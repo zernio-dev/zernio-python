@@ -67,7 +67,7 @@ class CrossPosterPipeline:
 
     def __init__(
         self,
-        client: "Late",
+        client: Late,
         *,
         default_stagger: int = 5,  # minutes between posts
     ) -> None:

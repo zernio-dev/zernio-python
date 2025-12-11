@@ -4,9 +4,13 @@ Rate limit handling for Late API.
 
 from __future__ import annotations
 
+import contextlib
 from dataclasses import dataclass
 from datetime import datetime
-from typing import Mapping
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from collections.abc import Mapping
 
 
 @dataclass
@@ -76,16 +80,12 @@ class RateLimiter:
         reset_str = headers.get("X-RateLimit-Reset")
 
         if limit_str is not None:
-            try:
+            with contextlib.suppress(ValueError):
                 self._info.limit = int(limit_str)
-            except ValueError:
-                pass
 
         if remaining_str is not None:
-            try:
+            with contextlib.suppress(ValueError):
                 self._info.remaining = int(remaining_str)
-            except ValueError:
-                pass
 
         if reset_str is not None:
             try:

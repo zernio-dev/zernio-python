@@ -4,13 +4,9 @@ Tools resource for media download and utilities.
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any, Literal
+from typing import Any, Literal
 
 from .base import BaseResource
-
-if TYPE_CHECKING:
-    from ..client.base import BaseClient
-
 
 Tone = Literal["professional", "casual", "humorous", "inspirational", "informative"]
 

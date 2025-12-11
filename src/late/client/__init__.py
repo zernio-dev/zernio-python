@@ -14,7 +14,7 @@ from .exceptions import (
     LateTimeoutError,
     LateValidationError,
 )
-from .rate_limiter import RateLimitInfo, RateLimiter
+from .rate_limiter import RateLimiter, RateLimitInfo
 
 __all__ = [
     "BaseClient",

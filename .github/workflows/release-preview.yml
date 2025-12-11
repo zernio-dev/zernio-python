@@ -1,0 +1,116 @@
+# Preview release info on PRs to main
+name: Release Preview
+
+on:
+  pull_request:
+    branches: [main]
+
+jobs:
+  preview:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: write
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v4
+        with:
+          version: "latest"
+
+      - name: Set up Python
+        run: uv python install 3.11
+
+      - name: Get version from pyproject.toml
+        id: version
+        run: |
+          VERSION=$(python -c "import tomllib; print(tomllib.load(open('pyproject.toml', 'rb'))['project']['version'])")
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+
+      - name: Check if tag exists
+        id: check_tag
+        run: |
+          if git rev-parse "v${{ steps.version.outputs.version }}" >/dev/null 2>&1; then
+            echo "exists=true" >> $GITHUB_OUTPUT
+          else
+            echo "exists=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Check PyPI for existing version
+        id: check_pypi
+        run: |
+          VERSION="${{ steps.version.outputs.version }}"
+          HTTP_STATUS=$(curl -s -o /dev/null -w "%{http_code}" "https://pypi.org/pypi/late-sdk/$VERSION/json")
+          if [ "$HTTP_STATUS" = "200" ]; then
+            echo "exists=true" >> $GITHUB_OUTPUT
+          else
+            echo "exists=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Create PR Comment
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const version = '${{ steps.version.outputs.version }}';
+            const tagExists = '${{ steps.check_tag.outputs.exists }}' === 'true';
+            const pypiExists = '${{ steps.check_pypi.outputs.exists }}' === 'true';
+
+            let body = '## 📦 Release Preview\n\n';
+            body += '| Item | Value |\n';
+            body += '|------|-------|\n';
+            body += `| Version | \`${version}\` |\n`;
+            body += `| Git tag exists | ${tagExists ? '✅ Yes' : '❌ No'} |\n`;
+            body += `| PyPI version exists | ${pypiExists ? '✅ Yes' : '❌ No'} |\n\n`;
+
+            if (tagExists || pypiExists) {
+              body += '### ⏭️ No Release\n\n';
+              if (tagExists && pypiExists) {
+                body += `Version \`${version}\` already exists on both GitHub and PyPI.\n\n`;
+              } else if (tagExists) {
+                body += `Git tag \`v${version}\` already exists.\n\n`;
+              } else {
+                body += `Version \`${version}\` already exists on PyPI.\n\n`;
+              }
+              body += '> 💡 **To create a new release**, update `version` in `pyproject.toml`\n';
+            } else {
+              body += '### 🚀 New Release\n\n';
+              body += 'When this PR is merged, the following will happen:\n\n';
+              body += `1. ✅ Create GitHub Release \`v${version}\`\n`;
+              body += `2. ✅ Publish to PyPI as \`late-sdk==${version}\`\n\n`;
+              body += '```bash\n';
+              body += `pip install late-sdk==${version}\n`;
+              body += '```\n';
+            }
+
+            // Find existing comment
+            const { data: comments } = await github.rest.issues.listComments({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+            });
+
+            const botComment = comments.find(comment =>
+              comment.user.type === 'Bot' &&
+              comment.body.includes('📦 Release Preview')
+            );
+
+            if (botComment) {
+              await github.rest.issues.updateComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                comment_id: botComment.id,
+                body: body
+              });
+            } else {
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: context.issue.number,
+                body: body
+              });
+            }

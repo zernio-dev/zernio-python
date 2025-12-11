@@ -4,12 +4,17 @@ Unified content generator that can use any provider.
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any, AsyncIterator
+from typing import TYPE_CHECKING, Any
 
-from .protocols import AIProvider, GenerateRequest, GenerateResponse, StreamingAIProvider
+from .protocols import (
+    AIProvider,
+    GenerateRequest,
+    GenerateResponse,
+    StreamingAIProvider,
+)
 
 if TYPE_CHECKING:
-    pass
+    from collections.abc import AsyncIterator
 
 
 class ContentGenerator:

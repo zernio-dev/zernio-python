@@ -93,7 +93,7 @@ def accounts_get(platform: str) -> str:
     matching = [a for a in accounts if a["platform"].lower() == platform.lower()]
 
     if not matching:
-        available = list(set(a["platform"] for a in accounts))
+        available = list({a["platform"] for a in accounts})
         return f"No {platform} account found. Available: {', '.join(available)}"
 
     acc = matching[0]
@@ -327,7 +327,7 @@ def posts_create(
     matching = [a for a in accounts if a["platform"].lower() == platform.lower()]
 
     if not matching:
-        available = list(set(a["platform"] for a in accounts))
+        available = list({a["platform"] for a in accounts})
         return f"No {platform} account connected. Available platforms: {', '.join(available)}"
 
     account = matching[0]
@@ -424,7 +424,7 @@ def posts_cross_post(
             not_found.append(platform)
 
     if not platform_targets:
-        available = list(set(a["platform"] for a in accounts))
+        available = list({a["platform"] for a in accounts})
         return f"No matching accounts found. Available: {', '.join(available)}"
 
     params = {

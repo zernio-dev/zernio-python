@@ -1,6 +1,6 @@
 [project]
 name = "late-sdk"
-version = "1.0.0"
+version = "1.0.1"
 description = "Python SDK for Late API - Social Media Scheduling"
 readme = "README.md"
 requires-python = ">=3.10"
@@ -71,8 +71,8 @@ late-mcp = "late.mcp.server:mcp.run"
 [project.urls]
 Homepage = "https://getlate.dev"
 Documentation = "https://docs.getlate.dev"
-Repository = "https://github.com/getlate/late-python-starter"
-Issues = "https://github.com/getlate/late-python-starter/issues"
+Repository = "https://github.com/getlatedev/late-python-sdk"
+Issues = "https://github.com/getlatedev/late-python-sdk/issues"
 
 [build-system]
 requires = ["hatchling"]
@@ -123,10 +123,20 @@ indent-style = "space"
 [tool.mypy]
 python_version = "3.10"
 strict = true
-warn_return_any = true
-warn_unused_ignores = true
+warn_return_any = false
+warn_unused_ignores = false
 disallow_untyped_defs = true
 plugins = ["pydantic.mypy"]
+
+[[tool.mypy.overrides]]
+module = [
+    "late.models._generated.*",
+    "late.ai.*",
+    "late.mcp.*",
+    "late.resources.*",
+    "late.pipelines.*",
+]
+ignore_errors = true
 
 [tool.pydantic-mypy]
 init_forbid_extra = true

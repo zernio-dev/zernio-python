@@ -6,12 +6,9 @@ from __future__ import annotations
 
 import mimetypes
 from pathlib import Path
-from typing import TYPE_CHECKING, Any
+from typing import Any
 
 from .base import BaseResource
-
-if TYPE_CHECKING:
-    from ..client.base import BaseClient
 
 
 class MediaResource(BaseResource[Any]):
@@ -56,7 +53,7 @@ class MediaResource(BaseResource[Any]):
         """
         path = Path(file_path)
         mime_type = self._get_mime_type(path)
-        with open(path, "rb") as f:
+        with path.open("rb") as f:
             return self._client._post(
                 self._BASE_PATH,
                 files={"files": (path.name, f, mime_type)},
@@ -79,7 +76,7 @@ class MediaResource(BaseResource[Any]):
             for file_path in file_paths:
                 path = Path(file_path)
                 mime_type = self._get_mime_type(path)
-                f = open(path, "rb")
+                f = path.open("rb")
                 file_handles.append(f)
                 files_list.append(("files", (path.name, f, mime_type)))
 
@@ -154,7 +151,7 @@ class MediaResource(BaseResource[Any]):
         """Upload a single media file asynchronously."""
         path = Path(file_path)
         mime_type = self._get_mime_type(path)
-        with open(path, "rb") as f:
+        with path.open("rb") as f:
             content = f.read()
         return await self._client._apost(
             self._BASE_PATH,
@@ -167,7 +164,7 @@ class MediaResource(BaseResource[Any]):
         for file_path in file_paths:
             path = Path(file_path)
             mime_type = self._get_mime_type(path)
-            with open(path, "rb") as f:
+            with path.open("rb") as f:
                 content = f.read()
             files_list.append(("files", (path.name, content, mime_type)))
 

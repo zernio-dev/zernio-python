@@ -4,13 +4,9 @@ Analytics resource for post analytics and usage statistics.
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any, Literal
+from typing import Any, Literal
 
 from .base import BaseResource
-
-if TYPE_CHECKING:
-    from ..client.base import BaseClient
-
 
 Period = Literal["7d", "30d", "90d", "all"]
 

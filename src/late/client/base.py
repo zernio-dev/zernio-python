@@ -6,7 +6,7 @@ from __future__ import annotations
 
 import time
 from contextlib import asynccontextmanager, contextmanager
-from typing import TYPE_CHECKING, Any, AsyncIterator, Iterator
+from typing import TYPE_CHECKING, Any
 
 import httpx
 
@@ -22,7 +22,7 @@ from .exceptions import (
 from .rate_limiter import RateLimiter
 
 if TYPE_CHECKING:
-    pass
+    from collections.abc import AsyncIterator, Iterator
 
 
 class BaseClient:
@@ -194,6 +194,7 @@ class BaseClient:
         path: str,
         data: dict[str, Any] | None = None,
         files: dict[str, Any] | list[tuple[str, Any]] | None = None,
+        params: dict[str, Any] | None = None,
     ) -> dict[str, Any]:
         """Make a sync POST request."""
         if files:
@@ -205,10 +206,10 @@ class BaseClient:
                 headers=headers,
                 timeout=self.timeout,
             ) as client:
-                return self._request_with_retry(client, "POST", path, files=files)
+                return self._request_with_retry(client, "POST", path, files=files, params=params)
 
         with self._sync_client() as client:
-            return self._request_with_retry(client, "POST", path, json=data)
+            return self._request_with_retry(client, "POST", path, json=data, params=params)
 
     def _put(
         self,
@@ -219,10 +220,14 @@ class BaseClient:
         with self._sync_client() as client:
             return self._request_with_retry(client, "PUT", path, json=data)
 
-    def _delete(self, path: str) -> dict[str, Any]:
+    def _delete(
+        self,
+        path: str,
+        params: dict[str, Any] | None = None,
+    ) -> dict[str, Any]:
         """Make a sync DELETE request."""
         with self._sync_client() as client:
-            return self._request_with_retry(client, "DELETE", path)
+            return self._request_with_retry(client, "DELETE", path, params=params)
 
     # =========================================================================
     # Async Client
@@ -296,6 +301,7 @@ class BaseClient:
         path: str,
         data: dict[str, Any] | None = None,
         files: dict[str, Any] | list[tuple[str, Any]] | None = None,
+        params: dict[str, Any] | None = None,
     ) -> dict[str, Any]:
         """Make an async POST request."""
         if files:
@@ -306,10 +312,10 @@ class BaseClient:
                 headers=headers,
                 timeout=self.timeout,
             ) as client:
-                return await self._arequest_with_retry(client, "POST", path, files=files)
+                return await self._arequest_with_retry(client, "POST", path, files=files, params=params)
 
         async with self._async_client() as client:
-            return await self._arequest_with_retry(client, "POST", path, json=data)
+            return await self._arequest_with_retry(client, "POST", path, json=data, params=params)
 
     async def _aput(
         self,
@@ -320,7 +326,11 @@ class BaseClient:
         async with self._async_client() as client:
             return await self._arequest_with_retry(client, "PUT", path, json=data)
 
-    async def _adelete(self, path: str) -> dict[str, Any]:
+    async def _adelete(
+        self,
+        path: str,
+        params: dict[str, Any] | None = None,
+    ) -> dict[str, Any]:
         """Make an async DELETE request."""
         async with self._async_client() as client:
-            return await self._arequest_with_retry(client, "DELETE", path)
+            return await self._arequest_with_retry(client, "DELETE", path, params=params)
