@@ -71,8 +71,8 @@ late-mcp = "late.mcp.server:mcp.run"
 [project.urls]
 Homepage = "https://getlate.dev"
 Documentation = "https://docs.getlate.dev"
-Repository = "https://github.com/getlate/late-python-starter"
-Issues = "https://github.com/getlate/late-python-starter/issues"
+Repository = "https://github.com/getlatedev/late-python-sdk"
+Issues = "https://github.com/getlatedev/late-python-sdk/issues"
 
 [build-system]
 requires = ["hatchling"]
