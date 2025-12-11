@@ -30,25 +30,60 @@ jobs:
       - name: Run tests
         run: uv run pytest tests -v --tb=short
 
-      - name: Get version
+      - name: Get version from pyproject.toml
         id: version
         run: |
           VERSION=$(uv run python -c "import tomllib; print(tomllib.load(open('pyproject.toml', 'rb'))['project']['version'])")
           echo "version=$VERSION" >> $GITHUB_OUTPUT
-          echo "Version: $VERSION"
+          echo "::notice::📦 Version in pyproject.toml: $VERSION"
 
       - name: Check if tag exists
         id: check_tag
         run: |
           if git rev-parse "v${{ steps.version.outputs.version }}" >/dev/null 2>&1; then
             echo "exists=true" >> $GITHUB_OUTPUT
+            echo "::notice::🔄 Tag v${{ steps.version.outputs.version }} already exists - skipping release"
           else
             echo "exists=false" >> $GITHUB_OUTPUT
+            echo "::notice::🚀 New version detected! Will create release v${{ steps.version.outputs.version }}"
+          fi
+
+      - name: Check PyPI for existing version
+        id: check_pypi
+        if: steps.check_tag.outputs.exists == 'false'
+        run: |
+          VERSION="${{ steps.version.outputs.version }}"
+          HTTP_STATUS=$(curl -s -o /dev/null -w "%{http_code}" "https://pypi.org/pypi/late-sdk/$VERSION/json")
+          if [ "$HTTP_STATUS" = "200" ]; then
+            echo "::error::❌ Version $VERSION already exists on PyPI! Bump the version in pyproject.toml"
+            exit 1
+          else
+            echo "::notice::✅ Version $VERSION not found on PyPI - ready to publish"
+          fi
+
+      - name: Release Summary
+        run: |
+          echo "## 📋 Release Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "| Item | Value |" >> $GITHUB_STEP_SUMMARY
+          echo "|------|-------|" >> $GITHUB_STEP_SUMMARY
+          echo "| Version | \`${{ steps.version.outputs.version }}\` |" >> $GITHUB_STEP_SUMMARY
+          echo "| Tag exists | ${{ steps.check_tag.outputs.exists }} |" >> $GITHUB_STEP_SUMMARY
+          if [ "${{ steps.check_tag.outputs.exists }}" = "true" ]; then
+            echo "| Action | ⏭️ **Skipped** (version already released) |" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "> 💡 To release a new version, update \`version\` in \`pyproject.toml\`" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "| Action | 🚀 **New Release** |" >> $GITHUB_STEP_SUMMARY
+            echo "| GitHub Release | v${{ steps.version.outputs.version }} |" >> $GITHUB_STEP_SUMMARY
+            echo "| PyPI | late-sdk==${{ steps.version.outputs.version }} |" >> $GITHUB_STEP_SUMMARY
           fi
 
       - name: Build package
         if: steps.check_tag.outputs.exists == 'false'
-        run: uv build
+        run: |
+          uv build
+          echo "::notice::📦 Built: $(ls dist/)"
 
       - name: Create GitHub Release
         if: steps.check_tag.outputs.exists == 'false'
@@ -64,3 +99,17 @@ jobs:
         uses: pypa/gh-action-pypi-publish@release/v1
         with:
           password: ${{ secrets.PYPI_API_TOKEN }}
+
+      - name: Post-release Summary
+        if: steps.check_tag.outputs.exists == 'false'
+        run: |
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "## ✅ Release Complete" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "- 🏷️ GitHub: [v${{ steps.version.outputs.version }}](https://github.com/${{ github.repository }}/releases/tag/v${{ steps.version.outputs.version }})" >> $GITHUB_STEP_SUMMARY
+          echo "- 📦 PyPI: [late-sdk ${{ steps.version.outputs.version }}](https://pypi.org/project/late-sdk/${{ steps.version.outputs.version }}/)" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "Install with:" >> $GITHUB_STEP_SUMMARY
+          echo "\`\`\`bash" >> $GITHUB_STEP_SUMMARY
+          echo "pip install late-sdk==${{ steps.version.outputs.version }}" >> $GITHUB_STEP_SUMMARY
+          echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
