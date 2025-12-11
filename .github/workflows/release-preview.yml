@@ -1,3 +1,4 @@
+# Preview release info on PRs to main
 name: Release Preview
 
 on:
