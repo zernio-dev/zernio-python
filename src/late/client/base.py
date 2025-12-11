@@ -6,7 +6,7 @@ from __future__ import annotations
 
 import time
 from contextlib import asynccontextmanager, contextmanager
-from typing import TYPE_CHECKING, Any, AsyncIterator, Iterator
+from typing import TYPE_CHECKING, Any
 
 import httpx
 
@@ -22,7 +22,7 @@ from .exceptions import (
 from .rate_limiter import RateLimiter
 
 if TYPE_CHECKING:
-    pass
+    from collections.abc import AsyncIterator, Iterator
 
 
 class BaseClient:

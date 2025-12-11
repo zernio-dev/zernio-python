@@ -31,7 +31,7 @@ class BaseResource(Generic[T]):
 
     _BASE_PATH: str = ""
 
-    def __init__(self, client: "BaseClient") -> None:
+    def __init__(self, client: BaseClient) -> None:
         """
         Initialize the resource.
 

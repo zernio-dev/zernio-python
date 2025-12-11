@@ -28,7 +28,6 @@ from late.client.exceptions import (
     LateRateLimitError,
 )
 
-
 # =============================================================================
 # Fixtures
 # =============================================================================
@@ -193,7 +192,7 @@ class TestPostsResource:
             )
         )
 
-        result = client.posts.create(
+        client.posts.create(
             content="Publish now!",
             platforms=[{"platform": "twitter", "accountId": "acc_123"}],
             publish_now=True,
@@ -214,7 +213,7 @@ class TestPostsResource:
             )
         )
 
-        result = client.posts.create(
+        client.posts.create(
             content="Draft content",
             platforms=[{"platform": "twitter", "accountId": "acc_123"}],
             is_draft=True,
@@ -275,7 +274,7 @@ class TestPostsResource:
             )
         )
 
-        result = client.posts.update(
+        client.posts.update(
             "post_123",
             content="Updated content",
             scheduled_for=datetime.now() + timedelta(days=1),
@@ -354,7 +353,7 @@ class TestProfilesResource:
             )
         )
 
-        result = client.profiles.create(
+        client.profiles.create(
             name="New Profile",
             description="A new profile",
             color="#FF5722",
@@ -377,7 +376,7 @@ class TestProfilesResource:
             )
         )
 
-        result = client.profiles.update(
+        client.profiles.update(
             "profile_123",
             name="Updated Name",
             is_default=True,
@@ -464,7 +463,7 @@ class TestAccountsResource:
             )
         )
 
-        result = client.accounts.get_follower_stats(account_ids=["acc_123", "acc_456"])
+        client.accounts.get_follower_stats(account_ids=["acc_123", "acc_456"])
 
         assert route.called
         request = route.calls[0].request
@@ -551,7 +550,7 @@ class TestQueueResource:
             )
         )
 
-        result = client.queue.get_slots(profile_id="profile_123")
+        client.queue.get_slots(profile_id="profile_123")
 
         assert route.called
         request = route.calls[0].request
@@ -618,7 +617,7 @@ class TestAnalyticsResource:
             )
         )
 
-        result = client.analytics.get(period="30d")
+        client.analytics.get(period="30d")
 
         assert route.called
         request = route.calls[0].request
@@ -662,7 +661,7 @@ class TestToolsResource:
             )
         )
 
-        result = client.tools.youtube_download("https://youtube.com/watch?v=abc123")
+        client.tools.youtube_download("https://youtube.com/watch?v=abc123")
 
         assert route.called
         request = route.calls[0].request
@@ -677,7 +676,7 @@ class TestToolsResource:
             )
         )
 
-        result = client.tools.youtube_transcript(
+        client.tools.youtube_transcript(
             "https://youtube.com/watch?v=abc123", lang="en"
         )
 
@@ -718,7 +717,7 @@ class TestToolsResource:
             )
         )
 
-        result = client.tools.generate_caption(
+        client.tools.generate_caption(
             "https://example.com/image.jpg",
             tone="professional",
             prompt="Describe this image",

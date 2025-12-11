@@ -4,7 +4,6 @@ Main Late API client.
 
 from __future__ import annotations
 
-from .base import BaseClient
 from ..resources import (
     AccountsResource,
     AnalyticsResource,
@@ -15,6 +14,7 @@ from ..resources import (
     ToolsResource,
     UsersResource,
 )
+from .base import BaseClient
 
 
 class Late(BaseClient):
@@ -71,7 +71,7 @@ class Late(BaseClient):
         self.tools = ToolsResource(self)
         self.queue = QueueResource(self)
 
-    async def __aenter__(self) -> "Late":
+    async def __aenter__(self) -> Late:
         """Async context manager entry."""
         return self
 

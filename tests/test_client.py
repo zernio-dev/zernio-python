@@ -2,7 +2,7 @@
 
 import pytest
 
-from late import Late, LateAPIError
+from late import Late
 
 
 class TestLateClient:
@@ -43,15 +43,9 @@ class TestModels:
     def test_models_import(self) -> None:
         """Test that models can be imported."""
         from late.models import (
-            ErrorResponse,
-            MediaItem,
-            Pagination,
-            PlatformTarget,
             Post,
             Profile,
             SocialAccount,
-            Status,
-            TikTokSettings,
         )
 
         assert Post is not None
@@ -91,10 +85,8 @@ class TestPipelines:
         """Test that pipelines can be imported."""
         from late.pipelines import (
             CrossPosterPipeline,
-            CrossPostResult,
             CSVSchedulerPipeline,
             PlatformConfig,
-            ScheduleResult,
         )
 
         assert CSVSchedulerPipeline is not None

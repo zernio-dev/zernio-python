@@ -5,12 +5,12 @@ OpenAI provider implementation.
 from __future__ import annotations
 
 import os
-from typing import TYPE_CHECKING, Any, AsyncIterator
+from typing import TYPE_CHECKING, Any
 
 from ..protocols import GenerateRequest, GenerateResponse
 
 if TYPE_CHECKING:
-    pass
+    from collections.abc import AsyncIterator
 
 
 class OpenAIProvider:

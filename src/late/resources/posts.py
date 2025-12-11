@@ -4,15 +4,13 @@ Posts resource for managing social media posts.
 
 from __future__ import annotations
 
-from datetime import datetime
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, Literal
 
 from .base import BaseResource
 
 if TYPE_CHECKING:
-    from ..client.base import BaseClient
-
+    from datetime import datetime
 
 # Type aliases for better readability
 Platform = Literal[
@@ -275,7 +273,7 @@ class PostsResource(BaseResource[Any]):
         """
         path = Path(file_path)
         params = {"dryRun": "true"} if dry_run else None
-        with open(path, "rb") as f:
+        with path.open("rb") as f:
             return self._client._post(
                 self._path("bulk-upload"),
                 files={"file": (path.name, f, "text/csv")},

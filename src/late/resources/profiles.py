@@ -4,12 +4,9 @@ Profiles resource for managing user profiles.
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any
+from typing import Any
 
 from .base import BaseResource
-
-if TYPE_CHECKING:
-    from ..client.base import BaseClient
 
 
 class ProfilesResource(BaseResource[Any]):

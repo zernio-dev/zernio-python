@@ -8,9 +8,11 @@ import csv
 from dataclasses import dataclass
 from datetime import datetime
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, Iterator
+from typing import TYPE_CHECKING, Any
 
 if TYPE_CHECKING:
+    from collections.abc import Iterator
+
     from ..client.late_client import Late
 
 
@@ -52,7 +54,7 @@ class CSVSchedulerPipeline:
 
     def __init__(
         self,
-        client: "Late",
+        client: Late,
         *,
         date_format: str = "%Y-%m-%d %H:%M:%S",
         default_timezone: str = "UTC",
@@ -63,10 +65,9 @@ class CSVSchedulerPipeline:
 
     def _parse_csv(self, file_path: Path) -> Iterator[tuple[int, dict[str, str]]]:
         """Parse CSV and yield (row_number, row_data)."""
-        with open(file_path, encoding="utf-8") as f:
+        with file_path.open(encoding="utf-8") as f:
             reader = csv.DictReader(f)
-            for i, row in enumerate(reader, start=2):
-                yield i, row
+            yield from enumerate(reader, start=2)
 
     def _parse_datetime(self, value: str) -> datetime:
         """Parse datetime from string."""

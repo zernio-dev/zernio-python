@@ -5,7 +5,6 @@ Tests all functionality: client, resources, models, AI, pipelines, and MCP.
 """
 
 import os
-from datetime import datetime, timedelta
 
 import pytest
 
@@ -558,32 +557,50 @@ class TestMCPImports:
     def test_import_mcp_tools(self):
         """Test MCP tools can be imported."""
         from late.mcp.server import (
-            create_post,
-            cross_post,
-            delete_post,
-            get_account,
-            get_post,
-            list_accounts,
-            list_failed_posts,
-            list_posts,
-            list_profiles,
-            publish_now,
-            retry_all_failed,
-            retry_post,
+            accounts_get,
+            accounts_list,
+            media_check_upload_status,
+            media_generate_upload_link,
+            posts_create,
+            posts_cross_post,
+            posts_delete,
+            posts_get,
+            posts_list,
+            posts_list_failed,
+            posts_publish_now,
+            posts_retry,
+            posts_retry_all_failed,
+            posts_update,
+            profiles_create,
+            profiles_delete,
+            profiles_get,
+            profiles_list,
+            profiles_update,
         )
 
-        assert list_accounts is not None
-        assert list_profiles is not None
-        assert list_posts is not None
-        assert list_failed_posts is not None
-        assert create_post is not None
-        assert publish_now is not None
-        assert cross_post is not None
-        assert delete_post is not None
-        assert get_account is not None
-        assert get_post is not None
-        assert retry_post is not None
-        assert retry_all_failed is not None
+        # Accounts
+        assert accounts_list is not None
+        assert accounts_get is not None
+        # Profiles
+        assert profiles_list is not None
+        assert profiles_get is not None
+        assert profiles_create is not None
+        assert profiles_update is not None
+        assert profiles_delete is not None
+        # Posts
+        assert posts_list is not None
+        assert posts_get is not None
+        assert posts_create is not None
+        assert posts_publish_now is not None
+        assert posts_cross_post is not None
+        assert posts_update is not None
+        assert posts_delete is not None
+        assert posts_retry is not None
+        assert posts_list_failed is not None
+        assert posts_retry_all_failed is not None
+        # Media
+        assert media_generate_upload_link is not None
+        assert media_check_upload_status is not None
 
 
 # ============================================================================
