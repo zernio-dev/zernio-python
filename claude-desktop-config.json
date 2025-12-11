@@ -1,0 +1,16 @@
+{
+  "mcpServers": {
+    "late": {
+      "command": "uv",
+      "args": [
+        "run",
+        "--directory",
+        "/Users/carlos/Documents/WebDev/Freelance/miquel-palet/late-python-starter",
+        "late-mcp"
+      ],
+      "env": {
+        "LATE_API_KEY": "YOUR_API_KEY_HERE"
+      }
+    }
+  }
+}

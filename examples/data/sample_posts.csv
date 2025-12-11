@@ -1,0 +1,6 @@
+content,platform,account_id,scheduled_for,title,media_url,tags
+"Hello world! This is my first automated post via Late SDK.",twitter,YOUR_ACCOUNT_ID,2024-12-25T10:00:00Z,,,automation,late-sdk
+"Excited to share our latest update! Check out the new features we've been working on.",linkedin,YOUR_ACCOUNT_ID,2024-12-25T11:00:00Z,,,update,features
+"New blog post is live! Link in bio.",instagram,YOUR_ACCOUNT_ID,2024-12-25T12:00:00Z,,https://example.com/image.jpg,blog,content
+"Quick tip: Always schedule your posts in advance to maintain consistency.",twitter,YOUR_ACCOUNT_ID,2024-12-26T09:00:00Z,,,tips,productivity
+"Behind the scenes look at our workflow automation setup.",linkedin,YOUR_ACCOUNT_ID,2024-12-26T14:00:00Z,,,behindthescenes,workflow
