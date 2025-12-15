@@ -51,9 +51,7 @@ class BaseResource(Generic[T]):
         Returns:
             Dictionary with non-None values and camelCase keys
         """
-        return {
-            _to_camel_case(k): v for k, v in kwargs.items() if v is not None
-        }
+        return {_to_camel_case(k): v for k, v in kwargs.items() if v is not None}
 
     def _build_payload(self, **kwargs: Any) -> dict[str, Any]:
         """

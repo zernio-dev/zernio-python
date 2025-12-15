@@ -170,7 +170,9 @@ class QueueResource(BaseResource[QueueSlotsResponse]):
         data = await self._client._aget(self._path("preview"), params=params or None)
         return QueuePreviewResponse.model_validate(data)
 
-    async def anext_slot(self, *, profile_id: str | None = None) -> QueueNextSlotResponse:
+    async def anext_slot(
+        self, *, profile_id: str | None = None
+    ) -> QueueNextSlotResponse:
         """Get next available slot asynchronously."""
         params = self._build_params(profile_id=profile_id)
         data = await self._client._aget(self._path("next-slot"), params=params or None)

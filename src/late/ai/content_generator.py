@@ -97,9 +97,7 @@ class ContentGenerator:
         """Generate content asynchronously."""
         return await self._provider.agenerate(request)
 
-    async def agenerate_stream(
-        self, request: GenerateRequest
-    ) -> AsyncIterator[str]:
+    async def agenerate_stream(self, request: GenerateRequest) -> AsyncIterator[str]:
         """Generate content as a stream."""
         if not isinstance(self._provider, StreamingAIProvider):
             raise NotImplementedError(

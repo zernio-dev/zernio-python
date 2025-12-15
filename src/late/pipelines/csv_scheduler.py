@@ -97,7 +97,10 @@ class CSVSchedulerPipeline:
 
         if row.get("media_url"):
             payload["mediaItems"] = [
-                {"type": row.get("media_type", MediaType.IMAGE), "url": row["media_url"]}
+                {
+                    "type": row.get("media_type", MediaType.IMAGE),
+                    "url": row["media_url"],
+                }
             ]
 
         if row.get("tags"):

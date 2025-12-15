@@ -34,7 +34,7 @@ class LargeFileError(UploadError):
     def __init__(self, file_size: int, max_direct_size: int) -> None:
         message = (
             f"File size ({file_size:,} bytes) exceeds direct upload limit "
-            f"({max_direct_size:,} bytes / {max_direct_size // (1024*1024)}MB).\n\n"
+            f"({max_direct_size:,} bytes / {max_direct_size // (1024 * 1024)}MB).\n\n"
             "For files larger than 4MB, provide a Vercel Blob token:\n\n"
             "  from late.upload import SmartUploader\n\n"
             "  uploader = SmartUploader(client, vercel_token='vercel_blob_rw_xxx')\n"
@@ -86,6 +86,7 @@ class SmartUploader:
         # Initialize Vercel uploader if token provided
         if vercel_token:
             from .vercel import VercelBlobUploader
+
             self._vercel_uploader = VercelBlobUploader(vercel_token, self._config)
 
     @property

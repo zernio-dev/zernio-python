@@ -206,10 +206,14 @@ class BaseClient:
                 headers=headers,
                 timeout=self.timeout,
             ) as client:
-                return self._request_with_retry(client, "POST", path, files=files, params=params)
+                return self._request_with_retry(
+                    client, "POST", path, files=files, params=params
+                )
 
         with self._sync_client() as client:
-            return self._request_with_retry(client, "POST", path, json=data, params=params)
+            return self._request_with_retry(
+                client, "POST", path, json=data, params=params
+            )
 
     def _put(
         self,
@@ -312,10 +316,14 @@ class BaseClient:
                 headers=headers,
                 timeout=self.timeout,
             ) as client:
-                return await self._arequest_with_retry(client, "POST", path, files=files, params=params)
+                return await self._arequest_with_retry(
+                    client, "POST", path, files=files, params=params
+                )
 
         async with self._async_client() as client:
-            return await self._arequest_with_retry(client, "POST", path, json=data, params=params)
+            return await self._arequest_with_retry(
+                client, "POST", path, json=data, params=params
+            )
 
     async def _aput(
         self,
@@ -333,4 +341,6 @@ class BaseClient:
     ) -> dict[str, Any]:
         """Make an async DELETE request."""
         async with self._async_client() as client:
-            return await self._arequest_with_retry(client, "DELETE", path, params=params)
+            return await self._arequest_with_retry(
+                client, "DELETE", path, params=params
+            )

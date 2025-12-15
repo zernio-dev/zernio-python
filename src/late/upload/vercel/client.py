@@ -64,13 +64,16 @@ class VercelBlobClient:
         # Create progress wrapper
         progress_cb = None
         if on_progress:
+
             def progress_cb(event: UploadProgressEvent) -> None:
-                on_progress(UploadProgress(
-                    uploaded_bytes=event.loaded,
-                    total_bytes=event.total,
-                    part_number=None,
-                    total_parts=None,
-                ))
+                on_progress(
+                    UploadProgress(
+                        uploaded_bytes=event.loaded,
+                        total_bytes=event.total,
+                        part_number=None,
+                        total_parts=None,
+                    )
+                )
 
         try:
             client = BlobClient(token=self._token)
@@ -119,13 +122,16 @@ class VercelBlobClient:
         # Create progress wrapper
         progress_cb = None
         if on_progress:
+
             def progress_cb(event: UploadProgressEvent) -> None:
-                on_progress(UploadProgress(
-                    uploaded_bytes=event.loaded,
-                    total_bytes=event.total,
-                    part_number=None,
-                    total_parts=None,
-                ))
+                on_progress(
+                    UploadProgress(
+                        uploaded_bytes=event.loaded,
+                        total_bytes=event.total,
+                        part_number=None,
+                        total_parts=None,
+                    )
+                )
 
         try:
             client = AsyncBlobClient(token=self._token)

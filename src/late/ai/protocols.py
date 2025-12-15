@@ -70,8 +70,6 @@ class StreamingAIProvider(Protocol):
     """Protocol for streaming content generation."""
 
     @abstractmethod
-    async def agenerate_stream(
-        self, request: GenerateRequest
-    ) -> AsyncIterator[str]:
+    async def agenerate_stream(self, request: GenerateRequest) -> AsyncIterator[str]:
         """Generate content as a stream."""
         ...

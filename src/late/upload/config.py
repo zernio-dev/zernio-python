@@ -98,27 +98,33 @@ class UploadConfig:
 
 
 # Supported content types for uploads
-ALLOWED_IMAGE_TYPES: frozenset[str] = frozenset({
-    "image/jpeg",
-    "image/jpg",
-    "image/png",
-    "image/webp",
-    "image/gif",
-})
+ALLOWED_IMAGE_TYPES: frozenset[str] = frozenset(
+    {
+        "image/jpeg",
+        "image/jpg",
+        "image/png",
+        "image/webp",
+        "image/gif",
+    }
+)
 
-ALLOWED_VIDEO_TYPES: frozenset[str] = frozenset({
-    "video/mp4",
-    "video/mpeg",
-    "video/quicktime",
-    "video/avi",
-    "video/x-msvideo",
-    "video/webm",
-    "video/x-m4v",
-})
+ALLOWED_VIDEO_TYPES: frozenset[str] = frozenset(
+    {
+        "video/mp4",
+        "video/mpeg",
+        "video/quicktime",
+        "video/avi",
+        "video/x-msvideo",
+        "video/webm",
+        "video/x-m4v",
+    }
+)
 
-ALLOWED_DOCUMENT_TYPES: frozenset[str] = frozenset({
-    "application/pdf",
-})
+ALLOWED_DOCUMENT_TYPES: frozenset[str] = frozenset(
+    {
+        "application/pdf",
+    }
+)
 
 ALLOWED_CONTENT_TYPES: frozenset[str] = (
     ALLOWED_IMAGE_TYPES | ALLOWED_VIDEO_TYPES | ALLOWED_DOCUMENT_TYPES

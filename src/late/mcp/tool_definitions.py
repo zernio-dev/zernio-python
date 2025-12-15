@@ -16,6 +16,7 @@ from typing import Any
 @dataclass
 class ParamDef:
     """Definition of a tool parameter."""
+
     name: str
     type: str
     description: str
@@ -32,6 +33,7 @@ class ParamDef:
 @dataclass
 class ToolDef:
     """Definition of a tool."""
+
     name: str
     description: str
     params: list[ParamDef]
@@ -214,7 +216,11 @@ def get_tool_docstring(tool_name: str) -> str:
     lines = [tool.description, "", "Args:"]
     for param in tool.params:
         req = " (required)" if param.required else ""
-        default = f" (default: {param.default})" if param.default is not None and not param.required else ""
+        default = (
+            f" (default: {param.default})"
+            if param.default is not None and not param.required
+            else ""
+        )
         lines.append(f"    {param.name}: {param.description}{req}{default}")
 
     return "\n".join(lines)

@@ -8,6 +8,8 @@ from pathlib import Path
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
+    from collections.abc import Generator
+
     from .protocols import UploadFile
 
 
@@ -32,7 +34,9 @@ def read_file_content(file: UploadFile) -> bytes:
     return data
 
 
-def iter_file_chunks(file: UploadFile, chunk_size: int):
+def iter_file_chunks(
+    file: UploadFile, chunk_size: int
+) -> Generator[tuple[int, bytes], None, None]:
     """
     Iterate over file content in chunks.
 

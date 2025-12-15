@@ -164,7 +164,9 @@ class PostsResource(BaseResource[PostsListResponse]):
             tags=tags,
             hashtags=hashtags,
             mentions=mentions,
-            crossposting_enabled=crossposting_enabled if not crossposting_enabled else None,
+            crossposting_enabled=crossposting_enabled
+            if not crossposting_enabled
+            else None,
             metadata=metadata,
             tiktok_settings=tiktok_settings,
             queued_from_profile=queued_from_profile,
@@ -351,7 +353,9 @@ class PostsResource(BaseResource[PostsListResponse]):
             tags=tags,
             hashtags=hashtags,
             mentions=mentions,
-            crossposting_enabled=crossposting_enabled if not crossposting_enabled else None,
+            crossposting_enabled=crossposting_enabled
+            if not crossposting_enabled
+            else None,
             metadata=metadata,
             tiktok_settings=tiktok_settings,
             queued_from_profile=queued_from_profile,

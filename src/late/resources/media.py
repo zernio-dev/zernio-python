@@ -60,6 +60,7 @@ class MediaResource(BaseResource[MediaUploadResponse]):
         size = file_path.stat().st_size
         if size > DIRECT_UPLOAD_MAX_SIZE:
             from late.upload import LargeFileError
+
             raise LargeFileError(size, DIRECT_UPLOAD_MAX_SIZE)
         return size
 
@@ -147,6 +148,7 @@ class MediaResource(BaseResource[MediaUploadResponse]):
         """
         if len(content) > DIRECT_UPLOAD_MAX_SIZE:
             from late.upload import LargeFileError
+
             raise LargeFileError(len(content), DIRECT_UPLOAD_MAX_SIZE)
 
         if mime_type is None:
@@ -314,7 +316,9 @@ class MediaResource(BaseResource[MediaUploadResponse]):
         )
         return MediaUploadResponse.model_validate(data)
 
-    async def aupload_multiple(self, file_paths: list[str | Path]) -> MediaUploadResponse:
+    async def aupload_multiple(
+        self, file_paths: list[str | Path]
+    ) -> MediaUploadResponse:
         """Upload multiple media files asynchronously (each < 4MB)."""
         files_list = []
         for file_path in file_paths:
@@ -338,6 +342,7 @@ class MediaResource(BaseResource[MediaUploadResponse]):
         """Upload media from bytes asynchronously (max 4MB)."""
         if len(content) > DIRECT_UPLOAD_MAX_SIZE:
             from late.upload import LargeFileError
+
             raise LargeFileError(len(content), DIRECT_UPLOAD_MAX_SIZE)
 
         if mime_type is None:
@@ -432,5 +437,7 @@ class MediaResource(BaseResource[MediaUploadResponse]):
 
     async def acheck_upload_token(self, token: str) -> UploadTokenStatusResponse:
         """Check the status of an upload token asynchronously."""
-        data = await self._client._aget(self._path("upload-token"), params={"token": token})
+        data = await self._client._aget(
+            self._path("upload-token"), params={"token": token}
+        )
         return UploadTokenStatusResponse.model_validate(data)

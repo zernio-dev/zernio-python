@@ -142,9 +142,7 @@ class OpenAIProvider:
             finish_reason=choice.finish_reason,
         )
 
-    async def agenerate_stream(
-        self, request: GenerateRequest
-    ) -> AsyncIterator[str]:
+    async def agenerate_stream(self, request: GenerateRequest) -> AsyncIterator[str]:
         """Generate content as a stream."""
         stream = await self._async_client.chat.completions.create(
             model=self._model,

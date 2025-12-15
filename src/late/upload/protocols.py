@@ -9,7 +9,10 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import BinaryIO, Protocol, runtime_checkable
+from typing import TYPE_CHECKING, BinaryIO, Protocol, runtime_checkable
+
+if TYPE_CHECKING:
+    from collections.abc import Callable
 
 
 @dataclass
@@ -162,7 +165,7 @@ class ProgressUploader(Protocol):
     def upload_with_progress(
         self,
         file: UploadFile,
-        on_progress: callable[[UploadProgress], None] | None = None,
+        on_progress: Callable[[UploadProgress], None] | None = None,
     ) -> UploadResult:
         """
         Upload a file with progress tracking.
@@ -253,9 +256,7 @@ class FileTooLargeError(UploadError):
     """Raised when file exceeds maximum allowed size."""
 
     def __init__(self, size: int, max_size: int) -> None:
-        super().__init__(
-            f"File size {size:,} bytes exceeds maximum {max_size:,} bytes"
-        )
+        super().__init__(f"File size {size:,} bytes exceeds maximum {max_size:,} bytes")
         self.size = size
         self.max_size = max_size
 

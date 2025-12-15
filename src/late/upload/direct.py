@@ -90,8 +90,7 @@ class DirectUploader:
     ) -> list[tuple[str, tuple[str, bytes, str]]]:
         """Build multipart files list for httpx."""
         return [
-            ("files", (f.filename, self._read_content(f), f.mime_type))
-            for f in files
+            ("files", (f.filename, self._read_content(f), f.mime_type)) for f in files
         ]
 
     def _parse_response(self, response: dict[str, Any]) -> list[UploadResult]:

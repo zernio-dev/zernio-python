@@ -59,7 +59,9 @@ class Late(BaseClient):
             timeout: Request timeout in seconds
             max_retries: Maximum retries for failed requests
         """
-        super().__init__(api_key, base_url=base_url, timeout=timeout, max_retries=max_retries)
+        super().__init__(
+            api_key, base_url=base_url, timeout=timeout, max_retries=max_retries
+        )
 
         # Initialize resources
         self.posts = PostsResource(self)

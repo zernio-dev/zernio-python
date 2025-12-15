@@ -100,7 +100,9 @@ class ToolsResource(BaseResource[DownloadResponse]):
         Returns:
             DownloadResponse with download information
         """
-        data = self._client._get(self._path("instagram", "download"), params={"url": url})
+        data = self._client._get(
+            self._path("instagram", "download"), params={"url": url}
+        )
         return DownloadResponse.model_validate(data)
 
     def instagram_hashtag_check(self, hashtags: list[str]) -> HashtagCheckResponse:
@@ -174,7 +176,9 @@ class ToolsResource(BaseResource[DownloadResponse]):
         Returns:
             DownloadResponse with download information
         """
-        data = self._client._get(self._path("facebook", "download"), params={"url": url})
+        data = self._client._get(
+            self._path("facebook", "download"), params={"url": url}
+        )
         return DownloadResponse.model_validate(data)
 
     # -------------------------------------------------------------------------
@@ -191,7 +195,9 @@ class ToolsResource(BaseResource[DownloadResponse]):
         Returns:
             DownloadResponse with download information
         """
-        data = self._client._get(self._path("linkedin", "download"), params={"url": url})
+        data = self._client._get(
+            self._path("linkedin", "download"), params={"url": url}
+        )
         return DownloadResponse.model_validate(data)
 
     # -------------------------------------------------------------------------
@@ -253,7 +259,9 @@ class ToolsResource(BaseResource[DownloadResponse]):
     ) -> DownloadResponse:
         """Download YouTube video asynchronously."""
         params = self._build_params(url=url, format_id=format_id)
-        data = await self._client._aget(self._path("youtube", "download"), params=params)
+        data = await self._client._aget(
+            self._path("youtube", "download"), params=params
+        )
         return DownloadResponse.model_validate(data)
 
     async def ayoutube_transcript(
@@ -264,7 +272,9 @@ class ToolsResource(BaseResource[DownloadResponse]):
     ) -> TranscriptResponse:
         """Get YouTube transcript asynchronously."""
         params = self._build_params(url=url, lang=lang)
-        data = await self._client._aget(self._path("youtube", "transcript"), params=params)
+        data = await self._client._aget(
+            self._path("youtube", "transcript"), params=params
+        )
         return TranscriptResponse.model_validate(data)
 
     async def ainstagram_download(self, url: str) -> DownloadResponse:
@@ -274,7 +284,9 @@ class ToolsResource(BaseResource[DownloadResponse]):
         )
         return DownloadResponse.model_validate(data)
 
-    async def ainstagram_hashtag_check(self, hashtags: list[str]) -> HashtagCheckResponse:
+    async def ainstagram_hashtag_check(
+        self, hashtags: list[str]
+    ) -> HashtagCheckResponse:
         """Check Instagram hashtags asynchronously."""
         data = await self._client._apost(
             self._path("instagram", "hashtag-checker"),
