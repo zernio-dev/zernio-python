@@ -6,10 +6,13 @@ Wraps the official `vercel.blob` SDK for uploading large files.
 
 from __future__ import annotations
 
-from typing import Callable
+from typing import TYPE_CHECKING
 
 from late.upload.protocols import UploadError, UploadFile, UploadProgress, UploadResult
 from late.upload.utils import read_file_content
+
+if TYPE_CHECKING:
+    from collections.abc import Callable
 
 
 class VercelBlobClient:

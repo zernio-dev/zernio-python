@@ -6,7 +6,7 @@ Chooses the best upload method based on file size.
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Callable
+from typing import TYPE_CHECKING
 
 from .config import UploadConfig
 from .direct import DirectUploader
@@ -19,6 +19,8 @@ from .protocols import (
 )
 
 if TYPE_CHECKING:
+    from collections.abc import Callable
+
     from late.client.base import BaseClient
 
 

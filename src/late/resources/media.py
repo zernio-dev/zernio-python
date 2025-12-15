@@ -10,7 +10,7 @@ from __future__ import annotations
 
 import mimetypes
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, Callable
+from typing import TYPE_CHECKING
 
 from late.models import (
     MediaLargeUploadResponse,
@@ -22,6 +22,8 @@ from late.models import (
 from .base import BaseResource
 
 if TYPE_CHECKING:
+    from collections.abc import Callable
+
     from late.upload import UploadProgress
 
 

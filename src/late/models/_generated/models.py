@@ -5,14 +5,14 @@
 from __future__ import annotations
 
 from enum import Enum
-from typing import Annotated, Any, Dict, List
+from typing import Annotated, Any
 
 from pydantic import AnyUrl, AwareDatetime, BaseModel, Field
 
 
 class ErrorResponse(BaseModel):
     error: str | None = None
-    details: Dict[str, Any] | None = None
+    details: dict[str, Any] | None = None
 
 
 class Type(Enum):
@@ -80,11 +80,11 @@ class Visibility(Enum):
 
 class ThreadItem(BaseModel):
     content: str | None = None
-    mediaItems: List[MediaItem] | None = None
+    mediaItems: list[MediaItem] | None = None
 
 
 class TwitterPlatformData(BaseModel):
-    threadItems: List[ThreadItem] | None = None
+    threadItems: list[ThreadItem] | None = None
     """
     Sequence of tweets in a thread. First item is the root tweet.
     """
@@ -101,7 +101,7 @@ class ThreadsPlatformData(BaseModel):
 
     """
 
-    threadItems: List[ThreadItem] | None = None
+    threadItems: list[ThreadItem] | None = None
     """
     Sequence of posts in a Threads thread (root then replies in order).
     """
@@ -190,7 +190,7 @@ class InstagramPlatformData(BaseModel):
     """
     For Reels only. When true (default), the Reel appears on both the Reels tab and your main profile feed. Set to false to post to the Reels tab only.
     """
-    collaborators: List[str] | None = None
+    collaborators: list[str] | None = None
     """
     Up to 3 Instagram usernames to invite as collaborators (feed/Reels only)
     """
@@ -198,7 +198,7 @@ class InstagramPlatformData(BaseModel):
     """
     Optional first comment to add after the post is created (not applied to Stories)
     """
-    userTags: List[UserTag] | None = None
+    userTags: list[UserTag] | None = None
     """
     Tag Instagram users in photos by username and position coordinates. Only works for single image posts and the first image of carousel posts. Not supported for stories or videos.
     """
@@ -453,7 +453,7 @@ class QueueSchedule(BaseModel):
     """
     IANA timezone (e.g., America/New_York)
     """
-    slots: List[QueueSlot] | None = None
+    slots: list[QueueSlot] | None = None
     active: bool | None = None
     """
     Whether the queue is active
@@ -615,7 +615,7 @@ class VideoClipJobCompleted(BaseModel):
     job_id: Annotated[str | None, Field(examples=["abc123def456"])] = None
     status: Annotated[Status3 | None, Field(examples=["completed"])] = None
     total_clips: Annotated[int | None, Field(examples=[5])] = None
-    clips: List[VideoClip] | None = None
+    clips: list[VideoClip] | None = None
 
 
 class Status4(Enum):
@@ -708,7 +708,7 @@ class AnalyticsSinglePostResponse(BaseModel):
     scheduledFor: AwareDatetime | None = None
     publishedAt: AwareDatetime | None = None
     analytics: PostAnalytics | None = None
-    platformAnalytics: List[PlatformAnalytics] | None = None
+    platformAnalytics: list[PlatformAnalytics] | None = None
     platform: str | None = None
     platformPostUrl: AnyUrl | None = None
     isExternal: bool | None = None
@@ -728,20 +728,20 @@ class Post1(BaseModel):
     publishedAt: AwareDatetime | None = None
     status: str | None = None
     analytics: PostAnalytics | None = None
-    platforms: List[PlatformAnalytics] | None = None
+    platforms: list[PlatformAnalytics] | None = None
     platform: str | None = None
     platformPostUrl: AnyUrl | None = None
     isExternal: bool | None = None
     thumbnailUrl: AnyUrl | None = None
     mediaType: MediaType1 | None = None
-    mediaItems: List[MediaItem] | None = None
+    mediaItems: list[MediaItem] | None = None
 
 
 class AnalyticsListResponse(BaseModel):
     overview: AnalyticsOverview | None = None
-    posts: List[Post1] | None = None
+    posts: list[Post1] | None = None
     pagination: Pagination | None = None
-    accounts: List[SocialAccount] | None = None
+    accounts: list[SocialAccount] | None = None
     """
     Connected social accounts (followerCount and followersLastUpdated only included if user has analytics add-on)
     """
@@ -756,7 +756,7 @@ class PostDeleteResponse(BaseModel):
 
 
 class ProfilesListResponse(BaseModel):
-    profiles: List[Profile] | None = None
+    profiles: list[Profile] | None = None
 
 
 class ProfileGetResponse(BaseModel):
@@ -778,7 +778,7 @@ class ProfileDeleteResponse(BaseModel):
 
 
 class AccountsListResponse(BaseModel):
-    accounts: List[SocialAccount] | None = None
+    accounts: list[SocialAccount] | None = None
     hasAnalyticsAccess: bool | None = None
     """
     Whether user has analytics add-on access
@@ -801,7 +801,7 @@ class Aggregation(Enum):
 
 
 class FollowerStatsResponse(BaseModel):
-    accounts: List[AccountWithFollowerStats] | None = None
+    accounts: list[AccountWithFollowerStats] | None = None
     dateRange: DateRange | None = None
     aggregation: Aggregation | None = None
 
@@ -821,7 +821,7 @@ class UploadedFile(BaseModel):
 
 
 class MediaUploadResponse(BaseModel):
-    files: List[UploadedFile] | None = None
+    files: list[UploadedFile] | None = None
 
 
 class Status5(Enum):
@@ -840,7 +840,7 @@ class UploadTokenResponse(BaseModel):
 class UploadTokenStatusResponse(BaseModel):
     token: str | None = None
     status: Status5 | None = None
-    files: List[UploadedFile] | None = None
+    files: list[UploadedFile] | None = None
     createdAt: AwareDatetime | None = None
     expiresAt: AwareDatetime | None = None
     completedAt: AwareDatetime | None = None
@@ -849,13 +849,13 @@ class UploadTokenStatusResponse(BaseModel):
 class QueueSlotsResponse(BaseModel):
     exists: bool | None = None
     schedule: QueueSchedule | None = None
-    nextSlots: List[AwareDatetime] | None = None
+    nextSlots: list[AwareDatetime] | None = None
 
 
 class QueueUpdateResponse(BaseModel):
     success: bool | None = None
     schedule: QueueSchedule | None = None
-    nextSlots: List[AwareDatetime] | None = None
+    nextSlots: list[AwareDatetime] | None = None
     reshuffledCount: int | None = None
 
 
@@ -867,7 +867,7 @@ class QueueDeleteResponse(BaseModel):
 class QueuePreviewResponse(BaseModel):
     profileId: str | None = None
     count: int | None = None
-    slots: List[AwareDatetime] | None = None
+    slots: list[AwareDatetime] | None = None
 
 
 class QueueNextSlotResponse(BaseModel):
@@ -889,7 +889,7 @@ class DownloadResponse(BaseModel):
     title: str | None = None
     thumbnail: AnyUrl | None = None
     duration: int | None = None
-    formats: List[DownloadFormat] | None = None
+    formats: list[DownloadFormat] | None = None
 
 
 class TranscriptSegment(BaseModel):
@@ -900,7 +900,7 @@ class TranscriptSegment(BaseModel):
 
 class TranscriptResponse(BaseModel):
     transcript: str | None = None
-    segments: List[TranscriptSegment] | None = None
+    segments: list[TranscriptSegment] | None = None
     language: str | None = None
 
 
@@ -918,7 +918,7 @@ class HashtagInfo(BaseModel):
 
 
 class HashtagCheckResponse(BaseModel):
-    hashtags: List[HashtagInfo] | None = None
+    hashtags: list[HashtagInfo] | None = None
 
 
 class CaptionResponse(BaseModel):
@@ -934,7 +934,7 @@ class User(BaseModel):
 
 
 class UsersListResponse(BaseModel):
-    users: List[User] | None = None
+    users: list[User] | None = None
 
 
 class UserGetResponse(BaseModel):
@@ -960,7 +960,7 @@ class VideoClipJob(BaseModel):
     ] = None
     videoFileName: Annotated[str | None, Field(examples=["my-video.mp4"])] = None
     status: Annotated[Status1 | None, Field(examples=["completed"])] = None
-    clips: List[VideoClip] | None = None
+    clips: list[VideoClip] | None = None
     totalClips: Annotated[int | None, Field(examples=[5])] = None
     error: Annotated[str | None, Field(examples=[None])] = None
     createdAt: Annotated[
@@ -978,7 +978,7 @@ class PlatformTarget(BaseModel):
     """
     accountId: str | None = None
     customContent: str | None = None
-    customMedia: List[MediaItem] | None = None
+    customMedia: list[MediaItem] | None = None
     scheduledFor: AwareDatetime | None = None
     """
     Optional per-platform scheduled time override (uses post.scheduledFor when omitted)
@@ -1014,8 +1014,8 @@ class PlatformTarget(BaseModel):
     ] = None
     """
     Public URL of the published post on the platform.
-    Populated after successful publish. For immediate posts (publishNow=true), 
-    this is included in the response. For scheduled posts, fetch the post 
+    Populated after successful publish. For immediate posts (publishNow=true),
+    this is included in the response. For scheduled posts, fetch the post
     via GET /v1/posts/{postId} after the scheduled time.
 
     """
@@ -1034,12 +1034,12 @@ class Post(BaseModel):
 
     """
     content: str | None = None
-    mediaItems: List[MediaItem] | None = None
-    platforms: List[PlatformTarget] | None = None
+    mediaItems: list[MediaItem] | None = None
+    platforms: list[PlatformTarget] | None = None
     scheduledFor: AwareDatetime | None = None
     timezone: str | None = None
     status: Status | None = None
-    tags: List[str] | None = None
+    tags: list[str] | None = None
     """
     YouTube tag constraints when targeting YouTube:
     - No count cap; duplicates removed.
@@ -1047,10 +1047,10 @@ class Post(BaseModel):
     - Combined characters across all tags ≤ 500.
 
     """
-    hashtags: List[str] | None = None
-    mentions: List[str] | None = None
+    hashtags: list[str] | None = None
+    mentions: list[str] | None = None
     visibility: Visibility | None = None
-    metadata: Dict[str, Any] | None = None
+    metadata: dict[str, Any] | None = None
     queuedFromProfile: str | None = None
     """
     Profile ID if the post was scheduled via the queue
@@ -1060,7 +1060,7 @@ class Post(BaseModel):
 
 
 class PostsListResponse(BaseModel):
-    posts: List[Post] | None = None
+    posts: list[Post] | None = None
     pagination: Pagination | None = None
 
 

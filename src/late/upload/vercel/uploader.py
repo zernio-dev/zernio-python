@@ -6,7 +6,7 @@ Uses the official Vercel SDK to upload files to Vercel Blob storage.
 
 from __future__ import annotations
 
-from typing import Callable
+from typing import TYPE_CHECKING
 
 from late.upload.config import UploadConfig
 from late.upload.protocols import (
@@ -18,6 +18,9 @@ from late.upload.protocols import (
 )
 
 from .client import VercelBlobClient
+
+if TYPE_CHECKING:
+    from collections.abc import Callable
 
 
 class VercelBlobUploader:

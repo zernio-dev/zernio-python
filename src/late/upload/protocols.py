@@ -9,10 +9,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import TYPE_CHECKING, BinaryIO, Protocol, runtime_checkable
-
-if TYPE_CHECKING:
-    from collections.abc import AsyncIterator, Iterator
+from typing import BinaryIO, Protocol, runtime_checkable
 
 
 @dataclass
