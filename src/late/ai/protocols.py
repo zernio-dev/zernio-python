@@ -12,6 +12,8 @@ from typing import TYPE_CHECKING, Any, Protocol, runtime_checkable
 if TYPE_CHECKING:
     from collections.abc import AsyncIterator
 
+    from late.enums import CaptionTone, Platform
+
 
 @dataclass
 class GenerateRequest:
@@ -21,8 +23,8 @@ class GenerateRequest:
     system: str | None = None
     max_tokens: int = 500
     temperature: float = 0.7
-    platform: str | None = None  # e.g., "twitter", "linkedin"
-    tone: str | None = None  # e.g., "professional", "casual"
+    platform: Platform | str | None = None
+    tone: CaptionTone | str | None = None
     language: str = "en"
     context: dict[str, Any] = field(default_factory=dict)
 

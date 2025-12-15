@@ -868,3 +868,491 @@ class TestAsyncAI:
 
         assert response.text is not None
         assert len(response.text) > 0
+
+
+# ============================================================================
+# MEDIA RESOURCE TESTS
+# ============================================================================
+
+
+class TestMediaResourceMethods:
+    """Test MediaResource has all expected methods."""
+
+    def test_media_has_upload_method(self, api_key: str):
+        """Test media resource has upload method."""
+        from late import Late
+
+        client = Late(api_key=api_key)
+        assert hasattr(client.media, "upload")
+        assert callable(client.media.upload)
+
+    def test_media_has_upload_multiple_method(self, api_key: str):
+        """Test media resource has upload_multiple method."""
+        from late import Late
+
+        client = Late(api_key=api_key)
+        assert hasattr(client.media, "upload_multiple")
+        assert callable(client.media.upload_multiple)
+
+    def test_media_has_upload_bytes_method(self, api_key: str):
+        """Test media resource has upload_bytes method."""
+        from late import Late
+
+        client = Late(api_key=api_key)
+        assert hasattr(client.media, "upload_bytes")
+        assert callable(client.media.upload_bytes)
+
+    def test_media_has_upload_large_method(self, api_key: str):
+        """Test media resource has upload_large method."""
+        from late import Late
+
+        client = Late(api_key=api_key)
+        assert hasattr(client.media, "upload_large")
+        assert callable(client.media.upload_large)
+
+    def test_media_has_upload_large_bytes_method(self, api_key: str):
+        """Test media resource has upload_large_bytes method."""
+        from late import Late
+
+        client = Late(api_key=api_key)
+        assert hasattr(client.media, "upload_large_bytes")
+        assert callable(client.media.upload_large_bytes)
+
+    def test_media_has_generate_upload_token_method(self, api_key: str):
+        """Test media resource has generate_upload_token method."""
+        from late import Late
+
+        client = Late(api_key=api_key)
+        assert hasattr(client.media, "generate_upload_token")
+        assert callable(client.media.generate_upload_token)
+
+    def test_media_has_check_upload_token_method(self, api_key: str):
+        """Test media resource has check_upload_token method."""
+        from late import Late
+
+        client = Late(api_key=api_key)
+        assert hasattr(client.media, "check_upload_token")
+        assert callable(client.media.check_upload_token)
+
+    def test_media_has_async_methods(self, api_key: str):
+        """Test media resource has async methods."""
+        from late import Late
+
+        client = Late(api_key=api_key)
+        assert hasattr(client.media, "aupload")
+        assert hasattr(client.media, "aupload_multiple")
+        assert hasattr(client.media, "aupload_bytes")
+        assert hasattr(client.media, "aupload_large")
+        assert hasattr(client.media, "aupload_large_bytes")
+        assert hasattr(client.media, "agenerate_upload_token")
+        assert hasattr(client.media, "acheck_upload_token")
+
+
+class TestUploadModule:
+    """Test upload module classes."""
+
+    def test_import_smart_uploader(self):
+        """Test SmartUploader import."""
+        from late.upload import SmartUploader
+
+        assert SmartUploader is not None
+
+    def test_import_direct_uploader(self):
+        """Test DirectUploader import."""
+        from late.upload import DirectUploader
+
+        assert DirectUploader is not None
+
+    def test_import_vercel_blob_uploader(self):
+        """Test VercelBlobUploader import."""
+        from late.upload import VercelBlobUploader
+
+        assert VercelBlobUploader is not None
+
+    def test_import_upload_file(self):
+        """Test UploadFile import."""
+        from late.upload import UploadFile
+
+        assert UploadFile is not None
+
+    def test_import_upload_result(self):
+        """Test UploadResult import."""
+        from late.upload import UploadResult
+
+        assert UploadResult is not None
+
+    def test_import_upload_progress(self):
+        """Test UploadProgress import."""
+        from late.upload import UploadProgress
+
+        assert UploadProgress is not None
+
+    def test_import_large_file_error(self):
+        """Test LargeFileError import."""
+        from late.upload import LargeFileError
+
+        assert LargeFileError is not None
+
+    def test_upload_progress_creation(self):
+        """Test UploadProgress dataclass."""
+        from late.upload import UploadProgress
+
+        progress = UploadProgress(
+            uploaded_bytes=500,
+            total_bytes=1000,
+        )
+        assert progress.uploaded_bytes == 500
+        assert progress.total_bytes == 1000
+        assert progress.percentage == 50.0
+
+    def test_large_file_error_creation(self):
+        """Test LargeFileError creation."""
+        from late.upload import LargeFileError
+
+        error = LargeFileError(file_size=5_000_000, max_direct_size=4_000_000)
+        assert "5,000,000" in str(error)
+        assert "4,000,000" in str(error) or "4MB" in str(error)
+
+
+# ============================================================================
+# QUEUE RESOURCE TESTS
+# ============================================================================
+
+
+class TestQueueResourceMethods:
+    """Test QueueResource has all expected methods."""
+
+    def test_queue_has_get_slots_method(self, api_key: str):
+        """Test queue resource has get_slots method."""
+        from late import Late
+
+        client = Late(api_key=api_key)
+        assert hasattr(client.queue, "get_slots")
+        assert callable(client.queue.get_slots)
+
+    def test_queue_has_update_slots_method(self, api_key: str):
+        """Test queue resource has update_slots method."""
+        from late import Late
+
+        client = Late(api_key=api_key)
+        assert hasattr(client.queue, "update_slots")
+        assert callable(client.queue.update_slots)
+
+    def test_queue_has_delete_slots_method(self, api_key: str):
+        """Test queue resource has delete_slots method."""
+        from late import Late
+
+        client = Late(api_key=api_key)
+        assert hasattr(client.queue, "delete_slots")
+        assert callable(client.queue.delete_slots)
+
+    def test_queue_has_preview_method(self, api_key: str):
+        """Test queue resource has preview method."""
+        from late import Late
+
+        client = Late(api_key=api_key)
+        assert hasattr(client.queue, "preview")
+        assert callable(client.queue.preview)
+
+    def test_queue_has_next_slot_method(self, api_key: str):
+        """Test queue resource has next_slot method."""
+        from late import Late
+
+        client = Late(api_key=api_key)
+        assert hasattr(client.queue, "next_slot")
+        assert callable(client.queue.next_slot)
+
+    def test_queue_has_async_methods(self, api_key: str):
+        """Test queue resource has async methods."""
+        from late import Late
+
+        client = Late(api_key=api_key)
+        assert hasattr(client.queue, "aget_slots")
+        assert hasattr(client.queue, "aupdate_slots")
+        assert hasattr(client.queue, "adelete_slots")
+        assert hasattr(client.queue, "apreview")
+        assert hasattr(client.queue, "anext_slot")
+
+
+# ============================================================================
+# TOOLS RESOURCE TESTS
+# ============================================================================
+
+
+class TestToolsResourceMethods:
+    """Test ToolsResource has all expected methods."""
+
+    def test_tools_has_youtube_download_method(self, api_key: str):
+        """Test tools resource has youtube_download method."""
+        from late import Late
+
+        client = Late(api_key=api_key)
+        assert hasattr(client.tools, "youtube_download")
+        assert callable(client.tools.youtube_download)
+
+    def test_tools_has_youtube_transcript_method(self, api_key: str):
+        """Test tools resource has youtube_transcript method."""
+        from late import Late
+
+        client = Late(api_key=api_key)
+        assert hasattr(client.tools, "youtube_transcript")
+        assert callable(client.tools.youtube_transcript)
+
+    def test_tools_has_instagram_download_method(self, api_key: str):
+        """Test tools resource has instagram_download method."""
+        from late import Late
+
+        client = Late(api_key=api_key)
+        assert hasattr(client.tools, "instagram_download")
+        assert callable(client.tools.instagram_download)
+
+    def test_tools_has_instagram_hashtag_check_method(self, api_key: str):
+        """Test tools resource has instagram_hashtag_check method."""
+        from late import Late
+
+        client = Late(api_key=api_key)
+        assert hasattr(client.tools, "instagram_hashtag_check")
+        assert callable(client.tools.instagram_hashtag_check)
+
+    def test_tools_has_tiktok_download_method(self, api_key: str):
+        """Test tools resource has tiktok_download method."""
+        from late import Late
+
+        client = Late(api_key=api_key)
+        assert hasattr(client.tools, "tiktok_download")
+        assert callable(client.tools.tiktok_download)
+
+    def test_tools_has_twitter_download_method(self, api_key: str):
+        """Test tools resource has twitter_download method."""
+        from late import Late
+
+        client = Late(api_key=api_key)
+        assert hasattr(client.tools, "twitter_download")
+        assert callable(client.tools.twitter_download)
+
+    def test_tools_has_facebook_download_method(self, api_key: str):
+        """Test tools resource has facebook_download method."""
+        from late import Late
+
+        client = Late(api_key=api_key)
+        assert hasattr(client.tools, "facebook_download")
+        assert callable(client.tools.facebook_download)
+
+    def test_tools_has_linkedin_download_method(self, api_key: str):
+        """Test tools resource has linkedin_download method."""
+        from late import Late
+
+        client = Late(api_key=api_key)
+        assert hasattr(client.tools, "linkedin_download")
+        assert callable(client.tools.linkedin_download)
+
+    def test_tools_has_bluesky_download_method(self, api_key: str):
+        """Test tools resource has bluesky_download method."""
+        from late import Late
+
+        client = Late(api_key=api_key)
+        assert hasattr(client.tools, "bluesky_download")
+        assert callable(client.tools.bluesky_download)
+
+    def test_tools_has_generate_caption_method(self, api_key: str):
+        """Test tools resource has generate_caption method."""
+        from late import Late
+
+        client = Late(api_key=api_key)
+        assert hasattr(client.tools, "generate_caption")
+        assert callable(client.tools.generate_caption)
+
+    def test_tools_has_async_methods(self, api_key: str):
+        """Test tools resource has async methods."""
+        from late import Late
+
+        client = Late(api_key=api_key)
+        assert hasattr(client.tools, "ayoutube_download")
+        assert hasattr(client.tools, "ayoutube_transcript")
+        assert hasattr(client.tools, "ainstagram_download")
+        assert hasattr(client.tools, "ainstagram_hashtag_check")
+        assert hasattr(client.tools, "atiktok_download")
+        assert hasattr(client.tools, "atwitter_download")
+        assert hasattr(client.tools, "afacebook_download")
+        assert hasattr(client.tools, "alinkedin_download")
+        assert hasattr(client.tools, "abluesky_download")
+        assert hasattr(client.tools, "agenerate_caption")
+
+
+# ============================================================================
+# PROFILES RESOURCE METHODS TESTS
+# ============================================================================
+
+
+class TestProfilesResourceMethods:
+    """Test ProfilesResource has all expected methods."""
+
+    def test_profiles_has_list_method(self, api_key: str):
+        """Test profiles resource has list method."""
+        from late import Late
+
+        client = Late(api_key=api_key)
+        assert hasattr(client.profiles, "list")
+        assert callable(client.profiles.list)
+
+    def test_profiles_has_get_method(self, api_key: str):
+        """Test profiles resource has get method."""
+        from late import Late
+
+        client = Late(api_key=api_key)
+        assert hasattr(client.profiles, "get")
+        assert callable(client.profiles.get)
+
+    def test_profiles_has_create_method(self, api_key: str):
+        """Test profiles resource has create method."""
+        from late import Late
+
+        client = Late(api_key=api_key)
+        assert hasattr(client.profiles, "create")
+        assert callable(client.profiles.create)
+
+    def test_profiles_has_update_method(self, api_key: str):
+        """Test profiles resource has update method."""
+        from late import Late
+
+        client = Late(api_key=api_key)
+        assert hasattr(client.profiles, "update")
+        assert callable(client.profiles.update)
+
+    def test_profiles_has_delete_method(self, api_key: str):
+        """Test profiles resource has delete method."""
+        from late import Late
+
+        client = Late(api_key=api_key)
+        assert hasattr(client.profiles, "delete")
+        assert callable(client.profiles.delete)
+
+    def test_profiles_has_async_methods(self, api_key: str):
+        """Test profiles resource has async methods."""
+        from late import Late
+
+        client = Late(api_key=api_key)
+        assert hasattr(client.profiles, "alist")
+        assert hasattr(client.profiles, "aget")
+        assert hasattr(client.profiles, "acreate")
+        assert hasattr(client.profiles, "aupdate")
+        assert hasattr(client.profiles, "adelete")
+
+
+# ============================================================================
+# ACCOUNTS RESOURCE METHODS TESTS
+# ============================================================================
+
+
+class TestAccountsResourceMethods:
+    """Test AccountsResource has all expected methods."""
+
+    def test_accounts_has_list_method(self, api_key: str):
+        """Test accounts resource has list method."""
+        from late import Late
+
+        client = Late(api_key=api_key)
+        assert hasattr(client.accounts, "list")
+        assert callable(client.accounts.list)
+
+    def test_accounts_has_get_method(self, api_key: str):
+        """Test accounts resource has get method."""
+        from late import Late
+
+        client = Late(api_key=api_key)
+        assert hasattr(client.accounts, "get")
+        assert callable(client.accounts.get)
+
+    def test_accounts_has_get_follower_stats_method(self, api_key: str):
+        """Test accounts resource has get_follower_stats method."""
+        from late import Late
+
+        client = Late(api_key=api_key)
+        assert hasattr(client.accounts, "get_follower_stats")
+        assert callable(client.accounts.get_follower_stats)
+
+    def test_accounts_has_async_methods(self, api_key: str):
+        """Test accounts resource has async methods."""
+        from late import Late
+
+        client = Late(api_key=api_key)
+        assert hasattr(client.accounts, "alist")
+        assert hasattr(client.accounts, "aget")
+        assert hasattr(client.accounts, "aget_follower_stats")
+
+
+# ============================================================================
+# POSTS RESOURCE METHODS TESTS
+# ============================================================================
+
+
+class TestPostsResourceMethods:
+    """Test PostsResource has all expected methods."""
+
+    def test_posts_has_list_method(self, api_key: str):
+        """Test posts resource has list method."""
+        from late import Late
+
+        client = Late(api_key=api_key)
+        assert hasattr(client.posts, "list")
+        assert callable(client.posts.list)
+
+    def test_posts_has_get_method(self, api_key: str):
+        """Test posts resource has get method."""
+        from late import Late
+
+        client = Late(api_key=api_key)
+        assert hasattr(client.posts, "get")
+        assert callable(client.posts.get)
+
+    def test_posts_has_create_method(self, api_key: str):
+        """Test posts resource has create method."""
+        from late import Late
+
+        client = Late(api_key=api_key)
+        assert hasattr(client.posts, "create")
+        assert callable(client.posts.create)
+
+    def test_posts_has_update_method(self, api_key: str):
+        """Test posts resource has update method."""
+        from late import Late
+
+        client = Late(api_key=api_key)
+        assert hasattr(client.posts, "update")
+        assert callable(client.posts.update)
+
+    def test_posts_has_delete_method(self, api_key: str):
+        """Test posts resource has delete method."""
+        from late import Late
+
+        client = Late(api_key=api_key)
+        assert hasattr(client.posts, "delete")
+        assert callable(client.posts.delete)
+
+    def test_posts_has_retry_method(self, api_key: str):
+        """Test posts resource has retry method."""
+        from late import Late
+
+        client = Late(api_key=api_key)
+        assert hasattr(client.posts, "retry")
+        assert callable(client.posts.retry)
+
+    def test_posts_has_bulk_upload_method(self, api_key: str):
+        """Test posts resource has bulk_upload method."""
+        from late import Late
+
+        client = Late(api_key=api_key)
+        assert hasattr(client.posts, "bulk_upload")
+        assert callable(client.posts.bulk_upload)
+
+    def test_posts_has_async_methods(self, api_key: str):
+        """Test posts resource has async methods."""
+        from late import Late
+
+        client = Late(api_key=api_key)
+        assert hasattr(client.posts, "alist")
+        assert hasattr(client.posts, "aget")
+        assert hasattr(client.posts, "acreate")
+        assert hasattr(client.posts, "aupdate")
+        assert hasattr(client.posts, "adelete")
+        assert hasattr(client.posts, "aretry")

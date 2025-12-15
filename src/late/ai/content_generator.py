@@ -6,6 +6,8 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, Any
 
+from late.enums import CaptionTone, Platform
+
 from .protocols import (
     AIProvider,
     GenerateRequest,
@@ -25,6 +27,7 @@ class ContentGenerator:
 
     Example:
         >>> from late.ai import ContentGenerator, GenerateRequest
+        >>> from late import Platform, CaptionTone
         >>>
         >>> # Using OpenAI
         >>> generator = ContentGenerator(provider="openai", api_key="sk-...")
@@ -32,8 +35,8 @@ class ContentGenerator:
         >>> response = generator.generate(
         ...     GenerateRequest(
         ...         prompt="Write a tweet about Python",
-        ...         platform="twitter",
-        ...         tone="professional",
+        ...         platform=Platform.TWITTER,
+        ...         tone=CaptionTone.PROFESSIONAL,
         ...     )
         ... )
         >>> print(response.text)
@@ -109,9 +112,9 @@ class ContentGenerator:
     def generate_post(
         self,
         topic: str,
-        platform: str,
+        platform: Platform | str,
         *,
-        tone: str = "professional",
+        tone: CaptionTone | str = CaptionTone.PROFESSIONAL,
         language: str = "en",
         **kwargs: Any,
     ) -> str:
@@ -139,9 +142,9 @@ class ContentGenerator:
     async def agenerate_post(
         self,
         topic: str,
-        platform: str,
+        platform: Platform | str,
         *,
-        tone: str = "professional",
+        tone: CaptionTone | str = CaptionTone.PROFESSIONAL,
         language: str = "en",
         **kwargs: Any,
     ) -> str:

@@ -5,42 +5,38 @@ Posts resource for managing social media posts.
 from __future__ import annotations
 
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, Literal
+from typing import TYPE_CHECKING, Any
+
+from late.models import (
+    PostCreateResponse,
+    PostDeleteResponse,
+    PostGetResponse,
+    PostRetryResponse,
+    PostsListResponse,
+    PostUpdateResponse,
+)
 
 from .base import BaseResource
 
 if TYPE_CHECKING:
     from datetime import datetime
 
-# Type aliases for better readability
-Platform = Literal[
-    "twitter",
-    "instagram",
-    "facebook",
-    "linkedin",
-    "tiktok",
-    "youtube",
-    "pinterest",
-    "reddit",
-    "bluesky",
-    "threads",
-    "googlebusiness",
-]
-PostStatus = Literal["draft", "scheduled", "publishing", "published", "failed", "partial"]
+    from late.enums import Platform, PostStatus
 
 
-class PostsResource(BaseResource[Any]):
+class PostsResource(BaseResource[PostsListResponse]):
     """
     Resource for managing posts.
 
     Example:
+        >>> from late import Platform, PostStatus
         >>> client = Late(api_key="...")
         >>> # List posts
-        >>> posts = client.posts.list(status="scheduled")
+        >>> posts = client.posts.list(status=PostStatus.SCHEDULED)
         >>> # Create a post
         >>> post = client.posts.create(
         ...     content="Hello!",
-        ...     platforms=[{"platform": "twitter", "accountId": "..."}],
+        ...     platforms=[{"platform": Platform.TWITTER, "accountId": "..."}],
         ...     scheduled_for=datetime.now() + timedelta(hours=1),
         ... )
         >>> # Update a post
@@ -67,7 +63,7 @@ class PostsResource(BaseResource[Any]):
         date_from: str | None = None,
         date_to: str | None = None,
         include_hidden: bool | None = None,
-    ) -> dict[str, Any]:
+    ) -> PostsListResponse:
         """
         List posts with optional filters.
 
@@ -83,7 +79,7 @@ class PostsResource(BaseResource[Any]):
             include_hidden: Include hidden posts (default: False)
 
         Returns:
-            Dict with 'posts' and 'pagination' keys
+            PostsListResponse with 'posts' and 'pagination' attributes
         """
         params = self._build_params(
             page=page,
@@ -96,9 +92,10 @@ class PostsResource(BaseResource[Any]):
             date_to=date_to,
             include_hidden=include_hidden,
         )
-        return self._client._get(self._BASE_PATH, params=params)
+        data = self._client._get(self._BASE_PATH, params=params)
+        return PostsListResponse.model_validate(data)
 
-    def get(self, post_id: str) -> dict[str, Any]:
+    def get(self, post_id: str) -> PostGetResponse:
         """
         Get a single post by ID.
 
@@ -106,9 +103,10 @@ class PostsResource(BaseResource[Any]):
             post_id: The post ID
 
         Returns:
-            Dict with 'post' key containing the Post object
+            PostGetResponse with 'post' attribute
         """
-        return self._client._get(self._path(post_id))
+        data = self._client._get(self._path(post_id))
+        return PostGetResponse.model_validate(data)
 
     def create(
         self,
@@ -128,7 +126,7 @@ class PostsResource(BaseResource[Any]):
         metadata: dict[str, Any] | None = None,
         tiktok_settings: dict[str, Any] | None = None,
         queued_from_profile: str | None = None,
-    ) -> dict[str, Any]:
+    ) -> PostCreateResponse:
         """
         Create a new post.
 
@@ -152,7 +150,7 @@ class PostsResource(BaseResource[Any]):
             queued_from_profile: Profile ID if creating via queue
 
         Returns:
-            Dict with 'message' and 'post' keys
+            PostCreateResponse with 'message' and 'post' attributes
         """
         payload = self._build_payload(
             content=content,
@@ -171,7 +169,8 @@ class PostsResource(BaseResource[Any]):
             tiktok_settings=tiktok_settings,
             queued_from_profile=queued_from_profile,
         )
-        return self._client._post(self._BASE_PATH, data=payload)
+        data = self._client._post(self._BASE_PATH, data=payload)
+        return PostCreateResponse.model_validate(data)
 
     def update(
         self,
@@ -188,7 +187,7 @@ class PostsResource(BaseResource[Any]):
         mentions: list[str] | None = None,
         metadata: dict[str, Any] | None = None,
         tiktok_settings: dict[str, Any] | None = None,
-    ) -> dict[str, Any]:
+    ) -> PostUpdateResponse:
         """
         Update an existing post.
 
@@ -210,7 +209,7 @@ class PostsResource(BaseResource[Any]):
             tiktok_settings: New TikTok settings
 
         Returns:
-            Dict with 'message' and 'post' keys
+            PostUpdateResponse with 'message' and 'post' attributes
         """
         payload = self._build_payload(
             content=content,
@@ -225,9 +224,10 @@ class PostsResource(BaseResource[Any]):
             metadata=metadata,
             tiktok_settings=tiktok_settings,
         )
-        return self._client._put(self._path(post_id), data=payload)
+        data = self._client._put(self._path(post_id), data=payload)
+        return PostUpdateResponse.model_validate(data)
 
-    def delete(self, post_id: str) -> dict[str, Any]:
+    def delete(self, post_id: str) -> PostDeleteResponse:
         """
         Delete a post.
 
@@ -239,11 +239,12 @@ class PostsResource(BaseResource[Any]):
             post_id: ID of the post to delete
 
         Returns:
-            Dict with 'message' key
+            PostDeleteResponse with 'message' attribute
         """
-        return self._client._delete(self._path(post_id))
+        data = self._client._delete(self._path(post_id))
+        return PostDeleteResponse.model_validate(data)
 
-    def retry(self, post_id: str) -> dict[str, Any]:
+    def retry(self, post_id: str) -> PostRetryResponse:
         """
         Retry a failed post.
 
@@ -251,9 +252,10 @@ class PostsResource(BaseResource[Any]):
             post_id: ID of the failed post
 
         Returns:
-            Dict with 'message' and 'post' keys
+            PostRetryResponse with 'message' attribute
         """
-        return self._client._post(self._path(post_id, "retry"))
+        data = self._client._post(self._path(post_id, "retry"))
+        return PostRetryResponse.model_validate(data)
 
     def bulk_upload(
         self,
@@ -296,7 +298,7 @@ class PostsResource(BaseResource[Any]):
         date_from: str | None = None,
         date_to: str | None = None,
         include_hidden: bool | None = None,
-    ) -> dict[str, Any]:
+    ) -> PostsListResponse:
         """List posts asynchronously."""
         params = self._build_params(
             page=page,
@@ -309,11 +311,13 @@ class PostsResource(BaseResource[Any]):
             date_to=date_to,
             include_hidden=include_hidden,
         )
-        return await self._client._aget(self._BASE_PATH, params=params)
+        data = await self._client._aget(self._BASE_PATH, params=params)
+        return PostsListResponse.model_validate(data)
 
-    async def aget(self, post_id: str) -> dict[str, Any]:
+    async def aget(self, post_id: str) -> PostGetResponse:
         """Get a post asynchronously."""
-        return await self._client._aget(self._path(post_id))
+        data = await self._client._aget(self._path(post_id))
+        return PostGetResponse.model_validate(data)
 
     async def acreate(
         self,
@@ -333,7 +337,7 @@ class PostsResource(BaseResource[Any]):
         metadata: dict[str, Any] | None = None,
         tiktok_settings: dict[str, Any] | None = None,
         queued_from_profile: str | None = None,
-    ) -> dict[str, Any]:
+    ) -> PostCreateResponse:
         """Create a post asynchronously."""
         payload = self._build_payload(
             content=content,
@@ -352,7 +356,8 @@ class PostsResource(BaseResource[Any]):
             tiktok_settings=tiktok_settings,
             queued_from_profile=queued_from_profile,
         )
-        return await self._client._apost(self._BASE_PATH, data=payload)
+        data = await self._client._apost(self._BASE_PATH, data=payload)
+        return PostCreateResponse.model_validate(data)
 
     async def aupdate(
         self,
@@ -369,7 +374,7 @@ class PostsResource(BaseResource[Any]):
         mentions: list[str] | None = None,
         metadata: dict[str, Any] | None = None,
         tiktok_settings: dict[str, Any] | None = None,
-    ) -> dict[str, Any]:
+    ) -> PostUpdateResponse:
         """Update a post asynchronously."""
         payload = self._build_payload(
             content=content,
@@ -384,12 +389,15 @@ class PostsResource(BaseResource[Any]):
             metadata=metadata,
             tiktok_settings=tiktok_settings,
         )
-        return await self._client._aput(self._path(post_id), data=payload)
+        data = await self._client._aput(self._path(post_id), data=payload)
+        return PostUpdateResponse.model_validate(data)
 
-    async def adelete(self, post_id: str) -> dict[str, Any]:
+    async def adelete(self, post_id: str) -> PostDeleteResponse:
         """Delete a post asynchronously."""
-        return await self._client._adelete(self._path(post_id))
+        data = await self._client._adelete(self._path(post_id))
+        return PostDeleteResponse.model_validate(data)
 
-    async def aretry(self, post_id: str) -> dict[str, Any]:
+    async def aretry(self, post_id: str) -> PostRetryResponse:
         """Retry a failed post asynchronously."""
-        return await self._client._apost(self._path(post_id, "retry"))
+        data = await self._client._apost(self._path(post_id, "retry"))
+        return PostRetryResponse.model_validate(data)

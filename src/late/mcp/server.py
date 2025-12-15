@@ -28,7 +28,7 @@ from datetime import datetime, timedelta
 
 from mcp.server.fastmcp import FastMCP
 
-from late import Late
+from late import Late, MediaType, PostStatus
 
 # Initialize MCP server
 mcp = FastMCP("Late", instructions="""
@@ -349,11 +349,11 @@ def posts_create(
         urls = [u.strip() for u in media_urls.split(",") if u.strip()]
         media_items = []
         for url in urls:
-            media_type = "image"
+            media_type: MediaType | str = MediaType.IMAGE
             if any(ext in url.lower() for ext in [".mp4", ".mov", ".avi", ".webm", ".m4v"]):
-                media_type = "video"
+                media_type = MediaType.VIDEO
             elif any(ext in url.lower() for ext in [".gif"]):
-                media_type = "gif"
+                media_type = MediaType.GIF
             media_items.append({"type": media_type, "url": url})
         params["media_items"] = media_items
 
@@ -436,11 +436,11 @@ def posts_cross_post(
         urls = [u.strip() for u in media_urls.split(",") if u.strip()]
         media_items = []
         for url in urls:
-            media_type = "image"
+            media_type: MediaType | str = MediaType.IMAGE
             if any(ext in url.lower() for ext in [".mp4", ".mov", ".avi", ".webm", ".m4v"]):
-                media_type = "video"
+                media_type = MediaType.VIDEO
             elif any(ext in url.lower() for ext in [".gif"]):
-                media_type = "gif"
+                media_type = MediaType.GIF
             media_items.append({"type": media_type, "url": url})
         params["media_items"] = media_items
 
@@ -527,7 +527,7 @@ def posts_retry(post_id: str) -> str:
     try:
         post_response = client.posts.get(post_id)
         post = post_response.get("post", post_response)
-        if post.get("status") != "failed":
+        if post.get("status") != PostStatus.FAILED:
             return f"⚠️ Post {post_id} is not in failed status (current: {post.get('status')})"
     except Exception as e:
         return f"❌ Could not find post {post_id}: {e}"
@@ -548,7 +548,7 @@ def posts_list_failed(limit: int = 10) -> str:
         limit: Maximum number of posts to return (default 10)
     """
     client = _get_client()
-    response = client.posts.list(status="failed", limit=limit)
+    response = client.posts.list(status=PostStatus.FAILED, limit=limit)
     posts = response.get("posts", [])
 
     if not posts:
@@ -573,7 +573,7 @@ def posts_retry_all_failed() -> str:
     Retry all failed posts.
     """
     client = _get_client()
-    response = client.posts.list(status="failed", limit=50)
+    response = client.posts.list(status=PostStatus.FAILED, limit=50)
     posts = response.get("posts", [])
 
     if not posts:

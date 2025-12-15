@@ -34,6 +34,7 @@ def main() -> int:
 
     # Create output directory
     output_dir.mkdir(parents=True, exist_ok=True)
+    output_file = output_dir / "models.py"
 
     # Run datamodel-code-generator
     cmd = [
@@ -43,7 +44,7 @@ def main() -> int:
         "--input",
         str(openapi_spec),
         "--output",
-        str(output_dir),
+        str(output_file),
         "--output-model-type",
         "pydantic_v2.BaseModel",
         "--input-file-type",
@@ -55,8 +56,6 @@ def main() -> int:
         "--field-constraints",
         "--use-field-description",
         "--capitalise-enum-members",
-        "--enum-field-as-literal",
-        "all",
         "--use-default-kwarg",
         "--collapse-root-models",
         "--use-union-operator",

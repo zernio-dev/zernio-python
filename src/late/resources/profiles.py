@@ -4,12 +4,18 @@ Profiles resource for managing user profiles.
 
 from __future__ import annotations
 
-from typing import Any
+from late.models import (
+    ProfileCreateResponse,
+    ProfileDeleteResponse,
+    ProfileGetResponse,
+    ProfilesListResponse,
+    ProfileUpdateResponse,
+)
 
 from .base import BaseResource
 
 
-class ProfilesResource(BaseResource[Any]):
+class ProfilesResource(BaseResource[ProfilesListResponse]):
     """
     Resource for managing profiles.
 
@@ -34,16 +40,17 @@ class ProfilesResource(BaseResource[Any]):
     # Sync methods
     # -------------------------------------------------------------------------
 
-    def list(self) -> dict[str, Any]:
+    def list(self) -> ProfilesListResponse:
         """
         List all profiles.
 
         Returns:
-            Dict with 'profiles' key containing list of Profile objects
+            ProfilesListResponse with 'profiles' attribute
         """
-        return self._client._get(self._BASE_PATH)
+        data = self._client._get(self._BASE_PATH)
+        return ProfilesListResponse.model_validate(data)
 
-    def get(self, profile_id: str) -> dict[str, Any]:
+    def get(self, profile_id: str) -> ProfileGetResponse:
         """
         Get a profile by ID.
 
@@ -51,9 +58,10 @@ class ProfilesResource(BaseResource[Any]):
             profile_id: The profile ID
 
         Returns:
-            Dict with 'profile' key containing the Profile object
+            ProfileGetResponse with 'profile' attribute
         """
-        return self._client._get(self._path(profile_id))
+        data = self._client._get(self._path(profile_id))
+        return ProfileGetResponse.model_validate(data)
 
     def create(
         self,
@@ -61,7 +69,7 @@ class ProfilesResource(BaseResource[Any]):
         name: str,
         description: str | None = None,
         color: str | None = None,
-    ) -> dict[str, Any]:
+    ) -> ProfileCreateResponse:
         """
         Create a new profile.
 
@@ -71,14 +79,15 @@ class ProfilesResource(BaseResource[Any]):
             color: Optional hex color (e.g., '#ffeda0')
 
         Returns:
-            Dict with 'message' and 'profile' keys
+            ProfileCreateResponse with 'message' and 'profile' attributes
         """
         payload = self._build_payload(
             name=name,
             description=description,
             color=color,
         )
-        return self._client._post(self._BASE_PATH, data=payload)
+        data = self._client._post(self._BASE_PATH, data=payload)
+        return ProfileCreateResponse.model_validate(data)
 
     def update(
         self,
@@ -88,7 +97,7 @@ class ProfilesResource(BaseResource[Any]):
         description: str | None = None,
         color: str | None = None,
         is_default: bool | None = None,
-    ) -> dict[str, Any]:
+    ) -> ProfileUpdateResponse:
         """
         Update a profile.
 
@@ -100,7 +109,7 @@ class ProfilesResource(BaseResource[Any]):
             is_default: Set as default profile
 
         Returns:
-            Dict with 'message' and 'profile' keys
+            ProfileUpdateResponse with 'message' and 'profile' attributes
         """
         payload = self._build_payload(
             name=name,
@@ -108,9 +117,10 @@ class ProfilesResource(BaseResource[Any]):
             color=color,
             is_default=is_default,
         )
-        return self._client._put(self._path(profile_id), data=payload)
+        data = self._client._put(self._path(profile_id), data=payload)
+        return ProfileUpdateResponse.model_validate(data)
 
-    def delete(self, profile_id: str) -> dict[str, Any]:
+    def delete(self, profile_id: str) -> ProfileDeleteResponse:
         """
         Delete a profile.
 
@@ -120,21 +130,24 @@ class ProfilesResource(BaseResource[Any]):
             profile_id: ID of the profile to delete
 
         Returns:
-            Dict with 'message' key
+            ProfileDeleteResponse with 'message' attribute
         """
-        return self._client._delete(self._path(profile_id))
+        data = self._client._delete(self._path(profile_id))
+        return ProfileDeleteResponse.model_validate(data)
 
     # -------------------------------------------------------------------------
     # Async methods
     # -------------------------------------------------------------------------
 
-    async def alist(self) -> dict[str, Any]:
+    async def alist(self) -> ProfilesListResponse:
         """List all profiles asynchronously."""
-        return await self._client._aget(self._BASE_PATH)
+        data = await self._client._aget(self._BASE_PATH)
+        return ProfilesListResponse.model_validate(data)
 
-    async def aget(self, profile_id: str) -> dict[str, Any]:
+    async def aget(self, profile_id: str) -> ProfileGetResponse:
         """Get a profile by ID asynchronously."""
-        return await self._client._aget(self._path(profile_id))
+        data = await self._client._aget(self._path(profile_id))
+        return ProfileGetResponse.model_validate(data)
 
     async def acreate(
         self,
@@ -142,14 +155,15 @@ class ProfilesResource(BaseResource[Any]):
         name: str,
         description: str | None = None,
         color: str | None = None,
-    ) -> dict[str, Any]:
+    ) -> ProfileCreateResponse:
         """Create a new profile asynchronously."""
         payload = self._build_payload(
             name=name,
             description=description,
             color=color,
         )
-        return await self._client._apost(self._BASE_PATH, data=payload)
+        data = await self._client._apost(self._BASE_PATH, data=payload)
+        return ProfileCreateResponse.model_validate(data)
 
     async def aupdate(
         self,
@@ -159,7 +173,7 @@ class ProfilesResource(BaseResource[Any]):
         description: str | None = None,
         color: str | None = None,
         is_default: bool | None = None,
-    ) -> dict[str, Any]:
+    ) -> ProfileUpdateResponse:
         """Update a profile asynchronously."""
         payload = self._build_payload(
             name=name,
@@ -167,8 +181,10 @@ class ProfilesResource(BaseResource[Any]):
             color=color,
             is_default=is_default,
         )
-        return await self._client._aput(self._path(profile_id), data=payload)
+        data = await self._client._aput(self._path(profile_id), data=payload)
+        return ProfileUpdateResponse.model_validate(data)
 
-    async def adelete(self, profile_id: str) -> dict[str, Any]:
+    async def adelete(self, profile_id: str) -> ProfileDeleteResponse:
         """Delete a profile asynchronously."""
-        return await self._client._adelete(self._path(profile_id))
+        data = await self._client._adelete(self._path(profile_id))
+        return ProfileDeleteResponse.model_validate(data)

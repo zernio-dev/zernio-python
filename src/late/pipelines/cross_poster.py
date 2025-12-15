@@ -8,6 +8,8 @@ from dataclasses import dataclass
 from datetime import datetime, timedelta
 from typing import TYPE_CHECKING, Any
 
+from late.enums import Platform
+
 if TYPE_CHECKING:
     from ..client.late_client import Late
 
@@ -16,7 +18,7 @@ if TYPE_CHECKING:
 class PlatformConfig:
     """Configuration for a single platform."""
 
-    platform: str
+    platform: Platform | str
     account_id: str
     custom_content: str | None = None
     delay_minutes: int = 0
@@ -26,7 +28,7 @@ class PlatformConfig:
 class CrossPostResult:
     """Result of cross-posting to a single platform."""
 
-    platform: str
+    platform: Platform | str
     success: bool
     post_id: str | None = None
     error: str | None = None
@@ -42,27 +44,28 @@ class CrossPosterPipeline:
     - Platform-specific customizations
 
     Example:
+        >>> from late.enums import Platform
         >>> client = Late(api_key="...")
         >>> cross_poster = CrossPosterPipeline(client)
         >>>
         >>> results = await cross_poster.post(
         ...     content="Exciting news! Our new feature is live.",
         ...     platforms=[
-        ...         PlatformConfig("twitter", "tw_123"),
-        ...         PlatformConfig("linkedin", "li_456"),
-        ...         PlatformConfig("instagram", "ig_789"),
+        ...         PlatformConfig(Platform.TWITTER, "tw_123"),
+        ...         PlatformConfig(Platform.LINKEDIN, "li_456"),
+        ...         PlatformConfig(Platform.INSTAGRAM, "ig_789"),
         ...     ],
         ... )
     """
 
-    CHAR_LIMITS = {
-        "twitter": 280,
-        "threads": 500,
-        "linkedin": 3000,
-        "instagram": 2200,
-        "facebook": 63206,
-        "tiktok": 2200,
-        "bluesky": 300,
+    CHAR_LIMITS: dict[Platform | str, int] = {
+        Platform.TWITTER: 280,
+        Platform.THREADS: 500,
+        Platform.LINKEDIN: 3000,
+        Platform.INSTAGRAM: 2200,
+        Platform.FACEBOOK: 63206,
+        Platform.TIKTOK: 2200,
+        Platform.BLUESKY: 300,
     }
 
     def __init__(

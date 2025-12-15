@@ -4,14 +4,22 @@ Tools resource for media download and utilities.
 
 from __future__ import annotations
 
-from typing import Any, Literal
+from typing import TYPE_CHECKING, Any
+
+from late.models import (
+    CaptionResponse,
+    DownloadResponse,
+    HashtagCheckResponse,
+    TranscriptResponse,
+)
 
 from .base import BaseResource
 
-Tone = Literal["professional", "casual", "humorous", "inspirational", "informative"]
+if TYPE_CHECKING:
+    from late.enums import CaptionTone
 
 
-class ToolsResource(BaseResource[Any]):
+class ToolsResource(BaseResource[DownloadResponse]):
     """
     Resource for media download and utility tools.
 
@@ -21,13 +29,14 @@ class ToolsResource(BaseResource[Any]):
     - Unlimited: unlimited
 
     Example:
+        >>> from late import CaptionTone
         >>> client = Late(api_key="...")
         >>> # Download YouTube video
         >>> result = client.tools.youtube_download("https://youtube.com/watch?v=...")
         >>> # Generate AI caption
         >>> caption = client.tools.generate_caption(
         ...     image_url="https://example.com/image.jpg",
-        ...     tone="professional",
+        ...     tone=CaptionTone.PROFESSIONAL,
         ... )
     """
 
@@ -42,7 +51,7 @@ class ToolsResource(BaseResource[Any]):
         url: str,
         *,
         format_id: str | None = None,
-    ) -> dict[str, Any]:
+    ) -> DownloadResponse:
         """
         Download YouTube video or audio.
 
@@ -51,17 +60,18 @@ class ToolsResource(BaseResource[Any]):
             format_id: Optional format ID for specific quality
 
         Returns:
-            Dict with download information
+            DownloadResponse with download information
         """
         params = self._build_params(url=url, format_id=format_id)
-        return self._client._get(self._path("youtube", "download"), params=params)
+        data = self._client._get(self._path("youtube", "download"), params=params)
+        return DownloadResponse.model_validate(data)
 
     def youtube_transcript(
         self,
         url: str,
         *,
         lang: str | None = None,
-    ) -> dict[str, Any]:
+    ) -> TranscriptResponse:
         """
         Get YouTube video transcript.
 
@@ -70,16 +80,17 @@ class ToolsResource(BaseResource[Any]):
             lang: Optional language code for transcript
 
         Returns:
-            Dict with transcript data
+            TranscriptResponse with transcript data
         """
         params = self._build_params(url=url, lang=lang)
-        return self._client._get(self._path("youtube", "transcript"), params=params)
+        data = self._client._get(self._path("youtube", "transcript"), params=params)
+        return TranscriptResponse.model_validate(data)
 
     # -------------------------------------------------------------------------
     # Instagram
     # -------------------------------------------------------------------------
 
-    def instagram_download(self, url: str) -> dict[str, Any]:
+    def instagram_download(self, url: str) -> DownloadResponse:
         """
         Download Instagram reel or post.
 
@@ -87,11 +98,12 @@ class ToolsResource(BaseResource[Any]):
             url: Instagram post/reel URL
 
         Returns:
-            Dict with download information
+            DownloadResponse with download information
         """
-        return self._client._get(self._path("instagram", "download"), params={"url": url})
+        data = self._client._get(self._path("instagram", "download"), params={"url": url})
+        return DownloadResponse.model_validate(data)
 
-    def instagram_hashtag_check(self, hashtags: list[str]) -> dict[str, Any]:
+    def instagram_hashtag_check(self, hashtags: list[str]) -> HashtagCheckResponse:
         """
         Check Instagram hashtags for bans.
 
@@ -99,12 +111,13 @@ class ToolsResource(BaseResource[Any]):
             hashtags: List of hashtags to check
 
         Returns:
-            Dict with hashtag status information
+            HashtagCheckResponse with hashtag status information
         """
-        return self._client._post(
+        data = self._client._post(
             self._path("instagram", "hashtag-checker"),
             data={"hashtags": hashtags},
         )
+        return HashtagCheckResponse.model_validate(data)
 
     # -------------------------------------------------------------------------
     # TikTok
@@ -115,7 +128,7 @@ class ToolsResource(BaseResource[Any]):
         url: str,
         *,
         no_watermark: bool = True,
-    ) -> dict[str, Any]:
+    ) -> DownloadResponse:
         """
         Download TikTok video.
 
@@ -124,16 +137,17 @@ class ToolsResource(BaseResource[Any]):
             no_watermark: If True, download without watermark
 
         Returns:
-            Dict with download information
+            DownloadResponse with download information
         """
         params = {"url": url, "noWatermark": str(no_watermark).lower()}
-        return self._client._get(self._path("tiktok", "download"), params=params)
+        data = self._client._get(self._path("tiktok", "download"), params=params)
+        return DownloadResponse.model_validate(data)
 
     # -------------------------------------------------------------------------
     # Twitter
     # -------------------------------------------------------------------------
 
-    def twitter_download(self, url: str) -> dict[str, Any]:
+    def twitter_download(self, url: str) -> DownloadResponse:
         """
         Download Twitter/X video.
 
@@ -141,15 +155,16 @@ class ToolsResource(BaseResource[Any]):
             url: Twitter/X video URL
 
         Returns:
-            Dict with download information
+            DownloadResponse with download information
         """
-        return self._client._get(self._path("twitter", "download"), params={"url": url})
+        data = self._client._get(self._path("twitter", "download"), params={"url": url})
+        return DownloadResponse.model_validate(data)
 
     # -------------------------------------------------------------------------
     # Facebook
     # -------------------------------------------------------------------------
 
-    def facebook_download(self, url: str) -> dict[str, Any]:
+    def facebook_download(self, url: str) -> DownloadResponse:
         """
         Download Facebook video.
 
@@ -157,15 +172,16 @@ class ToolsResource(BaseResource[Any]):
             url: Facebook video URL
 
         Returns:
-            Dict with download information
+            DownloadResponse with download information
         """
-        return self._client._get(self._path("facebook", "download"), params={"url": url})
+        data = self._client._get(self._path("facebook", "download"), params={"url": url})
+        return DownloadResponse.model_validate(data)
 
     # -------------------------------------------------------------------------
     # LinkedIn
     # -------------------------------------------------------------------------
 
-    def linkedin_download(self, url: str) -> dict[str, Any]:
+    def linkedin_download(self, url: str) -> DownloadResponse:
         """
         Download LinkedIn video.
 
@@ -173,15 +189,16 @@ class ToolsResource(BaseResource[Any]):
             url: LinkedIn video URL
 
         Returns:
-            Dict with download information
+            DownloadResponse with download information
         """
-        return self._client._get(self._path("linkedin", "download"), params={"url": url})
+        data = self._client._get(self._path("linkedin", "download"), params={"url": url})
+        return DownloadResponse.model_validate(data)
 
     # -------------------------------------------------------------------------
     # Bluesky
     # -------------------------------------------------------------------------
 
-    def bluesky_download(self, url: str) -> dict[str, Any]:
+    def bluesky_download(self, url: str) -> DownloadResponse:
         """
         Download Bluesky video.
 
@@ -189,9 +206,10 @@ class ToolsResource(BaseResource[Any]):
             url: Bluesky video URL
 
         Returns:
-            Dict with download information
+            DownloadResponse with download information
         """
-        return self._client._get(self._path("bluesky", "download"), params={"url": url})
+        data = self._client._get(self._path("bluesky", "download"), params={"url": url})
+        return DownloadResponse.model_validate(data)
 
     # -------------------------------------------------------------------------
     # AI Caption Generator
@@ -202,8 +220,8 @@ class ToolsResource(BaseResource[Any]):
         image_url: str,
         *,
         prompt: str | None = None,
-        tone: Tone | None = None,
-    ) -> dict[str, Any]:
+        tone: CaptionTone | str | None = None,
+    ) -> CaptionResponse:
         """
         Generate AI captions for an image.
 
@@ -213,14 +231,15 @@ class ToolsResource(BaseResource[Any]):
             tone: Optional tone (professional, casual, humorous, etc.)
 
         Returns:
-            Dict with generated caption(s)
+            CaptionResponse with generated caption
         """
         payload = self._build_payload(
             image_url=image_url,
             prompt=prompt,
             tone=tone,
         )
-        return self._client._post(self._path("caption-generator"), data=payload)
+        data = self._client._post(self._path("caption-generator"), data=payload)
+        return CaptionResponse.model_validate(data)
 
     # -------------------------------------------------------------------------
     # Async methods
@@ -231,79 +250,89 @@ class ToolsResource(BaseResource[Any]):
         url: str,
         *,
         format_id: str | None = None,
-    ) -> dict[str, Any]:
+    ) -> DownloadResponse:
         """Download YouTube video asynchronously."""
         params = self._build_params(url=url, format_id=format_id)
-        return await self._client._aget(self._path("youtube", "download"), params=params)
+        data = await self._client._aget(self._path("youtube", "download"), params=params)
+        return DownloadResponse.model_validate(data)
 
     async def ayoutube_transcript(
         self,
         url: str,
         *,
         lang: str | None = None,
-    ) -> dict[str, Any]:
+    ) -> TranscriptResponse:
         """Get YouTube transcript asynchronously."""
         params = self._build_params(url=url, lang=lang)
-        return await self._client._aget(self._path("youtube", "transcript"), params=params)
+        data = await self._client._aget(self._path("youtube", "transcript"), params=params)
+        return TranscriptResponse.model_validate(data)
 
-    async def ainstagram_download(self, url: str) -> dict[str, Any]:
+    async def ainstagram_download(self, url: str) -> DownloadResponse:
         """Download Instagram content asynchronously."""
-        return await self._client._aget(
+        data = await self._client._aget(
             self._path("instagram", "download"), params={"url": url}
         )
+        return DownloadResponse.model_validate(data)
 
-    async def ainstagram_hashtag_check(self, hashtags: list[str]) -> dict[str, Any]:
+    async def ainstagram_hashtag_check(self, hashtags: list[str]) -> HashtagCheckResponse:
         """Check Instagram hashtags asynchronously."""
-        return await self._client._apost(
+        data = await self._client._apost(
             self._path("instagram", "hashtag-checker"),
             data={"hashtags": hashtags},
         )
+        return HashtagCheckResponse.model_validate(data)
 
     async def atiktok_download(
         self,
         url: str,
         *,
         no_watermark: bool = True,
-    ) -> dict[str, Any]:
+    ) -> DownloadResponse:
         """Download TikTok video asynchronously."""
         params = {"url": url, "noWatermark": str(no_watermark).lower()}
-        return await self._client._aget(self._path("tiktok", "download"), params=params)
+        data = await self._client._aget(self._path("tiktok", "download"), params=params)
+        return DownloadResponse.model_validate(data)
 
-    async def atwitter_download(self, url: str) -> dict[str, Any]:
+    async def atwitter_download(self, url: str) -> DownloadResponse:
         """Download Twitter video asynchronously."""
-        return await self._client._aget(
+        data = await self._client._aget(
             self._path("twitter", "download"), params={"url": url}
         )
+        return DownloadResponse.model_validate(data)
 
-    async def afacebook_download(self, url: str) -> dict[str, Any]:
+    async def afacebook_download(self, url: str) -> DownloadResponse:
         """Download Facebook video asynchronously."""
-        return await self._client._aget(
+        data = await self._client._aget(
             self._path("facebook", "download"), params={"url": url}
         )
+        return DownloadResponse.model_validate(data)
 
-    async def alinkedin_download(self, url: str) -> dict[str, Any]:
+    async def alinkedin_download(self, url: str) -> DownloadResponse:
         """Download LinkedIn video asynchronously."""
-        return await self._client._aget(
+        data = await self._client._aget(
             self._path("linkedin", "download"), params={"url": url}
         )
+        return DownloadResponse.model_validate(data)
 
-    async def abluesky_download(self, url: str) -> dict[str, Any]:
+    async def abluesky_download(self, url: str) -> DownloadResponse:
         """Download Bluesky video asynchronously."""
-        return await self._client._aget(
+        data = await self._client._aget(
             self._path("bluesky", "download"), params={"url": url}
         )
+        return DownloadResponse.model_validate(data)
 
     async def agenerate_caption(
         self,
         image_url: str,
         *,
         prompt: str | None = None,
-        tone: Tone | None = None,
-    ) -> dict[str, Any]:
+        tone: CaptionTone | str | None = None,
+    ) -> CaptionResponse:
         """Generate AI caption asynchronously."""
         payload = self._build_payload(
             image_url=image_url,
             prompt=prompt,
             tone=tone,
         )
-        return await self._client._apost(self._path("caption-generator"), data=payload)
+        data = await self._client._apost(self._path("caption-generator"), data=payload)
+        return CaptionResponse.model_validate(data)
