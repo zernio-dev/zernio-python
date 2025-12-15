@@ -17,7 +17,8 @@ pip install late-sdk
 ## Quick Start
 
 ```python
-from late import Late
+from datetime import datetime, timedelta
+from late import Late, Platform
 
 client = Late(api_key="your_api_key")
 
@@ -25,11 +26,9 @@ client = Late(api_key="your_api_key")
 accounts = client.accounts.list()
 
 # Create a scheduled post
-from datetime import datetime, timedelta
-
 post = client.posts.create(
     content="Hello from Late!",
-    platforms=[{"platform": "twitter", "accountId": "your_account_id"}],
+    platforms=[{"platform": Platform.TWITTER, "accountId": "your_account_id"}],
     scheduled_for=datetime.now() + timedelta(hours=1),
 )
 ```
@@ -119,13 +118,13 @@ Since Claude can't access local files, use the browser upload flow:
 
 | Command | What it does |
 |---------|--------------|
-| `list_accounts` | Show connected social accounts |
-| `create_post` | Create scheduled or immediate post |
-| `publish_now` | Publish immediately |
-| `cross_post` | Post to multiple platforms |
-| `list_posts` | Show your posts |
-| `retry_post` | Retry a failed post |
-| `generate_upload_link` | Get link to upload media |
+| `accounts_list` | Show connected social accounts |
+| `posts_create` | Create scheduled, immediate, or draft post |
+| `posts_publish_now` | Publish immediately |
+| `posts_cross_post` | Post to multiple platforms |
+| `posts_list` | Show your posts |
+| `posts_retry` | Retry a failed post |
+| `media_generate_upload_link` | Get link to upload media |
 
 ---
 
@@ -144,22 +143,27 @@ async def main():
 asyncio.run(main())
 ```
 
-### AI Content Generation
+### AI Content Generation (Experimental)
 
 ```bash
 pip install late-sdk[ai]
 ```
 
 ```python
+from late import Platform, CaptionTone
 from late.ai import ContentGenerator, GenerateRequest
 
-generator = ContentGenerator(provider="openai", api_key="sk-...")
+generator = ContentGenerator(
+    provider="openai",
+    api_key="sk-...",
+    model="gpt-4o-mini",  # or gpt-4o, gpt-4-turbo, etc.
+)
 
 response = generator.generate(
     GenerateRequest(
         prompt="Write a tweet about Python",
-        platform="twitter",
-        tone="casual",
+        platform=Platform.TWITTER,
+        tone=CaptionTone.CASUAL,
     )
 )
 
@@ -185,6 +189,7 @@ results = pipeline.schedule("posts.csv")
 ### Cross-Posting
 
 ```python
+from late import Platform
 from late.pipelines import CrossPosterPipeline, PlatformConfig
 
 cross_poster = CrossPosterPipeline(client)
@@ -192,8 +197,8 @@ cross_poster = CrossPosterPipeline(client)
 results = await cross_poster.post(
     content="Big announcement!",
     platforms=[
-        PlatformConfig("twitter", "tw_123"),
-        PlatformConfig("linkedin", "li_456", delay_minutes=5),
+        PlatformConfig(Platform.TWITTER, "tw_123"),
+        PlatformConfig(Platform.LINKEDIN, "li_456", delay_minutes=5),
     ],
 )
 ```
