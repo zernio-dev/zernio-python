@@ -58,7 +58,13 @@ class OpenAIProvider:
         return "openai"
 
     @property
+    def model(self) -> str:
+        """Current model being used."""
+        return self._model
+
+    @property
     def default_model(self) -> str:
+        """Default model if none specified."""
         return "gpt-4o-mini"
 
     def _build_messages(self, request: GenerateRequest) -> list[dict[str, str]]:
