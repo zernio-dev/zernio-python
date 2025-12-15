@@ -7,6 +7,8 @@ from __future__ import annotations
 import os
 from typing import TYPE_CHECKING, Any
 
+from late.enums import Platform
+
 from ..protocols import GenerateRequest, GenerateResponse
 
 if TYPE_CHECKING:
@@ -56,7 +58,13 @@ class OpenAIProvider:
         return "openai"
 
     @property
+    def model(self) -> str:
+        """Current model being used."""
+        return self._model
+
+    @property
     def default_model(self) -> str:
+        """Default model if none specified."""
         return "gpt-4o-mini"
 
     def _build_messages(self, request: GenerateRequest) -> list[dict[str, str]]:
@@ -76,12 +84,12 @@ class OpenAIProvider:
         parts = ["You are an expert social media content creator."]
 
         if request.platform:
-            platform_guides = {
-                "twitter": "Keep it under 280 characters. Be concise and engaging.",
-                "linkedin": "Be professional and insightful. Use paragraphs.",
-                "instagram": "Be visual and use emojis. Include hashtag suggestions.",
-                "tiktok": "Be trendy and use Gen-Z language. Keep it fun.",
-                "facebook": "Be conversational and engaging.",
+            platform_guides: dict[Platform | str, str] = {
+                Platform.TWITTER: "Keep it under 280 characters. Be concise and engaging.",
+                Platform.LINKEDIN: "Be professional and insightful. Use paragraphs.",
+                Platform.INSTAGRAM: "Be visual and use emojis. Include hashtag suggestions.",
+                Platform.TIKTOK: "Be trendy and use Gen-Z language. Keep it fun.",
+                Platform.FACEBOOK: "Be conversational and engaging.",
             }
             guide = platform_guides.get(request.platform, "")
             parts.append(f"Writing for {request.platform}. {guide}")
@@ -140,9 +148,7 @@ class OpenAIProvider:
             finish_reason=choice.finish_reason,
         )
 
-    async def agenerate_stream(
-        self, request: GenerateRequest
-    ) -> AsyncIterator[str]:
+    async def agenerate_stream(self, request: GenerateRequest) -> AsyncIterator[str]:
         """Generate content as a stream."""
         stream = await self._async_client.chat.completions.create(
             model=self._model,

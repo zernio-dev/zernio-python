@@ -28,10 +28,12 @@ from datetime import datetime, timedelta
 
 from mcp.server.fastmcp import FastMCP
 
-from late import Late
+from late import Late, MediaType, PostStatus
 
 # Initialize MCP server
-mcp = FastMCP("Late", instructions="""
+mcp = FastMCP(
+    "Late",
+    instructions="""
 Late API server for scheduling social media posts.
 
 Available tools are prefixed by resource:
@@ -39,7 +41,8 @@ Available tools are prefixed by resource:
 - profiles_* : Manage profiles (groups of accounts)
 - posts_*    : Create, list, update, delete posts
 - media_*    : Upload images and videos
-""")
+""",
+)
 
 
 def _get_client() -> Late:
@@ -55,6 +58,7 @@ def _get_client() -> Late:
 # ============================================================================
 # ACCOUNTS
 # ============================================================================
+
 
 @mcp.tool()
 def accounts_list() -> str:
@@ -103,6 +107,7 @@ def accounts_get(platform: str) -> str:
 # ============================================================================
 # PROFILES
 # ============================================================================
+
 
 @mcp.tool()
 def profiles_list() -> str:
@@ -236,6 +241,7 @@ def profiles_delete(profile_id: str) -> str:
 # POSTS
 # ============================================================================
 
+
 @mcp.tool()
 def posts_list(status: str = "", limit: int = 10) -> str:
     """
@@ -258,7 +264,11 @@ def posts_list(status: str = "", limit: int = 10) -> str:
 
     lines = [f"Found {len(posts)} post(s):\n"]
     for post in posts:
-        content_preview = post["content"][:60] + "..." if len(post["content"]) > 60 else post["content"]
+        content_preview = (
+            post["content"][:60] + "..."
+            if len(post["content"]) > 60
+            else post["content"]
+        )
         platforms = ", ".join(t.get("platform", "?") for t in post.get("platforms", []))
         lines.append(f"- [{post['status']}] {content_preview}")
         lines.append(f"  Platforms: {platforms} | ID: {post['_id']}")
@@ -278,7 +288,9 @@ def posts_get(post_id: str) -> str:
     response = client.posts.get(post_id)
     post = response.get("post", response)
 
-    content_preview = post["content"][:100] + "..." if len(post["content"]) > 100 else post["content"]
+    content_preview = (
+        post["content"][:100] + "..." if len(post["content"]) > 100 else post["content"]
+    )
     platforms = ", ".join(t.get("platform", "?") for t in post.get("platforms", []))
 
     lines = [
@@ -304,6 +316,7 @@ def posts_get(post_id: str) -> str:
 def posts_create(
     content: str,
     platform: str,
+    is_draft: bool = False,
     publish_now: bool = False,
     schedule_minutes: int = 0,
     media_urls: str = "",
@@ -312,13 +325,19 @@ def posts_create(
     """
     Create a new social media post, optionally with media.
 
+    Scheduling behavior:
+    - is_draft=True: Save as draft (no scheduling, can edit later)
+    - publish_now=True: Publish immediately
+    - Neither: Schedule for schedule_minutes from now (default: 60 min)
+
     Args:
         content: The post content/text
         platform: Target platform (twitter, instagram, linkedin, tiktok, bluesky, facebook, youtube, pinterest, threads)
-        publish_now: If True, publish immediately. If False, schedule for later.
-        schedule_minutes: Minutes from now to schedule (ignored if publish_now=True). Default 60 min.
+        is_draft: Save as draft without scheduling. Draft posts can be edited and scheduled later (default: False)
+        publish_now: Publish immediately instead of scheduling (default: False)
+        schedule_minutes: Minutes from now to schedule (ignored if publish_now=True or is_draft=True). Default 60 min.
         media_urls: Comma-separated URLs of media files to attach. Optional.
-        title: Optional title (for YouTube, Pinterest)
+        title: Optional title (required for YouTube, recommended for Pinterest)
     """
     client = _get_client()
 
@@ -335,10 +354,12 @@ def posts_create(
     # Build request
     params = {
         "content": content,
-        "platforms": [{
-            "platform": account["platform"],
-            "accountId": account["_id"],
-        }],
+        "platforms": [
+            {
+                "platform": account["platform"],
+                "accountId": account["_id"],
+            }
+        ],
     }
 
     if title:
@@ -349,15 +370,19 @@ def posts_create(
         urls = [u.strip() for u in media_urls.split(",") if u.strip()]
         media_items = []
         for url in urls:
-            media_type = "image"
-            if any(ext in url.lower() for ext in [".mp4", ".mov", ".avi", ".webm", ".m4v"]):
-                media_type = "video"
+            media_type: MediaType | str = MediaType.IMAGE
+            if any(
+                ext in url.lower() for ext in [".mp4", ".mov", ".avi", ".webm", ".m4v"]
+            ):
+                media_type = MediaType.VIDEO
             elif any(ext in url.lower() for ext in [".gif"]):
-                media_type = "gif"
+                media_type = MediaType.GIF
             media_items.append({"type": media_type, "url": url})
         params["media_items"] = media_items
 
-    if publish_now:
+    if is_draft:
+        params["is_draft"] = True
+    elif publish_now:
         params["publish_now"] = True
     else:
         minutes = schedule_minutes if schedule_minutes > 0 else 60
@@ -367,9 +392,15 @@ def posts_create(
     post = response.get("post", {})
 
     username = account.get("username") or account.get("name") or account["_id"]
-    media_info = f" with {len(params.get('media_items', []))} media file(s)" if params.get("media_items") else ""
+    media_info = (
+        f" with {len(params.get('media_items', []))} media file(s)"
+        if params.get("media_items")
+        else ""
+    )
 
-    if publish_now:
+    if is_draft:
+        return f"📝 Draft saved for {platform} (@{username}){media_info}\nPost ID: {post.get('_id', 'N/A')}\nStatus: draft"
+    elif publish_now:
         return f"✅ Published to {platform} (@{username}){media_info}\nPost ID: {post.get('_id', 'N/A')}"
     else:
         scheduled = params["scheduled_for"].strftime("%Y-%m-%d %H:%M")
@@ -386,23 +417,32 @@ def posts_publish_now(content: str, platform: str, media_urls: str = "") -> str:
         platform: Target platform (twitter, instagram, linkedin, tiktok, bluesky, etc.)
         media_urls: Comma-separated URLs of media files to attach. Optional.
     """
-    return posts_create(content=content, platform=platform, publish_now=True, media_urls=media_urls)
+    return posts_create(
+        content=content, platform=platform, publish_now=True, media_urls=media_urls
+    )
 
 
 @mcp.tool()
 def posts_cross_post(
     content: str,
     platforms: str,
+    is_draft: bool = False,
     publish_now: bool = False,
     media_urls: str = "",
 ) -> str:
     """
     Post the same content to multiple platforms at once.
 
+    Scheduling behavior:
+    - is_draft=True: Save as draft (no scheduling, can edit later)
+    - publish_now=True: Publish immediately
+    - Neither: Schedule for 1 hour from now
+
     Args:
         content: The post content/text
         platforms: Comma-separated list of platforms (e.g., "twitter,linkedin,bluesky")
-        publish_now: If True, publish immediately. If False, schedule for 1 hour from now.
+        is_draft: Save as draft without scheduling (default: False)
+        publish_now: Publish immediately instead of scheduling (default: False)
         media_urls: Comma-separated URLs of media files to attach. Optional.
     """
     client = _get_client()
@@ -416,10 +456,12 @@ def posts_cross_post(
     for platform in target_platforms:
         matching = [a for a in accounts if a["platform"].lower() == platform]
         if matching:
-            platform_targets.append({
-                "platform": matching[0]["platform"],
-                "accountId": matching[0]["_id"],
-            })
+            platform_targets.append(
+                {
+                    "platform": matching[0]["platform"],
+                    "accountId": matching[0]["_id"],
+                }
+            )
         else:
             not_found.append(platform)
 
@@ -436,15 +478,19 @@ def posts_cross_post(
         urls = [u.strip() for u in media_urls.split(",") if u.strip()]
         media_items = []
         for url in urls:
-            media_type = "image"
-            if any(ext in url.lower() for ext in [".mp4", ".mov", ".avi", ".webm", ".m4v"]):
-                media_type = "video"
+            media_type: MediaType | str = MediaType.IMAGE
+            if any(
+                ext in url.lower() for ext in [".mp4", ".mov", ".avi", ".webm", ".m4v"]
+            ):
+                media_type = MediaType.VIDEO
             elif any(ext in url.lower() for ext in [".gif"]):
-                media_type = "gif"
+                media_type = MediaType.GIF
             media_items.append({"type": media_type, "url": url})
         params["media_items"] = media_items
 
-    if publish_now:
+    if is_draft:
+        params["is_draft"] = True
+    elif publish_now:
         params["publish_now"] = True
     else:
         params["scheduled_for"] = datetime.now() + timedelta(hours=1)
@@ -453,8 +499,16 @@ def posts_cross_post(
     post = response.get("post", {})
 
     posted_to = [t["platform"] for t in platform_targets]
-    media_info = f" with {len(params.get('media_items', []))} media file(s)" if params.get("media_items") else ""
-    result = f"✅ {'Published' if publish_now else 'Scheduled'} to: {', '.join(posted_to)}{media_info}\nPost ID: {post.get('_id', 'N/A')}"
+    media_info = (
+        f" with {len(params.get('media_items', []))} media file(s)"
+        if params.get("media_items")
+        else ""
+    )
+
+    if is_draft:
+        result = f"📝 Draft saved for: {', '.join(posted_to)}{media_info}\nPost ID: {post.get('_id', 'N/A')}\nStatus: draft"
+    else:
+        result = f"✅ {'Published' if publish_now else 'Scheduled'} to: {', '.join(posted_to)}{media_info}\nPost ID: {post.get('_id', 'N/A')}"
 
     if not_found:
         result += f"\n⚠️ Accounts not found for: {', '.join(not_found)}"
@@ -527,7 +581,7 @@ def posts_retry(post_id: str) -> str:
     try:
         post_response = client.posts.get(post_id)
         post = post_response.get("post", post_response)
-        if post.get("status") != "failed":
+        if post.get("status") != PostStatus.FAILED:
             return f"⚠️ Post {post_id} is not in failed status (current: {post.get('status')})"
     except Exception as e:
         return f"❌ Could not find post {post_id}: {e}"
@@ -548,7 +602,7 @@ def posts_list_failed(limit: int = 10) -> str:
         limit: Maximum number of posts to return (default 10)
     """
     client = _get_client()
-    response = client.posts.list(status="failed", limit=limit)
+    response = client.posts.list(status=PostStatus.FAILED, limit=limit)
     posts = response.get("posts", [])
 
     if not posts:
@@ -556,7 +610,11 @@ def posts_list_failed(limit: int = 10) -> str:
 
     lines = [f"Found {len(posts)} failed post(s):\n"]
     for post in posts:
-        content_preview = post["content"][:50] + "..." if len(post["content"]) > 50 else post["content"]
+        content_preview = (
+            post["content"][:50] + "..."
+            if len(post["content"]) > 50
+            else post["content"]
+        )
         platforms = ", ".join(t.get("platform", "?") for t in post.get("platforms", []))
         error = post.get("error", "Unknown error")
         lines.append(f"- {content_preview}")
@@ -573,7 +631,7 @@ def posts_retry_all_failed() -> str:
     Retry all failed posts.
     """
     client = _get_client()
-    response = client.posts.list(status="failed", limit=50)
+    response = client.posts.list(status=PostStatus.FAILED, limit=50)
     posts = response.get("posts", [])
 
     if not posts:
@@ -602,6 +660,7 @@ def posts_retry_all_failed() -> str:
 # ============================================================================
 # MEDIA UPLOAD
 # ============================================================================
+
 
 @mcp.tool()
 def media_generate_upload_link() -> str:
@@ -691,7 +750,9 @@ The upload link has expired. Use media_generate_upload_link to create a new one.
                 lines.append(f"  Size: {f.get('size', 0) / 1024:.1f} KB")
                 lines.append("")
 
-            lines.append("\n📝 You can now create a post with these media URLs using posts_create with the media_urls parameter.")
+            lines.append(
+                "\n📝 You can now create a post with these media URLs using posts_create with the media_urls parameter."
+            )
             lines.append(f"\nMedia URLs: {','.join(media_urls)}")
 
             return "\n".join(lines)

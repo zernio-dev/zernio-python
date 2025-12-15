@@ -4,12 +4,16 @@ Accounts resource for managing connected social accounts.
 
 from __future__ import annotations
 
-from typing import Any
+from late.models import (
+    AccountGetResponse,
+    AccountsListResponse,
+    FollowerStatsResponse,
+)
 
 from .base import BaseResource
 
 
-class AccountsResource(BaseResource[Any]):
+class AccountsResource(BaseResource[AccountsListResponse]):
     """
     Resource for managing connected social media accounts.
 
@@ -32,7 +36,7 @@ class AccountsResource(BaseResource[Any]):
     # Sync methods
     # -------------------------------------------------------------------------
 
-    def list(self, *, profile_id: str | None = None) -> dict[str, Any]:
+    def list(self, *, profile_id: str | None = None) -> AccountsListResponse:
         """
         List connected accounts.
 
@@ -40,12 +44,13 @@ class AccountsResource(BaseResource[Any]):
             profile_id: Optional profile ID to filter accounts
 
         Returns:
-            Dict with 'accounts' and 'hasAnalyticsAccess' keys
+            AccountsListResponse with 'accounts' and 'hasAnalyticsAccess' attributes
         """
         params = self._build_params(profile_id=profile_id)
-        return self._client._get(self._BASE_PATH, params=params or None)
+        data = self._client._get(self._BASE_PATH, params=params or None)
+        return AccountsListResponse.model_validate(data)
 
-    def get(self, account_id: str) -> dict[str, Any]:
+    def get(self, account_id: str) -> AccountGetResponse:
         """
         Get an account by ID.
 
@@ -53,15 +58,16 @@ class AccountsResource(BaseResource[Any]):
             account_id: The account ID
 
         Returns:
-            Dict with 'account' key containing the SocialAccount object
+            AccountGetResponse with 'account' attribute
         """
-        return self._client._get(self._path(account_id))
+        data = self._client._get(self._path(account_id))
+        return AccountGetResponse.model_validate(data)
 
     def get_follower_stats(
         self,
         *,
         account_ids: list[str] | None = None,
-    ) -> dict[str, Any]:
+    ) -> FollowerStatsResponse:
         """
         Get follower statistics for accounts.
 
@@ -71,33 +77,37 @@ class AccountsResource(BaseResource[Any]):
             account_ids: Optional list of account IDs to filter
 
         Returns:
-            Dict with follower statistics
+            FollowerStatsResponse with 'stats' attribute
         """
         params = None
         if account_ids:
             params = {"accountIds": ",".join(account_ids)}
-        return self._client._get(self._path("follower-stats"), params=params)
+        data = self._client._get(self._path("follower-stats"), params=params)
+        return FollowerStatsResponse.model_validate(data)
 
     # -------------------------------------------------------------------------
     # Async methods
     # -------------------------------------------------------------------------
 
-    async def alist(self, *, profile_id: str | None = None) -> dict[str, Any]:
+    async def alist(self, *, profile_id: str | None = None) -> AccountsListResponse:
         """List connected accounts asynchronously."""
         params = self._build_params(profile_id=profile_id)
-        return await self._client._aget(self._BASE_PATH, params=params or None)
+        data = await self._client._aget(self._BASE_PATH, params=params or None)
+        return AccountsListResponse.model_validate(data)
 
-    async def aget(self, account_id: str) -> dict[str, Any]:
+    async def aget(self, account_id: str) -> AccountGetResponse:
         """Get an account by ID asynchronously."""
-        return await self._client._aget(self._path(account_id))
+        data = await self._client._aget(self._path(account_id))
+        return AccountGetResponse.model_validate(data)
 
     async def aget_follower_stats(
         self,
         *,
         account_ids: list[str] | None = None,
-    ) -> dict[str, Any]:
+    ) -> FollowerStatsResponse:
         """Get follower statistics asynchronously."""
         params = None
         if account_ids:
             params = {"accountIds": ",".join(account_ids)}
-        return await self._client._aget(self._path("follower-stats"), params=params)
+        data = await self._client._aget(self._path("follower-stats"), params=params)
+        return FollowerStatsResponse.model_validate(data)

@@ -16,11 +16,42 @@ from .client.exceptions import (
     LateValidationError,
 )
 from .client.late_client import Late
+from .enums import (
+    CaptionTone,
+    DayOfWeek,
+    FacebookContentType,
+    GoogleBusinessCTAType,
+    InstagramContentType,
+    MediaType,
+    Platform,
+    PostStatus,
+    TikTokCommercialContentType,
+    TikTokMediaType,
+    TikTokPrivacyLevel,
+    Visibility,
+)
 
-__version__ = "1.0.0"
+__version__ = "1.1.0"
 
 __all__ = [
+    # Client
     "Late",
+    # Enums - Core
+    "Platform",
+    "PostStatus",
+    "MediaType",
+    "Visibility",
+    # Enums - Platform-specific
+    "InstagramContentType",
+    "FacebookContentType",
+    "TikTokPrivacyLevel",
+    "TikTokCommercialContentType",
+    "TikTokMediaType",
+    "GoogleBusinessCTAType",
+    # Enums - Tools & Queue
+    "CaptionTone",
+    "DayOfWeek",
+    # Exceptions
     "LateAPIError",
     "LateAuthenticationError",
     "LateConnectionError",

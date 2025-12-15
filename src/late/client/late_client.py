@@ -22,7 +22,7 @@ class Late(BaseClient):
     Late API client for scheduling social media posts.
 
     Example:
-        >>> from late import Late
+        >>> from late import Late, Platform
         >>>
         >>> # Initialize client
         >>> client = Late(api_key="your_api_key")
@@ -33,7 +33,7 @@ class Late(BaseClient):
         >>> # Create a post
         >>> post = client.posts.create(
         ...     content="Hello world!",
-        ...     platforms=[{"platform": "twitter", "accountId": "..."}],
+        ...     platforms=[{"platform": Platform.TWITTER, "accountId": "..."}],
         ...     scheduled_for="2024-12-25T10:00:00Z",
         ... )
         >>>
@@ -59,7 +59,9 @@ class Late(BaseClient):
             timeout: Request timeout in seconds
             max_retries: Maximum retries for failed requests
         """
-        super().__init__(api_key, base_url=base_url, timeout=timeout, max_retries=max_retries)
+        super().__init__(
+            api_key, base_url=base_url, timeout=timeout, max_retries=max_retries
+        )
 
         # Initialize resources
         self.posts = PostsResource(self)

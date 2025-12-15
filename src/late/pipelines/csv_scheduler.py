@@ -10,6 +10,8 @@ from datetime import datetime
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
+from late.enums import MediaType
+
 if TYPE_CHECKING:
     from collections.abc import Iterator
 
@@ -95,7 +97,10 @@ class CSVSchedulerPipeline:
 
         if row.get("media_url"):
             payload["mediaItems"] = [
-                {"type": row.get("media_type", "image"), "url": row["media_url"]}
+                {
+                    "type": row.get("media_type", MediaType.IMAGE),
+                    "url": row["media_url"],
+                }
             ]
 
         if row.get("tags"):

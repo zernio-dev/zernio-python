@@ -4,12 +4,12 @@ Users resource for managing team users.
 
 from __future__ import annotations
 
-from typing import Any
+from late.models import UserGetResponse, UsersListResponse
 
 from .base import BaseResource
 
 
-class UsersResource(BaseResource[Any]):
+class UsersResource(BaseResource[UsersListResponse]):
     """
     Resource for managing team users.
 
@@ -27,16 +27,17 @@ class UsersResource(BaseResource[Any]):
     # Sync methods
     # -------------------------------------------------------------------------
 
-    def list(self) -> dict[str, Any]:
+    def list(self) -> UsersListResponse:
         """
         List team users.
 
         Returns:
-            Dict with 'users' key containing list of User objects
+            UsersListResponse with 'users' attribute
         """
-        return self._client._get(self._BASE_PATH)
+        data = self._client._get(self._BASE_PATH)
+        return UsersListResponse.model_validate(data)
 
-    def get(self, user_id: str) -> dict[str, Any]:
+    def get(self, user_id: str) -> UserGetResponse:
         """
         Get a user by ID.
 
@@ -44,18 +45,21 @@ class UsersResource(BaseResource[Any]):
             user_id: The user ID
 
         Returns:
-            Dict with 'user' key containing the User object
+            UserGetResponse with 'user' attribute
         """
-        return self._client._get(self._path(user_id))
+        data = self._client._get(self._path(user_id))
+        return UserGetResponse.model_validate(data)
 
     # -------------------------------------------------------------------------
     # Async methods
     # -------------------------------------------------------------------------
 
-    async def alist(self) -> dict[str, Any]:
+    async def alist(self) -> UsersListResponse:
         """List team users asynchronously."""
-        return await self._client._aget(self._BASE_PATH)
+        data = await self._client._aget(self._BASE_PATH)
+        return UsersListResponse.model_validate(data)
 
-    async def aget(self, user_id: str) -> dict[str, Any]:
+    async def aget(self, user_id: str) -> UserGetResponse:
         """Get a user by ID asynchronously."""
-        return await self._client._aget(self._path(user_id))
+        data = await self._client._aget(self._path(user_id))
+        return UserGetResponse.model_validate(data)

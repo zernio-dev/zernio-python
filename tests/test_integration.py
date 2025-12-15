@@ -105,9 +105,9 @@ class TestPostsResource:
         result = client.posts.list()
 
         assert route.called
-        assert len(result["posts"]) == 1
-        assert result["posts"][0]["_id"] == "post_123"
-        assert result["pagination"]["total"] == 1
+        assert len(result.posts) == 1
+        assert result.posts[0].field_id == "post_123"
+        assert result.pagination.total == 1
 
     @respx.mock
     def test_list_posts_with_filters(self, client: Late, mock_post: dict) -> None:
@@ -152,7 +152,7 @@ class TestPostsResource:
         result = client.posts.get("post_123")
 
         assert route.called
-        assert result["post"]["_id"] == "post_123"
+        assert result.post.field_id == "post_123"
 
     @respx.mock
     def test_create_post_scheduled(self, client: Late, mock_post: dict) -> None:
@@ -172,7 +172,7 @@ class TestPostsResource:
         )
 
         assert route.called
-        assert result["message"] == "Post scheduled successfully"
+        assert result.message == "Post scheduled successfully"
 
         # Verify request payload
         request = route.calls[0].request
@@ -296,7 +296,7 @@ class TestPostsResource:
         result = client.posts.delete("post_123")
 
         assert route.called
-        assert result["message"] == "Post deleted successfully"
+        assert result.message == "Post deleted successfully"
 
     @respx.mock
     def test_retry_post(self, client: Late, mock_post: dict) -> None:
@@ -308,7 +308,7 @@ class TestPostsResource:
         result = client.posts.retry("post_123")
 
         assert route.called
-        assert result["message"] == "Retrying"
+        assert result.message == "Retrying"
 
 
 # =============================================================================
@@ -329,8 +329,8 @@ class TestProfilesResource:
         result = client.profiles.list()
 
         assert route.called
-        assert len(result["profiles"]) == 1
-        assert result["profiles"][0]["name"] == "Test Profile"
+        assert len(result.profiles) == 1
+        assert result.profiles[0].name == "Test Profile"
 
     @respx.mock
     def test_get_profile(self, client: Late, mock_profile: dict) -> None:
@@ -342,7 +342,7 @@ class TestProfilesResource:
         result = client.profiles.get("profile_123")
 
         assert route.called
-        assert result["profile"]["_id"] == "profile_123"
+        assert result.profile.field_id == "profile_123"
 
     @respx.mock
     def test_create_profile(self, client: Late, mock_profile: dict) -> None:
@@ -398,7 +398,7 @@ class TestProfilesResource:
         result = client.profiles.delete("profile_123")
 
         assert route.called
-        assert result["message"] == "Profile deleted"
+        assert result.message == "Profile deleted"
 
 
 # =============================================================================
@@ -421,8 +421,8 @@ class TestAccountsResource:
         result = client.accounts.list()
 
         assert route.called
-        assert len(result["accounts"]) == 1
-        assert result["accounts"][0]["platform"] == "twitter"
+        assert len(result.accounts) == 1
+        assert result.accounts[0].platform == "twitter"
 
     @respx.mock
     def test_list_accounts_by_profile(self, client: Late, mock_account: dict) -> None:
@@ -447,7 +447,7 @@ class TestAccountsResource:
         result = client.accounts.get("acc_123")
 
         assert route.called
-        assert result["account"]["_id"] == "acc_123"
+        assert result.account.field_id == "acc_123"
 
     @respx.mock
     def test_get_follower_stats(self, client: Late) -> None:
@@ -500,8 +500,8 @@ class TestMediaResource:
         result = client.media.generate_upload_token()
 
         assert route.called
-        assert result["token"] == "tok_123"
-        assert "uploadUrl" in result
+        assert result.token == "tok_123"
+        assert result.uploadUrl is not None
 
     @respx.mock
     def test_check_upload_token(self, client: Late) -> None:
@@ -522,8 +522,8 @@ class TestMediaResource:
         assert route.called
         request = route.calls[0].request
         assert "token=tok_123" in str(request.url)
-        assert result["status"] == "completed"
-        assert len(result["files"]) == 1
+        assert result.status.value == "completed"
+        assert len(result.files) == 1
 
 
 # =============================================================================
@@ -592,7 +592,7 @@ class TestQueueResource:
         result = client.queue.next_slot()
 
         assert route.called
-        assert "nextSlot" in result
+        assert result.nextSlot is not None
 
 
 # =============================================================================
@@ -756,7 +756,7 @@ class TestUsersResource:
         result = client.users.list()
 
         assert route.called
-        assert len(result["users"]) == 1
+        assert len(result.users) == 1
 
     @respx.mock
     def test_get_user(self, client: Late) -> None:
@@ -770,7 +770,7 @@ class TestUsersResource:
         result = client.users.get("user_123")
 
         assert route.called
-        assert result["user"]["_id"] == "user_123"
+        assert result.user.field_id == "user_123"
 
 
 # =============================================================================
@@ -865,7 +865,7 @@ class TestAsyncOperations:
             result = await async_client.posts.alist()
 
         assert route.called
-        assert len(result["posts"]) == 1
+        assert len(result.posts) == 1
 
     @respx.mock
     @pytest.mark.asyncio
@@ -883,7 +883,7 @@ class TestAsyncOperations:
             )
 
         assert route.called
-        assert result["message"] == "Created"
+        assert result.message == "Created"
 
     @respx.mock
     @pytest.mark.asyncio
@@ -905,15 +905,15 @@ class TestAsyncOperations:
         async with async_client:
             # Create
             result = await async_client.profiles.acreate(name="Test")
-            assert result["profile"]["_id"] == "profile_123"
+            assert result.profile.field_id == "profile_123"
 
             # Update
             result = await async_client.profiles.aupdate("profile_123", name="Updated")
-            assert result["profile"]["_id"] == "profile_123"
+            assert result.profile.field_id == "profile_123"
 
             # Delete
             result = await async_client.profiles.adelete("profile_123")
-            assert result["message"] == "Deleted"
+            assert result.message == "Deleted"
 
 
 # =============================================================================
