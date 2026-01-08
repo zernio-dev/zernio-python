@@ -544,6 +544,28 @@ POSTS_RETRY_ALL_FAILED = ToolDef(
 )
 
 # =============================================================================
+# DOCS TOOLS
+# =============================================================================
+
+DOCS_SEARCH = ToolDef(
+    name="docs_search",
+    summary="Search the Late API documentation.",
+    description="""Search across the Late API documentation to find relevant information, code examples, API references, and guides.
+
+Use this tool when you need to answer questions about Late, find specific documentation, understand how features work, or locate implementation details.
+
+The search returns contextual content with section titles and relevant snippets.""",
+    params=[
+        ParamDef(
+            name="query",
+            type="str",
+            description="Search query (e.g., 'webhooks', 'create post', 'authentication')",
+            required=True,
+        ),
+    ],
+)
+
+# =============================================================================
 # MEDIA TOOLS
 # =============================================================================
 
@@ -608,6 +630,8 @@ TOOL_DEFINITIONS: dict[str, ToolDef] = {
     # Media
     "media_generate_upload_link": MEDIA_GENERATE_UPLOAD_LINK,
     "media_check_upload_status": MEDIA_CHECK_UPLOAD_STATUS,
+    # Docs
+    "docs_search": DOCS_SEARCH,
 }
 
 
@@ -648,6 +672,7 @@ def generate_mdx_tools_reference() -> str:
             "posts_retry_all_failed",
         ],
         "Media": ["media_generate_upload_link", "media_check_upload_status"],
+        "Docs": ["docs_search"],
     }
 
     for category, tool_names in categories.items():

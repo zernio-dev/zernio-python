@@ -24,14 +24,21 @@ Usage:
 from __future__ import annotations
 
 import os
+import re
 from datetime import datetime, timedelta
 from typing import Any
 
+import httpx
 from mcp.server.fastmcp import FastMCP
 
 from late import Late, MediaType, PostStatus
 
 from .tool_definitions import use_tool_def
+
+# Cache for documentation content
+_docs_cache: dict[str, tuple[str, datetime]] = {}
+_DOCS_URL = "https://docs.getlate.dev/llms-full.txt"
+_CACHE_TTL_HOURS = 24
 
 # Initialize MCP server
 mcp = FastMCP(
@@ -44,6 +51,7 @@ Available tools are prefixed by resource:
 - profiles_* : Manage profiles (groups of accounts)
 - posts_*    : Create, list, update, delete posts
 - media_*    : Upload images and videos
+- docs_*     : Search Late API documentation
 """,
 )
 
@@ -633,6 +641,114 @@ The upload link has expired. Use media_generate_upload_link to create a new one.
 
     except Exception as e:
         return f"❌ Failed to check upload status: {e}"
+
+
+# ============================================================================
+# DOCS
+# ============================================================================
+
+
+def _get_docs_content() -> str:
+    """Fetch and cache documentation content."""
+    cache_key = "docs"
+
+    # Check cache
+    if cache_key in _docs_cache:
+        content, cached_at = _docs_cache[cache_key]
+        if datetime.now() - cached_at < timedelta(hours=_CACHE_TTL_HOURS):
+            return content
+
+    # Fetch fresh content
+    try:
+        response = httpx.get(_DOCS_URL, timeout=30.0)
+        response.raise_for_status()
+        content = response.text
+        _docs_cache[cache_key] = (content, datetime.now())
+        return content
+    except Exception as e:
+        # Return cached content if available, even if expired
+        if cache_key in _docs_cache:
+            return _docs_cache[cache_key][0]
+        raise RuntimeError(f"Failed to fetch documentation: {e}") from e
+
+
+def _search_docs(content: str, query: str, max_results: int = 5) -> list[dict[str, str]]:
+    """Search documentation content for relevant sections."""
+    results: list[dict[str, str]] = []
+    query_lower = query.lower()
+    query_terms = query_lower.split()
+
+    # Split content into sections (by markdown headers)
+    sections = re.split(r'\n(?=#{1,3} )', content)
+
+    scored_sections: list[tuple[int, str, str]] = []
+
+    for section in sections:
+        if not section.strip():
+            continue
+
+        section_lower = section.lower()
+
+        # Calculate relevance score
+        score = 0
+
+        # Exact phrase match (highest priority)
+        if query_lower in section_lower:
+            score += 100
+
+        # Individual term matches
+        for term in query_terms:
+            if term in section_lower:
+                score += 10
+                # Bonus for term in header
+                first_line = section.split('\n')[0].lower()
+                if term in first_line:
+                    score += 20
+
+        if score > 0:
+            # Extract title from first line
+            lines = section.strip().split('\n')
+            title = lines[0].lstrip('#').strip() if lines else "Untitled"
+            scored_sections.append((score, title, section.strip()))
+
+    # Sort by score and take top results
+    scored_sections.sort(key=lambda x: x[0], reverse=True)
+
+    for score, title, section_text in scored_sections[:max_results]:
+        # Truncate long sections
+        if len(section_text) > 1500:
+            section_text = section_text[:1500] + "\n...(truncated)"
+
+        results.append({
+            "title": title,
+            "content": section_text,
+            "relevance": str(score),
+        })
+
+    return results
+
+
+@mcp.tool()
+@use_tool_def("docs_search")
+def docs_search(query: str) -> str:
+    try:
+        content = _get_docs_content()
+        results = _search_docs(content, query)
+
+        if not results:
+            return f"No documentation found for '{query}'. Try different search terms."
+
+        lines = [f"Found {len(results)} relevant section(s) for '{query}':\n"]
+
+        for i, result in enumerate(results, 1):
+            lines.append(f"--- Result {i}: {result['title']} ---")
+            lines.append(result["content"])
+            lines.append("")
+
+        return "\n".join(lines)
+
+    except Exception as e:
+        return f"❌ Failed to search documentation: {e}"
 
 
 # ============================================================================
