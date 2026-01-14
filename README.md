@@ -128,6 +128,57 @@ Since Claude can't access local files, use the browser upload flow:
 
 ---
 
+## 🌐 Remote Access (HTTP/SSE)
+
+Deploy the MCP server to access it remotely from Claude Code CLI or custom clients.
+
+### Quick Deploy to Railway
+
+1. **Push to GitHub** and connect to Railway
+2. **Set environment variables:**
+   - `LATE_API_KEY` - Your Late API key
+   - `MCP_SERVER_API_KEY` - Secure random key (generate with command below)
+
+3. **Generate secure key:**
+```bash
+python -c "import secrets; print(secrets.token_urlsafe(32))"
+```
+
+4. **Railway auto-deploys** using the Dockerfile
+
+### Connect from Claude Code CLI
+
+```bash
+# Add your deployed server
+claude mcp add --transport http late https://your-app.railway.app/sse
+
+# Authenticate
+/mcp
+```
+
+### Local HTTP Server
+
+```bash
+# Set environment variables
+export LATE_API_KEY=your_api_key
+export MCP_SERVER_API_KEY=your_secure_key
+
+# Install with HTTP support
+uv sync --extra mcp
+
+# Run HTTP server
+uv run late-mcp-http
+```
+
+Server runs on `http://0.0.0.0:8080` with endpoints:
+- `/health` - Health check (public)
+- `/sse` - SSE connection (requires API key)
+- `/messages/` - Message handler (requires API key)
+
+📖 [Full HTTP deployment guide →](docs/HTTP_DEPLOYMENT.md)
+
+---
+
 ## SDK Features
 
 ### Async Support
