@@ -2,7 +2,6 @@
 
 import os
 import secrets
-from typing import Optional
 
 from starlette.requests import Request
 from starlette.responses import JSONResponse
@@ -27,7 +26,7 @@ def get_server_api_key() -> str:
     return api_key
 
 
-def extract_api_key(request: Request) -> Optional[str]:
+def extract_api_key(request: Request) -> str | None:
     """
     Extract API key from request (header or query param).
 

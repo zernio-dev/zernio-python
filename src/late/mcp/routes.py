@@ -18,7 +18,7 @@ from late.mcp.constants import (
 )
 
 
-async def handle_root(request: Request) -> JSONResponse:
+async def handle_root(_request: Request) -> JSONResponse:
     """Root endpoint with server information."""
     return JSONResponse(
         {
@@ -36,7 +36,7 @@ async def handle_root(request: Request) -> JSONResponse:
     )
 
 
-async def handle_health(request: Request) -> JSONResponse:
+async def handle_health(_request: Request) -> JSONResponse:
     """Health check endpoint (public, no auth required)."""
     return JSONResponse(
         {

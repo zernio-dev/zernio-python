@@ -3,7 +3,6 @@
 import os
 import sys
 from dataclasses import dataclass
-from typing import Optional
 
 from late.mcp.constants import (
     DEFAULT_HOST,
@@ -24,7 +23,7 @@ class ServerConfig:
     debug: bool = False
 
     @classmethod
-    def from_env(cls, host: Optional[str] = None, port: Optional[int] = None, debug: bool = False) -> "ServerConfig":
+    def from_env(cls, host: str | None = None, port: int | None = None, debug: bool = False) -> "ServerConfig":
         """
         Create configuration from environment variables.
 
