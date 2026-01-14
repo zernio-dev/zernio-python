@@ -25,6 +25,7 @@ from __future__ import annotations
 
 import os
 import re
+from contextvars import ContextVar
 from datetime import datetime, timedelta
 from typing import Any
 
@@ -34,6 +35,9 @@ from mcp.server.fastmcp import FastMCP
 from late import Late, MediaType, PostStatus
 
 from .tool_definitions import use_tool_def
+
+# Context variable to store the Late API key for the current connection
+_late_api_key: ContextVar[str | None] = ContextVar("late_api_key", default=None)
 
 # Cache for documentation content
 _docs_cache: dict[str, tuple[str, datetime]] = {}
@@ -56,11 +60,42 @@ Available tools are prefixed by resource:
 )
 
 
+def set_late_api_key(api_key: str) -> None:
+    """
+    Set the Late API key for the current async context.
+
+    Args:
+        api_key: The Late API key to use for this connection.
+    """
+    _late_api_key.set(api_key)
+
+
 def _get_client() -> Late:
-    """Get Late client with API key from environment."""
-    api_key = os.getenv("LATE_API_KEY", "")
+    """
+    Get Late client with API key from context or environment.
+
+    For HTTP/SSE connections, uses the API key from the current context.
+    For STDIO connections (Claude Desktop), falls back to LATE_API_KEY env var.
+
+    Returns:
+        Late client instance.
+
+    Raises:
+        ValueError: If no API key is available.
+    """
+    # Try to get API key from context (HTTP/SSE mode)
+    api_key = _late_api_key.get()
+
+    # Fall back to environment variable (STDIO mode for Claude Desktop)
     if not api_key:
-        raise ValueError("LATE_API_KEY environment variable is required")
+        api_key = os.getenv("LATE_API_KEY", "")
+
+    if not api_key:
+        raise ValueError(
+            "Late API key is required. "
+            "For HTTP/SSE: provide via X-Late-API-Key header. "
+            "For STDIO: set LATE_API_KEY environment variable."
+        )
 
     base_url = os.getenv("LATE_BASE_URL", None)
     return Late(api_key=api_key, base_url=base_url)

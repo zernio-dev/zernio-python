@@ -1,5 +1,9 @@
 # HTTP/SSE Deployment Guide
 
+## Overview
+
+The Late MCP server can be deployed via HTTP/SSE, allowing remote access from any MCP client. Each user provides their own Late API key when connecting.
+
 ## Quick Start
 
 ### Local Testing
@@ -9,66 +13,116 @@
 uv sync --extra mcp
 ```
 
-2. Set environment variables:
-```bash
-export LATE_API_KEY=your_late_api_key
-export MCP_SERVER_API_KEY=$(python -c "import secrets; print(secrets.token_urlsafe(32))")
-```
-
-3. Run HTTP server:
+2. Run HTTP server:
 ```bash
 uv run late-mcp-http
 ```
 
-4. Test the server:
+3. Test the server:
 ```bash
 # Health check (no auth needed)
 curl http://localhost:8080/health
 
-# Server info
+# Server info (no auth needed)
 curl http://localhost:8080/
 
-# SSE endpoint (with auth)
-curl -H "X-API-Key: your_key" http://localhost:8080/sse
+# SSE endpoint (requires your Late API key)
+curl -H "X-Late-API-Key: your_late_api_key" http://localhost:8080/sse
 ```
 
 ## Railway Deployment
 
-### Option 1: Using Dockerfile (Recommended)
+### Using Dockerfile
 
-1. Push to GitHub
+1. Push code to GitHub
 2. Create new Railway project from repo
-3. Set environment variables in Railway:
-   - `LATE_API_KEY`
-   - `MCP_SERVER_API_KEY`
-4. Railway auto-detects Dockerfile and deploys
+3. Railway auto-detects Dockerfile and deploys
+4. No environment variables needed! (users provide their own API keys)
 
-### Option 2: Using Railpack (Auto)
+### Environment Variables
 
-Railway will automatically:
-- Detect `pyproject.toml` and `uv.lock`
-- Install dependencies with `uv`
-- Run `late-mcp-http` command
+The server doesn't require any environment variables. Users authenticate by providing their Late API key when connecting.
+
+Optional variables:
+- `HOST` (default: 0.0.0.0)
+- `PORT` (default: 8080, Railway sets this automatically)
 
 ## Connecting Clients
 
 ### Claude Code CLI
+
 ```bash
+# Add the MCP server
 claude mcp add --transport http late https://your-app.railway.app/sse
+
+# When connecting, provide your Late API key via header
+# The Claude CLI will prompt for authentication details
+```
+
+Configuration in MCP settings:
+```json
+{
+  "late": {
+    "url": "https://your-app.railway.app/sse",
+    "headers": {
+      "X-Late-API-Key": "your_late_api_key_here"
+    }
+  }
+}
 ```
 
 ### Python Client
+
 ```python
 from mcp.client.sse import sse_client
 
-async with sse_client("https://your-app.railway.app/sse") as (read, write):
+# Provide your Late API key in headers
+headers = {
+    "X-Late-API-Key": "your_late_api_key_here"
+}
+
+async with sse_client(
+    "https://your-app.railway.app/sse",
+    headers=headers
+) as (read, write):
     # Use MCP client
     pass
 ```
 
 ## Authentication
 
-Add API key via:
-- Header: `Authorization: Bearer your_key`
-- Header: `X-API-Key: your_key`
-- Query: `?api_key=your_key`
+Each user must provide their own Late API key when connecting. The server accepts API keys via:
+
+1. **X-Late-API-Key header** (recommended):
+   ```
+   X-Late-API-Key: your_late_api_key
+   ```
+
+2. **Authorization header** (Bearer token):
+   ```
+   Authorization: Bearer your_late_api_key
+   ```
+
+3. **X-API-Key header** (alternative):
+   ```
+   X-API-Key: your_late_api_key
+   ```
+
+4. **Query parameter** (not recommended for production):
+   ```
+   https://your-app.railway.app/sse?api_key=your_late_api_key
+   ```
+
+The server validates the API key by making a test request to the Late API. If valid, the connection is established and the API key is used for all subsequent operations.
+
+## Security
+
+- Each user's API key is validated against the Late API
+- API keys are stored per-connection using Python's contextvars
+- No shared credentials or server-wide API keys
+- Health check endpoint is public (no auth required)
+- All other endpoints require authentication
+
+## Get Your Late API Key
+
+Visit https://getlate.dev to sign up and get your API key.

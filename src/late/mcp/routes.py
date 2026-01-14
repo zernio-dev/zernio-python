@@ -6,7 +6,7 @@ from mcp.server.sse import SseServerTransport
 from starlette.requests import Request
 from starlette.responses import JSONResponse, Response
 
-from late.mcp.auth import verify_api_key
+from late.mcp.auth import extract_late_api_key, verify_late_api_key
 from late.mcp.constants import (
     DOCS_URL,
     ENDPOINT_HEALTH,
@@ -63,14 +63,31 @@ def create_sse_handler(mcp_server, sse_transport: SseServerTransport, debug: boo
 
     async def handle_sse(request: Request) -> Response:
         """Handle SSE connection with authentication."""
-        # Verify API key
-        if not verify_api_key(request):
+        # Extract Late API key from request
+        late_api_key = extract_late_api_key(request)
+        if not late_api_key:
             return JSONResponse(
-                {"error": "Invalid or missing API key"}, status_code=401
+                {"error": "Missing Late API key. Provide via X-Late-API-Key header, Authorization: Bearer header, or X-API-Key header"},
+                status_code=401
             )
+
+        # Verify Late API key by making test request
+        if not await verify_late_api_key(late_api_key):
+            return JSONResponse(
+                {"error": "Invalid Late API key"},
+                status_code=401
+            )
+
+        # Store API key in request state for use in MCP tools
+        request.state.late_api_key = late_api_key
 
         # Establish SSE connection
         try:
+            # Import here to set context variable before running MCP
+            from late.mcp.server import set_late_api_key
+
+            set_late_api_key(late_api_key)
+
             async with sse_transport.connect_sse(
                 request.scope,
                 request.receive,
