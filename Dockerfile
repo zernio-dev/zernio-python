@@ -10,15 +10,13 @@ COPY pyproject.toml uv.lock README.md ./
 COPY src ./src
 
 # Install dependencies (no dev dependencies in production)
-RUN --mount=type=cache,target=/root/.cache/uv \
+RUN --mount=type=cache,id=uv-cache,target=/root/.cache/uv \
     uv sync --frozen --no-dev --extra mcp
 
 # Expose port (Railway will set PORT env var)
 EXPOSE 8080
 
-# Health check for Railway monitoring
-HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
-    CMD python -c "import httpx; httpx.get('http://localhost:8080/health', timeout=2.0)"
+# Health check for Railway monitoring (Railway will use /health endpoint)
 
-# Run HTTP server
-CMD ["uv", "run", "late-mcp-http", "--host", "0.0.0.0", "--port", "8080"]
+# Run HTTP server (Railway sets PORT env var automatically)
+CMD ["sh", "-c", "uv run late-mcp-http --host 0.0.0.0 --port ${PORT:-8080}"]
