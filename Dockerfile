@@ -1,7 +1,7 @@
 # Late MCP HTTP Server - Railway Deployment
 # Uses uv for fast, reliable dependency management
 
-FROM ghcr.io/astral-sh/uv:python3.12-slim
+FROM ghcr.io/astral-sh/uv:python3.12-bookworm-slim
 
 WORKDIR /app
 
