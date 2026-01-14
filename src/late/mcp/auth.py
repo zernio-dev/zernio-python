@@ -52,7 +52,7 @@ async def verify_late_api_key(api_key: str) -> bool:
     try:
         async with httpx.AsyncClient() as client:
             response = await client.get(
-                "https://api.getlate.dev/api/accounts",
+                "https://getlate.dev/api/v1/accounts",
                 headers={"Authorization": f"Bearer {api_key}"},
                 timeout=5.0,
             )
