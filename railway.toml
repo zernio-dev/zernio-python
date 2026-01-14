@@ -1,15 +1,9 @@
 [build]
-# Use Railpack (auto-detects Python + uv)
-builder = "NIXPACKS"
+builder = "DOCKERFILE"
+dockerfilePath = "Dockerfile"
 
 [deploy]
-# Start command for the HTTP server
-startCommand = "python main.py"
-
-# Health check configuration
 healthcheckPath = "/health"
 healthcheckTimeout = 100
-
-# Restart policy
 restartPolicyType = "on_failure"
 restartPolicyMaxRetries = 3
