@@ -31,7 +31,7 @@ async def handle_root(_request: Request) -> JSONResponse:
                 "health": f"{ENDPOINT_HEALTH} (GET) - Health check",
             },
             "documentation": DOCS_URL,
-            "authentication": "Required (use X-API-Key header or Bearer token)",
+            "authentication": "Required: 'Authorization: Bearer YOUR_LATE_API_KEY'",
         }
     )
 
@@ -67,7 +67,7 @@ def create_sse_handler(mcp_server, sse_transport: SseServerTransport, debug: boo
         late_api_key = extract_late_api_key(request)
         if not late_api_key:
             return JSONResponse(
-                {"error": "Missing Late API key. Provide via X-Late-API-Key header, Authorization: Bearer header, or X-API-Key header"},
+                {"error": "Missing Late API key. Provide via Authorization header: 'Authorization: Bearer YOUR_API_KEY'"},
                 status_code=401
             )
 

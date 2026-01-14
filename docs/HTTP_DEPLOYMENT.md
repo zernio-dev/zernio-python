@@ -27,7 +27,7 @@ curl http://localhost:8080/health
 curl http://localhost:8080/
 
 # SSE endpoint (requires your Late API key)
-curl -H "X-Late-API-Key: your_late_api_key" http://localhost:8080/sse
+curl -H "Authorization: Bearer your_late_api_key" http://localhost:8080/sse
 ```
 
 ## Railway Deployment
@@ -65,7 +65,7 @@ Configuration in MCP settings:
   "late": {
     "url": "https://your-app.railway.app/sse",
     "headers": {
-      "X-Late-API-Key": "your_late_api_key_here"
+      "Authorization": "Bearer your_late_api_key_here"
     }
   }
 }
@@ -76,9 +76,9 @@ Configuration in MCP settings:
 ```python
 from mcp.client.sse import sse_client
 
-# Provide your Late API key in headers
+# Provide your Late API key as Bearer token
 headers = {
-    "X-Late-API-Key": "your_late_api_key_here"
+    "Authorization": "Bearer your_late_api_key_here"
 }
 
 async with sse_client(
@@ -91,27 +91,17 @@ async with sse_client(
 
 ## Authentication
 
-Each user must provide their own Late API key when connecting. The server accepts API keys via:
+Each user must provide their own Late API key when connecting using the standard HTTP Authorization header:
 
-1. **X-Late-API-Key header** (recommended):
-   ```
-   X-Late-API-Key: your_late_api_key
-   ```
+```
+Authorization: Bearer YOUR_LATE_API_KEY
+```
 
-2. **Authorization header** (Bearer token):
-   ```
-   Authorization: Bearer your_late_api_key
-   ```
-
-3. **X-API-Key header** (alternative):
-   ```
-   X-API-Key: your_late_api_key
-   ```
-
-4. **Query parameter** (not recommended for production):
-   ```
-   https://your-app.railway.app/sse?api_key=your_late_api_key
-   ```
+Example:
+```bash
+curl -H "Authorization: Bearer sk_your_api_key_here" \
+     https://your-app.railway.app/sse
+```
 
 The server validates the API key by making a test request to the Late API. If valid, the connection is established and the API key is used for all subsequent operations.
 

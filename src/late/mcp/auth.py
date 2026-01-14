@@ -6,13 +6,9 @@ from starlette.requests import Request
 
 def extract_late_api_key(request: Request) -> str | None:
     """
-    Extract Late API key from request.
+    Extract Late API key from request Authorization header.
 
-    Checks in order:
-    1. X-Late-API-Key header
-    2. Authorization header (Bearer token)
-    3. X-API-Key header
-    4. api_key query parameter
+    Expects: Authorization: Bearer <your_late_api_key>
 
     Args:
         request: The incoming Starlette request.
@@ -20,23 +16,10 @@ def extract_late_api_key(request: Request) -> str | None:
     Returns:
         The extracted API key, or None if not found.
     """
-    # Try X-Late-API-Key header first (most specific)
-    late_key = request.headers.get("X-Late-API-Key")
-    if late_key:
-        return late_key
-
-    # Try Authorization header: "Bearer <key>"
     auth_header = request.headers.get("Authorization")
     if auth_header and auth_header.startswith("Bearer "):
-        return auth_header[7:]
-
-    # Try X-API-Key header
-    api_key_header = request.headers.get("X-API-Key")
-    if api_key_header:
-        return api_key_header
-
-    # Try query parameter as fallback
-    return request.query_params.get("api_key")
+        return auth_header[7:]  # Remove "Bearer " prefix
+    return None
 
 
 async def verify_late_api_key(api_key: str) -> bool:
