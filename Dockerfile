@@ -10,8 +10,7 @@ COPY pyproject.toml uv.lock README.md ./
 COPY src ./src
 
 # Install dependencies (no dev dependencies in production)
-RUN --mount=type=cache,id=uv-cache,target=/root/.cache/uv \
-    uv sync --frozen --no-dev --extra mcp
+RUN uv sync --frozen --no-dev --extra mcp
 
 # Expose port (Railway will set PORT env var)
 EXPOSE 8080
