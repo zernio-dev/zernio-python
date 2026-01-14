@@ -54,6 +54,8 @@ all = [
 ]
 mcp = [
     "mcp>=1.0.0",
+    "starlette>=0.42.0",
+    "uvicorn[standard]>=0.32.0",
 ]
 dev = [
     "pytest>=8.0.0",
@@ -66,7 +68,8 @@ dev = [
 ]
 
 [project.scripts]
-late-mcp = "late.mcp.server:mcp.run"
+late-mcp = "late.mcp.server:main"
+late-mcp-http = "late.mcp.http_server:main"
 
 [project.urls]
 Homepage = "https://getlate.dev"

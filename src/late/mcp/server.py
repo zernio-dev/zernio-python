@@ -755,5 +755,11 @@ def docs_search(query: str) -> str:
 # MAIN
 # ============================================================================
 
+
+def main() -> None:
+    """Entry point for STDIO transport (Claude Desktop)."""
+    mcp.run(transport="stdio")
+
+
 if __name__ == "__main__":
-    mcp.run()
+    main()
