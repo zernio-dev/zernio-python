@@ -21,8 +21,7 @@ env/
 .gitignore
 .gitattributes
 
-# Documentation
-*.md
+# Documentation (keep README.md for hatchling build)
 docs/
 examples/
 
