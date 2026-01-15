@@ -69,8 +69,8 @@ def register_generated_tools(mcp, _get_client):
         """Create a new account group
 
         Args:
-            name:  (required)
-            account_ids:  (required)"""
+            name: (required)
+            account_ids: (required)"""
         client = _get_client()
         try:
             response = client.account_groups.create_account_group(name=name, accountIds=account_ids)
@@ -84,9 +84,9 @@ def register_generated_tools(mcp, _get_client):
         """Update an account group
 
         Args:
-            group_id:  (required)
-            name: 
-            account_ids: """
+            group_id: (required)
+            name
+            account_ids"""
         client = _get_client()
         try:
             response = client.account_groups.update_account_group(group_id=group_id, name=name, accountIds=account_ids)
@@ -100,7 +100,7 @@ def register_generated_tools(mcp, _get_client):
         """Delete an account group
 
         Args:
-            group_id:  (required)"""
+            group_id: (required)"""
         client = _get_client()
         try:
             response = client.account_groups.delete_account_group(group_id=group_id)
@@ -118,8 +118,7 @@ def register_generated_tools(mcp, _get_client):
         Args:
             profile_id: Filter accounts by profile ID
             include_over_limit: When true, includes accounts from profiles that exceed the user's plan limit.
-    Useful for disconnecting accounts from over-limit profiles so they can be deleted.
-    """
+    Useful for disconnecting accounts from over-limit profiles so they can be deleted."""
         client = _get_client()
         try:
             response = client.accounts.list_accounts(profile_id=profile_id, include_over_limit=include_over_limit)
@@ -151,9 +150,9 @@ def register_generated_tools(mcp, _get_client):
         """Update a social account
 
         Args:
-            account_id:  (required)
-            username: 
-            display_name: """
+            account_id: (required)
+            username
+            display_name"""
         client = _get_client()
         try:
             response = client.accounts.update_account(account_id=account_id, username=username, displayName=display_name)
@@ -167,7 +166,7 @@ def register_generated_tools(mcp, _get_client):
         """Disconnect a social account
 
         Args:
-            account_id:  (required)"""
+            account_id: (required)"""
         client = _get_client()
         try:
             response = client.accounts.delete_account(account_id=account_id)
@@ -234,8 +233,7 @@ def register_generated_tools(mcp, _get_client):
      (required)
             display_name: The exact display name as shown on LinkedIn.
     - **Person mentions:** Required for clickable mentions. If not provided, a name is derived from the vanity URL which may not match exactly.
-    - **Organization mentions:** Optional. If not provided, the company name is automatically retrieved from LinkedIn.
-    """
+    - **Organization mentions:** Optional. If not provided, the company name is automatically retrieved from LinkedIn."""
         client = _get_client()
         try:
             response = client.accounts.get_linked_in_mentions(account_id=account_id, url=url, display_name=display_name)
@@ -251,10 +249,9 @@ def register_generated_tools(mcp, _get_client):
         """Unified analytics for posts
 
         Args:
-            post_id: Returns analytics for a single post. Accepts both Late Post IDs (from `POST /v1/posts`) 
-    and External Post IDs (from this endpoint's list response). The API automatically 
+            post_id: Returns analytics for a single post. Accepts both Late Post IDs (from `POST /v1/posts`)
+    and External Post IDs (from this endpoint's list response). The API automatically
     resolves Late Post IDs to their corresponding External Post analytics.
-
             platform: Filter by platform (default "all")
             profile_id: Filter by profile ID (default "all")
             from_date: Inclusive lower bound
@@ -299,17 +296,13 @@ def register_generated_tools(mcp, _get_client):
     - `DAILY`: Returns daily breakdown of metrics
 
     Note: `MEMBERS_REACHED` metric is not available with `DAILY` aggregation.
-
             start_date: Start date for analytics data in YYYY-MM-DD format.
     If provided without endDate, endDate defaults to today.
     If omitted entirely, returns lifetime analytics.
-
             end_date: End date for analytics data in YYYY-MM-DD format (exclusive).
     If provided without startDate, startDate defaults to 30 days before endDate.
-
             metrics: Comma-separated list of metrics to fetch. If omitted, fetches all available metrics.
-    Valid values: IMPRESSION, MEMBERS_REACHED, REACTION, COMMENT, RESHARE
-    """
+    Valid values: IMPRESSION, MEMBERS_REACHED, REACTION, COMMENT, RESHARE"""
         client = _get_client()
         try:
             response = client.analytics.get_linked_in_aggregate_analytics(account_id=account_id, aggregation=aggregation, start_date=start_date, end_date=end_date, metrics=metrics)
@@ -351,7 +344,7 @@ def register_generated_tools(mcp, _get_client):
         """Create a new API key
 
         Args:
-            name:  (required)
+            name: (required)
             expires_in: Days until expiry"""
         client = _get_client()
         try:
@@ -366,7 +359,7 @@ def register_generated_tools(mcp, _get_client):
         """Delete an API key
 
         Args:
-            key_id:  (required)"""
+            key_id: (required)"""
         client = _get_client()
         try:
             response = client.api_keys.delete_api_key(key_id=key_id)
@@ -386,8 +379,8 @@ def register_generated_tools(mcp, _get_client):
             profile_id: Your Late profile ID (get from /v1/profiles) (required)
             redirect_url: Optional: Your custom redirect URL after connection completes.
 
-    **Standard Mode:** Omit `headless=true` to use our hosted page selection UI.  
-    After the user selects a Facebook Page, Late redirects here with:  
+    **Standard Mode:** Omit `headless=true` to use our hosted page selection UI.
+    After the user selects a Facebook Page, Late redirects here with:
     `?connected=facebook&profileId=X&username=Y`
 
     **Headless Mode (Facebook, LinkedIn, Pinterest, Google Business Profile & Snapchat):**
@@ -414,8 +407,7 @@ def register_generated_tools(mcp, _get_client):
     - Google Business: `/v1/connect/googlebusiness/locations` (GET) and `/v1/connect/googlebusiness/select-location` (POST)
     - Snapchat: `/v1/connect/snapchat/select-profile` (POST to save selected public profile)
 
-    Example: `https://yourdomain.com/integrations/callback`
-    """
+    Example: `https://yourdomain.com/integrations/callback`"""
         client = _get_client()
         try:
             response = client.connect.get_connect_url(platform=platform, profile_id=profile_id, redirect_url=redirect_url)
@@ -429,10 +421,10 @@ def register_generated_tools(mcp, _get_client):
         """Complete OAuth token exchange manually (for server-side flows)
 
         Args:
-            platform:  (required)
-            code:  (required)
-            state:  (required)
-            profile_id:  (required)"""
+            platform: (required)
+            code: (required)
+            state: (required)
+            profile_id: (required)"""
         client = _get_client()
         try:
             response = client.connect.handle_o_auth_callback(platform=platform, code=code, state=state, profileId=profile_id)
@@ -497,9 +489,8 @@ def register_generated_tools(mcp, _get_client):
             profile_id: Profile ID from your connection flow (required)
             location_id: The Google Business location ID selected by the user (required)
             temp_token: Temporary Google access token from OAuth (required)
-            user_profile: Decoded user profile object from the OAuth callback. **Important:** This contains 
+            user_profile: Decoded user profile object from the OAuth callback. **Important:** This contains
     the refresh token needed for token refresh. Always include this field.
-
             redirect_url: Optional custom redirect URL to return to after selection"""
         client = _get_client()
         try:
@@ -529,12 +520,12 @@ def register_generated_tools(mcp, _get_client):
         """Select LinkedIn organization or personal account after OAuth
 
         Args:
-            profile_id:  (required)
-            temp_token:  (required)
-            user_profile:  (required)
-            account_type:  (required)
-            selected_organization: 
-            redirect_url: """
+            profile_id: (required)
+            temp_token: (required)
+            user_profile: (required)
+            account_type: (required)
+            selected_organization
+            redirect_url"""
         client = _get_client()
         try:
             response = client.connect.select_linked_in_organization(profileId=profile_id, tempToken=temp_token, userProfile=user_profile, accountType=account_type, selectedOrganization=selected_organization, redirect_url=redirect_url)
@@ -685,8 +676,8 @@ def register_generated_tools(mcp, _get_client):
         """Update selected Facebook page for a connected account
 
         Args:
-            account_id:  (required)
-            selected_page_id:  (required)"""
+            account_id: (required)
+            selected_page_id: (required)"""
         client = _get_client()
         try:
             response = client.connect.update_facebook_page(account_id=account_id, selectedPageId=selected_page_id)
@@ -700,7 +691,7 @@ def register_generated_tools(mcp, _get_client):
         """Get available LinkedIn organizations for a connected account
 
         Args:
-            account_id:  (required)"""
+            account_id: (required)"""
         client = _get_client()
         try:
             response = client.connect.get_linked_in_organizations(account_id=account_id)
@@ -714,9 +705,9 @@ def register_generated_tools(mcp, _get_client):
         """Switch LinkedIn account type (personal/organization)
 
         Args:
-            account_id:  (required)
-            account_type:  (required)
-            selected_organization: """
+            account_id: (required)
+            account_type: (required)
+            selected_organization"""
         client = _get_client()
         try:
             response = client.connect.update_linked_in_organization(account_id=account_id, accountType=account_type, selectedOrganization=selected_organization)
@@ -730,7 +721,7 @@ def register_generated_tools(mcp, _get_client):
         """List Pinterest boards for a connected account
 
         Args:
-            account_id:  (required)"""
+            account_id: (required)"""
         client = _get_client()
         try:
             response = client.connect.get_pinterest_boards(account_id=account_id)
@@ -744,9 +735,9 @@ def register_generated_tools(mcp, _get_client):
         """Set default Pinterest board on the connection
 
         Args:
-            account_id:  (required)
-            default_board_id:  (required)
-            default_board_name: """
+            account_id: (required)
+            default_board_id: (required)
+            default_board_name"""
         client = _get_client()
         try:
             response = client.connect.update_pinterest_boards(account_id=account_id, defaultBoardId=default_board_id, defaultBoardName=default_board_name)
@@ -760,7 +751,7 @@ def register_generated_tools(mcp, _get_client):
         """List Reddit subreddits for a connected account
 
         Args:
-            account_id:  (required)"""
+            account_id: (required)"""
         client = _get_client()
         try:
             response = client.connect.get_reddit_subreddits(account_id=account_id)
@@ -774,8 +765,8 @@ def register_generated_tools(mcp, _get_client):
         """Set default subreddit on the connection
 
         Args:
-            account_id:  (required)
-            default_subreddit:  (required)"""
+            account_id: (required)
+            default_subreddit: (required)"""
         client = _get_client()
         try:
             response = client.connect.update_reddit_subreddits(account_id=account_id, defaultSubreddit=default_subreddit)
@@ -921,13 +912,13 @@ def register_generated_tools(mcp, _get_client):
         Args:
             page: Page number
             limit: Results per page
-            status: 
-            platform: 
-            profile_id: 
-            created_by: 
-            date_from: 
-            date_to: 
-            include_hidden: """
+            status
+            platform
+            profile_id
+            created_by
+            date_from
+            date_to
+            include_hidden"""
         client = _get_client()
         try:
             response = client.posts.list_posts(page=page, limit=limit, status=status, platform=platform, profile_id=profile_id, created_by=created_by, date_from=date_from, date_to=date_to, include_hidden=include_hidden)
@@ -941,7 +932,7 @@ def register_generated_tools(mcp, _get_client):
         """Get a single post
 
         Args:
-            post_id:  (required)"""
+            post_id: (required)"""
         client = _get_client()
         try:
             response = client.posts.get_post(post_id=post_id)
@@ -955,7 +946,7 @@ def register_generated_tools(mcp, _get_client):
         """Update a post
 
         Args:
-            post_id:  (required)"""
+            post_id: (required)"""
         client = _get_client()
         try:
             response = client.posts.update_post(post_id=post_id)
@@ -969,7 +960,7 @@ def register_generated_tools(mcp, _get_client):
         """Delete a post
 
         Args:
-            post_id:  (required)"""
+            post_id: (required)"""
         client = _get_client()
         try:
             response = client.posts.delete_post(post_id=post_id)
@@ -983,7 +974,7 @@ def register_generated_tools(mcp, _get_client):
         """Validate and schedule multiple posts from CSV
 
         Args:
-            dry_run: """
+            dry_run"""
         client = _get_client()
         try:
             response = client.posts.bulk_upload_posts(dry_run=dry_run)
@@ -1001,8 +992,7 @@ def register_generated_tools(mcp, _get_client):
         Args:
             include_over_limit: When true, includes profiles that exceed the user's plan limit.
     Over-limit profiles will have `isOverLimit: true` in the response.
-    Useful for managing/deleting profiles after a plan downgrade.
-    """
+    Useful for managing/deleting profiles after a plan downgrade."""
         client = _get_client()
         try:
             response = client.profiles.list_profiles(include_over_limit=include_over_limit)
@@ -1016,9 +1006,9 @@ def register_generated_tools(mcp, _get_client):
         """Create a new profile
 
         Args:
-            name:  (required)
-            description: 
-            color: """
+            name: (required)
+            description
+            color"""
         client = _get_client()
         try:
             response = client.profiles.create_profile(name=name, description=description, color=color)
@@ -1032,7 +1022,7 @@ def register_generated_tools(mcp, _get_client):
         """Get a profile by id
 
         Args:
-            profile_id:  (required)"""
+            profile_id: (required)"""
         client = _get_client()
         try:
             response = client.profiles.get_profile(profile_id=profile_id)
@@ -1046,11 +1036,11 @@ def register_generated_tools(mcp, _get_client):
         """Update a profile
 
         Args:
-            profile_id:  (required)
-            name: 
-            description: 
-            color: 
-            is_default: """
+            profile_id: (required)
+            name
+            description
+            color
+            is_default"""
         client = _get_client()
         try:
             response = client.profiles.update_profile(profile_id=profile_id, name=name, description=description, color=color, isDefault=is_default)
@@ -1064,7 +1054,7 @@ def register_generated_tools(mcp, _get_client):
         """Delete a profile (must have no connected accounts)
 
         Args:
-            profile_id:  (required)"""
+            profile_id: (required)"""
         client = _get_client()
         try:
             response = client.profiles.delete_profile(profile_id=profile_id)
@@ -1099,8 +1089,8 @@ def register_generated_tools(mcp, _get_client):
             profile_id: Profile ID (required)
             name: Queue name (e.g., Evening Posts) (required)
             timezone: IANA timezone (required)
-            slots:  (required)
-            active: """
+            slots: (required)
+            active"""
         client = _get_client()
         try:
             response = client.queue.create_queue_slot(profileId=profile_id, name=name, timezone=timezone, slots=slots, active=active)
@@ -1114,12 +1104,12 @@ def register_generated_tools(mcp, _get_client):
         """Create or update a queue schedule
 
         Args:
-            profile_id:  (required)
+            profile_id: (required)
             queue_id: Queue ID to update (optional)
             name: Queue name
-            timezone:  (required)
-            slots:  (required)
-            active: 
+            timezone: (required)
+            slots: (required)
+            active
             set_as_default: Make this queue the default
             reshuffle_existing: Whether to reschedule existing queued posts to match new slots"""
         client = _get_client()
@@ -1135,7 +1125,7 @@ def register_generated_tools(mcp, _get_client):
         """Delete a queue schedule
 
         Args:
-            profile_id:  (required)
+            profile_id: (required)
             queue_id: Queue ID to delete (required)"""
         client = _get_client()
         try:
@@ -1150,8 +1140,8 @@ def register_generated_tools(mcp, _get_client):
         """Preview upcoming queue slots for a profile
 
         Args:
-            profile_id:  (required)
-            count: """
+            profile_id: (required)
+            count"""
         client = _get_client()
         try:
             response = client.queue.preview_queue(profile_id=profile_id, count=count)
@@ -1165,7 +1155,7 @@ def register_generated_tools(mcp, _get_client):
         """Get the next available queue slot for a profile
 
         Args:
-            profile_id:  (required)
+            profile_id: (required)
             queue_id: Specific queue ID (optional, defaults to profile's default queue)"""
         client = _get_client()
         try:
@@ -1182,13 +1172,13 @@ def register_generated_tools(mcp, _get_client):
         """Search Reddit posts via a connected account
 
         Args:
-            account_id:  (required)
-            subreddit: 
-            q:  (required)
-            restrict_sr: 
-            sort: 
-            limit: 
-            after: """
+            account_id: (required)
+            subreddit
+            q: (required)
+            restrict_sr
+            sort
+            limit
+            after"""
         client = _get_client()
         try:
             response = client.reddit.search_reddit(account_id=account_id, subreddit=subreddit, q=q, restrict_sr=restrict_sr, sort=sort, limit=limit, after=after)
@@ -1202,12 +1192,12 @@ def register_generated_tools(mcp, _get_client):
         """Fetch subreddit feed via a connected account
 
         Args:
-            account_id:  (required)
-            subreddit: 
-            sort: 
-            limit: 
-            after: 
-            t: """
+            account_id: (required)
+            subreddit
+            sort
+            limit
+            after
+            t"""
         client = _get_client()
         try:
             response = client.reddit.get_reddit_feed(account_id=account_id, subreddit=subreddit, sort=sort, limit=limit, after=after, t=t)
@@ -1270,7 +1260,7 @@ def register_generated_tools(mcp, _get_client):
         """Check Instagram hashtags for bans
 
         Args:
-            hashtags:  (required)"""
+            hashtags: (required)"""
         client = _get_client()
         try:
             response = client.tools.check_instagram_hashtags(hashtags=hashtags)
@@ -1301,8 +1291,8 @@ def register_generated_tools(mcp, _get_client):
 
         Args:
             url: Twitter/X post URL (required)
-            action: 
-            format_id: """
+            action
+            format_id"""
         client = _get_client()
         try:
             response = client.tools.download_twitter_media(url=url, action=action, format_id=format_id)
@@ -1384,7 +1374,7 @@ def register_generated_tools(mcp, _get_client):
         """Get user by id (self or invited)
 
         Args:
-            user_id:  (required)"""
+            user_id: (required)"""
         client = _get_client()
         try:
             response = client.users.get_user(user_id=user_id)

@@ -210,16 +210,24 @@ def generate_tool_handler(
 
     sig = ", ".join(sig_params)
 
-    # Docstring
-    doc_lines = [summary]
+    # Docstring - strip trailing whitespace from all lines
+    doc_lines = [summary.rstrip()]
     if params:
         doc_lines.append("")
         doc_lines.append("Args:")
         for p in params:
             req = " (required)" if p["required"] else ""
-            doc_lines.append(f"    {p['name']}: {p['description']}{req}")
+            desc = p['description'] if p['description'] else ""
+            # Strip trailing whitespace from each line of multiline descriptions
+            desc = "\n".join(line.rstrip() for line in desc.split("\n"))
+            # Avoid trailing whitespace when description is empty
+            if desc:
+                doc_lines.append(f"    {p['name']}: {desc}{req}")
+            else:
+                doc_lines.append(f"    {p['name']}:{req}" if req else f"    {p['name']}")
 
-    docstring = "\n    ".join(doc_lines)
+    # Strip trailing whitespace from all docstring lines
+    docstring = "\n    ".join(line.rstrip() for line in doc_lines)
 
     lines.append("")
     lines.append("")
