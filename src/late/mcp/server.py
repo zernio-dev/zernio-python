@@ -787,6 +787,20 @@ def docs_search(query: str) -> str:
 
 
 # ============================================================================
+# AUTO-GENERATED TOOLS
+# ============================================================================
+
+# Import and register auto-generated tools from OpenAPI spec
+# These complement the custom tools above with full API coverage
+try:
+    from .generated_tools import register_generated_tools
+    register_generated_tools(mcp, _get_client)
+except ImportError:
+    # generated_tools.py not yet created - run scripts/generate_mcp_tools.py
+    pass
+
+
+# ============================================================================
 # MAIN
 # ============================================================================
 

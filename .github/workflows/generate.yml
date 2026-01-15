@@ -52,10 +52,18 @@ jobs:
           uv run python scripts/generate_models.py || echo "Model generation skipped (requires local docs repo)"
           echo "Model generation complete."
 
+      - name: Generate MCP tools
+        run: |
+          echo "Starting MCP tool generation..."
+          uv run --with pyyaml python scripts/generate_mcp_tools.py
+          echo "MCP tool generation complete."
+
       - name: Run linter (fix formatting)
         run: |
           uv run ruff check --fix src/late/resources/_generated/ || true
           uv run ruff format src/late/resources/_generated/ || true
+          uv run ruff check --fix src/late/mcp/generated_tools.py || true
+          uv run ruff format src/late/mcp/generated_tools.py || true
 
       - name: Run tests
         run: uv run pytest tests -v --tb=short || echo "Tests failed but continuing..."
