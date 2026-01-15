@@ -131,7 +131,17 @@ def extract_parameters(operation: dict[str, Any]) -> list[dict[str, Any]]:
         if "name" not in param:
             continue
 
+        # Skip header parameters - they're handled differently in SDK
+        if param.get("in") == "header":
+            continue
+
         py_name = camel_to_snake(param["name"])
+        # SDK name must also be valid Python identifier
+        sdk_name = camel_to_snake(param["name"]).replace("-", "_")
+        # MCP doesn't allow params starting with underscore
+        if py_name.startswith("_"):
+            py_name = py_name.lstrip("_") + "_id" if py_name == "_id" else py_name.lstrip("_")
+
         type_str, default_str = get_python_type(
             param.get("schema", {}),
             param.get("required", False)
@@ -143,7 +153,7 @@ def extract_parameters(operation: dict[str, Any]) -> list[dict[str, Any]]:
             "required": param.get("required", False),
             "default": default_str,
             "description": param.get("description", ""),
-            "sdk_name": param["name"],
+            "sdk_name": sdk_name,
         })
 
     # Request body
@@ -157,6 +167,11 @@ def extract_parameters(operation: dict[str, Any]) -> list[dict[str, Any]]:
 
         for prop_name, prop_schema in properties.items():
             py_name = camel_to_snake(prop_name)
+            # MCP doesn't allow params starting with underscore
+            if py_name.startswith("_"):
+                py_name = py_name.lstrip("_")
+                if not py_name:  # Was just "_"
+                    continue
             is_required = prop_name in required_props
             type_str, default_str = get_python_type(prop_schema, is_required)
 
