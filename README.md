@@ -1,185 +1,137 @@
 <p align="center">
-  <img src="https://getlate.dev/images/icon_light.svg" alt="Late" width="80" />
+  <a href="https://getlate.dev">
+    <img src="https://getlate.dev/images/icon_light.svg" alt="Late" width="60">
+  </a>
 </p>
 
 <h1 align="center">Late Python SDK</h1>
 
 <p align="center">
-  Python SDK for <a href="https://getlate.dev">Late API</a> - Schedule social media posts across multiple platforms.
+  <a href="https://pypi.org/project/getlate/"><img src="https://img.shields.io/pypi/v/getlate.svg" alt="PyPI version"></a>
+  <a href="LICENSE"><img src="https://img.shields.io/badge/license-Apache--2.0-blue.svg" alt="License"></a>
 </p>
+
+<p align="center">
+  <strong>One API to post everywhere. 13 platforms, zero headaches.</strong>
+</p>
+
+The official Python SDK for the [Late API](https://getlate.dev) — schedule and publish social media posts across Instagram, TikTok, YouTube, LinkedIn, X/Twitter, Facebook, Pinterest, Threads, Bluesky, Reddit, Snapchat, Telegram, and Google Business Profile with a single integration.
 
 ## Installation
 
 ```bash
-pip install late-sdk
+pip install getlate
 ```
 
 ## Quick Start
 
 ```python
-from datetime import datetime, timedelta
-from late import Late, Platform
+from late import Late
 
-client = Late(api_key="your_api_key")
+late = Late()  # Uses LATE_API_KEY env var
 
-# List connected accounts
-accounts = client.accounts.list()
+# Publish to multiple platforms with one call
+post = late.posts.create(
+    content="Hello world from Late!",
+    platforms=[
+        {"platform": "twitter", "accountId": "acc_xxx"},
+        {"platform": "linkedin", "accountId": "acc_yyy"},
+        {"platform": "instagram", "accountId": "acc_zzz"},
+    ],
+    publish_now=True,
+)
 
-# Create a scheduled post
-post = client.posts.create(
-    content="Hello from Late!",
-    platforms=[{"platform": Platform.TWITTER, "accountId": "your_account_id"}],
-    scheduled_for=datetime.now() + timedelta(hours=1),
+print(f"Published to {len(post['post']['platforms'])} platforms!")
+```
+
+## Configuration
+
+```python
+late = Late(
+    api_key="your-api-key",  # Defaults to os.environ["LATE_API_KEY"]
+    base_url="https://getlate.dev/api",
+    timeout=60.0,
 )
 ```
 
----
+## Examples
 
-## 🤖 Claude Desktop Integration (MCP)
+### Schedule a Post
 
-Schedule posts directly from Claude Desktop using natural language.
-
-### Setup in 3 Steps
-
-**1. Install uv** (package manager)
-
-```bash
-# macOS / Linux
-curl -LsSf https://astral.sh/uv/install.sh | sh
-
-# Windows (PowerShell)
-powershell -c "irm https://astral.sh/uv/install.ps1 | iex"
+```python
+post = late.posts.create(
+    content="This post will go live tomorrow at 10am",
+    platforms=[{"platform": "instagram", "accountId": "acc_xxx"}],
+    scheduled_for="2025-02-01T10:00:00Z",
+)
 ```
 
-**2. Add to Claude Desktop config**
+### Platform-Specific Content
 
-Open the config file:
-- **macOS**: `~/Library/Application Support/Claude/claude_desktop_config.json`
-- **Windows**: `%APPDATA%\Claude\claude_desktop_config.json`
+Customize content per platform while posting to all at once:
 
-Add this:
-
-```json
-{
-  "mcpServers": {
-    "late": {
-      "command": "uvx",
-      "args": ["--from", "late-sdk[mcp]", "late-mcp"],
-      "env": {
-        "LATE_API_KEY": "your_api_key_here"
-      }
-    }
-  }
-}
+```python
+post = late.posts.create(
+    content="Default content",
+    platforms=[
+        {
+            "platform": "twitter",
+            "accountId": "acc_twitter",
+            "platformSpecificContent": "Short & punchy for X",
+        },
+        {
+            "platform": "linkedin",
+            "accountId": "acc_linkedin",
+            "platformSpecificContent": "Professional tone for LinkedIn with more detail.",
+        },
+    ],
+    publish_now=True,
+)
 ```
 
-> Get your API key at [getlate.dev/dashboard/api-keys](https://getlate.dev/dashboard/api-keys)
+### Upload Media
 
-**3. Restart Claude Desktop**
+```python
+# 1. Get presigned upload URL
+presign = late.media.get_presigned_url(
+    filename="video.mp4",
+    content_type="video/mp4",
+)
 
-Done! Ask Claude things like:
-- *"Post 'Hello world!' to Twitter"*
-- *"Schedule a LinkedIn post for tomorrow at 9am"*
-- *"Show my connected accounts"*
+# 2. Upload your file
+import httpx
+httpx.put(presign["uploadUrl"], content=video_bytes, headers={"Content-Type": "video/mp4"})
 
-<details>
-<summary><b>Alternative: Using pip instead of uvx</b></summary>
-
-```bash
-pip install late-sdk[mcp]
+# 3. Create post with media
+post = late.posts.create(
+    content="Check out this video!",
+    media_urls=[presign["publicUrl"]],
+    platforms=[
+        {"platform": "tiktok", "accountId": "acc_xxx"},
+        {"platform": "youtube", "accountId": "acc_yyy", "youtubeTitle": "My Video"},
+    ],
+    publish_now=True,
+)
 ```
 
-```json
-{
-  "mcpServers": {
-    "late": {
-      "command": "python",
-      "args": ["-m", "late.mcp"],
-      "env": {
-        "LATE_API_KEY": "your_api_key_here"
-      }
-    }
-  }
-}
+### Get Analytics
+
+```python
+data = late.analytics.get(post_id="post_xxx")
+
+print("Views:", data["analytics"]["views"])
+print("Likes:", data["analytics"]["likes"])
+print("Engagement Rate:", data["analytics"]["engagementRate"])
 ```
 
-</details>
+### List Connected Accounts
 
-### Uploading Images/Videos
+```python
+data = late.accounts.list()
 
-Since Claude can't access local files, use the browser upload flow:
-
-1. Ask Claude: *"I want to post an image to Instagram"*
-2. Claude gives you an upload link → open it in your browser
-3. Upload your file and tell Claude *"done"*
-4. Claude creates the post with your media
-
-### Available Commands
-
-| Command | What it does |
-|---------|--------------|
-| `accounts_list` | Show connected social accounts |
-| `posts_create` | Create scheduled, immediate, or draft post |
-| `posts_publish_now` | Publish immediately |
-| `posts_cross_post` | Post to multiple platforms |
-| `posts_list` | Show your posts |
-| `posts_retry` | Retry a failed post |
-| `media_generate_upload_link` | Get link to upload media |
-
----
-
-## 🌐 Remote Access (HTTP/SSE)
-
-Deploy the MCP server to access it remotely from Claude Code CLI or custom clients.
-
-### Quick Deploy to Railway
-
-1. **Push to GitHub** and connect to Railway
-2. **Set environment variables:**
-   - `LATE_API_KEY` - Your Late API key
-   - `MCP_SERVER_API_KEY` - Secure random key (generate with command below)
-
-3. **Generate secure key:**
-```bash
-python -c "import secrets; print(secrets.token_urlsafe(32))"
+for account in data["accounts"]:
+    print(f"{account['platform']}: @{account['username']}")
 ```
-
-4. **Railway auto-deploys** using the Dockerfile
-
-### Connect from Claude Code CLI
-
-```bash
-# Add your deployed server
-claude mcp add --transport http late https://your-app.railway.app/sse
-
-# Authenticate
-/mcp
-```
-
-### Local HTTP Server
-
-```bash
-# Set environment variables
-export LATE_API_KEY=your_api_key
-export MCP_SERVER_API_KEY=your_secure_key
-
-# Install with HTTP support
-uv sync --extra mcp
-
-# Run HTTP server
-uv run late-mcp-http
-```
-
-Server runs on `http://0.0.0.0:8080` with endpoints:
-- `/health` - Health check (public)
-- `/sse` - SSE connection (requires API key)
-- `/messages/` - Message handler (requires API key)
-
-📖 [Full HTTP deployment guide →](docs/HTTP_DEPLOYMENT.md)
-
----
-
-## SDK Features
 
 ### Async Support
 
@@ -188,106 +140,174 @@ import asyncio
 from late import Late
 
 async def main():
-    async with Late(api_key="...") as client:
-        posts = await client.posts.alist(status="scheduled")
+    async with Late() as late:
+        posts = await late.posts.alist(status="scheduled")
+        print(f"Found {len(posts['posts'])} scheduled posts")
 
 asyncio.run(main())
 ```
 
-### AI Content Generation (Experimental)
-
-```bash
-pip install late-sdk[ai]
-```
-
-```python
-from late import Platform, CaptionTone
-from late.ai import ContentGenerator, GenerateRequest
-
-generator = ContentGenerator(
-    provider="openai",
-    api_key="sk-...",
-    model="gpt-4o-mini",  # or gpt-4o, gpt-4-turbo, etc.
-)
-
-response = generator.generate(
-    GenerateRequest(
-        prompt="Write a tweet about Python",
-        platform=Platform.TWITTER,
-        tone=CaptionTone.CASUAL,
-    )
-)
-
-print(response.text)
-```
-
-### CSV Scheduling
+## Error Handling
 
 ```python
 from late import Late
-from late.pipelines import CSVSchedulerPipeline
+from late.exceptions import LateApiError, RateLimitError, ValidationError
 
-client = Late(api_key="...")
-pipeline = CSVSchedulerPipeline(client)
-
-# Validate first
-results = pipeline.schedule("posts.csv", dry_run=True)
-
-# Then schedule
-results = pipeline.schedule("posts.csv")
+try:
+    late.posts.create(content="Hello!", platforms=[...])
+except RateLimitError as e:
+    print(f"Rate limited. Retry in {e.retry_after}s")
+except ValidationError as e:
+    print(f"Invalid request: {e.errors}")
+except LateApiError as e:
+    print(f"Error {e.status_code}: {e.message}")
 ```
 
-### Cross-Posting
+## SDK Reference
 
-```python
-from late import Platform
-from late.pipelines import CrossPosterPipeline, PlatformConfig
+### Posts
+| Method | Description |
+|--------|-------------|
+| `posts.list()` | List all posts |
+| `posts.create()` | Create and schedule a post |
+| `posts.get()` | Get a specific post |
+| `posts.update()` | Update a scheduled post |
+| `posts.delete()` | Delete a post |
+| `posts.retry()` | Retry a failed post |
+| `posts.bulk_upload()` | Upload multiple posts at once |
 
-cross_poster = CrossPosterPipeline(client)
+### Accounts
+| Method | Description |
+|--------|-------------|
+| `accounts.list()` | List connected social accounts |
+| `accounts.get()` | Get a specific account |
+| `accounts.get_follower_stats()` | Get follower growth data |
+| `accounts.get_health()` | Check health of an account |
 
-results = await cross_poster.post(
-    content="Big announcement!",
-    platforms=[
-        PlatformConfig(Platform.TWITTER, "tw_123"),
-        PlatformConfig(Platform.LINKEDIN, "li_456", delay_minutes=5),
-    ],
-)
+### Profiles
+| Method | Description |
+|--------|-------------|
+| `profiles.list()` | List workspace profiles |
+| `profiles.create()` | Create a new profile |
+| `profiles.get()` | Get a specific profile |
+| `profiles.update()` | Update a profile |
+| `profiles.delete()` | Delete a profile |
+
+### Analytics
+| Method | Description |
+|--------|-------------|
+| `analytics.get()` | Get post performance metrics |
+| `analytics.get_youtube_daily_views()` | Get YouTube daily view breakdown |
+
+### Account Groups
+| Method | Description |
+|--------|-------------|
+| `account_groups.list()` | List account groups |
+| `account_groups.create()` | Create an account group |
+| `account_groups.update()` | Update an account group |
+| `account_groups.delete()` | Delete an account group |
+
+### Queue
+| Method | Description |
+|--------|-------------|
+| `queue.list_slots()` | List queue time slots |
+| `queue.create_slot()` | Create a queue slot |
+| `queue.update_slot()` | Update a queue slot |
+| `queue.delete_slot()` | Delete a queue slot |
+| `queue.preview()` | Preview upcoming queued posts |
+| `queue.get_next_slot()` | Get next available slot |
+
+### Webhooks
+| Method | Description |
+|--------|-------------|
+| `webhooks.get_settings()` | Get webhook configuration |
+| `webhooks.create_settings()` | Create webhook settings |
+| `webhooks.update_settings()` | Update webhook settings |
+| `webhooks.delete_settings()` | Delete webhook settings |
+| `webhooks.test()` | Send a test webhook |
+| `webhooks.get_logs()` | Get webhook delivery logs |
+
+### API Keys
+| Method | Description |
+|--------|-------------|
+| `api_keys.list()` | List API keys |
+| `api_keys.create()` | Create a new API key |
+| `api_keys.delete()` | Delete an API key |
+
+### Media
+| Method | Description |
+|--------|-------------|
+| `media.get_presigned_url()` | Get presigned URL for file upload |
+
+### Tools
+| Method | Description |
+|--------|-------------|
+| `tools.download_youtube()` | Download YouTube video |
+| `tools.get_youtube_transcript()` | Get YouTube video transcript |
+| `tools.download_instagram()` | Download Instagram media |
+| `tools.check_instagram_hashtags()` | Check if hashtags are banned |
+| `tools.download_tiktok()` | Download TikTok video |
+| `tools.download_twitter()` | Download Twitter/X media |
+| `tools.download_facebook()` | Download Facebook video |
+| `tools.download_linkedin()` | Download LinkedIn video |
+| `tools.download_bluesky()` | Download Bluesky media |
+
+### Users
+| Method | Description |
+|--------|-------------|
+| `users.list()` | List team users |
+| `users.get()` | Get a specific user |
+
+### Usage
+| Method | Description |
+|--------|-------------|
+| `usage.get_stats()` | Get API usage statistics |
+
+### Logs
+| Method | Description |
+|--------|-------------|
+| `logs.list()` | List publishing logs |
+| `logs.get()` | Get a specific log entry |
+
+### Connect (OAuth)
+| Method | Description |
+|--------|-------------|
+| `connect.get_url()` | Get OAuth URL for a platform |
+| `connect.handle_callback()` | Handle OAuth callback |
+
+### Reddit
+| Method | Description |
+|--------|-------------|
+| `reddit.search()` | Search Reddit |
+| `reddit.get_feed()` | Get Reddit feed |
+
+### Invites
+| Method | Description |
+|--------|-------------|
+| `invites.create_token()` | Create an invite token |
+| `invites.list()` | List platform invites |
+| `invites.create()` | Create a platform invite |
+| `invites.delete()` | Delete a platform invite |
+
+## MCP Server (Claude Desktop)
+
+The SDK includes a Model Context Protocol (MCP) server for integration with Claude Desktop. See [MCP documentation](docs/MCP.md) for setup instructions.
+
+```bash
+pip install getlate[mcp]
 ```
 
----
+## Requirements
 
-## API Reference
-
-### Resources
-
-| Resource | Methods |
-|----------|---------|
-| `client.posts` | `list`, `get`, `create`, `update`, `delete`, `retry` |
-| `client.profiles` | `list`, `get`, `create`, `update`, `delete` |
-| `client.accounts` | `list`, `get` |
-| `client.media` | `upload`, `upload_multiple` |
-| `client.analytics` | `get`, `get_usage` |
-| `client.tools` | `youtube_download`, `instagram_download`, `tiktok_download`, `generate_caption` |
-| `client.queue` | `get_slots`, `preview`, `next_slot` |
-
-### Client Options
-
-```python
-client = Late(
-    api_key="...",
-    timeout=30.0,      # seconds
-    max_retries=3,
-)
-```
-
----
+- Python 3.10+
+- [Late API key](https://getlate.dev) (free tier available)
 
 ## Links
 
-- [Late Website](https://getlate.dev)
-- [API Documentation](https://docs.getlate.dev)
-- [Get API Key](https://getlate.dev/dashboard/api-keys)
+- [Documentation](https://docs.getlate.dev)
+- [Dashboard](https://getlate.dev/dashboard)
+- [Changelog](https://docs.getlate.dev/changelog)
 
 ## License
 
-MIT
+Apache-2.0

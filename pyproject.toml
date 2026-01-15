@@ -1,10 +1,10 @@
 [project]
-name = "late-sdk"
+name = "getlate"
 version = "1.1.2"
-description = "Python SDK for Late API - Social Media Scheduling"
+description = "The official Python library for the Late API"
 readme = "README.md"
 requires-python = ">=3.10"
-license = { text = "MIT" }
+license = { text = "Apache-2.0" }
 authors = [
     { name = "Late", email = "hello@getlate.dev" }
 ]
@@ -12,18 +12,26 @@ keywords = [
     "late",
     "social-media",
     "scheduling",
-    "api-client",
-    "twitter",
+    "api",
+    "sdk",
     "instagram",
-    "linkedin",
     "tiktok",
     "youtube",
+    "linkedin",
+    "twitter",
+    "x",
     "facebook",
+    "pinterest",
+    "threads",
+    "bluesky",
+    "reddit",
+    "snapchat",
+    "telegram",
 ]
 classifiers = [
     "Development Status :: 4 - Beta",
     "Intended Audience :: Developers",
-    "License :: OSI Approved :: MIT License",
+    "License :: OSI Approved :: Apache Software License",
     "Operating System :: OS Independent",
     "Programming Language :: Python :: 3",
     "Programming Language :: Python :: 3.10",
@@ -75,8 +83,9 @@ late-mcp-http = "late.mcp.http_server:main"
 [project.urls]
 Homepage = "https://getlate.dev"
 Documentation = "https://docs.getlate.dev"
-Repository = "https://github.com/getlatedev/late-python-sdk"
-Issues = "https://github.com/getlatedev/late-python-sdk/issues"
+Repository = "https://github.com/getlatedev/late-python"
+Issues = "https://github.com/getlatedev/late-python/issues"
+Changelog = "https://docs.getlate.dev/changelog"
 
 [build-system]
 requires = ["hatchling"]
