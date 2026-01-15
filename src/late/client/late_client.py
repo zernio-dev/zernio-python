@@ -5,14 +5,22 @@ Main Late API client.
 from __future__ import annotations
 
 from ..resources import (
+    AccountGroupsResource,
     AccountsResource,
     AnalyticsResource,
+    ApiKeysResource,
+    ConnectResource,
+    InvitesResource,
+    LogsResource,
     MediaResource,
     PostsResource,
     ProfilesResource,
     QueueResource,
+    RedditResource,
     ToolsResource,
+    UsageResource,
     UsersResource,
+    WebhooksResource,
 )
 from .base import BaseClient
 
@@ -63,7 +71,7 @@ class Late(BaseClient):
             api_key, base_url=base_url, timeout=timeout, max_retries=max_retries
         )
 
-        # Initialize resources
+        # Core resources (manual with Pydantic validation)
         self.posts = PostsResource(self)
         self.profiles = ProfilesResource(self)
         self.accounts = AccountsResource(self)
@@ -72,6 +80,16 @@ class Late(BaseClient):
         self.analytics = AnalyticsResource(self)
         self.tools = ToolsResource(self)
         self.queue = QueueResource(self)
+
+        # Additional resources (auto-generated)
+        self.webhooks = WebhooksResource(self)
+        self.logs = LogsResource(self)
+        self.connect = ConnectResource(self)
+        self.invites = InvitesResource(self)
+        self.api_keys = ApiKeysResource(self)
+        self.account_groups = AccountGroupsResource(self)
+        self.usage = UsageResource(self)
+        self.reddit = RedditResource(self)
 
     async def __aenter__(self) -> Late:
         """Async context manager entry."""

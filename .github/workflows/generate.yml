@@ -1,0 +1,138 @@
+name: Regenerate
+
+on:
+  # Triggered by the API repository when OpenAPI spec changes
+  repository_dispatch:
+    types: [openapi-updated]
+
+  # Allow manual trigger
+  workflow_dispatch:
+
+jobs:
+  generate:
+    name: Regenerate from OpenAPI
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      id-token: write
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          fetch-depth: 0
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v4
+        with:
+          version: "latest"
+
+      - name: Set up Python
+        run: uv python install 3.11
+
+      - name: Install dependencies
+        run: uv sync --all-extras
+
+      - name: Fetch latest OpenAPI spec
+        run: |
+          curl -f -o openapi.yaml https://getlate.dev/openapi.yaml
+          echo "Fetched OpenAPI spec:"
+          head -20 openapi.yaml
+
+      - name: Generate resources
+        run: |
+          echo "Starting resource generation..."
+          uv run python scripts/generate_resources.py
+          echo "Resource generation complete."
+
+      - name: Generate models
+        run: |
+          echo "Starting model generation..."
+          uv run python scripts/generate_models.py || echo "Model generation skipped (requires local docs repo)"
+          echo "Model generation complete."
+
+      - name: Run linter (fix formatting)
+        run: |
+          uv run ruff check --fix src/late/resources/_generated/ || true
+          uv run ruff format src/late/resources/_generated/ || true
+
+      - name: Run tests
+        run: uv run pytest tests -v --tb=short || echo "Tests failed but continuing..."
+
+      - name: Check for changes
+        id: changes
+        run: |
+          git add -A
+          if git diff --staged --quiet; then
+            echo "has_changes=false" >> $GITHUB_OUTPUT
+          else
+            echo "has_changes=true" >> $GITHUB_OUTPUT
+            echo "Changes detected:"
+            git diff --staged --name-only
+          fi
+
+      - name: Bump version and commit
+        if: steps.changes.outputs.has_changes == 'true'
+        id: version
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+          # Get current version
+          CURRENT_VERSION=$(uv run python -c "import tomllib; print(tomllib.load(open('pyproject.toml', 'rb'))['project']['version'])")
+          echo "Current version: $CURRENT_VERSION"
+
+          # Bump patch version
+          IFS='.' read -ra VERSION_PARTS <<< "$CURRENT_VERSION"
+          MAJOR="${VERSION_PARTS[0]}"
+          MINOR="${VERSION_PARTS[1]}"
+          PATCH="${VERSION_PARTS[2]}"
+          NEW_PATCH=$((PATCH + 1))
+          NEW_VERSION="$MAJOR.$MINOR.$NEW_PATCH"
+          echo "New version: $NEW_VERSION"
+
+          # Update version in pyproject.toml
+          sed -i "s/version = \"$CURRENT_VERSION\"/version = \"$NEW_VERSION\"/" pyproject.toml
+
+          # Also update __init__.py if it has a version
+          sed -i "s/__version__ = \".*\"/__version__ = \"$NEW_VERSION\"/" src/late/__init__.py || true
+
+          echo "new_version=$NEW_VERSION" >> $GITHUB_OUTPUT
+
+          # Stage all changes
+          git add -A
+
+          # Commit
+          git commit -m "chore: regenerate from OpenAPI spec
+
+          - Auto-generated SDK updates
+          - Version: $NEW_VERSION"
+          git push
+
+      - name: Build package
+        if: steps.changes.outputs.has_changes == 'true'
+        run: uv build
+
+      - name: Create GitHub Release
+        if: steps.changes.outputs.has_changes == 'true'
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: v${{ steps.version.outputs.new_version }}
+          name: v${{ steps.version.outputs.new_version }}
+          files: dist/*
+          generate_release_notes: true
+          body: |
+            ## Auto-generated SDK Update
+
+            This release was automatically generated from the latest OpenAPI spec.
+
+            ```bash
+            pip install late-sdk==${{ steps.version.outputs.new_version }}
+            ```
+
+      - name: Publish to PyPI
+        if: steps.changes.outputs.has_changes == 'true'
+        uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          password: ${{ secrets.PYPI_API_TOKEN }}

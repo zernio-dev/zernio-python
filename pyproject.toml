@@ -65,6 +65,7 @@ dev = [
     "ruff>=0.8.0",
     "mypy>=1.13.0",
     "datamodel-code-generator>=0.26.0",
+    "pyyaml>=6.0.0",
 ]
 
 [project.scripts]
@@ -119,6 +120,8 @@ ignore = [
 [tool.ruff.lint.per-file-ignores]
 "**/models/_generated/*" = ["UP006", "UP007", "UP035", "W291"]  # Allow old-style annotations and trailing whitespace in generated code
 "**/models/_generated/**" = ["UP006", "UP007", "UP035", "W291"]
+"**/resources/_generated/*" = ["UP006", "UP007", "UP035", "W291", "ARG002"]  # Allow old-style annotations in generated resources
+"**/resources/_generated/**" = ["UP006", "UP007", "UP035", "W291", "ARG002"]
 
 [tool.ruff.lint.isort]
 known-first-party = ["late"]

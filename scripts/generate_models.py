@@ -23,13 +23,13 @@ def main() -> int:
     """Generate models from OpenAPI spec."""
     # Paths
     project_root = Path(__file__).parent.parent
-    openapi_spec = project_root.parent / "late-api-docs" / "public-api.yaml"
+    openapi_spec = project_root / "openapi.yaml"
     output_dir = project_root / "src" / "late" / "models" / "_generated"
 
-    # Validate OpenAPI spec exists
+    # Validate OpenAPI spec exists (should be fetched first)
     if not openapi_spec.exists():
         print(f"Error: OpenAPI spec not found at {openapi_spec}")
-        print("Make sure late-api-docs is in the parent directory.")
+        print("Run 'curl -o openapi.yaml https://getlate.dev/openapi.yaml' first")
         return 1
 
     # Create output directory
