@@ -260,15 +260,22 @@ def generate_method_body(
             )
         path_expr = f'f"{path_formatted}"'
 
+    # Determine if we need query params based on HTTP method
+    # GET and DELETE use query params; POST/PUT/PATCH typically use body
+    use_query_params = http_method.upper() in ("GET", "DELETE") and query_params
+    use_body_params = http_method.upper() in ("POST", "PUT", "PATCH") and body_params
+    # POST can also have query params in URL
+    use_query_on_post = http_method.upper() in ("POST", "PUT", "PATCH") and query_params and not body_params
+
     # Build params dict if needed
-    if query_params:
+    if use_query_params or use_query_on_post:
         lines.append("        params = self._build_params(")
         for p in query_params:
             lines.append(f"            {p['name']}={p['name']},")
         lines.append("        )")
 
     # Build payload dict if needed
-    if body_params:
+    if use_body_params:
         lines.append("        payload = self._build_payload(")
         for p in body_params:
             lines.append(f"            {p['name']}={p['name']},")
@@ -288,6 +295,8 @@ def generate_method_body(
     else:  # POST, PUT, PATCH
         if body_params:
             lines.append(f"        return {await_prefix}self._client.{client_method}({path_expr}, data=payload)")
+        elif query_params:
+            lines.append(f"        return {await_prefix}self._client.{client_method}({path_expr}, params=params)")
         else:
             lines.append(f"        return {await_prefix}self._client.{client_method}({path_expr})")
 
@@ -302,6 +311,13 @@ def generate_resource_class(
     class_name = "".join(word.title() for word in resource_name.split("_")) + "Resource"
     description = RESOURCE_DESCRIPTIONS.get(resource_name, f"{resource_name} operations")
 
+    # Check if any operation uses datetime type
+    uses_datetime = any(
+        "datetime" in p.get("type", "")
+        for op in operations
+        for p in op.get("params", [])
+    )
+
     lines = [
         '"""',
         f"Auto-generated {resource_name} resource.",
@@ -315,7 +331,17 @@ def generate_resource_class(
         "from typing import TYPE_CHECKING, Any",
         "",
         "if TYPE_CHECKING:",
-        "    from ..client.base import BaseClient",
+    ]
+
+    # Add datetime import inside TYPE_CHECKING block if needed
+    if uses_datetime:
+        lines.append("    from datetime import datetime")
+        lines.append("")
+        lines.append("    from ..client.base import BaseClient")
+    else:
+        lines.append("    from ..client.base import BaseClient")
+
+    lines.extend([
         "",
         "",
         f"class {class_name}:",
@@ -348,7 +374,7 @@ def generate_resource_class(
         "            else:",
         "                result[to_camel(k)] = v",
         "        return result",
-    ]
+    ])
 
     # Generate sync methods
     for op in operations:

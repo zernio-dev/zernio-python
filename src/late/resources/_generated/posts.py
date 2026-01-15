@@ -10,6 +10,8 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Any
 
 if TYPE_CHECKING:
+    from datetime import datetime
+
     from ..client.base import BaseClient
 
 
@@ -97,7 +99,7 @@ class PostsResource:
         params = self._build_params(
             dry_run=dry_run,
         )
-        return self._client._post("/v1/posts/bulk-upload")
+        return self._client._post("/v1/posts/bulk-upload", params=params)
 
     def retry_post(self, post_id: str) -> dict[str, Any]:
         """Retry publishing a failed or partial post"""
@@ -156,7 +158,7 @@ class PostsResource:
         params = self._build_params(
             dry_run=dry_run,
         )
-        return await self._client._apost("/v1/posts/bulk-upload")
+        return await self._client._apost("/v1/posts/bulk-upload", params=params)
 
     async def aretry_post(self, post_id: str) -> dict[str, Any]:
         """Retry publishing a failed or partial post (async)"""

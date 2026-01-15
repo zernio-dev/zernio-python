@@ -192,7 +192,7 @@ class ConnectResource:
         params = self._build_params(
             code=code,
         )
-        return self._client._patch("/v1/connect/telegram")
+        return self._client._patch("/v1/connect/telegram", params=params)
 
     def update_facebook_page(self, account_id: str, selected_page_id: str) -> dict[str, Any]:
         """Update selected Facebook page for a connected account"""
@@ -384,7 +384,7 @@ class ConnectResource:
         params = self._build_params(
             code=code,
         )
-        return await self._client._apatch("/v1/connect/telegram")
+        return await self._client._apatch("/v1/connect/telegram", params=params)
 
     async def aupdate_facebook_page(self, account_id: str, selected_page_id: str) -> dict[str, Any]:
         """Update selected Facebook page for a connected account (async)"""

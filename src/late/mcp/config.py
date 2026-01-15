@@ -1,7 +1,6 @@
 """Configuration management for Late MCP HTTP server."""
 
 import os
-import sys
 from dataclasses import dataclass
 
 from late.mcp.constants import (
