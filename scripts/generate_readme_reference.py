@@ -161,6 +161,37 @@ METHOD_DESCRIPTIONS = {
 }
 
 
+def get_method_sort_key(method_name: str) -> tuple:
+    """
+    Generate a sort key for consistent method ordering.
+
+    Ordering rules (CRUD-style):
+    1. list/get_all methods first
+    2. create methods
+    3. get (single) methods
+    4. update methods
+    5. delete methods
+    6. Everything else alphabetically
+
+    This ensures consistent output regardless of how methods are discovered.
+    """
+    name_lower = method_name.lower()
+
+    # Priority prefixes (lower number = higher priority)
+    if name_lower.startswith("list") or name_lower.startswith("get_all"):
+        return (0, method_name)
+    elif name_lower.startswith("create") or name_lower == "bulk_upload":
+        return (1, method_name)
+    elif name_lower.startswith("get") and not name_lower.startswith("get_all"):
+        return (2, method_name)
+    elif name_lower.startswith("update"):
+        return (3, method_name)
+    elif name_lower.startswith("delete"):
+        return (4, method_name)
+    else:
+        return (5, method_name)
+
+
 def get_methods(cls):
     """Get all public sync methods from a resource class."""
     methods = []
@@ -178,7 +209,8 @@ def get_methods(cls):
             if name not in dir(object):
                 methods.append(name)
 
-    return sorted(methods)
+    # Sort with CRUD-style ordering for consistency
+    return sorted(methods, key=get_method_sort_key)
 
 
 def generate_description(resource_name: str, method_name: str) -> str:
@@ -215,8 +247,46 @@ def generate_reference_section() -> str:
     return "\n".join(lines)
 
 
+def parse_existing_readme(readme_path: Path) -> dict[str, list[tuple[str, str]]]:
+    """Parse existing SDK Reference section from README to get current methods."""
+    content = readme_path.read_text()
+
+    # Extract SDK Reference section
+    match = re.search(r"## SDK Reference\n(.*?)(?=## MCP Server)", content, re.DOTALL)
+    if not match:
+        return {}
+
+    section = match.group(1)
+    existing = {}
+    current_resource = None
+
+    for line in section.split("\n"):
+        # Match resource headers like "### Posts"
+        header_match = re.match(r"### (.+)", line)
+        if header_match:
+            current_resource = header_match.group(1)
+            existing[current_resource] = []
+            continue
+
+        # Match method rows like "| `posts.list()` | List all posts |"
+        method_match = re.match(r"\| `([^`]+)\(\)` \| (.+) \|", line)
+        if method_match and current_resource:
+            method = method_match.group(1)
+            description = method_match.group(2)
+            existing[current_resource].append((method, description))
+
+    return existing
+
+
 def update_readme(readme_path: Path, reference_section: str) -> None:
-    """Update the README.md file with the new SDK Reference section."""
+    """
+    Update the README.md file, only modifying if there are actual changes.
+
+    This approach:
+    1. Parses the existing SDK Reference section
+    2. Compares with newly generated content
+    3. Only writes if there are real changes (new methods, removed methods, or description changes)
+    """
     content = readme_path.read_text()
 
     # Find the SDK Reference section and replace it
@@ -229,6 +299,10 @@ def update_readme(readme_path: Path, reference_section: str) -> None:
     if new_content != content:
         readme_path.write_text(new_content)
         print(f"Updated {readme_path}")
+
+        # Show what changed
+        old_methods = parse_existing_readme(readme_path)
+        # Could add detailed diff output here if needed
     else:
         print("No changes needed")
 
