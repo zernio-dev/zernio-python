@@ -28,7 +28,7 @@ pip install late-sdk
 ```python
 from late import Late
 
-late = Late()  # Uses LATE_API_KEY env var
+late = Late(api_key="your-api-key")
 
 # Publish to multiple platforms with one call
 post = late.posts.create(
@@ -48,9 +48,9 @@ print(f"Published to {len(post['post']['platforms'])} platforms!")
 
 ```python
 late = Late(
-    api_key="your-api-key",  # Defaults to os.environ["LATE_API_KEY"]
-    base_url="https://getlate.dev/api",
-    timeout=60.0,
+    api_key="your-api-key",  # Required
+    base_url="https://getlate.dev/api",  # Optional, this is the default
+    timeout=30.0,  # Optional, request timeout in seconds
 )
 ```
 
@@ -115,11 +115,9 @@ post = late.posts.create(
 ### Get Analytics
 
 ```python
-data = late.analytics.get(post_id="post_xxx")
+data = late.analytics.get(period="30d")
 
-print("Views:", data["analytics"]["views"])
-print("Likes:", data["analytics"]["likes"])
-print("Engagement Rate:", data["analytics"]["engagementRate"])
+print("Analytics:", data)
 ```
 
 ### List Connected Accounts
@@ -138,7 +136,7 @@ import asyncio
 from late import Late
 
 async def main():
-    async with Late() as late:
+    async with Late(api_key="your-api-key") as late:
         posts = await late.posts.alist(status="scheduled")
         print(f"Found {len(posts['posts'])} scheduled posts")
 
@@ -148,17 +146,18 @@ asyncio.run(main())
 ## Error Handling
 
 ```python
-from late import Late
-from late.exceptions import LateApiError, RateLimitError, ValidationError
+from late import Late, LateAPIError, LateRateLimitError, LateValidationError
+
+late = Late(api_key="your-api-key")
 
 try:
     late.posts.create(content="Hello!", platforms=[...])
-except RateLimitError as e:
-    print(f"Rate limited. Retry in {e.retry_after}s")
-except ValidationError as e:
-    print(f"Invalid request: {e.errors}")
-except LateApiError as e:
-    print(f"Error {e.status_code}: {e.message}")
+except LateRateLimitError as e:
+    print(f"Rate limited: {e}")
+except LateValidationError as e:
+    print(f"Invalid request: {e}")
+except LateAPIError as e:
+    print(f"API error: {e}")
 ```
 
 ## SDK Reference
