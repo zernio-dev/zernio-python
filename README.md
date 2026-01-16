@@ -92,20 +92,18 @@ post = late.posts.create(
 ### Upload Media
 
 ```python
-# 1. Get presigned upload URL
-presign = late.media.get_presigned_url(
-    filename="video.mp4",
-    content_type="video/mp4",
-)
+# Option 1: Direct upload (simplest)
+result = late.media.upload("path/to/video.mp4")
+media_url = result["publicUrl"]
 
-# 2. Upload your file
-import httpx
-httpx.put(presign["uploadUrl"], content=video_bytes, headers={"Content-Type": "video/mp4"})
+# Option 2: Upload from bytes
+result = late.media.upload_bytes(video_bytes, "video.mp4", "video/mp4")
+media_url = result["publicUrl"]
 
-# 3. Create post with media
+# Create post with media
 post = late.posts.create(
     content="Check out this video!",
-    media_urls=[presign["publicUrl"]],
+    media_urls=[media_url],
     platforms=[
         {"platform": "tiktok", "accountId": "acc_xxx"},
         {"platform": "youtube", "accountId": "acc_yyy", "youtubeTitle": "My Video"},
@@ -182,7 +180,6 @@ except LateApiError as e:
 | `accounts.list()` | List connected social accounts |
 | `accounts.get()` | Get a specific account |
 | `accounts.get_follower_stats()` | Get follower growth data |
-| `accounts.get_health()` | Check health of an account |
 
 ### Profiles
 | Method | Description |
@@ -197,25 +194,24 @@ except LateApiError as e:
 | Method | Description |
 |--------|-------------|
 | `analytics.get()` | Get post performance metrics |
-| `analytics.get_youtube_daily_views()` | Get YouTube daily view breakdown |
+| `analytics.get_usage()` | Get API usage statistics |
 
 ### Account Groups
 | Method | Description |
 |--------|-------------|
-| `account_groups.list()` | List account groups |
-| `account_groups.create()` | Create an account group |
-| `account_groups.update()` | Update an account group |
-| `account_groups.delete()` | Delete an account group |
+| `account_groups.list_account_groups()` | List account groups |
+| `account_groups.create_account_group()` | Create an account group |
+| `account_groups.update_account_group()` | Update an account group |
+| `account_groups.delete_account_group()` | Delete an account group |
 
 ### Queue
 | Method | Description |
 |--------|-------------|
-| `queue.list_slots()` | List queue time slots |
-| `queue.create_slot()` | Create a queue slot |
-| `queue.update_slot()` | Update a queue slot |
-| `queue.delete_slot()` | Delete a queue slot |
+| `queue.get_slots()` | List queue time slots |
+| `queue.update_slots()` | Update queue slots |
+| `queue.delete_slots()` | Delete queue slots |
 | `queue.preview()` | Preview upcoming queued posts |
-| `queue.get_next_slot()` | Get next available slot |
+| `queue.next_slot()` | Get next available slot |
 
 ### Webhooks
 | Method | Description |
@@ -237,20 +233,27 @@ except LateApiError as e:
 ### Media
 | Method | Description |
 |--------|-------------|
-| `media.get_presigned_url()` | Get presigned URL for file upload |
+| `media.generate_upload_token()` | Generate upload token for browser uploads |
+| `media.check_upload_token()` | Check upload token status |
+| `media.upload()` | Upload a file from path |
+| `media.upload_bytes()` | Upload file from bytes |
+| `media.upload_large()` | Upload large file with multipart |
+| `media.upload_large_bytes()` | Upload large file from bytes |
+| `media.upload_multiple()` | Upload multiple files |
 
 ### Tools
 | Method | Description |
 |--------|-------------|
-| `tools.download_youtube()` | Download YouTube video |
-| `tools.get_youtube_transcript()` | Get YouTube video transcript |
-| `tools.download_instagram()` | Download Instagram media |
-| `tools.check_instagram_hashtags()` | Check if hashtags are banned |
-| `tools.download_tiktok()` | Download TikTok video |
-| `tools.download_twitter()` | Download Twitter/X media |
-| `tools.download_facebook()` | Download Facebook video |
-| `tools.download_linkedin()` | Download LinkedIn video |
-| `tools.download_bluesky()` | Download Bluesky media |
+| `tools.youtube_download()` | Download YouTube video |
+| `tools.youtube_transcript()` | Get YouTube video transcript |
+| `tools.instagram_download()` | Download Instagram media |
+| `tools.instagram_hashtag_check()` | Check if hashtags are banned |
+| `tools.tiktok_download()` | Download TikTok video |
+| `tools.twitter_download()` | Download Twitter/X media |
+| `tools.facebook_download()` | Download Facebook video |
+| `tools.linkedin_download()` | Download LinkedIn video |
+| `tools.bluesky_download()` | Download Bluesky media |
+| `tools.generate_caption()` | Generate caption using AI |
 
 ### Users
 | Method | Description |
@@ -266,28 +269,43 @@ except LateApiError as e:
 ### Logs
 | Method | Description |
 |--------|-------------|
-| `logs.list()` | List publishing logs |
-| `logs.get()` | Get a specific log entry |
+| `logs.list_logs()` | List publishing logs |
+| `logs.get_log()` | Get a specific log entry |
+| `logs.get_post_logs()` | Get logs for a specific post |
 
 ### Connect (OAuth)
 | Method | Description |
 |--------|-------------|
-| `connect.get_url()` | Get OAuth URL for a platform |
-| `connect.handle_callback()` | Handle OAuth callback |
+| `connect.get_connect_url()` | Get OAuth URL for a platform |
+| `connect.handle_o_auth_callback()` | Handle OAuth callback |
+| `connect.list_facebook_pages()` | List Facebook pages |
+| `connect.select_facebook_page()` | Select a Facebook page |
+| `connect.list_google_business_locations()` | List Google Business locations |
+| `connect.select_google_business_location()` | Select a Google Business location |
+| `connect.list_linked_in_organizations()` | List LinkedIn organizations |
+| `connect.select_linked_in_organization()` | Select a LinkedIn organization |
+| `connect.list_pinterest_boards_for_selection()` | List Pinterest boards |
+| `connect.select_pinterest_board()` | Select a Pinterest board |
+| `connect.list_snapchat_profiles()` | List Snapchat profiles |
+| `connect.select_snapchat_profile()` | Select a Snapchat profile |
+| `connect.connect_bluesky_credentials()` | Connect Bluesky with credentials |
+| `connect.get_telegram_connect_status()` | Get Telegram connection status |
+| `connect.initiate_telegram_connect()` | Start Telegram connection |
+| `connect.complete_telegram_connect()` | Complete Telegram connection |
 
 ### Reddit
 | Method | Description |
 |--------|-------------|
-| `reddit.search()` | Search Reddit |
-| `reddit.get_feed()` | Get Reddit feed |
+| `reddit.search_reddit()` | Search Reddit |
+| `reddit.get_reddit_feed()` | Get Reddit feed |
 
 ### Invites
 | Method | Description |
 |--------|-------------|
-| `invites.create_token()` | Create an invite token |
-| `invites.list()` | List platform invites |
-| `invites.create()` | Create a platform invite |
-| `invites.delete()` | Delete a platform invite |
+| `invites.create_invite_token()` | Create an invite token |
+| `invites.list_platform_invites()` | List platform invites |
+| `invites.create_platform_invite()` | Create a platform invite |
+| `invites.delete_platform_invite()` | Delete a platform invite |
 
 ## MCP Server (Claude Desktop)
 
