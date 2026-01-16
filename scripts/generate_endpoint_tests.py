@@ -123,8 +123,9 @@ def generate_test_file(endpoints: list[dict[str, Any]]) -> str:
         'Run `python scripts/generate_endpoint_tests.py` to regenerate.',
         '"""',
         '',
+        'from unittest.mock import MagicMock, patch',
+        '',
         'import pytest',
-        'from unittest.mock import AsyncMock, MagicMock, patch',
         '',
         'from late import Late',
         '',
@@ -156,7 +157,7 @@ def generate_test_file(endpoints: list[dict[str, Any]]) -> str:
             lines.append(f'    def test_{resource}_{method}_exists(self, client: Late) -> None:')
             lines.append(f'        """Test that {resource}.{method} method exists."""')
             lines.append(f'        assert hasattr(client.{resource}, "{method}")')
-            lines.append(f'        assert callable(getattr(client.{resource}, "{method}"))')
+            lines.append(f'        assert callable(client.{resource}.{method})')
             lines.append('')
 
     # Generate mock response tests
