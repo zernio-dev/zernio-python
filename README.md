@@ -7,7 +7,7 @@
 <h1 align="center">Late Python SDK</h1>
 
 <p align="center">
-  <a href="https://pypi.org/project/getlate/"><img src="https://img.shields.io/pypi/v/getlate.svg" alt="PyPI version"></a>
+  <a href="https://pypi.org/project/late-sdk/"><img src="https://img.shields.io/pypi/v/late-sdk.svg" alt="PyPI version"></a>
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-Apache--2.0-blue.svg" alt="License"></a>
 </p>
 
@@ -20,7 +20,7 @@ The official Python SDK for the [Late API](https://getlate.dev) — schedule and
 ## Installation
 
 ```bash
-pip install getlate
+pip install late-sdk
 ```
 
 ## Quick Start
@@ -220,19 +220,19 @@ except LateApiError as e:
 ### Webhooks
 | Method | Description |
 |--------|-------------|
-| `webhooks.get_settings()` | Get webhook configuration |
-| `webhooks.create_settings()` | Create webhook settings |
-| `webhooks.update_settings()` | Update webhook settings |
-| `webhooks.delete_settings()` | Delete webhook settings |
-| `webhooks.test()` | Send a test webhook |
-| `webhooks.get_logs()` | Get webhook delivery logs |
+| `webhooks.get_webhook_settings()` | Get webhook configuration |
+| `webhooks.create_webhook_settings()` | Create webhook settings |
+| `webhooks.update_webhook_settings()` | Update webhook settings |
+| `webhooks.delete_webhook_settings()` | Delete webhook settings |
+| `webhooks.test_webhook()` | Send a test webhook |
+| `webhooks.get_webhook_logs()` | Get webhook delivery logs |
 
 ### API Keys
 | Method | Description |
 |--------|-------------|
-| `api_keys.list()` | List API keys |
-| `api_keys.create()` | Create a new API key |
-| `api_keys.delete()` | Delete an API key |
+| `api_keys.list_api_keys()` | List API keys |
+| `api_keys.create_api_key()` | Create a new API key |
+| `api_keys.delete_api_key()` | Delete an API key |
 
 ### Media
 | Method | Description |
@@ -261,7 +261,7 @@ except LateApiError as e:
 ### Usage
 | Method | Description |
 |--------|-------------|
-| `usage.get_stats()` | Get API usage statistics |
+| `usage.get_usage_stats()` | Get API usage statistics |
 
 ### Logs
 | Method | Description |
@@ -291,10 +291,10 @@ except LateApiError as e:
 
 ## MCP Server (Claude Desktop)
 
-The SDK includes a Model Context Protocol (MCP) server for integration with Claude Desktop. See [MCP documentation](docs/MCP.md) for setup instructions.
+The SDK includes a Model Context Protocol (MCP) server for integration with Claude Desktop. See [MCP documentation](https://docs.getlate.dev/resources/mcp) for setup instructions.
 
 ```bash
-pip install getlate[mcp]
+pip install late-sdk[mcp]
 ```
 
 ## Requirements
