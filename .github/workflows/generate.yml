@@ -58,6 +58,12 @@ jobs:
           uv run --with pyyaml python scripts/generate_mcp_tools.py
           echo "MCP tool generation complete."
 
+      - name: Generate README SDK Reference
+        run: |
+          echo "Starting README SDK Reference generation..."
+          uv run python scripts/generate_readme_reference.py
+          echo "README SDK Reference generation complete."
+
       - name: Run linter (fix formatting)
         run: |
           uv run ruff check --fix src/late/resources/_generated/ || true

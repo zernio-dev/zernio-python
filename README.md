@@ -166,29 +166,29 @@ except LateApiError as e:
 ### Posts
 | Method | Description |
 |--------|-------------|
-| `posts.list()` | List all posts |
-| `posts.create()` | Create and schedule a post |
-| `posts.get()` | Get a specific post |
-| `posts.update()` | Update a scheduled post |
-| `posts.delete()` | Delete a post |
-| `posts.retry()` | Retry a failed post |
 | `posts.bulk_upload()` | Upload multiple posts at once |
+| `posts.create()` | Create and schedule a post |
+| `posts.delete()` | Delete a post |
+| `posts.get()` | Get a specific post |
+| `posts.list()` | List all posts |
+| `posts.retry()` | Retry a failed post |
+| `posts.update()` | Update a scheduled post |
 
 ### Accounts
 | Method | Description |
 |--------|-------------|
-| `accounts.list()` | List connected social accounts |
 | `accounts.get()` | Get a specific account |
 | `accounts.get_follower_stats()` | Get follower growth data |
+| `accounts.list()` | List connected social accounts |
 
 ### Profiles
 | Method | Description |
 |--------|-------------|
-| `profiles.list()` | List workspace profiles |
 | `profiles.create()` | Create a new profile |
-| `profiles.get()` | Get a specific profile |
-| `profiles.update()` | Update a profile |
 | `profiles.delete()` | Delete a profile |
+| `profiles.get()` | Get a specific profile |
+| `profiles.list()` | List workspace profiles |
+| `profiles.update()` | Update a profile |
 
 ### Analytics
 | Method | Description |
@@ -199,42 +199,42 @@ except LateApiError as e:
 ### Account Groups
 | Method | Description |
 |--------|-------------|
-| `account_groups.list_account_groups()` | List account groups |
 | `account_groups.create_account_group()` | Create an account group |
-| `account_groups.update_account_group()` | Update an account group |
 | `account_groups.delete_account_group()` | Delete an account group |
+| `account_groups.list_account_groups()` | List account groups |
+| `account_groups.update_account_group()` | Update an account group |
 
 ### Queue
 | Method | Description |
 |--------|-------------|
-| `queue.get_slots()` | List queue time slots |
-| `queue.update_slots()` | Update queue slots |
 | `queue.delete_slots()` | Delete queue slots |
-| `queue.preview()` | Preview upcoming queued posts |
+| `queue.get_slots()` | List queue time slots |
 | `queue.next_slot()` | Get next available slot |
+| `queue.preview()` | Preview upcoming queued posts |
+| `queue.update_slots()` | Update queue slots |
 
 ### Webhooks
 | Method | Description |
 |--------|-------------|
-| `webhooks.get_webhook_settings()` | Get webhook configuration |
 | `webhooks.create_webhook_settings()` | Create webhook settings |
-| `webhooks.update_webhook_settings()` | Update webhook settings |
 | `webhooks.delete_webhook_settings()` | Delete webhook settings |
-| `webhooks.test_webhook()` | Send a test webhook |
 | `webhooks.get_webhook_logs()` | Get webhook delivery logs |
+| `webhooks.get_webhook_settings()` | Get webhook configuration |
+| `webhooks.test_webhook()` | Send a test webhook |
+| `webhooks.update_webhook_settings()` | Update webhook settings |
 
 ### API Keys
 | Method | Description |
 |--------|-------------|
-| `api_keys.list_api_keys()` | List API keys |
 | `api_keys.create_api_key()` | Create a new API key |
 | `api_keys.delete_api_key()` | Delete an API key |
+| `api_keys.list_api_keys()` | List API keys |
 
 ### Media
 | Method | Description |
 |--------|-------------|
-| `media.generate_upload_token()` | Generate upload token for browser uploads |
 | `media.check_upload_token()` | Check upload token status |
+| `media.generate_upload_token()` | Generate upload token for browser uploads |
 | `media.upload()` | Upload a file from path |
 | `media.upload_bytes()` | Upload file from bytes |
 | `media.upload_large()` | Upload large file with multipart |
@@ -244,22 +244,22 @@ except LateApiError as e:
 ### Tools
 | Method | Description |
 |--------|-------------|
-| `tools.youtube_download()` | Download YouTube video |
-| `tools.youtube_transcript()` | Get YouTube video transcript |
+| `tools.bluesky_download()` | Download Bluesky media |
+| `tools.facebook_download()` | Download Facebook video |
+| `tools.generate_caption()` | Generate caption using AI |
 | `tools.instagram_download()` | Download Instagram media |
 | `tools.instagram_hashtag_check()` | Check if hashtags are banned |
+| `tools.linkedin_download()` | Download LinkedIn video |
 | `tools.tiktok_download()` | Download TikTok video |
 | `tools.twitter_download()` | Download Twitter/X media |
-| `tools.facebook_download()` | Download Facebook video |
-| `tools.linkedin_download()` | Download LinkedIn video |
-| `tools.bluesky_download()` | Download Bluesky media |
-| `tools.generate_caption()` | Generate caption using AI |
+| `tools.youtube_download()` | Download YouTube video |
+| `tools.youtube_transcript()` | Get YouTube video transcript |
 
 ### Users
 | Method | Description |
 |--------|-------------|
-| `users.list()` | List team users |
 | `users.get()` | Get a specific user |
+| `users.list()` | List team users |
 
 ### Usage
 | Method | Description |
@@ -269,50 +269,50 @@ except LateApiError as e:
 ### Logs
 | Method | Description |
 |--------|-------------|
-| `logs.list_logs()` | List publishing logs |
 | `logs.get_log()` | Get a specific log entry |
 | `logs.get_post_logs()` | Get logs for a specific post |
+| `logs.list_logs()` | List publishing logs |
 
 ### Connect (OAuth)
 | Method | Description |
 |--------|-------------|
-| `connect.get_connect_url()` | Get OAuth URL for a platform |
-| `connect.handle_o_auth_callback()` | Handle OAuth callback |
-| `connect.list_facebook_pages()` | List Facebook pages |
-| `connect.select_facebook_page()` | Select a Facebook page |
-| `connect.update_facebook_page()` | Update Facebook page settings |
-| `connect.list_google_business_locations()` | List Google Business locations |
-| `connect.select_google_business_location()` | Select a Google Business location |
-| `connect.list_linked_in_organizations()` | List LinkedIn organizations |
-| `connect.select_linked_in_organization()` | Select a LinkedIn organization |
-| `connect.get_linked_in_organizations()` | Get LinkedIn organizations |
-| `connect.update_linked_in_organization()` | Update LinkedIn organization |
-| `connect.list_pinterest_boards_for_selection()` | List Pinterest boards |
-| `connect.select_pinterest_board()` | Select a Pinterest board |
-| `connect.get_pinterest_boards()` | Get Pinterest boards |
-| `connect.update_pinterest_boards()` | Update Pinterest boards |
-| `connect.list_snapchat_profiles()` | List Snapchat profiles |
-| `connect.select_snapchat_profile()` | Select a Snapchat profile |
-| `connect.connect_bluesky_credentials()` | Connect Bluesky with credentials |
-| `connect.get_telegram_connect_status()` | Get Telegram connection status |
-| `connect.initiate_telegram_connect()` | Start Telegram connection |
 | `connect.complete_telegram_connect()` | Complete Telegram connection |
+| `connect.connect_bluesky_credentials()` | Connect Bluesky with credentials |
+| `connect.get_connect_url()` | Get OAuth URL for a platform |
+| `connect.get_linked_in_organizations()` | Get LinkedIn organizations |
+| `connect.get_pinterest_boards()` | Get Pinterest boards |
 | `connect.get_reddit_subreddits()` | Get Reddit subreddits |
+| `connect.get_telegram_connect_status()` | Get Telegram connection status |
+| `connect.handle_o_auth_callback()` | Handle OAuth callback |
+| `connect.initiate_telegram_connect()` | Start Telegram connection |
+| `connect.list_facebook_pages()` | List Facebook pages |
+| `connect.list_google_business_locations()` | List Google Business locations |
+| `connect.list_linked_in_organizations()` | List LinkedIn organizations |
+| `connect.list_pinterest_boards_for_selection()` | List Pinterest boards |
+| `connect.list_snapchat_profiles()` | List Snapchat profiles |
+| `connect.select_facebook_page()` | Select a Facebook page |
+| `connect.select_google_business_location()` | Select a Google Business location |
+| `connect.select_linked_in_organization()` | Select a LinkedIn organization |
+| `connect.select_pinterest_board()` | Select a Pinterest board |
+| `connect.select_snapchat_profile()` | Select a Snapchat profile |
+| `connect.update_facebook_page()` | Update Facebook page settings |
+| `connect.update_linked_in_organization()` | Update LinkedIn organization |
+| `connect.update_pinterest_boards()` | Update Pinterest boards |
 | `connect.update_reddit_subreddits()` | Update Reddit subreddits |
 
 ### Reddit
 | Method | Description |
 |--------|-------------|
-| `reddit.search_reddit()` | Search Reddit |
 | `reddit.get_reddit_feed()` | Get Reddit feed |
+| `reddit.search_reddit()` | Search Reddit |
 
 ### Invites
 | Method | Description |
 |--------|-------------|
 | `invites.create_invite_token()` | Create an invite token |
-| `invites.list_platform_invites()` | List platform invites |
 | `invites.create_platform_invite()` | Create a platform invite |
 | `invites.delete_platform_invite()` | Delete a platform invite |
+| `invites.list_platform_invites()` | List platform invites |
 
 ## MCP Server (Claude Desktop)
 
