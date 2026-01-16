@@ -64,6 +64,12 @@ jobs:
           uv run python scripts/generate_readme_reference.py
           echo "README SDK Reference generation complete."
 
+      - name: Generate endpoint tests
+        run: |
+          echo "Starting endpoint tests generation..."
+          uv run python scripts/generate_endpoint_tests.py
+          echo "Endpoint tests generation complete."
+
       - name: Run linter (fix formatting)
         run: |
           uv run ruff check --fix src/late/resources/_generated/ || true
