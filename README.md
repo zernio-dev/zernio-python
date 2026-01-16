@@ -280,18 +280,25 @@ except LateApiError as e:
 | `connect.handle_o_auth_callback()` | Handle OAuth callback |
 | `connect.list_facebook_pages()` | List Facebook pages |
 | `connect.select_facebook_page()` | Select a Facebook page |
+| `connect.update_facebook_page()` | Update Facebook page settings |
 | `connect.list_google_business_locations()` | List Google Business locations |
 | `connect.select_google_business_location()` | Select a Google Business location |
 | `connect.list_linked_in_organizations()` | List LinkedIn organizations |
 | `connect.select_linked_in_organization()` | Select a LinkedIn organization |
+| `connect.get_linked_in_organizations()` | Get LinkedIn organizations |
+| `connect.update_linked_in_organization()` | Update LinkedIn organization |
 | `connect.list_pinterest_boards_for_selection()` | List Pinterest boards |
 | `connect.select_pinterest_board()` | Select a Pinterest board |
+| `connect.get_pinterest_boards()` | Get Pinterest boards |
+| `connect.update_pinterest_boards()` | Update Pinterest boards |
 | `connect.list_snapchat_profiles()` | List Snapchat profiles |
 | `connect.select_snapchat_profile()` | Select a Snapchat profile |
 | `connect.connect_bluesky_credentials()` | Connect Bluesky with credentials |
 | `connect.get_telegram_connect_status()` | Get Telegram connection status |
 | `connect.initiate_telegram_connect()` | Start Telegram connection |
 | `connect.complete_telegram_connect()` | Complete Telegram connection |
+| `connect.get_reddit_subreddits()` | Get Reddit subreddits |
+| `connect.update_reddit_subreddits()` | Update Reddit subreddits |
 
 ### Reddit
 | Method | Description |
