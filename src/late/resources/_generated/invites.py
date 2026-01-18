@@ -23,17 +23,21 @@ class InvitesResource:
 
     def _build_params(self, **kwargs: Any) -> dict[str, Any]:
         """Build query parameters, filtering None values."""
+
         def to_camel(s: str) -> str:
             parts = s.split("_")
             return parts[0] + "".join(p.title() for p in parts[1:])
+
         return {to_camel(k): v for k, v in kwargs.items() if v is not None}
 
     def _build_payload(self, **kwargs: Any) -> dict[str, Any]:
         """Build request payload, filtering None values."""
         from datetime import datetime
+
         def to_camel(s: str) -> str:
             parts = s.split("_")
             return parts[0] + "".join(p.title() for p in parts[1:])
+
         result: dict[str, Any] = {}
         for k, v in kwargs.items():
             if v is None:
@@ -44,7 +48,9 @@ class InvitesResource:
                 result[to_camel(k)] = v
         return result
 
-    def create_invite_token(self, scope: str, *, profile_ids: list[str] | None = None) -> dict[str, Any]:
+    def create_invite_token(
+        self, scope: str, *, profile_ids: list[str] | None = None
+    ) -> dict[str, Any]:
         """Create a team member invite token"""
         payload = self._build_payload(
             scope=scope,
@@ -74,7 +80,9 @@ class InvitesResource:
         )
         return self._client._delete("/v1/platform-invites", params=params)
 
-    async def acreate_invite_token(self, scope: str, *, profile_ids: list[str] | None = None) -> dict[str, Any]:
+    async def acreate_invite_token(
+        self, scope: str, *, profile_ids: list[str] | None = None
+    ) -> dict[str, Any]:
         """Create a team member invite token (async)"""
         payload = self._build_payload(
             scope=scope,
@@ -82,14 +90,18 @@ class InvitesResource:
         )
         return await self._client._apost("/v1/invite/tokens", data=payload)
 
-    async def alist_platform_invites(self, *, profile_id: str | None = None) -> dict[str, Any]:
+    async def alist_platform_invites(
+        self, *, profile_id: str | None = None
+    ) -> dict[str, Any]:
         """List platform connection invites (async)"""
         params = self._build_params(
             profile_id=profile_id,
         )
         return await self._client._aget("/v1/platform-invites", params=params)
 
-    async def acreate_platform_invite(self, profile_id: str, platform: str) -> dict[str, Any]:
+    async def acreate_platform_invite(
+        self, profile_id: str, platform: str
+    ) -> dict[str, Any]:
         """Create a platform connection invite (async)"""
         payload = self._build_payload(
             profile_id=profile_id,

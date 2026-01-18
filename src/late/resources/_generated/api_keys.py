@@ -23,17 +23,21 @@ class ApiKeysResource:
 
     def _build_params(self, **kwargs: Any) -> dict[str, Any]:
         """Build query parameters, filtering None values."""
+
         def to_camel(s: str) -> str:
             parts = s.split("_")
             return parts[0] + "".join(p.title() for p in parts[1:])
+
         return {to_camel(k): v for k, v in kwargs.items() if v is not None}
 
     def _build_payload(self, **kwargs: Any) -> dict[str, Any]:
         """Build request payload, filtering None values."""
         from datetime import datetime
+
         def to_camel(s: str) -> str:
             parts = s.split("_")
             return parts[0] + "".join(p.title() for p in parts[1:])
+
         result: dict[str, Any] = {}
         for k, v in kwargs.items():
             if v is None:
@@ -48,7 +52,9 @@ class ApiKeysResource:
         """List API keys for the current user"""
         return self._client._get("/v1/api-keys")
 
-    def create_api_key(self, name: str, *, expires_in: int | None = None) -> dict[str, Any]:
+    def create_api_key(
+        self, name: str, *, expires_in: int | None = None
+    ) -> dict[str, Any]:
         """Create a new API key"""
         payload = self._build_payload(
             name=name,
@@ -64,7 +70,9 @@ class ApiKeysResource:
         """List API keys for the current user (async)"""
         return await self._client._aget("/v1/api-keys")
 
-    async def acreate_api_key(self, name: str, *, expires_in: int | None = None) -> dict[str, Any]:
+    async def acreate_api_key(
+        self, name: str, *, expires_in: int | None = None
+    ) -> dict[str, Any]:
         """Create a new API key (async)"""
         payload = self._build_payload(
             name=name,

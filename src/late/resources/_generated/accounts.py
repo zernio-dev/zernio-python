@@ -23,17 +23,21 @@ class AccountsResource:
 
     def _build_params(self, **kwargs: Any) -> dict[str, Any]:
         """Build query parameters, filtering None values."""
+
         def to_camel(s: str) -> str:
             parts = s.split("_")
             return parts[0] + "".join(p.title() for p in parts[1:])
+
         return {to_camel(k): v for k, v in kwargs.items() if v is not None}
 
     def _build_payload(self, **kwargs: Any) -> dict[str, Any]:
         """Build request payload, filtering None values."""
         from datetime import datetime
+
         def to_camel(s: str) -> str:
             parts = s.split("_")
             return parts[0] + "".join(p.title() for p in parts[1:])
+
         result: dict[str, Any] = {}
         for k, v in kwargs.items():
             if v is None:
@@ -44,7 +48,9 @@ class AccountsResource:
                 result[to_camel(k)] = v
         return result
 
-    def list_accounts(self, *, profile_id: str | None = None, include_over_limit: bool | None = False) -> dict[str, Any]:
+    def list_accounts(
+        self, *, profile_id: str | None = None, include_over_limit: bool | None = False
+    ) -> dict[str, Any]:
         """List connected social accounts"""
         params = self._build_params(
             profile_id=profile_id,
@@ -52,7 +58,15 @@ class AccountsResource:
         )
         return self._client._get("/v1/accounts", params=params)
 
-    def get_follower_stats(self, *, account_ids: str | None = None, profile_id: str | None = None, from_date: str | None = None, to_date: str | None = None, granularity: str | None = "daily") -> dict[str, Any]:
+    def get_follower_stats(
+        self,
+        *,
+        account_ids: str | None = None,
+        profile_id: str | None = None,
+        from_date: str | None = None,
+        to_date: str | None = None,
+        granularity: str | None = "daily",
+    ) -> dict[str, Any]:
         """Get follower stats and growth metrics"""
         params = self._build_params(
             account_ids=account_ids,
@@ -63,7 +77,13 @@ class AccountsResource:
         )
         return self._client._get("/v1/accounts/follower-stats", params=params)
 
-    def update_account(self, account_id: str, *, username: str | None = None, display_name: str | None = None) -> dict[str, Any]:
+    def update_account(
+        self,
+        account_id: str,
+        *,
+        username: str | None = None,
+        display_name: str | None = None,
+    ) -> dict[str, Any]:
         """Update a social account"""
         payload = self._build_payload(
             username=username,
@@ -75,7 +95,13 @@ class AccountsResource:
         """Disconnect a social account"""
         return self._client._delete(f"/v1/accounts/{account_id}")
 
-    def get_all_accounts_health(self, *, profile_id: str | None = None, platform: str | None = None, status: str | None = None) -> dict[str, Any]:
+    def get_all_accounts_health(
+        self,
+        *,
+        profile_id: str | None = None,
+        platform: str | None = None,
+        status: str | None = None,
+    ) -> dict[str, Any]:
         """Check health of all connected accounts"""
         params = self._build_params(
             profile_id=profile_id,
@@ -88,23 +114,37 @@ class AccountsResource:
         """Check health of a specific account"""
         return self._client._get(f"/v1/accounts/{account_id}/health")
 
-    def get_google_business_reviews(self, account_id: str, *, page_size: int | None = 50, page_token: str | None = None) -> dict[str, Any]:
+    def get_google_business_reviews(
+        self,
+        account_id: str,
+        *,
+        page_size: int | None = 50,
+        page_token: str | None = None,
+    ) -> dict[str, Any]:
         """Get Google Business Profile reviews"""
         params = self._build_params(
             page_size=page_size,
             page_token=page_token,
         )
-        return self._client._get(f"/v1/accounts/{account_id}/gmb-reviews", params=params)
+        return self._client._get(
+            f"/v1/accounts/{account_id}/gmb-reviews", params=params
+        )
 
-    def get_linked_in_mentions(self, account_id: str, url: str, *, display_name: str | None = None) -> dict[str, Any]:
+    def get_linked_in_mentions(
+        self, account_id: str, url: str, *, display_name: str | None = None
+    ) -> dict[str, Any]:
         """Resolve a LinkedIn profile or company URL to a URN for @mentions"""
         params = self._build_params(
             url=url,
             display_name=display_name,
         )
-        return self._client._get(f"/v1/accounts/{account_id}/linkedin-mentions", params=params)
+        return self._client._get(
+            f"/v1/accounts/{account_id}/linkedin-mentions", params=params
+        )
 
-    async def alist_accounts(self, *, profile_id: str | None = None, include_over_limit: bool | None = False) -> dict[str, Any]:
+    async def alist_accounts(
+        self, *, profile_id: str | None = None, include_over_limit: bool | None = False
+    ) -> dict[str, Any]:
         """List connected social accounts (async)"""
         params = self._build_params(
             profile_id=profile_id,
@@ -112,7 +152,15 @@ class AccountsResource:
         )
         return await self._client._aget("/v1/accounts", params=params)
 
-    async def aget_follower_stats(self, *, account_ids: str | None = None, profile_id: str | None = None, from_date: str | None = None, to_date: str | None = None, granularity: str | None = "daily") -> dict[str, Any]:
+    async def aget_follower_stats(
+        self,
+        *,
+        account_ids: str | None = None,
+        profile_id: str | None = None,
+        from_date: str | None = None,
+        to_date: str | None = None,
+        granularity: str | None = "daily",
+    ) -> dict[str, Any]:
         """Get follower stats and growth metrics (async)"""
         params = self._build_params(
             account_ids=account_ids,
@@ -123,7 +171,13 @@ class AccountsResource:
         )
         return await self._client._aget("/v1/accounts/follower-stats", params=params)
 
-    async def aupdate_account(self, account_id: str, *, username: str | None = None, display_name: str | None = None) -> dict[str, Any]:
+    async def aupdate_account(
+        self,
+        account_id: str,
+        *,
+        username: str | None = None,
+        display_name: str | None = None,
+    ) -> dict[str, Any]:
         """Update a social account (async)"""
         payload = self._build_payload(
             username=username,
@@ -135,7 +189,13 @@ class AccountsResource:
         """Disconnect a social account (async)"""
         return await self._client._adelete(f"/v1/accounts/{account_id}")
 
-    async def aget_all_accounts_health(self, *, profile_id: str | None = None, platform: str | None = None, status: str | None = None) -> dict[str, Any]:
+    async def aget_all_accounts_health(
+        self,
+        *,
+        profile_id: str | None = None,
+        platform: str | None = None,
+        status: str | None = None,
+    ) -> dict[str, Any]:
         """Check health of all connected accounts (async)"""
         params = self._build_params(
             profile_id=profile_id,
@@ -148,18 +208,30 @@ class AccountsResource:
         """Check health of a specific account (async)"""
         return await self._client._aget(f"/v1/accounts/{account_id}/health")
 
-    async def aget_google_business_reviews(self, account_id: str, *, page_size: int | None = 50, page_token: str | None = None) -> dict[str, Any]:
+    async def aget_google_business_reviews(
+        self,
+        account_id: str,
+        *,
+        page_size: int | None = 50,
+        page_token: str | None = None,
+    ) -> dict[str, Any]:
         """Get Google Business Profile reviews (async)"""
         params = self._build_params(
             page_size=page_size,
             page_token=page_token,
         )
-        return await self._client._aget(f"/v1/accounts/{account_id}/gmb-reviews", params=params)
+        return await self._client._aget(
+            f"/v1/accounts/{account_id}/gmb-reviews", params=params
+        )
 
-    async def aget_linked_in_mentions(self, account_id: str, url: str, *, display_name: str | None = None) -> dict[str, Any]:
+    async def aget_linked_in_mentions(
+        self, account_id: str, url: str, *, display_name: str | None = None
+    ) -> dict[str, Any]:
         """Resolve a LinkedIn profile or company URL to a URN for @mentions (async)"""
         params = self._build_params(
             url=url,
             display_name=display_name,
         )
-        return await self._client._aget(f"/v1/accounts/{account_id}/linkedin-mentions", params=params)
+        return await self._client._aget(
+            f"/v1/accounts/{account_id}/linkedin-mentions", params=params
+        )

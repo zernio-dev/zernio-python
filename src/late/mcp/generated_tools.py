@@ -13,35 +13,37 @@ def _format_response(response: Any) -> str:
     """Format SDK response for MCP output."""
     if response is None:
         return "Success"
-    if hasattr(response, '__dict__'):
+    if hasattr(response, "__dict__"):
         # Handle response objects
-        if hasattr(response, 'posts') and response.posts:
+        if hasattr(response, "posts") and response.posts:
             posts = response.posts
             lines = [f"Found {len(posts)} post(s):"]
             for p in posts[:10]:
-                content = str(getattr(p, 'content', ''))[:50]
-                status = getattr(p, 'status', 'unknown')
+                content = str(getattr(p, "content", ""))[:50]
+                status = getattr(p, "status", "unknown")
                 lines.append(f"- [{status}] {content}...")
             return "\n".join(lines)
-        if hasattr(response, 'accounts') and response.accounts:
+        if hasattr(response, "accounts") and response.accounts:
             accs = response.accounts
             lines = [f"Found {len(accs)} account(s):"]
             for a in accs[:10]:
-                platform = getattr(a, 'platform', '?')
-                username = getattr(a, 'username', None) or getattr(a, 'displayName', '?')
+                platform = getattr(a, "platform", "?")
+                username = getattr(a, "username", None) or getattr(
+                    a, "displayName", "?"
+                )
                 lines.append(f"- {platform}: {username}")
             return "\n".join(lines)
-        if hasattr(response, 'profiles') and response.profiles:
+        if hasattr(response, "profiles") and response.profiles:
             profiles = response.profiles
             lines = [f"Found {len(profiles)} profile(s):"]
             for p in profiles[:10]:
-                name = getattr(p, 'name', 'Unnamed')
+                name = getattr(p, "name", "Unnamed")
                 lines.append(f"- {name}")
             return "\n".join(lines)
-        if hasattr(response, 'post') and response.post:
+        if hasattr(response, "post") and response.post:
             p = response.post
             return f"Post ID: {getattr(p, 'field_id', 'N/A')}\nStatus: {getattr(p, 'status', 'N/A')}"
-        if hasattr(response, 'profile') and response.profile:
+        if hasattr(response, "profile") and response.profile:
             p = response.profile
             return f"Profile: {getattr(p, 'name', 'N/A')} (ID: {getattr(p, 'field_id', 'N/A')})"
     return str(response)
@@ -52,7 +54,6 @@ def register_generated_tools(mcp, _get_client):
 
     # ACCOUNT_GROUPS
 
-
     @mcp.tool()
     def account_groups_list_account_groups() -> str:
         """List account groups for the authenticated user"""
@@ -61,8 +62,7 @@ def register_generated_tools(mcp, _get_client):
             response = client.account_groups.list_account_groups()
             return _format_response(response)
         except Exception as e:
-            return f'Error: {e}'
-
+            return f"Error: {e}"
 
     @mcp.tool()
     def account_groups_create_account_group(name: str, account_ids: str) -> str:
@@ -73,14 +73,17 @@ def register_generated_tools(mcp, _get_client):
             account_ids: (required)"""
         client = _get_client()
         try:
-            response = client.account_groups.create_account_group(name=name, accountIds=account_ids)
+            response = client.account_groups.create_account_group(
+                name=name, accountIds=account_ids
+            )
             return _format_response(response)
         except Exception as e:
-            return f'Error: {e}'
-
+            return f"Error: {e}"
 
     @mcp.tool()
-    def account_groups_update_account_group(group_id: str, name: str = "", account_ids: str = "") -> str:
+    def account_groups_update_account_group(
+        group_id: str, name: str = "", account_ids: str = ""
+    ) -> str:
         """Update an account group
 
         Args:
@@ -89,11 +92,12 @@ def register_generated_tools(mcp, _get_client):
             account_ids"""
         client = _get_client()
         try:
-            response = client.account_groups.update_account_group(group_id=group_id, name=name, accountIds=account_ids)
+            response = client.account_groups.update_account_group(
+                group_id=group_id, name=name, accountIds=account_ids
+            )
             return _format_response(response)
         except Exception as e:
-            return f'Error: {e}'
-
+            return f"Error: {e}"
 
     @mcp.tool()
     def account_groups_delete_account_group(group_id: str) -> str:
@@ -106,29 +110,37 @@ def register_generated_tools(mcp, _get_client):
             response = client.account_groups.delete_account_group(group_id=group_id)
             return _format_response(response)
         except Exception as e:
-            return f'Error: {e}'
+            return f"Error: {e}"
 
     # ACCOUNTS
 
-
     @mcp.tool()
-    def accounts_list_accounts(profile_id: str = "", include_over_limit: bool = False) -> str:
+    def accounts_list_accounts(
+        profile_id: str = "", include_over_limit: bool = False
+    ) -> str:
         """List connected social accounts
 
-        Args:
-            profile_id: Filter accounts by profile ID
-            include_over_limit: When true, includes accounts from profiles that exceed the user's plan limit.
-    Useful for disconnecting accounts from over-limit profiles so they can be deleted."""
+            Args:
+                profile_id: Filter accounts by profile ID
+                include_over_limit: When true, includes accounts from profiles that exceed the user's plan limit.
+        Useful for disconnecting accounts from over-limit profiles so they can be deleted."""
         client = _get_client()
         try:
-            response = client.accounts.list_accounts(profile_id=profile_id, include_over_limit=include_over_limit)
+            response = client.accounts.list_accounts(
+                profile_id=profile_id, include_over_limit=include_over_limit
+            )
             return _format_response(response)
         except Exception as e:
-            return f'Error: {e}'
-
+            return f"Error: {e}"
 
     @mcp.tool()
-    def accounts_get_follower_stats(account_ids: str = "", profile_id: str = "", from_date: str = "", to_date: str = "", granularity: str = "daily") -> str:
+    def accounts_get_follower_stats(
+        account_ids: str = "",
+        profile_id: str = "",
+        from_date: str = "",
+        to_date: str = "",
+        granularity: str = "daily",
+    ) -> str:
         """Get follower stats and growth metrics
 
         Args:
@@ -139,14 +151,21 @@ def register_generated_tools(mcp, _get_client):
             granularity: Data aggregation level"""
         client = _get_client()
         try:
-            response = client.accounts.get_follower_stats(account_ids=account_ids, profile_id=profile_id, from_date=from_date, to_date=to_date, granularity=granularity)
+            response = client.accounts.get_follower_stats(
+                account_ids=account_ids,
+                profile_id=profile_id,
+                from_date=from_date,
+                to_date=to_date,
+                granularity=granularity,
+            )
             return _format_response(response)
         except Exception as e:
-            return f'Error: {e}'
-
+            return f"Error: {e}"
 
     @mcp.tool()
-    def accounts_update_account(account_id: str, username: str = "", display_name: str = "") -> str:
+    def accounts_update_account(
+        account_id: str, username: str = "", display_name: str = ""
+    ) -> str:
         """Update a social account
 
         Args:
@@ -155,11 +174,12 @@ def register_generated_tools(mcp, _get_client):
             display_name"""
         client = _get_client()
         try:
-            response = client.accounts.update_account(account_id=account_id, username=username, displayName=display_name)
+            response = client.accounts.update_account(
+                account_id=account_id, username=username, displayName=display_name
+            )
             return _format_response(response)
         except Exception as e:
-            return f'Error: {e}'
-
+            return f"Error: {e}"
 
     @mcp.tool()
     def accounts_delete_account(account_id: str) -> str:
@@ -172,11 +192,12 @@ def register_generated_tools(mcp, _get_client):
             response = client.accounts.delete_account(account_id=account_id)
             return _format_response(response)
         except Exception as e:
-            return f'Error: {e}'
-
+            return f"Error: {e}"
 
     @mcp.tool()
-    def accounts_get_all_accounts_health(profile_id: str = "", platform: str = "", status: str = "") -> str:
+    def accounts_get_all_accounts_health(
+        profile_id: str = "", platform: str = "", status: str = ""
+    ) -> str:
         """Check health of all connected accounts
 
         Args:
@@ -185,11 +206,12 @@ def register_generated_tools(mcp, _get_client):
             status: Filter by health status"""
         client = _get_client()
         try:
-            response = client.accounts.get_all_accounts_health(profile_id=profile_id, platform=platform, status=status)
+            response = client.accounts.get_all_accounts_health(
+                profile_id=profile_id, platform=platform, status=status
+            )
             return _format_response(response)
         except Exception as e:
-            return f'Error: {e}'
-
+            return f"Error: {e}"
 
     @mcp.tool()
     def accounts_get_account_health(account_id: str) -> str:
@@ -202,11 +224,12 @@ def register_generated_tools(mcp, _get_client):
             response = client.accounts.get_account_health(account_id=account_id)
             return _format_response(response)
         except Exception as e:
-            return f'Error: {e}'
-
+            return f"Error: {e}"
 
     @mcp.tool()
-    def accounts_get_google_business_reviews(account_id: str, page_size: int = 50, page_token: str = "") -> str:
+    def accounts_get_google_business_reviews(
+        account_id: str, page_size: int = 50, page_token: str = ""
+    ) -> str:
         """Get Google Business Profile reviews
 
         Args:
@@ -215,61 +238,86 @@ def register_generated_tools(mcp, _get_client):
             page_token: Pagination token from previous response"""
         client = _get_client()
         try:
-            response = client.accounts.get_google_business_reviews(account_id=account_id, page_size=page_size, page_token=page_token)
+            response = client.accounts.get_google_business_reviews(
+                account_id=account_id, page_size=page_size, page_token=page_token
+            )
             return _format_response(response)
         except Exception as e:
-            return f'Error: {e}'
-
+            return f"Error: {e}"
 
     @mcp.tool()
-    def accounts_get_linked_in_mentions(account_id: str, url: str, display_name: str = "") -> str:
+    def accounts_get_linked_in_mentions(
+        account_id: str, url: str, display_name: str = ""
+    ) -> str:
         """Resolve a LinkedIn profile or company URL to a URN for @mentions
 
-        Args:
-            account_id: The LinkedIn account ID (required)
-            url: LinkedIn profile URL, company URL, or vanity name.
-    - Person: `miquelpalet`, `linkedin.com/in/miquelpalet`
-    - Organization: `company/microsoft`, `linkedin.com/company/microsoft`
-     (required)
-            display_name: The exact display name as shown on LinkedIn.
-    - **Person mentions:** Required for clickable mentions. If not provided, a name is derived from the vanity URL which may not match exactly.
-    - **Organization mentions:** Optional. If not provided, the company name is automatically retrieved from LinkedIn."""
+            Args:
+                account_id: The LinkedIn account ID (required)
+                url: LinkedIn profile URL, company URL, or vanity name.
+        - Person: `miquelpalet`, `linkedin.com/in/miquelpalet`
+        - Organization: `company/microsoft`, `linkedin.com/company/microsoft`
+         (required)
+                display_name: The exact display name as shown on LinkedIn.
+        - **Person mentions:** Required for clickable mentions. If not provided, a name is derived from the vanity URL which may not match exactly.
+        - **Organization mentions:** Optional. If not provided, the company name is automatically retrieved from LinkedIn."""
         client = _get_client()
         try:
-            response = client.accounts.get_linked_in_mentions(account_id=account_id, url=url, display_name=display_name)
+            response = client.accounts.get_linked_in_mentions(
+                account_id=account_id, url=url, display_name=display_name
+            )
             return _format_response(response)
         except Exception as e:
-            return f'Error: {e}'
+            return f"Error: {e}"
 
     # ANALYTICS
 
-
     @mcp.tool()
-    def analytics_get_analytics(post_id: str = "", platform: str = "", profile_id: str = "", from_date: str = "", to_date: str = "", limit: int = 50, page: int = 1, sort_by: str = "date", order: str = "desc") -> str:
+    def analytics_get_analytics(
+        post_id: str = "",
+        platform: str = "",
+        profile_id: str = "",
+        from_date: str = "",
+        to_date: str = "",
+        limit: int = 50,
+        page: int = 1,
+        sort_by: str = "date",
+        order: str = "desc",
+    ) -> str:
         """Unified analytics for posts
 
-        Args:
-            post_id: Returns analytics for a single post. Accepts both Late Post IDs (from `POST /v1/posts`)
-    and External Post IDs (from this endpoint's list response). The API automatically
-    resolves Late Post IDs to their corresponding External Post analytics.
-            platform: Filter by platform (default "all")
-            profile_id: Filter by profile ID (default "all")
-            from_date: Inclusive lower bound
-            to_date: Inclusive upper bound
-            limit: Page size (default 50)
-            page: Page number (default 1)
-            sort_by: Sort by date or engagement
-            order: Sort order"""
+            Args:
+                post_id: Returns analytics for a single post. Accepts both Late Post IDs (from `POST /v1/posts`)
+        and External Post IDs (from this endpoint's list response). The API automatically
+        resolves Late Post IDs to their corresponding External Post analytics.
+                platform: Filter by platform (default "all")
+                profile_id: Filter by profile ID (default "all")
+                from_date: Inclusive lower bound
+                to_date: Inclusive upper bound
+                limit: Page size (default 50)
+                page: Page number (default 1)
+                sort_by: Sort by date or engagement
+                order: Sort order"""
         client = _get_client()
         try:
-            response = client.analytics.get_analytics(post_id=post_id, platform=platform, profile_id=profile_id, from_date=from_date, to_date=to_date, limit=limit, page=page, sort_by=sort_by, order=order)
+            response = client.analytics.get_analytics(
+                post_id=post_id,
+                platform=platform,
+                profile_id=profile_id,
+                from_date=from_date,
+                to_date=to_date,
+                limit=limit,
+                page=page,
+                sort_by=sort_by,
+                order=order,
+            )
             return _format_response(response)
         except Exception as e:
-            return f'Error: {e}'
-
+            return f"Error: {e}"
 
     @mcp.tool()
-    def analytics_get_you_tube_daily_views(video_id: str, account_id: str, start_date: str = "", end_date: str = "") -> str:
+    def analytics_get_you_tube_daily_views(
+        video_id: str, account_id: str, start_date: str = "", end_date: str = ""
+    ) -> str:
         """YouTube daily views breakdown
 
         Args:
@@ -279,37 +327,52 @@ def register_generated_tools(mcp, _get_client):
             end_date: End date (YYYY-MM-DD). Defaults to 3 days ago (YouTube data latency)."""
         client = _get_client()
         try:
-            response = client.analytics.get_you_tube_daily_views(video_id=video_id, account_id=account_id, start_date=start_date, end_date=end_date)
+            response = client.analytics.get_you_tube_daily_views(
+                video_id=video_id,
+                account_id=account_id,
+                start_date=start_date,
+                end_date=end_date,
+            )
             return _format_response(response)
         except Exception as e:
-            return f'Error: {e}'
-
+            return f"Error: {e}"
 
     @mcp.tool()
-    def analytics_get_linked_in_aggregate_analytics(account_id: str, aggregation: str = "TOTAL", start_date: str = "", end_date: str = "", metrics: str = "") -> str:
+    def analytics_get_linked_in_aggregate_analytics(
+        account_id: str,
+        aggregation: str = "TOTAL",
+        start_date: str = "",
+        end_date: str = "",
+        metrics: str = "",
+    ) -> str:
         """Get aggregate analytics for a LinkedIn personal account
 
-        Args:
-            account_id: The ID of the LinkedIn personal account (required)
-            aggregation: Type of aggregation for the analytics data.
-    - `TOTAL` (default): Returns single totals for each metric
-    - `DAILY`: Returns daily breakdown of metrics
+            Args:
+                account_id: The ID of the LinkedIn personal account (required)
+                aggregation: Type of aggregation for the analytics data.
+        - `TOTAL` (default): Returns single totals for each metric
+        - `DAILY`: Returns daily breakdown of metrics
 
-    Note: `MEMBERS_REACHED` metric is not available with `DAILY` aggregation.
-            start_date: Start date for analytics data in YYYY-MM-DD format.
-    If provided without endDate, endDate defaults to today.
-    If omitted entirely, returns lifetime analytics.
-            end_date: End date for analytics data in YYYY-MM-DD format (exclusive).
-    If provided without startDate, startDate defaults to 30 days before endDate.
-            metrics: Comma-separated list of metrics to fetch. If omitted, fetches all available metrics.
-    Valid values: IMPRESSION, MEMBERS_REACHED, REACTION, COMMENT, RESHARE"""
+        Note: `MEMBERS_REACHED` metric is not available with `DAILY` aggregation.
+                start_date: Start date for analytics data in YYYY-MM-DD format.
+        If provided without endDate, endDate defaults to today.
+        If omitted entirely, returns lifetime analytics.
+                end_date: End date for analytics data in YYYY-MM-DD format (exclusive).
+        If provided without startDate, startDate defaults to 30 days before endDate.
+                metrics: Comma-separated list of metrics to fetch. If omitted, fetches all available metrics.
+        Valid values: IMPRESSION, MEMBERS_REACHED, REACTION, COMMENT, RESHARE"""
         client = _get_client()
         try:
-            response = client.analytics.get_linked_in_aggregate_analytics(account_id=account_id, aggregation=aggregation, start_date=start_date, end_date=end_date, metrics=metrics)
+            response = client.analytics.get_linked_in_aggregate_analytics(
+                account_id=account_id,
+                aggregation=aggregation,
+                start_date=start_date,
+                end_date=end_date,
+                metrics=metrics,
+            )
             return _format_response(response)
         except Exception as e:
-            return f'Error: {e}'
-
+            return f"Error: {e}"
 
     @mcp.tool()
     def analytics_get_linked_in_post_analytics(account_id: str, urn: str) -> str:
@@ -320,13 +383,14 @@ def register_generated_tools(mcp, _get_client):
             urn: The LinkedIn post URN (required)"""
         client = _get_client()
         try:
-            response = client.analytics.get_linked_in_post_analytics(account_id=account_id, urn=urn)
+            response = client.analytics.get_linked_in_post_analytics(
+                account_id=account_id, urn=urn
+            )
             return _format_response(response)
         except Exception as e:
-            return f'Error: {e}'
+            return f"Error: {e}"
 
     # API_KEYS
-
 
     @mcp.tool()
     def api_keys_list_api_keys() -> str:
@@ -336,8 +400,7 @@ def register_generated_tools(mcp, _get_client):
             response = client.api_keys.list_api_keys()
             return _format_response(response)
         except Exception as e:
-            return f'Error: {e}'
-
+            return f"Error: {e}"
 
     @mcp.tool()
     def api_keys_create_api_key(name: str, expires_in: int = 0) -> str:
@@ -351,8 +414,7 @@ def register_generated_tools(mcp, _get_client):
             response = client.api_keys.create_api_key(name=name, expiresIn=expires_in)
             return _format_response(response)
         except Exception as e:
-            return f'Error: {e}'
-
+            return f"Error: {e}"
 
     @mcp.tool()
     def api_keys_delete_api_key(key_id: str) -> str:
@@ -365,59 +427,63 @@ def register_generated_tools(mcp, _get_client):
             response = client.api_keys.delete_api_key(key_id=key_id)
             return _format_response(response)
         except Exception as e:
-            return f'Error: {e}'
+            return f"Error: {e}"
 
     # CONNECT
 
-
     @mcp.tool()
-    def connect_get_connect_url(platform: str, profile_id: str, redirect_url: str = "") -> str:
+    def connect_get_connect_url(
+        platform: str, profile_id: str, redirect_url: str = ""
+    ) -> str:
         """Start OAuth connection for a platform
 
-        Args:
-            platform: Social media platform to connect (required)
-            profile_id: Your Late profile ID (get from /v1/profiles) (required)
-            redirect_url: Optional: Your custom redirect URL after connection completes.
+            Args:
+                platform: Social media platform to connect (required)
+                profile_id: Your Late profile ID (get from /v1/profiles) (required)
+                redirect_url: Optional: Your custom redirect URL after connection completes.
 
-    **Standard Mode:** Omit `headless=true` to use our hosted page selection UI.
-    After the user selects a Facebook Page, Late redirects here with:
-    `?connected=facebook&profileId=X&username=Y`
+        **Standard Mode:** Omit `headless=true` to use our hosted page selection UI.
+        After the user selects a Facebook Page, Late redirects here with:
+        `?connected=facebook&profileId=X&username=Y`
 
-    **Headless Mode (Facebook, LinkedIn, Pinterest, Google Business Profile & Snapchat):**
-    Pass `headless=true` as a query parameter on this endpoint (not inside `redirect_url`), e.g.:
-    `GET /v1/connect/facebook?profileId=PROFILE_ID&redirect_url=https://yourapp.com/callback&headless=true`
-    `GET /v1/connect/linkedin?profileId=PROFILE_ID&redirect_url=https://yourapp.com/callback&headless=true`
-    `GET /v1/connect/pinterest?profileId=PROFILE_ID&redirect_url=https://yourapp.com/callback&headless=true`
-    `GET /v1/connect/googlebusiness?profileId=PROFILE_ID&redirect_url=https://yourapp.com/callback&headless=true`
-    `GET /v1/connect/snapchat?profileId=PROFILE_ID&redirect_url=https://yourapp.com/callback&headless=true`
+        **Headless Mode (Facebook, LinkedIn, Pinterest, Google Business Profile & Snapchat):**
+        Pass `headless=true` as a query parameter on this endpoint (not inside `redirect_url`), e.g.:
+        `GET /v1/connect/facebook?profileId=PROFILE_ID&redirect_url=https://yourapp.com/callback&headless=true`
+        `GET /v1/connect/linkedin?profileId=PROFILE_ID&redirect_url=https://yourapp.com/callback&headless=true`
+        `GET /v1/connect/pinterest?profileId=PROFILE_ID&redirect_url=https://yourapp.com/callback&headless=true`
+        `GET /v1/connect/googlebusiness?profileId=PROFILE_ID&redirect_url=https://yourapp.com/callback&headless=true`
+        `GET /v1/connect/snapchat?profileId=PROFILE_ID&redirect_url=https://yourapp.com/callback&headless=true`
 
-    After OAuth, the user is redirected directly to your `redirect_url` with OAuth data:
-    - **Facebook:** `?profileId=X&tempToken=Y&userProfile=Z&connect_token=CT&platform=facebook&step=select_page`
-    - **LinkedIn:** `?profileId=X&tempToken=Y&userProfile=Z&organizations=ORGS&connect_token=CT&platform=linkedin&step=select_organization`
-      (organizations contains `id`, `urn`, `name` only - use `/v1/connect/linkedin/organizations` to fetch full details)
-    - **Pinterest:** `?profileId=X&tempToken=Y&userProfile=Z&connect_token=CT&platform=pinterest&step=select_board`
-    - **Google Business:** `?profileId=X&tempToken=Y&userProfile=Z&connect_token=CT&platform=googlebusiness&step=select_location`
-    - **Snapchat:** `?profileId=X&tempToken=Y&userProfile=Z&publicProfiles=PROFILES&connect_token=CT&platform=snapchat&step=select_public_profile`
-      (publicProfiles contains `id`, `display_name`, `username`, `profile_image_url`, `subscriber_count`)
+        After OAuth, the user is redirected directly to your `redirect_url` with OAuth data:
+        - **Facebook:** `?profileId=X&tempToken=Y&userProfile=Z&connect_token=CT&platform=facebook&step=select_page`
+        - **LinkedIn:** `?profileId=X&tempToken=Y&userProfile=Z&organizations=ORGS&connect_token=CT&platform=linkedin&step=select_organization`
+          (organizations contains `id`, `urn`, `name` only - use `/v1/connect/linkedin/organizations` to fetch full details)
+        - **Pinterest:** `?profileId=X&tempToken=Y&userProfile=Z&connect_token=CT&platform=pinterest&step=select_board`
+        - **Google Business:** `?profileId=X&tempToken=Y&userProfile=Z&connect_token=CT&platform=googlebusiness&step=select_location`
+        - **Snapchat:** `?profileId=X&tempToken=Y&userProfile=Z&publicProfiles=PROFILES&connect_token=CT&platform=snapchat&step=select_public_profile`
+          (publicProfiles contains `id`, `display_name`, `username`, `profile_image_url`, `subscriber_count`)
 
-    Then use the respective endpoints to build your custom UI:
-    - Facebook: `/v1/connect/facebook/select-page` (GET to fetch, POST to save)
-    - LinkedIn: `/v1/connect/linkedin/organizations` (GET to fetch logos), `/v1/connect/linkedin/select-organization` (POST to save)
-    - Pinterest: `/v1/connect/pinterest/select-board` (GET to fetch, POST to save)
-    - Google Business: `/v1/connect/googlebusiness/locations` (GET) and `/v1/connect/googlebusiness/select-location` (POST)
-    - Snapchat: `/v1/connect/snapchat/select-profile` (POST to save selected public profile)
+        Then use the respective endpoints to build your custom UI:
+        - Facebook: `/v1/connect/facebook/select-page` (GET to fetch, POST to save)
+        - LinkedIn: `/v1/connect/linkedin/organizations` (GET to fetch logos), `/v1/connect/linkedin/select-organization` (POST to save)
+        - Pinterest: `/v1/connect/pinterest/select-board` (GET to fetch, POST to save)
+        - Google Business: `/v1/connect/googlebusiness/locations` (GET) and `/v1/connect/googlebusiness/select-location` (POST)
+        - Snapchat: `/v1/connect/snapchat/select-profile` (POST to save selected public profile)
 
-    Example: `https://yourdomain.com/integrations/callback`"""
+        Example: `https://yourdomain.com/integrations/callback`"""
         client = _get_client()
         try:
-            response = client.connect.get_connect_url(platform=platform, profile_id=profile_id, redirect_url=redirect_url)
+            response = client.connect.get_connect_url(
+                platform=platform, profile_id=profile_id, redirect_url=redirect_url
+            )
             return _format_response(response)
         except Exception as e:
-            return f'Error: {e}'
-
+            return f"Error: {e}"
 
     @mcp.tool()
-    def connect_handle_o_auth_callback(platform: str, code: str, state: str, profile_id: str) -> str:
+    def connect_handle_o_auth_callback(
+        platform: str, code: str, state: str, profile_id: str
+    ) -> str:
         """Complete OAuth token exchange manually (for server-side flows)
 
         Args:
@@ -427,11 +493,12 @@ def register_generated_tools(mcp, _get_client):
             profile_id: (required)"""
         client = _get_client()
         try:
-            response = client.connect.handle_o_auth_callback(platform=platform, code=code, state=state, profileId=profile_id)
+            response = client.connect.handle_o_auth_callback(
+                platform=platform, code=code, state=state, profileId=profile_id
+            )
             return _format_response(response)
         except Exception as e:
-            return f'Error: {e}'
-
+            return f"Error: {e}"
 
     @mcp.tool()
     def connect_list_facebook_pages(profile_id: str, temp_token: str) -> str:
@@ -442,14 +509,21 @@ def register_generated_tools(mcp, _get_client):
             temp_token: Temporary Facebook access token from the OAuth callback redirect (required)"""
         client = _get_client()
         try:
-            response = client.connect.list_facebook_pages(profile_id=profile_id, temp_token=temp_token)
+            response = client.connect.list_facebook_pages(
+                profile_id=profile_id, temp_token=temp_token
+            )
             return _format_response(response)
         except Exception as e:
-            return f'Error: {e}'
-
+            return f"Error: {e}"
 
     @mcp.tool()
-    def connect_select_facebook_page(profile_id: str, page_id: str, temp_token: str, user_profile: str = "", redirect_url: str = "") -> str:
+    def connect_select_facebook_page(
+        profile_id: str,
+        page_id: str,
+        temp_token: str,
+        user_profile: str = "",
+        redirect_url: str = "",
+    ) -> str:
         """Select a Facebook Page to complete the connection (Headless Mode)
 
         Args:
@@ -460,11 +534,16 @@ def register_generated_tools(mcp, _get_client):
             redirect_url: Optional custom redirect URL to return to after selection"""
         client = _get_client()
         try:
-            response = client.connect.select_facebook_page(profileId=profile_id, pageId=page_id, tempToken=temp_token, userProfile=user_profile, redirect_url=redirect_url)
+            response = client.connect.select_facebook_page(
+                profileId=profile_id,
+                pageId=page_id,
+                tempToken=temp_token,
+                userProfile=user_profile,
+                redirect_url=redirect_url,
+            )
             return _format_response(response)
         except Exception as e:
-            return f'Error: {e}'
-
+            return f"Error: {e}"
 
     @mcp.tool()
     def connect_list_google_business_locations(profile_id: str, temp_token: str) -> str:
@@ -475,30 +554,42 @@ def register_generated_tools(mcp, _get_client):
             temp_token: Temporary Google access token from the OAuth callback redirect (required)"""
         client = _get_client()
         try:
-            response = client.connect.list_google_business_locations(profile_id=profile_id, temp_token=temp_token)
+            response = client.connect.list_google_business_locations(
+                profile_id=profile_id, temp_token=temp_token
+            )
             return _format_response(response)
         except Exception as e:
-            return f'Error: {e}'
-
+            return f"Error: {e}"
 
     @mcp.tool()
-    def connect_select_google_business_location(profile_id: str, location_id: str, temp_token: str, user_profile: str = "", redirect_url: str = "") -> str:
+    def connect_select_google_business_location(
+        profile_id: str,
+        location_id: str,
+        temp_token: str,
+        user_profile: str = "",
+        redirect_url: str = "",
+    ) -> str:
         """Select a Google Business location to complete the connection (Headless Mode)
 
-        Args:
-            profile_id: Profile ID from your connection flow (required)
-            location_id: The Google Business location ID selected by the user (required)
-            temp_token: Temporary Google access token from OAuth (required)
-            user_profile: Decoded user profile object from the OAuth callback. **Important:** This contains
-    the refresh token needed for token refresh. Always include this field.
-            redirect_url: Optional custom redirect URL to return to after selection"""
+            Args:
+                profile_id: Profile ID from your connection flow (required)
+                location_id: The Google Business location ID selected by the user (required)
+                temp_token: Temporary Google access token from OAuth (required)
+                user_profile: Decoded user profile object from the OAuth callback. **Important:** This contains
+        the refresh token needed for token refresh. Always include this field.
+                redirect_url: Optional custom redirect URL to return to after selection"""
         client = _get_client()
         try:
-            response = client.connect.select_google_business_location(profileId=profile_id, locationId=location_id, tempToken=temp_token, userProfile=user_profile, redirect_url=redirect_url)
+            response = client.connect.select_google_business_location(
+                profileId=profile_id,
+                locationId=location_id,
+                tempToken=temp_token,
+                userProfile=user_profile,
+                redirect_url=redirect_url,
+            )
             return _format_response(response)
         except Exception as e:
-            return f'Error: {e}'
-
+            return f"Error: {e}"
 
     @mcp.tool()
     def connect_list_linked_in_organizations(temp_token: str, org_ids: str) -> str:
@@ -509,14 +600,22 @@ def register_generated_tools(mcp, _get_client):
             org_ids: Comma-separated list of organization IDs to fetch details for (max 100) (required)"""
         client = _get_client()
         try:
-            response = client.connect.list_linked_in_organizations(temp_token=temp_token, org_ids=org_ids)
+            response = client.connect.list_linked_in_organizations(
+                temp_token=temp_token, org_ids=org_ids
+            )
             return _format_response(response)
         except Exception as e:
-            return f'Error: {e}'
-
+            return f"Error: {e}"
 
     @mcp.tool()
-    def connect_select_linked_in_organization(profile_id: str, temp_token: str, user_profile: str, account_type: str, selected_organization: str = "", redirect_url: str = "") -> str:
+    def connect_select_linked_in_organization(
+        profile_id: str,
+        temp_token: str,
+        user_profile: str,
+        account_type: str,
+        selected_organization: str = "",
+        redirect_url: str = "",
+    ) -> str:
         """Select LinkedIn organization or personal account after OAuth
 
         Args:
@@ -528,14 +627,22 @@ def register_generated_tools(mcp, _get_client):
             redirect_url"""
         client = _get_client()
         try:
-            response = client.connect.select_linked_in_organization(profileId=profile_id, tempToken=temp_token, userProfile=user_profile, accountType=account_type, selectedOrganization=selected_organization, redirect_url=redirect_url)
+            response = client.connect.select_linked_in_organization(
+                profileId=profile_id,
+                tempToken=temp_token,
+                userProfile=user_profile,
+                accountType=account_type,
+                selectedOrganization=selected_organization,
+                redirect_url=redirect_url,
+            )
             return _format_response(response)
         except Exception as e:
-            return f'Error: {e}'
-
+            return f"Error: {e}"
 
     @mcp.tool()
-    def connect_list_pinterest_boards_for_selection(profile_id: str, temp_token: str) -> str:
+    def connect_list_pinterest_boards_for_selection(
+        profile_id: str, temp_token: str
+    ) -> str:
         """List Pinterest Boards after OAuth (Headless Mode)
 
         Args:
@@ -543,14 +650,24 @@ def register_generated_tools(mcp, _get_client):
             temp_token: Temporary Pinterest access token from the OAuth callback redirect (required)"""
         client = _get_client()
         try:
-            response = client.connect.list_pinterest_boards_for_selection(profile_id=profile_id, temp_token=temp_token)
+            response = client.connect.list_pinterest_boards_for_selection(
+                profile_id=profile_id, temp_token=temp_token
+            )
             return _format_response(response)
         except Exception as e:
-            return f'Error: {e}'
-
+            return f"Error: {e}"
 
     @mcp.tool()
-    def connect_select_pinterest_board(profile_id: str, board_id: str, temp_token: str, board_name: str = "", user_profile: str = "", refresh_token: str = "", expires_in: int = 0, redirect_url: str = "") -> str:
+    def connect_select_pinterest_board(
+        profile_id: str,
+        board_id: str,
+        temp_token: str,
+        board_name: str = "",
+        user_profile: str = "",
+        refresh_token: str = "",
+        expires_in: int = 0,
+        redirect_url: str = "",
+    ) -> str:
         """Select a Pinterest Board to complete the connection (Headless Mode)
 
         Args:
@@ -564,11 +681,19 @@ def register_generated_tools(mcp, _get_client):
             redirect_url: Custom redirect URL after connection completes"""
         client = _get_client()
         try:
-            response = client.connect.select_pinterest_board(profileId=profile_id, boardId=board_id, boardName=board_name, tempToken=temp_token, userProfile=user_profile, refreshToken=refresh_token, expiresIn=expires_in, redirect_url=redirect_url)
+            response = client.connect.select_pinterest_board(
+                profileId=profile_id,
+                boardId=board_id,
+                boardName=board_name,
+                tempToken=temp_token,
+                userProfile=user_profile,
+                refreshToken=refresh_token,
+                expiresIn=expires_in,
+                redirect_url=redirect_url,
+            )
             return _format_response(response)
         except Exception as e:
-            return f'Error: {e}'
-
+            return f"Error: {e}"
 
     @mcp.tool()
     def connect_list_snapchat_profiles(profile_id: str, temp_token: str) -> str:
@@ -579,14 +704,23 @@ def register_generated_tools(mcp, _get_client):
             temp_token: Temporary Snapchat access token from the OAuth callback redirect (required)"""
         client = _get_client()
         try:
-            response = client.connect.list_snapchat_profiles(profile_id=profile_id, temp_token=temp_token)
+            response = client.connect.list_snapchat_profiles(
+                profile_id=profile_id, temp_token=temp_token
+            )
             return _format_response(response)
         except Exception as e:
-            return f'Error: {e}'
-
+            return f"Error: {e}"
 
     @mcp.tool()
-    def connect_select_snapchat_profile(profile_id: str, selected_public_profile: str, temp_token: str, user_profile: str, refresh_token: str = "", expires_in: int = 0, redirect_url: str = "") -> str:
+    def connect_select_snapchat_profile(
+        profile_id: str,
+        selected_public_profile: str,
+        temp_token: str,
+        user_profile: str,
+        refresh_token: str = "",
+        expires_in: int = 0,
+        redirect_url: str = "",
+    ) -> str:
         """Select a Snapchat Public Profile to complete the connection (Headless Mode)
 
         Args:
@@ -599,31 +733,44 @@ def register_generated_tools(mcp, _get_client):
             redirect_url: Custom redirect URL after connection completes"""
         client = _get_client()
         try:
-            response = client.connect.select_snapchat_profile(profileId=profile_id, selectedPublicProfile=selected_public_profile, tempToken=temp_token, userProfile=user_profile, refreshToken=refresh_token, expiresIn=expires_in, redirect_url=redirect_url)
+            response = client.connect.select_snapchat_profile(
+                profileId=profile_id,
+                selectedPublicProfile=selected_public_profile,
+                tempToken=temp_token,
+                userProfile=user_profile,
+                refreshToken=refresh_token,
+                expiresIn=expires_in,
+                redirect_url=redirect_url,
+            )
             return _format_response(response)
         except Exception as e:
-            return f'Error: {e}'
-
+            return f"Error: {e}"
 
     @mcp.tool()
-    def connect_bluesky_credentials(identifier: str, app_password: str, state: str, redirect_uri: str = "") -> str:
+    def connect_bluesky_credentials(
+        identifier: str, app_password: str, state: str, redirect_uri: str = ""
+    ) -> str:
         """Connect Bluesky using app password
 
-        Args:
-            identifier: Your Bluesky handle (e.g. user.bsky.social) or email address (required)
-            app_password: App password generated from Bluesky Settings > App Passwords (required)
-            state: Required state parameter formatted as `{userId}-{profileId}`.
-    - `userId`: Your Late user ID (get from `GET /v1/users` → `currentUserId`)
-    - `profileId`: The profile ID to connect the account to (get from `GET /v1/profiles`)
-     (required)
-            redirect_uri: Optional URL to redirect to after successful connection"""
+            Args:
+                identifier: Your Bluesky handle (e.g. user.bsky.social) or email address (required)
+                app_password: App password generated from Bluesky Settings > App Passwords (required)
+                state: Required state parameter formatted as `{userId}-{profileId}`.
+        - `userId`: Your Late user ID (get from `GET /v1/users` → `currentUserId`)
+        - `profileId`: The profile ID to connect the account to (get from `GET /v1/profiles`)
+         (required)
+                redirect_uri: Optional URL to redirect to after successful connection"""
         client = _get_client()
         try:
-            response = client.connect.connect_bluesky_credentials(identifier=identifier, appPassword=app_password, state=state, redirectUri=redirect_uri)
+            response = client.connect.connect_bluesky_credentials(
+                identifier=identifier,
+                appPassword=app_password,
+                state=state,
+                redirectUri=redirect_uri,
+            )
             return _format_response(response)
         except Exception as e:
-            return f'Error: {e}'
-
+            return f"Error: {e}"
 
     @mcp.tool()
     def connect_get_telegram_connect_status(profile_id: str) -> str:
@@ -636,26 +783,26 @@ def register_generated_tools(mcp, _get_client):
             response = client.connect.get_telegram_connect_status(profile_id=profile_id)
             return _format_response(response)
         except Exception as e:
-            return f'Error: {e}'
-
+            return f"Error: {e}"
 
     @mcp.tool()
     def connect_initiate_telegram_connect(chat_id: str, profile_id: str) -> str:
         """Direct Telegram connection (power users)
 
-        Args:
-            chat_id: The Telegram chat ID. Can be:
-    - Numeric ID (e.g., "-1001234567890")
-    - Username with @ prefix (e.g., "@mychannel")
-     (required)
-            profile_id: The profile ID to connect the account to (required)"""
+            Args:
+                chat_id: The Telegram chat ID. Can be:
+        - Numeric ID (e.g., "-1001234567890")
+        - Username with @ prefix (e.g., "@mychannel")
+         (required)
+                profile_id: The profile ID to connect the account to (required)"""
         client = _get_client()
         try:
-            response = client.connect.initiate_telegram_connect(chatId=chat_id, profileId=profile_id)
+            response = client.connect.initiate_telegram_connect(
+                chatId=chat_id, profileId=profile_id
+            )
             return _format_response(response)
         except Exception as e:
-            return f'Error: {e}'
-
+            return f"Error: {e}"
 
     @mcp.tool()
     def connect_complete_telegram_connect(code: str) -> str:
@@ -668,8 +815,7 @@ def register_generated_tools(mcp, _get_client):
             response = client.connect.complete_telegram_connect(code=code)
             return _format_response(response)
         except Exception as e:
-            return f'Error: {e}'
-
+            return f"Error: {e}"
 
     @mcp.tool()
     def connect_update_facebook_page(account_id: str, selected_page_id: str) -> str:
@@ -680,11 +826,12 @@ def register_generated_tools(mcp, _get_client):
             selected_page_id: (required)"""
         client = _get_client()
         try:
-            response = client.connect.update_facebook_page(account_id=account_id, selectedPageId=selected_page_id)
+            response = client.connect.update_facebook_page(
+                account_id=account_id, selectedPageId=selected_page_id
+            )
             return _format_response(response)
         except Exception as e:
-            return f'Error: {e}'
-
+            return f"Error: {e}"
 
     @mcp.tool()
     def connect_get_linked_in_organizations(account_id: str) -> str:
@@ -697,11 +844,12 @@ def register_generated_tools(mcp, _get_client):
             response = client.connect.get_linked_in_organizations(account_id=account_id)
             return _format_response(response)
         except Exception as e:
-            return f'Error: {e}'
-
+            return f"Error: {e}"
 
     @mcp.tool()
-    def connect_update_linked_in_organization(account_id: str, account_type: str, selected_organization: str = "") -> str:
+    def connect_update_linked_in_organization(
+        account_id: str, account_type: str, selected_organization: str = ""
+    ) -> str:
         """Switch LinkedIn account type (personal/organization)
 
         Args:
@@ -710,11 +858,14 @@ def register_generated_tools(mcp, _get_client):
             selected_organization"""
         client = _get_client()
         try:
-            response = client.connect.update_linked_in_organization(account_id=account_id, accountType=account_type, selectedOrganization=selected_organization)
+            response = client.connect.update_linked_in_organization(
+                account_id=account_id,
+                accountType=account_type,
+                selectedOrganization=selected_organization,
+            )
             return _format_response(response)
         except Exception as e:
-            return f'Error: {e}'
-
+            return f"Error: {e}"
 
     @mcp.tool()
     def connect_get_pinterest_boards(account_id: str) -> str:
@@ -727,11 +878,12 @@ def register_generated_tools(mcp, _get_client):
             response = client.connect.get_pinterest_boards(account_id=account_id)
             return _format_response(response)
         except Exception as e:
-            return f'Error: {e}'
-
+            return f"Error: {e}"
 
     @mcp.tool()
-    def connect_update_pinterest_boards(account_id: str, default_board_id: str, default_board_name: str = "") -> str:
+    def connect_update_pinterest_boards(
+        account_id: str, default_board_id: str, default_board_name: str = ""
+    ) -> str:
         """Set default Pinterest board on the connection
 
         Args:
@@ -740,11 +892,14 @@ def register_generated_tools(mcp, _get_client):
             default_board_name"""
         client = _get_client()
         try:
-            response = client.connect.update_pinterest_boards(account_id=account_id, defaultBoardId=default_board_id, defaultBoardName=default_board_name)
+            response = client.connect.update_pinterest_boards(
+                account_id=account_id,
+                defaultBoardId=default_board_id,
+                defaultBoardName=default_board_name,
+            )
             return _format_response(response)
         except Exception as e:
-            return f'Error: {e}'
-
+            return f"Error: {e}"
 
     @mcp.tool()
     def connect_get_reddit_subreddits(account_id: str) -> str:
@@ -757,11 +912,12 @@ def register_generated_tools(mcp, _get_client):
             response = client.connect.get_reddit_subreddits(account_id=account_id)
             return _format_response(response)
         except Exception as e:
-            return f'Error: {e}'
-
+            return f"Error: {e}"
 
     @mcp.tool()
-    def connect_update_reddit_subreddits(account_id: str, default_subreddit: str) -> str:
+    def connect_update_reddit_subreddits(
+        account_id: str, default_subreddit: str
+    ) -> str:
         """Set default subreddit on the connection
 
         Args:
@@ -769,13 +925,14 @@ def register_generated_tools(mcp, _get_client):
             default_subreddit: (required)"""
         client = _get_client()
         try:
-            response = client.connect.update_reddit_subreddits(account_id=account_id, defaultSubreddit=default_subreddit)
+            response = client.connect.update_reddit_subreddits(
+                account_id=account_id, defaultSubreddit=default_subreddit
+            )
             return _format_response(response)
         except Exception as e:
-            return f'Error: {e}'
+            return f"Error: {e}"
 
     # INVITES
-
 
     @mcp.tool()
     def invites_create_invite_token(scope: str, profile_ids: str = "") -> str:
@@ -786,11 +943,12 @@ def register_generated_tools(mcp, _get_client):
             profile_ids: Required if scope is 'profiles'. Array of profile IDs to grant access to."""
         client = _get_client()
         try:
-            response = client.invites.create_invite_token(scope=scope, profileIds=profile_ids)
+            response = client.invites.create_invite_token(
+                scope=scope, profileIds=profile_ids
+            )
             return _format_response(response)
         except Exception as e:
-            return f'Error: {e}'
-
+            return f"Error: {e}"
 
     @mcp.tool()
     def invites_list_platform_invites(profile_id: str = "") -> str:
@@ -803,8 +961,7 @@ def register_generated_tools(mcp, _get_client):
             response = client.invites.list_platform_invites(profile_id=profile_id)
             return _format_response(response)
         except Exception as e:
-            return f'Error: {e}'
-
+            return f"Error: {e}"
 
     @mcp.tool()
     def invites_create_platform_invite(profile_id: str, platform: str) -> str:
@@ -815,11 +972,12 @@ def register_generated_tools(mcp, _get_client):
             platform: Platform to connect (required)"""
         client = _get_client()
         try:
-            response = client.invites.create_platform_invite(profileId=profile_id, platform=platform)
+            response = client.invites.create_platform_invite(
+                profileId=profile_id, platform=platform
+            )
             return _format_response(response)
         except Exception as e:
-            return f'Error: {e}'
-
+            return f"Error: {e}"
 
     @mcp.tool()
     def invites_delete_platform_invite(id: str) -> str:
@@ -832,13 +990,19 @@ def register_generated_tools(mcp, _get_client):
             response = client.invites.delete_platform_invite(id=id)
             return _format_response(response)
         except Exception as e:
-            return f'Error: {e}'
+            return f"Error: {e}"
 
     # LOGS
 
-
     @mcp.tool()
-    def logs_list_logs(status: str = "", platform: str = "", action: str = "", days: int = 7, limit: int = 50, skip: int = 0) -> str:
+    def logs_list_logs(
+        status: str = "",
+        platform: str = "",
+        action: str = "",
+        days: int = 7,
+        limit: int = 50,
+        skip: int = 0,
+    ) -> str:
         """Get publishing logs
 
         Args:
@@ -850,11 +1014,17 @@ def register_generated_tools(mcp, _get_client):
             skip: Number of logs to skip (for pagination)"""
         client = _get_client()
         try:
-            response = client.logs.list_logs(status=status, platform=platform, action=action, days=days, limit=limit, skip=skip)
+            response = client.logs.list_logs(
+                status=status,
+                platform=platform,
+                action=action,
+                days=days,
+                limit=limit,
+                skip=skip,
+            )
             return _format_response(response)
         except Exception as e:
-            return f'Error: {e}'
-
+            return f"Error: {e}"
 
     @mcp.tool()
     def logs_get_log(log_id: str) -> str:
@@ -867,8 +1037,7 @@ def register_generated_tools(mcp, _get_client):
             response = client.logs.get_log(log_id=log_id)
             return _format_response(response)
         except Exception as e:
-            return f'Error: {e}'
-
+            return f"Error: {e}"
 
     @mcp.tool()
     def logs_get_post_logs(post_id: str, limit: int = 50) -> str:
@@ -882,13 +1051,14 @@ def register_generated_tools(mcp, _get_client):
             response = client.logs.get_post_logs(post_id=post_id, limit=limit)
             return _format_response(response)
         except Exception as e:
-            return f'Error: {e}'
+            return f"Error: {e}"
 
     # MEDIA
 
-
     @mcp.tool()
-    def media_get_media_presigned_url(filename: str, content_type: str, size: int = 0) -> str:
+    def media_get_media_presigned_url(
+        filename: str, content_type: str, size: int = 0
+    ) -> str:
         """Get a presigned URL for direct file upload (up to 5GB)
 
         Args:
@@ -897,16 +1067,27 @@ def register_generated_tools(mcp, _get_client):
             size: Optional file size in bytes for pre-validation (max 5GB)"""
         client = _get_client()
         try:
-            response = client.media.get_media_presigned_url(filename=filename, contentType=content_type, size=size)
+            response = client.media.get_media_presigned_url(
+                filename=filename, contentType=content_type, size=size
+            )
             return _format_response(response)
         except Exception as e:
-            return f'Error: {e}'
+            return f"Error: {e}"
 
     # POSTS
 
-
     @mcp.tool()
-    def posts_list_posts(page: int = 1, limit: int = 10, status: str = "", platform: str = "", profile_id: str = "", created_by: str = "", date_from: str = "", date_to: str = "", include_hidden: bool = False) -> str:
+    def posts_list_posts(
+        page: int = 1,
+        limit: int = 10,
+        status: str = "",
+        platform: str = "",
+        profile_id: str = "",
+        created_by: str = "",
+        date_from: str = "",
+        date_to: str = "",
+        include_hidden: bool = False,
+    ) -> str:
         """List posts visible to the authenticated user
 
         Args:
@@ -921,11 +1102,20 @@ def register_generated_tools(mcp, _get_client):
             include_hidden"""
         client = _get_client()
         try:
-            response = client.posts.list_posts(page=page, limit=limit, status=status, platform=platform, profile_id=profile_id, created_by=created_by, date_from=date_from, date_to=date_to, include_hidden=include_hidden)
+            response = client.posts.list_posts(
+                page=page,
+                limit=limit,
+                status=status,
+                platform=platform,
+                profile_id=profile_id,
+                created_by=created_by,
+                date_from=date_from,
+                date_to=date_to,
+                include_hidden=include_hidden,
+            )
             return _format_response(response)
         except Exception as e:
-            return f'Error: {e}'
-
+            return f"Error: {e}"
 
     @mcp.tool()
     def posts_get_post(post_id: str) -> str:
@@ -938,8 +1128,7 @@ def register_generated_tools(mcp, _get_client):
             response = client.posts.get_post(post_id=post_id)
             return _format_response(response)
         except Exception as e:
-            return f'Error: {e}'
-
+            return f"Error: {e}"
 
     @mcp.tool()
     def posts_update_post(post_id: str) -> str:
@@ -952,8 +1141,7 @@ def register_generated_tools(mcp, _get_client):
             response = client.posts.update_post(post_id=post_id)
             return _format_response(response)
         except Exception as e:
-            return f'Error: {e}'
-
+            return f"Error: {e}"
 
     @mcp.tool()
     def posts_delete_post(post_id: str) -> str:
@@ -966,8 +1154,7 @@ def register_generated_tools(mcp, _get_client):
             response = client.posts.delete_post(post_id=post_id)
             return _format_response(response)
         except Exception as e:
-            return f'Error: {e}'
-
+            return f"Error: {e}"
 
     @mcp.tool()
     def posts_bulk_upload_posts(dry_run: bool = False) -> str:
@@ -980,29 +1167,31 @@ def register_generated_tools(mcp, _get_client):
             response = client.posts.bulk_upload_posts(dry_run=dry_run)
             return _format_response(response)
         except Exception as e:
-            return f'Error: {e}'
+            return f"Error: {e}"
 
     # PROFILES
-
 
     @mcp.tool()
     def profiles_list_profiles(include_over_limit: bool = False) -> str:
         """List profiles visible to the authenticated user
 
-        Args:
-            include_over_limit: When true, includes profiles that exceed the user's plan limit.
-    Over-limit profiles will have `isOverLimit: true` in the response.
-    Useful for managing/deleting profiles after a plan downgrade."""
+            Args:
+                include_over_limit: When true, includes profiles that exceed the user's plan limit.
+        Over-limit profiles will have `isOverLimit: true` in the response.
+        Useful for managing/deleting profiles after a plan downgrade."""
         client = _get_client()
         try:
-            response = client.profiles.list_profiles(include_over_limit=include_over_limit)
+            response = client.profiles.list_profiles(
+                include_over_limit=include_over_limit
+            )
             return _format_response(response)
         except Exception as e:
-            return f'Error: {e}'
-
+            return f"Error: {e}"
 
     @mcp.tool()
-    def profiles_create_profile(name: str, description: str = "", color: str = "") -> str:
+    def profiles_create_profile(
+        name: str, description: str = "", color: str = ""
+    ) -> str:
         """Create a new profile
 
         Args:
@@ -1011,11 +1200,12 @@ def register_generated_tools(mcp, _get_client):
             color"""
         client = _get_client()
         try:
-            response = client.profiles.create_profile(name=name, description=description, color=color)
+            response = client.profiles.create_profile(
+                name=name, description=description, color=color
+            )
             return _format_response(response)
         except Exception as e:
-            return f'Error: {e}'
-
+            return f"Error: {e}"
 
     @mcp.tool()
     def profiles_get_profile(profile_id: str) -> str:
@@ -1028,11 +1218,16 @@ def register_generated_tools(mcp, _get_client):
             response = client.profiles.get_profile(profile_id=profile_id)
             return _format_response(response)
         except Exception as e:
-            return f'Error: {e}'
-
+            return f"Error: {e}"
 
     @mcp.tool()
-    def profiles_update_profile(profile_id: str, name: str = "", description: str = "", color: str = "", is_default: bool = False) -> str:
+    def profiles_update_profile(
+        profile_id: str,
+        name: str = "",
+        description: str = "",
+        color: str = "",
+        is_default: bool = False,
+    ) -> str:
         """Update a profile
 
         Args:
@@ -1043,11 +1238,16 @@ def register_generated_tools(mcp, _get_client):
             is_default"""
         client = _get_client()
         try:
-            response = client.profiles.update_profile(profile_id=profile_id, name=name, description=description, color=color, isDefault=is_default)
+            response = client.profiles.update_profile(
+                profile_id=profile_id,
+                name=name,
+                description=description,
+                color=color,
+                isDefault=is_default,
+            )
             return _format_response(response)
         except Exception as e:
-            return f'Error: {e}'
-
+            return f"Error: {e}"
 
     @mcp.tool()
     def profiles_delete_profile(profile_id: str) -> str:
@@ -1060,13 +1260,14 @@ def register_generated_tools(mcp, _get_client):
             response = client.profiles.delete_profile(profile_id=profile_id)
             return _format_response(response)
         except Exception as e:
-            return f'Error: {e}'
+            return f"Error: {e}"
 
     # QUEUE
 
-
     @mcp.tool()
-    def queue_list_queue_slots(profile_id: str, queue_id: str = "", all: str = "") -> str:
+    def queue_list_queue_slots(
+        profile_id: str, queue_id: str = "", all: str = ""
+    ) -> str:
         """Get queue schedules for a profile
 
         Args:
@@ -1075,14 +1276,17 @@ def register_generated_tools(mcp, _get_client):
             all: Set to 'true' to list all queues for the profile"""
         client = _get_client()
         try:
-            response = client.queue.list_queue_slots(profile_id=profile_id, queue_id=queue_id, all=all)
+            response = client.queue.list_queue_slots(
+                profile_id=profile_id, queue_id=queue_id, all=all
+            )
             return _format_response(response)
         except Exception as e:
-            return f'Error: {e}'
-
+            return f"Error: {e}"
 
     @mcp.tool()
-    def queue_create_queue_slot(profile_id: str, name: str, timezone: str, slots: str, active: bool = True) -> str:
+    def queue_create_queue_slot(
+        profile_id: str, name: str, timezone: str, slots: str, active: bool = True
+    ) -> str:
         """Create a new queue for a profile
 
         Args:
@@ -1093,14 +1297,28 @@ def register_generated_tools(mcp, _get_client):
             active"""
         client = _get_client()
         try:
-            response = client.queue.create_queue_slot(profileId=profile_id, name=name, timezone=timezone, slots=slots, active=active)
+            response = client.queue.create_queue_slot(
+                profileId=profile_id,
+                name=name,
+                timezone=timezone,
+                slots=slots,
+                active=active,
+            )
             return _format_response(response)
         except Exception as e:
-            return f'Error: {e}'
-
+            return f"Error: {e}"
 
     @mcp.tool()
-    def queue_update_queue_slot(profile_id: str, timezone: str, slots: str, queue_id: str = "", name: str = "", active: bool = True, set_as_default: bool = False, reshuffle_existing: bool = False) -> str:
+    def queue_update_queue_slot(
+        profile_id: str,
+        timezone: str,
+        slots: str,
+        queue_id: str = "",
+        name: str = "",
+        active: bool = True,
+        set_as_default: bool = False,
+        reshuffle_existing: bool = False,
+    ) -> str:
         """Create or update a queue schedule
 
         Args:
@@ -1114,11 +1332,19 @@ def register_generated_tools(mcp, _get_client):
             reshuffle_existing: Whether to reschedule existing queued posts to match new slots"""
         client = _get_client()
         try:
-            response = client.queue.update_queue_slot(profileId=profile_id, queueId=queue_id, name=name, timezone=timezone, slots=slots, active=active, setAsDefault=set_as_default, reshuffleExisting=reshuffle_existing)
+            response = client.queue.update_queue_slot(
+                profileId=profile_id,
+                queueId=queue_id,
+                name=name,
+                timezone=timezone,
+                slots=slots,
+                active=active,
+                setAsDefault=set_as_default,
+                reshuffleExisting=reshuffle_existing,
+            )
             return _format_response(response)
         except Exception as e:
-            return f'Error: {e}'
-
+            return f"Error: {e}"
 
     @mcp.tool()
     def queue_delete_queue_slot(profile_id: str, queue_id: str) -> str:
@@ -1129,11 +1355,12 @@ def register_generated_tools(mcp, _get_client):
             queue_id: Queue ID to delete (required)"""
         client = _get_client()
         try:
-            response = client.queue.delete_queue_slot(profile_id=profile_id, queue_id=queue_id)
+            response = client.queue.delete_queue_slot(
+                profile_id=profile_id, queue_id=queue_id
+            )
             return _format_response(response)
         except Exception as e:
-            return f'Error: {e}'
-
+            return f"Error: {e}"
 
     @mcp.tool()
     def queue_preview_queue(profile_id: str, count: int = 20) -> str:
@@ -1147,8 +1374,7 @@ def register_generated_tools(mcp, _get_client):
             response = client.queue.preview_queue(profile_id=profile_id, count=count)
             return _format_response(response)
         except Exception as e:
-            return f'Error: {e}'
-
+            return f"Error: {e}"
 
     @mcp.tool()
     def queue_get_next_queue_slot(profile_id: str, queue_id: str = "") -> str:
@@ -1159,16 +1385,25 @@ def register_generated_tools(mcp, _get_client):
             queue_id: Specific queue ID (optional, defaults to profile's default queue)"""
         client = _get_client()
         try:
-            response = client.queue.get_next_queue_slot(profile_id=profile_id, queue_id=queue_id)
+            response = client.queue.get_next_queue_slot(
+                profile_id=profile_id, queue_id=queue_id
+            )
             return _format_response(response)
         except Exception as e:
-            return f'Error: {e}'
+            return f"Error: {e}"
 
     # REDDIT
 
-
     @mcp.tool()
-    def reddit_search_reddit(account_id: str, q: str, subreddit: str = "", restrict_sr: str = "", sort: str = "new", limit: int = 25, after: str = "") -> str:
+    def reddit_search_reddit(
+        account_id: str,
+        q: str,
+        subreddit: str = "",
+        restrict_sr: str = "",
+        sort: str = "new",
+        limit: int = 25,
+        after: str = "",
+    ) -> str:
         """Search Reddit posts via a connected account
 
         Args:
@@ -1181,14 +1416,28 @@ def register_generated_tools(mcp, _get_client):
             after"""
         client = _get_client()
         try:
-            response = client.reddit.search_reddit(account_id=account_id, subreddit=subreddit, q=q, restrict_sr=restrict_sr, sort=sort, limit=limit, after=after)
+            response = client.reddit.search_reddit(
+                account_id=account_id,
+                subreddit=subreddit,
+                q=q,
+                restrict_sr=restrict_sr,
+                sort=sort,
+                limit=limit,
+                after=after,
+            )
             return _format_response(response)
         except Exception as e:
-            return f'Error: {e}'
-
+            return f"Error: {e}"
 
     @mcp.tool()
-    def reddit_get_reddit_feed(account_id: str, subreddit: str = "", sort: str = "hot", limit: int = 25, after: str = "", t: str = "") -> str:
+    def reddit_get_reddit_feed(
+        account_id: str,
+        subreddit: str = "",
+        sort: str = "hot",
+        limit: int = 25,
+        after: str = "",
+        t: str = "",
+    ) -> str:
         """Fetch subreddit feed via a connected account
 
         Args:
@@ -1200,16 +1449,28 @@ def register_generated_tools(mcp, _get_client):
             t"""
         client = _get_client()
         try:
-            response = client.reddit.get_reddit_feed(account_id=account_id, subreddit=subreddit, sort=sort, limit=limit, after=after, t=t)
+            response = client.reddit.get_reddit_feed(
+                account_id=account_id,
+                subreddit=subreddit,
+                sort=sort,
+                limit=limit,
+                after=after,
+                t=t,
+            )
             return _format_response(response)
         except Exception as e:
-            return f'Error: {e}'
+            return f"Error: {e}"
 
     # TOOLS
 
-
     @mcp.tool()
-    def tools_download_you_tube_video(url: str, action: str = "download", format: str = "video", quality: str = "hd", format_id: str = "") -> str:
+    def tools_download_you_tube_video(
+        url: str,
+        action: str = "download",
+        format: str = "video",
+        quality: str = "hd",
+        format_id: str = "",
+    ) -> str:
         """Download YouTube video or audio
 
         Args:
@@ -1220,11 +1481,16 @@ def register_generated_tools(mcp, _get_client):
             format_id: Specific format ID from formats list"""
         client = _get_client()
         try:
-            response = client.tools.download_you_tube_video(url=url, action=action, format=format, quality=quality, format_id=format_id)
+            response = client.tools.download_you_tube_video(
+                url=url,
+                action=action,
+                format=format,
+                quality=quality,
+                format_id=format_id,
+            )
             return _format_response(response)
         except Exception as e:
-            return f'Error: {e}'
-
+            return f"Error: {e}"
 
     @mcp.tool()
     def tools_get_you_tube_transcript(url: str, lang: str = "en") -> str:
@@ -1238,8 +1504,7 @@ def register_generated_tools(mcp, _get_client):
             response = client.tools.get_you_tube_transcript(url=url, lang=lang)
             return _format_response(response)
         except Exception as e:
-            return f'Error: {e}'
-
+            return f"Error: {e}"
 
     @mcp.tool()
     def tools_download_instagram_media(url: str) -> str:
@@ -1252,8 +1517,7 @@ def register_generated_tools(mcp, _get_client):
             response = client.tools.download_instagram_media(url=url)
             return _format_response(response)
         except Exception as e:
-            return f'Error: {e}'
-
+            return f"Error: {e}"
 
     @mcp.tool()
     def tools_check_instagram_hashtags(hashtags: str) -> str:
@@ -1266,11 +1530,12 @@ def register_generated_tools(mcp, _get_client):
             response = client.tools.check_instagram_hashtags(hashtags=hashtags)
             return _format_response(response)
         except Exception as e:
-            return f'Error: {e}'
-
+            return f"Error: {e}"
 
     @mcp.tool()
-    def tools_download_tik_tok_video(url: str, action: str = "download", format_id: str = "") -> str:
+    def tools_download_tik_tok_video(
+        url: str, action: str = "download", format_id: str = ""
+    ) -> str:
         """Download TikTok video
 
         Args:
@@ -1279,14 +1544,17 @@ def register_generated_tools(mcp, _get_client):
             format_id: Specific format ID (0 = no watermark, etc.)"""
         client = _get_client()
         try:
-            response = client.tools.download_tik_tok_video(url=url, action=action, format_id=format_id)
+            response = client.tools.download_tik_tok_video(
+                url=url, action=action, format_id=format_id
+            )
             return _format_response(response)
         except Exception as e:
-            return f'Error: {e}'
-
+            return f"Error: {e}"
 
     @mcp.tool()
-    def tools_download_twitter_media(url: str, action: str = "download", format_id: str = "") -> str:
+    def tools_download_twitter_media(
+        url: str, action: str = "download", format_id: str = ""
+    ) -> str:
         """Download Twitter/X video
 
         Args:
@@ -1295,11 +1563,12 @@ def register_generated_tools(mcp, _get_client):
             format_id"""
         client = _get_client()
         try:
-            response = client.tools.download_twitter_media(url=url, action=action, format_id=format_id)
+            response = client.tools.download_twitter_media(
+                url=url, action=action, format_id=format_id
+            )
             return _format_response(response)
         except Exception as e:
-            return f'Error: {e}'
-
+            return f"Error: {e}"
 
     @mcp.tool()
     def tools_download_facebook_video(url: str) -> str:
@@ -1312,8 +1581,7 @@ def register_generated_tools(mcp, _get_client):
             response = client.tools.download_facebook_video(url=url)
             return _format_response(response)
         except Exception as e:
-            return f'Error: {e}'
-
+            return f"Error: {e}"
 
     @mcp.tool()
     def tools_download_linked_in_video(url: str) -> str:
@@ -1326,8 +1594,7 @@ def register_generated_tools(mcp, _get_client):
             response = client.tools.download_linked_in_video(url=url)
             return _format_response(response)
         except Exception as e:
-            return f'Error: {e}'
-
+            return f"Error: {e}"
 
     @mcp.tool()
     def tools_download_bluesky_media(url: str) -> str:
@@ -1340,10 +1607,9 @@ def register_generated_tools(mcp, _get_client):
             response = client.tools.download_bluesky_media(url=url)
             return _format_response(response)
         except Exception as e:
-            return f'Error: {e}'
+            return f"Error: {e}"
 
     # USAGE
-
 
     @mcp.tool()
     def usage_get_usage_stats() -> str:
@@ -1353,10 +1619,9 @@ def register_generated_tools(mcp, _get_client):
             response = client.usage.get_usage_stats()
             return _format_response(response)
         except Exception as e:
-            return f'Error: {e}'
+            return f"Error: {e}"
 
     # USERS
-
 
     @mcp.tool()
     def users_list_users() -> str:
@@ -1366,8 +1631,7 @@ def register_generated_tools(mcp, _get_client):
             response = client.users.list_users()
             return _format_response(response)
         except Exception as e:
-            return f'Error: {e}'
-
+            return f"Error: {e}"
 
     @mcp.tool()
     def users_get_user(user_id: str) -> str:
@@ -1380,10 +1644,9 @@ def register_generated_tools(mcp, _get_client):
             response = client.users.get_user(user_id=user_id)
             return _format_response(response)
         except Exception as e:
-            return f'Error: {e}'
+            return f"Error: {e}"
 
     # WEBHOOKS
-
 
     @mcp.tool()
     def webhooks_get_webhook_settings() -> str:
@@ -1393,11 +1656,17 @@ def register_generated_tools(mcp, _get_client):
             response = client.webhooks.get_webhook_settings()
             return _format_response(response)
         except Exception as e:
-            return f'Error: {e}'
-
+            return f"Error: {e}"
 
     @mcp.tool()
-    def webhooks_create_webhook_settings(name: str = "", url: str = "", secret: str = "", events: str = "", is_active: bool = False, custom_headers: str = "") -> str:
+    def webhooks_create_webhook_settings(
+        name: str = "",
+        url: str = "",
+        secret: str = "",
+        events: str = "",
+        is_active: bool = False,
+        custom_headers: str = "",
+    ) -> str:
         """Create a new webhook
 
         Args:
@@ -1409,14 +1678,28 @@ def register_generated_tools(mcp, _get_client):
             custom_headers: Custom headers to include in webhook requests"""
         client = _get_client()
         try:
-            response = client.webhooks.create_webhook_settings(name=name, url=url, secret=secret, events=events, isActive=is_active, customHeaders=custom_headers)
+            response = client.webhooks.create_webhook_settings(
+                name=name,
+                url=url,
+                secret=secret,
+                events=events,
+                isActive=is_active,
+                customHeaders=custom_headers,
+            )
             return _format_response(response)
         except Exception as e:
-            return f'Error: {e}'
-
+            return f"Error: {e}"
 
     @mcp.tool()
-    def webhooks_update_webhook_settings(id: str, name: str = "", url: str = "", secret: str = "", events: str = "", is_active: bool = False, custom_headers: str = "") -> str:
+    def webhooks_update_webhook_settings(
+        id: str,
+        name: str = "",
+        url: str = "",
+        secret: str = "",
+        events: str = "",
+        is_active: bool = False,
+        custom_headers: str = "",
+    ) -> str:
         """Update a webhook
 
         Args:
@@ -1429,11 +1712,18 @@ def register_generated_tools(mcp, _get_client):
             custom_headers: Custom headers to include in webhook requests"""
         client = _get_client()
         try:
-            response = client.webhooks.update_webhook_settings(_id=id, name=name, url=url, secret=secret, events=events, isActive=is_active, customHeaders=custom_headers)
+            response = client.webhooks.update_webhook_settings(
+                _id=id,
+                name=name,
+                url=url,
+                secret=secret,
+                events=events,
+                isActive=is_active,
+                customHeaders=custom_headers,
+            )
             return _format_response(response)
         except Exception as e:
-            return f'Error: {e}'
-
+            return f"Error: {e}"
 
     @mcp.tool()
     def webhooks_delete_webhook_settings(id: str) -> str:
@@ -1446,8 +1736,7 @@ def register_generated_tools(mcp, _get_client):
             response = client.webhooks.delete_webhook_settings(id=id)
             return _format_response(response)
         except Exception as e:
-            return f'Error: {e}'
-
+            return f"Error: {e}"
 
     @mcp.tool()
     def webhooks_test_webhook(webhook_id: str) -> str:
@@ -1460,11 +1749,12 @@ def register_generated_tools(mcp, _get_client):
             response = client.webhooks.test_webhook(webhookId=webhook_id)
             return _format_response(response)
         except Exception as e:
-            return f'Error: {e}'
-
+            return f"Error: {e}"
 
     @mcp.tool()
-    def webhooks_get_webhook_logs(limit: int = 50, status: str = "", event: str = "", webhook_id: str = "") -> str:
+    def webhooks_get_webhook_logs(
+        limit: int = 50, status: str = "", event: str = "", webhook_id: str = ""
+    ) -> str:
         """Get webhook delivery logs
 
         Args:
@@ -1474,7 +1764,9 @@ def register_generated_tools(mcp, _get_client):
             webhook_id: Filter by webhook ID"""
         client = _get_client()
         try:
-            response = client.webhooks.get_webhook_logs(limit=limit, status=status, event=event, webhook_id=webhook_id)
+            response = client.webhooks.get_webhook_logs(
+                limit=limit, status=status, event=event, webhook_id=webhook_id
+            )
             return _format_response(response)
         except Exception as e:
-            return f'Error: {e}'
+            return f"Error: {e}"

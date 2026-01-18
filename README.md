@@ -165,75 +165,82 @@ except LateAPIError as e:
 ### Posts
 | Method | Description |
 |--------|-------------|
-| `posts.list()` | List all posts |
-| `posts.bulk_upload()` | Upload multiple posts at once |
-| `posts.create()` | Create and schedule a post |
-| `posts.get()` | Get a specific post |
-| `posts.update()` | Update a scheduled post |
-| `posts.delete()` | Delete a post |
-| `posts.retry()` | Retry a failed post |
+| `posts.list_posts()` | List posts visible to the authenticated user |
+| `posts.bulk_upload_posts()` | Validate and schedule multiple posts from CSV |
+| `posts.create_post()` | Create a draft, scheduled, or immediate post |
+| `posts.get_post()` | Get a single post |
+| `posts.update_post()` | Update a post |
+| `posts.delete_post()` | Delete a post |
+| `posts.retry_post()` | Retry publishing a failed or partial post |
 
 ### Accounts
 | Method | Description |
 |--------|-------------|
-| `accounts.list()` | List connected social accounts |
-| `accounts.get()` | Get a specific account |
-| `accounts.get_follower_stats()` | Get follower growth data |
+| `accounts.get_all_accounts_health()` | Check health of all connected accounts |
+| `accounts.list_accounts()` | List connected social accounts |
+| `accounts.get_account_health()` | Check health of a specific account |
+| `accounts.get_follower_stats()` | Get follower stats and growth metrics |
+| `accounts.get_google_business_reviews()` | Get Google Business Profile reviews |
+| `accounts.get_linked_in_mentions()` | Resolve a LinkedIn profile or company URL to a URN for @mentions |
+| `accounts.update_account()` | Update a social account |
+| `accounts.delete_account()` | Disconnect a social account |
 
 ### Profiles
 | Method | Description |
 |--------|-------------|
-| `profiles.list()` | List workspace profiles |
-| `profiles.create()` | Create a new profile |
-| `profiles.get()` | Get a specific profile |
-| `profiles.update()` | Update a profile |
-| `profiles.delete()` | Delete a profile |
+| `profiles.list_profiles()` | List profiles visible to the authenticated user |
+| `profiles.create_profile()` | Create a new profile |
+| `profiles.get_profile()` | Get a profile by id |
+| `profiles.update_profile()` | Update a profile |
+| `profiles.delete_profile()` | Delete a profile (must have no connected accounts) |
 
 ### Analytics
 | Method | Description |
 |--------|-------------|
-| `analytics.get()` | Get post performance metrics |
-| `analytics.get_usage()` | Get API usage statistics |
+| `analytics.get_analytics()` | Unified analytics for posts |
+| `analytics.get_linked_in_aggregate_analytics()` | Get aggregate analytics for a LinkedIn personal account |
+| `analytics.get_linked_in_post_analytics()` | Get analytics for a specific LinkedIn post by URN |
+| `analytics.get_you_tube_daily_views()` | YouTube daily views breakdown |
 
 ### Account Groups
 | Method | Description |
 |--------|-------------|
-| `account_groups.list_account_groups()` | List account groups |
-| `account_groups.create_account_group()` | Create an account group |
+| `account_groups.list_account_groups()` | List account groups for the authenticated user |
+| `account_groups.create_account_group()` | Create a new account group |
 | `account_groups.update_account_group()` | Update an account group |
 | `account_groups.delete_account_group()` | Delete an account group |
 
 ### Queue
 | Method | Description |
 |--------|-------------|
-| `queue.get_slots()` | List queue time slots |
-| `queue.update_slots()` | Update queue slots |
-| `queue.delete_slots()` | Delete queue slots |
-| `queue.next_slot()` | Get next available slot |
-| `queue.preview()` | Preview upcoming queued posts |
+| `queue.list_queue_slots()` | Get queue schedules for a profile |
+| `queue.create_queue_slot()` | Create a new queue for a profile |
+| `queue.get_next_queue_slot()` | Get the next available queue slot for a profile |
+| `queue.update_queue_slot()` | Create or update a queue schedule |
+| `queue.delete_queue_slot()` | Delete a queue schedule |
+| `queue.preview_queue()` | Preview upcoming queue slots for a profile |
 
 ### Webhooks
 | Method | Description |
 |--------|-------------|
-| `webhooks.create_webhook_settings()` | Create webhook settings |
+| `webhooks.create_webhook_settings()` | Create a new webhook |
 | `webhooks.get_webhook_logs()` | Get webhook delivery logs |
-| `webhooks.get_webhook_settings()` | Get webhook configuration |
-| `webhooks.update_webhook_settings()` | Update webhook settings |
-| `webhooks.delete_webhook_settings()` | Delete webhook settings |
-| `webhooks.test_webhook()` | Send a test webhook |
+| `webhooks.get_webhook_settings()` | List all webhooks |
+| `webhooks.update_webhook_settings()` | Update a webhook |
+| `webhooks.delete_webhook_settings()` | Delete a webhook |
+| `webhooks.test_webhook()` | Send test webhook |
 
 ### API Keys
 | Method | Description |
 |--------|-------------|
-| `api_keys.list_api_keys()` | List API keys |
+| `api_keys.list_api_keys()` | List API keys for the current user |
 | `api_keys.create_api_key()` | Create a new API key |
 | `api_keys.delete_api_key()` | Delete an API key |
 
 ### Media
 | Method | Description |
 |--------|-------------|
-| `media.check_upload_token()` | Check upload token status |
-| `media.generate_upload_token()` | Generate upload token for browser uploads |
+| `media.get_media_presigned_url()` | Get a presigned URL for direct file upload (up to 5GB) |
 | `media.upload()` | Upload a file from path |
 | `media.upload_bytes()` | Upload file from bytes |
 | `media.upload_large()` | Upload large file with multipart |
@@ -243,75 +250,74 @@ except LateAPIError as e:
 ### Tools
 | Method | Description |
 |--------|-------------|
-| `tools.bluesky_download()` | Download Bluesky media |
-| `tools.facebook_download()` | Download Facebook video |
-| `tools.generate_caption()` | Generate caption using AI |
-| `tools.instagram_download()` | Download Instagram media |
-| `tools.instagram_hashtag_check()` | Check if hashtags are banned |
-| `tools.linkedin_download()` | Download LinkedIn video |
-| `tools.tiktok_download()` | Download TikTok video |
-| `tools.twitter_download()` | Download Twitter/X media |
-| `tools.youtube_download()` | Download YouTube video |
-| `tools.youtube_transcript()` | Get YouTube video transcript |
+| `tools.get_you_tube_transcript()` | Get YouTube video transcript |
+| `tools.check_instagram_hashtags()` | Check Instagram hashtags for bans |
+| `tools.download_bluesky_media()` | Download Bluesky video |
+| `tools.download_facebook_video()` | Download Facebook video |
+| `tools.download_instagram_media()` | Download Instagram reel or post |
+| `tools.download_linked_in_video()` | Download LinkedIn video |
+| `tools.download_tik_tok_video()` | Download TikTok video |
+| `tools.download_twitter_media()` | Download Twitter/X video |
+| `tools.download_you_tube_video()` | Download YouTube video or audio |
 
 ### Users
 | Method | Description |
 |--------|-------------|
-| `users.list()` | List team users |
-| `users.get()` | Get a specific user |
+| `users.list_users()` | List team users (root + invited) |
+| `users.get_user()` | Get user by id (self or invited) |
 
 ### Usage
 | Method | Description |
 |--------|-------------|
-| `usage.get_usage_stats()` | Get API usage statistics |
+| `usage.get_usage_stats()` | Get plan and usage stats for current account |
 
 ### Logs
 | Method | Description |
 |--------|-------------|
-| `logs.list_logs()` | List publishing logs |
-| `logs.get_log()` | Get a specific log entry |
+| `logs.list_logs()` | Get publishing logs |
+| `logs.get_log()` | Get a single log entry |
 | `logs.get_post_logs()` | Get logs for a specific post |
 
 ### Connect (OAuth)
 | Method | Description |
 |--------|-------------|
-| `connect.list_facebook_pages()` | List Facebook pages |
-| `connect.list_google_business_locations()` | List Google Business locations |
-| `connect.list_linked_in_organizations()` | List LinkedIn organizations |
-| `connect.list_pinterest_boards_for_selection()` | List Pinterest boards |
-| `connect.list_snapchat_profiles()` | List Snapchat profiles |
-| `connect.get_connect_url()` | Get OAuth URL for a platform |
-| `connect.get_linked_in_organizations()` | Get LinkedIn organizations |
-| `connect.get_pinterest_boards()` | Get Pinterest boards |
-| `connect.get_reddit_subreddits()` | Get Reddit subreddits |
-| `connect.get_telegram_connect_status()` | Get Telegram connection status |
-| `connect.update_facebook_page()` | Update Facebook page settings |
-| `connect.update_linked_in_organization()` | Update LinkedIn organization |
-| `connect.update_pinterest_boards()` | Update Pinterest boards |
-| `connect.update_reddit_subreddits()` | Update Reddit subreddits |
-| `connect.complete_telegram_connect()` | Complete Telegram connection |
-| `connect.connect_bluesky_credentials()` | Connect Bluesky with credentials |
-| `connect.handle_o_auth_callback()` | Handle OAuth callback |
-| `connect.initiate_telegram_connect()` | Start Telegram connection |
-| `connect.select_facebook_page()` | Select a Facebook page |
-| `connect.select_google_business_location()` | Select a Google Business location |
-| `connect.select_linked_in_organization()` | Select a LinkedIn organization |
-| `connect.select_pinterest_board()` | Select a Pinterest board |
-| `connect.select_snapchat_profile()` | Select a Snapchat profile |
+| `connect.list_facebook_pages()` | List Facebook Pages after OAuth (Headless Mode) |
+| `connect.list_google_business_locations()` | List Google Business Locations after OAuth (Headless Mode) |
+| `connect.list_linked_in_organizations()` | Fetch full LinkedIn organization details (Headless Mode) |
+| `connect.list_pinterest_boards_for_selection()` | List Pinterest Boards after OAuth (Headless Mode) |
+| `connect.list_snapchat_profiles()` | List Snapchat Public Profiles after OAuth (Headless Mode) |
+| `connect.get_connect_url()` | Start OAuth connection for a platform |
+| `connect.get_linked_in_organizations()` | Get available LinkedIn organizations for a connected account |
+| `connect.get_pinterest_boards()` | List Pinterest boards for a connected account |
+| `connect.get_reddit_subreddits()` | List Reddit subreddits for a connected account |
+| `connect.get_telegram_connect_status()` | Generate Telegram access code |
+| `connect.update_facebook_page()` | Update selected Facebook page for a connected account |
+| `connect.update_linked_in_organization()` | Switch LinkedIn account type (personal/organization) |
+| `connect.update_pinterest_boards()` | Set default Pinterest board on the connection |
+| `connect.update_reddit_subreddits()` | Set default subreddit on the connection |
+| `connect.complete_telegram_connect()` | Check Telegram connection status |
+| `connect.connect_bluesky_credentials()` | Connect Bluesky using app password |
+| `connect.handle_o_auth_callback()` | Complete OAuth token exchange manually (for server-side flows) |
+| `connect.initiate_telegram_connect()` | Direct Telegram connection (power users) |
+| `connect.select_facebook_page()` | Select a Facebook Page to complete the connection (Headless Mode) |
+| `connect.select_google_business_location()` | Select a Google Business location to complete the connection (Headless Mode) |
+| `connect.select_linked_in_organization()` | Select LinkedIn organization or personal account after OAuth |
+| `connect.select_pinterest_board()` | Select a Pinterest Board to complete the connection (Headless Mode) |
+| `connect.select_snapchat_profile()` | Select a Snapchat Public Profile to complete the connection (Headless Mode) |
 
 ### Reddit
 | Method | Description |
 |--------|-------------|
-| `reddit.get_reddit_feed()` | Get Reddit feed |
-| `reddit.search_reddit()` | Search Reddit |
+| `reddit.get_reddit_feed()` | Fetch subreddit feed via a connected account |
+| `reddit.search_reddit()` | Search Reddit posts via a connected account |
 
 ### Invites
 | Method | Description |
 |--------|-------------|
-| `invites.list_platform_invites()` | List platform invites |
-| `invites.create_invite_token()` | Create an invite token |
-| `invites.create_platform_invite()` | Create a platform invite |
-| `invites.delete_platform_invite()` | Delete a platform invite |
+| `invites.list_platform_invites()` | List platform connection invites |
+| `invites.create_invite_token()` | Create a team member invite token |
+| `invites.create_platform_invite()` | Create a platform connection invite |
+| `invites.delete_platform_invite()` | Revoke a platform connection invite |
 
 ## MCP Server (Claude Desktop)
 

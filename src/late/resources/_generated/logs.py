@@ -23,17 +23,21 @@ class LogsResource:
 
     def _build_params(self, **kwargs: Any) -> dict[str, Any]:
         """Build query parameters, filtering None values."""
+
         def to_camel(s: str) -> str:
             parts = s.split("_")
             return parts[0] + "".join(p.title() for p in parts[1:])
+
         return {to_camel(k): v for k, v in kwargs.items() if v is not None}
 
     def _build_payload(self, **kwargs: Any) -> dict[str, Any]:
         """Build request payload, filtering None values."""
         from datetime import datetime
+
         def to_camel(s: str) -> str:
             parts = s.split("_")
             return parts[0] + "".join(p.title() for p in parts[1:])
+
         result: dict[str, Any] = {}
         for k, v in kwargs.items():
             if v is None:
@@ -44,7 +48,16 @@ class LogsResource:
                 result[to_camel(k)] = v
         return result
 
-    def list_logs(self, *, status: str | None = None, platform: str | None = None, action: str | None = None, days: int | None = 7, limit: int | None = 50, skip: int | None = 0) -> dict[str, Any]:
+    def list_logs(
+        self,
+        *,
+        status: str | None = None,
+        platform: str | None = None,
+        action: str | None = None,
+        days: int | None = 7,
+        limit: int | None = 50,
+        skip: int | None = 0,
+    ) -> dict[str, Any]:
         """Get publishing logs"""
         params = self._build_params(
             status=status,
@@ -67,7 +80,16 @@ class LogsResource:
         )
         return self._client._get(f"/v1/posts/{post_id}/logs", params=params)
 
-    async def alist_logs(self, *, status: str | None = None, platform: str | None = None, action: str | None = None, days: int | None = 7, limit: int | None = 50, skip: int | None = 0) -> dict[str, Any]:
+    async def alist_logs(
+        self,
+        *,
+        status: str | None = None,
+        platform: str | None = None,
+        action: str | None = None,
+        days: int | None = 7,
+        limit: int | None = 50,
+        skip: int | None = 0,
+    ) -> dict[str, Any]:
         """Get publishing logs (async)"""
         params = self._build_params(
             status=status,
@@ -83,7 +105,9 @@ class LogsResource:
         """Get a single log entry (async)"""
         return await self._client._aget(f"/v1/logs/{log_id}")
 
-    async def aget_post_logs(self, post_id: str, *, limit: int | None = 50) -> dict[str, Any]:
+    async def aget_post_logs(
+        self, post_id: str, *, limit: int | None = 50
+    ) -> dict[str, Any]:
         """Get logs for a specific post (async)"""
         params = self._build_params(
             limit=limit,
