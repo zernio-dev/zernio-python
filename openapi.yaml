@@ -45,6 +45,7 @@ tags:
       - `post.published` - When a post is successfully published
       - `post.failed` - When a post fails to publish on all platforms
       - `post.partial` - When a post publishes to some platforms but fails on others
+      - `account.connected` - When a social account is successfully connected
       - `account.disconnected` - When a social account is disconnected (token expired/revoked)
 
       **Security:**
@@ -222,7 +223,7 @@ components:
           type: array
           items:
             type: string
-            enum: [post.scheduled, post.published, post.failed, post.partial, account.disconnected]
+            enum: [post.scheduled, post.published, post.failed, post.partial, account.connected, account.disconnected]
           description: Events subscribed to
         isActive:
           type: boolean
@@ -253,7 +254,7 @@ components:
           description: Name of the webhook that was triggered
         event:
           type: string
-          enum: [post.scheduled, post.published, post.failed, post.partial, account.disconnected, webhook.test]
+          enum: [post.scheduled, post.published, post.failed, post.partial, account.connected, account.disconnected, webhook.test]
         url:
           type: string
           format: uri
@@ -316,6 +317,31 @@ components:
                     type: string
                   error:
                     type: string
+        timestamp:
+          type: string
+          format: date-time
+    WebhookPayloadAccountConnected:
+      type: object
+      description: Webhook payload for account connected events
+      properties:
+        event:
+          type: string
+          enum: [account.connected]
+        account:
+          type: object
+          properties:
+            accountId:
+              type: string
+              description: The account's unique identifier (same as used in /v1/accounts/{accountId})
+            profileId:
+              type: string
+              description: The profile's unique identifier this account belongs to
+            platform:
+              type: string
+            username:
+              type: string
+            displayName:
+              type: string
         timestamp:
           type: string
           format: date-time
@@ -783,6 +809,15 @@ components:
             Only applies to Reels (video posts). Can only be set once - either during creation or
             later from the Instagram audio page in the app.
           example: "My Podcast Intro"
+        thumbOffset:
+          type: integer
+          minimum: 0
+          description: |
+            Millisecond offset from the start of the video to use as the Reel thumbnail.
+            Only applies to Reels (video posts). If a custom thumbnail URL (instagramThumbnail
+            in mediaItems) is provided, it takes priority and this offset is ignored.
+            Defaults to 0 (first frame).
+          example: 5000
       description: |
         Constraints:
         - Feed posts require images with aspect ratio between 0.8 (4:5 portrait) and 1.91 (1.91:1 landscape).
@@ -7111,7 +7146,7 @@ paths:
                   type: array
                   items:
                     type: string
-                    enum: [post.scheduled, post.published, post.failed, post.partial, account.disconnected]
+                    enum: [post.scheduled, post.published, post.failed, post.partial, account.connected, account.disconnected]
                   description: Events to subscribe to
                 isActive:
                   type: boolean
@@ -7128,7 +7163,7 @@ paths:
                   name: "My Production Webhook"
                   url: "https://example.com/webhook"
                   secret: "your-secret-key"
-                  events: ["post.scheduled", "post.published", "post.failed", "post.partial", "account.disconnected"]
+                  events: ["post.scheduled", "post.published", "post.failed", "post.partial", "account.connected", "account.disconnected"]
                   isActive: true
       responses:
         '200':
@@ -7180,7 +7215,7 @@ paths:
                   type: array
                   items:
                     type: string
-                    enum: [post.scheduled, post.published, post.failed, post.partial, account.disconnected]
+                    enum: [post.scheduled, post.published, post.failed, post.partial, account.connected, account.disconnected]
                   description: Events to subscribe to
                 isActive:
                   type: boolean
@@ -7323,7 +7358,7 @@ paths:
           description: Filter by event type
           schema:
             type: string
-            enum: [post.scheduled, post.published, post.failed, post.partial, account.disconnected, webhook.test]
+            enum: [post.scheduled, post.published, post.failed, post.partial, account.connected, account.disconnected, webhook.test]
         - name: webhookId
           in: query
           description: Filter by webhook ID
