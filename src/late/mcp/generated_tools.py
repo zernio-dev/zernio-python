@@ -950,48 +950,6 @@ def register_generated_tools(mcp, _get_client):
         except Exception as e:
             return f"Error: {e}"
 
-    @mcp.tool()
-    def invites_list_platform_invites(profile_id: str = "") -> str:
-        """List platform connection invites
-
-        Args:
-            profile_id: Optional. Filter invites by profile ID"""
-        client = _get_client()
-        try:
-            response = client.invites.list_platform_invites(profile_id=profile_id)
-            return _format_response(response)
-        except Exception as e:
-            return f"Error: {e}"
-
-    @mcp.tool()
-    def invites_create_platform_invite(profile_id: str, platform: str) -> str:
-        """Create a platform connection invite
-
-        Args:
-            profile_id: Profile ID to connect the account to (required)
-            platform: Platform to connect (required)"""
-        client = _get_client()
-        try:
-            response = client.invites.create_platform_invite(
-                profileId=profile_id, platform=platform
-            )
-            return _format_response(response)
-        except Exception as e:
-            return f"Error: {e}"
-
-    @mcp.tool()
-    def invites_delete_platform_invite(id: str) -> str:
-        """Revoke a platform connection invite
-
-        Args:
-            id: Invite ID to revoke (required)"""
-        client = _get_client()
-        try:
-            response = client.invites.delete_platform_invite(id=id)
-            return _format_response(response)
-        except Exception as e:
-            return f"Error: {e}"
-
     # LOGS
 
     @mcp.tool()

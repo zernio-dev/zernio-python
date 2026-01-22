@@ -314,10 +314,7 @@ except LateAPIError as e:
 ### Invites
 | Method | Description |
 |--------|-------------|
-| `invites.list_platform_invites()` | List platform connection invites |
 | `invites.create_invite_token()` | Create a team member invite token |
-| `invites.create_platform_invite()` | Create a platform connection invite |
-| `invites.delete_platform_invite()` | Revoke a platform connection invite |
 
 ## MCP Server (Claude Desktop)
 
