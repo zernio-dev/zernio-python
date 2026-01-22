@@ -4316,19 +4316,22 @@ paths:
         5. In this mode, users never see Late's hosted page selector – only your UI.
         
         **LinkedIn:**
-        1. Call this endpoint with `&headless=true`, e.g.  
+        1. Call this endpoint with `&headless=true`, e.g.
            `GET /v1/connect/linkedin?profileId=PROFILE_ID&redirect_url=https://yourapp.com/callback&headless=true`
         2. Redirect your user to the returned `authUrl`
         3. After OAuth, the user is redirected directly to **your** `redirect_url` with:
-           - `profileId` – your Late profile ID  
-           - `tempToken` – temporary LinkedIn access token  
-           - `userProfile` – URL‑encoded JSON with `id`, `username`, `displayName`, `profilePicture`  
-           - `organizations` – URL‑encoded JSON array with `id`, `urn`, `name` for each org (logos not included to prevent URL length issues)
-           - `connect_token` – short‑lived connect token (for API auth)  
-           - `platform=linkedin`  
+           - `profileId` – your Late profile ID
+           - `pendingDataToken` – token to fetch OAuth data via API (see step 4)
+           - `connect_token` – short-lived connect token (for API auth)
+           - `platform=linkedin`
            - `step=select_organization`
-        4. The `organizations` array contains minimal data (`id`, `urn`, `name`). Use it to build your selection UI.
-        5. **Optional:** To fetch full organization details (logos, vanityName, website, industry, description), call `GET /v1/connect/linkedin/organizations?tempToken=X&orgIds=id1,id2,...`
+        4. Call `GET /v1/connect/pending-data?token=PENDING_DATA_TOKEN` to fetch the OAuth data:
+           - `tempToken` – temporary LinkedIn access token
+           - `userProfile` – JSON object with `id`, `username`, `displayName`, `profilePicture`
+           - `organizations` – JSON array with `id`, `urn`, `name`, `vanityName` for each org
+           - `refreshToken` / `expiresIn` – token metadata
+           This endpoint is one-time use and data expires after 10 minutes.
+        5. **Optional:** To fetch full organization details (logos, website, industry, description), call `GET /v1/connect/linkedin/organizations?tempToken=X&orgIds=id1,id2,...`
         6. Call `POST /v1/connect/linkedin/select-organization` with the `X-Connect-Token` header to save the selection.
         7. In this mode, users never see Late's hosted organization selector – only your UI.
         8. Note: If the user has no organization admin access, `step=select_organization` will NOT be present,
@@ -4398,8 +4401,8 @@ paths:
 
             After OAuth, the user is redirected directly to your `redirect_url` with OAuth data:
             - **Facebook:** `?profileId=X&tempToken=Y&userProfile=Z&connect_token=CT&platform=facebook&step=select_page`
-            - **LinkedIn:** `?profileId=X&tempToken=Y&userProfile=Z&organizations=ORGS&connect_token=CT&platform=linkedin&step=select_organization`
-              (organizations contains `id`, `urn`, `name` only - use `/v1/connect/linkedin/organizations` to fetch full details)
+            - **LinkedIn:** `?profileId=X&pendingDataToken=TOKEN&connect_token=CT&platform=linkedin&step=select_organization`
+              Use `GET /v1/connect/pending-data?token=TOKEN` to fetch tempToken, userProfile, organizations, refreshToken.
             - **Pinterest:** `?profileId=X&tempToken=Y&userProfile=Z&connect_token=CT&platform=pinterest&step=select_board`
             - **Google Business:** `?profileId=X&tempToken=Y&userProfile=Z&connect_token=CT&platform=googlebusiness&step=select_location`
             - **Snapchat:** `?profileId=X&tempToken=Y&userProfile=Z&publicProfiles=PROFILES&connect_token=CT&platform=snapchat&step=select_public_profile`
@@ -4929,6 +4932,102 @@ paths:
         '404': { $ref: '#/components/responses/NotFound' }
         '500':
           description: Failed to fetch reviews
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ErrorResponse' }
+
+  /v1/connect/pending-data:
+    get:
+      operationId: getPendingOAuthData
+      tags: [Connect]
+      summary: Fetch pending OAuth selection data (Headless Mode)
+      description: |
+        **Fetch Pending OAuth Data for Headless Mode**
+
+        In headless mode, platforms like LinkedIn store OAuth selection data (organizations, pages, etc.)
+        in the database instead of passing it via URL parameters. This prevents URI_TOO_LONG errors
+        when users have many organizations/pages to select from.
+
+        After OAuth redirect, use the `pendingDataToken` from the URL to fetch the stored data.
+
+        **Important:**
+        - This endpoint is one-time use: data is deleted after being fetched
+        - Data expires automatically after 10 minutes if not fetched
+        - No authentication required, just the token from the redirect URL
+      parameters:
+        - name: token
+          in: query
+          required: true
+          schema: { type: string }
+          description: The pending data token from the OAuth redirect URL (`pendingDataToken` parameter)
+      responses:
+        '200':
+          description: OAuth data fetched successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  platform:
+                    type: string
+                    description: The platform (e.g., "linkedin")
+                  profileId:
+                    type: string
+                    description: The Late profile ID
+                  tempToken:
+                    type: string
+                    description: Temporary access token for the platform
+                  refreshToken:
+                    type: string
+                    description: Refresh token (if available)
+                  expiresIn:
+                    type: number
+                    description: Token expiry in seconds
+                  userProfile:
+                    type: object
+                    description: User profile data (id, username, displayName, profilePicture)
+                  selectionType:
+                    type: string
+                    enum: [organizations, pages, boards, locations, profiles]
+                    description: Type of selection data
+                  organizations:
+                    type: array
+                    description: LinkedIn organizations (when selectionType is "organizations")
+                    items:
+                      type: object
+                      properties:
+                        id: { type: string }
+                        urn: { type: string }
+                        name: { type: string }
+                        vanityName: { type: string }
+              example:
+                platform: "linkedin"
+                profileId: "abc123"
+                tempToken: "AQV..."
+                refreshToken: "AQW..."
+                expiresIn: 5183999
+                userProfile:
+                  id: "ABC123"
+                  username: "John Doe"
+                  displayName: "John Doe"
+                  profilePicture: "https://..."
+                selectionType: "organizations"
+                organizations:
+                  - id: "12345"
+                    urn: "urn:li:organization:12345"
+                    name: "Acme Corp"
+                    vanityName: "acme-corp"
+                  - id: "67890"
+                    urn: "urn:li:organization:67890"
+                    name: "Example Inc"
+                    vanityName: "example-inc"
+        '400':
+          description: Missing token parameter
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ErrorResponse' }
+        '404':
+          description: Token not found or expired
           content:
             application/json:
               schema: { $ref: '#/components/schemas/ErrorResponse' }

@@ -456,8 +456,8 @@ def register_generated_tools(mcp, _get_client):
 
         After OAuth, the user is redirected directly to your `redirect_url` with OAuth data:
         - **Facebook:** `?profileId=X&tempToken=Y&userProfile=Z&connect_token=CT&platform=facebook&step=select_page`
-        - **LinkedIn:** `?profileId=X&tempToken=Y&userProfile=Z&organizations=ORGS&connect_token=CT&platform=linkedin&step=select_organization`
-          (organizations contains `id`, `urn`, `name` only - use `/v1/connect/linkedin/organizations` to fetch full details)
+        - **LinkedIn:** `?profileId=X&pendingDataToken=TOKEN&connect_token=CT&platform=linkedin&step=select_organization`
+          Use `GET /v1/connect/pending-data?token=TOKEN` to fetch tempToken, userProfile, organizations, refreshToken.
         - **Pinterest:** `?profileId=X&tempToken=Y&userProfile=Z&connect_token=CT&platform=pinterest&step=select_board`
         - **Google Business:** `?profileId=X&tempToken=Y&userProfile=Z&connect_token=CT&platform=googlebusiness&step=select_location`
         - **Snapchat:** `?profileId=X&tempToken=Y&userProfile=Z&publicProfiles=PROFILES&connect_token=CT&platform=snapchat&step=select_public_profile`
@@ -587,6 +587,19 @@ def register_generated_tools(mcp, _get_client):
                 userProfile=user_profile,
                 redirect_url=redirect_url,
             )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool()
+    def connect_get_pending_o_auth_data(token: str) -> str:
+        """Fetch pending OAuth selection data (Headless Mode)
+
+        Args:
+            token: The pending data token from the OAuth redirect URL (`pendingDataToken` parameter) (required)"""
+        client = _get_client()
+        try:
+            response = client.connect.get_pending_o_auth_data(token=token)
             return _format_response(response)
         except Exception as e:
             return f"Error: {e}"

@@ -288,6 +288,7 @@ except LateAPIError as e:
 | `connect.list_snapchat_profiles()` | List Snapchat Public Profiles after OAuth (Headless Mode) |
 | `connect.get_connect_url()` | Start OAuth connection for a platform |
 | `connect.get_linked_in_organizations()` | Get available LinkedIn organizations for a connected account |
+| `connect.get_pending_o_auth_data()` | Fetch pending OAuth selection data (Headless Mode) |
 | `connect.get_pinterest_boards()` | List Pinterest boards for a connected account |
 | `connect.get_reddit_subreddits()` | List Reddit subreddits for a connected account |
 | `connect.get_telegram_connect_status()` | Generate Telegram access code |

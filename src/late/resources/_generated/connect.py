@@ -127,6 +127,13 @@ class ConnectResource:
             "/v1/connect/googlebusiness/select-location", data=payload
         )
 
+    def get_pending_o_auth_data(self, token: str) -> dict[str, Any]:
+        """Fetch pending OAuth selection data (Headless Mode)"""
+        params = self._build_params(
+            token=token,
+        )
+        return self._client._get("/v1/connect/pending-data", params=params)
+
     def list_linked_in_organizations(
         self, temp_token: str, org_ids: str
     ) -> dict[str, Any]:
@@ -422,6 +429,13 @@ class ConnectResource:
         return await self._client._apost(
             "/v1/connect/googlebusiness/select-location", data=payload
         )
+
+    async def aget_pending_o_auth_data(self, token: str) -> dict[str, Any]:
+        """Fetch pending OAuth selection data (Headless Mode) (async)"""
+        params = self._build_params(
+            token=token,
+        )
+        return await self._client._aget("/v1/connect/pending-data", params=params)
 
     async def alist_linked_in_organizations(
         self, temp_token: str, org_ids: str
