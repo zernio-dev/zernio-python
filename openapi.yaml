@@ -6602,20 +6602,27 @@ paths:
                     items:
                       type: object
                       properties:
-                        name: { type: string }
-                        displayName: { type: string }
-                        subscribers: { type: integer }
-                        public_description: { type: string }
+                        id: { type: string, description: Reddit subreddit ID }
+                        name: { type: string, description: Subreddit name without r/ prefix }
+                        title: { type: string, description: Subreddit title }
+                        url: { type: string, description: Subreddit URL path }
+                        over18: { type: boolean, description: Whether the subreddit is NSFW }
+                  defaultSubreddit:
+                    type: string
+                    description: Currently set default subreddit for posting
               example:
                 subreddits:
-                  - name: "marketing"
-                    displayName: "r/marketing"
-                    subscribers: 456000
-                    public_description: "A place to discuss marketing strategies"
-                  - name: "socialmedia"
-                    displayName: "r/socialmedia"
-                    subscribers: 234000
-                    public_description: "Social media marketing discussions"
+                  - id: "2qh1i"
+                    name: "marketing"
+                    title: "Marketing"
+                    url: "/r/marketing/"
+                    over18: false
+                  - id: "2qh3l"
+                    name: "socialmedia"
+                    title: "Social Media"
+                    url: "/r/socialmedia/"
+                    over18: false
+                defaultSubreddit: "marketing"
         '400': { description: Not a Reddit account }
         '401': { $ref: '#/components/responses/Unauthorized' }
         '404': { description: Account not found }
@@ -6648,16 +6655,9 @@ paths:
               schema:
                 type: object
                 properties:
-                  message: { type: string }
-                  account: { $ref: '#/components/schemas/SocialAccount' }
+                  success: { type: boolean }
               example:
-                message: "Default subreddit updated successfully"
-                account:
-                  _id: "64e1f0a9e2b5af0012ab34cd"
-                  platform: "reddit"
-                  username: "u/myuser"
-                  displayName: "My Reddit Account"
-                  isActive: true
+                success: true
         '400': { description: Invalid request }
         '401': { $ref: '#/components/responses/Unauthorized' }
         '404': { description: Account not found }
