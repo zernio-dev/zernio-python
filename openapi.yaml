@@ -3122,9 +3122,13 @@ paths:
                 queuedFromProfile:
                   type: string
                   description: |
-                    Profile ID to schedule via queue. When provided without scheduledFor,
-                    the post will be automatically assigned to the next available slot
-                    from the profile's default queue (or the queue specified by queueId).
+                    Profile ID to schedule via queue.
+
+                    When provided (without `scheduledFor`), the post will be automatically assigned
+                    to the next available slot from the profile's queue. The system uses distributed
+                    locking to prevent race conditions when multiple posts are scheduled concurrently.
+                    Do not call `/v1/queue/next-slot` and then use that time in `scheduledFor`.
+                    That bypasses the queue system and can cause duplicate slot assignments.
                 queueId:
                   type: string
                   description: |
@@ -3193,6 +3197,27 @@ paths:
                           platformPostId: "urn:li:share:7123456789012345678"
                           platformPostUrl: "https://www.linkedin.com/feed/update/urn:li:share:7123456789012345678"
                     message: "Post published successfully"
+                queueScheduled:
+                  summary: Post scheduled via queue (using queuedFromProfile)
+                  value:
+                    post:
+                      _id: "65f1c0a9e2b5af0012ab34cd"
+                      content: "Scheduled via queue!"
+                      status: "scheduled"
+                      scheduledFor: "2024-11-01T09:00:00Z"
+                      timezone: "America/New_York"
+                      queuedFromProfile: "64f0a1b2c3d4e5f6a7b8c9d0"
+                      queueId: "64f0a1b2c3d4e5f6a7b8c9d1"
+                      platforms:
+                        - platform: "linkedin"
+                          accountId:
+                            _id: "64e1f0..."
+                            platform: "linkedin"
+                            username: "acme-corp"
+                            displayName: "Acme Corp"
+                            isActive: true
+                          status: "pending"
+                    message: "Post scheduled successfully"
         '400':
           description: Validation error
           content:
@@ -6970,10 +6995,21 @@ paths:
     get:
       operationId: getNextQueueSlot
       tags: [Queue]
-      summary: Get the next available queue slot for a profile
+      summary: Preview the next available queue slot (informational only)
       description: |
-        Returns the next available posting slot, taking into account already scheduled posts
-        to avoid conflicts. Useful for scheduling posts via queue without manual time selection.
+        Returns the next available queue slot for preview/informational purposes.
+
+        **Important: To schedule a post to the queue, do NOT use this endpoint's response
+        with `scheduledFor`.** That creates a manual post, not a queue post.
+
+        Instead, use `POST /v1/posts` with `queuedFromProfile` (and optionally `queueId`).
+        The system will automatically assign the next available slot with proper locking
+        to prevent race conditions.
+
+        This endpoint is useful for:
+        - Showing users when their next post will go out before they commit
+        - Debugging/verifying queue configuration
+        - Building UI previews
 
         If no queueId is specified, uses the profile's default queue.
       parameters:

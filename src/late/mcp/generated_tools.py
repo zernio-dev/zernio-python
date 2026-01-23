@@ -1349,7 +1349,7 @@ def register_generated_tools(mcp, _get_client):
 
     @mcp.tool()
     def queue_get_next_queue_slot(profile_id: str, queue_id: str = "") -> str:
-        """Get the next available queue slot for a profile
+        """Preview the next available queue slot (informational only)
 
         Args:
             profile_id: (required)

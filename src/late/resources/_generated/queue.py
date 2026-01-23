@@ -124,7 +124,7 @@ class QueueResource:
     def get_next_queue_slot(
         self, profile_id: str, *, queue_id: str | None = None
     ) -> dict[str, Any]:
-        """Get the next available queue slot for a profile"""
+        """Preview the next available queue slot (informational only)"""
         params = self._build_params(
             profile_id=profile_id,
             queue_id=queue_id,
@@ -209,7 +209,7 @@ class QueueResource:
     async def aget_next_queue_slot(
         self, profile_id: str, *, queue_id: str | None = None
     ) -> dict[str, Any]:
-        """Get the next available queue slot for a profile (async)"""
+        """Preview the next available queue slot (informational only) (async)"""
         params = self._build_params(
             profile_id=profile_id,
             queue_id=queue_id,

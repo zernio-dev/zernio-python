@@ -215,7 +215,7 @@ except LateAPIError as e:
 |--------|-------------|
 | `queue.list_queue_slots()` | Get queue schedules for a profile |
 | `queue.create_queue_slot()` | Create a new queue for a profile |
-| `queue.get_next_queue_slot()` | Get the next available queue slot for a profile |
+| `queue.get_next_queue_slot()` | Preview the next available queue slot (informational only) |
 | `queue.update_queue_slot()` | Create or update a queue schedule |
 | `queue.delete_queue_slot()` | Delete a queue schedule |
 | `queue.preview_queue()` | Preview upcoming queue slots for a profile |
