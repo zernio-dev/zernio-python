@@ -93,6 +93,7 @@ class PostsResource:
         mentions: list[str] | None = None,
         crossposting_enabled: bool | None = True,
         metadata: dict[str, Any] | None = None,
+        tiktok_settings: Any | None = None,
         queued_from_profile: str | None = None,
         queue_id: str | None = None,
     ) -> dict[str, Any]:
@@ -111,6 +112,7 @@ class PostsResource:
             mentions=mentions,
             crossposting_enabled=crossposting_enabled,
             metadata=metadata,
+            tiktok_settings=tiktok_settings,
             queued_from_profile=queued_from_profile,
             queue_id=queue_id,
         )
@@ -182,6 +184,7 @@ class PostsResource:
         mentions: list[str] | None = None,
         crossposting_enabled: bool | None = True,
         metadata: dict[str, Any] | None = None,
+        tiktok_settings: Any | None = None,
         queued_from_profile: str | None = None,
         queue_id: str | None = None,
     ) -> dict[str, Any]:
@@ -200,6 +203,7 @@ class PostsResource:
             mentions=mentions,
             crossposting_enabled=crossposting_enabled,
             metadata=metadata,
+            tiktok_settings=tiktok_settings,
             queued_from_profile=queued_from_profile,
             queue_id=queue_id,
         )
