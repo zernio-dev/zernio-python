@@ -31,6 +31,14 @@ tags:
   - name: TikTok
   - name: Queue
   - name: Analytics
+  - name: Inbox Access
+    description: |
+      Check and manage inbox feature access.
+  - name: Inbox
+    description: |
+      Unified inbox API for managing conversations, comments, and reviews across all connected accounts.
+      All inbox endpoints aggregate data from multiple social accounts in a single API call.
+      Requires Inbox addon.
   - name: Tools
     description: |
       Media download and utility tools. Available to paid plans only.
@@ -38,7 +46,7 @@ tags:
       All responses include X-RateLimit-Limit, X-RateLimit-Remaining, and X-RateLimit-Reset headers.
   - name: Webhooks
     description: |
-      Configure webhooks to receive real-time notifications about post status changes and account events.
+      Configure webhooks to receive real-time notifications about post status changes, account events, and incoming messages.
 
       **Available Events:**
       - `post.scheduled` - When a post is successfully scheduled
@@ -47,6 +55,7 @@ tags:
       - `post.partial` - When a post publishes to some platforms but fails on others
       - `account.connected` - When a social account is successfully connected
       - `account.disconnected` - When a social account is disconnected (token expired/revoked)
+      - `message.received` - When a new DM is received (Instagram, Facebook, Telegram)
 
       **Security:**
       - Optional HMAC-SHA256 signature sent in `X-Late-Signature` header
@@ -223,7 +232,7 @@ components:
           type: array
           items:
             type: string
-            enum: [post.scheduled, post.published, post.failed, post.partial, account.connected, account.disconnected]
+            enum: [post.scheduled, post.published, post.failed, post.partial, account.connected, account.disconnected, message.received]
           description: Events subscribed to
         isActive:
           type: boolean
@@ -254,7 +263,7 @@ components:
           description: Name of the webhook that was triggered
         event:
           type: string
-          enum: [post.scheduled, post.published, post.failed, post.partial, account.connected, account.disconnected, webhook.test]
+          enum: [post.scheduled, post.published, post.failed, post.partial, account.connected, account.disconnected, message.received, webhook.test]
         url:
           type: string
           format: uri
@@ -374,6 +383,98 @@ components:
             reason:
               type: string
               description: Human-readable reason for the disconnection
+        timestamp:
+          type: string
+          format: date-time
+    WebhookPayloadMessage:
+      type: object
+      description: Webhook payload for message received events (DMs from Instagram, Facebook, Telegram)
+      properties:
+        event:
+          type: string
+          enum: [message.received]
+        message:
+          type: object
+          properties:
+            id:
+              type: string
+              description: Internal message ID
+            conversationId:
+              type: string
+              description: Internal conversation ID
+            platform:
+              type: string
+              enum: [instagram, facebook, telegram]
+            platformMessageId:
+              type: string
+              description: Platform's message ID
+            direction:
+              type: string
+              enum: [incoming]
+            text:
+              type: string
+              nullable: true
+              description: Message text content
+            attachments:
+              type: array
+              items:
+                type: object
+                properties:
+                  type:
+                    type: string
+                    description: Attachment type (image, video, file, sticker, audio)
+                  url:
+                    type: string
+                    description: Attachment URL (may expire for Meta platforms)
+                  payload:
+                    type: object
+                    description: Additional attachment metadata
+            sender:
+              type: object
+              properties:
+                id:
+                  type: string
+                name:
+                  type: string
+                username:
+                  type: string
+                picture:
+                  type: string
+            sentAt:
+              type: string
+              format: date-time
+            isRead:
+              type: boolean
+        conversation:
+          type: object
+          properties:
+            id:
+              type: string
+            platformConversationId:
+              type: string
+            participantId:
+              type: string
+            participantName:
+              type: string
+            participantUsername:
+              type: string
+            participantPicture:
+              type: string
+            status:
+              type: string
+              enum: [active, archived]
+        account:
+          type: object
+          properties:
+            id:
+              type: string
+              description: Social account ID
+            platform:
+              type: string
+            username:
+              type: string
+            displayName:
+              type: string
         timestamp:
           type: string
           format: date-time
@@ -889,6 +990,19 @@ components:
             - public: Anyone can search for and watch (default)
             - unlisted: Only people with the link can watch
             - private: Only you and people you specifically share with can watch
+        madeForKids:
+          type: boolean
+          default: false
+          description: |
+            COPPA compliance: Audience designation for the video.
+            - true: Video is made for kids (child-directed content)
+            - false: Video is NOT made for kids (default)
+
+            This field maps to YouTube's `selfDeclaredMadeForKids` setting. Videos marked as made for kids
+            have restricted features (no comments, no notifications, limited ad targeting).
+
+            IMPORTANT: If not specified, defaults to false. YouTube requires this to be explicitly set,
+            otherwise the video may be blocked from views until configured in YouTube Studio.
         firstComment:
           type: string
           maxLength: 10000
@@ -909,6 +1023,7 @@ components:
         - Custom thumbnails NOT supported for Shorts via API
         - Scheduled videos are uploaded immediately as the specified visibility and published at scheduled time
         - Visibility defaults to "public" if not specified
+        - madeForKids defaults to false (not child-directed)
         - Set containsSyntheticMedia: true if your video contains AI-generated content
 
     GoogleBusinessPlatformData:
@@ -2181,7 +2296,7 @@ paths:
         - If you pass a Late Post ID, the API automatically resolves it to the corresponding External Post analytics
         - Both return the same analytics data for the same underlying social media post
         
-        **Correlating posts:** Use `platformPostUrl` (e.g., `https://www.instagram.com/reel/ABC123/`) as the unique identifier - it's consistent across both Late and External post records.
+        **Correlating posts:** Use `latePostId` to link analytics entries back to the original post created via `POST /v1/posts`. This field contains the Late Post ID when the external post originated from Late. Alternatively, use `platformPostUrl` (e.g., `https://www.instagram.com/reel/ABC123/`) as a stable identifier.
         
         **Note:** For follower count history and growth metrics, use the dedicated `/v1/accounts/follower-stats` endpoint.
         
@@ -2247,6 +2362,7 @@ paths:
                   summary: Single post analytics
                   value:
                     postId: "65f1c0a9e2b5af0012ab34cd"
+                    latePostId: "65f1c0a9e2b5af0012ab34ab"
                     status: "published"
                     content: "Check out our new product launch!"
                     scheduledFor: "2024-11-01T10:00:00Z"
@@ -2293,6 +2409,7 @@ paths:
                       lastSync: "2024-11-02T08:30:00Z"
                     posts:
                       - _id: "65f1c0a9e2b5af0012ab34cd"
+                        latePostId: "65f1c0a9e2b5af0012ab34ab"
                         content: "Check out our new product launch!"
                         scheduledFor: "2024-11-01T10:00:00Z"
                         publishedAt: "2024-11-01T10:00:05Z"
@@ -3235,14 +3352,46 @@ paths:
                 type: object
                 properties:
                   error: { type: string }
+        '409':
+          description: Duplicate content detected
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error: { type: string, example: "This exact content was already posted to this account within the last 24 hours." }
+                  details:
+                    type: object
+                    properties:
+                      accountId: { type: string }
+                      platform: { type: string }
+                      existingPostId: { type: string }
         '429':
-          description: Rate limit exceeded
+          description: |
+            Rate limit exceeded. Can be triggered by:
+            - **API rate limit**: Requests per minute exceeded (Free: 60, Build: 120, Accelerate: 600, Unlimited: 1,200)
+            - **Velocity limit**: 15 posts per hour per account exceeded
+            - **Account cooldown**: Account temporarily rate-limited due to repeated errors (escalating: 10min, 20min, 40min, up to 24h)
+            - **Daily post limit**: Platform daily limits exceeded (X: 20, Pinterest: 25, Instagram/Facebook: 100, Threads: 250, others: 50)
           content:
             application/json:
               schema:
                 type: object
                 properties:
                   error: { type: string }
+                  details:
+                    type: object
+                    description: Additional context about the rate limit
+          headers:
+            Retry-After:
+              description: Seconds until the rate limit resets (for API rate limits)
+              schema: { type: integer }
+            X-RateLimit-Limit:
+              description: The rate limit ceiling
+              schema: { type: integer }
+            X-RateLimit-Remaining:
+              description: Requests remaining in current window
+              schema: { type: integer }
   /v1/posts/{postId}:
     get:
       operationId: getPost
@@ -3450,6 +3599,19 @@ paths:
         '400':
           description: Invalid CSV or validation errors
         '401': { $ref: '#/components/responses/Unauthorized' }
+        '429':
+          description: |
+            Rate limit exceeded. Can be triggered by:
+            - **API rate limit**: Requests per minute exceeded
+            - **Account cooldown**: One or more accounts are temporarily rate-limited
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error: { type: string }
+                  details:
+                    type: object
   /v1/posts/{postId}/retry:
     post:
       operationId: retryPost
@@ -3495,6 +3657,20 @@ paths:
         '404': { $ref: '#/components/responses/NotFound' }
         '409':
           description: Post is currently publishing
+        '429':
+          description: |
+            Rate limit exceeded. Can be triggered by:
+            - **API rate limit**: Requests per minute exceeded
+            - **Velocity limit**: 15 posts per hour per account exceeded
+            - **Account cooldown**: Account temporarily rate-limited due to repeated errors
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error: { type: string }
+                  details:
+                    type: object
   /v1/users:
     get:
       operationId: listUsers
@@ -4632,6 +4808,9 @@ paths:
                   account:
                     type: object
                     properties:
+                      accountId:
+                        type: string
+                        description: ID of the created SocialAccount
                       platform: { type: string, enum: [facebook] }
                       username: { type: string }
                       displayName: { type: string }
@@ -4642,6 +4821,7 @@ paths:
                 message: "Facebook page connected successfully"
                 redirect_url: "https://yourdomain.com/integrations/callback?connected=facebook&profileId=507f1f77bcf86cd799439011&username=My+Brand+Page"
                 account:
+                  accountId: "64e1f0a9e2b5af0012ab34cd"
                   platform: "facebook"
                   username: "mybrand"
                   displayName: "My Brand Page"
@@ -4803,6 +4983,9 @@ paths:
                   account:
                     type: object
                     properties:
+                      accountId:
+                        type: string
+                        description: ID of the created SocialAccount
                       platform: { type: string, enum: [googlebusiness] }
                       username: { type: string }
                       displayName: { type: string }
@@ -4813,6 +4996,7 @@ paths:
                 message: "Google Business location connected successfully"
                 redirect_url: "https://yourdomain.com/integrations/callback?connected=googlebusiness&profileId=507f1f77bcf86cd799439011&username=My+Coffee+Shop"
                 account:
+                  accountId: "64e1f0a9e2b5af0012ab34cd"
                   platform: "googlebusiness"
                   username: "My Coffee Shop"
                   displayName: "My Coffee Shop"
@@ -5202,30 +5386,52 @@ paths:
                 type: object
                 properties:
                   message: { type: string }
-                  account: { $ref: '#/components/schemas/SocialAccount' }
+                  redirect_url:
+                    type: string
+                    description: The redirect URL with connection params appended (only if redirect_url was provided in request)
+                  account:
+                    type: object
+                    properties:
+                      accountId:
+                        type: string
+                        description: ID of the created SocialAccount
+                      platform: { type: string, enum: [linkedin] }
+                      username: { type: string }
+                      displayName: { type: string }
+                      profilePicture: { type: string }
+                      isActive: { type: boolean }
+                      accountType: { type: string, enum: [personal, organization] }
+                  bulkRefresh:
+                    type: object
+                    properties:
+                      updatedCount: { type: integer }
+                      errors: { type: integer }
               examples:
                 personalAccountResponse:
                   summary: Personal account connected
                   value:
                     message: "LinkedIn account connected successfully"
-                    accountType: "personal"
-                    accountName: "John Doe"
-                    socialAccount:
-                      id: "64e1f0a9e2b5af0012ab34cd"
+                    account:
+                      accountId: "64e1f0a9e2b5af0012ab34cd"
                       platform: "linkedin"
                       username: "johndoe"
                       displayName: "John Doe"
-                organizationAccountResponse:
-                  summary: Organization account connected
+                      profilePicture: "https://media.licdn.com/..."
+                      isActive: true
+                      accountType: "personal"
+                organizationWithRedirect:
+                  summary: Organization account with redirect URL
                   value:
                     message: "LinkedIn account connected successfully"
-                    accountType: "organization"
-                    accountName: "Acme Corporation"
-                    socialAccount:
-                      id: "64e1f0a9e2b5af0012ab34cd"
+                    redirect_url: "https://yourapp.com/callback?connected=linkedin&profileId=507f1f77bcf86cd799439011&accountId=64e1f0a9e2b5af0012ab34cd&username=Acme+Corporation"
+                    account:
+                      accountId: "64e1f0a9e2b5af0012ab34cd"
                       platform: "linkedin"
                       username: "acme-corp"
                       displayName: "Acme Corporation"
+                      profilePicture: "https://media.licdn.com/..."
+                      isActive: true
+                      accountType: "organization"
                     bulkRefresh:
                       updatedCount: 5
                       errors: 0
@@ -5363,6 +5569,9 @@ paths:
                   account:
                     type: object
                     properties:
+                      accountId:
+                        type: string
+                        description: ID of the created SocialAccount
                       platform: { type: string, enum: [pinterest] }
                       username: { type: string }
                       displayName: { type: string }
@@ -5373,6 +5582,7 @@ paths:
                 message: "Pinterest connected successfully with default board"
                 redirect_url: "https://yourdomain.com/integrations/callback?connected=pinterest&profileId=507f1f77bcf86cd799439011&board=Marketing+Ideas"
                 account:
+                  accountId: "64e1f0a9e2b5af0012ab34cd"
                   platform: "pinterest"
                   username: "mybrand"
                   displayName: "My Brand"
@@ -5569,6 +5779,9 @@ paths:
                   account:
                     type: object
                     properties:
+                      accountId:
+                        type: string
+                        description: ID of the created SocialAccount
                       platform: { type: string, enum: [snapchat] }
                       username: { type: string }
                       displayName: { type: string }
@@ -5579,6 +5792,7 @@ paths:
                 message: "Snapchat connected successfully with public profile"
                 redirect_url: "https://yourdomain.com/integrations/callback?connected=snapchat&profileId=507f1f77bcf86cd799439011&publicProfile=My+Brand"
                 account:
+                  accountId: "64e1f0a9e2b5af0012ab34cd"
                   platform: "snapchat"
                   username: "mybrand"
                   displayName: "My Brand"
@@ -5875,6 +6089,52 @@ paths:
         '500': { description: Internal error }
 
   /v1/accounts/{accountId}/facebook-page:
+    get:
+      operationId: getFacebookPages
+      tags: [Connect]
+      summary: List available Facebook pages for a connected account
+      description: Returns all Facebook pages the connected account has access to, including the currently selected page.
+      parameters:
+        - name: accountId
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        '200':
+          description: Pages list
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  pages:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id: { type: string }
+                        name: { type: string }
+                        username: { type: string }
+                        category: { type: string }
+                        fan_count: { type: integer }
+                  selectedPageId: { type: string }
+                  cached: { type: boolean }
+              example:
+                pages:
+                  - id: "123456789012345"
+                    name: "My Brand Page"
+                    username: "mybrand"
+                    category: "Brand"
+                    fan_count: 5000
+                  - id: "234567890123456"
+                    name: "My Other Page"
+                    username: "myotherpage"
+                    category: "Business"
+                    fan_count: 1200
+                selectedPageId: "123456789012345"
+                cached: true
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404': { description: Account not found }
     put:
       operationId: updateFacebookPage
       tags: [Connect]
@@ -6604,6 +6864,95 @@ paths:
         '401': { $ref: '#/components/responses/Unauthorized' }
         '404': { description: Account not found }
 
+  /v1/accounts/{accountId}/gmb-locations:
+    get:
+      operationId: getGmbLocations
+      tags: [Connect]
+      summary: List available Google Business Profile locations for a connected account
+      description: Returns all Google Business Profile locations the connected account has access to, including the currently selected location.
+      parameters:
+        - name: accountId
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        '200':
+          description: Locations list
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  locations:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id: { type: string }
+                        name: { type: string }
+                        accountId: { type: string }
+                        accountName: { type: string }
+                        address: { type: string }
+                        category: { type: string }
+                        websiteUrl: { type: string }
+                  selectedLocationId: { type: string }
+                  cached: { type: boolean }
+              example:
+                locations:
+                  - id: "12345678901234567890"
+                    name: "My Business Location"
+                    accountId: "accounts/123456789"
+                    accountName: "My Business Account"
+                    address: "123 Main St, San Francisco, CA"
+                    category: "Restaurant"
+                    websiteUrl: "https://mybusiness.com"
+                selectedLocationId: "12345678901234567890"
+                cached: true
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404': { description: Account not found }
+    put:
+      operationId: updateGmbLocation
+      tags: [Connect]
+      summary: Update selected Google Business Profile location for a connected account
+      parameters:
+        - name: accountId
+          in: path
+          required: true
+          schema: { type: string }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [selectedLocationId]
+              properties:
+                selectedLocationId: { type: string }
+            example:
+              selectedLocationId: "12345678901234567890"
+      responses:
+        '200':
+          description: Location updated
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message: { type: string }
+                  selectedLocation:
+                    type: object
+                    properties:
+                      id: { type: string }
+                      name: { type: string }
+              example:
+                message: "Google Business location updated successfully"
+                selectedLocation:
+                  id: "12345678901234567890"
+                  name: "My Business Location"
+        '400': { description: Location not in available locations }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404': { description: Account not found }
+
   /v1/accounts/{accountId}/reddit-subreddits:
     get:
       operationId: getRedditSubreddits
@@ -7117,7 +7466,7 @@ paths:
                   type: array
                   items:
                     type: string
-                    enum: [post.scheduled, post.published, post.failed, post.partial, account.connected, account.disconnected]
+                    enum: [post.scheduled, post.published, post.failed, post.partial, account.connected, account.disconnected, message.received]
                   description: Events to subscribe to
                 isActive:
                   type: boolean
@@ -7134,7 +7483,7 @@ paths:
                   name: "My Production Webhook"
                   url: "https://example.com/webhook"
                   secret: "your-secret-key"
-                  events: ["post.scheduled", "post.published", "post.failed", "post.partial", "account.connected", "account.disconnected"]
+                  events: ["post.scheduled", "post.published", "post.failed", "post.partial", "account.connected", "account.disconnected", "message.received"]
                   isActive: true
       responses:
         '200':
@@ -7186,7 +7535,7 @@ paths:
                   type: array
                   items:
                     type: string
-                    enum: [post.scheduled, post.published, post.failed, post.partial, account.connected, account.disconnected]
+                    enum: [post.scheduled, post.published, post.failed, post.partial, account.connected, account.disconnected, message.received]
                   description: Events to subscribe to
                 isActive:
                   type: boolean
@@ -7329,7 +7678,7 @@ paths:
           description: Filter by event type
           schema:
             type: string
-            enum: [post.scheduled, post.published, post.failed, post.partial, account.connected, account.disconnected, webhook.test]
+            enum: [post.scheduled, post.published, post.failed, post.partial, account.connected, account.disconnected, message.received, webhook.test]
         - name: webhookId
           in: query
           description: Filter by webhook ID
@@ -7612,10 +7961,957 @@ paths:
           description: Forbidden - not authorized to view this post
         '404': { $ref: '#/components/responses/NotFound' }
 
+  # Unified Inbox Endpoints
+  /v1/inbox/conversations:
+    get:
+      operationId: listInboxConversations
+      summary: List conversations across all accounts
+      description: |
+        Fetch conversations (DMs) from all connected messaging accounts in a single API call.
+        Supports filtering by profile and platform. Results are aggregated and deduplicated.
 
+        **Supported platforms:** Facebook, Instagram, Bluesky, Reddit, Telegram
+      tags: [Inbox]
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - name: profileId
+          in: query
+          schema: { type: string }
+          description: Filter by profile ID
+        - name: platform
+          in: query
+          schema: { type: string, enum: [facebook, instagram, bluesky, reddit, telegram] }
+          description: Filter by platform
+        - name: status
+          in: query
+          schema: { type: string, enum: [active, archived] }
+          description: Filter by conversation status
+        - name: sortOrder
+          in: query
+          schema: { type: string, enum: [asc, desc], default: desc }
+          description: Sort order by updated time
+        - name: limit
+          in: query
+          schema: { type: integer, minimum: 1, maximum: 100, default: 50 }
+          description: Maximum number of conversations to return
+        - name: cursor
+          in: query
+          schema: { type: string }
+          description: Pagination cursor for next page
+        - name: accountId
+          in: query
+          schema: { type: string }
+          description: Filter by specific social account ID
+      responses:
+        '200':
+          description: Aggregated conversations
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id: { type: string }
+                        platform: { type: string }
+                        accountId: { type: string }
+                        accountUsername: { type: string }
+                        participantId: { type: string }
+                        participantName: { type: string }
+                        participantPicture: { type: string, nullable: true }
+                        lastMessage: { type: string }
+                        updatedTime: { type: string, format: date-time }
+                        status: { type: string, enum: [active, archived] }
+                        unreadCount: { type: integer, nullable: true, description: Number of unread messages }
+                        url:
+                          type: string
+                          nullable: true
+                          description: Direct link to open the conversation on the platform (if available)
+                  pagination:
+                    type: object
+                    properties:
+                      hasMore: { type: boolean }
+                      nextCursor: { type: string, nullable: true }
+                  meta:
+                    type: object
+                    properties:
+                      accountsQueried: { type: integer }
+                      accountsFailed: { type: integer }
+                      failedAccounts:
+                        type: array
+                        items:
+                          type: object
+                          properties:
+                            accountId: { type: string }
+                            accountUsername: { type: string, nullable: true }
+                            platform: { type: string }
+                            error: { type: string }
+                            code: { type: string, nullable: true, description: Error code if available }
+                            retryAfter: { type: integer, nullable: true, description: Seconds to wait before retry (rate limits) }
+                      lastUpdated: { type: string, format: date-time }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403':
+          description: Inbox addon required
+  /v1/inbox/conversations/{conversationId}:
+    get:
+      operationId: getInboxConversation
+      summary: Get conversation details
+      description: Retrieve details and metadata for a specific conversation. Requires accountId query parameter.
+      tags: [Inbox]
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - name: conversationId
+          in: path
+          required: true
+          schema: { type: string }
+        - name: accountId
+          in: query
+          required: true
+          schema: { type: string }
+          description: The social account ID
+      responses:
+        '200':
+          description: Conversation details
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      id: { type: string }
+                      accountId: { type: string }
+                      accountUsername: { type: string }
+                      platform: { type: string }
+                      status: { type: string, enum: [active, archived] }
+                      participantName: { type: string }
+                      participantId: { type: string }
+                      lastMessage: { type: string }
+                      lastMessageAt: { type: string, format: date-time }
+                      updatedTime: { type: string, format: date-time }
+                      participants:
+                        type: array
+                        items:
+                          type: object
+                          properties:
+                            id: { type: string }
+                            name: { type: string }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403':
+          description: Inbox addon required
+        '404':
+          description: Conversation not found
+    put:
+      operationId: updateInboxConversation
+      summary: Update conversation status
+      description: Archive or activate a conversation. Requires accountId in request body.
+      tags: [Inbox]
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - name: conversationId
+          in: path
+          required: true
+          schema: { type: string }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [accountId, status]
+              properties:
+                accountId: { type: string, description: Social account ID }
+                status: { type: string, enum: [active, archived] }
+      responses:
+        '200':
+          description: Conversation updated
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success: { type: boolean }
+                  data:
+                    type: object
+                    properties:
+                      id: { type: string }
+                      accountId: { type: string }
+                      status: { type: string, enum: [active, archived] }
+                      platform: { type: string }
+                      updatedAt: { type: string, format: date-time }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403':
+          description: Inbox addon required
 
+  /v1/inbox/conversations/{conversationId}/messages:
+    get:
+      operationId: getInboxConversationMessages
+      summary: Get messages in a conversation
+      description: Fetch messages for a specific conversation. Requires accountId query parameter.
+      tags: [Inbox]
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - name: conversationId
+          in: path
+          required: true
+          schema: { type: string }
+        - name: accountId
+          in: query
+          required: true
+          schema: { type: string }
+          description: Social account ID
+      responses:
+        '200':
+          description: Messages in conversation
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status: { type: string }
+                  messages:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id: { type: string }
+                        conversationId: { type: string }
+                        accountId: { type: string }
+                        platform: { type: string }
+                        message: { type: string }
+                        senderId: { type: string }
+                        senderName: { type: string, nullable: true }
+                        direction: { type: string, enum: [incoming, outgoing] }
+                        createdAt: { type: string, format: date-time }
+                        attachments:
+                          type: array
+                          items:
+                            type: object
+                            properties:
+                              id: { type: string }
+                              type: { type: string, enum: [image, video, audio, file, sticker, share] }
+                              url: { type: string }
+                              filename: { type: string, nullable: true }
+                              previewUrl: { type: string, nullable: true }
+                        subject: { type: string, nullable: true, description: Reddit message subject }
+                        storyReply: { type: boolean, nullable: true, description: Instagram story reply }
+                        isStoryMention: { type: boolean, nullable: true, description: Instagram story mention }
+                  lastUpdated: { type: string, format: date-time }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403':
+          description: Inbox addon required
+    post:
+      operationId: sendInboxMessage
+      summary: Send a message
+      description: |
+        Send a message in a conversation. Requires accountId in request body.
 
+        **Attachment support by platform:**
+        - Telegram: Images, videos, documents (up to 50MB)
+        - Facebook Messenger: Images, videos, audio, files
+        - Twitter/X: Images, videos (requires media upload)
+        - Instagram: Not supported (API limitation)
+        - Bluesky: Not supported (API limitation)
+        - Reddit: Not supported (API limitation)
+      tags: [Inbox]
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - name: conversationId
+          in: path
+          required: true
+          schema: { type: string }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [accountId, message]
+              properties:
+                accountId: { type: string, description: Social account ID }
+                message: { type: string, description: Message text }
+          multipart/form-data:
+            schema:
+              type: object
+              required: [accountId]
+              properties:
+                accountId: { type: string, description: Social account ID }
+                message: { type: string, description: Message text (optional when sending attachment) }
+                attachment:
+                  type: string
+                  format: binary
+                  description: |
+                    File attachment (images, videos, documents). See description for platform support.
+                    Supported formats: JPEG, PNG, GIF, MP4. Max size: 25MB.
+      responses:
+        '200':
+          description: Message sent
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success: { type: boolean }
+                  data:
+                    type: object
+                    properties:
+                      messageId: { type: string, description: ID of the sent message (not returned for Reddit) }
+                      conversationId: { type: string, nullable: true, description: Twitter conversation ID }
+                      sentAt: { type: string, format: date-time, nullable: true, description: Bluesky sent timestamp }
+                      message: { type: string, nullable: true, description: Success message (Reddit only) }
+        '400':
+          description: Bad request (e.g., attachment not supported for platform)
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error: { type: string }
+                  code:
+                    type: string
+                    enum: [PLATFORM_LIMITATION]
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403':
+          description: Inbox addon required
 
+  /v1/inbox/comments:
+    get:
+      operationId: listInboxComments
+      summary: List posts with comments across all accounts
+      description: |
+        Fetch posts with their comment counts from all connected accounts.
+        Aggregates data from multiple accounts in a single API call.
 
+        **Supported platforms:** Facebook, Instagram, Bluesky, YouTube, LinkedIn, Reddit, TikTok (write-only)
+      tags: [Inbox]
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - name: profileId
+          in: query
+          schema: { type: string }
+          description: Filter by profile ID
+        - name: platform
+          in: query
+          schema: { type: string, enum: [facebook, instagram, youtube, linkedin, reddit, bluesky, tiktok] }
+          description: Filter by platform
+        - name: minComments
+          in: query
+          schema: { type: integer, minimum: 0 }
+          description: Minimum comment count
+        - name: since
+          in: query
+          schema: { type: string, format: date-time }
+          description: Posts created after this date
+        - name: sortBy
+          in: query
+          schema: { type: string, enum: [date, comments], default: date }
+          description: Sort field
+        - name: sortOrder
+          in: query
+          schema: { type: string, enum: [asc, desc], default: desc }
+          description: Sort order
+        - name: limit
+          in: query
+          schema: { type: integer, minimum: 1, maximum: 100, default: 50 }
+        - name: cursor
+          in: query
+          schema: { type: string }
+        - name: accountId
+          in: query
+          schema: { type: string }
+          description: Filter by specific social account ID
+      responses:
+        '200':
+          description: Aggregated posts with comments
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id: { type: string }
+                        platform: { type: string }
+                        accountId: { type: string }
+                        accountUsername: { type: string }
+                        content: { type: string }
+                        picture: { type: string, nullable: true }
+                        permalink: { type: string, nullable: true }
+                        createdTime: { type: string, format: date-time }
+                        commentCount: { type: integer }
+                        likeCount: { type: integer }
+                        cid: { type: string, nullable: true, description: Bluesky content identifier }
+                        subreddit: { type: string, nullable: true, description: Reddit subreddit name }
+                  pagination:
+                    type: object
+                    properties:
+                      hasMore: { type: boolean }
+                      nextCursor: { type: string, nullable: true }
+                  meta:
+                    type: object
+                    properties:
+                      accountsQueried: { type: integer }
+                      accountsFailed: { type: integer }
+                      failedAccounts:
+                        type: array
+                        items:
+                          type: object
+                          properties:
+                            accountId: { type: string }
+                            accountUsername: { type: string, nullable: true }
+                            platform: { type: string }
+                            error: { type: string }
+                            code: { type: string, nullable: true, description: Error code if available }
+                            retryAfter: { type: integer, nullable: true, description: Seconds to wait before retry (rate limits) }
+                      lastUpdated: { type: string, format: date-time }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403':
+          description: Inbox addon required
 
+  /v1/inbox/comments/{postId}:
+    get:
+      operationId: getInboxPostComments
+      summary: Get comments for a post
+      description: Fetch comments for a specific post. Requires accountId query parameter.
+      tags: [Inbox]
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - name: postId
+          in: path
+          required: true
+          schema: { type: string }
+        - name: accountId
+          in: query
+          required: true
+          schema: { type: string }
+        - name: subreddit
+          in: query
+          schema: { type: string }
+          description: (Reddit only) Subreddit name
+        - name: limit
+          in: query
+          schema: { type: integer, minimum: 1, maximum: 100, default: 25 }
+          description: Maximum number of comments to return
+        - name: cursor
+          in: query
+          schema: { type: string }
+          description: Pagination cursor
+        - name: commentId
+          in: query
+          schema: { type: string }
+          description: (Reddit only) Get replies to a specific comment
+      responses:
+        '200':
+          description: Comments for the post
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status: { type: string }
+                  comments:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id: { type: string }
+                        message: { type: string }
+                        createdTime: { type: string, format: date-time }
+                        from:
+                          type: object
+                          properties:
+                            id: { type: string }
+                            name: { type: string }
+                            username: { type: string }
+                            picture: { type: string, nullable: true }
+                            isOwner: { type: boolean }
+                        likeCount: { type: integer }
+                        replyCount: { type: integer }
+                        platform: { type: string, description: The platform this comment is from }
+                        url:
+                          type: string
+                          nullable: true
+                          description: Direct link to the comment on the platform (if available)
+                        replies:
+                          type: array
+                          items: { type: object }
+                        canReply: { type: boolean }
+                        canDelete: { type: boolean }
+                        canHide: { type: boolean, description: Whether this comment can be hidden (Facebook, Instagram, Threads) }
+                        canLike: { type: boolean, description: Whether this comment can be liked (Facebook, Bluesky, Reddit) }
+                        isHidden: { type: boolean, description: Whether the comment is currently hidden }
+                        isLiked: { type: boolean, description: Whether the current user has liked this comment }
+                        likeUri: { type: string, nullable: true, description: Bluesky like URI for unliking }
+                        cid: { type: string, nullable: true, description: Bluesky content identifier }
+                        parentId: { type: string, nullable: true, description: Parent comment ID for nested replies }
+                        rootUri: { type: string, nullable: true, description: Bluesky root post URI }
+                        rootCid: { type: string, nullable: true, description: Bluesky root post CID }
+                  pagination:
+                    type: object
+                    properties:
+                      hasMore: { type: boolean }
+                      cursor: { type: string, nullable: true }
+                  meta:
+                    type: object
+                    properties:
+                      platform: { type: string }
+                      postId: { type: string }
+                      accountId: { type: string }
+                      subreddit: { type: string, nullable: true, description: (Reddit only) Subreddit name }
+                      lastUpdated: { type: string, format: date-time }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403':
+          description: Inbox addon required
+    post:
+      operationId: replyToInboxPost
+      summary: Reply to a post or comment
+      description: Post a reply to a post or specific comment. Requires accountId in request body.
+      tags: [Inbox]
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - name: postId
+          in: path
+          required: true
+          schema: { type: string }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [accountId, message]
+              properties:
+                accountId: { type: string }
+                message: { type: string }
+                commentId: { type: string, description: Reply to specific comment (optional) }
+                subreddit: { type: string, description: (Reddit only) Subreddit name for replies }
+                parentCid: { type: string, description: (Bluesky only) Parent content identifier }
+                rootUri: { type: string, description: (Bluesky only) Root post URI }
+                rootCid: { type: string, description: (Bluesky only) Root post CID }
+      responses:
+        '200':
+          description: Reply posted
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success: { type: boolean }
+                  data:
+                    type: object
+                    properties:
+                      commentId: { type: string }
+                      isReply: { type: boolean }
+                      cid: { type: string, nullable: true, description: Bluesky CID }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403':
+          description: Inbox addon required
+    delete:
+      operationId: deleteInboxComment
+      summary: Delete a comment
+      description: |
+        Delete a comment on a post. Supported by Facebook, Instagram, Bluesky, Reddit, YouTube, LinkedIn, and TikTok.
+        Requires accountId and commentId query parameters.
+      tags: [Inbox]
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - name: postId
+          in: path
+          required: true
+          schema: { type: string }
+        - name: accountId
+          in: query
+          required: true
+          schema: { type: string }
+        - name: commentId
+          in: query
+          required: true
+          schema: { type: string }
+      responses:
+        '200':
+          description: Comment deleted
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success: { type: boolean }
+                  data:
+                    type: object
+                    properties:
+                      message: { type: string }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403':
+          description: Inbox addon required
 
+  /v1/inbox/comments/{postId}/{commentId}/hide:
+    post:
+      operationId: hideInboxComment
+      summary: Hide a comment
+      description: |
+        Hide a comment on a post. Supported by Facebook, Instagram, and Threads.
+        Hidden comments are only visible to the commenter and page admin.
+      tags: [Inbox]
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - name: postId
+          in: path
+          required: true
+          schema: { type: string }
+        - name: commentId
+          in: path
+          required: true
+          schema: { type: string }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [accountId]
+              properties:
+                accountId: { type: string, description: The social account ID }
+      responses:
+        '200':
+          description: Comment hidden
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status: { type: string }
+                  commentId: { type: string }
+                  hidden: { type: boolean }
+                  platform: { type: string }
+        '400':
+          description: Platform does not support hiding comments
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403':
+          description: Inbox addon required
+    delete:
+      operationId: unhideInboxComment
+      summary: Unhide a comment
+      description: |
+        Unhide a previously hidden comment. Supported by Facebook, Instagram, and Threads.
+      tags: [Inbox]
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - name: postId
+          in: path
+          required: true
+          schema: { type: string }
+        - name: commentId
+          in: path
+          required: true
+          schema: { type: string }
+        - name: accountId
+          in: query
+          required: true
+          schema: { type: string }
+      responses:
+        '200':
+          description: Comment unhidden
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status: { type: string }
+                  commentId: { type: string }
+                  hidden: { type: boolean }
+                  platform: { type: string }
+        '400':
+          description: Platform does not support unhiding comments
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403':
+          description: Inbox addon required
+
+  /v1/inbox/comments/{postId}/{commentId}/like:
+    post:
+      operationId: likeInboxComment
+      summary: Like a comment
+      description: |
+        Like or upvote a comment on a post.
+
+        **Supported platforms:** Facebook, Bluesky, Reddit
+
+        For Bluesky, the `cid` (content identifier) is required in the request body.
+      tags: [Inbox]
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - name: postId
+          in: path
+          required: true
+          schema: { type: string }
+        - name: commentId
+          in: path
+          required: true
+          schema: { type: string }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [accountId]
+              properties:
+                accountId: { type: string, description: The social account ID }
+                cid: { type: string, description: (Bluesky only) Content identifier for the comment }
+      responses:
+        '200':
+          description: Comment liked
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status: { type: string }
+                  commentId: { type: string }
+                  liked: { type: boolean }
+                  likeUri: { type: string, description: (Bluesky only) URI to use for unliking }
+                  platform: { type: string }
+        '400':
+          description: Platform does not support liking comments
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403':
+          description: Inbox addon required
+    delete:
+      operationId: unlikeInboxComment
+      summary: Unlike a comment
+      description: |
+        Remove a like from a comment.
+
+        **Supported platforms:** Facebook, Bluesky, Reddit
+
+        For Bluesky, the `likeUri` query parameter is required.
+      tags: [Inbox]
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - name: postId
+          in: path
+          required: true
+          schema: { type: string }
+        - name: commentId
+          in: path
+          required: true
+          schema: { type: string }
+        - name: accountId
+          in: query
+          required: true
+          schema: { type: string }
+        - name: likeUri
+          in: query
+          schema: { type: string }
+          description: (Bluesky only) The like URI returned when liking
+      responses:
+        '200':
+          description: Comment unliked
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status: { type: string }
+                  commentId: { type: string }
+                  liked: { type: boolean }
+                  platform: { type: string }
+        '400':
+          description: Platform does not support unliking comments
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403':
+          description: Inbox addon required
+
+  /v1/inbox/reviews:
+    get:
+      operationId: listInboxReviews
+      summary: List reviews across all accounts
+      description: |
+        Fetch reviews from all connected Facebook Pages and Google Business accounts.
+        Aggregates data with filtering and sorting options.
+
+        **Supported platforms:** Facebook, Google Business
+      tags: [Inbox]
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - name: profileId
+          in: query
+          schema: { type: string }
+        - name: platform
+          in: query
+          schema: { type: string, enum: [facebook, googlebusiness] }
+        - name: minRating
+          in: query
+          schema: { type: integer, minimum: 1, maximum: 5 }
+        - name: maxRating
+          in: query
+          schema: { type: integer, minimum: 1, maximum: 5 }
+        - name: hasReply
+          in: query
+          schema: { type: boolean }
+          description: Filter by reply status
+        - name: sortBy
+          in: query
+          schema: { type: string, enum: [date, rating], default: date }
+        - name: sortOrder
+          in: query
+          schema: { type: string, enum: [asc, desc], default: desc }
+        - name: limit
+          in: query
+          schema: { type: integer, minimum: 1, maximum: 50, default: 25 }
+        - name: cursor
+          in: query
+          schema: { type: string }
+        - name: accountId
+          in: query
+          schema: { type: string }
+          description: Filter by specific social account ID
+      responses:
+        '200':
+          description: Aggregated reviews
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status: { type: string }
+                  data:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id: { type: string }
+                        platform: { type: string }
+                        accountId: { type: string }
+                        accountUsername: { type: string }
+                        reviewer:
+                          type: object
+                          properties:
+                            id: { type: string, nullable: true }
+                            name: { type: string }
+                            profileImage: { type: string, nullable: true }
+                        rating: { type: integer }
+                        text: { type: string }
+                        created: { type: string, format: date-time }
+                        hasReply: { type: boolean }
+                        reply:
+                          type: object
+                          nullable: true
+                          properties:
+                            id: { type: string }
+                            text: { type: string }
+                            created: { type: string, format: date-time }
+                        reviewUrl: { type: string, nullable: true }
+                  pagination:
+                    type: object
+                    properties:
+                      hasMore: { type: boolean }
+                      nextCursor: { type: string, nullable: true }
+                  meta:
+                    type: object
+                    properties:
+                      accountsQueried: { type: integer }
+                      accountsFailed: { type: integer }
+                      failedAccounts:
+                        type: array
+                        items:
+                          type: object
+                          properties:
+                            accountId: { type: string }
+                            accountUsername: { type: string, nullable: true }
+                            platform: { type: string }
+                            error: { type: string }
+                            code: { type: string, nullable: true, description: Error code if available }
+                            retryAfter: { type: integer, nullable: true, description: Seconds to wait before retry (rate limits) }
+                      lastUpdated: { type: string, format: date-time }
+                  summary:
+                    type: object
+                    properties:
+                      totalReviews: { type: integer }
+                      averageRating: { type: number, nullable: true }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403':
+          description: Inbox addon required
+
+  /v1/inbox/reviews/{reviewId}/reply:
+    post:
+      operationId: replyToInboxReview
+      summary: Reply to a review
+      description: Post a reply to a review. Requires accountId in request body.
+      tags: [Inbox]
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - name: reviewId
+          in: path
+          required: true
+          schema: { type: string }
+          description: Review ID (URL-encoded for Google Business)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [accountId, message]
+              properties:
+                accountId: { type: string }
+                message: { type: string }
+      responses:
+        '200':
+          description: Reply posted
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status: { type: string }
+                  reply:
+                    type: object
+                    properties:
+                      id: { type: string }
+                      text: { type: string }
+                      created: { type: string, format: date-time }
+                  platform: { type: string }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403':
+          description: Inbox addon required
+    delete:
+      operationId: deleteInboxReviewReply
+      summary: Delete a review reply
+      description: Delete a reply to a review (Google Business only). Requires accountId in request body.
+      tags: [Inbox]
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - name: reviewId
+          in: path
+          required: true
+          schema: { type: string }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [accountId]
+              properties:
+                accountId: { type: string }
+      responses:
+        '200':
+          description: Reply deleted
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status: { type: string }
+                  message: { type: string }
+                  platform: { type: string }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403':
+          description: Inbox addon required

@@ -277,6 +277,10 @@ class ConnectResource:
         )
         return self._client._patch("/v1/connect/telegram", params=params)
 
+    def get_facebook_pages(self, account_id: str) -> dict[str, Any]:
+        """List available Facebook pages for a connected account"""
+        return self._client._get(f"/v1/accounts/{account_id}/facebook-page")
+
     def update_facebook_page(
         self, account_id: str, selected_page_id: str
     ) -> dict[str, Any]:
@@ -326,6 +330,21 @@ class ConnectResource:
         )
         return self._client._put(
             f"/v1/accounts/{account_id}/pinterest-boards", data=payload
+        )
+
+    def get_gmb_locations(self, account_id: str) -> dict[str, Any]:
+        """List available Google Business Profile locations for a connected account"""
+        return self._client._get(f"/v1/accounts/{account_id}/gmb-locations")
+
+    def update_gmb_location(
+        self, account_id: str, selected_location_id: str
+    ) -> dict[str, Any]:
+        """Update selected Google Business Profile location for a connected account"""
+        payload = self._build_payload(
+            selected_location_id=selected_location_id,
+        )
+        return self._client._put(
+            f"/v1/accounts/{account_id}/gmb-locations", data=payload
         )
 
     def get_reddit_subreddits(self, account_id: str) -> dict[str, Any]:
@@ -592,6 +611,10 @@ class ConnectResource:
         )
         return await self._client._apatch("/v1/connect/telegram", params=params)
 
+    async def aget_facebook_pages(self, account_id: str) -> dict[str, Any]:
+        """List available Facebook pages for a connected account (async)"""
+        return await self._client._aget(f"/v1/accounts/{account_id}/facebook-page")
+
     async def aupdate_facebook_page(
         self, account_id: str, selected_page_id: str
     ) -> dict[str, Any]:
@@ -643,6 +666,21 @@ class ConnectResource:
         )
         return await self._client._aput(
             f"/v1/accounts/{account_id}/pinterest-boards", data=payload
+        )
+
+    async def aget_gmb_locations(self, account_id: str) -> dict[str, Any]:
+        """List available Google Business Profile locations for a connected account (async)"""
+        return await self._client._aget(f"/v1/accounts/{account_id}/gmb-locations")
+
+    async def aupdate_gmb_location(
+        self, account_id: str, selected_location_id: str
+    ) -> dict[str, Any]:
+        """Update selected Google Business Profile location for a connected account (async)"""
+        payload = self._build_payload(
+            selected_location_id=selected_location_id,
+        )
+        return await self._client._aput(
+            f"/v1/accounts/{account_id}/gmb-locations", data=payload
         )
 
     async def aget_reddit_subreddits(self, account_id: str) -> dict[str, Any]:

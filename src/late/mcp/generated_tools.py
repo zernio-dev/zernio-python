@@ -831,6 +831,19 @@ def register_generated_tools(mcp, _get_client):
             return f"Error: {e}"
 
     @mcp.tool()
+    def connect_get_facebook_pages(account_id: str) -> str:
+        """List available Facebook pages for a connected account
+
+        Args:
+            account_id: (required)"""
+        client = _get_client()
+        try:
+            response = client.connect.get_facebook_pages(account_id=account_id)
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool()
     def connect_update_facebook_page(account_id: str, selected_page_id: str) -> str:
         """Update selected Facebook page for a connected account
 
@@ -915,6 +928,35 @@ def register_generated_tools(mcp, _get_client):
             return f"Error: {e}"
 
     @mcp.tool()
+    def connect_get_gmb_locations(account_id: str) -> str:
+        """List available Google Business Profile locations for a connected account
+
+        Args:
+            account_id: (required)"""
+        client = _get_client()
+        try:
+            response = client.connect.get_gmb_locations(account_id=account_id)
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool()
+    def connect_update_gmb_location(account_id: str, selected_location_id: str) -> str:
+        """Update selected Google Business Profile location for a connected account
+
+        Args:
+            account_id: (required)
+            selected_location_id: (required)"""
+        client = _get_client()
+        try:
+            response = client.connect.update_gmb_location(
+                account_id=account_id, selectedLocationId=selected_location_id
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool()
     def connect_get_reddit_subreddits(account_id: str) -> str:
         """List Reddit subreddits for a connected account
 
@@ -940,6 +982,403 @@ def register_generated_tools(mcp, _get_client):
         try:
             response = client.connect.update_reddit_subreddits(
                 account_id=account_id, defaultSubreddit=default_subreddit
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    # INBOX
+
+    @mcp.tool()
+    def inbox_list_inbox_conversations(
+        profile_id: str = "",
+        platform: str = "",
+        status: str = "",
+        sort_order: str = "desc",
+        limit: int = 50,
+        cursor: str = "",
+        account_id: str = "",
+    ) -> str:
+        """List conversations across all accounts
+
+        Args:
+            profile_id: Filter by profile ID
+            platform: Filter by platform
+            status: Filter by conversation status
+            sort_order: Sort order by updated time
+            limit: Maximum number of conversations to return
+            cursor: Pagination cursor for next page
+            account_id: Filter by specific social account ID"""
+        client = _get_client()
+        try:
+            response = client.inbox.list_inbox_conversations(
+                profile_id=profile_id,
+                platform=platform,
+                status=status,
+                sort_order=sort_order,
+                limit=limit,
+                cursor=cursor,
+                account_id=account_id,
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool()
+    def inbox_get_inbox_conversation(conversation_id: str, account_id: str) -> str:
+        """Get conversation details
+
+        Args:
+            conversation_id: (required)
+            account_id: The social account ID (required)"""
+        client = _get_client()
+        try:
+            response = client.inbox.get_inbox_conversation(
+                conversation_id=conversation_id, account_id=account_id
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool()
+    def inbox_update_inbox_conversation(
+        conversation_id: str, account_id: str, status: str
+    ) -> str:
+        """Update conversation status
+
+        Args:
+            conversation_id: (required)
+            account_id: Social account ID (required)
+            status: (required)"""
+        client = _get_client()
+        try:
+            response = client.inbox.update_inbox_conversation(
+                conversation_id=conversation_id, accountId=account_id, status=status
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool()
+    def inbox_get_inbox_conversation_messages(
+        conversation_id: str, account_id: str
+    ) -> str:
+        """Get messages in a conversation
+
+        Args:
+            conversation_id: (required)
+            account_id: Social account ID (required)"""
+        client = _get_client()
+        try:
+            response = client.inbox.get_inbox_conversation_messages(
+                conversation_id=conversation_id, account_id=account_id
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool()
+    def inbox_send_inbox_message(
+        conversation_id: str, account_id: str, message: str
+    ) -> str:
+        """Send a message
+
+        Args:
+            conversation_id: (required)
+            account_id: Social account ID (required)
+            message: Message text (required)"""
+        client = _get_client()
+        try:
+            response = client.inbox.send_inbox_message(
+                conversation_id=conversation_id, accountId=account_id, message=message
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool()
+    def inbox_list_inbox_comments(
+        profile_id: str = "",
+        platform: str = "",
+        min_comments: int = 0,
+        since: str = "",
+        sort_by: str = "date",
+        sort_order: str = "desc",
+        limit: int = 50,
+        cursor: str = "",
+        account_id: str = "",
+    ) -> str:
+        """List posts with comments across all accounts
+
+        Args:
+            profile_id: Filter by profile ID
+            platform: Filter by platform
+            min_comments: Minimum comment count
+            since: Posts created after this date
+            sort_by: Sort field
+            sort_order: Sort order
+            limit
+            cursor
+            account_id: Filter by specific social account ID"""
+        client = _get_client()
+        try:
+            response = client.inbox.list_inbox_comments(
+                profile_id=profile_id,
+                platform=platform,
+                min_comments=min_comments,
+                since=since,
+                sort_by=sort_by,
+                sort_order=sort_order,
+                limit=limit,
+                cursor=cursor,
+                account_id=account_id,
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool()
+    def inbox_get_inbox_post_comments(
+        post_id: str,
+        account_id: str,
+        subreddit: str = "",
+        limit: int = 25,
+        cursor: str = "",
+        comment_id: str = "",
+    ) -> str:
+        """Get comments for a post
+
+        Args:
+            post_id: (required)
+            account_id: (required)
+            subreddit: (Reddit only) Subreddit name
+            limit: Maximum number of comments to return
+            cursor: Pagination cursor
+            comment_id: (Reddit only) Get replies to a specific comment"""
+        client = _get_client()
+        try:
+            response = client.inbox.get_inbox_post_comments(
+                post_id=post_id,
+                account_id=account_id,
+                subreddit=subreddit,
+                limit=limit,
+                cursor=cursor,
+                comment_id=comment_id,
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool()
+    def inbox_reply_to_inbox_post(
+        post_id: str,
+        account_id: str,
+        message: str,
+        comment_id: str = "",
+        subreddit: str = "",
+        parent_cid: str = "",
+        root_uri: str = "",
+        root_cid: str = "",
+    ) -> str:
+        """Reply to a post or comment
+
+        Args:
+            post_id: (required)
+            account_id: (required)
+            message: (required)
+            comment_id: Reply to specific comment (optional)
+            subreddit: (Reddit only) Subreddit name for replies
+            parent_cid: (Bluesky only) Parent content identifier
+            root_uri: (Bluesky only) Root post URI
+            root_cid: (Bluesky only) Root post CID"""
+        client = _get_client()
+        try:
+            response = client.inbox.reply_to_inbox_post(
+                post_id=post_id,
+                accountId=account_id,
+                message=message,
+                commentId=comment_id,
+                subreddit=subreddit,
+                parentCid=parent_cid,
+                rootUri=root_uri,
+                rootCid=root_cid,
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool()
+    def inbox_delete_inbox_comment(
+        post_id: str, account_id: str, comment_id: str
+    ) -> str:
+        """Delete a comment
+
+        Args:
+            post_id: (required)
+            account_id: (required)
+            comment_id: (required)"""
+        client = _get_client()
+        try:
+            response = client.inbox.delete_inbox_comment(
+                post_id=post_id, account_id=account_id, comment_id=comment_id
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool()
+    def inbox_hide_inbox_comment(post_id: str, comment_id: str, account_id: str) -> str:
+        """Hide a comment
+
+        Args:
+            post_id: (required)
+            comment_id: (required)
+            account_id: The social account ID (required)"""
+        client = _get_client()
+        try:
+            response = client.inbox.hide_inbox_comment(
+                post_id=post_id, comment_id=comment_id, accountId=account_id
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool()
+    def inbox_unhide_inbox_comment(
+        post_id: str, comment_id: str, account_id: str
+    ) -> str:
+        """Unhide a comment
+
+        Args:
+            post_id: (required)
+            comment_id: (required)
+            account_id: (required)"""
+        client = _get_client()
+        try:
+            response = client.inbox.unhide_inbox_comment(
+                post_id=post_id, comment_id=comment_id, account_id=account_id
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool()
+    def inbox_like_inbox_comment(
+        post_id: str, comment_id: str, account_id: str, cid: str = ""
+    ) -> str:
+        """Like a comment
+
+        Args:
+            post_id: (required)
+            comment_id: (required)
+            account_id: The social account ID (required)
+            cid: (Bluesky only) Content identifier for the comment"""
+        client = _get_client()
+        try:
+            response = client.inbox.like_inbox_comment(
+                post_id=post_id, comment_id=comment_id, accountId=account_id, cid=cid
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool()
+    def inbox_unlike_inbox_comment(
+        post_id: str, comment_id: str, account_id: str, like_uri: str = ""
+    ) -> str:
+        """Unlike a comment
+
+        Args:
+            post_id: (required)
+            comment_id: (required)
+            account_id: (required)
+            like_uri: (Bluesky only) The like URI returned when liking"""
+        client = _get_client()
+        try:
+            response = client.inbox.unlike_inbox_comment(
+                post_id=post_id,
+                comment_id=comment_id,
+                account_id=account_id,
+                like_uri=like_uri,
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool()
+    def inbox_list_inbox_reviews(
+        profile_id: str = "",
+        platform: str = "",
+        min_rating: int = 0,
+        max_rating: int = 0,
+        has_reply: bool = False,
+        sort_by: str = "date",
+        sort_order: str = "desc",
+        limit: int = 25,
+        cursor: str = "",
+        account_id: str = "",
+    ) -> str:
+        """List reviews across all accounts
+
+        Args:
+            profile_id
+            platform
+            min_rating
+            max_rating
+            has_reply: Filter by reply status
+            sort_by
+            sort_order
+            limit
+            cursor
+            account_id: Filter by specific social account ID"""
+        client = _get_client()
+        try:
+            response = client.inbox.list_inbox_reviews(
+                profile_id=profile_id,
+                platform=platform,
+                min_rating=min_rating,
+                max_rating=max_rating,
+                has_reply=has_reply,
+                sort_by=sort_by,
+                sort_order=sort_order,
+                limit=limit,
+                cursor=cursor,
+                account_id=account_id,
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool()
+    def inbox_reply_to_inbox_review(
+        review_id: str, account_id: str, message: str
+    ) -> str:
+        """Reply to a review
+
+        Args:
+            review_id: Review ID (URL-encoded for Google Business) (required)
+            account_id: (required)
+            message: (required)"""
+        client = _get_client()
+        try:
+            response = client.inbox.reply_to_inbox_review(
+                review_id=review_id, accountId=account_id, message=message
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool()
+    def inbox_delete_inbox_review_reply(review_id: str, account_id: str) -> str:
+        """Delete a review reply
+
+        Args:
+            review_id: (required)
+            account_id: (required)"""
+        client = _get_client()
+        try:
+            response = client.inbox.delete_inbox_review_reply(
+                review_id=review_id, accountId=account_id
             )
             return _format_response(response)
         except Exception as e:

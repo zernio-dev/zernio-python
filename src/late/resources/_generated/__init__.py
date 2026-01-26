@@ -7,6 +7,7 @@ from .accounts import AccountsResource
 from .analytics import AnalyticsResource
 from .api_keys import ApiKeysResource
 from .connect import ConnectResource
+from .inbox import InboxResource
 from .invites import InvitesResource
 from .logs import LogsResource
 from .media import MediaResource
@@ -25,6 +26,7 @@ __all__ = [
     "AnalyticsResource",
     "ApiKeysResource",
     "ConnectResource",
+    "InboxResource",
     "InvitesResource",
     "LogsResource",
     "MediaResource",

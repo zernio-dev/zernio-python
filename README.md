@@ -287,12 +287,15 @@ except LateAPIError as e:
 | `connect.list_pinterest_boards_for_selection()` | List Pinterest Boards after OAuth (Headless Mode) |
 | `connect.list_snapchat_profiles()` | List Snapchat Public Profiles after OAuth (Headless Mode) |
 | `connect.get_connect_url()` | Start OAuth connection for a platform |
+| `connect.get_facebook_pages()` | List available Facebook pages for a connected account |
+| `connect.get_gmb_locations()` | List available Google Business Profile locations for a connected account |
 | `connect.get_linked_in_organizations()` | Get available LinkedIn organizations for a connected account |
 | `connect.get_pending_o_auth_data()` | Fetch pending OAuth selection data (Headless Mode) |
 | `connect.get_pinterest_boards()` | List Pinterest boards for a connected account |
 | `connect.get_reddit_subreddits()` | List Reddit subreddits for a connected account |
 | `connect.get_telegram_connect_status()` | Generate Telegram access code |
 | `connect.update_facebook_page()` | Update selected Facebook page for a connected account |
+| `connect.update_gmb_location()` | Update selected Google Business Profile location for a connected account |
 | `connect.update_linked_in_organization()` | Switch LinkedIn account type (personal/organization) |
 | `connect.update_pinterest_boards()` | Set default Pinterest board on the connection |
 | `connect.update_reddit_subreddits()` | Set default subreddit on the connection |
