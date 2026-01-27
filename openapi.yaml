@@ -6170,15 +6170,16 @@ paths:
                 type: object
                 properties:
                   message: { type: string }
-                  account: { $ref: '#/components/schemas/SocialAccount' }
+                  selectedPage:
+                    type: object
+                    properties:
+                      id: { type: string }
+                      name: { type: string }
               example:
                 message: "Facebook page updated successfully"
-                account:
-                  _id: "64e1f0a9e2b5af0012ab34cd"
-                  platform: "facebook"
-                  username: "mybrand"
-                  displayName: "My Brand Page"
-                  isActive: true
+                selectedPage:
+                  id: "123456789012345"
+                  name: "My Brand Page"
         '400': { description: Page not in available pages }
         '401': { $ref: '#/components/responses/Unauthorized' }
         '404': { description: Account not found }
