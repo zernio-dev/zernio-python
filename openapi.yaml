@@ -34,10 +34,21 @@ tags:
   - name: Inbox Access
     description: |
       Check and manage inbox feature access.
-  - name: Inbox
+  - name: Messages
     description: |
-      Unified inbox API for managing conversations, comments, and reviews across all connected accounts.
-      All inbox endpoints aggregate data from multiple social accounts in a single API call.
+      Unified inbox API for managing conversations and direct messages across all connected accounts.
+      All endpoints aggregate data from multiple social accounts in a single API call.
+      Requires Inbox addon.
+  - name: Comments
+    description: |
+      Unified inbox API for managing comments on posts across all connected accounts.
+      Supports commenting on third-party posts for platforms that allow it (YouTube, Twitter, Reddit, Bluesky, Threads).
+      All endpoints aggregate data from multiple social accounts in a single API call.
+      Requires Inbox addon.
+  - name: Reviews
+    description: |
+      Unified inbox API for managing reviews on Facebook Pages and Google Business accounts.
+      All endpoints aggregate data from multiple social accounts in a single API call.
       Requires Inbox addon.
   - name: Tools
     description: |
@@ -7978,7 +7989,7 @@ paths:
         Supports filtering by profile and platform. Results are aggregated and deduplicated.
 
         **Supported platforms:** Facebook, Instagram, Bluesky, Reddit, Telegram
-      tags: [Inbox]
+      tags: [Messages]
       security: [{ bearerAuth: [] }]
       parameters:
         - name: profileId
@@ -8067,7 +8078,7 @@ paths:
       operationId: getInboxConversation
       summary: Get conversation details
       description: Retrieve details and metadata for a specific conversation. Requires accountId query parameter.
-      tags: [Inbox]
+      tags: [Messages]
       security: [{ bearerAuth: [] }]
       parameters:
         - name: conversationId
@@ -8116,7 +8127,7 @@ paths:
       operationId: updateInboxConversation
       summary: Update conversation status
       description: Archive or activate a conversation. Requires accountId in request body.
-      tags: [Inbox]
+      tags: [Messages]
       security: [{ bearerAuth: [] }]
       parameters:
         - name: conversationId
@@ -8159,7 +8170,7 @@ paths:
       operationId: getInboxConversationMessages
       summary: Get messages in a conversation
       description: Fetch messages for a specific conversation. Requires accountId query parameter.
-      tags: [Inbox]
+      tags: [Messages]
       security: [{ bearerAuth: [] }]
       parameters:
         - name: conversationId
@@ -8224,7 +8235,7 @@ paths:
         - Instagram: Not supported (API limitation)
         - Bluesky: Not supported (API limitation)
         - Reddit: Not supported (API limitation)
-      tags: [Inbox]
+      tags: [Messages]
       security: [{ bearerAuth: [] }]
       parameters:
         - name: conversationId
@@ -8294,7 +8305,7 @@ paths:
         Aggregates data from multiple accounts in a single API call.
 
         **Supported platforms:** Facebook, Instagram, Bluesky, YouTube, LinkedIn, Reddit, TikTok (write-only)
-      tags: [Inbox]
+      tags: [Comments]
       security: [{ bearerAuth: [] }]
       parameters:
         - name: profileId
@@ -8387,7 +8398,7 @@ paths:
       operationId: getInboxPostComments
       summary: Get comments for a post
       description: Fetch comments for a specific post. Requires accountId query parameter.
-      tags: [Inbox]
+      tags: [Comments]
       security: [{ bearerAuth: [] }]
       parameters:
         - name: postId
@@ -8480,7 +8491,7 @@ paths:
       operationId: replyToInboxPost
       summary: Reply to a post or comment
       description: Post a reply to a post or specific comment. Requires accountId in request body.
-      tags: [Inbox]
+      tags: [Comments]
       security: [{ bearerAuth: [] }]
       parameters:
         - name: postId
@@ -8526,7 +8537,7 @@ paths:
       description: |
         Delete a comment on a post. Supported by Facebook, Instagram, Bluesky, Reddit, YouTube, LinkedIn, and TikTok.
         Requires accountId and commentId query parameters.
-      tags: [Inbox]
+      tags: [Comments]
       security: [{ bearerAuth: [] }]
       parameters:
         - name: postId
@@ -8565,7 +8576,7 @@ paths:
       description: |
         Hide a comment on a post. Supported by Facebook, Instagram, and Threads.
         Hidden comments are only visible to the commenter and page admin.
-      tags: [Inbox]
+      tags: [Comments]
       security: [{ bearerAuth: [] }]
       parameters:
         - name: postId
@@ -8607,7 +8618,7 @@ paths:
       summary: Unhide a comment
       description: |
         Unhide a previously hidden comment. Supported by Facebook, Instagram, and Threads.
-      tags: [Inbox]
+      tags: [Comments]
       security: [{ bearerAuth: [] }]
       parameters:
         - name: postId
@@ -8650,7 +8661,7 @@ paths:
         **Supported platforms:** Facebook, Bluesky, Reddit
 
         For Bluesky, the `cid` (content identifier) is required in the request body.
-      tags: [Inbox]
+      tags: [Comments]
       security: [{ bearerAuth: [] }]
       parameters:
         - name: postId
@@ -8698,7 +8709,7 @@ paths:
         **Supported platforms:** Facebook, Bluesky, Reddit
 
         For Bluesky, the `likeUri` query parameter is required.
-      tags: [Inbox]
+      tags: [Comments]
       security: [{ bearerAuth: [] }]
       parameters:
         - name: postId
@@ -8744,7 +8755,7 @@ paths:
         Aggregates data with filtering and sorting options.
 
         **Supported platforms:** Facebook, Google Business
-      tags: [Inbox]
+      tags: [Reviews]
       security: [{ bearerAuth: [] }]
       parameters:
         - name: profileId
@@ -8851,7 +8862,7 @@ paths:
       operationId: replyToInboxReview
       summary: Reply to a review
       description: Post a reply to a review. Requires accountId in request body.
-      tags: [Inbox]
+      tags: [Reviews]
       security: [{ bearerAuth: [] }]
       parameters:
         - name: reviewId
@@ -8892,7 +8903,7 @@ paths:
       operationId: deleteInboxReviewReply
       summary: Delete a review reply
       description: Delete a reply to a review (Google Business only). Requires accountId in request body.
-      tags: [Inbox]
+      tags: [Reviews]
       security: [{ bearerAuth: [] }]
       parameters:
         - name: reviewId
