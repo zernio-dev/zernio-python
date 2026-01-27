@@ -55,7 +55,7 @@ tags:
       - `post.partial` - When a post publishes to some platforms but fails on others
       - `account.connected` - When a social account is successfully connected
       - `account.disconnected` - When a social account is disconnected (token expired/revoked)
-      - `message.received` - When a new DM is received (Instagram, Facebook, Telegram)
+      - `message.received` - When a new DM is received (Instagram, Telegram)
 
       **Security:**
       - Optional HMAC-SHA256 signature sent in `X-Late-Signature` header
@@ -388,7 +388,7 @@ components:
           format: date-time
     WebhookPayloadMessage:
       type: object
-      description: Webhook payload for message received events (DMs from Instagram, Facebook, Telegram)
+      description: Webhook payload for message received events (DMs from Instagram, Telegram)
       properties:
         event:
           type: string
