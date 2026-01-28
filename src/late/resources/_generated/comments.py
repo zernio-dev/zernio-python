@@ -182,6 +182,18 @@ class CommentsResource:
             f"/v1/inbox/comments/{post_id}/{comment_id}/like", params=params
         )
 
+    def send_private_reply_to_comment(
+        self, post_id: str, comment_id: str, account_id: str, message: str
+    ) -> dict[str, Any]:
+        """Send private reply to comment author"""
+        payload = self._build_payload(
+            account_id=account_id,
+            message=message,
+        )
+        return self._client._post(
+            f"/v1/inbox/comments/{post_id}/{comment_id}/private-reply", data=payload
+        )
+
     async def alist_inbox_comments(
         self,
         *,
@@ -314,4 +326,16 @@ class CommentsResource:
         )
         return await self._client._adelete(
             f"/v1/inbox/comments/{post_id}/{comment_id}/like", params=params
+        )
+
+    async def asend_private_reply_to_comment(
+        self, post_id: str, comment_id: str, account_id: str, message: str
+    ) -> dict[str, Any]:
+        """Send private reply to comment author (async)"""
+        payload = self._build_payload(
+            account_id=account_id,
+            message=message,
+        )
+        return await self._client._apost(
+            f"/v1/inbox/comments/{post_id}/{comment_id}/private-reply", data=payload
         )

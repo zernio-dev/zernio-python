@@ -8746,6 +8746,110 @@ paths:
         '403':
           description: Inbox addon required
 
+  /v1/inbox/comments/{postId}/{commentId}/private-reply:
+    post:
+      operationId: sendPrivateReplyToComment
+      summary: Send private reply to comment author
+      description: |
+        Send a private direct message to the author of a comment on your post.
+        This is useful for handling customer inquiries or sensitive matters privately.
+
+        **Supported platforms:** Instagram only
+
+        **Limitations:**
+        - Instagram only allows ONE private reply per comment
+        - Must be sent within 7 days of the comment being posted
+        - Only works for comments on posts owned by the connected account
+        - Message goes to the user's Inbox (if they follow you) or Message Requests (if they don't)
+        - Requires `instagram_business_manage_messages` permission (already included in Late's OAuth)
+
+        **Note:** This does not create a conversation thread until the user replies back.
+      tags: [Comments]
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - name: postId
+          in: path
+          required: true
+          schema: { type: string }
+          description: The Instagram media/post ID
+        - name: commentId
+          in: path
+          required: true
+          schema: { type: string }
+          description: The comment ID to send a private reply to
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [accountId, message]
+              properties:
+                accountId:
+                  type: string
+                  description: The Instagram social account ID
+                message:
+                  type: string
+                  description: The message text to send as a private DM
+            example:
+              accountId: "507f1f77bcf86cd799439011"
+              message: "Hi! Thanks for your comment. I wanted to reach out privately to help with your question."
+      responses:
+        '200':
+          description: Private reply sent successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: success
+                  messageId:
+                    type: string
+                    description: The ID of the sent message
+                  commentId:
+                    type: string
+                    description: The comment ID that was replied to
+                  platform:
+                    type: string
+                    example: instagram
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                  code:
+                    type: string
+                    enum: [PLATFORM_LIMITATION]
+              examples:
+                platformNotSupported:
+                  summary: Platform not supported
+                  value:
+                    error: "Private replies to comments are only supported on Instagram."
+                    code: "PLATFORM_LIMITATION"
+                alreadyReplied:
+                  summary: Already sent a private reply
+                  value:
+                    error: "A private reply has already been sent to this comment, or the 7-day reply window has expired. Instagram only allows one private reply per comment within 7 days."
+                commentTooOld:
+                  summary: Comment older than 7 days
+                  value:
+                    error: "The comment is older than 7 days. Instagram only allows private replies within 7 days of the comment being posted."
+                missingMessage:
+                  summary: Missing message
+                  value:
+                    error: "message is required and must be a non-empty string"
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403':
+          description: Inbox addon required
+        '404':
+          description: Account not found
+
   /v1/inbox/reviews:
     get:
       operationId: listInboxReviews

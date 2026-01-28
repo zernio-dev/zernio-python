@@ -642,6 +642,29 @@ def register_generated_tools(mcp, _get_client):
         except Exception as e:
             return f"Error: {e}"
 
+    @mcp.tool()
+    def comments_send_private_reply_to_comment(
+        post_id: str, comment_id: str, account_id: str, message: str
+    ) -> str:
+        """Send private reply to comment author
+
+        Args:
+            post_id: The Instagram media/post ID (required)
+            comment_id: The comment ID to send a private reply to (required)
+            account_id: The Instagram social account ID (required)
+            message: The message text to send as a private DM (required)"""
+        client = _get_client()
+        try:
+            response = client.comments.send_private_reply_to_comment(
+                post_id=post_id,
+                comment_id=comment_id,
+                accountId=account_id,
+                message=message,
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
     # CONNECT
 
     @mcp.tool()
