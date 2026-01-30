@@ -849,7 +849,10 @@ components:
           description: Optional first comment to post immediately after publishing (feed posts only, not stories)
         pageId:
           type: string
-          description: Target Facebook Page ID. If omitted, uses the selected/default page on the connection.
+          description: |
+            Target Facebook Page ID for multi-page posting.
+            If omitted, uses the selected/default page on the connection.
+            Use GET /api/v1/accounts/{id}/facebook-page to list available pages.
       description: |
         Constraints:
         - Posts cannot mix videos and images.
@@ -857,6 +860,7 @@ components:
         - Multiple videos in the same post are not supported.
         - Stories require media (single image or video); text captions are not displayed with stories.
         - Stories are ephemeral (disappear after 24 hours).
+        - Use pageId to post to multiple pages from the same account connection.
 
     InstagramPlatformData:
       type: object
@@ -949,6 +953,13 @@ components:
     LinkedInPlatformData:
       type: object
       properties:
+        organizationUrn:
+          type: string
+          description: |
+            Target LinkedIn Organization URN for multi-organization posting.
+            Format: "urn:li:organization:123456789"
+            If omitted, uses the selected/default organization on the connection.
+            Use GET /api/v1/accounts/{id}/linkedin-organizations to list available organizations.
         firstComment:
           type: string
           description: Optional first comment to add after the post is created
@@ -962,6 +973,7 @@ components:
         - Single PDF document posts are supported (max 100MB, ~300 pages). Documents cannot be mixed with other media.
         - Post ID is returned in the x-restli-id response header.
         - Link previews are automatically generated for URLs when no media is attached (can be disabled with disableLinkPreview).
+        - Use organizationUrn to post to multiple organizations from the same account connection.
 
     PinterestPlatformData:
       type: object
@@ -1040,6 +1052,13 @@ components:
     GoogleBusinessPlatformData:
       type: object
       properties:
+        locationId:
+          type: string
+          description: |
+            Target Google Business location ID for multi-location posting.
+            Format: "locations/123456789"
+            If omitted, uses the selected/default location on the connection.
+            Use GET /api/v1/accounts/{id}/gmb-locations to list available locations.
         callToAction:
           type: object
           description: Optional call-to-action button displayed on the post
@@ -1066,6 +1085,7 @@ components:
         - Images must be publicly accessible URLs
         - Call-to-action buttons drive user engagement
         - Posts appear on your Google Business Profile and in Google Search/Maps
+        - Use locationId to post to multiple locations from the same account connection
 
     TikTokPlatformData:
       type: object
@@ -3169,7 +3189,16 @@ paths:
         **Getting Post URLs:**
         - For immediate posts (`publishNow: true`): The response includes `platformPostUrl` in each platform entry under `post.platforms[]`.
         - For scheduled posts: Fetch the post via `GET /v1/posts/{postId}` after the scheduled time; `platformPostUrl` will be populated once published.
-        
+
+        **Content/Caption requirements:**
+        - `content` (caption/description) is optional when:
+          - Media is attached (`mediaItems` or per-platform `customMedia`)
+          - All platforms have `customContent` set
+          - Posting only to YouTube (title is used instead)
+        - Text-only posts (no media) require `content`
+        - Stories do not use captions (content is ignored)
+        - Reels, feed posts, and other media posts can have optional captions
+
         Platform constraints:
         - YouTube requires a video in mediaItems; optional custom thumbnail via MediaItem.thumbnail.
         - Instagram and TikTok require media; do not mix videos and images for TikTok.
@@ -3180,6 +3209,14 @@ paths:
         - Pinterest supports single image via image_url or a single video per Pin; boardId is required.
         - Bluesky supports up to 4 images per post. Images may be automatically recompressed to ≤ ~1MB to satisfy Bluesky's blob limit. When no media is attached, a link preview may be generated for URLs in the text.
         - Snapchat requires media (single image or video); set contentType to 'story', 'saved_story', or 'spotlight' in platformSpecificData. Stories are ephemeral (24h), Saved Stories are permanent, Spotlight is for video content.
+
+        **Multi-page/multi-location posting:**
+        Some platforms allow posting to multiple pages, organizations, or locations from a single account connection.
+        Use the same accountId multiple times with different targets in platformSpecificData:
+        - Facebook: `pageId` - post to multiple Facebook Pages (list via GET /v1/accounts/{id}/facebook-page)
+        - LinkedIn: `organizationUrn` - post to multiple organizations (list via GET /v1/accounts/{id}/linkedin-organizations)
+        - Google Business: `locationId` - post to multiple locations (list via GET /v1/accounts/{id}/gmb-locations)
+        - Reddit: `subreddit` - post to multiple subreddits from the same account
       requestBody:
         required: true
         content:
@@ -3188,7 +3225,11 @@ paths:
               type: object
               properties:
                 title: { type: string }
-                content: { type: string }
+                content:
+                  type: string
+                  description: |
+                    Post caption/text content. Optional when media is attached (images, videos, etc.).
+                    Required for text-only posts. Can also be omitted if all platforms have customContent set.
                 mediaItems:
                   type: array
                   items:
