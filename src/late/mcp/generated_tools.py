@@ -1365,7 +1365,7 @@ def register_generated_tools(mcp, _get_client):
         """Get conversation details
 
         Args:
-            conversation_id: (required)
+            conversation_id: The conversation ID (id field from list conversations endpoint). This is the platform-specific conversation identifier, not an internal database ID. (required)
             account_id: The social account ID (required)"""
         client = _get_client()
         try:
@@ -1383,7 +1383,7 @@ def register_generated_tools(mcp, _get_client):
         """Update conversation status
 
         Args:
-            conversation_id: (required)
+            conversation_id: The conversation ID (id field from list conversations endpoint). This is the platform-specific conversation identifier, not an internal database ID. (required)
             account_id: Social account ID (required)
             status: (required)"""
         client = _get_client()
@@ -1402,7 +1402,7 @@ def register_generated_tools(mcp, _get_client):
         """Get messages in a conversation
 
         Args:
-            conversation_id: (required)
+            conversation_id: The conversation ID (id field from list conversations endpoint). This is the platform-specific conversation identifier, not an internal database ID. (required)
             account_id: Social account ID (required)"""
         client = _get_client()
         try:
@@ -1420,7 +1420,7 @@ def register_generated_tools(mcp, _get_client):
         """Send a message
 
         Args:
-            conversation_id: (required)
+            conversation_id: The conversation ID (id field from list conversations endpoint). This is the platform-specific conversation identifier, not an internal database ID. (required)
             account_id: Social account ID (required)
             message: Message text (required)"""
         client = _get_client()

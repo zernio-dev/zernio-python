@@ -8126,6 +8126,7 @@ paths:
           in: path
           required: true
           schema: { type: string }
+          description: The conversation ID (id field from list conversations endpoint). This is the platform-specific conversation identifier, not an internal database ID.
         - name: accountId
           in: query
           required: true
@@ -8175,6 +8176,7 @@ paths:
           in: path
           required: true
           schema: { type: string }
+          description: The conversation ID (id field from list conversations endpoint). This is the platform-specific conversation identifier, not an internal database ID.
       requestBody:
         required: true
         content:
@@ -8218,6 +8220,7 @@ paths:
           in: path
           required: true
           schema: { type: string }
+          description: The conversation ID (id field from list conversations endpoint). This is the platform-specific conversation identifier, not an internal database ID.
         - name: accountId
           in: query
           required: true
@@ -8283,6 +8286,7 @@ paths:
           in: path
           required: true
           schema: { type: string }
+          description: The conversation ID (id field from list conversations endpoint). This is the platform-specific conversation identifier, not an internal database ID.
       requestBody:
         required: true
         content:
