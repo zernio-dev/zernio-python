@@ -753,6 +753,37 @@ components:
           type: string
           format: date-time
           description: Timestamp when the post was published to this platform
+        errorMessage:
+          type: string
+          description: |
+            Human-readable error message when status is 'failed'.
+            Contains platform-specific error details explaining why the publish failed.
+            Examples:
+            - "Instagram access token has expired. Please reconnect your account."
+            - "Post text exceeds the 500 character limit for Threads."
+            - "You do not have enough karma to post in this subreddit."
+            - "Video is too long for Reels. Facebook Reels must be 90 seconds or less."
+        errorCategory:
+          type: string
+          enum: [auth_expired, user_content, user_abuse, account_issue, platform_rejected, platform_error, system_error, unknown]
+          description: |
+            Error category for programmatic handling:
+            - auth_expired: Token expired or revoked, account needs reconnection
+            - user_content: Content doesn't meet platform requirements (too long, wrong format, etc.)
+            - user_abuse: Rate limits, spam detection, excessive posting
+            - account_issue: Account configuration problems (missing board, inactive account)
+            - platform_rejected: Platform rules violated (banned, suspended, policy violation)
+            - platform_error: Platform-side issues (5xx errors, maintenance)
+            - system_error: Late infrastructure issues (timeouts, network errors)
+            - unknown: Unclassified error
+        errorSource:
+          type: string
+          enum: [user, platform, system]
+          description: |
+            Who/what caused the error:
+            - user: User action required (fix content, reconnect account)
+            - platform: Platform-side issue (outage, API change)
+            - system: Late system issue (rare)
     Post:
       type: object
       properties:
@@ -3530,6 +3561,52 @@ paths:
                           publishedAt: "2024-11-01T10:00:06Z"
                           platformPostId: "urn:li:share:7123456789012345678"
                           platformPostUrl: "https://www.linkedin.com/feed/update/urn:li:share:7123456789012345678"
+                failedPost:
+                  summary: Failed post with error details
+                  value:
+                    post:
+                      _id: "65f1c0a9e2b5af0012ab34cd"
+                      content: "This post failed to publish"
+                      status: "failed"
+                      platforms:
+                        - platform: "instagram"
+                          accountId:
+                            _id: "64e1f0a9e2b5af0012ab34de"
+                            platform: "instagram"
+                            username: "acmecorp"
+                            isActive: false
+                          status: "failed"
+                          errorMessage: "Instagram access token has expired. Please reconnect your account."
+                          errorCategory: "auth_expired"
+                          errorSource: "user"
+                partialPost:
+                  summary: Partial success (some platforms failed)
+                  value:
+                    post:
+                      _id: "65f1c0a9e2b5af0012ab34cd"
+                      content: "Launch announcement!"
+                      status: "partial"
+                      platforms:
+                        - platform: "twitter"
+                          accountId:
+                            _id: "64e1f0a9e2b5af0012ab34de"
+                            platform: "twitter"
+                            username: "@acmecorp"
+                            isActive: true
+                          status: "published"
+                          publishedAt: "2024-11-01T10:00:05Z"
+                          platformPostId: "1852634789012345678"
+                          platformPostUrl: "https://twitter.com/acmecorp/status/1852634789012345678"
+                        - platform: "threads"
+                          accountId:
+                            _id: "64e1f0a9e2b5af0012ab34ef"
+                            platform: "threads"
+                            username: "acmecorp"
+                            isActive: true
+                          status: "failed"
+                          errorMessage: "Post text exceeds the 500 character limit for Threads."
+                          errorCategory: "user_content"
+                          errorSource: "user"
         '401': { $ref: '#/components/responses/Unauthorized' }
         '403':
           description: Forbidden
