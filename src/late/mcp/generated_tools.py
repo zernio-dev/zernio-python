@@ -276,6 +276,7 @@ def register_generated_tools(mcp, _get_client):
         post_id: str = "",
         platform: str = "",
         profile_id: str = "",
+        source: str = "all",
         from_date: str = "",
         to_date: str = "",
         limit: int = 50,
@@ -291,6 +292,10 @@ def register_generated_tools(mcp, _get_client):
         resolves Late Post IDs to their corresponding External Post analytics.
                 platform: Filter by platform (default "all")
                 profile_id: Filter by profile ID (default "all")
+                source: Filter by post source:
+        - `late` - Only posts scheduled/published via Late API
+        - `external` - Only posts synced from the platform (not posted via Late)
+        - `all` - All posts (default)
                 from_date: Inclusive lower bound
                 to_date: Inclusive upper bound
                 limit: Page size (default 50)
@@ -303,6 +308,7 @@ def register_generated_tools(mcp, _get_client):
                 post_id=post_id,
                 platform=platform,
                 profile_id=profile_id,
+                source=source,
                 from_date=from_date,
                 to_date=to_date,
                 limit=limit,

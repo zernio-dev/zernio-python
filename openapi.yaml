@@ -2395,6 +2395,14 @@ paths:
           in: query
           schema: { type: string }
           description: Filter by profile ID (default "all")
+        - name: source
+          in: query
+          schema: { type: string, enum: [all, late, external], default: all }
+          description: |
+            Filter by post source:
+            - `late` - Only posts scheduled/published via Late API
+            - `external` - Only posts synced from the platform (not posted via Late)
+            - `all` - All posts (default)
         - name: fromDate
           in: query
           schema: { type: string, format: date }
