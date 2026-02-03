@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Late API
-  version: "1.0.0"
+  version: "1.0.1"
   description: |
     API reference for Late. Authenticate with a Bearer API key.
     Base URL: https://getlate.dev/api
