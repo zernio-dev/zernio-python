@@ -4,6 +4,9 @@ Generate SDK Reference section for README.md from the OpenAPI spec.
 
 This script parses the OpenAPI spec and generates markdown tables
 documenting all available methods with descriptions from the spec.
+
+New tags added to the OpenAPI spec are auto-discovered and included
+in the README. Only special cases need explicit configuration below.
 """
 
 import re
@@ -12,34 +15,35 @@ from pathlib import Path
 
 import yaml
 
-# Map OpenAPI tags to SDK resource names and display names
-TAG_TO_RESOURCE: dict[str, tuple[str, str]] = {
-    "Posts": ("posts", "Posts"),
-    "Accounts": ("accounts", "Accounts"),
-    "Profiles": ("profiles", "Profiles"),
-    "Analytics": ("analytics", "Analytics"),
-    "Account Groups": ("account_groups", "Account Groups"),
-    "Queue": ("queue", "Queue"),
-    "Webhooks": ("webhooks", "Webhooks"),
-    "API Keys": ("api_keys", "API Keys"),
-    "Media": ("media", "Media"),
-    "Tools": ("tools", "Tools"),
-    "Users": ("users", "Users"),
-    "Usage": ("usage", "Usage"),
-    "Logs": ("logs", "Logs"),
-    "Connect": ("connect", "Connect (OAuth)"),
-    "Reddit Search": ("reddit", "Reddit"),
-    "Invites": ("invites", "Invites"),
-    "Messages": ("messages", "Messages (Inbox)"),
-    "Comments": ("comments", "Comments (Inbox)"),
-    "Reviews": ("reviews", "Reviews (Inbox)"),
-    # Group these under existing resources
-    "GMB Reviews": ("accounts", "Accounts"),
-    "LinkedIn Mentions": ("accounts", "Accounts"),
+# Tags that should be merged into another resource instead of getting their own section
+TAG_MERGE: dict[str, str] = {
+    "GMB Reviews": "accounts",
+    "LinkedIn Mentions": "accounts",
 }
 
-# Order of resources in the README
-RESOURCE_ORDER = [
+# Tags to skip entirely (no SDK methods)
+SKIP_TAGS: set[str] = {
+    "Inbox Access",
+}
+
+# Override display names (tag -> display name). Unmatched tags use the tag name as-is.
+DISPLAY_NAME_OVERRIDES: dict[str, str] = {
+    "Connect": "Connect (OAuth)",
+    "Reddit Search": "Reddit",
+    "Messages": "Messages (Inbox)",
+    "Comments": "Comments (Inbox)",
+    "Reviews": "Reviews (Inbox)",
+}
+
+# Override resource key names (tag -> snake_case key). Unmatched tags are auto-converted.
+RESOURCE_KEY_OVERRIDES: dict[str, str] = {
+    "Account Groups": "account_groups",
+    "API Keys": "api_keys",
+    "Reddit Search": "reddit",
+}
+
+# Preferred ordering for known resources. Auto-discovered resources appear after these.
+PREFERRED_ORDER: list[str] = [
     "posts",
     "accounts",
     "profiles",
@@ -55,9 +59,10 @@ RESOURCE_ORDER = [
     "logs",
     "connect",
     "reddit",
-    "messages",
-    "comments",
-    "reviews",
+]
+
+# Resources that should always appear last, in this order
+LAST_RESOURCES: list[str] = [
     "invites",
 ]
 
@@ -71,6 +76,16 @@ SDK_ONLY_METHODS: dict[str, list[tuple[str, str]]] = {
         ("upload_multiple", "Upload multiple files"),
     ],
 }
+
+
+def tag_to_resource_key(tag: str) -> str:
+    """Convert a tag name to a snake_case resource key.
+
+    e.g. "Account Groups" -> "account_groups", "Messages" -> "messages"
+    """
+    if tag in RESOURCE_KEY_OVERRIDES:
+        return RESOURCE_KEY_OVERRIDES[tag]
+    return tag.lower().replace(" ", "_")
 
 
 def camel_to_snake(name: str) -> str:
@@ -115,13 +130,17 @@ def load_openapi_spec(spec_path: Path) -> dict:
         return yaml.safe_load(f)
 
 
-def extract_methods_from_spec(spec: dict) -> dict[str, list[tuple[str, str]]]:
+def extract_methods_from_spec(
+    spec: dict,
+) -> tuple[dict[str, list[tuple[str, str]]], list[str], dict[str, str]]:
     """
     Extract methods and descriptions from OpenAPI spec.
 
-    Returns a dict mapping resource names to list of (method_name, description) tuples.
+    Returns (resources, resource_order, display_names).
     """
-    resources: dict[str, list[tuple[str, str]]] = {name: [] for name in RESOURCE_ORDER}
+    resources: dict[str, list[tuple[str, str]]] = {}
+    display_names: dict[str, str] = {}
+    discovered: set[str] = set()
 
     for path, path_item in spec.get("paths", {}).items():
         for method, operation in path_item.items():
@@ -133,25 +152,30 @@ def extract_methods_from_spec(spec: dict) -> dict[str, list[tuple[str, str]]]:
                 continue
 
             tag = tags[0]
-            if tag not in TAG_TO_RESOURCE:
+            if tag in SKIP_TAGS:
                 continue
 
-            resource_name, _ = TAG_TO_RESOURCE[tag]
             operation_id = operation.get("operationId", "")
-            summary = operation.get("summary", "")
-
             if not operation_id:
                 continue
+
+            # Resolve the resource key: merged tags go to their parent, others auto-generate
+            resource_name = TAG_MERGE.get(tag) or tag_to_resource_key(tag)
+            discovered.add(resource_name)
+
+            # Track display name (non-merged tags only)
+            if tag not in TAG_MERGE:
+                display_names[resource_name] = DISPLAY_NAME_OVERRIDES.get(tag, tag)
+
+            if resource_name not in resources:
+                resources[resource_name] = []
 
             # Convert operationId to snake_case method name
             method_name = camel_to_snake(operation_id)
 
             # Use summary as description, or generate from method name
-            if summary:
-                description = summary
-            else:
-                # Auto-generate from method name
-                description = method_name.replace("_", " ").title()
+            summary = operation.get("summary", "")
+            description = summary if summary else method_name.replace("_", " ").title()
 
             resources[resource_name].append((method_name, description))
 
@@ -160,24 +184,38 @@ def extract_methods_from_spec(spec: dict) -> dict[str, list[tuple[str, str]]]:
         if resource_name in resources:
             resources[resource_name].extend(methods)
 
+    # Build final order: preferred first, then auto-discovered, then last resources
+    preferred_set = set(PREFERRED_ORDER)
+    last_set = set(LAST_RESOURCES)
+    auto_discovered = sorted(
+        r for r in discovered if r not in preferred_set and r not in last_set
+    )
+
+    resource_order = [
+        *[r for r in PREFERRED_ORDER if r in discovered],
+        *auto_discovered,
+        *[r for r in LAST_RESOURCES if r in discovered],
+    ]
+
     # Sort methods within each resource
-    for resource_name in resources:
-        resources[resource_name] = sorted(
-            resources[resource_name],
-            key=lambda x: get_method_sort_key(x[0])
-        )
+    for resource_name in resource_order:
+        if resource_name in resources:
+            resources[resource_name] = sorted(
+                resources[resource_name], key=lambda x: get_method_sort_key(x[0])
+            )
 
-    return resources
+    return resources, resource_order, display_names
 
 
-def generate_reference_section(resources: dict[str, list[tuple[str, str]]]) -> str:
+def generate_reference_section(
+    resources: dict[str, list[tuple[str, str]]],
+    resource_order: list[str],
+    display_names: dict[str, str],
+) -> str:
     """Generate the SDK Reference section markdown."""
     lines = ["## SDK Reference", ""]
 
-    # Get display names
-    display_names = {v[0]: v[1] for v in TAG_TO_RESOURCE.values()}
-
-    for resource_name in RESOURCE_ORDER:
+    for resource_name in resource_order:
         methods = resources.get(resource_name, [])
         if not methods:
             continue
@@ -220,8 +258,8 @@ def main():
     readme_path = script_dir.parent / "README.md"
 
     spec = load_openapi_spec(spec_path)
-    resources = extract_methods_from_spec(spec)
-    reference_section = generate_reference_section(resources)
+    resources, resource_order, display_names = extract_methods_from_spec(spec)
+    reference_section = generate_reference_section(resources, resource_order, display_names)
 
     if "--print" in sys.argv:
         print(reference_section)
