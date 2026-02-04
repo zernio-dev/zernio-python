@@ -30,6 +30,9 @@ TAG_TO_RESOURCE: dict[str, tuple[str, str]] = {
     "Connect": ("connect", "Connect (OAuth)"),
     "Reddit Search": ("reddit", "Reddit"),
     "Invites": ("invites", "Invites"),
+    "Messages": ("messages", "Messages (Inbox)"),
+    "Comments": ("comments", "Comments (Inbox)"),
+    "Reviews": ("reviews", "Reviews (Inbox)"),
     # Group these under existing resources
     "GMB Reviews": ("accounts", "Accounts"),
     "LinkedIn Mentions": ("accounts", "Accounts"),
@@ -52,6 +55,9 @@ RESOURCE_ORDER = [
     "logs",
     "connect",
     "reddit",
+    "messages",
+    "comments",
+    "reviews",
     "invites",
 ]
 
