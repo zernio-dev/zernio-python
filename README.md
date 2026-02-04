@@ -315,6 +315,35 @@ except LateAPIError as e:
 | `reddit.get_reddit_feed()` | Fetch subreddit feed via a connected account |
 | `reddit.search_reddit()` | Search Reddit posts via a connected account |
 
+### Comments (Inbox)
+| Method | Description |
+|--------|-------------|
+| `comments.list_inbox_comments()` | List posts with comments across all accounts |
+| `comments.get_inbox_post_comments()` | Get comments for a post |
+| `comments.delete_inbox_comment()` | Delete a comment |
+| `comments.hide_inbox_comment()` | Hide a comment |
+| `comments.like_inbox_comment()` | Like a comment |
+| `comments.reply_to_inbox_post()` | Reply to a post or comment |
+| `comments.send_private_reply_to_comment()` | Send private reply to comment author |
+| `comments.unhide_inbox_comment()` | Unhide a comment |
+| `comments.unlike_inbox_comment()` | Unlike a comment |
+
+### Messages (Inbox)
+| Method | Description |
+|--------|-------------|
+| `messages.list_inbox_conversations()` | List conversations across all accounts |
+| `messages.get_inbox_conversation()` | Get conversation details |
+| `messages.get_inbox_conversation_messages()` | Get messages in a conversation |
+| `messages.update_inbox_conversation()` | Update conversation status |
+| `messages.send_inbox_message()` | Send a message |
+
+### Reviews (Inbox)
+| Method | Description |
+|--------|-------------|
+| `reviews.list_inbox_reviews()` | List reviews across all accounts |
+| `reviews.delete_inbox_review_reply()` | Delete a review reply |
+| `reviews.reply_to_inbox_review()` | Reply to a review |
+
 ### Invites
 | Method | Description |
 |--------|-------------|
