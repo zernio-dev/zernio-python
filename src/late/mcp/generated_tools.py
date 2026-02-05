@@ -998,6 +998,38 @@ def register_generated_tools(mcp, _get_client):
         except Exception as e:
             return f'Error: {e}'
 
+    # GMB ATTRIBUTES
+
+
+    @mcp.tool()
+    def gmb attributes_get_google_business_attributes(account_id: str) -> str:
+        """Get Google Business Profile location attributes
+
+        Args:
+            account_id: (required)"""
+        client = _get_client()
+        try:
+            response = client.gmb attributes.get_google_business_attributes(account_id=account_id)
+            return _format_response(response)
+        except Exception as e:
+            return f'Error: {e}'
+
+
+    @mcp.tool()
+    def gmb attributes_update_google_business_attributes(account_id: str, attributes: str, attribute_mask: str) -> str:
+        """Update Google Business Profile location attributes
+
+        Args:
+            account_id: (required)
+            attributes: (required)
+            attribute_mask: Comma-separated attribute names to update (e.g. 'has_delivery,has_takeout') (required)"""
+        client = _get_client()
+        try:
+            response = client.gmb attributes.update_google_business_attributes(account_id=account_id, attributes=attributes, attributeMask=attribute_mask)
+            return _format_response(response)
+        except Exception as e:
+            return f'Error: {e}'
+
     # GMB FOOD MENUS
 
 
@@ -1026,6 +1058,145 @@ def register_generated_tools(mcp, _get_client):
         client = _get_client()
         try:
             response = client.gmb food menus.update_google_business_food_menus(account_id=account_id, menus=menus, updateMask=update_mask)
+            return _format_response(response)
+        except Exception as e:
+            return f'Error: {e}'
+
+    # GMB LOCATION DETAILS
+
+
+    @mcp.tool()
+    def gmb location details_get_google_business_location_details(account_id: str, read_mask: str = "") -> str:
+        """Get Google Business Profile location details
+
+        Args:
+            account_id: The Late account ID (from /v1/accounts) (required)
+            read_mask: Comma-separated fields to return. Defaults to common fields.
+    Available: name, title, phoneNumbers, categories, storefrontAddress, websiteUri,
+    regularHours, specialHours, serviceArea, profile, openInfo, metadata, moreHours"""
+        client = _get_client()
+        try:
+            response = client.gmb location details.get_google_business_location_details(account_id=account_id, read_mask=read_mask)
+            return _format_response(response)
+        except Exception as e:
+            return f'Error: {e}'
+
+
+    @mcp.tool()
+    def gmb location details_update_google_business_location_details(account_id: str, update_mask: str, regular_hours: str = "", special_hours: str = "", profile: str = "", website_uri: str = "", phone_numbers: str = "") -> str:
+        """Update Google Business Profile location details
+
+        Args:
+            account_id: The Late account ID (from /v1/accounts) (required)
+            update_mask: Required. Comma-separated fields to update (e.g. 'regularHours', 'specialHours', 'profile.description') (required)
+            regular_hours
+            special_hours
+            profile
+            website_uri
+            phone_numbers"""
+        client = _get_client()
+        try:
+            response = client.gmb location details.update_google_business_location_details(account_id=account_id, updateMask=update_mask, regularHours=regular_hours, specialHours=special_hours, profile=profile, websiteUri=website_uri, phoneNumbers=phone_numbers)
+            return _format_response(response)
+        except Exception as e:
+            return f'Error: {e}'
+
+    # GMB MEDIA
+
+
+    @mcp.tool()
+    def gmb media_list_google_business_media(account_id: str, page_size: int = 100, page_token: str = "") -> str:
+        """List Google Business Profile media (photos)
+
+        Args:
+            account_id: (required)
+            page_size: Number of items to return (max 100)
+            page_token: Pagination token from previous response"""
+        client = _get_client()
+        try:
+            response = client.gmb media.list_google_business_media(account_id=account_id, page_size=page_size, page_token=page_token)
+            return _format_response(response)
+        except Exception as e:
+            return f'Error: {e}'
+
+
+    @mcp.tool()
+    def gmb media_create_google_business_media(account_id: str, source_url: str, media_format: str = "PHOTO", description: str = "", category: str = "") -> str:
+        """Upload a photo to Google Business Profile
+
+        Args:
+            account_id: (required)
+            source_url: Publicly accessible image URL (required)
+            media_format
+            description: Photo description
+            category: Where the photo appears on the listing"""
+        client = _get_client()
+        try:
+            response = client.gmb media.create_google_business_media(account_id=account_id, sourceUrl=source_url, mediaFormat=media_format, description=description, category=category)
+            return _format_response(response)
+        except Exception as e:
+            return f'Error: {e}'
+
+
+    @mcp.tool()
+    def gmb media_delete_google_business_media(account_id: str, media_id: str) -> str:
+        """Delete a photo from Google Business Profile
+
+        Args:
+            account_id: (required)
+            media_id: The media item ID to delete (required)"""
+        client = _get_client()
+        try:
+            response = client.gmb media.delete_google_business_media(account_id=account_id, media_id=media_id)
+            return _format_response(response)
+        except Exception as e:
+            return f'Error: {e}'
+
+    # GMB PLACE ACTIONS
+
+
+    @mcp.tool()
+    def gmb place actions_list_google_business_place_actions(account_id: str, page_size: int = 100, page_token: str = "") -> str:
+        """List place action links (booking, ordering, reservations)
+
+        Args:
+            account_id: (required)
+            page_size
+            page_token"""
+        client = _get_client()
+        try:
+            response = client.gmb place actions.list_google_business_place_actions(account_id=account_id, page_size=page_size, page_token=page_token)
+            return _format_response(response)
+        except Exception as e:
+            return f'Error: {e}'
+
+
+    @mcp.tool()
+    def gmb place actions_create_google_business_place_action(account_id: str, uri: str, place_action_type: str) -> str:
+        """Create a place action link (booking, ordering, reservation)
+
+        Args:
+            account_id: (required)
+            uri: The action URL (required)
+            place_action_type: Type of action (required)"""
+        client = _get_client()
+        try:
+            response = client.gmb place actions.create_google_business_place_action(account_id=account_id, uri=uri, placeActionType=place_action_type)
+            return _format_response(response)
+        except Exception as e:
+            return f'Error: {e}'
+
+
+    @mcp.tool()
+    def gmb place actions_delete_google_business_place_action(account_id: str, name: str) -> str:
+        """Delete a place action link
+
+        Args:
+            account_id: (required)
+            name: The resource name of the place action link (e.g. locations/123/placeActionLinks/456) (required)"""
+        client = _get_client()
+        try:
+            response = client.gmb place actions.delete_google_business_place_action(account_id=account_id, name=name)
             return _format_response(response)
         except Exception as e:
             return f'Error: {e}'

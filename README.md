@@ -328,11 +328,37 @@ except LateAPIError as e:
 | `comments.unhide_inbox_comment()` | Unhide a comment |
 | `comments.unlike_inbox_comment()` | Unlike a comment |
 
+### GMB Attributes
+| Method | Description |
+|--------|-------------|
+| `gmb_attributes.get_google_business_attributes()` | Get Google Business Profile location attributes |
+| `gmb_attributes.update_google_business_attributes()` | Update Google Business Profile location attributes |
+
 ### GMB Food Menus
 | Method | Description |
 |--------|-------------|
 | `gmb_food_menus.get_google_business_food_menus()` | Get Google Business Profile food menus |
 | `gmb_food_menus.update_google_business_food_menus()` | Update Google Business Profile food menus |
+
+### GMB Location Details
+| Method | Description |
+|--------|-------------|
+| `gmb_location_details.get_google_business_location_details()` | Get Google Business Profile location details |
+| `gmb_location_details.update_google_business_location_details()` | Update Google Business Profile location details |
+
+### GMB Media
+| Method | Description |
+|--------|-------------|
+| `gmb_media.list_google_business_media()` | List Google Business Profile media (photos) |
+| `gmb_media.create_google_business_media()` | Upload a photo to Google Business Profile |
+| `gmb_media.delete_google_business_media()` | Delete a photo from Google Business Profile |
+
+### GMB Place Actions
+| Method | Description |
+|--------|-------------|
+| `gmb_place_actions.list_google_business_place_actions()` | List place action links (booking, ordering, reservations) |
+| `gmb_place_actions.create_google_business_place_action()` | Create a place action link (booking, ordering, reservation) |
+| `gmb_place_actions.delete_google_business_place_action()` | Delete a place action link |
 
 ### Messages (Inbox)
 | Method | Description |
