@@ -26,6 +26,7 @@ tags:
   - name: Reddit Search
   - name: Facebook
   - name: GMB Reviews
+  - name: GMB Food Menus
   - name: LinkedIn Mentions
   - name: Pinterest
   - name: TikTok
@@ -140,6 +141,87 @@ components:
         details:
           type: object
           additionalProperties: true
+    FoodMenuLabel:
+      type: object
+      required: [displayName]
+      properties:
+        displayName: { type: string, description: Display name of the item/section/menu }
+        description: { type: string, description: Optional description }
+        languageCode: { type: string, description: "BCP-47 language code (e.g. en, es)" }
+    Money:
+      type: object
+      required: [currencyCode, units]
+      properties:
+        currencyCode: { type: string, description: "ISO 4217 currency code (e.g. USD, EUR)" }
+        units: { type: string, description: Whole units of the amount }
+        nanos: { type: integer, description: Nano units (10^-9) of the amount }
+    FoodMenuItemAttributes:
+      type: object
+      properties:
+        price: { $ref: '#/components/schemas/Money' }
+        spiciness: { type: string, description: "Spiciness level (e.g. MILD, MEDIUM, HOT)" }
+        allergen:
+          type: array
+          items: { type: string }
+          description: "Allergens (e.g. DAIRY, GLUTEN, SHELLFISH)"
+        dietaryRestriction:
+          type: array
+          items: { type: string }
+          description: "Dietary labels (e.g. VEGETARIAN, VEGAN, GLUTEN_FREE)"
+        servesNumPeople: { type: integer, description: Number of people the item serves }
+        preparationMethods:
+          type: array
+          items: { type: string }
+          description: "Preparation methods (e.g. GRILLED, FRIED)"
+        mediaKeys:
+          type: array
+          items: { type: string }
+          description: Media references for item photos
+    FoodMenuItem:
+      type: object
+      required: [labels]
+      properties:
+        labels:
+          type: array
+          items: { $ref: '#/components/schemas/FoodMenuLabel' }
+        attributes: { $ref: '#/components/schemas/FoodMenuItemAttributes' }
+        options:
+          type: array
+          items:
+            type: object
+            properties:
+              labels:
+                type: array
+                items: { $ref: '#/components/schemas/FoodMenuLabel' }
+              attributes: { $ref: '#/components/schemas/FoodMenuItemAttributes' }
+          description: Item variants/options (e.g. sizes, preparations)
+    FoodMenuSection:
+      type: object
+      required: [labels]
+      properties:
+        labels:
+          type: array
+          items: { $ref: '#/components/schemas/FoodMenuLabel' }
+        items:
+          type: array
+          items: { $ref: '#/components/schemas/FoodMenuItem' }
+    FoodMenu:
+      type: object
+      required: [labels]
+      properties:
+        labels:
+          type: array
+          items: { $ref: '#/components/schemas/FoodMenuLabel' }
+        sections:
+          type: array
+          items: { $ref: '#/components/schemas/FoodMenuSection' }
+        cuisines:
+          type: array
+          items: { type: string }
+          description: "Cuisine types (e.g. AMERICAN, ITALIAN, JAPANESE)"
+        sourceUrl:
+          type: string
+          description: URL of the original menu source
     YouTubeDailyViewsResponse:
       type: object
       properties:
@@ -1438,6 +1520,7 @@ components:
         likes: { type: integer, example: 0 }
         comments: { type: integer, example: 0 }
         shares: { type: integer, example: 0 }
+        saves: { type: integer, example: 0, description: 'Number of saves/bookmarks (Instagram, Pinterest)' }
         clicks: { type: integer, example: 0 }
         views: { type: integer, example: 0 }
         engagementRate: { type: number, example: 0 }
@@ -5293,6 +5376,186 @@ paths:
         '404': { $ref: '#/components/responses/NotFound' }
         '500':
           description: Failed to fetch reviews
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ErrorResponse' }
+
+  /v1/accounts/{accountId}/gmb-food-menus:
+    get:
+      operationId: getGoogleBusinessFoodMenus
+      tags: [GMB Food Menus]
+      summary: Get Google Business Profile food menus
+      description: |
+        Fetches food menus for a connected Google Business Profile location.
+
+        Returns the full menu structure including:
+        - Menu names and descriptions
+        - Sections (e.g. Appetizers, Entrees, Drinks)
+        - Items with labels, pricing, dietary info, and allergens
+        - Item options/variants
+
+        Only available for locations with food menu support (restaurants, cafes, etc.).
+      parameters:
+        - name: accountId
+          in: path
+          required: true
+          schema: { type: string }
+          description: The Late account ID (from /v1/accounts)
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Food menus fetched successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success: { type: boolean }
+                  accountId: { type: string }
+                  locationId: { type: string }
+                  name: { type: string, description: Resource name of the food menus }
+                  menus:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/FoodMenu'
+              example:
+                success: true
+                accountId: "64e1f0a9e2b5af0012ab34cd"
+                locationId: "9281089117903930794"
+                name: "accounts/123456789/locations/9281089117903930794/foodMenus"
+                menus:
+                  - labels:
+                      - displayName: "Lunch Menu"
+                        description: "Available 11am-3pm"
+                        languageCode: "en"
+                    sections:
+                      - labels:
+                          - displayName: "Appetizers"
+                        items:
+                          - labels:
+                              - displayName: "Caesar Salad"
+                                description: "Romaine, parmesan, croutons"
+                            attributes:
+                              price:
+                                currencyCode: "USD"
+                                units: "12"
+                              dietaryRestriction: ["VEGETARIAN"]
+        '400':
+          description: Invalid request - not a Google Business account or missing location
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ErrorResponse' }
+              example:
+                error: "This endpoint is only available for Google Business Profile accounts"
+        '401':
+          description: Unauthorized or token expired
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ErrorResponse' }
+              example:
+                error: "Access token expired. Please reconnect your Google Business Profile account."
+        '403':
+          description: Permission denied for this location
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ErrorResponse' }
+              example:
+                error: "You do not have permission to access food menus for this location."
+        '404': { $ref: '#/components/responses/NotFound' }
+        '500':
+          description: Failed to fetch food menus
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ErrorResponse' }
+    put:
+      operationId: updateGoogleBusinessFoodMenus
+      tags: [GMB Food Menus]
+      summary: Update Google Business Profile food menus
+      description: |
+        Updates the food menus for a connected Google Business Profile location.
+
+        Send the full menus array. Use `updateMask` for partial updates (e.g. `"menus"` to only update the menus field).
+
+        Each menu can contain sections, and each section can contain items with pricing, dietary restrictions, allergens, and more.
+      parameters:
+        - name: accountId
+          in: path
+          required: true
+          schema: { type: string }
+          description: The Late account ID (from /v1/accounts)
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [menus]
+              properties:
+                menus:
+                  type: array
+                  items:
+                    $ref: '#/components/schemas/FoodMenu'
+                  description: Array of food menus to set
+                updateMask:
+                  type: string
+                  description: Field mask for partial updates (e.g. "menus")
+            example:
+              menus:
+                - labels:
+                    - displayName: "Dinner Menu"
+                      languageCode: "en"
+                  sections:
+                    - labels:
+                        - displayName: "Mains"
+                      items:
+                        - labels:
+                            - displayName: "Grilled Salmon"
+                              description: "With seasonal vegetables"
+                          attributes:
+                            price:
+                              currencyCode: "USD"
+                              units: "24"
+                            allergen: ["FISH"]
+              updateMask: "menus"
+      responses:
+        '200':
+          description: Food menus updated successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success: { type: boolean }
+                  accountId: { type: string }
+                  locationId: { type: string }
+                  name: { type: string }
+                  menus:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/FoodMenu'
+        '400':
+          description: Invalid request
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ErrorResponse' }
+              example:
+                error: "Request body must include a \"menus\" array"
+        '401':
+          description: Unauthorized or token expired
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ErrorResponse' }
+        '403':
+          description: Permission denied for this location
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ErrorResponse' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '500':
+          description: Failed to update food menus
           content:
             application/json:
               schema: { $ref: '#/components/schemas/ErrorResponse' }

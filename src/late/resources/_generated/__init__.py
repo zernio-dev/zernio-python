@@ -8,6 +8,7 @@ from .analytics import AnalyticsResource
 from .api_keys import ApiKeysResource
 from .comments import CommentsResource
 from .connect import ConnectResource
+from .gmb_food_menus import GmbFoodMenusResource
 from .invites import InvitesResource
 from .logs import LogsResource
 from .media import MediaResource
@@ -29,6 +30,7 @@ __all__ = [
     "ApiKeysResource",
     "CommentsResource",
     "ConnectResource",
+    "GmbFoodMenusResource",
     "InvitesResource",
     "LogsResource",
     "MediaResource",

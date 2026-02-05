@@ -723,7 +723,7 @@ wheels = [
 
 [[package]]
 name = "late-sdk"
-version = "1.2.24"
+version = "1.2.25"
 source = { editable = "." }
 dependencies = [
     { name = "httpx" },

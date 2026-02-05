@@ -328,6 +328,12 @@ except LateAPIError as e:
 | `comments.unhide_inbox_comment()` | Unhide a comment |
 | `comments.unlike_inbox_comment()` | Unlike a comment |
 
+### GMB Food Menus
+| Method | Description |
+|--------|-------------|
+| `gmb_food_menus.get_google_business_food_menus()` | Get Google Business Profile food menus |
+| `gmb_food_menus.update_google_business_food_menus()` | Update Google Business Profile food menus |
+
 ### Messages (Inbox)
 | Method | Description |
 |--------|-------------|
