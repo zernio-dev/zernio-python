@@ -130,6 +130,155 @@ class AccountsResource:
             f"/v1/accounts/{account_id}/gmb-reviews", params=params
         )
 
+    def get_google_business_food_menus(self, account_id: str) -> dict[str, Any]:
+        """Get Google Business Profile food menus"""
+        return self._client._get(f"/v1/accounts/{account_id}/gmb-food-menus")
+
+    def update_google_business_food_menus(
+        self, account_id: str, menus: list[Any], *, update_mask: str | None = None
+    ) -> dict[str, Any]:
+        """Update Google Business Profile food menus"""
+        payload = self._build_payload(
+            menus=menus,
+            update_mask=update_mask,
+        )
+        return self._client._put(
+            f"/v1/accounts/{account_id}/gmb-food-menus", data=payload
+        )
+
+    def get_google_business_location_details(
+        self, account_id: str, *, read_mask: str | None = None
+    ) -> dict[str, Any]:
+        """Get Google Business Profile location details"""
+        params = self._build_params(
+            read_mask=read_mask,
+        )
+        return self._client._get(
+            f"/v1/accounts/{account_id}/gmb-location-details", params=params
+        )
+
+    def update_google_business_location_details(
+        self,
+        account_id: str,
+        update_mask: str,
+        *,
+        regular_hours: dict[str, Any] | None = None,
+        special_hours: dict[str, Any] | None = None,
+        profile: dict[str, Any] | None = None,
+        website_uri: str | None = None,
+        phone_numbers: dict[str, Any] | None = None,
+    ) -> dict[str, Any]:
+        """Update Google Business Profile location details"""
+        payload = self._build_payload(
+            update_mask=update_mask,
+            regular_hours=regular_hours,
+            special_hours=special_hours,
+            profile=profile,
+            website_uri=website_uri,
+            phone_numbers=phone_numbers,
+        )
+        return self._client._put(
+            f"/v1/accounts/{account_id}/gmb-location-details", data=payload
+        )
+
+    def list_google_business_media(
+        self,
+        account_id: str,
+        *,
+        page_size: int | None = 100,
+        page_token: str | None = None,
+    ) -> dict[str, Any]:
+        """List Google Business Profile media (photos)"""
+        params = self._build_params(
+            page_size=page_size,
+            page_token=page_token,
+        )
+        return self._client._get(f"/v1/accounts/{account_id}/gmb-media", params=params)
+
+    def create_google_business_media(
+        self,
+        account_id: str,
+        source_url: str,
+        *,
+        media_format: str | None = "PHOTO",
+        description: str | None = None,
+        category: str | None = None,
+    ) -> dict[str, Any]:
+        """Upload a photo to Google Business Profile"""
+        payload = self._build_payload(
+            source_url=source_url,
+            media_format=media_format,
+            description=description,
+            category=category,
+        )
+        return self._client._post(f"/v1/accounts/{account_id}/gmb-media", data=payload)
+
+    def delete_google_business_media(
+        self, account_id: str, media_id: str
+    ) -> dict[str, Any]:
+        """Delete a photo from Google Business Profile"""
+        params = self._build_params(
+            media_id=media_id,
+        )
+        return self._client._delete(
+            f"/v1/accounts/{account_id}/gmb-media", params=params
+        )
+
+    def get_google_business_attributes(self, account_id: str) -> dict[str, Any]:
+        """Get Google Business Profile location attributes"""
+        return self._client._get(f"/v1/accounts/{account_id}/gmb-attributes")
+
+    def update_google_business_attributes(
+        self, account_id: str, attributes: list[dict[str, Any]], attribute_mask: str
+    ) -> dict[str, Any]:
+        """Update Google Business Profile location attributes"""
+        payload = self._build_payload(
+            attributes=attributes,
+            attribute_mask=attribute_mask,
+        )
+        return self._client._put(
+            f"/v1/accounts/{account_id}/gmb-attributes", data=payload
+        )
+
+    def list_google_business_place_actions(
+        self,
+        account_id: str,
+        *,
+        page_size: int | None = 100,
+        page_token: str | None = None,
+    ) -> dict[str, Any]:
+        """List place action links (booking, ordering, reservations)"""
+        params = self._build_params(
+            page_size=page_size,
+            page_token=page_token,
+        )
+        return self._client._get(
+            f"/v1/accounts/{account_id}/gmb-place-actions", params=params
+        )
+
+    def create_google_business_place_action(
+        self, account_id: str, uri: str, place_action_type: str
+    ) -> dict[str, Any]:
+        """Create a place action link (booking, ordering, reservation)"""
+        payload = self._build_payload(
+            uri=uri,
+            place_action_type=place_action_type,
+        )
+        return self._client._post(
+            f"/v1/accounts/{account_id}/gmb-place-actions", data=payload
+        )
+
+    def delete_google_business_place_action(
+        self, account_id: str, name: str
+    ) -> dict[str, Any]:
+        """Delete a place action link"""
+        params = self._build_params(
+            name=name,
+        )
+        return self._client._delete(
+            f"/v1/accounts/{account_id}/gmb-place-actions", params=params
+        )
+
     def get_linked_in_mentions(
         self, account_id: str, url: str, *, display_name: str | None = None
     ) -> dict[str, Any]:
@@ -222,6 +371,159 @@ class AccountsResource:
         )
         return await self._client._aget(
             f"/v1/accounts/{account_id}/gmb-reviews", params=params
+        )
+
+    async def aget_google_business_food_menus(self, account_id: str) -> dict[str, Any]:
+        """Get Google Business Profile food menus (async)"""
+        return await self._client._aget(f"/v1/accounts/{account_id}/gmb-food-menus")
+
+    async def aupdate_google_business_food_menus(
+        self, account_id: str, menus: list[Any], *, update_mask: str | None = None
+    ) -> dict[str, Any]:
+        """Update Google Business Profile food menus (async)"""
+        payload = self._build_payload(
+            menus=menus,
+            update_mask=update_mask,
+        )
+        return await self._client._aput(
+            f"/v1/accounts/{account_id}/gmb-food-menus", data=payload
+        )
+
+    async def aget_google_business_location_details(
+        self, account_id: str, *, read_mask: str | None = None
+    ) -> dict[str, Any]:
+        """Get Google Business Profile location details (async)"""
+        params = self._build_params(
+            read_mask=read_mask,
+        )
+        return await self._client._aget(
+            f"/v1/accounts/{account_id}/gmb-location-details", params=params
+        )
+
+    async def aupdate_google_business_location_details(
+        self,
+        account_id: str,
+        update_mask: str,
+        *,
+        regular_hours: dict[str, Any] | None = None,
+        special_hours: dict[str, Any] | None = None,
+        profile: dict[str, Any] | None = None,
+        website_uri: str | None = None,
+        phone_numbers: dict[str, Any] | None = None,
+    ) -> dict[str, Any]:
+        """Update Google Business Profile location details (async)"""
+        payload = self._build_payload(
+            update_mask=update_mask,
+            regular_hours=regular_hours,
+            special_hours=special_hours,
+            profile=profile,
+            website_uri=website_uri,
+            phone_numbers=phone_numbers,
+        )
+        return await self._client._aput(
+            f"/v1/accounts/{account_id}/gmb-location-details", data=payload
+        )
+
+    async def alist_google_business_media(
+        self,
+        account_id: str,
+        *,
+        page_size: int | None = 100,
+        page_token: str | None = None,
+    ) -> dict[str, Any]:
+        """List Google Business Profile media (photos) (async)"""
+        params = self._build_params(
+            page_size=page_size,
+            page_token=page_token,
+        )
+        return await self._client._aget(
+            f"/v1/accounts/{account_id}/gmb-media", params=params
+        )
+
+    async def acreate_google_business_media(
+        self,
+        account_id: str,
+        source_url: str,
+        *,
+        media_format: str | None = "PHOTO",
+        description: str | None = None,
+        category: str | None = None,
+    ) -> dict[str, Any]:
+        """Upload a photo to Google Business Profile (async)"""
+        payload = self._build_payload(
+            source_url=source_url,
+            media_format=media_format,
+            description=description,
+            category=category,
+        )
+        return await self._client._apost(
+            f"/v1/accounts/{account_id}/gmb-media", data=payload
+        )
+
+    async def adelete_google_business_media(
+        self, account_id: str, media_id: str
+    ) -> dict[str, Any]:
+        """Delete a photo from Google Business Profile (async)"""
+        params = self._build_params(
+            media_id=media_id,
+        )
+        return await self._client._adelete(
+            f"/v1/accounts/{account_id}/gmb-media", params=params
+        )
+
+    async def aget_google_business_attributes(self, account_id: str) -> dict[str, Any]:
+        """Get Google Business Profile location attributes (async)"""
+        return await self._client._aget(f"/v1/accounts/{account_id}/gmb-attributes")
+
+    async def aupdate_google_business_attributes(
+        self, account_id: str, attributes: list[dict[str, Any]], attribute_mask: str
+    ) -> dict[str, Any]:
+        """Update Google Business Profile location attributes (async)"""
+        payload = self._build_payload(
+            attributes=attributes,
+            attribute_mask=attribute_mask,
+        )
+        return await self._client._aput(
+            f"/v1/accounts/{account_id}/gmb-attributes", data=payload
+        )
+
+    async def alist_google_business_place_actions(
+        self,
+        account_id: str,
+        *,
+        page_size: int | None = 100,
+        page_token: str | None = None,
+    ) -> dict[str, Any]:
+        """List place action links (booking, ordering, reservations) (async)"""
+        params = self._build_params(
+            page_size=page_size,
+            page_token=page_token,
+        )
+        return await self._client._aget(
+            f"/v1/accounts/{account_id}/gmb-place-actions", params=params
+        )
+
+    async def acreate_google_business_place_action(
+        self, account_id: str, uri: str, place_action_type: str
+    ) -> dict[str, Any]:
+        """Create a place action link (booking, ordering, reservation) (async)"""
+        payload = self._build_payload(
+            uri=uri,
+            place_action_type=place_action_type,
+        )
+        return await self._client._apost(
+            f"/v1/accounts/{account_id}/gmb-place-actions", data=payload
+        )
+
+    async def adelete_google_business_place_action(
+        self, account_id: str, name: str
+    ) -> dict[str, Any]:
+        """Delete a place action link (async)"""
+        params = self._build_params(
+            name=name,
+        )
+        return await self._client._adelete(
+            f"/v1/accounts/{account_id}/gmb-place-actions", params=params
         )
 
     async def aget_linked_in_mentions(
