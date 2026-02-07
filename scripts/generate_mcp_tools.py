@@ -40,6 +40,11 @@ TAG_TO_RESOURCE: dict[str, str] = {
     "Reddit Search": "reddit",
     "Invites": "invites",
     "GMB Reviews": "accounts",
+    "GMB Food Menus": "accounts",
+    "GMB Location Details": "accounts",
+    "GMB Media": "accounts",
+    "GMB Attributes": "accounts",
+    "GMB Place Actions": "accounts",
     "LinkedIn Mentions": "accounts",
 }
 
@@ -276,7 +281,7 @@ def main() -> int:
                 continue
 
             tags = operation.get("tags", ["Other"])
-            resource = TAG_TO_RESOURCE.get(tags[0], tags[0].lower())
+            resource = TAG_TO_RESOURCE.get(tags[0], tags[0].lower().replace(" ", "_"))
 
             # Generate tool name from operationId
             sdk_method = camel_to_snake(operation_id)

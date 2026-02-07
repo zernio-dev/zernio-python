@@ -41,6 +41,11 @@ TAG_TO_RESOURCE: dict[str, str] = {
     "Reddit Search": "reddit",
     "Invites": "invites",
     "GMB Reviews": "accounts",  # Group under accounts
+    "GMB Food Menus": "accounts",  # Group under accounts
+    "GMB Location Details": "accounts",  # Group under accounts
+    "GMB Media": "accounts",  # Group under accounts
+    "GMB Attributes": "accounts",  # Group under accounts
+    "GMB Place Actions": "accounts",  # Group under accounts
     "LinkedIn Mentions": "accounts",  # Group under accounts
 }
 
