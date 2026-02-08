@@ -795,6 +795,7 @@ components:
             - $ref: '#/components/schemas/SocialAccount'
         customContent:
           type: string
+          description: Platform-specific text override. When set, this content is used instead of the top-level post content for this platform. Useful for tailoring captions per platform (e.g. keeping tweets under 280 characters).
         customMedia:
           type: array
           items:
@@ -3379,7 +3380,9 @@ paths:
                     properties:
                       platform: { type: string, example: twitter }
                       accountId: { type: string }
-                      customContent: { type: string }
+                      customContent:
+                        type: string
+                        description: Platform-specific text override. When set, this content is used instead of the top-level post content for this platform. Useful for tailoring captions per platform (e.g. keeping tweets under 280 characters).
                       customMedia:
                         type: array
                         items:
