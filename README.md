@@ -274,7 +274,9 @@ except LateAPIError as e:
 ### Logs
 | Method | Description |
 |--------|-------------|
-| `logs.list_logs()` | Get publishing logs |
+| `logs.list_connection_logs()` | Get connection logs |
+| `logs.list_logs()` | Get publishing logs (deprecated) |
+| `logs.list_posts_logs()` | Get publishing logs |
 | `logs.get_log()` | Get a single log entry |
 | `logs.get_post_logs()` | Get logs for a specific post |
 

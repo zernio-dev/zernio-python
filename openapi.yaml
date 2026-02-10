@@ -716,6 +716,97 @@ components:
             metadata:
               type: object
               description: Additional metadata (e.g., rate limit info)
+    ConnectionLog:
+      type: object
+      description: Connection event log showing account connection/disconnection history
+      properties:
+        _id:
+          type: string
+        userId:
+          type: string
+          description: User who owns the connection (may be null for early OAuth failures)
+        profileId:
+          type: string
+        accountId:
+          type: string
+          description: The social account ID (present on successful connections and disconnects)
+        platform:
+          type: string
+          enum: [tiktok, instagram, facebook, youtube, linkedin, twitter, threads, pinterest, reddit, bluesky, googlebusiness, telegram, snapchat]
+        eventType:
+          type: string
+          enum: [connect_success, connect_failed, disconnect, reconnect_success, reconnect_failed]
+          description: |
+            Type of connection event:
+            - `connect_success` - New account connected successfully
+            - `connect_failed` - Connection attempt failed
+            - `disconnect` - Account was disconnected
+            - `reconnect_success` - Existing account reconnected successfully
+            - `reconnect_failed` - Reconnection attempt failed
+        connectionMethod:
+          type: string
+          enum: [oauth, credentials, invitation]
+          description: How the connection was initiated
+        error:
+          type: object
+          description: Error details (present on failed events)
+          properties:
+            code:
+              type: string
+              description: Error code (e.g., oauth_denied, token_exchange_failed)
+            message:
+              type: string
+              description: Human-readable error message
+            rawResponse:
+              type: string
+              description: Raw error response (truncated to 2000 chars)
+        success:
+          type: object
+          description: Success details (present on successful events)
+          properties:
+            displayName:
+              type: string
+            username:
+              type: string
+            profilePicture:
+              type: string
+            permissions:
+              type: array
+              items:
+                type: string
+              description: OAuth scopes/permissions granted
+            tokenExpiresAt:
+              type: string
+              format: date-time
+            accountType:
+              type: string
+              description: Account type (personal, business, organization)
+        context:
+          type: object
+          description: Additional context about the connection attempt
+          properties:
+            isHeadlessMode:
+              type: boolean
+            hasCustomRedirectUrl:
+              type: boolean
+            isReconnection:
+              type: boolean
+            isBYOK:
+              type: boolean
+              description: Using bring-your-own-keys
+            invitationToken:
+              type: string
+            connectToken:
+              type: string
+        durationMs:
+          type: integer
+          description: How long the operation took in milliseconds
+        metadata:
+          type: object
+          description: Additional metadata
+        createdAt:
+          type: string
+          format: date-time
     MediaItem:
       type: object
       description: |
@@ -818,6 +909,8 @@ components:
             - $ref: '#/components/schemas/TikTokPlatformData'
             - $ref: '#/components/schemas/TelegramPlatformData'
             - $ref: '#/components/schemas/SnapchatPlatformData'
+            - $ref: '#/components/schemas/RedditPlatformData'
+            - $ref: '#/components/schemas/BlueskyPlatformData'
           additionalProperties: true
         status:
           type: string
@@ -1374,6 +1467,59 @@ components:
         **Analytics:**
         - Views, screenshots, shares, unique viewers, completion rate available
         - Analytics are fetched per content type (story/saved_story/spotlight)
+
+    RedditPlatformData:
+      type: object
+      properties:
+        subreddit:
+          type: string
+          description: |
+            Target subreddit name (without "r/" prefix).
+            Overrides the default subreddit configured on the account connection.
+            Use GET /api/v1/accounts/{id}/reddit-subreddits to list available subreddits.
+          example: socialmedia
+        title:
+          type: string
+          maxLength: 300
+          description: Post title. Defaults to the first line of content, truncated to 300 characters.
+        url:
+          type: string
+          format: uri
+          description: URL for link posts. If provided (and forceSelf is not true), creates a link post instead of a text post.
+        forceSelf:
+          type: boolean
+          description: When true, creates a text/self post even when a URL or media is provided.
+      description: |
+        Reddit post settings:
+        - Posts are either "link" (with URL/media) or "self" (text-only)
+        - If media is provided, the first media item's URL is used as the link
+        - Use forceSelf to override and create a text post with the URL in the body
+        - Subreddit defaults to the account's configured subreddit if omitted
+        - Use the same accountId multiple times with different subreddit values in platformSpecificData to post to multiple subreddits
+        - Images are automatically compressed if they exceed Reddit's 20MB limit
+
+    BlueskyPlatformData:
+      type: object
+      properties:
+        threadItems:
+          type: array
+          description: Sequence of posts in a Bluesky thread (root then replies in order).
+          items:
+            type: object
+            properties:
+              content:
+                type: string
+              mediaItems:
+                type: array
+                items:
+                  $ref: '#/components/schemas/MediaItem'
+      description: |
+        Bluesky post settings:
+        - Supports text posts with up to 4 images per post
+        - Videos supported (single video per post)
+        - threadItems creates a reply chain (Bluesky thread)
+        - Images exceeding Bluesky's 1MB limit are automatically compressed
+        - Alt text for images is supported via mediaItem properties
 
     QueueSlot:
       type: object
@@ -3403,9 +3549,12 @@ paths:
                           - $ref: '#/components/schemas/LinkedInPlatformData'
                           - $ref: '#/components/schemas/PinterestPlatformData'
                           - $ref: '#/components/schemas/YouTubePlatformData'
+                          - $ref: '#/components/schemas/GoogleBusinessPlatformData'
                           - $ref: '#/components/schemas/TikTokPlatformData'
                           - $ref: '#/components/schemas/TelegramPlatformData'
                           - $ref: '#/components/schemas/SnapchatPlatformData'
+                          - $ref: '#/components/schemas/RedditPlatformData'
+                          - $ref: '#/components/schemas/BlueskyPlatformData'
                 scheduledFor: { type: string, format: date-time }
                 publishNow: { type: boolean, default: false }
                 isDraft: { type: boolean, default: false }
@@ -8811,9 +8960,12 @@ paths:
   /v1/logs:
     get:
       operationId: listLogs
+      deprecated: true
       tags: [Logs]
-      summary: Get publishing logs
+      summary: Get publishing logs (deprecated)
       description: |
+        **Deprecated:** Use `/v1/posts/logs` instead. This endpoint is maintained for backwards compatibility.
+
         Retrieve publishing logs for all posts. Logs show detailed information about each
         publishing attempt including API requests, responses, and timing data.
 
@@ -8995,6 +9147,254 @@ paths:
         '403':
           description: Forbidden - not authorized to view this log
         '404': { $ref: '#/components/responses/NotFound' }
+
+  /v1/posts/logs:
+    get:
+      operationId: listPostsLogs
+      tags: [Logs]
+      summary: Get publishing logs
+      description: |
+        Retrieve publishing logs for all posts. Logs show detailed information about each
+        publishing attempt including API requests, responses, and timing data.
+
+        **Filtering:**
+        - Filter by status (success, failed, pending, skipped)
+        - Filter by platform (instagram, twitter, linkedin, etc.)
+        - Filter by action (publish, retry, rate_limit_pause, etc.)
+
+        **Retention:** Logs are automatically deleted after 7 days.
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: status
+          in: query
+          description: Filter by log status
+          schema:
+            type: string
+            enum: [success, failed, pending, skipped, all]
+        - name: platform
+          in: query
+          description: Filter by platform
+          schema:
+            type: string
+            enum: [tiktok, instagram, facebook, youtube, linkedin, twitter, threads, pinterest, reddit, bluesky, googlebusiness, telegram, snapchat, all]
+        - name: action
+          in: query
+          description: Filter by action type
+          schema:
+            type: string
+            enum: [publish, retry, media_upload, rate_limit_pause, token_refresh, cancelled, all]
+        - name: days
+          in: query
+          description: Number of days to look back (max 7)
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 7
+            default: 7
+        - name: limit
+          in: query
+          description: Maximum number of logs to return (max 100)
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 50
+        - name: skip
+          in: query
+          description: Number of logs to skip (for pagination)
+          schema:
+            type: integer
+            minimum: 0
+            default: 0
+      responses:
+        '200':
+          description: Publishing logs retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  logs:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/PostLog'
+                  pagination:
+                    type: object
+                    properties:
+                      total:
+                        type: integer
+                        description: Total number of logs matching the query
+                      limit:
+                        type: integer
+                      skip:
+                        type: integer
+                      pages:
+                        type: integer
+                        description: Total number of pages
+                      hasMore:
+                        type: boolean
+              example:
+                logs:
+                  - _id: "675f1c0a9e2b5af0012ab34cd"
+                    postId:
+                      _id: "65f1c0a9e2b5af0012ab34cd"
+                      content: "Check out our new feature!"
+                      status: "published"
+                    userId: "64e1f0a9e2b5af0012ab34de"
+                    platform: "instagram"
+                    accountId: "64e1f0a9e2b5af0012ab34ef"
+                    accountUsername: "@acmecorp"
+                    action: "publish"
+                    status: "success"
+                    statusCode: 200
+                    endpoint: "graph.facebook.com/me/media_publish"
+                    request:
+                      contentPreview: "Check out our new feature!"
+                      mediaCount: 1
+                      mediaTypes: ["image"]
+                      mediaUrls: ["https://storage.getlate.dev/abc123.jpg"]
+                    response:
+                      platformPostId: "17895695668004550"
+                      platformPostUrl: "https://www.instagram.com/p/ABC123/"
+                    durationMs: 2340
+                    attemptNumber: 1
+                    createdAt: "2024-11-01T10:00:05Z"
+                pagination:
+                  total: 150
+                  limit: 50
+                  skip: 0
+                  pages: 3
+                  hasMore: true
+        '401': { $ref: '#/components/responses/Unauthorized' }
+
+  /v1/connections/logs:
+    get:
+      operationId: listConnectionLogs
+      tags: [Logs]
+      summary: Get connection logs
+      description: |
+        Retrieve connection event logs showing account connection and disconnection history.
+        Useful for debugging OAuth issues and tracking account lifecycle.
+
+        **Event Types:**
+        - `connect_success` - New account connected successfully
+        - `connect_failed` - Connection attempt failed
+        - `disconnect` - Account was disconnected
+        - `reconnect_success` - Existing account reconnected
+        - `reconnect_failed` - Reconnection attempt failed
+
+        **Retention:** Logs are automatically deleted after 7 days.
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: platform
+          in: query
+          description: Filter by platform
+          schema:
+            type: string
+            enum: [tiktok, instagram, facebook, youtube, linkedin, twitter, threads, pinterest, reddit, bluesky, googlebusiness, telegram, snapchat, all]
+        - name: eventType
+          in: query
+          description: Filter by event type
+          schema:
+            type: string
+            enum: [connect_success, connect_failed, disconnect, reconnect_success, reconnect_failed, all]
+        - name: status
+          in: query
+          description: Filter by status (shorthand for event types)
+          schema:
+            type: string
+            enum: [success, failed, all]
+            description: success = connect_success + reconnect_success, failed = connect_failed + reconnect_failed
+        - name: days
+          in: query
+          description: Number of days to look back (max 7)
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 7
+            default: 7
+        - name: limit
+          in: query
+          description: Maximum number of logs to return (max 100)
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 50
+        - name: skip
+          in: query
+          description: Number of logs to skip (for pagination)
+          schema:
+            type: integer
+            minimum: 0
+            default: 0
+      responses:
+        '200':
+          description: Connection logs retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  logs:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/ConnectionLog'
+                  pagination:
+                    type: object
+                    properties:
+                      total:
+                        type: integer
+                        description: Total number of logs matching the query
+                      limit:
+                        type: integer
+                      skip:
+                        type: integer
+                      pages:
+                        type: integer
+                        description: Total number of pages
+                      hasMore:
+                        type: boolean
+              example:
+                logs:
+                  - _id: "675f1c0a9e2b5af0012ab34cd"
+                    userId: "64e1f0a9e2b5af0012ab34de"
+                    profileId: "64e1f0a9e2b5af0012ab34ef"
+                    accountId: "64e1f0a9e2b5af0012ab3500"
+                    platform: "instagram"
+                    eventType: "connect_success"
+                    connectionMethod: "oauth"
+                    success:
+                      displayName: "Acme Corp"
+                      username: "acmecorp"
+                      profilePicture: "https://..."
+                      permissions: ["instagram_basic", "instagram_content_publish"]
+                      tokenExpiresAt: "2024-12-01T10:00:00Z"
+                      accountType: "business"
+                    context:
+                      hasCustomRedirectUrl: false
+                    createdAt: "2024-11-01T10:00:00Z"
+                  - _id: "675f1c0a9e2b5af0012ab34ce"
+                    userId: "64e1f0a9e2b5af0012ab34de"
+                    profileId: "64e1f0a9e2b5af0012ab34ef"
+                    platform: "twitter"
+                    eventType: "connect_failed"
+                    connectionMethod: "oauth"
+                    error:
+                      code: "oauth_denied"
+                      message: "OAuth error: access_denied"
+                    context:
+                      hasCustomRedirectUrl: true
+                    createdAt: "2024-11-01T09:00:00Z"
+                pagination:
+                  total: 25
+                  limit: 50
+                  skip: 0
+                  pages: 1
+                  hasMore: false
+        '401': { $ref: '#/components/responses/Unauthorized' }
 
   /v1/posts/{postId}/logs:
     get:
@@ -9500,6 +9900,7 @@ paths:
         - name: postId
           in: path
           required: true
+          description: The post identifier. Accepts a Late post ID (MongoDB ObjectId) which is automatically resolved to the platform-specific post ID, or a platform-specific post ID directly (e.g. tweet ID, Facebook Graph ID, YouTube video ID).
           schema: { type: string }
         - name: accountId
           in: query
@@ -9593,6 +9994,7 @@ paths:
         - name: postId
           in: path
           required: true
+          description: The post identifier. Accepts a Late post ID or a platform-specific post ID.
           schema: { type: string }
       requestBody:
         required: true
@@ -9639,6 +10041,7 @@ paths:
         - name: postId
           in: path
           required: true
+          description: The post identifier. Accepts a Late post ID or a platform-specific post ID.
           schema: { type: string }
         - name: accountId
           in: query

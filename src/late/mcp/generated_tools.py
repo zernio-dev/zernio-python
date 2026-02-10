@@ -733,7 +733,7 @@ def register_generated_tools(mcp, _get_client):
         """Get comments for a post
 
         Args:
-            post_id: (required)
+            post_id: The post identifier. Accepts a Late post ID (MongoDB ObjectId) which is automatically resolved to the platform-specific post ID, or a platform-specific post ID directly (e.g. tweet ID, Facebook Graph ID, YouTube video ID). (required)
             account_id: (required)
             subreddit: (Reddit only) Subreddit name
             limit: Maximum number of comments to return
@@ -767,7 +767,7 @@ def register_generated_tools(mcp, _get_client):
         """Reply to a post or comment
 
         Args:
-            post_id: (required)
+            post_id: The post identifier. Accepts a Late post ID or a platform-specific post ID. (required)
             account_id: (required)
             message: (required)
             comment_id: Reply to specific comment (optional)
@@ -798,7 +798,7 @@ def register_generated_tools(mcp, _get_client):
         """Delete a comment
 
         Args:
-            post_id: (required)
+            post_id: The post identifier. Accepts a Late post ID or a platform-specific post ID. (required)
             account_id: (required)
             comment_id: (required)"""
         client = _get_client()
@@ -1501,7 +1501,7 @@ def register_generated_tools(mcp, _get_client):
         limit: int = 50,
         skip: int = 0,
     ) -> str:
-        """Get publishing logs
+        """Get publishing logs (deprecated)
 
         Args:
             status: Filter by log status
@@ -1533,6 +1533,70 @@ def register_generated_tools(mcp, _get_client):
         client = _get_client()
         try:
             response = client.logs.get_log(log_id=log_id)
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool()
+    def logs_list_posts_logs(
+        status: str = "",
+        platform: str = "",
+        action: str = "",
+        days: int = 7,
+        limit: int = 50,
+        skip: int = 0,
+    ) -> str:
+        """Get publishing logs
+
+        Args:
+            status: Filter by log status
+            platform: Filter by platform
+            action: Filter by action type
+            days: Number of days to look back (max 7)
+            limit: Maximum number of logs to return (max 100)
+            skip: Number of logs to skip (for pagination)"""
+        client = _get_client()
+        try:
+            response = client.logs.list_posts_logs(
+                status=status,
+                platform=platform,
+                action=action,
+                days=days,
+                limit=limit,
+                skip=skip,
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool()
+    def logs_list_connection_logs(
+        platform: str = "",
+        event_type: str = "",
+        status: str = "",
+        days: int = 7,
+        limit: int = 50,
+        skip: int = 0,
+    ) -> str:
+        """Get connection logs
+
+        Args:
+            platform: Filter by platform
+            event_type: Filter by event type
+            status: Filter by status (shorthand for event types)
+            days: Number of days to look back (max 7)
+            limit: Maximum number of logs to return (max 100)
+            skip: Number of logs to skip (for pagination)"""
+        client = _get_client()
+        try:
+            response = client.logs.list_connection_logs(
+                platform=platform,
+                event_type=event_type,
+                status=status,
+                days=days,
+                limit=limit,
+                skip=skip,
+            )
             return _format_response(response)
         except Exception as e:
             return f"Error: {e}"
