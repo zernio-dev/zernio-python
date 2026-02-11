@@ -540,6 +540,27 @@ components:
                   type: string
                 picture:
                   type: string
+                instagramProfile:
+                  type: object
+                  nullable: true
+                  description: Instagram profile data for the sender. Only present for Instagram conversations.
+                  properties:
+                    isFollower:
+                      type: boolean
+                      nullable: true
+                      description: Whether the sender follows your Instagram business account
+                    isFollowing:
+                      type: boolean
+                      nullable: true
+                      description: Whether your Instagram business account follows the sender
+                    followerCount:
+                      type: integer
+                      nullable: true
+                      description: The sender's follower count on Instagram
+                    isVerified:
+                      type: boolean
+                      nullable: true
+                      description: Whether the sender is a verified Instagram user
             sentAt:
               type: string
               format: date-time
@@ -9569,6 +9590,32 @@ paths:
                           type: string
                           nullable: true
                           description: Direct link to open the conversation on the platform (if available)
+                        instagramProfile:
+                          type: object
+                          nullable: true
+                          description: Instagram profile data for the participant. Only present for Instagram conversations.
+                          properties:
+                            isFollower:
+                              type: boolean
+                              nullable: true
+                              description: Whether the participant follows your Instagram business account
+                            isFollowing:
+                              type: boolean
+                              nullable: true
+                              description: Whether your Instagram business account follows the participant
+                            followerCount:
+                              type: integer
+                              nullable: true
+                              description: The participant's follower count on Instagram
+                            isVerified:
+                              type: boolean
+                              nullable: true
+                              description: Whether the participant is a verified Instagram user
+                            fetchedAt:
+                              type: string
+                              format: date-time
+                              nullable: true
+                              description: When this profile data was last fetched from Instagram
                   pagination:
                     type: object
                     properties:
@@ -9640,6 +9687,32 @@ paths:
                           properties:
                             id: { type: string }
                             name: { type: string }
+                      instagramProfile:
+                        type: object
+                        nullable: true
+                        description: Instagram profile data for the participant. Only present for Instagram conversations.
+                        properties:
+                          isFollower:
+                            type: boolean
+                            nullable: true
+                            description: Whether the participant follows your Instagram business account
+                          isFollowing:
+                            type: boolean
+                            nullable: true
+                            description: Whether your Instagram business account follows the participant
+                          followerCount:
+                            type: integer
+                            nullable: true
+                            description: The participant's follower count on Instagram
+                          isVerified:
+                            type: boolean
+                            nullable: true
+                            description: Whether the participant is a verified Instagram user
+                          fetchedAt:
+                            type: string
+                            format: date-time
+                            nullable: true
+                            description: When this profile data was last fetched from Instagram
         '401': { $ref: '#/components/responses/Unauthorized' }
         '403':
           description: Inbox addon required
