@@ -1802,14 +1802,29 @@ def register_generated_tools(mcp, _get_client):
             return f"Error: {e}"
 
     @mcp.tool()
-    def posts_update_post(post_id: str) -> str:
+    def posts_update_post(
+        post_id: str,
+        content: str = "",
+        scheduled_for: str = "",
+        tiktok_settings: str = "",
+    ) -> str:
         """Update a post
 
-        Args:
-            post_id: (required)"""
+            Args:
+                post_id: (required)
+                content
+                scheduled_for
+                tiktok_settings: Root-level TikTok settings applied to all TikTok platforms in the request.
+        This is a convenience shorthand. Settings here are merged into each TikTok
+        platform's platformSpecificData, with platform-specific settings taking precedence."""
         client = _get_client()
         try:
-            response = client.posts.update_post(post_id=post_id)
+            response = client.posts.update_post(
+                post_id=post_id,
+                content=content,
+                scheduledFor=scheduled_for,
+                tiktokSettings=tiktok_settings,
+            )
             return _format_response(response)
         except Exception as e:
             return f"Error: {e}"

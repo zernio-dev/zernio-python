@@ -3876,6 +3876,15 @@ paths:
           application/json:
             schema:
               type: object
+              properties:
+                content: { type: string }
+                scheduledFor: { type: string, format: date-time }
+                tiktokSettings:
+                  $ref: '#/components/schemas/TikTokPlatformData'
+                  description: |
+                    Root-level TikTok settings applied to all TikTok platforms in the request.
+                    This is a convenience shorthand. Settings here are merged into each TikTok
+                    platform's platformSpecificData, with platform-specific settings taking precedence.
               additionalProperties: true
             example:
               content: "Updated content for our launch post!"

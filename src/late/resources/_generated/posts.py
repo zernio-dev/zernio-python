@@ -122,9 +122,21 @@ class PostsResource:
         """Get a single post"""
         return self._client._get(f"/v1/posts/{post_id}")
 
-    def update_post(self, post_id: str) -> dict[str, Any]:
+    def update_post(
+        self,
+        post_id: str,
+        *,
+        content: str | None = None,
+        scheduled_for: datetime | str | None = None,
+        tiktok_settings: Any | None = None,
+    ) -> dict[str, Any]:
         """Update a post"""
-        return self._client._put(f"/v1/posts/{post_id}")
+        payload = self._build_payload(
+            content=content,
+            scheduled_for=scheduled_for,
+            tiktok_settings=tiktok_settings,
+        )
+        return self._client._put(f"/v1/posts/{post_id}", data=payload)
 
     def delete_post(self, post_id: str) -> dict[str, Any]:
         """Delete a post"""
@@ -213,9 +225,21 @@ class PostsResource:
         """Get a single post (async)"""
         return await self._client._aget(f"/v1/posts/{post_id}")
 
-    async def aupdate_post(self, post_id: str) -> dict[str, Any]:
+    async def aupdate_post(
+        self,
+        post_id: str,
+        *,
+        content: str | None = None,
+        scheduled_for: datetime | str | None = None,
+        tiktok_settings: Any | None = None,
+    ) -> dict[str, Any]:
         """Update a post (async)"""
-        return await self._client._aput(f"/v1/posts/{post_id}")
+        payload = self._build_payload(
+            content=content,
+            scheduled_for=scheduled_for,
+            tiktok_settings=tiktok_settings,
+        )
+        return await self._client._aput(f"/v1/posts/{post_id}", data=payload)
 
     async def adelete_post(self, post_id: str) -> dict[str, Any]:
         """Delete a post (async)"""
