@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from .account_groups import AccountGroupsResource
+from .account_settings import AccountSettingsResource
 from .accounts import AccountsResource
 from .analytics import AnalyticsResource
 from .api_keys import ApiKeysResource
@@ -24,6 +25,7 @@ from .webhooks import WebhooksResource
 
 __all__ = [
     "AccountGroupsResource",
+    "AccountSettingsResource",
     "AccountsResource",
     "AnalyticsResource",
     "ApiKeysResource",

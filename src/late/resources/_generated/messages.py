@@ -106,15 +106,53 @@ class MessagesResource:
         )
 
     def send_inbox_message(
-        self, conversation_id: str, account_id: str, message: str
+        self,
+        conversation_id: str,
+        account_id: str,
+        *,
+        message: str | None = None,
+        quick_replies: list[dict[str, Any]] | None = None,
+        buttons: list[dict[str, Any]] | None = None,
+        template: dict[str, Any] | None = None,
+        reply_markup: dict[str, Any] | None = None,
+        messaging_type: str | None = None,
+        message_tag: str | None = None,
+        reply_to: str | None = None,
     ) -> dict[str, Any]:
         """Send a message"""
         payload = self._build_payload(
             account_id=account_id,
             message=message,
+            quick_replies=quick_replies,
+            buttons=buttons,
+            template=template,
+            reply_markup=reply_markup,
+            messaging_type=messaging_type,
+            message_tag=message_tag,
+            reply_to=reply_to,
         )
         return self._client._post(
             f"/v1/inbox/conversations/{conversation_id}/messages", data=payload
+        )
+
+    def edit_inbox_message(
+        self,
+        conversation_id: str,
+        message_id: str,
+        account_id: str,
+        *,
+        text: str | None = None,
+        reply_markup: dict[str, Any] | None = None,
+    ) -> dict[str, Any]:
+        """Edit a message (Telegram only)"""
+        payload = self._build_payload(
+            account_id=account_id,
+            text=text,
+            reply_markup=reply_markup,
+        )
+        return self._client._patch(
+            f"/v1/inbox/conversations/{conversation_id}/messages/{message_id}",
+            data=payload,
         )
 
     async def alist_inbox_conversations(
@@ -175,13 +213,51 @@ class MessagesResource:
         )
 
     async def asend_inbox_message(
-        self, conversation_id: str, account_id: str, message: str
+        self,
+        conversation_id: str,
+        account_id: str,
+        *,
+        message: str | None = None,
+        quick_replies: list[dict[str, Any]] | None = None,
+        buttons: list[dict[str, Any]] | None = None,
+        template: dict[str, Any] | None = None,
+        reply_markup: dict[str, Any] | None = None,
+        messaging_type: str | None = None,
+        message_tag: str | None = None,
+        reply_to: str | None = None,
     ) -> dict[str, Any]:
         """Send a message (async)"""
         payload = self._build_payload(
             account_id=account_id,
             message=message,
+            quick_replies=quick_replies,
+            buttons=buttons,
+            template=template,
+            reply_markup=reply_markup,
+            messaging_type=messaging_type,
+            message_tag=message_tag,
+            reply_to=reply_to,
         )
         return await self._client._apost(
             f"/v1/inbox/conversations/{conversation_id}/messages", data=payload
+        )
+
+    async def aedit_inbox_message(
+        self,
+        conversation_id: str,
+        message_id: str,
+        account_id: str,
+        *,
+        text: str | None = None,
+        reply_markup: dict[str, Any] | None = None,
+    ) -> dict[str, Any]:
+        """Edit a message (Telegram only) (async)"""
+        payload = self._build_payload(
+            account_id=account_id,
+            text=text,
+            reply_markup=reply_markup,
+        )
+        return await self._client._apatch(
+            f"/v1/inbox/conversations/{conversation_id}/messages/{message_id}",
+            data=payload,
         )

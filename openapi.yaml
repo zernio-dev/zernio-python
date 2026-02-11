@@ -60,6 +60,9 @@ tags:
       Media download and utility tools. Available to paid plans only.
       Rate limits: Build (50/day), Accelerate (500/day), Unlimited (unlimited).
       All responses include X-RateLimit-Limit, X-RateLimit-Remaining, and X-RateLimit-Reset headers.
+  - name: Account Settings
+    description: |
+      Platform-specific account settings: Facebook persistent menu, Instagram ice breakers, and Telegram bot commands.
   - name: Webhooks
     description: |
       Configure webhooks to receive real-time notifications about post status changes, account events, and incoming messages.
@@ -572,6 +575,23 @@ components:
               type: string
             displayName:
               type: string
+        metadata:
+          type: object
+          nullable: true
+          description: Interactive message metadata (present when message is a quick reply tap, postback button tap, or inline keyboard callback)
+          properties:
+            quickReplyPayload:
+              type: string
+              description: Payload from a quick reply tap (Meta platforms)
+            postbackPayload:
+              type: string
+              description: Payload from a postback button tap (Meta platforms)
+            postbackTitle:
+              type: string
+              description: Title of the tapped postback button (Meta platforms)
+            callbackData:
+              type: string
+              description: Callback data from an inline keyboard button tap (Telegram)
         timestamp:
           type: string
           format: date-time
@@ -9730,15 +9750,28 @@ paths:
       operationId: sendInboxMessage
       summary: Send a message
       description: |
-        Send a message in a conversation. Requires accountId in request body.
+        Send a message in a conversation. Supports text, attachments, quick replies, buttons, carousels, and message tags.
 
         **Attachment support by platform:**
         - Telegram: Images, videos, documents (up to 50MB)
         - Facebook Messenger: Images, videos, audio, files
+        - Instagram: Images, videos, audio via URL (8MB images, 25MB video/audio)
         - Twitter/X: Images, videos (requires media upload)
-        - Instagram: Not supported (API limitation)
-        - Bluesky: Not supported (API limitation)
-        - Reddit: Not supported (API limitation)
+        - Bluesky: Not supported
+        - Reddit: Not supported
+
+        **Interactive message support:**
+        | Field | Instagram | Facebook | Telegram |
+        |---|---|---|---|
+        | quickReplies | Meta quick_replies (13 max) | Meta quick_replies (13 max) | ReplyKeyboardMarkup (one_time) |
+        | buttons | Generic template | Generic template | Inline keyboard |
+        | template | Generic template (carousel) | Generic template (carousel) | Ignored |
+        | replyMarkup | Ignored | Ignored | InlineKeyboardMarkup / ReplyKeyboardMarkup |
+        | messagingType | Ignored | RESPONSE / UPDATE / MESSAGE_TAG | Ignored |
+        | messageTag | HUMAN_AGENT only | 4 tag types | Ignored |
+        | replyTo | Ignored | Ignored | reply_parameters |
+
+        Platform-specific fields are silently ignored on unsupported platforms.
       tags: [Messages]
       security: [{ bearerAuth: [] }]
       parameters:
@@ -9753,10 +9786,87 @@ paths:
           application/json:
             schema:
               type: object
-              required: [accountId, message]
+              required: [accountId]
               properties:
                 accountId: { type: string, description: Social account ID }
                 message: { type: string, description: Message text }
+                quickReplies:
+                  type: array
+                  maxItems: 13
+                  description: Quick reply buttons. Mutually exclusive with buttons. Max 13 items.
+                  items:
+                    type: object
+                    required: [title, payload]
+                    properties:
+                      title: { type: string, maxLength: 20, description: Button label (max 20 chars) }
+                      payload: { type: string, description: Payload sent back on tap }
+                      imageUrl: { type: string, description: Optional icon URL (Meta only) }
+                buttons:
+                  type: array
+                  maxItems: 3
+                  description: Action buttons. Mutually exclusive with quickReplies. Max 3 items.
+                  items:
+                    type: object
+                    required: [type, title]
+                    properties:
+                      type: { type: string, enum: [url, postback, phone], description: Button type. phone is Facebook only. }
+                      title: { type: string, maxLength: 20, description: Button label (max 20 chars) }
+                      url: { type: string, description: URL for url-type buttons }
+                      payload: { type: string, description: Payload for postback-type buttons }
+                      phone: { type: string, description: Phone number for phone-type buttons (Facebook only) }
+                template:
+                  type: object
+                  description: Generic template for carousels (Instagram/Facebook only, ignored on Telegram).
+                  properties:
+                    type: { type: string, enum: [generic], description: Template type }
+                    elements:
+                      type: array
+                      maxItems: 10
+                      items:
+                        type: object
+                        required: [title]
+                        properties:
+                          title: { type: string, maxLength: 80, description: Element title (max 80 chars) }
+                          subtitle: { type: string, description: Element subtitle }
+                          imageUrl: { type: string, description: Element image URL }
+                          buttons:
+                            type: array
+                            maxItems: 3
+                            items:
+                              type: object
+                              properties:
+                                type: { type: string, enum: [url, postback] }
+                                title: { type: string, maxLength: 20 }
+                                url: { type: string }
+                                payload: { type: string }
+                replyMarkup:
+                  type: object
+                  description: Telegram-native keyboard markup. Ignored on other platforms.
+                  properties:
+                    type: { type: string, enum: [inline_keyboard, reply_keyboard], description: Keyboard type }
+                    keyboard:
+                      type: array
+                      description: Array of rows, each row is an array of buttons
+                      items:
+                        type: array
+                        items:
+                          type: object
+                          properties:
+                            text: { type: string, description: Button text }
+                            callbackData: { type: string, maxLength: 64, description: Callback data (inline_keyboard only, max 64 bytes) }
+                            url: { type: string, description: URL to open (inline_keyboard only) }
+                    oneTime: { type: boolean, default: true, description: Hide keyboard after use (reply_keyboard only) }
+                messagingType:
+                  type: string
+                  enum: [RESPONSE, UPDATE, MESSAGE_TAG]
+                  description: Facebook messaging type. Required when using messageTag.
+                messageTag:
+                  type: string
+                  enum: [CONFIRMED_EVENT_UPDATE, POST_PURCHASE_UPDATE, ACCOUNT_UPDATE, HUMAN_AGENT]
+                  description: Facebook message tag for messaging outside 24h window. Requires messagingType MESSAGE_TAG. Instagram only supports HUMAN_AGENT.
+                replyTo:
+                  type: string
+                  description: Platform message ID to reply to (Telegram only).
           multipart/form-data:
             schema:
               type: object
@@ -9769,7 +9879,29 @@ paths:
                   format: binary
                   description: |
                     File attachment (images, videos, documents). See description for platform support.
-                    Supported formats: JPEG, PNG, GIF, MP4. Max size: 25MB.
+                    Supported formats: JPEG, PNG, GIF, MP4, AAC, WAV. Max size: 25MB.
+                    Instagram attachments are automatically uploaded to temp storage and sent as URLs.
+                quickReplies:
+                  type: string
+                  description: JSON string of quick replies array (same schema as application/json body)
+                buttons:
+                  type: string
+                  description: JSON string of buttons array (same schema as application/json body)
+                template:
+                  type: string
+                  description: JSON string of template object (same schema as application/json body)
+                replyMarkup:
+                  type: string
+                  description: JSON string of replyMarkup object (same schema as application/json body)
+                messagingType:
+                  type: string
+                  description: Messaging type (Facebook only). RESPONSE, UPDATE, or MESSAGE_TAG.
+                messageTag:
+                  type: string
+                  description: Message tag (requires messagingType MESSAGE_TAG)
+                replyTo:
+                  type: string
+                  description: Platform message ID to reply to (Telegram only)
       responses:
         '200':
           description: Message sent
@@ -9787,7 +9919,7 @@ paths:
                       sentAt: { type: string, format: date-time, nullable: true, description: Bluesky sent timestamp }
                       message: { type: string, nullable: true, description: Success message (Reddit only) }
         '400':
-          description: Bad request (e.g., attachment not supported for platform)
+          description: Bad request (e.g., attachment not supported for platform, validation error)
           content:
             application/json:
               schema:
@@ -9800,6 +9932,289 @@ paths:
         '401': { $ref: '#/components/responses/Unauthorized' }
         '403':
           description: Inbox addon required
+
+  /v1/inbox/conversations/{conversationId}/messages/{messageId}:
+    patch:
+      operationId: editInboxMessage
+      summary: Edit a message (Telegram only)
+      description: |
+        Edit the text and/or reply markup of a previously sent Telegram message.
+        Only supported for Telegram. Returns 400 for other platforms.
+      tags: [Messages]
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - name: conversationId
+          in: path
+          required: true
+          schema: { type: string }
+          description: The conversation ID
+        - name: messageId
+          in: path
+          required: true
+          schema: { type: string }
+          description: The Telegram message ID to edit
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [accountId]
+              properties:
+                accountId: { type: string, description: Social account ID }
+                text: { type: string, description: New message text }
+                replyMarkup:
+                  type: object
+                  description: New inline keyboard markup
+                  properties:
+                    type: { type: string, enum: [inline_keyboard] }
+                    keyboard:
+                      type: array
+                      items:
+                        type: array
+                        items:
+                          type: object
+                          properties:
+                            text: { type: string }
+                            callbackData: { type: string }
+                            url: { type: string }
+      responses:
+        '200':
+          description: Message edited
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success: { type: boolean }
+                  data:
+                    type: object
+                    properties:
+                      messageId: { type: integer }
+        '400':
+          description: Not supported or invalid request
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403':
+          description: Inbox addon required
+
+  /v1/accounts/{accountId}/messenger-menu:
+    get:
+      operationId: getMessengerMenu
+      summary: Get Facebook persistent menu
+      description: Get the persistent menu configuration for a Facebook Messenger account.
+      tags: [Account Settings]
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - name: accountId
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        '200':
+          description: Persistent menu configuration
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data: { type: array, items: { type: object } }
+        '400':
+          description: Not a Facebook account
+        '401': { $ref: '#/components/responses/Unauthorized' }
+    put:
+      operationId: setMessengerMenu
+      summary: Set Facebook persistent menu
+      description: Set the persistent menu for a Facebook Messenger account. Max 3 top-level items, max 5 nested items.
+      tags: [Account Settings]
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - name: accountId
+          in: path
+          required: true
+          schema: { type: string }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [persistent_menu]
+              properties:
+                persistent_menu:
+                  type: array
+                  description: Persistent menu configuration array (Meta format)
+                  items: { type: object }
+      responses:
+        '200':
+          description: Menu set successfully
+        '400':
+          description: Invalid request
+        '401': { $ref: '#/components/responses/Unauthorized' }
+    delete:
+      operationId: deleteMessengerMenu
+      summary: Delete Facebook persistent menu
+      tags: [Account Settings]
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - name: accountId
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        '200':
+          description: Menu deleted
+        '401': { $ref: '#/components/responses/Unauthorized' }
+
+  /v1/accounts/{accountId}/instagram-ice-breakers:
+    get:
+      operationId: getInstagramIceBreakers
+      summary: Get Instagram ice breakers
+      description: Get the ice breaker configuration for an Instagram account.
+      tags: [Account Settings]
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - name: accountId
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        '200':
+          description: Ice breaker configuration
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data: { type: array, items: { type: object } }
+        '400':
+          description: Not an Instagram account
+        '401': { $ref: '#/components/responses/Unauthorized' }
+    put:
+      operationId: setInstagramIceBreakers
+      summary: Set Instagram ice breakers
+      description: Set ice breakers for an Instagram account. Max 4 ice breakers, question max 80 chars.
+      tags: [Account Settings]
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - name: accountId
+          in: path
+          required: true
+          schema: { type: string }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [ice_breakers]
+              properties:
+                ice_breakers:
+                  type: array
+                  maxItems: 4
+                  items:
+                    type: object
+                    required: [question, payload]
+                    properties:
+                      question: { type: string, maxLength: 80 }
+                      payload: { type: string }
+      responses:
+        '200':
+          description: Ice breakers set successfully
+        '400':
+          description: Invalid request
+        '401': { $ref: '#/components/responses/Unauthorized' }
+    delete:
+      operationId: deleteInstagramIceBreakers
+      summary: Delete Instagram ice breakers
+      tags: [Account Settings]
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - name: accountId
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        '200':
+          description: Ice breakers deleted
+        '401': { $ref: '#/components/responses/Unauthorized' }
+
+  /v1/accounts/{accountId}/telegram-commands:
+    get:
+      operationId: getTelegramCommands
+      summary: Get Telegram bot commands
+      description: Get the bot commands configuration for a Telegram account.
+      tags: [Account Settings]
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - name: accountId
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        '200':
+          description: Bot commands list
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        command: { type: string }
+                        description: { type: string }
+        '400':
+          description: Not a Telegram account
+        '401': { $ref: '#/components/responses/Unauthorized' }
+    put:
+      operationId: setTelegramCommands
+      summary: Set Telegram bot commands
+      description: Set bot commands for a Telegram account.
+      tags: [Account Settings]
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - name: accountId
+          in: path
+          required: true
+          schema: { type: string }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [commands]
+              properties:
+                commands:
+                  type: array
+                  items:
+                    type: object
+                    required: [command, description]
+                    properties:
+                      command: { type: string, description: Bot command without leading slash }
+                      description: { type: string, description: Command description }
+      responses:
+        '200':
+          description: Commands set successfully
+        '400':
+          description: Invalid request
+        '401': { $ref: '#/components/responses/Unauthorized' }
+    delete:
+      operationId: deleteTelegramCommands
+      summary: Delete Telegram bot commands
+      tags: [Account Settings]
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - name: accountId
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        '200':
+          description: Commands deleted
+        '401': { $ref: '#/components/responses/Unauthorized' }
 
   /v1/inbox/comments:
     get:

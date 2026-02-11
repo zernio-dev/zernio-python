@@ -112,6 +112,148 @@ def register_generated_tools(mcp, _get_client):
         except Exception as e:
             return f"Error: {e}"
 
+    # ACCOUNT_SETTINGS
+
+    @mcp.tool()
+    def account_settings_get_messenger_menu(account_id: str) -> str:
+        """Get Facebook persistent menu
+
+        Args:
+            account_id: (required)"""
+        client = _get_client()
+        try:
+            response = client.account_settings.get_messenger_menu(account_id=account_id)
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool()
+    def account_settings_set_messenger_menu(
+        account_id: str, persistent_menu: str
+    ) -> str:
+        """Set Facebook persistent menu
+
+        Args:
+            account_id: (required)
+            persistent_menu: Persistent menu configuration array (Meta format) (required)"""
+        client = _get_client()
+        try:
+            response = client.account_settings.set_messenger_menu(
+                account_id=account_id, persistent_menu=persistent_menu
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool()
+    def account_settings_delete_messenger_menu(account_id: str) -> str:
+        """Delete Facebook persistent menu
+
+        Args:
+            account_id: (required)"""
+        client = _get_client()
+        try:
+            response = client.account_settings.delete_messenger_menu(
+                account_id=account_id
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool()
+    def account_settings_get_instagram_ice_breakers(account_id: str) -> str:
+        """Get Instagram ice breakers
+
+        Args:
+            account_id: (required)"""
+        client = _get_client()
+        try:
+            response = client.account_settings.get_instagram_ice_breakers(
+                account_id=account_id
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool()
+    def account_settings_set_instagram_ice_breakers(
+        account_id: str, ice_breakers: str
+    ) -> str:
+        """Set Instagram ice breakers
+
+        Args:
+            account_id: (required)
+            ice_breakers: (required)"""
+        client = _get_client()
+        try:
+            response = client.account_settings.set_instagram_ice_breakers(
+                account_id=account_id, ice_breakers=ice_breakers
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool()
+    def account_settings_delete_instagram_ice_breakers(account_id: str) -> str:
+        """Delete Instagram ice breakers
+
+        Args:
+            account_id: (required)"""
+        client = _get_client()
+        try:
+            response = client.account_settings.delete_instagram_ice_breakers(
+                account_id=account_id
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool()
+    def account_settings_get_telegram_commands(account_id: str) -> str:
+        """Get Telegram bot commands
+
+        Args:
+            account_id: (required)"""
+        client = _get_client()
+        try:
+            response = client.account_settings.get_telegram_commands(
+                account_id=account_id
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool()
+    def account_settings_set_telegram_commands(account_id: str, commands: str) -> str:
+        """Set Telegram bot commands
+
+        Args:
+            account_id: (required)
+            commands: (required)"""
+        client = _get_client()
+        try:
+            response = client.account_settings.set_telegram_commands(
+                account_id=account_id, commands=commands
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool()
+    def account_settings_delete_telegram_commands(account_id: str) -> str:
+        """Delete Telegram bot commands
+
+        Args:
+            account_id: (required)"""
+        client = _get_client()
+        try:
+            response = client.account_settings.delete_telegram_commands(
+                account_id=account_id
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
     # ACCOUNTS
 
     @mcp.tool()
@@ -1728,18 +1870,72 @@ def register_generated_tools(mcp, _get_client):
 
     @mcp.tool()
     def messages_send_inbox_message(
-        conversation_id: str, account_id: str, message: str
+        conversation_id: str,
+        account_id: str,
+        message: str = "",
+        quick_replies: str = "",
+        buttons: str = "",
+        template: str = "",
+        reply_markup: str = "",
+        messaging_type: str = "",
+        message_tag: str = "",
+        reply_to: str = "",
     ) -> str:
         """Send a message
 
         Args:
             conversation_id: The conversation ID (id field from list conversations endpoint). This is the platform-specific conversation identifier, not an internal database ID. (required)
             account_id: Social account ID (required)
-            message: Message text (required)"""
+            message: Message text
+            quick_replies: Quick reply buttons. Mutually exclusive with buttons. Max 13 items.
+            buttons: Action buttons. Mutually exclusive with quickReplies. Max 3 items.
+            template: Generic template for carousels (Instagram/Facebook only, ignored on Telegram).
+            reply_markup: Telegram-native keyboard markup. Ignored on other platforms.
+            messaging_type: Facebook messaging type. Required when using messageTag.
+            message_tag: Facebook message tag for messaging outside 24h window. Requires messagingType MESSAGE_TAG. Instagram only supports HUMAN_AGENT.
+            reply_to: Platform message ID to reply to (Telegram only)."""
         client = _get_client()
         try:
             response = client.messages.send_inbox_message(
-                conversation_id=conversation_id, accountId=account_id, message=message
+                conversation_id=conversation_id,
+                accountId=account_id,
+                message=message,
+                quickReplies=quick_replies,
+                buttons=buttons,
+                template=template,
+                replyMarkup=reply_markup,
+                messagingType=messaging_type,
+                messageTag=message_tag,
+                replyTo=reply_to,
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool()
+    def messages_edit_inbox_message(
+        conversation_id: str,
+        message_id: str,
+        account_id: str,
+        text: str = "",
+        reply_markup: str = "",
+    ) -> str:
+        """Edit a message (Telegram only)
+
+        Args:
+            conversation_id: The conversation ID (required)
+            message_id: The Telegram message ID to edit (required)
+            account_id: Social account ID (required)
+            text: New message text
+            reply_markup: New inline keyboard markup"""
+        client = _get_client()
+        try:
+            response = client.messages.edit_inbox_message(
+                conversation_id=conversation_id,
+                message_id=message_id,
+                accountId=account_id,
+                text=text,
+                replyMarkup=reply_markup,
             )
             return _format_response(response)
         except Exception as e:

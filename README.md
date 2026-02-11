@@ -317,6 +317,19 @@ except LateAPIError as e:
 | `reddit.get_reddit_feed()` | Fetch subreddit feed via a connected account |
 | `reddit.search_reddit()` | Search Reddit posts via a connected account |
 
+### Account Settings
+| Method | Description |
+|--------|-------------|
+| `account_settings.get_instagram_ice_breakers()` | Get Instagram ice breakers |
+| `account_settings.get_messenger_menu()` | Get Facebook persistent menu |
+| `account_settings.get_telegram_commands()` | Get Telegram bot commands |
+| `account_settings.delete_instagram_ice_breakers()` | Delete Instagram ice breakers |
+| `account_settings.delete_messenger_menu()` | Delete Facebook persistent menu |
+| `account_settings.delete_telegram_commands()` | Delete Telegram bot commands |
+| `account_settings.set_instagram_ice_breakers()` | Set Instagram ice breakers |
+| `account_settings.set_messenger_menu()` | Set Facebook persistent menu |
+| `account_settings.set_telegram_commands()` | Set Telegram bot commands |
+
 ### Comments (Inbox)
 | Method | Description |
 |--------|-------------|
@@ -369,6 +382,7 @@ except LateAPIError as e:
 | `messages.get_inbox_conversation()` | Get conversation details |
 | `messages.get_inbox_conversation_messages()` | Get messages in a conversation |
 | `messages.update_inbox_conversation()` | Update conversation status |
+| `messages.edit_inbox_message()` | Edit a message (Telegram only) |
 | `messages.send_inbox_message()` | Send a message |
 
 ### Reviews (Inbox)
