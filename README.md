@@ -294,6 +294,7 @@ except LateAPIError as e:
 | `connect.get_linked_in_organizations()` | Get available LinkedIn organizations for a connected account |
 | `connect.get_pending_o_auth_data()` | Fetch pending OAuth selection data (Headless Mode) |
 | `connect.get_pinterest_boards()` | List Pinterest boards for a connected account |
+| `connect.get_reddit_flairs()` | List available post flairs for a Reddit subreddit |
 | `connect.get_reddit_subreddits()` | List Reddit subreddits for a connected account |
 | `connect.get_telegram_connect_status()` | Generate Telegram access code |
 | `connect.update_facebook_page()` | Update selected Facebook page for a connected account |

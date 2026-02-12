@@ -362,6 +362,15 @@ class ConnectResource:
             f"/v1/accounts/{account_id}/reddit-subreddits", data=payload
         )
 
+    def get_reddit_flairs(self, account_id: str, subreddit: str) -> dict[str, Any]:
+        """List available post flairs for a Reddit subreddit"""
+        params = self._build_params(
+            subreddit=subreddit,
+        )
+        return self._client._get(
+            f"/v1/accounts/{account_id}/reddit-flairs", params=params
+        )
+
     async def aget_connect_url(
         self, platform: str, profile_id: str, *, redirect_url: str | None = None
     ) -> dict[str, Any]:
@@ -696,4 +705,15 @@ class ConnectResource:
         )
         return await self._client._aput(
             f"/v1/accounts/{account_id}/reddit-subreddits", data=payload
+        )
+
+    async def aget_reddit_flairs(
+        self, account_id: str, subreddit: str
+    ) -> dict[str, Any]:
+        """List available post flairs for a Reddit subreddit (async)"""
+        params = self._build_params(
+            subreddit=subreddit,
+        )
+        return await self._client._aget(
+            f"/v1/accounts/{account_id}/reddit-flairs", params=params
         )

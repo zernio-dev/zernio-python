@@ -1530,6 +1530,12 @@ components:
         forceSelf:
           type: boolean
           description: When true, creates a text/self post even when a URL or media is provided.
+        flairId:
+          type: string
+          description: |
+            Flair ID for the post. Required by some subreddits.
+            Use GET /api/v1/accounts/{id}/reddit-flairs?subreddit=name to list available flairs.
+          example: "a1b2c3d4-e5f6-7890-abcd-ef1234567890"
       description: |
         Reddit post settings:
         - Posts are either "link" (with URL/media) or "self" (text-only)
@@ -1538,6 +1544,7 @@ components:
         - Subreddit defaults to the account's configured subreddit if omitted
         - Use the same accountId multiple times with different subreddit values in platformSpecificData to post to multiple subreddits
         - Images are automatically compressed if they exceed Reddit's 20MB limit
+        - Some subreddits require a flair; if not provided, the API will attempt to use the first available flair as fallback
 
     BlueskyPlatformData:
       type: object
@@ -8345,8 +8352,51 @@ paths:
         '401': { $ref: '#/components/responses/Unauthorized' }
         '404': { description: Account not found }
 
-
-
+  /v1/accounts/{accountId}/reddit-flairs:
+    get:
+      operationId: getRedditFlairs
+      tags: [Connect]
+      summary: List available post flairs for a Reddit subreddit
+      parameters:
+        - name: accountId
+          in: path
+          required: true
+          schema: { type: string }
+        - name: subreddit
+          in: query
+          required: true
+          schema: { type: string }
+          description: Subreddit name (without "r/" prefix) to fetch flairs for
+      responses:
+        '200':
+          description: Flairs list
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  flairs:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id: { type: string, description: Flair ID to pass as flairId in platformSpecificData }
+                        text: { type: string, description: Flair display text }
+                        textColor: { type: string, description: "Text color: 'dark' or 'light'" }
+                        backgroundColor: { type: string, description: "Background hex color (e.g. '#ff4500')" }
+              example:
+                flairs:
+                  - id: "a1b2c3d4-e5f6-7890-abcd-ef1234567890"
+                    text: "Discussion"
+                    textColor: "dark"
+                    backgroundColor: "#edeff1"
+                  - id: "b2c3d4e5-f6a7-8901-bcde-f12345678901"
+                    text: "News"
+                    textColor: "light"
+                    backgroundColor: "#ff4500"
+        '400': { description: Not a Reddit account or missing subreddit parameter }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404': { description: Account not found }
 
   /v1/queue/slots:
     get:

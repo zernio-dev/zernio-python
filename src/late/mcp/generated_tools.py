@@ -1614,6 +1614,22 @@ def register_generated_tools(mcp, _get_client):
         except Exception as e:
             return f"Error: {e}"
 
+    @mcp.tool()
+    def connect_get_reddit_flairs(account_id: str, subreddit: str) -> str:
+        """List available post flairs for a Reddit subreddit
+
+        Args:
+            account_id: (required)
+            subreddit: Subreddit name (without "r/" prefix) to fetch flairs for (required)"""
+        client = _get_client()
+        try:
+            response = client.connect.get_reddit_flairs(
+                account_id=account_id, subreddit=subreddit
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
     # INVITES
 
     @mcp.tool()
