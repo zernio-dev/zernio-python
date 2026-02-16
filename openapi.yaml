@@ -4284,6 +4284,81 @@ paths:
                   error: { type: string }
                   details:
                     type: object
+  /v1/posts/{postId}/unpublish:
+    post:
+      operationId: unpublishPost
+      tags: [Posts]
+      summary: Delete a published post from a social media platform
+      description: |
+        Permanently deletes a published post from the specified social media platform.
+        The post record in Late is kept but its platform status is set to "cancelled".
+
+        **Supported platforms:** Threads, Facebook, Twitter/X, LinkedIn, YouTube, Pinterest, Reddit, Bluesky, Google Business, Telegram.
+
+        **Not supported:**
+        - **Instagram:** No deletion API available. Posts must be deleted manually.
+        - **TikTok:** No deletion API available. Posts must be deleted manually.
+        - **Snapchat:** No deletion API available. Posts must be deleted manually.
+
+        **Platform notes:**
+        - **Telegram:** Messages older than 48 hours may fail to delete (Telegram Bot API limitation).
+        - **YouTube:** This permanently deletes the video from YouTube.
+      parameters:
+        - name: postId
+          in: path
+          required: true
+          schema: { type: string }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [platform]
+              properties:
+                platform:
+                  type: string
+                  description: The platform to delete the post from
+                  enum:
+                    - threads
+                    - facebook
+                    - twitter
+                    - linkedin
+                    - youtube
+                    - pinterest
+                    - reddit
+                    - bluesky
+                    - googlebusiness
+                    - telegram
+            example:
+              platform: "threads"
+      responses:
+        '200':
+          description: Post deleted from platform
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success: { type: boolean }
+                  message: { type: string }
+              example:
+                success: true
+                message: "Post deleted from threads successfully"
+        '400':
+          description: |
+            Invalid request. Possible reasons:
+            - Platform not recognized or not supported for deletion
+            - Post does not have the specified platform
+            - Post is not in "published" status on that platform
+            - No platform post ID found (post may not have been published correctly)
+            - No access token (account needs to be reconnected)
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403':
+          description: Forbidden
+        '404': { $ref: '#/components/responses/NotFound' }
+        '500':
+          description: Platform API deletion failed
   /v1/users:
     get:
       operationId: listUsers

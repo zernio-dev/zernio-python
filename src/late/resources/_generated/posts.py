@@ -153,6 +153,13 @@ class PostsResource:
         """Retry publishing a failed or partial post"""
         return self._client._post(f"/v1/posts/{post_id}/retry")
 
+    def unpublish_post(self, post_id: str, platform: str) -> dict[str, Any]:
+        """Delete a published post from a social media platform"""
+        payload = self._build_payload(
+            platform=platform,
+        )
+        return self._client._post(f"/v1/posts/{post_id}/unpublish", data=payload)
+
     async def alist_posts(
         self,
         *,
@@ -257,3 +264,10 @@ class PostsResource:
     async def aretry_post(self, post_id: str) -> dict[str, Any]:
         """Retry publishing a failed or partial post (async)"""
         return await self._client._apost(f"/v1/posts/{post_id}/retry")
+
+    async def aunpublish_post(self, post_id: str, platform: str) -> dict[str, Any]:
+        """Delete a published post from a social media platform (async)"""
+        payload = self._build_payload(
+            platform=platform,
+        )
+        return await self._client._apost(f"/v1/posts/{post_id}/unpublish", data=payload)

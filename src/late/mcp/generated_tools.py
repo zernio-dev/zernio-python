@@ -2067,6 +2067,20 @@ def register_generated_tools(mcp, _get_client):
         except Exception as e:
             return f"Error: {e}"
 
+    @mcp.tool()
+    def posts_unpublish_post(post_id: str, platform: str) -> str:
+        """Delete a published post from a social media platform
+
+        Args:
+            post_id: (required)
+            platform: The platform to delete the post from (required)"""
+        client = _get_client()
+        try:
+            response = client.posts.unpublish_post(post_id=post_id, platform=platform)
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
     # PROFILES
 
     @mcp.tool()

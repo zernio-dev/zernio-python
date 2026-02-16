@@ -172,6 +172,7 @@ except LateAPIError as e:
 | `posts.update_post()` | Update a post |
 | `posts.delete_post()` | Delete a post |
 | `posts.retry_post()` | Retry publishing a failed or partial post |
+| `posts.unpublish_post()` | Delete a published post from a social media platform |
 
 ### Accounts
 | Method | Description |
