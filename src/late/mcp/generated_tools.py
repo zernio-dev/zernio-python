@@ -874,13 +874,18 @@ def register_generated_tools(mcp, _get_client):
     ) -> str:
         """Get comments for a post
 
-        Args:
-            post_id: The post identifier. Accepts a Late post ID (MongoDB ObjectId) which is automatically resolved to the platform-specific post ID, or a platform-specific post ID directly (e.g. tweet ID, Facebook Graph ID, YouTube video ID). (required)
-            account_id: (required)
-            subreddit: (Reddit only) Subreddit name
-            limit: Maximum number of comments to return
-            cursor: Pagination cursor
-            comment_id: (Reddit only) Get replies to a specific comment"""
+            Args:
+                post_id: The post identifier. Accepts a Late post ID (MongoDB ObjectId) which is automatically resolved to the platform-specific post ID, or a platform-specific post ID directly (e.g. tweet ID, Facebook Graph ID, YouTube video ID).
+
+        **LinkedIn:** For your own posts, the full URN stored in Late (e.g., `urn:li:share:7429218977714745345`) is used automatically.
+        For third-party posts, pass either the full activity URN (e.g., `urn:li:activity:7422459067685855232`) or the raw numeric activity ID from the LinkedIn URL (automatically wrapped as `urn:li:activity:`).
+        Note: LinkedIn post URLs use activity IDs (`linkedin.com/feed/update/urn:li:activity:XXXX`).
+         (required)
+                account_id: (required)
+                subreddit: (Reddit only) Subreddit name
+                limit: Maximum number of comments to return
+                cursor: Pagination cursor
+                comment_id: (Reddit only) Get replies to a specific comment"""
         client = _get_client()
         try:
             response = client.comments.get_inbox_post_comments(
@@ -908,15 +913,18 @@ def register_generated_tools(mcp, _get_client):
     ) -> str:
         """Reply to a post or comment
 
-        Args:
-            post_id: The post identifier. Accepts a Late post ID or a platform-specific post ID. (required)
-            account_id: (required)
-            message: (required)
-            comment_id: Reply to specific comment (optional)
-            subreddit: (Reddit only) Subreddit name for replies
-            parent_cid: (Bluesky only) Parent content identifier
-            root_uri: (Bluesky only) Root post URI
-            root_cid: (Bluesky only) Root post CID"""
+            Args:
+                post_id: The post identifier. Accepts a Late post ID or a platform-specific post ID.
+
+        **LinkedIn:** For third-party posts, pass the full activity URN (e.g., `urn:li:activity:7422459067685855232`) or the raw numeric activity ID from the URL.
+         (required)
+                account_id: (required)
+                message: (required)
+                comment_id: Reply to specific comment (optional)
+                subreddit: (Reddit only) Subreddit name for replies
+                parent_cid: (Bluesky only) Parent content identifier
+                root_uri: (Bluesky only) Root post URI
+                root_cid: (Bluesky only) Root post CID"""
         client = _get_client()
         try:
             response = client.comments.reply_to_inbox_post(
@@ -939,10 +947,13 @@ def register_generated_tools(mcp, _get_client):
     ) -> str:
         """Delete a comment
 
-        Args:
-            post_id: The post identifier. Accepts a Late post ID or a platform-specific post ID. (required)
-            account_id: (required)
-            comment_id: (required)"""
+            Args:
+                post_id: The post identifier. Accepts a Late post ID or a platform-specific post ID.
+
+        **LinkedIn:** For third-party posts, pass the full activity URN (e.g., `urn:li:activity:7422459067685855232`) or the raw numeric activity ID from the URL.
+         (required)
+                account_id: (required)
+                comment_id: (required)"""
         client = _get_client()
         try:
             response = client.comments.delete_inbox_comment(
