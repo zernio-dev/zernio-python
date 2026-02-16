@@ -5,6 +5,151 @@ info:
   description: |
     API reference for Late. Authenticate with a Bearer API key.
     Base URL: https://getlate.dev/api
+  termsOfService: https://getlate.dev/tos
+  contact:
+    name: Late Support
+    url: https://getlate.dev
+    email: support@getlate.dev
+  # RapidAPI extensions for Hub listing
+  x-logo:
+    url: https://getlate.dev/icon.png?v=3
+  x-long-description: |
+    Late is the social media API that replaces 13 integrations. Schedule posts, retrieve analytics,
+    manage DMs, comments, and reviews across Twitter/X, Instagram, TikTok, LinkedIn, Facebook,
+    YouTube, Threads, Reddit, Pinterest, Bluesky, Telegram, Google Business, and Snapchat, all
+    from a single REST API.
+
+    **Key Features:**
+    - **Unified Posting** - Schedule or publish to 13 platforms with one API call. Supports text, images, video, carousels, stories, and reels.
+    - **Analytics** - Aggregated engagement metrics (likes, shares, reach, impressions, clicks, views) across all platforms.
+    - **Unified Inbox** - Manage DMs, comments, and reviews from all connected accounts in one place.
+    - **Webhooks** - Real-time notifications for post delivery, account events, and incoming messages.
+    - **OAuth Connect** - Let your users connect their social accounts through one OAuth flow, no developer apps needed.
+    - **Queue Scheduling** - Set up recurring time slots and Late auto-schedules posts to the next available slot.
+    - **White-label ready** - Built for agencies and SaaS products managing 5,000+ accounts.
+
+    **Supported platforms:** Twitter/X, Instagram, Facebook, LinkedIn, TikTok, YouTube, Pinterest, Reddit, Bluesky, Threads, Google Business, Telegram, Snapchat.
+  x-category: Social
+  x-website: https://getlate.dev
+  x-thumbnail: https://rapidapi-prod-apis.s3.amazonaws.com/b24d3df5-563c-4a50-9e1e-1ad3eb1fce69.png
+  x-version-lifecycle: ACTIVE
+  x-badges:
+    - name: "social media"
+      value: "social media"
+    - name: "scheduling"
+      value: "scheduling"
+    - name: "instagram"
+      value: "instagram"
+    - name: "tiktok"
+      value: "tiktok"
+    - name: "twitter"
+      value: "twitter"
+    - name: "linkedin"
+      value: "linkedin"
+    - name: "facebook"
+      value: "facebook"
+    - name: "youtube"
+      value: "youtube"
+    - name: "social media api"
+      value: "social media api"
+    - name: "posting"
+      value: "posting"
+
+# RapidAPI Hub documentation tab (README)
+x-documentation:
+  readme: |
+    # Late API
+
+    The social media API that replaces 13 integrations. Build social media features into your app in minutes, not months.
+
+    ## Quick Start
+
+    **Base URL:** `https://getlate.dev/api/v1`
+
+    **Authentication:** All requests require a Bearer API key in the `Authorization` header.
+
+    ```bash
+    curl https://getlate.dev/api/v1/user \
+      -H "Authorization: Bearer YOUR_API_KEY"
+    ```
+
+    Get your API key at [getlate.dev/dashboard/api-keys](https://getlate.dev/dashboard/api-keys).
+
+    ## Core Concepts
+
+    | Concept | Description |
+    |---------|-------------|
+    | **Profiles** | Containers that organize social accounts into brands or projects |
+    | **Accounts** | Connected social media accounts belonging to a profile |
+    | **Posts** | Content scheduled or published to one or more accounts |
+    | **Queue** | Recurring time slots for automatic post scheduling |
+
+    ## Create a Post
+
+    ```bash
+    curl -X POST https://getlate.dev/api/v1/post \
+      -H "Authorization: Bearer YOUR_API_KEY" \
+      -H "Content-Type: application/json" \
+      -d '{
+        "profileId": "your-profile-id",
+        "text": "Hello from Late API!",
+        "socialAccountIds": ["account-1", "account-2"],
+        "scheduledAt": "2025-01-15T10:00:00Z"
+      }'
+    ```
+
+    This single call publishes or schedules the post to all selected accounts across any platform.
+
+    ## Supported Platforms
+
+    | Platform | Post | Stories/Reels | Analytics | Inbox |
+    |----------|------|---------------|-----------|-------|
+    | Twitter/X | Yes | - | Yes | Yes |
+    | Instagram | Yes | Yes | Yes | Yes |
+    | Facebook | Yes | Stories | Yes | Yes |
+    | LinkedIn | Yes | - | Yes | - |
+    | TikTok | Yes | - | Yes | - |
+    | YouTube | Yes | Shorts | Yes | Yes |
+    | Pinterest | Yes | - | Yes | - |
+    | Reddit | Yes | - | - | Yes |
+    | Bluesky | Yes | - | - | Yes |
+    | Threads | Yes | - | Yes | Yes |
+    | Google Business | Yes | - | - | Yes |
+    | Telegram | Yes | - | - | - |
+    | Snapchat | Yes | - | - | - |
+
+    ## Rate Limits
+
+    | Plan | Requests/min | Posts/month |
+    |------|-------------|-------------|
+    | Free | 60 | 20 |
+    | Build | 120 | 120 |
+    | Accelerate | 600 | Unlimited |
+    | Unlimited | 1,200 | Unlimited |
+
+    All responses include `X-RateLimit-Limit`, `X-RateLimit-Remaining`, and `X-RateLimit-Reset` headers.
+
+    ## Webhooks
+
+    Receive real-time notifications for post status changes, account events, and incoming messages:
+
+    - `post.scheduled` - Post successfully scheduled
+    - `post.published` - Post successfully published
+    - `post.failed` - Post failed on all platforms
+    - `post.partial` - Post published to some platforms, failed on others
+    - `account.connected` - Social account connected
+    - `account.disconnected` - Social account disconnected (token expired)
+    - `message.received` - New DM received
+
+    Webhook payloads are signed with HMAC-SHA256 via the `X-Late-Signature` header.
+
+    ## Full Documentation
+
+    For complete guides, platform-specific details, and SDK references, visit [docs.getlate.dev](https://docs.getlate.dev).
+
+    ## SDKs
+
+    Official SDKs available for: [Node.js](https://www.npmjs.com/package/late), [Python](https://pypi.org/project/late), Go, Ruby, Java, PHP, .NET, and Rust.
 
 servers:
   - url: https://getlate.dev/api
