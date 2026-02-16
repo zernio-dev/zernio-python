@@ -1320,6 +1320,14 @@ components:
             Format: "locations/123456789"
             If omitted, uses the selected/default location on the connection.
             Use GET /api/v1/accounts/{id}/gmb-locations to list available locations.
+        languageCode:
+          type: string
+          description: |
+            BCP 47 language code for the post content (e.g., "en", "de", "es", "fr").
+            If omitted, the language is automatically detected from the post text.
+            Setting this explicitly is recommended when auto-detection may not be accurate
+            (e.g., very short posts, mixed-language content, or transliterated text).
+          example: "de"
         callToAction:
           type: object
           description: Optional call-to-action button displayed on the post
@@ -1347,6 +1355,7 @@ components:
         - Call-to-action buttons drive user engagement
         - Posts appear on your Google Business Profile and in Google Search/Maps
         - Use locationId to post to multiple locations from the same account connection
+        - Language is auto-detected from content; override with languageCode if needed
 
     TikTokPlatformData:
       type: object
@@ -10800,16 +10809,17 @@ paths:
         Send a private direct message to the author of a comment on your post.
         This is useful for handling customer inquiries or sensitive matters privately.
 
-        **Supported platforms:** Instagram only
+        **Supported platforms:** Instagram, Facebook
 
         **Limitations:**
-        - Instagram only allows ONE private reply per comment
+        - Only ONE private reply per comment (platform API restriction)
         - Must be sent within 7 days of the comment being posted
         - Only works for comments on posts owned by the connected account
-        - Message goes to the user's Inbox (if they follow you) or Message Requests (if they don't)
-        - Requires `instagram_business_manage_messages` permission (already included in Late's OAuth)
+        - Text only (no media attachments)
+        - Instagram: message goes to the user's Inbox (if they follow you) or Message Requests (if they don't). Requires `instagram_business_manage_messages` permission.
+        - Facebook: message opens a Messenger conversation with the commenter. Requires `pages_messaging` permission.
 
-        **Note:** This does not create a conversation thread until the user replies back.
+        **Note:** Both permissions are already included in Late's OAuth flow. This does not create a conversation thread until the user replies back.
       tags: [Comments]
       security: [{ bearerAuth: [] }]
       parameters:
@@ -10817,7 +10827,7 @@ paths:
           in: path
           required: true
           schema: { type: string }
-          description: The Instagram media/post ID
+          description: The media/post ID (Instagram media ID or Facebook post ID)
         - name: commentId
           in: path
           required: true
@@ -10833,7 +10843,7 @@ paths:
               properties:
                 accountId:
                   type: string
-                  description: The Instagram social account ID
+                  description: The social account ID (Instagram or Facebook)
                 message:
                   type: string
                   description: The message text to send as a private DM
@@ -10859,6 +10869,7 @@ paths:
                     description: The comment ID that was replied to
                   platform:
                     type: string
+                    enum: [instagram, facebook]
                     example: instagram
         '400':
           description: Bad request
@@ -10876,16 +10887,16 @@ paths:
                 platformNotSupported:
                   summary: Platform not supported
                   value:
-                    error: "Private replies to comments are only supported on Instagram."
+                    error: "Private replies to comments are only supported on Instagram and Facebook."
                     code: "PLATFORM_LIMITATION"
                 alreadyReplied:
                   summary: Already sent a private reply
                   value:
-                    error: "A private reply has already been sent to this comment, or the 7-day reply window has expired. Instagram only allows one private reply per comment within 7 days."
+                    error: "A private reply has already been sent to this comment, or the 7-day reply window has expired. Only one private reply per comment is allowed within 7 days."
                 commentTooOld:
                   summary: Comment older than 7 days
                   value:
-                    error: "The comment is older than 7 days. Instagram only allows private replies within 7 days of the comment being posted."
+                    error: "The comment is older than 7 days. Private replies can only be sent within 7 days of the comment being posted."
                 missingMessage:
                   summary: Missing message
                   value:

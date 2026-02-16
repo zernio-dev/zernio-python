@@ -1040,9 +1040,9 @@ def register_generated_tools(mcp, _get_client):
         """Send private reply to comment author
 
         Args:
-            post_id: The Instagram media/post ID (required)
+            post_id: The media/post ID (Instagram media ID or Facebook post ID) (required)
             comment_id: The comment ID to send a private reply to (required)
-            account_id: The Instagram social account ID (required)
+            account_id: The social account ID (Instagram or Facebook) (required)
             message: The message text to send as a private DM (required)"""
         client = _get_client()
         try:
