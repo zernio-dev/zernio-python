@@ -262,10 +262,9 @@ def register_generated_tools(mcp, _get_client):
     ) -> str:
         """List accounts
 
-            Args:
-                profile_id: Filter accounts by profile ID
-                include_over_limit: When true, includes accounts from profiles that exceed the user's plan limit.
-        Useful for disconnecting accounts from over-limit profiles so they can be deleted."""
+        Args:
+            profile_id: Filter accounts by profile ID
+            include_over_limit: When true, includes accounts from over-limit profiles."""
         client = _get_client()
         try:
             response = client.accounts.list_accounts(
@@ -427,11 +426,9 @@ def register_generated_tools(mcp, _get_client):
     ) -> str:
         """Get location details
 
-            Args:
-                account_id: The Late account ID (from /v1/accounts) (required)
-                read_mask: Comma-separated fields to return. Defaults to common fields.
-        Available: name, title, phoneNumbers, categories, storefrontAddress, websiteUri,
-        regularHours, specialHours, serviceArea, profile, openInfo, metadata, moreHours"""
+        Args:
+            account_id: The Late account ID (from /v1/accounts) (required)
+            read_mask: Comma-separated fields to return. Available: name, title, phoneNumbers, categories, storefrontAddress, websiteUri, regularHours, specialHours, serviceArea, profile, openInfo, metadata, moreHours."""
         client = _get_client()
         try:
             response = client.accounts.get_google_business_location_details(
@@ -636,11 +633,10 @@ def register_generated_tools(mcp, _get_client):
     ) -> str:
         """Resolve LinkedIn mention
 
-           Args:
-               account_id: The LinkedIn account ID (required)
-               url: LinkedIn profile URL, company URL, or vanity name. Person examples: miquelpalet, linkedin.com/in/miquelpalet. Organization examples: company/microsoft, linkedin.com/company/microsoft.
-        (required)
-               display_name: The exact display name as shown on LinkedIn. Required for person mentions (for clickable mentions; if not provided, a name is derived from the vanity URL which may not match). Optional for organization mentions (company name is auto-retrieved from LinkedIn)."""
+        Args:
+            account_id: The LinkedIn account ID (required)
+            url: LinkedIn profile URL, company URL, or vanity name. (required)
+            display_name: Exact display name as shown on LinkedIn. Required for person mentions to be clickable. Optional for org mentions."""
         client = _get_client()
         try:
             response = client.accounts.get_linked_in_mentions(
@@ -729,16 +725,12 @@ def register_generated_tools(mcp, _get_client):
     ) -> str:
         """Get LinkedIn aggregate stats
 
-            Args:
-                account_id: The ID of the LinkedIn personal account (required)
-                aggregation: Type of aggregation: TOTAL (default, returns single totals) or DAILY (returns daily breakdown). Note: MEMBERS_REACHED is not available with DAILY aggregation.
-                start_date: Start date for analytics data in YYYY-MM-DD format.
-        If provided without endDate, endDate defaults to today.
-        If omitted entirely, returns lifetime analytics.
-                end_date: End date for analytics data in YYYY-MM-DD format (exclusive).
-        If provided without startDate, startDate defaults to 30 days before endDate.
-                metrics: Comma-separated list of metrics to fetch. If omitted, fetches all available metrics.
-        Valid values: IMPRESSION, MEMBERS_REACHED, REACTION, COMMENT, RESHARE"""
+        Args:
+            account_id: The ID of the LinkedIn personal account (required)
+            aggregation: TOTAL (default, lifetime totals) or DAILY (time series). MEMBERS_REACHED not available with DAILY.
+            start_date: Start date (YYYY-MM-DD). If omitted, returns lifetime analytics.
+            end_date: End date (YYYY-MM-DD, exclusive). Defaults to today if omitted.
+            metrics: Comma-separated metrics: IMPRESSION, MEMBERS_REACHED, REACTION, COMMENT, RESHARE. Omit for all."""
         client = _get_client()
         try:
             response = client.analytics.get_linked_in_aggregate_analytics(
@@ -861,15 +853,13 @@ def register_generated_tools(mcp, _get_client):
     ) -> str:
         """Get post comments
 
-            Args:
-                post_id: The post identifier. Accepts a Late post ID (MongoDB ObjectId) which is automatically resolved to the platform-specific post ID, or a platform-specific post ID directly (e.g. tweet ID, Facebook Graph ID, YouTube video ID).
-        LinkedIn: for your own posts, the full URN stored in Late is used automatically. For third-party posts, pass the full activity URN or the raw numeric activity ID from the LinkedIn URL (automatically wrapped as urn:li:activity:).
-         (required)
-                account_id: (required)
-                subreddit: (Reddit only) Subreddit name
-                limit: Maximum number of comments to return
-                cursor: Pagination cursor
-                comment_id: (Reddit only) Get replies to a specific comment"""
+        Args:
+            post_id: Late post ID or platform-specific post ID. Late IDs are auto-resolved. LinkedIn third-party posts accept full activity URN or numeric ID. (required)
+            account_id: (required)
+            subreddit: (Reddit only) Subreddit name
+            limit: Maximum number of comments to return
+            cursor: Pagination cursor
+            comment_id: (Reddit only) Get replies to a specific comment"""
         client = _get_client()
         try:
             response = client.comments.get_inbox_post_comments(
@@ -897,18 +887,15 @@ def register_generated_tools(mcp, _get_client):
     ) -> str:
         """Reply to comment
 
-            Args:
-                post_id: The post identifier. Accepts a Late post ID or a platform-specific post ID.
-
-        LinkedIn: for third-party posts, pass the full activity URN (e.g. urn:li:activity:7422459067685855232) or the raw numeric activity ID from the URL.
-         (required)
-                account_id: (required)
-                message: (required)
-                comment_id: Reply to specific comment (optional)
-                subreddit: (Reddit only) Subreddit name for replies
-                parent_cid: (Bluesky only) Parent content identifier
-                root_uri: (Bluesky only) Root post URI
-                root_cid: (Bluesky only) Root post CID"""
+        Args:
+            post_id: Late post ID or platform-specific post ID. LinkedIn third-party posts accept full activity URN or numeric ID. (required)
+            account_id: (required)
+            message: (required)
+            comment_id: Reply to specific comment (optional)
+            subreddit: (Reddit only) Subreddit name for replies
+            parent_cid: (Bluesky only) Parent content identifier
+            root_uri: (Bluesky only) Root post URI
+            root_cid: (Bluesky only) Root post CID"""
         client = _get_client()
         try:
             response = client.comments.reply_to_inbox_post(
@@ -931,13 +918,10 @@ def register_generated_tools(mcp, _get_client):
     ) -> str:
         """Delete comment
 
-            Args:
-                post_id: The post identifier. Accepts a Late post ID or a platform-specific post ID.
-
-        LinkedIn: for third-party posts, pass the full activity URN (e.g. urn:li:activity:7422459067685855232) or the raw numeric activity ID from the URL.
-         (required)
-                account_id: (required)
-                comment_id: (required)"""
+        Args:
+            post_id: Late post ID or platform-specific post ID. LinkedIn third-party posts accept full activity URN or numeric ID. (required)
+            account_id: (required)
+            comment_id: (required)"""
         client = _get_client()
         try:
             response = client.comments.delete_inbox_comment(
@@ -1059,12 +1043,10 @@ def register_generated_tools(mcp, _get_client):
     ) -> str:
         """Get OAuth connect URL
 
-            Args:
-                platform: Social media platform to connect (required)
-                profile_id: Your Late profile ID (get from /v1/profiles) (required)
-                redirect_url: Your custom redirect URL after connection completes.
-        Standard mode: Late redirects here with ?connected={platform}&profileId=X&username=Y.
-        Headless mode: pass headless=true on this endpoint. User is redirected to your URL with OAuth data (profileId, tempToken, userProfile, connect_token, platform, step). See endpoint description for details."""
+        Args:
+            platform: Social media platform to connect (required)
+            profile_id: Your Late profile ID (get from /v1/profiles) (required)
+            redirect_url: Your custom redirect URL after connection completes. Standard mode appends ?connected={platform}&profileId=X&username=Y. Headless mode appends OAuth data params."""
         client = _get_client()
         try:
             response = client.connect.get_connect_url(
@@ -1169,7 +1151,7 @@ def register_generated_tools(mcp, _get_client):
             profile_id: Profile ID from your connection flow (required)
             location_id: The Google Business location ID selected by the user (required)
             temp_token: Temporary Google access token from OAuth (required)
-            user_profile: Decoded user profile object from the OAuth callback. Contains the refresh token needed for token refresh. Always include this field.
+            user_profile: Decoded user profile from the OAuth callback. Contains the refresh token. Always include this field.
             redirect_url: Optional custom redirect URL to return to after selection"""
         client = _get_client()
         try:
@@ -1358,12 +1340,11 @@ def register_generated_tools(mcp, _get_client):
     ) -> str:
         """Connect Bluesky account
 
-           Args:
-               identifier: Your Bluesky handle (e.g. user.bsky.social) or email address (required)
-               app_password: App password generated from Bluesky Settings > App Passwords (required)
-               state: Required state parameter formatted as {userId}-{profileId}. userId is your Late user ID (from GET /v1/users, currentUserId field), profileId is the profile to connect the account to (from GET /v1/profiles).
-        (required)
-               redirect_uri: Optional URL to redirect to after successful connection"""
+        Args:
+            identifier: Your Bluesky handle (e.g. user.bsky.social) or email address (required)
+            app_password: App password generated from Bluesky Settings > App Passwords (required)
+            state: Required state formatted as {userId}-{profileId}. Get userId from GET /v1/users and profileId from GET /v1/profiles. (required)
+            redirect_uri: Optional URL to redirect to after successful connection"""
         client = _get_client()
         try:
             response = client.connect.connect_bluesky_credentials(
@@ -1393,12 +1374,9 @@ def register_generated_tools(mcp, _get_client):
     def connect_initiate_telegram_connect(chat_id: str, profile_id: str) -> str:
         """Connect Telegram directly
 
-            Args:
-                chat_id: The Telegram chat ID. Can be:
-        - Numeric ID (e.g., "-1001234567890")
-        - Username with @ prefix (e.g., "@mychannel")
-         (required)
-                profile_id: The profile ID to connect the account to (required)"""
+        Args:
+            chat_id: The Telegram chat ID. Numeric ID (e.g. "-1001234567890") or username with @ prefix (e.g. "@mychannel"). (required)
+            profile_id: The profile ID to connect the account to (required)"""
         client = _get_client()
         try:
             response = client.connect.initiate_telegram_connect(
@@ -2005,7 +1983,7 @@ def register_generated_tools(mcp, _get_client):
         """List profiles
 
         Args:
-            include_over_limit: When true, includes profiles that exceed the user's plan limit. Over-limit profiles will have isOverLimit: true in the response. Useful for managing/deleting profiles after a plan downgrade."""
+            include_over_limit: When true, includes over-limit profiles (marked with isOverLimit: true)."""
         client = _get_client()
         try:
             response = client.profiles.list_profiles(
