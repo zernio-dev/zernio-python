@@ -59,7 +59,7 @@ class RedditResource:
         limit: int | None = 25,
         after: str | None = None,
     ) -> dict[str, Any]:
-        """Search Reddit posts via a connected account"""
+        """Search posts"""
         params = self._build_params(
             account_id=account_id,
             subreddit=subreddit,
@@ -81,7 +81,7 @@ class RedditResource:
         after: str | None = None,
         t: str | None = None,
     ) -> dict[str, Any]:
-        """Fetch subreddit feed via a connected account"""
+        """Get subreddit feed"""
         params = self._build_params(
             account_id=account_id,
             subreddit=subreddit,
@@ -103,7 +103,7 @@ class RedditResource:
         limit: int | None = 25,
         after: str | None = None,
     ) -> dict[str, Any]:
-        """Search Reddit posts via a connected account (async)"""
+        """Search posts (async)"""
         params = self._build_params(
             account_id=account_id,
             subreddit=subreddit,
@@ -125,7 +125,7 @@ class RedditResource:
         after: str | None = None,
         t: str | None = None,
     ) -> dict[str, Any]:
-        """Fetch subreddit feed via a connected account (async)"""
+        """Get subreddit feed (async)"""
         params = self._build_params(
             account_id=account_id,
             subreddit=subreddit,

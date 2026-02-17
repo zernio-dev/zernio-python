@@ -165,83 +165,83 @@ except LateAPIError as e:
 ### Posts
 | Method | Description |
 |--------|-------------|
-| `posts.list_posts()` | List posts visible to the authenticated user |
-| `posts.bulk_upload_posts()` | Validate and schedule multiple posts from CSV |
-| `posts.create_post()` | Create a draft, scheduled, or immediate post |
-| `posts.get_post()` | Get a single post |
-| `posts.update_post()` | Update a post |
-| `posts.delete_post()` | Delete a post |
-| `posts.retry_post()` | Retry publishing a failed or partial post |
-| `posts.unpublish_post()` | Delete a published post from a social media platform |
+| `posts.list_posts()` | List posts |
+| `posts.bulk_upload_posts()` | Bulk upload from CSV |
+| `posts.create_post()` | Create post |
+| `posts.get_post()` | Get post |
+| `posts.update_post()` | Update post |
+| `posts.delete_post()` | Delete post |
+| `posts.retry_post()` | Retry failed post |
+| `posts.unpublish_post()` | Unpublish post |
 
 ### Accounts
 | Method | Description |
 |--------|-------------|
-| `accounts.get_all_accounts_health()` | Check health of all connected accounts |
-| `accounts.list_accounts()` | List connected social accounts |
-| `accounts.get_account_health()` | Check health of a specific account |
-| `accounts.get_follower_stats()` | Get follower stats and growth metrics |
-| `accounts.get_google_business_reviews()` | Get Google Business Profile reviews |
-| `accounts.get_linked_in_mentions()` | Resolve a LinkedIn profile or company URL to a URN for @mentions |
-| `accounts.update_account()` | Update a social account |
-| `accounts.delete_account()` | Disconnect a social account |
+| `accounts.get_all_accounts_health()` | Check accounts health |
+| `accounts.list_accounts()` | List accounts |
+| `accounts.get_account_health()` | Check account health |
+| `accounts.get_follower_stats()` | Get follower stats |
+| `accounts.get_google_business_reviews()` | Get reviews |
+| `accounts.get_linked_in_mentions()` | Resolve LinkedIn mention |
+| `accounts.update_account()` | Update account |
+| `accounts.delete_account()` | Disconnect account |
 
 ### Profiles
 | Method | Description |
 |--------|-------------|
-| `profiles.list_profiles()` | List profiles visible to the authenticated user |
-| `profiles.create_profile()` | Create a new profile |
-| `profiles.get_profile()` | Get a profile by id |
-| `profiles.update_profile()` | Update a profile |
-| `profiles.delete_profile()` | Delete a profile (must have no connected accounts) |
+| `profiles.list_profiles()` | List profiles |
+| `profiles.create_profile()` | Create profile |
+| `profiles.get_profile()` | Get profile |
+| `profiles.update_profile()` | Update profile |
+| `profiles.delete_profile()` | Delete profile |
 
 ### Analytics
 | Method | Description |
 |--------|-------------|
-| `analytics.get_analytics()` | Unified analytics for posts |
-| `analytics.get_linked_in_aggregate_analytics()` | Get aggregate analytics for a LinkedIn personal account |
-| `analytics.get_linked_in_post_analytics()` | Get analytics for a specific LinkedIn post by URN |
-| `analytics.get_you_tube_daily_views()` | YouTube daily views breakdown |
+| `analytics.get_analytics()` | Get post analytics |
+| `analytics.get_linked_in_aggregate_analytics()` | Get LinkedIn aggregate stats |
+| `analytics.get_linked_in_post_analytics()` | Get LinkedIn post stats |
+| `analytics.get_you_tube_daily_views()` | Get YouTube daily views |
 
 ### Account Groups
 | Method | Description |
 |--------|-------------|
-| `account_groups.list_account_groups()` | List account groups for the authenticated user |
-| `account_groups.create_account_group()` | Create a new account group |
-| `account_groups.update_account_group()` | Update an account group |
-| `account_groups.delete_account_group()` | Delete an account group |
+| `account_groups.list_account_groups()` | List groups |
+| `account_groups.create_account_group()` | Create group |
+| `account_groups.update_account_group()` | Update group |
+| `account_groups.delete_account_group()` | Delete group |
 
 ### Queue
 | Method | Description |
 |--------|-------------|
-| `queue.list_queue_slots()` | Get queue schedules for a profile |
-| `queue.create_queue_slot()` | Create a new queue for a profile |
-| `queue.get_next_queue_slot()` | Preview the next available queue slot (informational only) |
-| `queue.update_queue_slot()` | Create or update a queue schedule |
-| `queue.delete_queue_slot()` | Delete a queue schedule |
-| `queue.preview_queue()` | Preview upcoming queue slots for a profile |
+| `queue.list_queue_slots()` | List schedules |
+| `queue.create_queue_slot()` | Create schedule |
+| `queue.get_next_queue_slot()` | Get next available slot |
+| `queue.update_queue_slot()` | Update schedule |
+| `queue.delete_queue_slot()` | Delete schedule |
+| `queue.preview_queue()` | Preview upcoming slots |
 
 ### Webhooks
 | Method | Description |
 |--------|-------------|
-| `webhooks.create_webhook_settings()` | Create a new webhook |
-| `webhooks.get_webhook_logs()` | Get webhook delivery logs |
-| `webhooks.get_webhook_settings()` | List all webhooks |
-| `webhooks.update_webhook_settings()` | Update a webhook |
-| `webhooks.delete_webhook_settings()` | Delete a webhook |
+| `webhooks.create_webhook_settings()` | Create webhook |
+| `webhooks.get_webhook_logs()` | Get delivery logs |
+| `webhooks.get_webhook_settings()` | List webhooks |
+| `webhooks.update_webhook_settings()` | Update webhook |
+| `webhooks.delete_webhook_settings()` | Delete webhook |
 | `webhooks.test_webhook()` | Send test webhook |
 
 ### API Keys
 | Method | Description |
 |--------|-------------|
-| `api_keys.list_api_keys()` | List API keys for the current user |
-| `api_keys.create_api_key()` | Create a new API key |
-| `api_keys.delete_api_key()` | Delete an API key |
+| `api_keys.list_api_keys()` | List keys |
+| `api_keys.create_api_key()` | Create key |
+| `api_keys.delete_api_key()` | Delete key |
 
 ### Media
 | Method | Description |
 |--------|-------------|
-| `media.get_media_presigned_url()` | Get a presigned URL for direct file upload (up to 5GB) |
+| `media.get_media_presigned_url()` | Get presigned upload URL |
 | `media.upload()` | Upload a file from path |
 | `media.upload_bytes()` | Upload file from bytes |
 | `media.upload_large()` | Upload large file with multipart |
@@ -251,73 +251,73 @@ except LateAPIError as e:
 ### Tools
 | Method | Description |
 |--------|-------------|
-| `tools.get_you_tube_transcript()` | Get YouTube video transcript |
-| `tools.check_instagram_hashtags()` | Check Instagram hashtags for bans |
-| `tools.download_bluesky_media()` | Download Bluesky video |
+| `tools.get_you_tube_transcript()` | Get YouTube transcript |
+| `tools.check_instagram_hashtags()` | Check Instagram hashtag bans |
+| `tools.download_bluesky_media()` | Download Bluesky media |
 | `tools.download_facebook_video()` | Download Facebook video |
-| `tools.download_instagram_media()` | Download Instagram reel or post |
+| `tools.download_instagram_media()` | Download Instagram media |
 | `tools.download_linked_in_video()` | Download LinkedIn video |
 | `tools.download_tik_tok_video()` | Download TikTok video |
-| `tools.download_twitter_media()` | Download Twitter/X video |
-| `tools.download_you_tube_video()` | Download YouTube video or audio |
+| `tools.download_twitter_media()` | Download Twitter/X media |
+| `tools.download_you_tube_video()` | Download YouTube video |
 
 ### Users
 | Method | Description |
 |--------|-------------|
-| `users.list_users()` | List team users (root + invited) |
-| `users.get_user()` | Get user by id (self or invited) |
+| `users.list_users()` | List users |
+| `users.get_user()` | Get user |
 
 ### Usage
 | Method | Description |
 |--------|-------------|
-| `usage.get_usage_stats()` | Get plan and usage stats for current account |
+| `usage.get_usage_stats()` | Get plan and usage stats |
 
 ### Logs
 | Method | Description |
 |--------|-------------|
-| `logs.list_connection_logs()` | Get connection logs |
-| `logs.list_logs()` | Get publishing logs (deprecated) |
-| `logs.list_posts_logs()` | Get publishing logs |
-| `logs.get_log()` | Get a single log entry |
-| `logs.get_post_logs()` | Get logs for a specific post |
+| `logs.list_connection_logs()` | List connection logs |
+| `logs.list_logs()` | List publishing logs (deprecated) |
+| `logs.list_posts_logs()` | List publishing logs |
+| `logs.get_log()` | Get log entry |
+| `logs.get_post_logs()` | Get post logs |
 
 ### Connect (OAuth)
 | Method | Description |
 |--------|-------------|
-| `connect.list_facebook_pages()` | List Facebook Pages after OAuth (Headless Mode) |
-| `connect.list_google_business_locations()` | List Google Business Locations after OAuth (Headless Mode) |
-| `connect.list_linked_in_organizations()` | Fetch full LinkedIn organization details (Headless Mode) |
-| `connect.list_pinterest_boards_for_selection()` | List Pinterest Boards after OAuth (Headless Mode) |
-| `connect.list_snapchat_profiles()` | List Snapchat Public Profiles after OAuth (Headless Mode) |
-| `connect.get_connect_url()` | Start OAuth connection for a platform |
-| `connect.get_facebook_pages()` | List available Facebook pages for a connected account |
-| `connect.get_gmb_locations()` | List available Google Business Profile locations for a connected account |
-| `connect.get_linked_in_organizations()` | Get available LinkedIn organizations for a connected account |
-| `connect.get_pending_o_auth_data()` | Fetch pending OAuth selection data (Headless Mode) |
-| `connect.get_pinterest_boards()` | List Pinterest boards for a connected account |
-| `connect.get_reddit_flairs()` | List available post flairs for a Reddit subreddit |
-| `connect.get_reddit_subreddits()` | List Reddit subreddits for a connected account |
-| `connect.get_telegram_connect_status()` | Generate Telegram access code |
-| `connect.update_facebook_page()` | Update selected Facebook page for a connected account |
-| `connect.update_gmb_location()` | Update selected Google Business Profile location for a connected account |
-| `connect.update_linked_in_organization()` | Switch LinkedIn account type (personal/organization) |
-| `connect.update_pinterest_boards()` | Set default Pinterest board on the connection |
-| `connect.update_reddit_subreddits()` | Set default subreddit on the connection |
-| `connect.complete_telegram_connect()` | Check Telegram connection status |
-| `connect.connect_bluesky_credentials()` | Connect Bluesky using app password |
-| `connect.handle_o_auth_callback()` | Complete OAuth token exchange manually (for server-side flows) |
-| `connect.initiate_telegram_connect()` | Direct Telegram connection (power users) |
-| `connect.select_facebook_page()` | Select a Facebook Page to complete the connection (Headless Mode) |
-| `connect.select_google_business_location()` | Select a Google Business location to complete the connection (Headless Mode) |
-| `connect.select_linked_in_organization()` | Select LinkedIn organization or personal account after OAuth |
-| `connect.select_pinterest_board()` | Select a Pinterest Board to complete the connection (Headless Mode) |
-| `connect.select_snapchat_profile()` | Select a Snapchat Public Profile to complete the connection (Headless Mode) |
+| `connect.list_facebook_pages()` | List Facebook pages |
+| `connect.list_google_business_locations()` | List Google Business locations |
+| `connect.list_linked_in_organizations()` | List LinkedIn orgs |
+| `connect.list_pinterest_boards_for_selection()` | List Pinterest boards |
+| `connect.list_snapchat_profiles()` | List Snapchat profiles |
+| `connect.get_connect_url()` | Get OAuth connect URL |
+| `connect.get_facebook_pages()` | List Facebook pages |
+| `connect.get_gmb_locations()` | List Google Business locations |
+| `connect.get_linked_in_organizations()` | List LinkedIn orgs |
+| `connect.get_pending_o_auth_data()` | Get pending OAuth data |
+| `connect.get_pinterest_boards()` | List Pinterest boards |
+| `connect.get_reddit_flairs()` | List subreddit flairs |
+| `connect.get_reddit_subreddits()` | List Reddit subreddits |
+| `connect.get_telegram_connect_status()` | Generate Telegram code |
+| `connect.update_facebook_page()` | Update Facebook page |
+| `connect.update_gmb_location()` | Update Google Business location |
+| `connect.update_linked_in_organization()` | Switch LinkedIn account type |
+| `connect.update_pinterest_boards()` | Set default Pinterest board |
+| `connect.update_reddit_subreddits()` | Set default subreddit |
+| `connect.complete_telegram_connect()` | Check Telegram status |
+| `connect.connect_bluesky_credentials()` | Connect Bluesky account |
+| `connect.handle_o_auth_callback()` | Complete OAuth callback |
+| `connect.initiate_telegram_connect()` | Connect Telegram directly |
+| `connect.select_facebook_page()` | Select Facebook page |
+| `connect.select_google_business_location()` | Select Google Business location |
+| `connect.select_linked_in_organization()` | Select LinkedIn org |
+| `connect.select_pinterest_board()` | Select Pinterest board |
+| `connect.select_snapchat_profile()` | Select Snapchat profile |
 
 ### Reddit
 | Method | Description |
 |--------|-------------|
-| `reddit.get_reddit_feed()` | Fetch subreddit feed via a connected account |
-| `reddit.search_reddit()` | Search Reddit posts via a connected account |
+| `reddit.get_reddit_feed()` | Get subreddit feed |
+| `reddit.search_reddit()` | Search posts |
 
 ### Account Settings
 | Method | Description |
@@ -335,69 +335,69 @@ except LateAPIError as e:
 ### Comments (Inbox)
 | Method | Description |
 |--------|-------------|
-| `comments.list_inbox_comments()` | List posts with comments across all accounts |
-| `comments.get_inbox_post_comments()` | Get comments for a post |
-| `comments.delete_inbox_comment()` | Delete a comment |
-| `comments.hide_inbox_comment()` | Hide a comment |
-| `comments.like_inbox_comment()` | Like a comment |
-| `comments.reply_to_inbox_post()` | Reply to a post or comment |
-| `comments.send_private_reply_to_comment()` | Send private reply to comment author |
-| `comments.unhide_inbox_comment()` | Unhide a comment |
-| `comments.unlike_inbox_comment()` | Unlike a comment |
+| `comments.list_inbox_comments()` | List commented posts |
+| `comments.get_inbox_post_comments()` | Get post comments |
+| `comments.delete_inbox_comment()` | Delete comment |
+| `comments.hide_inbox_comment()` | Hide comment |
+| `comments.like_inbox_comment()` | Like comment |
+| `comments.reply_to_inbox_post()` | Reply to comment |
+| `comments.send_private_reply_to_comment()` | Send private reply |
+| `comments.unhide_inbox_comment()` | Unhide comment |
+| `comments.unlike_inbox_comment()` | Unlike comment |
 
 ### GMB Attributes
 | Method | Description |
 |--------|-------------|
-| `gmb_attributes.get_google_business_attributes()` | Get Google Business Profile location attributes |
-| `gmb_attributes.update_google_business_attributes()` | Update Google Business Profile location attributes |
+| `gmb_attributes.get_google_business_attributes()` | Get attributes |
+| `gmb_attributes.update_google_business_attributes()` | Update attributes |
 
 ### GMB Food Menus
 | Method | Description |
 |--------|-------------|
-| `gmb_food_menus.get_google_business_food_menus()` | Get Google Business Profile food menus |
-| `gmb_food_menus.update_google_business_food_menus()` | Update Google Business Profile food menus |
+| `gmb_food_menus.get_google_business_food_menus()` | Get food menus |
+| `gmb_food_menus.update_google_business_food_menus()` | Update food menus |
 
 ### GMB Location Details
 | Method | Description |
 |--------|-------------|
-| `gmb_location_details.get_google_business_location_details()` | Get Google Business Profile location details |
-| `gmb_location_details.update_google_business_location_details()` | Update Google Business Profile location details |
+| `gmb_location_details.get_google_business_location_details()` | Get location details |
+| `gmb_location_details.update_google_business_location_details()` | Update location details |
 
 ### GMB Media
 | Method | Description |
 |--------|-------------|
-| `gmb_media.list_google_business_media()` | List Google Business Profile media (photos) |
-| `gmb_media.create_google_business_media()` | Upload a photo to Google Business Profile |
-| `gmb_media.delete_google_business_media()` | Delete a photo from Google Business Profile |
+| `gmb_media.list_google_business_media()` | List media |
+| `gmb_media.create_google_business_media()` | Upload photo |
+| `gmb_media.delete_google_business_media()` | Delete photo |
 
 ### GMB Place Actions
 | Method | Description |
 |--------|-------------|
-| `gmb_place_actions.list_google_business_place_actions()` | List place action links (booking, ordering, reservations) |
-| `gmb_place_actions.create_google_business_place_action()` | Create a place action link (booking, ordering, reservation) |
-| `gmb_place_actions.delete_google_business_place_action()` | Delete a place action link |
+| `gmb_place_actions.list_google_business_place_actions()` | List action links |
+| `gmb_place_actions.create_google_business_place_action()` | Create action link |
+| `gmb_place_actions.delete_google_business_place_action()` | Delete action link |
 
 ### Messages (Inbox)
 | Method | Description |
 |--------|-------------|
-| `messages.list_inbox_conversations()` | List conversations across all accounts |
-| `messages.get_inbox_conversation()` | Get conversation details |
-| `messages.get_inbox_conversation_messages()` | Get messages in a conversation |
+| `messages.list_inbox_conversations()` | List conversations |
+| `messages.get_inbox_conversation()` | Get conversation |
+| `messages.get_inbox_conversation_messages()` | List messages |
 | `messages.update_inbox_conversation()` | Update conversation status |
-| `messages.edit_inbox_message()` | Edit a message (Telegram only) |
-| `messages.send_inbox_message()` | Send a message |
+| `messages.edit_inbox_message()` | Edit message |
+| `messages.send_inbox_message()` | Send message |
 
 ### Reviews (Inbox)
 | Method | Description |
 |--------|-------------|
-| `reviews.list_inbox_reviews()` | List reviews across all accounts |
-| `reviews.delete_inbox_review_reply()` | Delete a review reply |
-| `reviews.reply_to_inbox_review()` | Reply to a review |
+| `reviews.list_inbox_reviews()` | List reviews |
+| `reviews.delete_inbox_review_reply()` | Delete review reply |
+| `reviews.reply_to_inbox_review()` | Reply to review |
 
 ### Invites
 | Method | Description |
 |--------|-------------|
-| `invites.create_invite_token()` | Create a team member invite token |
+| `invites.create_invite_token()` | Create invite token |
 
 ## MCP Server (Claude Desktop)
 

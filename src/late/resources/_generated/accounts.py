@@ -51,7 +51,7 @@ class AccountsResource:
     def list_accounts(
         self, *, profile_id: str | None = None, include_over_limit: bool | None = False
     ) -> dict[str, Any]:
-        """List connected social accounts"""
+        """List accounts"""
         params = self._build_params(
             profile_id=profile_id,
             include_over_limit=include_over_limit,
@@ -67,7 +67,7 @@ class AccountsResource:
         to_date: str | None = None,
         granularity: str | None = "daily",
     ) -> dict[str, Any]:
-        """Get follower stats and growth metrics"""
+        """Get follower stats"""
         params = self._build_params(
             account_ids=account_ids,
             profile_id=profile_id,
@@ -84,7 +84,7 @@ class AccountsResource:
         username: str | None = None,
         display_name: str | None = None,
     ) -> dict[str, Any]:
-        """Update a social account"""
+        """Update account"""
         payload = self._build_payload(
             username=username,
             display_name=display_name,
@@ -92,7 +92,7 @@ class AccountsResource:
         return self._client._put(f"/v1/accounts/{account_id}", data=payload)
 
     def delete_account(self, account_id: str) -> dict[str, Any]:
-        """Disconnect a social account"""
+        """Disconnect account"""
         return self._client._delete(f"/v1/accounts/{account_id}")
 
     def get_all_accounts_health(
@@ -102,7 +102,7 @@ class AccountsResource:
         platform: str | None = None,
         status: str | None = None,
     ) -> dict[str, Any]:
-        """Check health of all connected accounts"""
+        """Check accounts health"""
         params = self._build_params(
             profile_id=profile_id,
             platform=platform,
@@ -111,7 +111,7 @@ class AccountsResource:
         return self._client._get("/v1/accounts/health", params=params)
 
     def get_account_health(self, account_id: str) -> dict[str, Any]:
-        """Check health of a specific account"""
+        """Check account health"""
         return self._client._get(f"/v1/accounts/{account_id}/health")
 
     def get_google_business_reviews(
@@ -121,7 +121,7 @@ class AccountsResource:
         page_size: int | None = 50,
         page_token: str | None = None,
     ) -> dict[str, Any]:
-        """Get Google Business Profile reviews"""
+        """Get reviews"""
         params = self._build_params(
             page_size=page_size,
             page_token=page_token,
@@ -131,13 +131,13 @@ class AccountsResource:
         )
 
     def get_google_business_food_menus(self, account_id: str) -> dict[str, Any]:
-        """Get Google Business Profile food menus"""
+        """Get food menus"""
         return self._client._get(f"/v1/accounts/{account_id}/gmb-food-menus")
 
     def update_google_business_food_menus(
         self, account_id: str, menus: list[Any], *, update_mask: str | None = None
     ) -> dict[str, Any]:
-        """Update Google Business Profile food menus"""
+        """Update food menus"""
         payload = self._build_payload(
             menus=menus,
             update_mask=update_mask,
@@ -149,7 +149,7 @@ class AccountsResource:
     def get_google_business_location_details(
         self, account_id: str, *, read_mask: str | None = None
     ) -> dict[str, Any]:
-        """Get Google Business Profile location details"""
+        """Get location details"""
         params = self._build_params(
             read_mask=read_mask,
         )
@@ -168,7 +168,7 @@ class AccountsResource:
         website_uri: str | None = None,
         phone_numbers: dict[str, Any] | None = None,
     ) -> dict[str, Any]:
-        """Update Google Business Profile location details"""
+        """Update location details"""
         payload = self._build_payload(
             update_mask=update_mask,
             regular_hours=regular_hours,
@@ -188,7 +188,7 @@ class AccountsResource:
         page_size: int | None = 100,
         page_token: str | None = None,
     ) -> dict[str, Any]:
-        """List Google Business Profile media (photos)"""
+        """List media"""
         params = self._build_params(
             page_size=page_size,
             page_token=page_token,
@@ -204,7 +204,7 @@ class AccountsResource:
         description: str | None = None,
         category: str | None = None,
     ) -> dict[str, Any]:
-        """Upload a photo to Google Business Profile"""
+        """Upload photo"""
         payload = self._build_payload(
             source_url=source_url,
             media_format=media_format,
@@ -216,7 +216,7 @@ class AccountsResource:
     def delete_google_business_media(
         self, account_id: str, media_id: str
     ) -> dict[str, Any]:
-        """Delete a photo from Google Business Profile"""
+        """Delete photo"""
         params = self._build_params(
             media_id=media_id,
         )
@@ -225,13 +225,13 @@ class AccountsResource:
         )
 
     def get_google_business_attributes(self, account_id: str) -> dict[str, Any]:
-        """Get Google Business Profile location attributes"""
+        """Get attributes"""
         return self._client._get(f"/v1/accounts/{account_id}/gmb-attributes")
 
     def update_google_business_attributes(
         self, account_id: str, attributes: list[dict[str, Any]], attribute_mask: str
     ) -> dict[str, Any]:
-        """Update Google Business Profile location attributes"""
+        """Update attributes"""
         payload = self._build_payload(
             attributes=attributes,
             attribute_mask=attribute_mask,
@@ -247,7 +247,7 @@ class AccountsResource:
         page_size: int | None = 100,
         page_token: str | None = None,
     ) -> dict[str, Any]:
-        """List place action links (booking, ordering, reservations)"""
+        """List action links"""
         params = self._build_params(
             page_size=page_size,
             page_token=page_token,
@@ -259,7 +259,7 @@ class AccountsResource:
     def create_google_business_place_action(
         self, account_id: str, uri: str, place_action_type: str
     ) -> dict[str, Any]:
-        """Create a place action link (booking, ordering, reservation)"""
+        """Create action link"""
         payload = self._build_payload(
             uri=uri,
             place_action_type=place_action_type,
@@ -271,7 +271,7 @@ class AccountsResource:
     def delete_google_business_place_action(
         self, account_id: str, name: str
     ) -> dict[str, Any]:
-        """Delete a place action link"""
+        """Delete action link"""
         params = self._build_params(
             name=name,
         )
@@ -282,7 +282,7 @@ class AccountsResource:
     def get_linked_in_mentions(
         self, account_id: str, url: str, *, display_name: str | None = None
     ) -> dict[str, Any]:
-        """Resolve a LinkedIn profile or company URL to a URN for @mentions"""
+        """Resolve LinkedIn mention"""
         params = self._build_params(
             url=url,
             display_name=display_name,
@@ -294,7 +294,7 @@ class AccountsResource:
     async def alist_accounts(
         self, *, profile_id: str | None = None, include_over_limit: bool | None = False
     ) -> dict[str, Any]:
-        """List connected social accounts (async)"""
+        """List accounts (async)"""
         params = self._build_params(
             profile_id=profile_id,
             include_over_limit=include_over_limit,
@@ -310,7 +310,7 @@ class AccountsResource:
         to_date: str | None = None,
         granularity: str | None = "daily",
     ) -> dict[str, Any]:
-        """Get follower stats and growth metrics (async)"""
+        """Get follower stats (async)"""
         params = self._build_params(
             account_ids=account_ids,
             profile_id=profile_id,
@@ -327,7 +327,7 @@ class AccountsResource:
         username: str | None = None,
         display_name: str | None = None,
     ) -> dict[str, Any]:
-        """Update a social account (async)"""
+        """Update account (async)"""
         payload = self._build_payload(
             username=username,
             display_name=display_name,
@@ -335,7 +335,7 @@ class AccountsResource:
         return await self._client._aput(f"/v1/accounts/{account_id}", data=payload)
 
     async def adelete_account(self, account_id: str) -> dict[str, Any]:
-        """Disconnect a social account (async)"""
+        """Disconnect account (async)"""
         return await self._client._adelete(f"/v1/accounts/{account_id}")
 
     async def aget_all_accounts_health(
@@ -345,7 +345,7 @@ class AccountsResource:
         platform: str | None = None,
         status: str | None = None,
     ) -> dict[str, Any]:
-        """Check health of all connected accounts (async)"""
+        """Check accounts health (async)"""
         params = self._build_params(
             profile_id=profile_id,
             platform=platform,
@@ -354,7 +354,7 @@ class AccountsResource:
         return await self._client._aget("/v1/accounts/health", params=params)
 
     async def aget_account_health(self, account_id: str) -> dict[str, Any]:
-        """Check health of a specific account (async)"""
+        """Check account health (async)"""
         return await self._client._aget(f"/v1/accounts/{account_id}/health")
 
     async def aget_google_business_reviews(
@@ -364,7 +364,7 @@ class AccountsResource:
         page_size: int | None = 50,
         page_token: str | None = None,
     ) -> dict[str, Any]:
-        """Get Google Business Profile reviews (async)"""
+        """Get reviews (async)"""
         params = self._build_params(
             page_size=page_size,
             page_token=page_token,
@@ -374,13 +374,13 @@ class AccountsResource:
         )
 
     async def aget_google_business_food_menus(self, account_id: str) -> dict[str, Any]:
-        """Get Google Business Profile food menus (async)"""
+        """Get food menus (async)"""
         return await self._client._aget(f"/v1/accounts/{account_id}/gmb-food-menus")
 
     async def aupdate_google_business_food_menus(
         self, account_id: str, menus: list[Any], *, update_mask: str | None = None
     ) -> dict[str, Any]:
-        """Update Google Business Profile food menus (async)"""
+        """Update food menus (async)"""
         payload = self._build_payload(
             menus=menus,
             update_mask=update_mask,
@@ -392,7 +392,7 @@ class AccountsResource:
     async def aget_google_business_location_details(
         self, account_id: str, *, read_mask: str | None = None
     ) -> dict[str, Any]:
-        """Get Google Business Profile location details (async)"""
+        """Get location details (async)"""
         params = self._build_params(
             read_mask=read_mask,
         )
@@ -411,7 +411,7 @@ class AccountsResource:
         website_uri: str | None = None,
         phone_numbers: dict[str, Any] | None = None,
     ) -> dict[str, Any]:
-        """Update Google Business Profile location details (async)"""
+        """Update location details (async)"""
         payload = self._build_payload(
             update_mask=update_mask,
             regular_hours=regular_hours,
@@ -431,7 +431,7 @@ class AccountsResource:
         page_size: int | None = 100,
         page_token: str | None = None,
     ) -> dict[str, Any]:
-        """List Google Business Profile media (photos) (async)"""
+        """List media (async)"""
         params = self._build_params(
             page_size=page_size,
             page_token=page_token,
@@ -449,7 +449,7 @@ class AccountsResource:
         description: str | None = None,
         category: str | None = None,
     ) -> dict[str, Any]:
-        """Upload a photo to Google Business Profile (async)"""
+        """Upload photo (async)"""
         payload = self._build_payload(
             source_url=source_url,
             media_format=media_format,
@@ -463,7 +463,7 @@ class AccountsResource:
     async def adelete_google_business_media(
         self, account_id: str, media_id: str
     ) -> dict[str, Any]:
-        """Delete a photo from Google Business Profile (async)"""
+        """Delete photo (async)"""
         params = self._build_params(
             media_id=media_id,
         )
@@ -472,13 +472,13 @@ class AccountsResource:
         )
 
     async def aget_google_business_attributes(self, account_id: str) -> dict[str, Any]:
-        """Get Google Business Profile location attributes (async)"""
+        """Get attributes (async)"""
         return await self._client._aget(f"/v1/accounts/{account_id}/gmb-attributes")
 
     async def aupdate_google_business_attributes(
         self, account_id: str, attributes: list[dict[str, Any]], attribute_mask: str
     ) -> dict[str, Any]:
-        """Update Google Business Profile location attributes (async)"""
+        """Update attributes (async)"""
         payload = self._build_payload(
             attributes=attributes,
             attribute_mask=attribute_mask,
@@ -494,7 +494,7 @@ class AccountsResource:
         page_size: int | None = 100,
         page_token: str | None = None,
     ) -> dict[str, Any]:
-        """List place action links (booking, ordering, reservations) (async)"""
+        """List action links (async)"""
         params = self._build_params(
             page_size=page_size,
             page_token=page_token,
@@ -506,7 +506,7 @@ class AccountsResource:
     async def acreate_google_business_place_action(
         self, account_id: str, uri: str, place_action_type: str
     ) -> dict[str, Any]:
-        """Create a place action link (booking, ordering, reservation) (async)"""
+        """Create action link (async)"""
         payload = self._build_payload(
             uri=uri,
             place_action_type=place_action_type,
@@ -518,7 +518,7 @@ class AccountsResource:
     async def adelete_google_business_place_action(
         self, account_id: str, name: str
     ) -> dict[str, Any]:
-        """Delete a place action link (async)"""
+        """Delete action link (async)"""
         params = self._build_params(
             name=name,
         )
@@ -529,7 +529,7 @@ class AccountsResource:
     async def aget_linked_in_mentions(
         self, account_id: str, url: str, *, display_name: str | None = None
     ) -> dict[str, Any]:
-        """Resolve a LinkedIn profile or company URL to a URN for @mentions (async)"""
+        """Resolve LinkedIn mention (async)"""
         params = self._build_params(
             url=url,
             display_name=display_name,

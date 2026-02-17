@@ -62,7 +62,7 @@ class ReviewsResource:
         cursor: str | None = None,
         account_id: str | None = None,
     ) -> dict[str, Any]:
-        """List reviews across all accounts"""
+        """List reviews"""
         params = self._build_params(
             profile_id=profile_id,
             platform=platform,
@@ -80,7 +80,7 @@ class ReviewsResource:
     def reply_to_inbox_review(
         self, review_id: str, account_id: str, message: str
     ) -> dict[str, Any]:
-        """Reply to a review"""
+        """Reply to review"""
         payload = self._build_payload(
             account_id=account_id,
             message=message,
@@ -90,7 +90,7 @@ class ReviewsResource:
     def delete_inbox_review_reply(
         self, review_id: str, account_id: str
     ) -> dict[str, Any]:
-        """Delete a review reply"""
+        """Delete review reply"""
         return self._client._delete(f"/v1/inbox/reviews/{review_id}/reply")
 
     async def alist_inbox_reviews(
@@ -107,7 +107,7 @@ class ReviewsResource:
         cursor: str | None = None,
         account_id: str | None = None,
     ) -> dict[str, Any]:
-        """List reviews across all accounts (async)"""
+        """List reviews (async)"""
         params = self._build_params(
             profile_id=profile_id,
             platform=platform,
@@ -125,7 +125,7 @@ class ReviewsResource:
     async def areply_to_inbox_review(
         self, review_id: str, account_id: str, message: str
     ) -> dict[str, Any]:
-        """Reply to a review (async)"""
+        """Reply to review (async)"""
         payload = self._build_payload(
             account_id=account_id,
             message=message,
@@ -137,5 +137,5 @@ class ReviewsResource:
     async def adelete_inbox_review_reply(
         self, review_id: str, account_id: str
     ) -> dict[str, Any]:
-        """Delete a review reply (async)"""
+        """Delete review reply (async)"""
         return await self._client._adelete(f"/v1/inbox/reviews/{review_id}/reply")

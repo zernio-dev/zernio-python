@@ -49,11 +49,11 @@ class AccountGroupsResource:
         return result
 
     def list_account_groups(self) -> dict[str, Any]:
-        """List account groups for the authenticated user"""
+        """List groups"""
         return self._client._get("/v1/account-groups")
 
     def create_account_group(self, name: str, account_ids: list[str]) -> dict[str, Any]:
-        """Create a new account group"""
+        """Create group"""
         payload = self._build_payload(
             name=name,
             account_ids=account_ids,
@@ -67,7 +67,7 @@ class AccountGroupsResource:
         name: str | None = None,
         account_ids: list[str] | None = None,
     ) -> dict[str, Any]:
-        """Update an account group"""
+        """Update group"""
         payload = self._build_payload(
             name=name,
             account_ids=account_ids,
@@ -75,17 +75,17 @@ class AccountGroupsResource:
         return self._client._put(f"/v1/account-groups/{group_id}", data=payload)
 
     def delete_account_group(self, group_id: str) -> dict[str, Any]:
-        """Delete an account group"""
+        """Delete group"""
         return self._client._delete(f"/v1/account-groups/{group_id}")
 
     async def alist_account_groups(self) -> dict[str, Any]:
-        """List account groups for the authenticated user (async)"""
+        """List groups (async)"""
         return await self._client._aget("/v1/account-groups")
 
     async def acreate_account_group(
         self, name: str, account_ids: list[str]
     ) -> dict[str, Any]:
-        """Create a new account group (async)"""
+        """Create group (async)"""
         payload = self._build_payload(
             name=name,
             account_ids=account_ids,
@@ -99,7 +99,7 @@ class AccountGroupsResource:
         name: str | None = None,
         account_ids: list[str] | None = None,
     ) -> dict[str, Any]:
-        """Update an account group (async)"""
+        """Update group (async)"""
         payload = self._build_payload(
             name=name,
             account_ids=account_ids,
@@ -107,5 +107,5 @@ class AccountGroupsResource:
         return await self._client._aput(f"/v1/account-groups/{group_id}", data=payload)
 
     async def adelete_account_group(self, group_id: str) -> dict[str, Any]:
-        """Delete an account group (async)"""
+        """Delete group (async)"""
         return await self._client._adelete(f"/v1/account-groups/{group_id}")

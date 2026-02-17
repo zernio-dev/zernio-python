@@ -59,7 +59,7 @@ class MessagesResource:
         cursor: str | None = None,
         account_id: str | None = None,
     ) -> dict[str, Any]:
-        """List conversations across all accounts"""
+        """List conversations"""
         params = self._build_params(
             profile_id=profile_id,
             platform=platform,
@@ -74,7 +74,7 @@ class MessagesResource:
     def get_inbox_conversation(
         self, conversation_id: str, account_id: str
     ) -> dict[str, Any]:
-        """Get conversation details"""
+        """Get conversation"""
         params = self._build_params(
             account_id=account_id,
         )
@@ -97,7 +97,7 @@ class MessagesResource:
     def get_inbox_conversation_messages(
         self, conversation_id: str, account_id: str
     ) -> dict[str, Any]:
-        """Get messages in a conversation"""
+        """List messages"""
         params = self._build_params(
             account_id=account_id,
         )
@@ -119,7 +119,7 @@ class MessagesResource:
         message_tag: str | None = None,
         reply_to: str | None = None,
     ) -> dict[str, Any]:
-        """Send a message"""
+        """Send message"""
         payload = self._build_payload(
             account_id=account_id,
             message=message,
@@ -144,7 +144,7 @@ class MessagesResource:
         text: str | None = None,
         reply_markup: dict[str, Any] | None = None,
     ) -> dict[str, Any]:
-        """Edit a message (Telegram only)"""
+        """Edit message"""
         payload = self._build_payload(
             account_id=account_id,
             text=text,
@@ -166,7 +166,7 @@ class MessagesResource:
         cursor: str | None = None,
         account_id: str | None = None,
     ) -> dict[str, Any]:
-        """List conversations across all accounts (async)"""
+        """List conversations (async)"""
         params = self._build_params(
             profile_id=profile_id,
             platform=platform,
@@ -181,7 +181,7 @@ class MessagesResource:
     async def aget_inbox_conversation(
         self, conversation_id: str, account_id: str
     ) -> dict[str, Any]:
-        """Get conversation details (async)"""
+        """Get conversation (async)"""
         params = self._build_params(
             account_id=account_id,
         )
@@ -204,7 +204,7 @@ class MessagesResource:
     async def aget_inbox_conversation_messages(
         self, conversation_id: str, account_id: str
     ) -> dict[str, Any]:
-        """Get messages in a conversation (async)"""
+        """List messages (async)"""
         params = self._build_params(
             account_id=account_id,
         )
@@ -226,7 +226,7 @@ class MessagesResource:
         message_tag: str | None = None,
         reply_to: str | None = None,
     ) -> dict[str, Any]:
-        """Send a message (async)"""
+        """Send message (async)"""
         payload = self._build_payload(
             account_id=account_id,
             message=message,
@@ -251,7 +251,7 @@ class MessagesResource:
         text: str | None = None,
         reply_markup: dict[str, Any] | None = None,
     ) -> dict[str, Any]:
-        """Edit a message (Telegram only) (async)"""
+        """Edit message (async)"""
         payload = self._build_payload(
             account_id=account_id,
             text=text,

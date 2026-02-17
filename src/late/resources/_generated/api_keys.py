@@ -49,13 +49,13 @@ class ApiKeysResource:
         return result
 
     def list_api_keys(self) -> dict[str, Any]:
-        """List API keys for the current user"""
+        """List keys"""
         return self._client._get("/v1/api-keys")
 
     def create_api_key(
         self, name: str, *, expires_in: int | None = None
     ) -> dict[str, Any]:
-        """Create a new API key"""
+        """Create key"""
         payload = self._build_payload(
             name=name,
             expires_in=expires_in,
@@ -63,17 +63,17 @@ class ApiKeysResource:
         return self._client._post("/v1/api-keys", data=payload)
 
     def delete_api_key(self, key_id: str) -> dict[str, Any]:
-        """Delete an API key"""
+        """Delete key"""
         return self._client._delete(f"/v1/api-keys/{key_id}")
 
     async def alist_api_keys(self) -> dict[str, Any]:
-        """List API keys for the current user (async)"""
+        """List keys (async)"""
         return await self._client._aget("/v1/api-keys")
 
     async def acreate_api_key(
         self, name: str, *, expires_in: int | None = None
     ) -> dict[str, Any]:
-        """Create a new API key (async)"""
+        """Create key (async)"""
         payload = self._build_payload(
             name=name,
             expires_in=expires_in,
@@ -81,5 +81,5 @@ class ApiKeysResource:
         return await self._client._apost("/v1/api-keys", data=payload)
 
     async def adelete_api_key(self, key_id: str) -> dict[str, Any]:
-        """Delete an API key (async)"""
+        """Delete key (async)"""
         return await self._client._adelete(f"/v1/api-keys/{key_id}")

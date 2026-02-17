@@ -51,7 +51,7 @@ class MediaResource:
     def get_media_presigned_url(
         self, filename: str, content_type: str, *, size: int | None = None
     ) -> dict[str, Any]:
-        """Get a presigned URL for direct file upload (up to 5GB)"""
+        """Get presigned upload URL"""
         payload = self._build_payload(
             filename=filename,
             content_type=content_type,
@@ -62,7 +62,7 @@ class MediaResource:
     async def aget_media_presigned_url(
         self, filename: str, content_type: str, *, size: int | None = None
     ) -> dict[str, Any]:
-        """Get a presigned URL for direct file upload (up to 5GB) (async)"""
+        """Get presigned upload URL (async)"""
         payload = self._build_payload(
             filename=filename,
             content_type=content_type,

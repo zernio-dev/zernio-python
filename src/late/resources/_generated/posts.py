@@ -63,7 +63,7 @@ class PostsResource:
         date_to: str | None = None,
         include_hidden: bool | None = False,
     ) -> dict[str, Any]:
-        """List posts visible to the authenticated user"""
+        """List posts"""
         params = self._build_params(
             page=page,
             limit=limit,
@@ -97,7 +97,7 @@ class PostsResource:
         queued_from_profile: str | None = None,
         queue_id: str | None = None,
     ) -> dict[str, Any]:
-        """Create a draft, scheduled, or immediate post"""
+        """Create post"""
         payload = self._build_payload(
             title=title,
             content=content,
@@ -119,7 +119,7 @@ class PostsResource:
         return self._client._post("/v1/posts", data=payload)
 
     def get_post(self, post_id: str) -> dict[str, Any]:
-        """Get a single post"""
+        """Get post"""
         return self._client._get(f"/v1/posts/{post_id}")
 
     def update_post(
@@ -130,7 +130,7 @@ class PostsResource:
         scheduled_for: datetime | str | None = None,
         tiktok_settings: Any | None = None,
     ) -> dict[str, Any]:
-        """Update a post"""
+        """Update post"""
         payload = self._build_payload(
             content=content,
             scheduled_for=scheduled_for,
@@ -139,22 +139,22 @@ class PostsResource:
         return self._client._put(f"/v1/posts/{post_id}", data=payload)
 
     def delete_post(self, post_id: str) -> dict[str, Any]:
-        """Delete a post"""
+        """Delete post"""
         return self._client._delete(f"/v1/posts/{post_id}")
 
     def bulk_upload_posts(self, *, dry_run: bool | None = False) -> dict[str, Any]:
-        """Validate and schedule multiple posts from CSV"""
+        """Bulk upload from CSV"""
         params = self._build_params(
             dry_run=dry_run,
         )
         return self._client._post("/v1/posts/bulk-upload", params=params)
 
     def retry_post(self, post_id: str) -> dict[str, Any]:
-        """Retry publishing a failed or partial post"""
+        """Retry failed post"""
         return self._client._post(f"/v1/posts/{post_id}/retry")
 
     def unpublish_post(self, post_id: str, platform: str) -> dict[str, Any]:
-        """Delete a published post from a social media platform"""
+        """Unpublish post"""
         payload = self._build_payload(
             platform=platform,
         )
@@ -173,7 +173,7 @@ class PostsResource:
         date_to: str | None = None,
         include_hidden: bool | None = False,
     ) -> dict[str, Any]:
-        """List posts visible to the authenticated user (async)"""
+        """List posts (async)"""
         params = self._build_params(
             page=page,
             limit=limit,
@@ -207,7 +207,7 @@ class PostsResource:
         queued_from_profile: str | None = None,
         queue_id: str | None = None,
     ) -> dict[str, Any]:
-        """Create a draft, scheduled, or immediate post (async)"""
+        """Create post (async)"""
         payload = self._build_payload(
             title=title,
             content=content,
@@ -229,7 +229,7 @@ class PostsResource:
         return await self._client._apost("/v1/posts", data=payload)
 
     async def aget_post(self, post_id: str) -> dict[str, Any]:
-        """Get a single post (async)"""
+        """Get post (async)"""
         return await self._client._aget(f"/v1/posts/{post_id}")
 
     async def aupdate_post(
@@ -240,7 +240,7 @@ class PostsResource:
         scheduled_for: datetime | str | None = None,
         tiktok_settings: Any | None = None,
     ) -> dict[str, Any]:
-        """Update a post (async)"""
+        """Update post (async)"""
         payload = self._build_payload(
             content=content,
             scheduled_for=scheduled_for,
@@ -249,24 +249,24 @@ class PostsResource:
         return await self._client._aput(f"/v1/posts/{post_id}", data=payload)
 
     async def adelete_post(self, post_id: str) -> dict[str, Any]:
-        """Delete a post (async)"""
+        """Delete post (async)"""
         return await self._client._adelete(f"/v1/posts/{post_id}")
 
     async def abulk_upload_posts(
         self, *, dry_run: bool | None = False
     ) -> dict[str, Any]:
-        """Validate and schedule multiple posts from CSV (async)"""
+        """Bulk upload from CSV (async)"""
         params = self._build_params(
             dry_run=dry_run,
         )
         return await self._client._apost("/v1/posts/bulk-upload", params=params)
 
     async def aretry_post(self, post_id: str) -> dict[str, Any]:
-        """Retry publishing a failed or partial post (async)"""
+        """Retry failed post (async)"""
         return await self._client._apost(f"/v1/posts/{post_id}/retry")
 
     async def aunpublish_post(self, post_id: str, platform: str) -> dict[str, Any]:
-        """Delete a published post from a social media platform (async)"""
+        """Unpublish post (async)"""
         payload = self._build_payload(
             platform=platform,
         )

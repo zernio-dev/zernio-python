@@ -49,17 +49,17 @@ class UsersResource:
         return result
 
     def list_users(self) -> dict[str, Any]:
-        """List team users (root + invited)"""
+        """List users"""
         return self._client._get("/v1/users")
 
     def get_user(self, user_id: str) -> dict[str, Any]:
-        """Get user by id (self or invited)"""
+        """Get user"""
         return self._client._get(f"/v1/users/{user_id}")
 
     async def alist_users(self) -> dict[str, Any]:
-        """List team users (root + invited) (async)"""
+        """List users (async)"""
         return await self._client._aget("/v1/users")
 
     async def aget_user(self, user_id: str) -> dict[str, Any]:
-        """Get user by id (self or invited) (async)"""
+        """Get user (async)"""
         return await self._client._aget(f"/v1/users/{user_id}")

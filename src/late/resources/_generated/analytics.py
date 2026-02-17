@@ -62,7 +62,7 @@ class AnalyticsResource:
         sort_by: str | None = "date",
         order: str | None = "desc",
     ) -> dict[str, Any]:
-        """Unified analytics for posts"""
+        """Get post analytics"""
         params = self._build_params(
             post_id=post_id,
             platform=platform,
@@ -85,7 +85,7 @@ class AnalyticsResource:
         start_date: str | None = None,
         end_date: str | None = None,
     ) -> dict[str, Any]:
-        """YouTube daily views breakdown"""
+        """Get YouTube daily views"""
         params = self._build_params(
             video_id=video_id,
             account_id=account_id,
@@ -103,7 +103,7 @@ class AnalyticsResource:
         end_date: str | None = None,
         metrics: str | None = None,
     ) -> dict[str, Any]:
-        """Get aggregate analytics for a LinkedIn personal account"""
+        """Get LinkedIn aggregate stats"""
         params = self._build_params(
             aggregation=aggregation,
             start_date=start_date,
@@ -115,7 +115,7 @@ class AnalyticsResource:
         )
 
     def get_linked_in_post_analytics(self, account_id: str, urn: str) -> dict[str, Any]:
-        """Get analytics for a specific LinkedIn post by URN"""
+        """Get LinkedIn post stats"""
         params = self._build_params(
             urn=urn,
         )
@@ -137,7 +137,7 @@ class AnalyticsResource:
         sort_by: str | None = "date",
         order: str | None = "desc",
     ) -> dict[str, Any]:
-        """Unified analytics for posts (async)"""
+        """Get post analytics (async)"""
         params = self._build_params(
             post_id=post_id,
             platform=platform,
@@ -160,7 +160,7 @@ class AnalyticsResource:
         start_date: str | None = None,
         end_date: str | None = None,
     ) -> dict[str, Any]:
-        """YouTube daily views breakdown (async)"""
+        """Get YouTube daily views (async)"""
         params = self._build_params(
             video_id=video_id,
             account_id=account_id,
@@ -180,7 +180,7 @@ class AnalyticsResource:
         end_date: str | None = None,
         metrics: str | None = None,
     ) -> dict[str, Any]:
-        """Get aggregate analytics for a LinkedIn personal account (async)"""
+        """Get LinkedIn aggregate stats (async)"""
         params = self._build_params(
             aggregation=aggregation,
             start_date=start_date,
@@ -194,7 +194,7 @@ class AnalyticsResource:
     async def aget_linked_in_post_analytics(
         self, account_id: str, urn: str
     ) -> dict[str, Any]:
-        """Get analytics for a specific LinkedIn post by URN (async)"""
+        """Get LinkedIn post stats (async)"""
         params = self._build_params(
             urn=urn,
         )

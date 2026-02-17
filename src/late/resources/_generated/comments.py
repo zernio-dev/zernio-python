@@ -63,7 +63,7 @@ class CommentsResource:
         cursor: str | None = None,
         account_id: str | None = None,
     ) -> dict[str, Any]:
-        """List posts with comments across all accounts"""
+        """List commented posts"""
         params = self._build_params(
             profile_id=profile_id,
             platform=platform,
@@ -87,7 +87,7 @@ class CommentsResource:
         cursor: str | None = None,
         comment_id: str | None = None,
     ) -> dict[str, Any]:
-        """Get comments for a post"""
+        """Get post comments"""
         params = self._build_params(
             account_id=account_id,
             subreddit=subreddit,
@@ -109,7 +109,7 @@ class CommentsResource:
         root_uri: str | None = None,
         root_cid: str | None = None,
     ) -> dict[str, Any]:
-        """Reply to a post or comment"""
+        """Reply to comment"""
         payload = self._build_payload(
             account_id=account_id,
             message=message,
@@ -124,7 +124,7 @@ class CommentsResource:
     def delete_inbox_comment(
         self, post_id: str, account_id: str, comment_id: str
     ) -> dict[str, Any]:
-        """Delete a comment"""
+        """Delete comment"""
         params = self._build_params(
             account_id=account_id,
             comment_id=comment_id,
@@ -134,7 +134,7 @@ class CommentsResource:
     def hide_inbox_comment(
         self, post_id: str, comment_id: str, account_id: str
     ) -> dict[str, Any]:
-        """Hide a comment"""
+        """Hide comment"""
         payload = self._build_payload(
             account_id=account_id,
         )
@@ -145,7 +145,7 @@ class CommentsResource:
     def unhide_inbox_comment(
         self, post_id: str, comment_id: str, account_id: str
     ) -> dict[str, Any]:
-        """Unhide a comment"""
+        """Unhide comment"""
         params = self._build_params(
             account_id=account_id,
         )
@@ -156,7 +156,7 @@ class CommentsResource:
     def like_inbox_comment(
         self, post_id: str, comment_id: str, account_id: str, *, cid: str | None = None
     ) -> dict[str, Any]:
-        """Like a comment"""
+        """Like comment"""
         payload = self._build_payload(
             account_id=account_id,
             cid=cid,
@@ -173,7 +173,7 @@ class CommentsResource:
         *,
         like_uri: str | None = None,
     ) -> dict[str, Any]:
-        """Unlike a comment"""
+        """Unlike comment"""
         params = self._build_params(
             account_id=account_id,
             like_uri=like_uri,
@@ -185,7 +185,7 @@ class CommentsResource:
     def send_private_reply_to_comment(
         self, post_id: str, comment_id: str, account_id: str, message: str
     ) -> dict[str, Any]:
-        """Send private reply to comment author"""
+        """Send private reply"""
         payload = self._build_payload(
             account_id=account_id,
             message=message,
@@ -207,7 +207,7 @@ class CommentsResource:
         cursor: str | None = None,
         account_id: str | None = None,
     ) -> dict[str, Any]:
-        """List posts with comments across all accounts (async)"""
+        """List commented posts (async)"""
         params = self._build_params(
             profile_id=profile_id,
             platform=platform,
@@ -231,7 +231,7 @@ class CommentsResource:
         cursor: str | None = None,
         comment_id: str | None = None,
     ) -> dict[str, Any]:
-        """Get comments for a post (async)"""
+        """Get post comments (async)"""
         params = self._build_params(
             account_id=account_id,
             subreddit=subreddit,
@@ -253,7 +253,7 @@ class CommentsResource:
         root_uri: str | None = None,
         root_cid: str | None = None,
     ) -> dict[str, Any]:
-        """Reply to a post or comment (async)"""
+        """Reply to comment (async)"""
         payload = self._build_payload(
             account_id=account_id,
             message=message,
@@ -268,7 +268,7 @@ class CommentsResource:
     async def adelete_inbox_comment(
         self, post_id: str, account_id: str, comment_id: str
     ) -> dict[str, Any]:
-        """Delete a comment (async)"""
+        """Delete comment (async)"""
         params = self._build_params(
             account_id=account_id,
             comment_id=comment_id,
@@ -280,7 +280,7 @@ class CommentsResource:
     async def ahide_inbox_comment(
         self, post_id: str, comment_id: str, account_id: str
     ) -> dict[str, Any]:
-        """Hide a comment (async)"""
+        """Hide comment (async)"""
         payload = self._build_payload(
             account_id=account_id,
         )
@@ -291,7 +291,7 @@ class CommentsResource:
     async def aunhide_inbox_comment(
         self, post_id: str, comment_id: str, account_id: str
     ) -> dict[str, Any]:
-        """Unhide a comment (async)"""
+        """Unhide comment (async)"""
         params = self._build_params(
             account_id=account_id,
         )
@@ -302,7 +302,7 @@ class CommentsResource:
     async def alike_inbox_comment(
         self, post_id: str, comment_id: str, account_id: str, *, cid: str | None = None
     ) -> dict[str, Any]:
-        """Like a comment (async)"""
+        """Like comment (async)"""
         payload = self._build_payload(
             account_id=account_id,
             cid=cid,
@@ -319,7 +319,7 @@ class CommentsResource:
         *,
         like_uri: str | None = None,
     ) -> dict[str, Any]:
-        """Unlike a comment (async)"""
+        """Unlike comment (async)"""
         params = self._build_params(
             account_id=account_id,
             like_uri=like_uri,
@@ -331,7 +331,7 @@ class CommentsResource:
     async def asend_private_reply_to_comment(
         self, post_id: str, comment_id: str, account_id: str, message: str
     ) -> dict[str, Any]:
-        """Send private reply to comment author (async)"""
+        """Send private reply (async)"""
         payload = self._build_payload(
             account_id=account_id,
             message=message,

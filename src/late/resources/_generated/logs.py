@@ -58,7 +58,7 @@ class LogsResource:
         limit: int | None = 50,
         skip: int | None = 0,
     ) -> dict[str, Any]:
-        """Get publishing logs (deprecated)"""
+        """List publishing logs (deprecated)"""
         params = self._build_params(
             status=status,
             platform=platform,
@@ -70,7 +70,7 @@ class LogsResource:
         return self._client._get("/v1/logs", params=params)
 
     def get_log(self, log_id: str) -> dict[str, Any]:
-        """Get a single log entry"""
+        """Get log entry"""
         return self._client._get(f"/v1/logs/{log_id}")
 
     def list_posts_logs(
@@ -83,7 +83,7 @@ class LogsResource:
         limit: int | None = 50,
         skip: int | None = 0,
     ) -> dict[str, Any]:
-        """Get publishing logs"""
+        """List publishing logs"""
         params = self._build_params(
             status=status,
             platform=platform,
@@ -104,7 +104,7 @@ class LogsResource:
         limit: int | None = 50,
         skip: int | None = 0,
     ) -> dict[str, Any]:
-        """Get connection logs"""
+        """List connection logs"""
         params = self._build_params(
             platform=platform,
             event_type=event_type,
@@ -116,7 +116,7 @@ class LogsResource:
         return self._client._get("/v1/connections/logs", params=params)
 
     def get_post_logs(self, post_id: str, *, limit: int | None = 50) -> dict[str, Any]:
-        """Get logs for a specific post"""
+        """Get post logs"""
         params = self._build_params(
             limit=limit,
         )
@@ -132,7 +132,7 @@ class LogsResource:
         limit: int | None = 50,
         skip: int | None = 0,
     ) -> dict[str, Any]:
-        """Get publishing logs (deprecated) (async)"""
+        """List publishing logs (deprecated) (async)"""
         params = self._build_params(
             status=status,
             platform=platform,
@@ -144,7 +144,7 @@ class LogsResource:
         return await self._client._aget("/v1/logs", params=params)
 
     async def aget_log(self, log_id: str) -> dict[str, Any]:
-        """Get a single log entry (async)"""
+        """Get log entry (async)"""
         return await self._client._aget(f"/v1/logs/{log_id}")
 
     async def alist_posts_logs(
@@ -157,7 +157,7 @@ class LogsResource:
         limit: int | None = 50,
         skip: int | None = 0,
     ) -> dict[str, Any]:
-        """Get publishing logs (async)"""
+        """List publishing logs (async)"""
         params = self._build_params(
             status=status,
             platform=platform,
@@ -178,7 +178,7 @@ class LogsResource:
         limit: int | None = 50,
         skip: int | None = 0,
     ) -> dict[str, Any]:
-        """Get connection logs (async)"""
+        """List connection logs (async)"""
         params = self._build_params(
             platform=platform,
             event_type=event_type,
@@ -192,7 +192,7 @@ class LogsResource:
     async def aget_post_logs(
         self, post_id: str, *, limit: int | None = 50
     ) -> dict[str, Any]:
-        """Get logs for a specific post (async)"""
+        """Get post logs (async)"""
         params = self._build_params(
             limit=limit,
         )

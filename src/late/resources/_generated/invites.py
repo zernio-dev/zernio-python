@@ -51,7 +51,7 @@ class InvitesResource:
     def create_invite_token(
         self, scope: str, *, profile_ids: list[str] | None = None
     ) -> dict[str, Any]:
-        """Create a team member invite token"""
+        """Create invite token"""
         payload = self._build_payload(
             scope=scope,
             profile_ids=profile_ids,
@@ -61,7 +61,7 @@ class InvitesResource:
     async def acreate_invite_token(
         self, scope: str, *, profile_ids: list[str] | None = None
     ) -> dict[str, Any]:
-        """Create a team member invite token (async)"""
+        """Create invite token (async)"""
         payload = self._build_payload(
             scope=scope,
             profile_ids=profile_ids,

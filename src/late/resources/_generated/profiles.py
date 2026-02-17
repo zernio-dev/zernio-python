@@ -51,7 +51,7 @@ class ProfilesResource:
     def list_profiles(
         self, *, include_over_limit: bool | None = False
     ) -> dict[str, Any]:
-        """List profiles visible to the authenticated user"""
+        """List profiles"""
         params = self._build_params(
             include_over_limit=include_over_limit,
         )
@@ -60,7 +60,7 @@ class ProfilesResource:
     def create_profile(
         self, name: str, *, description: str | None = None, color: str | None = None
     ) -> dict[str, Any]:
-        """Create a new profile"""
+        """Create profile"""
         payload = self._build_payload(
             name=name,
             description=description,
@@ -69,7 +69,7 @@ class ProfilesResource:
         return self._client._post("/v1/profiles", data=payload)
 
     def get_profile(self, profile_id: str) -> dict[str, Any]:
-        """Get a profile by id"""
+        """Get profile"""
         return self._client._get(f"/v1/profiles/{profile_id}")
 
     def update_profile(
@@ -81,7 +81,7 @@ class ProfilesResource:
         color: str | None = None,
         is_default: bool | None = None,
     ) -> dict[str, Any]:
-        """Update a profile"""
+        """Update profile"""
         payload = self._build_payload(
             name=name,
             description=description,
@@ -91,13 +91,13 @@ class ProfilesResource:
         return self._client._put(f"/v1/profiles/{profile_id}", data=payload)
 
     def delete_profile(self, profile_id: str) -> dict[str, Any]:
-        """Delete a profile (must have no connected accounts)"""
+        """Delete profile"""
         return self._client._delete(f"/v1/profiles/{profile_id}")
 
     async def alist_profiles(
         self, *, include_over_limit: bool | None = False
     ) -> dict[str, Any]:
-        """List profiles visible to the authenticated user (async)"""
+        """List profiles (async)"""
         params = self._build_params(
             include_over_limit=include_over_limit,
         )
@@ -106,7 +106,7 @@ class ProfilesResource:
     async def acreate_profile(
         self, name: str, *, description: str | None = None, color: str | None = None
     ) -> dict[str, Any]:
-        """Create a new profile (async)"""
+        """Create profile (async)"""
         payload = self._build_payload(
             name=name,
             description=description,
@@ -115,7 +115,7 @@ class ProfilesResource:
         return await self._client._apost("/v1/profiles", data=payload)
 
     async def aget_profile(self, profile_id: str) -> dict[str, Any]:
-        """Get a profile by id (async)"""
+        """Get profile (async)"""
         return await self._client._aget(f"/v1/profiles/{profile_id}")
 
     async def aupdate_profile(
@@ -127,7 +127,7 @@ class ProfilesResource:
         color: str | None = None,
         is_default: bool | None = None,
     ) -> dict[str, Any]:
-        """Update a profile (async)"""
+        """Update profile (async)"""
         payload = self._build_payload(
             name=name,
             description=description,
@@ -137,5 +137,5 @@ class ProfilesResource:
         return await self._client._aput(f"/v1/profiles/{profile_id}", data=payload)
 
     async def adelete_profile(self, profile_id: str) -> dict[str, Any]:
-        """Delete a profile (must have no connected accounts) (async)"""
+        """Delete profile (async)"""
         return await self._client._adelete(f"/v1/profiles/{profile_id}")

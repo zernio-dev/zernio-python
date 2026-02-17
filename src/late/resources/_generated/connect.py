@@ -51,7 +51,7 @@ class ConnectResource:
     def get_connect_url(
         self, platform: str, profile_id: str, *, redirect_url: str | None = None
     ) -> dict[str, Any]:
-        """Start OAuth connection for a platform"""
+        """Get OAuth connect URL"""
         params = self._build_params(
             profile_id=profile_id,
             redirect_url=redirect_url,
@@ -61,7 +61,7 @@ class ConnectResource:
     def handle_o_auth_callback(
         self, platform: str, code: str, state: str, profile_id: str
     ) -> dict[str, Any]:
-        """Complete OAuth token exchange manually (for server-side flows)"""
+        """Complete OAuth callback"""
         payload = self._build_payload(
             code=code,
             state=state,
@@ -70,7 +70,7 @@ class ConnectResource:
         return self._client._post(f"/v1/connect/{platform}", data=payload)
 
     def list_facebook_pages(self, profile_id: str, temp_token: str) -> dict[str, Any]:
-        """List Facebook Pages after OAuth (Headless Mode)"""
+        """List Facebook pages"""
         params = self._build_params(
             profile_id=profile_id,
             temp_token=temp_token,
@@ -86,7 +86,7 @@ class ConnectResource:
         user_profile: dict[str, Any] | None = None,
         redirect_url: str | None = None,
     ) -> dict[str, Any]:
-        """Select a Facebook Page to complete the connection (Headless Mode)"""
+        """Select Facebook page"""
         payload = self._build_payload(
             profile_id=profile_id,
             page_id=page_id,
@@ -99,7 +99,7 @@ class ConnectResource:
     def list_google_business_locations(
         self, profile_id: str, temp_token: str
     ) -> dict[str, Any]:
-        """List Google Business Locations after OAuth (Headless Mode)"""
+        """List Google Business locations"""
         params = self._build_params(
             profile_id=profile_id,
             temp_token=temp_token,
@@ -115,7 +115,7 @@ class ConnectResource:
         user_profile: dict[str, Any] | None = None,
         redirect_url: str | None = None,
     ) -> dict[str, Any]:
-        """Select a Google Business location to complete the connection (Headless Mode)"""
+        """Select Google Business location"""
         payload = self._build_payload(
             profile_id=profile_id,
             location_id=location_id,
@@ -128,7 +128,7 @@ class ConnectResource:
         )
 
     def get_pending_o_auth_data(self, token: str) -> dict[str, Any]:
-        """Fetch pending OAuth selection data (Headless Mode)"""
+        """Get pending OAuth data"""
         params = self._build_params(
             token=token,
         )
@@ -137,7 +137,7 @@ class ConnectResource:
     def list_linked_in_organizations(
         self, temp_token: str, org_ids: str
     ) -> dict[str, Any]:
-        """Fetch full LinkedIn organization details (Headless Mode)"""
+        """List LinkedIn orgs"""
         params = self._build_params(
             temp_token=temp_token,
             org_ids=org_ids,
@@ -154,7 +154,7 @@ class ConnectResource:
         selected_organization: dict[str, Any] | None = None,
         redirect_url: str | None = None,
     ) -> dict[str, Any]:
-        """Select LinkedIn organization or personal account after OAuth"""
+        """Select LinkedIn org"""
         payload = self._build_payload(
             profile_id=profile_id,
             temp_token=temp_token,
@@ -170,7 +170,7 @@ class ConnectResource:
     def list_pinterest_boards_for_selection(
         self, x_connect_token: str, profile_id: str, temp_token: str
     ) -> dict[str, Any]:
-        """List Pinterest Boards after OAuth (Headless Mode)"""
+        """List Pinterest boards"""
         params = self._build_params(
             profile_id=profile_id,
             temp_token=temp_token,
@@ -189,7 +189,7 @@ class ConnectResource:
         expires_in: int | None = None,
         redirect_url: str | None = None,
     ) -> dict[str, Any]:
-        """Select a Pinterest Board to complete the connection (Headless Mode)"""
+        """Select Pinterest board"""
         payload = self._build_payload(
             profile_id=profile_id,
             board_id=board_id,
@@ -205,7 +205,7 @@ class ConnectResource:
     def list_snapchat_profiles(
         self, x_connect_token: str, profile_id: str, temp_token: str
     ) -> dict[str, Any]:
-        """List Snapchat Public Profiles after OAuth (Headless Mode)"""
+        """List Snapchat profiles"""
         params = self._build_params(
             profile_id=profile_id,
             temp_token=temp_token,
@@ -224,7 +224,7 @@ class ConnectResource:
         expires_in: int | None = None,
         redirect_url: str | None = None,
     ) -> dict[str, Any]:
-        """Select a Snapchat Public Profile to complete the connection (Headless Mode)"""
+        """Select Snapchat profile"""
         payload = self._build_payload(
             profile_id=profile_id,
             selected_public_profile=selected_public_profile,
@@ -244,7 +244,7 @@ class ConnectResource:
         *,
         redirect_uri: str | None = None,
     ) -> dict[str, Any]:
-        """Connect Bluesky using app password"""
+        """Connect Bluesky account"""
         payload = self._build_payload(
             identifier=identifier,
             app_password=app_password,
@@ -254,7 +254,7 @@ class ConnectResource:
         return self._client._post("/v1/connect/bluesky/credentials", data=payload)
 
     def get_telegram_connect_status(self, profile_id: str) -> dict[str, Any]:
-        """Generate Telegram access code"""
+        """Generate Telegram code"""
         params = self._build_params(
             profile_id=profile_id,
         )
@@ -263,7 +263,7 @@ class ConnectResource:
     def initiate_telegram_connect(
         self, chat_id: str, profile_id: str
     ) -> dict[str, Any]:
-        """Direct Telegram connection (power users)"""
+        """Connect Telegram directly"""
         payload = self._build_payload(
             chat_id=chat_id,
             profile_id=profile_id,
@@ -271,20 +271,20 @@ class ConnectResource:
         return self._client._post("/v1/connect/telegram", data=payload)
 
     def complete_telegram_connect(self, code: str) -> dict[str, Any]:
-        """Check Telegram connection status"""
+        """Check Telegram status"""
         params = self._build_params(
             code=code,
         )
         return self._client._patch("/v1/connect/telegram", params=params)
 
     def get_facebook_pages(self, account_id: str) -> dict[str, Any]:
-        """List available Facebook pages for a connected account"""
+        """List Facebook pages"""
         return self._client._get(f"/v1/accounts/{account_id}/facebook-page")
 
     def update_facebook_page(
         self, account_id: str, selected_page_id: str
     ) -> dict[str, Any]:
-        """Update selected Facebook page for a connected account"""
+        """Update Facebook page"""
         payload = self._build_payload(
             selected_page_id=selected_page_id,
         )
@@ -293,7 +293,7 @@ class ConnectResource:
         )
 
     def get_linked_in_organizations(self, account_id: str) -> dict[str, Any]:
-        """Get available LinkedIn organizations for a connected account"""
+        """List LinkedIn orgs"""
         return self._client._get(f"/v1/accounts/{account_id}/linkedin-organizations")
 
     def update_linked_in_organization(
@@ -303,7 +303,7 @@ class ConnectResource:
         *,
         selected_organization: dict[str, Any] | None = None,
     ) -> dict[str, Any]:
-        """Switch LinkedIn account type (personal/organization)"""
+        """Switch LinkedIn account type"""
         payload = self._build_payload(
             account_type=account_type,
             selected_organization=selected_organization,
@@ -313,7 +313,7 @@ class ConnectResource:
         )
 
     def get_pinterest_boards(self, account_id: str) -> dict[str, Any]:
-        """List Pinterest boards for a connected account"""
+        """List Pinterest boards"""
         return self._client._get(f"/v1/accounts/{account_id}/pinterest-boards")
 
     def update_pinterest_boards(
@@ -323,7 +323,7 @@ class ConnectResource:
         *,
         default_board_name: str | None = None,
     ) -> dict[str, Any]:
-        """Set default Pinterest board on the connection"""
+        """Set default Pinterest board"""
         payload = self._build_payload(
             default_board_id=default_board_id,
             default_board_name=default_board_name,
@@ -333,13 +333,13 @@ class ConnectResource:
         )
 
     def get_gmb_locations(self, account_id: str) -> dict[str, Any]:
-        """List available Google Business Profile locations for a connected account"""
+        """List Google Business locations"""
         return self._client._get(f"/v1/accounts/{account_id}/gmb-locations")
 
     def update_gmb_location(
         self, account_id: str, selected_location_id: str
     ) -> dict[str, Any]:
-        """Update selected Google Business Profile location for a connected account"""
+        """Update Google Business location"""
         payload = self._build_payload(
             selected_location_id=selected_location_id,
         )
@@ -348,13 +348,13 @@ class ConnectResource:
         )
 
     def get_reddit_subreddits(self, account_id: str) -> dict[str, Any]:
-        """List Reddit subreddits for a connected account"""
+        """List Reddit subreddits"""
         return self._client._get(f"/v1/accounts/{account_id}/reddit-subreddits")
 
     def update_reddit_subreddits(
         self, account_id: str, default_subreddit: str
     ) -> dict[str, Any]:
-        """Set default subreddit on the connection"""
+        """Set default subreddit"""
         payload = self._build_payload(
             default_subreddit=default_subreddit,
         )
@@ -363,7 +363,7 @@ class ConnectResource:
         )
 
     def get_reddit_flairs(self, account_id: str, subreddit: str) -> dict[str, Any]:
-        """List available post flairs for a Reddit subreddit"""
+        """List subreddit flairs"""
         params = self._build_params(
             subreddit=subreddit,
         )
@@ -374,7 +374,7 @@ class ConnectResource:
     async def aget_connect_url(
         self, platform: str, profile_id: str, *, redirect_url: str | None = None
     ) -> dict[str, Any]:
-        """Start OAuth connection for a platform (async)"""
+        """Get OAuth connect URL (async)"""
         params = self._build_params(
             profile_id=profile_id,
             redirect_url=redirect_url,
@@ -384,7 +384,7 @@ class ConnectResource:
     async def ahandle_o_auth_callback(
         self, platform: str, code: str, state: str, profile_id: str
     ) -> dict[str, Any]:
-        """Complete OAuth token exchange manually (for server-side flows) (async)"""
+        """Complete OAuth callback (async)"""
         payload = self._build_payload(
             code=code,
             state=state,
@@ -395,7 +395,7 @@ class ConnectResource:
     async def alist_facebook_pages(
         self, profile_id: str, temp_token: str
     ) -> dict[str, Any]:
-        """List Facebook Pages after OAuth (Headless Mode) (async)"""
+        """List Facebook pages (async)"""
         params = self._build_params(
             profile_id=profile_id,
             temp_token=temp_token,
@@ -413,7 +413,7 @@ class ConnectResource:
         user_profile: dict[str, Any] | None = None,
         redirect_url: str | None = None,
     ) -> dict[str, Any]:
-        """Select a Facebook Page to complete the connection (Headless Mode) (async)"""
+        """Select Facebook page (async)"""
         payload = self._build_payload(
             profile_id=profile_id,
             page_id=page_id,
@@ -428,7 +428,7 @@ class ConnectResource:
     async def alist_google_business_locations(
         self, profile_id: str, temp_token: str
     ) -> dict[str, Any]:
-        """List Google Business Locations after OAuth (Headless Mode) (async)"""
+        """List Google Business locations (async)"""
         params = self._build_params(
             profile_id=profile_id,
             temp_token=temp_token,
@@ -446,7 +446,7 @@ class ConnectResource:
         user_profile: dict[str, Any] | None = None,
         redirect_url: str | None = None,
     ) -> dict[str, Any]:
-        """Select a Google Business location to complete the connection (Headless Mode) (async)"""
+        """Select Google Business location (async)"""
         payload = self._build_payload(
             profile_id=profile_id,
             location_id=location_id,
@@ -459,7 +459,7 @@ class ConnectResource:
         )
 
     async def aget_pending_o_auth_data(self, token: str) -> dict[str, Any]:
-        """Fetch pending OAuth selection data (Headless Mode) (async)"""
+        """Get pending OAuth data (async)"""
         params = self._build_params(
             token=token,
         )
@@ -468,7 +468,7 @@ class ConnectResource:
     async def alist_linked_in_organizations(
         self, temp_token: str, org_ids: str
     ) -> dict[str, Any]:
-        """Fetch full LinkedIn organization details (Headless Mode) (async)"""
+        """List LinkedIn orgs (async)"""
         params = self._build_params(
             temp_token=temp_token,
             org_ids=org_ids,
@@ -487,7 +487,7 @@ class ConnectResource:
         selected_organization: dict[str, Any] | None = None,
         redirect_url: str | None = None,
     ) -> dict[str, Any]:
-        """Select LinkedIn organization or personal account after OAuth (async)"""
+        """Select LinkedIn org (async)"""
         payload = self._build_payload(
             profile_id=profile_id,
             temp_token=temp_token,
@@ -503,7 +503,7 @@ class ConnectResource:
     async def alist_pinterest_boards_for_selection(
         self, x_connect_token: str, profile_id: str, temp_token: str
     ) -> dict[str, Any]:
-        """List Pinterest Boards after OAuth (Headless Mode) (async)"""
+        """List Pinterest boards (async)"""
         params = self._build_params(
             profile_id=profile_id,
             temp_token=temp_token,
@@ -524,7 +524,7 @@ class ConnectResource:
         expires_in: int | None = None,
         redirect_url: str | None = None,
     ) -> dict[str, Any]:
-        """Select a Pinterest Board to complete the connection (Headless Mode) (async)"""
+        """Select Pinterest board (async)"""
         payload = self._build_payload(
             profile_id=profile_id,
             board_id=board_id,
@@ -542,7 +542,7 @@ class ConnectResource:
     async def alist_snapchat_profiles(
         self, x_connect_token: str, profile_id: str, temp_token: str
     ) -> dict[str, Any]:
-        """List Snapchat Public Profiles after OAuth (Headless Mode) (async)"""
+        """List Snapchat profiles (async)"""
         params = self._build_params(
             profile_id=profile_id,
             temp_token=temp_token,
@@ -563,7 +563,7 @@ class ConnectResource:
         expires_in: int | None = None,
         redirect_url: str | None = None,
     ) -> dict[str, Any]:
-        """Select a Snapchat Public Profile to complete the connection (Headless Mode) (async)"""
+        """Select Snapchat profile (async)"""
         payload = self._build_payload(
             profile_id=profile_id,
             selected_public_profile=selected_public_profile,
@@ -585,7 +585,7 @@ class ConnectResource:
         *,
         redirect_uri: str | None = None,
     ) -> dict[str, Any]:
-        """Connect Bluesky using app password (async)"""
+        """Connect Bluesky account (async)"""
         payload = self._build_payload(
             identifier=identifier,
             app_password=app_password,
@@ -597,7 +597,7 @@ class ConnectResource:
         )
 
     async def aget_telegram_connect_status(self, profile_id: str) -> dict[str, Any]:
-        """Generate Telegram access code (async)"""
+        """Generate Telegram code (async)"""
         params = self._build_params(
             profile_id=profile_id,
         )
@@ -606,7 +606,7 @@ class ConnectResource:
     async def ainitiate_telegram_connect(
         self, chat_id: str, profile_id: str
     ) -> dict[str, Any]:
-        """Direct Telegram connection (power users) (async)"""
+        """Connect Telegram directly (async)"""
         payload = self._build_payload(
             chat_id=chat_id,
             profile_id=profile_id,
@@ -614,20 +614,20 @@ class ConnectResource:
         return await self._client._apost("/v1/connect/telegram", data=payload)
 
     async def acomplete_telegram_connect(self, code: str) -> dict[str, Any]:
-        """Check Telegram connection status (async)"""
+        """Check Telegram status (async)"""
         params = self._build_params(
             code=code,
         )
         return await self._client._apatch("/v1/connect/telegram", params=params)
 
     async def aget_facebook_pages(self, account_id: str) -> dict[str, Any]:
-        """List available Facebook pages for a connected account (async)"""
+        """List Facebook pages (async)"""
         return await self._client._aget(f"/v1/accounts/{account_id}/facebook-page")
 
     async def aupdate_facebook_page(
         self, account_id: str, selected_page_id: str
     ) -> dict[str, Any]:
-        """Update selected Facebook page for a connected account (async)"""
+        """Update Facebook page (async)"""
         payload = self._build_payload(
             selected_page_id=selected_page_id,
         )
@@ -636,7 +636,7 @@ class ConnectResource:
         )
 
     async def aget_linked_in_organizations(self, account_id: str) -> dict[str, Any]:
-        """Get available LinkedIn organizations for a connected account (async)"""
+        """List LinkedIn orgs (async)"""
         return await self._client._aget(
             f"/v1/accounts/{account_id}/linkedin-organizations"
         )
@@ -648,7 +648,7 @@ class ConnectResource:
         *,
         selected_organization: dict[str, Any] | None = None,
     ) -> dict[str, Any]:
-        """Switch LinkedIn account type (personal/organization) (async)"""
+        """Switch LinkedIn account type (async)"""
         payload = self._build_payload(
             account_type=account_type,
             selected_organization=selected_organization,
@@ -658,7 +658,7 @@ class ConnectResource:
         )
 
     async def aget_pinterest_boards(self, account_id: str) -> dict[str, Any]:
-        """List Pinterest boards for a connected account (async)"""
+        """List Pinterest boards (async)"""
         return await self._client._aget(f"/v1/accounts/{account_id}/pinterest-boards")
 
     async def aupdate_pinterest_boards(
@@ -668,7 +668,7 @@ class ConnectResource:
         *,
         default_board_name: str | None = None,
     ) -> dict[str, Any]:
-        """Set default Pinterest board on the connection (async)"""
+        """Set default Pinterest board (async)"""
         payload = self._build_payload(
             default_board_id=default_board_id,
             default_board_name=default_board_name,
@@ -678,13 +678,13 @@ class ConnectResource:
         )
 
     async def aget_gmb_locations(self, account_id: str) -> dict[str, Any]:
-        """List available Google Business Profile locations for a connected account (async)"""
+        """List Google Business locations (async)"""
         return await self._client._aget(f"/v1/accounts/{account_id}/gmb-locations")
 
     async def aupdate_gmb_location(
         self, account_id: str, selected_location_id: str
     ) -> dict[str, Any]:
-        """Update selected Google Business Profile location for a connected account (async)"""
+        """Update Google Business location (async)"""
         payload = self._build_payload(
             selected_location_id=selected_location_id,
         )
@@ -693,13 +693,13 @@ class ConnectResource:
         )
 
     async def aget_reddit_subreddits(self, account_id: str) -> dict[str, Any]:
-        """List Reddit subreddits for a connected account (async)"""
+        """List Reddit subreddits (async)"""
         return await self._client._aget(f"/v1/accounts/{account_id}/reddit-subreddits")
 
     async def aupdate_reddit_subreddits(
         self, account_id: str, default_subreddit: str
     ) -> dict[str, Any]:
-        """Set default subreddit on the connection (async)"""
+        """Set default subreddit (async)"""
         payload = self._build_payload(
             default_subreddit=default_subreddit,
         )
@@ -710,7 +710,7 @@ class ConnectResource:
     async def aget_reddit_flairs(
         self, account_id: str, subreddit: str
     ) -> dict[str, Any]:
-        """List available post flairs for a Reddit subreddit (async)"""
+        """List subreddit flairs (async)"""
         params = self._build_params(
             subreddit=subreddit,
         )

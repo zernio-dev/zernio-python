@@ -49,9 +49,9 @@ class UsageResource:
         return result
 
     def get_usage_stats(self) -> dict[str, Any]:
-        """Get plan and usage stats for current account"""
+        """Get plan and usage stats"""
         return self._client._get("/v1/usage-stats")
 
     async def aget_usage_stats(self) -> dict[str, Any]:
-        """Get plan and usage stats for current account (async)"""
+        """Get plan and usage stats (async)"""
         return await self._client._aget("/v1/usage-stats")

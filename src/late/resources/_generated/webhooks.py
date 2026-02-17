@@ -49,7 +49,7 @@ class WebhooksResource:
         return result
 
     def get_webhook_settings(self) -> dict[str, Any]:
-        """List all webhooks"""
+        """List webhooks"""
         return self._client._get("/v1/webhooks/settings")
 
     def create_webhook_settings(
@@ -62,7 +62,7 @@ class WebhooksResource:
         is_active: bool | None = None,
         custom_headers: dict[str, Any] | None = None,
     ) -> dict[str, Any]:
-        """Create a new webhook"""
+        """Create webhook"""
         payload = self._build_payload(
             name=name,
             url=url,
@@ -84,7 +84,7 @@ class WebhooksResource:
         is_active: bool | None = None,
         custom_headers: dict[str, Any] | None = None,
     ) -> dict[str, Any]:
-        """Update a webhook"""
+        """Update webhook"""
         payload = self._build_payload(
             _id=_id,
             name=name,
@@ -97,7 +97,7 @@ class WebhooksResource:
         return self._client._put("/v1/webhooks/settings", data=payload)
 
     def delete_webhook_settings(self, id: str) -> dict[str, Any]:
-        """Delete a webhook"""
+        """Delete webhook"""
         params = self._build_params(
             id=id,
         )
@@ -118,7 +118,7 @@ class WebhooksResource:
         event: str | None = None,
         webhook_id: str | None = None,
     ) -> dict[str, Any]:
-        """Get webhook delivery logs"""
+        """Get delivery logs"""
         params = self._build_params(
             limit=limit,
             status=status,
@@ -128,7 +128,7 @@ class WebhooksResource:
         return self._client._get("/v1/webhooks/logs", params=params)
 
     async def aget_webhook_settings(self) -> dict[str, Any]:
-        """List all webhooks (async)"""
+        """List webhooks (async)"""
         return await self._client._aget("/v1/webhooks/settings")
 
     async def acreate_webhook_settings(
@@ -141,7 +141,7 @@ class WebhooksResource:
         is_active: bool | None = None,
         custom_headers: dict[str, Any] | None = None,
     ) -> dict[str, Any]:
-        """Create a new webhook (async)"""
+        """Create webhook (async)"""
         payload = self._build_payload(
             name=name,
             url=url,
@@ -163,7 +163,7 @@ class WebhooksResource:
         is_active: bool | None = None,
         custom_headers: dict[str, Any] | None = None,
     ) -> dict[str, Any]:
-        """Update a webhook (async)"""
+        """Update webhook (async)"""
         payload = self._build_payload(
             _id=_id,
             name=name,
@@ -176,7 +176,7 @@ class WebhooksResource:
         return await self._client._aput("/v1/webhooks/settings", data=payload)
 
     async def adelete_webhook_settings(self, id: str) -> dict[str, Any]:
-        """Delete a webhook (async)"""
+        """Delete webhook (async)"""
         params = self._build_params(
             id=id,
         )
@@ -197,7 +197,7 @@ class WebhooksResource:
         event: str | None = None,
         webhook_id: str | None = None,
     ) -> dict[str, Any]:
-        """Get webhook delivery logs (async)"""
+        """Get delivery logs (async)"""
         params = self._build_params(
             limit=limit,
             status=status,

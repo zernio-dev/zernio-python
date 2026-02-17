@@ -56,7 +56,7 @@ def register_generated_tools(mcp, _get_client):
 
     @mcp.tool()
     def account_groups_list_account_groups() -> str:
-        """List account groups for the authenticated user"""
+        """List groups"""
         client = _get_client()
         try:
             response = client.account_groups.list_account_groups()
@@ -66,7 +66,7 @@ def register_generated_tools(mcp, _get_client):
 
     @mcp.tool()
     def account_groups_create_account_group(name: str, account_ids: str) -> str:
-        """Create a new account group
+        """Create group
 
         Args:
             name: (required)
@@ -84,7 +84,7 @@ def register_generated_tools(mcp, _get_client):
     def account_groups_update_account_group(
         group_id: str, name: str = "", account_ids: str = ""
     ) -> str:
-        """Update an account group
+        """Update group
 
         Args:
             group_id: (required)
@@ -101,7 +101,7 @@ def register_generated_tools(mcp, _get_client):
 
     @mcp.tool()
     def account_groups_delete_account_group(group_id: str) -> str:
-        """Delete an account group
+        """Delete group
 
         Args:
             group_id: (required)"""
@@ -260,7 +260,7 @@ def register_generated_tools(mcp, _get_client):
     def accounts_list_accounts(
         profile_id: str = "", include_over_limit: bool = False
     ) -> str:
-        """List connected social accounts
+        """List accounts
 
             Args:
                 profile_id: Filter accounts by profile ID
@@ -283,7 +283,7 @@ def register_generated_tools(mcp, _get_client):
         to_date: str = "",
         granularity: str = "daily",
     ) -> str:
-        """Get follower stats and growth metrics
+        """Get follower stats
 
         Args:
             account_ids: Comma-separated list of account IDs (optional, defaults to all user's accounts)
@@ -308,7 +308,7 @@ def register_generated_tools(mcp, _get_client):
     def accounts_update_account(
         account_id: str, username: str = "", display_name: str = ""
     ) -> str:
-        """Update a social account
+        """Update account
 
         Args:
             account_id: (required)
@@ -325,7 +325,7 @@ def register_generated_tools(mcp, _get_client):
 
     @mcp.tool()
     def accounts_delete_account(account_id: str) -> str:
-        """Disconnect a social account
+        """Disconnect account
 
         Args:
             account_id: (required)"""
@@ -340,7 +340,7 @@ def register_generated_tools(mcp, _get_client):
     def accounts_get_all_accounts_health(
         profile_id: str = "", platform: str = "", status: str = ""
     ) -> str:
-        """Check health of all connected accounts
+        """Check accounts health
 
         Args:
             profile_id: Filter by profile ID
@@ -357,7 +357,7 @@ def register_generated_tools(mcp, _get_client):
 
     @mcp.tool()
     def accounts_get_account_health(account_id: str) -> str:
-        """Check health of a specific account
+        """Check account health
 
         Args:
             account_id: The account ID to check (required)"""
@@ -372,7 +372,7 @@ def register_generated_tools(mcp, _get_client):
     def accounts_get_google_business_reviews(
         account_id: str, page_size: int = 50, page_token: str = ""
     ) -> str:
-        """Get Google Business Profile reviews
+        """Get reviews
 
         Args:
             account_id: The Late account ID (from /v1/accounts) (required)
@@ -389,7 +389,7 @@ def register_generated_tools(mcp, _get_client):
 
     @mcp.tool()
     def accounts_get_google_business_food_menus(account_id: str) -> str:
-        """Get Google Business Profile food menus
+        """Get food menus
 
         Args:
             account_id: The Late account ID (from /v1/accounts) (required)"""
@@ -406,7 +406,7 @@ def register_generated_tools(mcp, _get_client):
     def accounts_update_google_business_food_menus(
         account_id: str, menus: str, update_mask: str = ""
     ) -> str:
-        """Update Google Business Profile food menus
+        """Update food menus
 
         Args:
             account_id: The Late account ID (from /v1/accounts) (required)
@@ -425,7 +425,7 @@ def register_generated_tools(mcp, _get_client):
     def accounts_get_google_business_location_details(
         account_id: str, read_mask: str = ""
     ) -> str:
-        """Get Google Business Profile location details
+        """Get location details
 
             Args:
                 account_id: The Late account ID (from /v1/accounts) (required)
@@ -451,7 +451,7 @@ def register_generated_tools(mcp, _get_client):
         website_uri: str = "",
         phone_numbers: str = "",
     ) -> str:
-        """Update Google Business Profile location details
+        """Update location details
 
         Args:
             account_id: The Late account ID (from /v1/accounts) (required)
@@ -480,7 +480,7 @@ def register_generated_tools(mcp, _get_client):
     def accounts_list_google_business_media(
         account_id: str, page_size: int = 100, page_token: str = ""
     ) -> str:
-        """List Google Business Profile media (photos)
+        """List media
 
         Args:
             account_id: (required)
@@ -503,7 +503,7 @@ def register_generated_tools(mcp, _get_client):
         description: str = "",
         category: str = "",
     ) -> str:
-        """Upload a photo to Google Business Profile
+        """Upload photo
 
         Args:
             account_id: (required)
@@ -526,7 +526,7 @@ def register_generated_tools(mcp, _get_client):
 
     @mcp.tool()
     def accounts_delete_google_business_media(account_id: str, media_id: str) -> str:
-        """Delete a photo from Google Business Profile
+        """Delete photo
 
         Args:
             account_id: (required)
@@ -542,7 +542,7 @@ def register_generated_tools(mcp, _get_client):
 
     @mcp.tool()
     def accounts_get_google_business_attributes(account_id: str) -> str:
-        """Get Google Business Profile location attributes
+        """Get attributes
 
         Args:
             account_id: (required)"""
@@ -559,7 +559,7 @@ def register_generated_tools(mcp, _get_client):
     def accounts_update_google_business_attributes(
         account_id: str, attributes: str, attribute_mask: str
     ) -> str:
-        """Update Google Business Profile location attributes
+        """Update attributes
 
         Args:
             account_id: (required)
@@ -580,7 +580,7 @@ def register_generated_tools(mcp, _get_client):
     def accounts_list_google_business_place_actions(
         account_id: str, page_size: int = 100, page_token: str = ""
     ) -> str:
-        """List place action links (booking, ordering, reservations)
+        """List action links
 
         Args:
             account_id: (required)
@@ -599,7 +599,7 @@ def register_generated_tools(mcp, _get_client):
     def accounts_create_google_business_place_action(
         account_id: str, uri: str, place_action_type: str
     ) -> str:
-        """Create a place action link (booking, ordering, reservation)
+        """Create action link
 
         Args:
             account_id: (required)
@@ -616,7 +616,7 @@ def register_generated_tools(mcp, _get_client):
 
     @mcp.tool()
     def accounts_delete_google_business_place_action(account_id: str, name: str) -> str:
-        """Delete a place action link
+        """Delete action link
 
         Args:
             account_id: (required)
@@ -634,7 +634,7 @@ def register_generated_tools(mcp, _get_client):
     def accounts_get_linked_in_mentions(
         account_id: str, url: str, display_name: str = ""
     ) -> str:
-        """Resolve a LinkedIn profile or company URL to a URN for @mentions
+        """Resolve LinkedIn mention
 
             Args:
                 account_id: The LinkedIn account ID (required)
@@ -669,7 +669,7 @@ def register_generated_tools(mcp, _get_client):
         sort_by: str = "date",
         order: str = "desc",
     ) -> str:
-        """Unified analytics for posts
+        """Get post analytics
 
             Args:
                 post_id: Returns analytics for a single post. Accepts both Late Post IDs (from `POST /v1/posts`)
@@ -709,7 +709,7 @@ def register_generated_tools(mcp, _get_client):
     def analytics_get_you_tube_daily_views(
         video_id: str, account_id: str, start_date: str = "", end_date: str = ""
     ) -> str:
-        """YouTube daily views breakdown
+        """Get YouTube daily views
 
         Args:
             video_id: The YouTube video ID (e.g., "dQw4w9WgXcQ") (required)
@@ -736,7 +736,7 @@ def register_generated_tools(mcp, _get_client):
         end_date: str = "",
         metrics: str = "",
     ) -> str:
-        """Get aggregate analytics for a LinkedIn personal account
+        """Get LinkedIn aggregate stats
 
             Args:
                 account_id: The ID of the LinkedIn personal account (required)
@@ -767,7 +767,7 @@ def register_generated_tools(mcp, _get_client):
 
     @mcp.tool()
     def analytics_get_linked_in_post_analytics(account_id: str, urn: str) -> str:
-        """Get analytics for a specific LinkedIn post by URN
+        """Get LinkedIn post stats
 
         Args:
             account_id: The ID of the LinkedIn account (required)
@@ -785,7 +785,7 @@ def register_generated_tools(mcp, _get_client):
 
     @mcp.tool()
     def api_keys_list_api_keys() -> str:
-        """List API keys for the current user"""
+        """List keys"""
         client = _get_client()
         try:
             response = client.api_keys.list_api_keys()
@@ -795,7 +795,7 @@ def register_generated_tools(mcp, _get_client):
 
     @mcp.tool()
     def api_keys_create_api_key(name: str, expires_in: int = 0) -> str:
-        """Create a new API key
+        """Create key
 
         Args:
             name: (required)
@@ -809,7 +809,7 @@ def register_generated_tools(mcp, _get_client):
 
     @mcp.tool()
     def api_keys_delete_api_key(key_id: str) -> str:
-        """Delete an API key
+        """Delete key
 
         Args:
             key_id: (required)"""
@@ -834,7 +834,7 @@ def register_generated_tools(mcp, _get_client):
         cursor: str = "",
         account_id: str = "",
     ) -> str:
-        """List posts with comments across all accounts
+        """List commented posts
 
         Args:
             profile_id: Filter by profile ID
@@ -872,7 +872,7 @@ def register_generated_tools(mcp, _get_client):
         cursor: str = "",
         comment_id: str = "",
     ) -> str:
-        """Get comments for a post
+        """Get post comments
 
             Args:
                 post_id: The post identifier. Accepts a Late post ID (MongoDB ObjectId) which is automatically resolved to the platform-specific post ID, or a platform-specific post ID directly (e.g. tweet ID, Facebook Graph ID, YouTube video ID).
@@ -911,7 +911,7 @@ def register_generated_tools(mcp, _get_client):
         root_uri: str = "",
         root_cid: str = "",
     ) -> str:
-        """Reply to a post or comment
+        """Reply to comment
 
             Args:
                 post_id: The post identifier. Accepts a Late post ID or a platform-specific post ID.
@@ -945,7 +945,7 @@ def register_generated_tools(mcp, _get_client):
     def comments_delete_inbox_comment(
         post_id: str, account_id: str, comment_id: str
     ) -> str:
-        """Delete a comment
+        """Delete comment
 
             Args:
                 post_id: The post identifier. Accepts a Late post ID or a platform-specific post ID.
@@ -967,7 +967,7 @@ def register_generated_tools(mcp, _get_client):
     def comments_hide_inbox_comment(
         post_id: str, comment_id: str, account_id: str
     ) -> str:
-        """Hide a comment
+        """Hide comment
 
         Args:
             post_id: (required)
@@ -986,7 +986,7 @@ def register_generated_tools(mcp, _get_client):
     def comments_unhide_inbox_comment(
         post_id: str, comment_id: str, account_id: str
     ) -> str:
-        """Unhide a comment
+        """Unhide comment
 
         Args:
             post_id: (required)
@@ -1005,7 +1005,7 @@ def register_generated_tools(mcp, _get_client):
     def comments_like_inbox_comment(
         post_id: str, comment_id: str, account_id: str, cid: str = ""
     ) -> str:
-        """Like a comment
+        """Like comment
 
         Args:
             post_id: (required)
@@ -1025,7 +1025,7 @@ def register_generated_tools(mcp, _get_client):
     def comments_unlike_inbox_comment(
         post_id: str, comment_id: str, account_id: str, like_uri: str = ""
     ) -> str:
-        """Unlike a comment
+        """Unlike comment
 
         Args:
             post_id: (required)
@@ -1048,7 +1048,7 @@ def register_generated_tools(mcp, _get_client):
     def comments_send_private_reply_to_comment(
         post_id: str, comment_id: str, account_id: str, message: str
     ) -> str:
-        """Send private reply to comment author
+        """Send private reply
 
         Args:
             post_id: The media/post ID (Instagram media ID or Facebook post ID) (required)
@@ -1073,40 +1073,16 @@ def register_generated_tools(mcp, _get_client):
     def connect_get_connect_url(
         platform: str, profile_id: str, redirect_url: str = ""
     ) -> str:
-        """Start OAuth connection for a platform
+        """Get OAuth connect URL
 
             Args:
                 platform: Social media platform to connect (required)
                 profile_id: Your Late profile ID (get from /v1/profiles) (required)
-                redirect_url: Optional: Your custom redirect URL after connection completes.
+                redirect_url: Your custom redirect URL after connection completes.
 
-        **Standard Mode:** Omit `headless=true` to use our hosted page selection UI.
-        After the user selects a Facebook Page, Late redirects here with:
-        `?connected=facebook&profileId=X&username=Y`
+        **Standard Mode:** After the user selects an account, Late redirects here with `?connected={platform}&profileId=X&username=Y`.
 
-        **Headless Mode (Facebook, LinkedIn, Pinterest, Google Business Profile & Snapchat):**
-        Pass `headless=true` as a query parameter on this endpoint (not inside `redirect_url`), e.g.:
-        `GET /v1/connect/facebook?profileId=PROFILE_ID&redirect_url=https://yourapp.com/callback&headless=true`
-        `GET /v1/connect/linkedin?profileId=PROFILE_ID&redirect_url=https://yourapp.com/callback&headless=true`
-        `GET /v1/connect/pinterest?profileId=PROFILE_ID&redirect_url=https://yourapp.com/callback&headless=true`
-        `GET /v1/connect/googlebusiness?profileId=PROFILE_ID&redirect_url=https://yourapp.com/callback&headless=true`
-        `GET /v1/connect/snapchat?profileId=PROFILE_ID&redirect_url=https://yourapp.com/callback&headless=true`
-
-        After OAuth, the user is redirected directly to your `redirect_url` with OAuth data:
-        - **Facebook:** `?profileId=X&tempToken=Y&userProfile=Z&connect_token=CT&platform=facebook&step=select_page`
-        - **LinkedIn:** `?profileId=X&pendingDataToken=TOKEN&connect_token=CT&platform=linkedin&step=select_organization`
-          Use `GET /v1/connect/pending-data?token=TOKEN` to fetch tempToken, userProfile, organizations, refreshToken.
-        - **Pinterest:** `?profileId=X&tempToken=Y&userProfile=Z&connect_token=CT&platform=pinterest&step=select_board`
-        - **Google Business:** `?profileId=X&tempToken=Y&userProfile=Z&connect_token=CT&platform=googlebusiness&step=select_location`
-        - **Snapchat:** `?profileId=X&tempToken=Y&userProfile=Z&publicProfiles=PROFILES&connect_token=CT&platform=snapchat&step=select_public_profile`
-          (publicProfiles contains `id`, `display_name`, `username`, `profile_image_url`, `subscriber_count`)
-
-        Then use the respective endpoints to build your custom UI:
-        - Facebook: `/v1/connect/facebook/select-page` (GET to fetch, POST to save)
-        - LinkedIn: `/v1/connect/linkedin/organizations` (GET to fetch logos), `/v1/connect/linkedin/select-organization` (POST to save)
-        - Pinterest: `/v1/connect/pinterest/select-board` (GET to fetch, POST to save)
-        - Google Business: `/v1/connect/googlebusiness/locations` (GET) and `/v1/connect/googlebusiness/select-location` (POST)
-        - Snapchat: `/v1/connect/snapchat/select-profile` (POST to save selected public profile)
+        **Headless Mode:** Pass `headless=true` as a query parameter on this endpoint. After OAuth, the user is redirected to your URL with OAuth data (`profileId`, `tempToken`, `userProfile`, `connect_token`, `platform`, `step`). See the main endpoint description for details.
 
         Example: `https://yourdomain.com/integrations/callback`"""
         client = _get_client()
@@ -1122,7 +1098,7 @@ def register_generated_tools(mcp, _get_client):
     def connect_handle_o_auth_callback(
         platform: str, code: str, state: str, profile_id: str
     ) -> str:
-        """Complete OAuth token exchange manually (for server-side flows)
+        """Complete OAuth callback
 
         Args:
             platform: (required)
@@ -1140,7 +1116,7 @@ def register_generated_tools(mcp, _get_client):
 
     @mcp.tool()
     def connect_list_facebook_pages(profile_id: str, temp_token: str) -> str:
-        """List Facebook Pages after OAuth (Headless Mode)
+        """List Facebook pages
 
         Args:
             profile_id: Profile ID from your connection flow (required)
@@ -1162,7 +1138,7 @@ def register_generated_tools(mcp, _get_client):
         user_profile: str = "",
         redirect_url: str = "",
     ) -> str:
-        """Select a Facebook Page to complete the connection (Headless Mode)
+        """Select Facebook page
 
         Args:
             profile_id: Profile ID from your connection flow (required)
@@ -1185,7 +1161,7 @@ def register_generated_tools(mcp, _get_client):
 
     @mcp.tool()
     def connect_list_google_business_locations(profile_id: str, temp_token: str) -> str:
-        """List Google Business Locations after OAuth (Headless Mode)
+        """List Google Business locations
 
         Args:
             profile_id: Profile ID from your connection flow (required)
@@ -1207,7 +1183,7 @@ def register_generated_tools(mcp, _get_client):
         user_profile: str = "",
         redirect_url: str = "",
     ) -> str:
-        """Select a Google Business location to complete the connection (Headless Mode)
+        """Select Google Business location
 
             Args:
                 profile_id: Profile ID from your connection flow (required)
@@ -1231,7 +1207,7 @@ def register_generated_tools(mcp, _get_client):
 
     @mcp.tool()
     def connect_get_pending_o_auth_data(token: str) -> str:
-        """Fetch pending OAuth selection data (Headless Mode)
+        """Get pending OAuth data
 
         Args:
             token: The pending data token from the OAuth redirect URL (`pendingDataToken` parameter) (required)"""
@@ -1244,7 +1220,7 @@ def register_generated_tools(mcp, _get_client):
 
     @mcp.tool()
     def connect_list_linked_in_organizations(temp_token: str, org_ids: str) -> str:
-        """Fetch full LinkedIn organization details (Headless Mode)
+        """List LinkedIn orgs
 
         Args:
             temp_token: The temporary LinkedIn access token from the OAuth redirect (required)
@@ -1267,7 +1243,7 @@ def register_generated_tools(mcp, _get_client):
         selected_organization: str = "",
         redirect_url: str = "",
     ) -> str:
-        """Select LinkedIn organization or personal account after OAuth
+        """Select LinkedIn org
 
         Args:
             profile_id: (required)
@@ -1294,7 +1270,7 @@ def register_generated_tools(mcp, _get_client):
     def connect_list_pinterest_boards_for_selection(
         profile_id: str, temp_token: str
     ) -> str:
-        """List Pinterest Boards after OAuth (Headless Mode)
+        """List Pinterest boards
 
         Args:
             profile_id: Your Late profile ID (required)
@@ -1319,7 +1295,7 @@ def register_generated_tools(mcp, _get_client):
         expires_in: int = 0,
         redirect_url: str = "",
     ) -> str:
-        """Select a Pinterest Board to complete the connection (Headless Mode)
+        """Select Pinterest board
 
         Args:
             profile_id: Your Late profile ID (required)
@@ -1348,7 +1324,7 @@ def register_generated_tools(mcp, _get_client):
 
     @mcp.tool()
     def connect_list_snapchat_profiles(profile_id: str, temp_token: str) -> str:
-        """List Snapchat Public Profiles after OAuth (Headless Mode)
+        """List Snapchat profiles
 
         Args:
             profile_id: Your Late profile ID (required)
@@ -1372,7 +1348,7 @@ def register_generated_tools(mcp, _get_client):
         expires_in: int = 0,
         redirect_url: str = "",
     ) -> str:
-        """Select a Snapchat Public Profile to complete the connection (Headless Mode)
+        """Select Snapchat profile
 
         Args:
             profile_id: Your Late profile ID (required)
@@ -1401,7 +1377,7 @@ def register_generated_tools(mcp, _get_client):
     def connect_bluesky_credentials(
         identifier: str, app_password: str, state: str, redirect_uri: str = ""
     ) -> str:
-        """Connect Bluesky using app password
+        """Connect Bluesky account
 
             Args:
                 identifier: Your Bluesky handle (e.g. user.bsky.social) or email address (required)
@@ -1425,7 +1401,7 @@ def register_generated_tools(mcp, _get_client):
 
     @mcp.tool()
     def connect_get_telegram_connect_status(profile_id: str) -> str:
-        """Generate Telegram access code
+        """Generate Telegram code
 
         Args:
             profile_id: The profile ID to connect the Telegram account to (required)"""
@@ -1438,7 +1414,7 @@ def register_generated_tools(mcp, _get_client):
 
     @mcp.tool()
     def connect_initiate_telegram_connect(chat_id: str, profile_id: str) -> str:
-        """Direct Telegram connection (power users)
+        """Connect Telegram directly
 
             Args:
                 chat_id: The Telegram chat ID. Can be:
@@ -1457,7 +1433,7 @@ def register_generated_tools(mcp, _get_client):
 
     @mcp.tool()
     def connect_complete_telegram_connect(code: str) -> str:
-        """Check Telegram connection status
+        """Check Telegram status
 
         Args:
             code: The access code to check status for (required)"""
@@ -1470,7 +1446,7 @@ def register_generated_tools(mcp, _get_client):
 
     @mcp.tool()
     def connect_get_facebook_pages(account_id: str) -> str:
-        """List available Facebook pages for a connected account
+        """List Facebook pages
 
         Args:
             account_id: (required)"""
@@ -1483,7 +1459,7 @@ def register_generated_tools(mcp, _get_client):
 
     @mcp.tool()
     def connect_update_facebook_page(account_id: str, selected_page_id: str) -> str:
-        """Update selected Facebook page for a connected account
+        """Update Facebook page
 
         Args:
             account_id: (required)
@@ -1499,7 +1475,7 @@ def register_generated_tools(mcp, _get_client):
 
     @mcp.tool()
     def connect_get_linked_in_organizations(account_id: str) -> str:
-        """Get available LinkedIn organizations for a connected account
+        """List LinkedIn orgs
 
         Args:
             account_id: (required)"""
@@ -1514,7 +1490,7 @@ def register_generated_tools(mcp, _get_client):
     def connect_update_linked_in_organization(
         account_id: str, account_type: str, selected_organization: str = ""
     ) -> str:
-        """Switch LinkedIn account type (personal/organization)
+        """Switch LinkedIn account type
 
         Args:
             account_id: (required)
@@ -1533,7 +1509,7 @@ def register_generated_tools(mcp, _get_client):
 
     @mcp.tool()
     def connect_get_pinterest_boards(account_id: str) -> str:
-        """List Pinterest boards for a connected account
+        """List Pinterest boards
 
         Args:
             account_id: (required)"""
@@ -1548,7 +1524,7 @@ def register_generated_tools(mcp, _get_client):
     def connect_update_pinterest_boards(
         account_id: str, default_board_id: str, default_board_name: str = ""
     ) -> str:
-        """Set default Pinterest board on the connection
+        """Set default Pinterest board
 
         Args:
             account_id: (required)
@@ -1567,7 +1543,7 @@ def register_generated_tools(mcp, _get_client):
 
     @mcp.tool()
     def connect_get_gmb_locations(account_id: str) -> str:
-        """List available Google Business Profile locations for a connected account
+        """List Google Business locations
 
         Args:
             account_id: (required)"""
@@ -1580,7 +1556,7 @@ def register_generated_tools(mcp, _get_client):
 
     @mcp.tool()
     def connect_update_gmb_location(account_id: str, selected_location_id: str) -> str:
-        """Update selected Google Business Profile location for a connected account
+        """Update Google Business location
 
         Args:
             account_id: (required)
@@ -1596,7 +1572,7 @@ def register_generated_tools(mcp, _get_client):
 
     @mcp.tool()
     def connect_get_reddit_subreddits(account_id: str) -> str:
-        """List Reddit subreddits for a connected account
+        """List Reddit subreddits
 
         Args:
             account_id: (required)"""
@@ -1611,7 +1587,7 @@ def register_generated_tools(mcp, _get_client):
     def connect_update_reddit_subreddits(
         account_id: str, default_subreddit: str
     ) -> str:
-        """Set default subreddit on the connection
+        """Set default subreddit
 
         Args:
             account_id: (required)
@@ -1627,7 +1603,7 @@ def register_generated_tools(mcp, _get_client):
 
     @mcp.tool()
     def connect_get_reddit_flairs(account_id: str, subreddit: str) -> str:
-        """List available post flairs for a Reddit subreddit
+        """List subreddit flairs
 
         Args:
             account_id: (required)
@@ -1645,7 +1621,7 @@ def register_generated_tools(mcp, _get_client):
 
     @mcp.tool()
     def invites_create_invite_token(scope: str, profile_ids: str = "") -> str:
-        """Create a team member invite token
+        """Create invite token
 
         Args:
             scope: 'all' grants access to all profiles, 'profiles' restricts to specific profiles (required)
@@ -1670,7 +1646,7 @@ def register_generated_tools(mcp, _get_client):
         limit: int = 50,
         skip: int = 0,
     ) -> str:
-        """Get publishing logs (deprecated)
+        """List publishing logs (deprecated)
 
         Args:
             status: Filter by log status
@@ -1695,7 +1671,7 @@ def register_generated_tools(mcp, _get_client):
 
     @mcp.tool()
     def logs_get_log(log_id: str) -> str:
-        """Get a single log entry
+        """Get log entry
 
         Args:
             log_id: The log entry ID (required)"""
@@ -1715,7 +1691,7 @@ def register_generated_tools(mcp, _get_client):
         limit: int = 50,
         skip: int = 0,
     ) -> str:
-        """Get publishing logs
+        """List publishing logs
 
         Args:
             status: Filter by log status
@@ -1747,7 +1723,7 @@ def register_generated_tools(mcp, _get_client):
         limit: int = 50,
         skip: int = 0,
     ) -> str:
-        """Get connection logs
+        """List connection logs
 
         Args:
             platform: Filter by platform
@@ -1772,7 +1748,7 @@ def register_generated_tools(mcp, _get_client):
 
     @mcp.tool()
     def logs_get_post_logs(post_id: str, limit: int = 50) -> str:
-        """Get logs for a specific post
+        """Get post logs
 
         Args:
             post_id: The post ID (required)
@@ -1790,7 +1766,7 @@ def register_generated_tools(mcp, _get_client):
     def media_get_media_presigned_url(
         filename: str, content_type: str, size: int = 0
     ) -> str:
-        """Get a presigned URL for direct file upload (up to 5GB)
+        """Get presigned upload URL
 
         Args:
             filename: Name of the file to upload (required)
@@ -1817,7 +1793,7 @@ def register_generated_tools(mcp, _get_client):
         cursor: str = "",
         account_id: str = "",
     ) -> str:
-        """List conversations across all accounts
+        """List conversations
 
         Args:
             profile_id: Filter by profile ID
@@ -1844,7 +1820,7 @@ def register_generated_tools(mcp, _get_client):
 
     @mcp.tool()
     def messages_get_inbox_conversation(conversation_id: str, account_id: str) -> str:
-        """Get conversation details
+        """Get conversation
 
         Args:
             conversation_id: The conversation ID (id field from list conversations endpoint). This is the platform-specific conversation identifier, not an internal database ID. (required)
@@ -1881,7 +1857,7 @@ def register_generated_tools(mcp, _get_client):
     def messages_get_inbox_conversation_messages(
         conversation_id: str, account_id: str
     ) -> str:
-        """Get messages in a conversation
+        """List messages
 
         Args:
             conversation_id: The conversation ID (id field from list conversations endpoint). This is the platform-specific conversation identifier, not an internal database ID. (required)
@@ -1908,7 +1884,7 @@ def register_generated_tools(mcp, _get_client):
         message_tag: str = "",
         reply_to: str = "",
     ) -> str:
-        """Send a message
+        """Send message
 
         Args:
             conversation_id: The conversation ID (id field from list conversations endpoint). This is the platform-specific conversation identifier, not an internal database ID. (required)
@@ -1947,7 +1923,7 @@ def register_generated_tools(mcp, _get_client):
         text: str = "",
         reply_markup: str = "",
     ) -> str:
-        """Edit a message (Telegram only)
+        """Edit message
 
         Args:
             conversation_id: The conversation ID (required)
@@ -1982,7 +1958,7 @@ def register_generated_tools(mcp, _get_client):
         date_to: str = "",
         include_hidden: bool = False,
     ) -> str:
-        """List posts visible to the authenticated user
+        """List posts
 
         Args:
             page: Page number
@@ -2013,7 +1989,7 @@ def register_generated_tools(mcp, _get_client):
 
     @mcp.tool()
     def posts_get_post(post_id: str) -> str:
-        """Get a single post
+        """Get post
 
         Args:
             post_id: (required)"""
@@ -2031,7 +2007,7 @@ def register_generated_tools(mcp, _get_client):
         scheduled_for: str = "",
         tiktok_settings: str = "",
     ) -> str:
-        """Update a post
+        """Update post
 
             Args:
                 post_id: (required)
@@ -2054,7 +2030,7 @@ def register_generated_tools(mcp, _get_client):
 
     @mcp.tool()
     def posts_delete_post(post_id: str) -> str:
-        """Delete a post
+        """Delete post
 
         Args:
             post_id: (required)"""
@@ -2067,7 +2043,7 @@ def register_generated_tools(mcp, _get_client):
 
     @mcp.tool()
     def posts_bulk_upload_posts(dry_run: bool = False) -> str:
-        """Validate and schedule multiple posts from CSV
+        """Bulk upload from CSV
 
         Args:
             dry_run"""
@@ -2080,7 +2056,7 @@ def register_generated_tools(mcp, _get_client):
 
     @mcp.tool()
     def posts_unpublish_post(post_id: str, platform: str) -> str:
-        """Delete a published post from a social media platform
+        """Unpublish post
 
         Args:
             post_id: (required)
@@ -2096,7 +2072,7 @@ def register_generated_tools(mcp, _get_client):
 
     @mcp.tool()
     def profiles_list_profiles(include_over_limit: bool = False) -> str:
-        """List profiles visible to the authenticated user
+        """List profiles
 
             Args:
                 include_over_limit: When true, includes profiles that exceed the user's plan limit.
@@ -2115,7 +2091,7 @@ def register_generated_tools(mcp, _get_client):
     def profiles_create_profile(
         name: str, description: str = "", color: str = ""
     ) -> str:
-        """Create a new profile
+        """Create profile
 
         Args:
             name: (required)
@@ -2132,7 +2108,7 @@ def register_generated_tools(mcp, _get_client):
 
     @mcp.tool()
     def profiles_get_profile(profile_id: str) -> str:
-        """Get a profile by id
+        """Get profile
 
         Args:
             profile_id: (required)"""
@@ -2151,7 +2127,7 @@ def register_generated_tools(mcp, _get_client):
         color: str = "",
         is_default: bool = False,
     ) -> str:
-        """Update a profile
+        """Update profile
 
         Args:
             profile_id: (required)
@@ -2174,7 +2150,7 @@ def register_generated_tools(mcp, _get_client):
 
     @mcp.tool()
     def profiles_delete_profile(profile_id: str) -> str:
-        """Delete a profile (must have no connected accounts)
+        """Delete profile
 
         Args:
             profile_id: (required)"""
@@ -2191,7 +2167,7 @@ def register_generated_tools(mcp, _get_client):
     def queue_list_queue_slots(
         profile_id: str, queue_id: str = "", all: str = ""
     ) -> str:
-        """Get queue schedules for a profile
+        """List schedules
 
         Args:
             profile_id: Profile ID to get queues for (required)
@@ -2210,7 +2186,7 @@ def register_generated_tools(mcp, _get_client):
     def queue_create_queue_slot(
         profile_id: str, name: str, timezone: str, slots: str, active: bool = True
     ) -> str:
-        """Create a new queue for a profile
+        """Create schedule
 
         Args:
             profile_id: Profile ID (required)
@@ -2242,7 +2218,7 @@ def register_generated_tools(mcp, _get_client):
         set_as_default: bool = False,
         reshuffle_existing: bool = False,
     ) -> str:
-        """Create or update a queue schedule
+        """Update schedule
 
         Args:
             profile_id: (required)
@@ -2271,7 +2247,7 @@ def register_generated_tools(mcp, _get_client):
 
     @mcp.tool()
     def queue_delete_queue_slot(profile_id: str, queue_id: str) -> str:
-        """Delete a queue schedule
+        """Delete schedule
 
         Args:
             profile_id: (required)
@@ -2287,7 +2263,7 @@ def register_generated_tools(mcp, _get_client):
 
     @mcp.tool()
     def queue_preview_queue(profile_id: str, count: int = 20) -> str:
-        """Preview upcoming queue slots for a profile
+        """Preview upcoming slots
 
         Args:
             profile_id: (required)
@@ -2301,7 +2277,7 @@ def register_generated_tools(mcp, _get_client):
 
     @mcp.tool()
     def queue_get_next_queue_slot(profile_id: str, queue_id: str = "") -> str:
-        """Preview the next available queue slot (informational only)
+        """Get next available slot
 
         Args:
             profile_id: (required)
@@ -2327,7 +2303,7 @@ def register_generated_tools(mcp, _get_client):
         limit: int = 25,
         after: str = "",
     ) -> str:
-        """Search Reddit posts via a connected account
+        """Search posts
 
         Args:
             account_id: (required)
@@ -2361,7 +2337,7 @@ def register_generated_tools(mcp, _get_client):
         after: str = "",
         t: str = "",
     ) -> str:
-        """Fetch subreddit feed via a connected account
+        """Get subreddit feed
 
         Args:
             account_id: (required)
@@ -2399,7 +2375,7 @@ def register_generated_tools(mcp, _get_client):
         cursor: str = "",
         account_id: str = "",
     ) -> str:
-        """List reviews across all accounts
+        """List reviews
 
         Args:
             profile_id
@@ -2434,7 +2410,7 @@ def register_generated_tools(mcp, _get_client):
     def reviews_reply_to_inbox_review(
         review_id: str, account_id: str, message: str
     ) -> str:
-        """Reply to a review
+        """Reply to review
 
         Args:
             review_id: Review ID (URL-encoded for Google Business) (required)
@@ -2451,7 +2427,7 @@ def register_generated_tools(mcp, _get_client):
 
     @mcp.tool()
     def reviews_delete_inbox_review_reply(review_id: str, account_id: str) -> str:
-        """Delete a review reply
+        """Delete review reply
 
         Args:
             review_id: (required)
@@ -2475,7 +2451,7 @@ def register_generated_tools(mcp, _get_client):
         quality: str = "hd",
         format_id: str = "",
     ) -> str:
-        """Download YouTube video or audio
+        """Download YouTube video
 
         Args:
             url: YouTube video URL or video ID (required)
@@ -2498,7 +2474,7 @@ def register_generated_tools(mcp, _get_client):
 
     @mcp.tool()
     def tools_get_you_tube_transcript(url: str, lang: str = "en") -> str:
-        """Get YouTube video transcript
+        """Get YouTube transcript
 
         Args:
             url: YouTube video URL or video ID (required)
@@ -2512,7 +2488,7 @@ def register_generated_tools(mcp, _get_client):
 
     @mcp.tool()
     def tools_download_instagram_media(url: str) -> str:
-        """Download Instagram reel or post
+        """Download Instagram media
 
         Args:
             url: Instagram reel or post URL (required)"""
@@ -2525,7 +2501,7 @@ def register_generated_tools(mcp, _get_client):
 
     @mcp.tool()
     def tools_check_instagram_hashtags(hashtags: str) -> str:
-        """Check Instagram hashtags for bans
+        """Check Instagram hashtag bans
 
         Args:
             hashtags: (required)"""
@@ -2559,7 +2535,7 @@ def register_generated_tools(mcp, _get_client):
     def tools_download_twitter_media(
         url: str, action: str = "download", format_id: str = ""
     ) -> str:
-        """Download Twitter/X video
+        """Download Twitter/X media
 
         Args:
             url: Twitter/X post URL (required)
@@ -2602,7 +2578,7 @@ def register_generated_tools(mcp, _get_client):
 
     @mcp.tool()
     def tools_download_bluesky_media(url: str) -> str:
-        """Download Bluesky video
+        """Download Bluesky media
 
         Args:
             url: Bluesky post URL (required)"""
@@ -2617,7 +2593,7 @@ def register_generated_tools(mcp, _get_client):
 
     @mcp.tool()
     def usage_get_usage_stats() -> str:
-        """Get plan and usage stats for current account"""
+        """Get plan and usage stats"""
         client = _get_client()
         try:
             response = client.usage.get_usage_stats()
@@ -2629,7 +2605,7 @@ def register_generated_tools(mcp, _get_client):
 
     @mcp.tool()
     def users_list_users() -> str:
-        """List team users (root + invited)"""
+        """List users"""
         client = _get_client()
         try:
             response = client.users.list_users()
@@ -2639,7 +2615,7 @@ def register_generated_tools(mcp, _get_client):
 
     @mcp.tool()
     def users_get_user(user_id: str) -> str:
-        """Get user by id (self or invited)
+        """Get user
 
         Args:
             user_id: (required)"""
@@ -2654,7 +2630,7 @@ def register_generated_tools(mcp, _get_client):
 
     @mcp.tool()
     def webhooks_get_webhook_settings() -> str:
-        """List all webhooks"""
+        """List webhooks"""
         client = _get_client()
         try:
             response = client.webhooks.get_webhook_settings()
@@ -2671,7 +2647,7 @@ def register_generated_tools(mcp, _get_client):
         is_active: bool = False,
         custom_headers: str = "",
     ) -> str:
-        """Create a new webhook
+        """Create webhook
 
         Args:
             name: Webhook name (max 50 characters)
@@ -2704,7 +2680,7 @@ def register_generated_tools(mcp, _get_client):
         is_active: bool = False,
         custom_headers: str = "",
     ) -> str:
-        """Update a webhook
+        """Update webhook
 
         Args:
             id: Webhook ID to update (required) (required)
@@ -2731,7 +2707,7 @@ def register_generated_tools(mcp, _get_client):
 
     @mcp.tool()
     def webhooks_delete_webhook_settings(id: str) -> str:
-        """Delete a webhook
+        """Delete webhook
 
         Args:
             id: Webhook ID to delete (required)"""
@@ -2759,7 +2735,7 @@ def register_generated_tools(mcp, _get_client):
     def webhooks_get_webhook_logs(
         limit: int = 50, status: str = "", event: str = "", webhook_id: str = ""
     ) -> str:
-        """Get webhook delivery logs
+        """Get delivery logs
 
         Args:
             limit: Maximum number of logs to return (max 100)

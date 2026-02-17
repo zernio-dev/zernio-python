@@ -57,7 +57,7 @@ class ToolsResource:
         quality: str | None = "hd",
         format_id: str | None = None,
     ) -> dict[str, Any]:
-        """Download YouTube video or audio"""
+        """Download YouTube video"""
         params = self._build_params(
             url=url,
             action=action,
@@ -70,7 +70,7 @@ class ToolsResource:
     def get_you_tube_transcript(
         self, url: str, *, lang: str | None = "en"
     ) -> dict[str, Any]:
-        """Get YouTube video transcript"""
+        """Get YouTube transcript"""
         params = self._build_params(
             url=url,
             lang=lang,
@@ -78,14 +78,14 @@ class ToolsResource:
         return self._client._get("/v1/tools/youtube/transcript", params=params)
 
     def download_instagram_media(self, url: str) -> dict[str, Any]:
-        """Download Instagram reel or post"""
+        """Download Instagram media"""
         params = self._build_params(
             url=url,
         )
         return self._client._get("/v1/tools/instagram/download", params=params)
 
     def check_instagram_hashtags(self, hashtags: list[str]) -> dict[str, Any]:
-        """Check Instagram hashtags for bans"""
+        """Check Instagram hashtag bans"""
         payload = self._build_payload(
             hashtags=hashtags,
         )
@@ -105,7 +105,7 @@ class ToolsResource:
     def download_twitter_media(
         self, url: str, *, action: str | None = "download", format_id: str | None = None
     ) -> dict[str, Any]:
-        """Download Twitter/X video"""
+        """Download Twitter/X media"""
         params = self._build_params(
             url=url,
             action=action,
@@ -128,7 +128,7 @@ class ToolsResource:
         return self._client._get("/v1/tools/linkedin/download", params=params)
 
     def download_bluesky_media(self, url: str) -> dict[str, Any]:
-        """Download Bluesky video"""
+        """Download Bluesky media"""
         params = self._build_params(
             url=url,
         )
@@ -143,7 +143,7 @@ class ToolsResource:
         quality: str | None = "hd",
         format_id: str | None = None,
     ) -> dict[str, Any]:
-        """Download YouTube video or audio (async)"""
+        """Download YouTube video (async)"""
         params = self._build_params(
             url=url,
             action=action,
@@ -156,7 +156,7 @@ class ToolsResource:
     async def aget_you_tube_transcript(
         self, url: str, *, lang: str | None = "en"
     ) -> dict[str, Any]:
-        """Get YouTube video transcript (async)"""
+        """Get YouTube transcript (async)"""
         params = self._build_params(
             url=url,
             lang=lang,
@@ -164,14 +164,14 @@ class ToolsResource:
         return await self._client._aget("/v1/tools/youtube/transcript", params=params)
 
     async def adownload_instagram_media(self, url: str) -> dict[str, Any]:
-        """Download Instagram reel or post (async)"""
+        """Download Instagram media (async)"""
         params = self._build_params(
             url=url,
         )
         return await self._client._aget("/v1/tools/instagram/download", params=params)
 
     async def acheck_instagram_hashtags(self, hashtags: list[str]) -> dict[str, Any]:
-        """Check Instagram hashtags for bans (async)"""
+        """Check Instagram hashtag bans (async)"""
         payload = self._build_payload(
             hashtags=hashtags,
         )
@@ -193,7 +193,7 @@ class ToolsResource:
     async def adownload_twitter_media(
         self, url: str, *, action: str | None = "download", format_id: str | None = None
     ) -> dict[str, Any]:
-        """Download Twitter/X video (async)"""
+        """Download Twitter/X media (async)"""
         params = self._build_params(
             url=url,
             action=action,
@@ -216,7 +216,7 @@ class ToolsResource:
         return await self._client._aget("/v1/tools/linkedin/download", params=params)
 
     async def adownload_bluesky_media(self, url: str) -> dict[str, Any]:
-        """Download Bluesky video (async)"""
+        """Download Bluesky media (async)"""
         params = self._build_params(
             url=url,
         )

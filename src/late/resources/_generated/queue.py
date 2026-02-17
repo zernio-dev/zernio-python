@@ -51,7 +51,7 @@ class QueueResource:
     def list_queue_slots(
         self, profile_id: str, *, queue_id: str | None = None, all: str | None = None
     ) -> dict[str, Any]:
-        """Get queue schedules for a profile"""
+        """List schedules"""
         params = self._build_params(
             profile_id=profile_id,
             queue_id=queue_id,
@@ -68,7 +68,7 @@ class QueueResource:
         *,
         active: bool | None = True,
     ) -> dict[str, Any]:
-        """Create a new queue for a profile"""
+        """Create schedule"""
         payload = self._build_payload(
             profile_id=profile_id,
             name=name,
@@ -90,7 +90,7 @@ class QueueResource:
         set_as_default: bool | None = None,
         reshuffle_existing: bool | None = False,
     ) -> dict[str, Any]:
-        """Create or update a queue schedule"""
+        """Update schedule"""
         payload = self._build_payload(
             profile_id=profile_id,
             queue_id=queue_id,
@@ -104,7 +104,7 @@ class QueueResource:
         return self._client._put("/v1/queue/slots", data=payload)
 
     def delete_queue_slot(self, profile_id: str, queue_id: str) -> dict[str, Any]:
-        """Delete a queue schedule"""
+        """Delete schedule"""
         params = self._build_params(
             profile_id=profile_id,
             queue_id=queue_id,
@@ -114,7 +114,7 @@ class QueueResource:
     def preview_queue(
         self, profile_id: str, *, count: int | None = 20
     ) -> dict[str, Any]:
-        """Preview upcoming queue slots for a profile"""
+        """Preview upcoming slots"""
         params = self._build_params(
             profile_id=profile_id,
             count=count,
@@ -124,7 +124,7 @@ class QueueResource:
     def get_next_queue_slot(
         self, profile_id: str, *, queue_id: str | None = None
     ) -> dict[str, Any]:
-        """Preview the next available queue slot (informational only)"""
+        """Get next available slot"""
         params = self._build_params(
             profile_id=profile_id,
             queue_id=queue_id,
@@ -134,7 +134,7 @@ class QueueResource:
     async def alist_queue_slots(
         self, profile_id: str, *, queue_id: str | None = None, all: str | None = None
     ) -> dict[str, Any]:
-        """Get queue schedules for a profile (async)"""
+        """List schedules (async)"""
         params = self._build_params(
             profile_id=profile_id,
             queue_id=queue_id,
@@ -151,7 +151,7 @@ class QueueResource:
         *,
         active: bool | None = True,
     ) -> dict[str, Any]:
-        """Create a new queue for a profile (async)"""
+        """Create schedule (async)"""
         payload = self._build_payload(
             profile_id=profile_id,
             name=name,
@@ -173,7 +173,7 @@ class QueueResource:
         set_as_default: bool | None = None,
         reshuffle_existing: bool | None = False,
     ) -> dict[str, Any]:
-        """Create or update a queue schedule (async)"""
+        """Update schedule (async)"""
         payload = self._build_payload(
             profile_id=profile_id,
             queue_id=queue_id,
@@ -189,7 +189,7 @@ class QueueResource:
     async def adelete_queue_slot(
         self, profile_id: str, queue_id: str
     ) -> dict[str, Any]:
-        """Delete a queue schedule (async)"""
+        """Delete schedule (async)"""
         params = self._build_params(
             profile_id=profile_id,
             queue_id=queue_id,
@@ -199,7 +199,7 @@ class QueueResource:
     async def apreview_queue(
         self, profile_id: str, *, count: int | None = 20
     ) -> dict[str, Any]:
-        """Preview upcoming queue slots for a profile (async)"""
+        """Preview upcoming slots (async)"""
         params = self._build_params(
             profile_id=profile_id,
             count=count,
@@ -209,7 +209,7 @@ class QueueResource:
     async def aget_next_queue_slot(
         self, profile_id: str, *, queue_id: str | None = None
     ) -> dict[str, Any]:
-        """Preview the next available queue slot (informational only) (async)"""
+        """Get next available slot (async)"""
         params = self._build_params(
             profile_id=profile_id,
             queue_id=queue_id,
