@@ -3810,6 +3810,57 @@ paths:
                     Specific queue ID to use when scheduling via queue.
                     Only used when queuedFromProfile is also provided.
                     If omitted, uses the profile's default queue.
+            examples:
+              tiktokPhotoCarousel:
+                summary: TikTok photo carousel with draft mode
+                value:
+                  content: "Check out these photos!"
+                  mediaItems:
+                    - type: image
+                      url: "https://example.com/photo1.jpg"
+                    - type: image
+                      url: "https://example.com/photo2.jpg"
+                  platforms:
+                    - platform: tiktok
+                      accountId: "64e1f0a9e2b5af0012ab34cd"
+                  tiktokSettings:
+                    draft: true
+                    privacyLevel: "PUBLIC_TO_EVERYONE"
+                    allowComment: true
+                    contentPreviewConfirmed: true
+                    expressConsentGiven: true
+              tiktokVideo:
+                summary: TikTok video post (direct publish)
+                value:
+                  content: "New video is live!"
+                  mediaItems:
+                    - type: video
+                      url: "https://example.com/video.mp4"
+                  platforms:
+                    - platform: tiktok
+                      accountId: "64e1f0a9e2b5af0012ab34cd"
+                  tiktokSettings:
+                    privacyLevel: "PUBLIC_TO_EVERYONE"
+                    allowComment: true
+                    allowDuet: true
+                    allowStitch: true
+                    commercialContentType: "none"
+                    contentPreviewConfirmed: true
+                    expressConsentGiven: true
+              multiPlatform:
+                summary: Multi-platform post (Twitter + LinkedIn)
+                value:
+                  content: "We just launched our new product!"
+                  mediaItems:
+                    - type: image
+                      url: "https://example.com/launch.jpg"
+                  platforms:
+                    - platform: twitter
+                      accountId: "64e1f0a9e2b5af0012ab34cd"
+                    - platform: linkedin
+                      accountId: "64e1f0a9e2b5af0012ab34ef"
+                  scheduledFor: "2024-11-01T10:00:00Z"
+                  timezone: "America/New_York"
       responses:
         '201':
           description: Post created
