@@ -252,7 +252,7 @@ except LateAPIError as e:
 | Method | Description |
 |--------|-------------|
 | `tools.get_you_tube_transcript()` | Get YouTube transcript |
-| `tools.check_instagram_hashtags()` | Check Instagram hashtag bans |
+| `tools.check_instagram_hashtags()` | Check IG hashtag bans |
 | `tools.download_bluesky_media()` | Download Bluesky media |
 | `tools.download_facebook_video()` | Download Facebook video |
 | `tools.download_instagram_media()` | Download Instagram media |
@@ -276,22 +276,20 @@ except LateAPIError as e:
 | Method | Description |
 |--------|-------------|
 | `logs.list_connection_logs()` | List connection logs |
-| `logs.list_logs()` | List publishing logs (deprecated) |
 | `logs.list_posts_logs()` | List publishing logs |
-| `logs.get_log()` | Get log entry |
 | `logs.get_post_logs()` | Get post logs |
 
 ### Connect (OAuth)
 | Method | Description |
 |--------|-------------|
 | `connect.list_facebook_pages()` | List Facebook pages |
-| `connect.list_google_business_locations()` | List Google Business locations |
+| `connect.list_google_business_locations()` | List GBP locations |
 | `connect.list_linked_in_organizations()` | List LinkedIn orgs |
 | `connect.list_pinterest_boards_for_selection()` | List Pinterest boards |
 | `connect.list_snapchat_profiles()` | List Snapchat profiles |
 | `connect.get_connect_url()` | Get OAuth connect URL |
 | `connect.get_facebook_pages()` | List Facebook pages |
-| `connect.get_gmb_locations()` | List Google Business locations |
+| `connect.get_gmb_locations()` | List GBP locations |
 | `connect.get_linked_in_organizations()` | List LinkedIn orgs |
 | `connect.get_pending_o_auth_data()` | Get pending OAuth data |
 | `connect.get_pinterest_boards()` | List Pinterest boards |
@@ -299,7 +297,7 @@ except LateAPIError as e:
 | `connect.get_reddit_subreddits()` | List Reddit subreddits |
 | `connect.get_telegram_connect_status()` | Generate Telegram code |
 | `connect.update_facebook_page()` | Update Facebook page |
-| `connect.update_gmb_location()` | Update Google Business location |
+| `connect.update_gmb_location()` | Update GBP location |
 | `connect.update_linked_in_organization()` | Switch LinkedIn account type |
 | `connect.update_pinterest_boards()` | Set default Pinterest board |
 | `connect.update_reddit_subreddits()` | Set default subreddit |
@@ -308,7 +306,7 @@ except LateAPIError as e:
 | `connect.handle_o_auth_callback()` | Complete OAuth callback |
 | `connect.initiate_telegram_connect()` | Connect Telegram directly |
 | `connect.select_facebook_page()` | Select Facebook page |
-| `connect.select_google_business_location()` | Select Google Business location |
+| `connect.select_google_business_location()` | Select GBP location |
 | `connect.select_linked_in_organization()` | Select LinkedIn org |
 | `connect.select_pinterest_board()` | Select Pinterest board |
 | `connect.select_snapchat_profile()` | Select Snapchat profile |
@@ -322,15 +320,15 @@ except LateAPIError as e:
 ### Account Settings
 | Method | Description |
 |--------|-------------|
-| `account_settings.get_instagram_ice_breakers()` | Get Instagram ice breakers |
-| `account_settings.get_messenger_menu()` | Get Facebook persistent menu |
-| `account_settings.get_telegram_commands()` | Get Telegram bot commands |
-| `account_settings.delete_instagram_ice_breakers()` | Delete Instagram ice breakers |
-| `account_settings.delete_messenger_menu()` | Delete Facebook persistent menu |
-| `account_settings.delete_telegram_commands()` | Delete Telegram bot commands |
-| `account_settings.set_instagram_ice_breakers()` | Set Instagram ice breakers |
-| `account_settings.set_messenger_menu()` | Set Facebook persistent menu |
-| `account_settings.set_telegram_commands()` | Set Telegram bot commands |
+| `account_settings.get_instagram_ice_breakers()` | Get IG ice breakers |
+| `account_settings.get_messenger_menu()` | Get FB persistent menu |
+| `account_settings.get_telegram_commands()` | Get TG bot commands |
+| `account_settings.delete_instagram_ice_breakers()` | Delete IG ice breakers |
+| `account_settings.delete_messenger_menu()` | Delete FB persistent menu |
+| `account_settings.delete_telegram_commands()` | Delete TG bot commands |
+| `account_settings.set_instagram_ice_breakers()` | Set IG ice breakers |
+| `account_settings.set_messenger_menu()` | Set FB persistent menu |
+| `account_settings.set_telegram_commands()` | Set TG bot commands |
 
 ### Comments (Inbox)
 | Method | Description |

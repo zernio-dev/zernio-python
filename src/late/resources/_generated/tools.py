@@ -85,7 +85,7 @@ class ToolsResource:
         return self._client._get("/v1/tools/instagram/download", params=params)
 
     def check_instagram_hashtags(self, hashtags: list[str]) -> dict[str, Any]:
-        """Check Instagram hashtag bans"""
+        """Check IG hashtag bans"""
         payload = self._build_payload(
             hashtags=hashtags,
         )
@@ -171,7 +171,7 @@ class ToolsResource:
         return await self._client._aget("/v1/tools/instagram/download", params=params)
 
     async def acheck_instagram_hashtags(self, hashtags: list[str]) -> dict[str, Any]:
-        """Check Instagram hashtag bans (async)"""
+        """Check IG hashtag bans (async)"""
         payload = self._build_payload(
             hashtags=hashtags,
         )

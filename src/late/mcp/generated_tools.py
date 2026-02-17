@@ -116,7 +116,7 @@ def register_generated_tools(mcp, _get_client):
 
     @mcp.tool()
     def account_settings_get_messenger_menu(account_id: str) -> str:
-        """Get Facebook persistent menu
+        """Get FB persistent menu
 
         Args:
             account_id: (required)"""
@@ -131,7 +131,7 @@ def register_generated_tools(mcp, _get_client):
     def account_settings_set_messenger_menu(
         account_id: str, persistent_menu: str
     ) -> str:
-        """Set Facebook persistent menu
+        """Set FB persistent menu
 
         Args:
             account_id: (required)
@@ -147,7 +147,7 @@ def register_generated_tools(mcp, _get_client):
 
     @mcp.tool()
     def account_settings_delete_messenger_menu(account_id: str) -> str:
-        """Delete Facebook persistent menu
+        """Delete FB persistent menu
 
         Args:
             account_id: (required)"""
@@ -162,7 +162,7 @@ def register_generated_tools(mcp, _get_client):
 
     @mcp.tool()
     def account_settings_get_instagram_ice_breakers(account_id: str) -> str:
-        """Get Instagram ice breakers
+        """Get IG ice breakers
 
         Args:
             account_id: (required)"""
@@ -179,7 +179,7 @@ def register_generated_tools(mcp, _get_client):
     def account_settings_set_instagram_ice_breakers(
         account_id: str, ice_breakers: str
     ) -> str:
-        """Set Instagram ice breakers
+        """Set IG ice breakers
 
         Args:
             account_id: (required)
@@ -195,7 +195,7 @@ def register_generated_tools(mcp, _get_client):
 
     @mcp.tool()
     def account_settings_delete_instagram_ice_breakers(account_id: str) -> str:
-        """Delete Instagram ice breakers
+        """Delete IG ice breakers
 
         Args:
             account_id: (required)"""
@@ -210,7 +210,7 @@ def register_generated_tools(mcp, _get_client):
 
     @mcp.tool()
     def account_settings_get_telegram_commands(account_id: str) -> str:
-        """Get Telegram bot commands
+        """Get TG bot commands
 
         Args:
             account_id: (required)"""
@@ -225,7 +225,7 @@ def register_generated_tools(mcp, _get_client):
 
     @mcp.tool()
     def account_settings_set_telegram_commands(account_id: str, commands: str) -> str:
-        """Set Telegram bot commands
+        """Set TG bot commands
 
         Args:
             account_id: (required)
@@ -241,7 +241,7 @@ def register_generated_tools(mcp, _get_client):
 
     @mcp.tool()
     def account_settings_delete_telegram_commands(account_id: str) -> str:
-        """Delete Telegram bot commands
+        """Delete TG bot commands
 
         Args:
             account_id: (required)"""
@@ -636,15 +636,11 @@ def register_generated_tools(mcp, _get_client):
     ) -> str:
         """Resolve LinkedIn mention
 
-            Args:
-                account_id: The LinkedIn account ID (required)
-                url: LinkedIn profile URL, company URL, or vanity name.
-        - Person: `miquelpalet`, `linkedin.com/in/miquelpalet`
-        - Organization: `company/microsoft`, `linkedin.com/company/microsoft`
-         (required)
-                display_name: The exact display name as shown on LinkedIn.
-        - **Person mentions:** Required for clickable mentions. If not provided, a name is derived from the vanity URL which may not match exactly.
-        - **Organization mentions:** Optional. If not provided, the company name is automatically retrieved from LinkedIn."""
+           Args:
+               account_id: The LinkedIn account ID (required)
+               url: LinkedIn profile URL, company URL, or vanity name. Person examples: miquelpalet, linkedin.com/in/miquelpalet. Organization examples: company/microsoft, linkedin.com/company/microsoft.
+        (required)
+               display_name: The exact display name as shown on LinkedIn. Required for person mentions (for clickable mentions; if not provided, a name is derived from the vanity URL which may not match). Optional for organization mentions (company name is auto-retrieved from LinkedIn)."""
         client = _get_client()
         try:
             response = client.accounts.get_linked_in_mentions(
@@ -671,22 +667,17 @@ def register_generated_tools(mcp, _get_client):
     ) -> str:
         """Get post analytics
 
-            Args:
-                post_id: Returns analytics for a single post. Accepts both Late Post IDs (from `POST /v1/posts`)
-        and External Post IDs (from this endpoint's list response). The API automatically
-        resolves Late Post IDs to their corresponding External Post analytics.
-                platform: Filter by platform (default "all")
-                profile_id: Filter by profile ID (default "all")
-                source: Filter by post source:
-        - `late` - Only posts scheduled/published via Late API
-        - `external` - Only posts synced from the platform (not posted via Late)
-        - `all` - All posts (default)
-                from_date: Inclusive lower bound
-                to_date: Inclusive upper bound
-                limit: Page size (default 50)
-                page: Page number (default 1)
-                sort_by: Sort by date or engagement
-                order: Sort order"""
+        Args:
+            post_id: Returns analytics for a single post. Accepts both Late Post IDs and External Post IDs. Late IDs are auto-resolved to External Post analytics.
+            platform: Filter by platform (default "all")
+            profile_id: Filter by profile ID (default "all")
+            source: Filter by post source: late (posted via Late API), external (synced from platform), all (default)
+            from_date: Inclusive lower bound
+            to_date: Inclusive upper bound
+            limit: Page size (default 50)
+            page: Page number (default 1)
+            sort_by: Sort by date or engagement
+            order: Sort order"""
         client = _get_client()
         try:
             response = client.analytics.get_analytics(
@@ -740,11 +731,7 @@ def register_generated_tools(mcp, _get_client):
 
             Args:
                 account_id: The ID of the LinkedIn personal account (required)
-                aggregation: Type of aggregation for the analytics data.
-        - `TOTAL` (default): Returns single totals for each metric
-        - `DAILY`: Returns daily breakdown of metrics
-
-        Note: `MEMBERS_REACHED` metric is not available with `DAILY` aggregation.
+                aggregation: Type of aggregation: TOTAL (default, returns single totals) or DAILY (returns daily breakdown). Note: MEMBERS_REACHED is not available with DAILY aggregation.
                 start_date: Start date for analytics data in YYYY-MM-DD format.
         If provided without endDate, endDate defaults to today.
         If omitted entirely, returns lifetime analytics.
@@ -876,10 +863,7 @@ def register_generated_tools(mcp, _get_client):
 
             Args:
                 post_id: The post identifier. Accepts a Late post ID (MongoDB ObjectId) which is automatically resolved to the platform-specific post ID, or a platform-specific post ID directly (e.g. tweet ID, Facebook Graph ID, YouTube video ID).
-
-        **LinkedIn:** For your own posts, the full URN stored in Late (e.g., `urn:li:share:7429218977714745345`) is used automatically.
-        For third-party posts, pass either the full activity URN (e.g., `urn:li:activity:7422459067685855232`) or the raw numeric activity ID from the LinkedIn URL (automatically wrapped as `urn:li:activity:`).
-        Note: LinkedIn post URLs use activity IDs (`linkedin.com/feed/update/urn:li:activity:XXXX`).
+        LinkedIn: for your own posts, the full URN stored in Late is used automatically. For third-party posts, pass the full activity URN or the raw numeric activity ID from the LinkedIn URL (automatically wrapped as urn:li:activity:).
          (required)
                 account_id: (required)
                 subreddit: (Reddit only) Subreddit name
@@ -916,7 +900,7 @@ def register_generated_tools(mcp, _get_client):
             Args:
                 post_id: The post identifier. Accepts a Late post ID or a platform-specific post ID.
 
-        **LinkedIn:** For third-party posts, pass the full activity URN (e.g., `urn:li:activity:7422459067685855232`) or the raw numeric activity ID from the URL.
+        LinkedIn: for third-party posts, pass the full activity URN (e.g. urn:li:activity:7422459067685855232) or the raw numeric activity ID from the URL.
          (required)
                 account_id: (required)
                 message: (required)
@@ -950,7 +934,7 @@ def register_generated_tools(mcp, _get_client):
             Args:
                 post_id: The post identifier. Accepts a Late post ID or a platform-specific post ID.
 
-        **LinkedIn:** For third-party posts, pass the full activity URN (e.g., `urn:li:activity:7422459067685855232`) or the raw numeric activity ID from the URL.
+        LinkedIn: for third-party posts, pass the full activity URN (e.g. urn:li:activity:7422459067685855232) or the raw numeric activity ID from the URL.
          (required)
                 account_id: (required)
                 comment_id: (required)"""
@@ -1079,12 +1063,8 @@ def register_generated_tools(mcp, _get_client):
                 platform: Social media platform to connect (required)
                 profile_id: Your Late profile ID (get from /v1/profiles) (required)
                 redirect_url: Your custom redirect URL after connection completes.
-
-        **Standard Mode:** After the user selects an account, Late redirects here with `?connected={platform}&profileId=X&username=Y`.
-
-        **Headless Mode:** Pass `headless=true` as a query parameter on this endpoint. After OAuth, the user is redirected to your URL with OAuth data (`profileId`, `tempToken`, `userProfile`, `connect_token`, `platform`, `step`). See the main endpoint description for details.
-
-        Example: `https://yourdomain.com/integrations/callback`"""
+        Standard mode: Late redirects here with ?connected={platform}&profileId=X&username=Y.
+        Headless mode: pass headless=true on this endpoint. User is redirected to your URL with OAuth data (profileId, tempToken, userProfile, connect_token, platform, step). See endpoint description for details."""
         client = _get_client()
         try:
             response = client.connect.get_connect_url(
@@ -1161,7 +1141,7 @@ def register_generated_tools(mcp, _get_client):
 
     @mcp.tool()
     def connect_list_google_business_locations(profile_id: str, temp_token: str) -> str:
-        """List Google Business locations
+        """List GBP locations
 
         Args:
             profile_id: Profile ID from your connection flow (required)
@@ -1183,15 +1163,14 @@ def register_generated_tools(mcp, _get_client):
         user_profile: str = "",
         redirect_url: str = "",
     ) -> str:
-        """Select Google Business location
+        """Select GBP location
 
-            Args:
-                profile_id: Profile ID from your connection flow (required)
-                location_id: The Google Business location ID selected by the user (required)
-                temp_token: Temporary Google access token from OAuth (required)
-                user_profile: Decoded user profile object from the OAuth callback. **Important:** This contains
-        the refresh token needed for token refresh. Always include this field.
-                redirect_url: Optional custom redirect URL to return to after selection"""
+        Args:
+            profile_id: Profile ID from your connection flow (required)
+            location_id: The Google Business location ID selected by the user (required)
+            temp_token: Temporary Google access token from OAuth (required)
+            user_profile: Decoded user profile object from the OAuth callback. Contains the refresh token needed for token refresh. Always include this field.
+            redirect_url: Optional custom redirect URL to return to after selection"""
         client = _get_client()
         try:
             response = client.connect.select_google_business_location(
@@ -1210,7 +1189,7 @@ def register_generated_tools(mcp, _get_client):
         """Get pending OAuth data
 
         Args:
-            token: The pending data token from the OAuth redirect URL (`pendingDataToken` parameter) (required)"""
+            token: The pending data token from the OAuth redirect URL (pendingDataToken parameter) (required)"""
         client = _get_client()
         try:
             response = client.connect.get_pending_o_auth_data(token=token)
@@ -1379,14 +1358,12 @@ def register_generated_tools(mcp, _get_client):
     ) -> str:
         """Connect Bluesky account
 
-            Args:
-                identifier: Your Bluesky handle (e.g. user.bsky.social) or email address (required)
-                app_password: App password generated from Bluesky Settings > App Passwords (required)
-                state: Required state parameter formatted as `{userId}-{profileId}`.
-        - `userId`: Your Late user ID (get from `GET /v1/users` → `currentUserId`)
-        - `profileId`: The profile ID to connect the account to (get from `GET /v1/profiles`)
-         (required)
-                redirect_uri: Optional URL to redirect to after successful connection"""
+           Args:
+               identifier: Your Bluesky handle (e.g. user.bsky.social) or email address (required)
+               app_password: App password generated from Bluesky Settings > App Passwords (required)
+               state: Required state parameter formatted as {userId}-{profileId}. userId is your Late user ID (from GET /v1/users, currentUserId field), profileId is the profile to connect the account to (from GET /v1/profiles).
+        (required)
+               redirect_uri: Optional URL to redirect to after successful connection"""
         client = _get_client()
         try:
             response = client.connect.connect_bluesky_credentials(
@@ -1543,7 +1520,7 @@ def register_generated_tools(mcp, _get_client):
 
     @mcp.tool()
     def connect_get_gmb_locations(account_id: str) -> str:
-        """List Google Business locations
+        """List GBP locations
 
         Args:
             account_id: (required)"""
@@ -1556,7 +1533,7 @@ def register_generated_tools(mcp, _get_client):
 
     @mcp.tool()
     def connect_update_gmb_location(account_id: str, selected_location_id: str) -> str:
-        """Update Google Business location
+        """Update GBP location
 
         Args:
             account_id: (required)
@@ -1636,51 +1613,6 @@ def register_generated_tools(mcp, _get_client):
             return f"Error: {e}"
 
     # LOGS
-
-    @mcp.tool()
-    def logs_list_logs(
-        status: str = "",
-        platform: str = "",
-        action: str = "",
-        days: int = 7,
-        limit: int = 50,
-        skip: int = 0,
-    ) -> str:
-        """List publishing logs (deprecated)
-
-        Args:
-            status: Filter by log status
-            platform: Filter by platform
-            action: Filter by action type
-            days: Number of days to look back (max 7)
-            limit: Maximum number of logs to return (max 100)
-            skip: Number of logs to skip (for pagination)"""
-        client = _get_client()
-        try:
-            response = client.logs.list_logs(
-                status=status,
-                platform=platform,
-                action=action,
-                days=days,
-                limit=limit,
-                skip=skip,
-            )
-            return _format_response(response)
-        except Exception as e:
-            return f"Error: {e}"
-
-    @mcp.tool()
-    def logs_get_log(log_id: str) -> str:
-        """Get log entry
-
-        Args:
-            log_id: The log entry ID (required)"""
-        client = _get_client()
-        try:
-            response = client.logs.get_log(log_id=log_id)
-            return _format_response(response)
-        except Exception as e:
-            return f"Error: {e}"
 
     @mcp.tool()
     def logs_list_posts_logs(
@@ -2009,13 +1941,11 @@ def register_generated_tools(mcp, _get_client):
     ) -> str:
         """Update post
 
-            Args:
-                post_id: (required)
-                content
-                scheduled_for
-                tiktok_settings: Root-level TikTok settings applied to all TikTok platforms in the request.
-        This is a convenience shorthand. Settings here are merged into each TikTok
-        platform's platformSpecificData, with platform-specific settings taking precedence."""
+        Args:
+            post_id: (required)
+            content
+            scheduled_for
+            tiktok_settings: Root-level TikTok settings applied to all TikTok platforms. Merged into each platform's platformSpecificData, with platform-specific settings taking precedence."""
         client = _get_client()
         try:
             response = client.posts.update_post(
@@ -2074,10 +2004,8 @@ def register_generated_tools(mcp, _get_client):
     def profiles_list_profiles(include_over_limit: bool = False) -> str:
         """List profiles
 
-            Args:
-                include_over_limit: When true, includes profiles that exceed the user's plan limit.
-        Over-limit profiles will have `isOverLimit: true` in the response.
-        Useful for managing/deleting profiles after a plan downgrade."""
+        Args:
+            include_over_limit: When true, includes profiles that exceed the user's plan limit. Over-limit profiles will have isOverLimit: true in the response. Useful for managing/deleting profiles after a plan downgrade."""
         client = _get_client()
         try:
             response = client.profiles.list_profiles(
@@ -2501,7 +2429,7 @@ def register_generated_tools(mcp, _get_client):
 
     @mcp.tool()
     def tools_check_instagram_hashtags(hashtags: str) -> str:
-        """Check Instagram hashtag bans
+        """Check IG hashtag bans
 
         Args:
             hashtags: (required)"""

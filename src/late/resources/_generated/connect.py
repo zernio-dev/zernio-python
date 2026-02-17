@@ -99,7 +99,7 @@ class ConnectResource:
     def list_google_business_locations(
         self, profile_id: str, temp_token: str
     ) -> dict[str, Any]:
-        """List Google Business locations"""
+        """List GBP locations"""
         params = self._build_params(
             profile_id=profile_id,
             temp_token=temp_token,
@@ -115,7 +115,7 @@ class ConnectResource:
         user_profile: dict[str, Any] | None = None,
         redirect_url: str | None = None,
     ) -> dict[str, Any]:
-        """Select Google Business location"""
+        """Select GBP location"""
         payload = self._build_payload(
             profile_id=profile_id,
             location_id=location_id,
@@ -333,13 +333,13 @@ class ConnectResource:
         )
 
     def get_gmb_locations(self, account_id: str) -> dict[str, Any]:
-        """List Google Business locations"""
+        """List GBP locations"""
         return self._client._get(f"/v1/accounts/{account_id}/gmb-locations")
 
     def update_gmb_location(
         self, account_id: str, selected_location_id: str
     ) -> dict[str, Any]:
-        """Update Google Business location"""
+        """Update GBP location"""
         payload = self._build_payload(
             selected_location_id=selected_location_id,
         )
@@ -428,7 +428,7 @@ class ConnectResource:
     async def alist_google_business_locations(
         self, profile_id: str, temp_token: str
     ) -> dict[str, Any]:
-        """List Google Business locations (async)"""
+        """List GBP locations (async)"""
         params = self._build_params(
             profile_id=profile_id,
             temp_token=temp_token,
@@ -446,7 +446,7 @@ class ConnectResource:
         user_profile: dict[str, Any] | None = None,
         redirect_url: str | None = None,
     ) -> dict[str, Any]:
-        """Select Google Business location (async)"""
+        """Select GBP location (async)"""
         payload = self._build_payload(
             profile_id=profile_id,
             location_id=location_id,
@@ -678,13 +678,13 @@ class ConnectResource:
         )
 
     async def aget_gmb_locations(self, account_id: str) -> dict[str, Any]:
-        """List Google Business locations (async)"""
+        """List GBP locations (async)"""
         return await self._client._aget(f"/v1/accounts/{account_id}/gmb-locations")
 
     async def aupdate_gmb_location(
         self, account_id: str, selected_location_id: str
     ) -> dict[str, Any]:
-        """Update Google Business location (async)"""
+        """Update GBP location (async)"""
         payload = self._build_payload(
             selected_location_id=selected_location_id,
         )

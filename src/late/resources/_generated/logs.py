@@ -48,31 +48,6 @@ class LogsResource:
                 result[to_camel(k)] = v
         return result
 
-    def list_logs(
-        self,
-        *,
-        status: str | None = None,
-        platform: str | None = None,
-        action: str | None = None,
-        days: int | None = 7,
-        limit: int | None = 50,
-        skip: int | None = 0,
-    ) -> dict[str, Any]:
-        """List publishing logs (deprecated)"""
-        params = self._build_params(
-            status=status,
-            platform=platform,
-            action=action,
-            days=days,
-            limit=limit,
-            skip=skip,
-        )
-        return self._client._get("/v1/logs", params=params)
-
-    def get_log(self, log_id: str) -> dict[str, Any]:
-        """Get log entry"""
-        return self._client._get(f"/v1/logs/{log_id}")
-
     def list_posts_logs(
         self,
         *,
@@ -121,31 +96,6 @@ class LogsResource:
             limit=limit,
         )
         return self._client._get(f"/v1/posts/{post_id}/logs", params=params)
-
-    async def alist_logs(
-        self,
-        *,
-        status: str | None = None,
-        platform: str | None = None,
-        action: str | None = None,
-        days: int | None = 7,
-        limit: int | None = 50,
-        skip: int | None = 0,
-    ) -> dict[str, Any]:
-        """List publishing logs (deprecated) (async)"""
-        params = self._build_params(
-            status=status,
-            platform=platform,
-            action=action,
-            days=days,
-            limit=limit,
-            skip=skip,
-        )
-        return await self._client._aget("/v1/logs", params=params)
-
-    async def aget_log(self, log_id: str) -> dict[str, Any]:
-        """Get log entry (async)"""
-        return await self._client._aget(f"/v1/logs/{log_id}")
 
     async def alist_posts_logs(
         self,

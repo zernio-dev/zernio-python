@@ -49,13 +49,13 @@ class AccountSettingsResource:
         return result
 
     def get_messenger_menu(self, account_id: str) -> dict[str, Any]:
-        """Get Facebook persistent menu"""
+        """Get FB persistent menu"""
         return self._client._get(f"/v1/accounts/{account_id}/messenger-menu")
 
     def set_messenger_menu(
         self, account_id: str, persistent_menu: list[dict[str, Any]]
     ) -> dict[str, Any]:
-        """Set Facebook persistent menu"""
+        """Set FB persistent menu"""
         payload = self._build_payload(
             persistent_menu=persistent_menu,
         )
@@ -64,17 +64,17 @@ class AccountSettingsResource:
         )
 
     def delete_messenger_menu(self, account_id: str) -> dict[str, Any]:
-        """Delete Facebook persistent menu"""
+        """Delete FB persistent menu"""
         return self._client._delete(f"/v1/accounts/{account_id}/messenger-menu")
 
     def get_instagram_ice_breakers(self, account_id: str) -> dict[str, Any]:
-        """Get Instagram ice breakers"""
+        """Get IG ice breakers"""
         return self._client._get(f"/v1/accounts/{account_id}/instagram-ice-breakers")
 
     def set_instagram_ice_breakers(
         self, account_id: str, ice_breakers: list[dict[str, Any]]
     ) -> dict[str, Any]:
-        """Set Instagram ice breakers"""
+        """Set IG ice breakers"""
         payload = self._build_payload(
             ice_breakers=ice_breakers,
         )
@@ -83,17 +83,17 @@ class AccountSettingsResource:
         )
 
     def delete_instagram_ice_breakers(self, account_id: str) -> dict[str, Any]:
-        """Delete Instagram ice breakers"""
+        """Delete IG ice breakers"""
         return self._client._delete(f"/v1/accounts/{account_id}/instagram-ice-breakers")
 
     def get_telegram_commands(self, account_id: str) -> dict[str, Any]:
-        """Get Telegram bot commands"""
+        """Get TG bot commands"""
         return self._client._get(f"/v1/accounts/{account_id}/telegram-commands")
 
     def set_telegram_commands(
         self, account_id: str, commands: list[dict[str, Any]]
     ) -> dict[str, Any]:
-        """Set Telegram bot commands"""
+        """Set TG bot commands"""
         payload = self._build_payload(
             commands=commands,
         )
@@ -102,17 +102,17 @@ class AccountSettingsResource:
         )
 
     def delete_telegram_commands(self, account_id: str) -> dict[str, Any]:
-        """Delete Telegram bot commands"""
+        """Delete TG bot commands"""
         return self._client._delete(f"/v1/accounts/{account_id}/telegram-commands")
 
     async def aget_messenger_menu(self, account_id: str) -> dict[str, Any]:
-        """Get Facebook persistent menu (async)"""
+        """Get FB persistent menu (async)"""
         return await self._client._aget(f"/v1/accounts/{account_id}/messenger-menu")
 
     async def aset_messenger_menu(
         self, account_id: str, persistent_menu: list[dict[str, Any]]
     ) -> dict[str, Any]:
-        """Set Facebook persistent menu (async)"""
+        """Set FB persistent menu (async)"""
         payload = self._build_payload(
             persistent_menu=persistent_menu,
         )
@@ -121,11 +121,11 @@ class AccountSettingsResource:
         )
 
     async def adelete_messenger_menu(self, account_id: str) -> dict[str, Any]:
-        """Delete Facebook persistent menu (async)"""
+        """Delete FB persistent menu (async)"""
         return await self._client._adelete(f"/v1/accounts/{account_id}/messenger-menu")
 
     async def aget_instagram_ice_breakers(self, account_id: str) -> dict[str, Any]:
-        """Get Instagram ice breakers (async)"""
+        """Get IG ice breakers (async)"""
         return await self._client._aget(
             f"/v1/accounts/{account_id}/instagram-ice-breakers"
         )
@@ -133,7 +133,7 @@ class AccountSettingsResource:
     async def aset_instagram_ice_breakers(
         self, account_id: str, ice_breakers: list[dict[str, Any]]
     ) -> dict[str, Any]:
-        """Set Instagram ice breakers (async)"""
+        """Set IG ice breakers (async)"""
         payload = self._build_payload(
             ice_breakers=ice_breakers,
         )
@@ -142,19 +142,19 @@ class AccountSettingsResource:
         )
 
     async def adelete_instagram_ice_breakers(self, account_id: str) -> dict[str, Any]:
-        """Delete Instagram ice breakers (async)"""
+        """Delete IG ice breakers (async)"""
         return await self._client._adelete(
             f"/v1/accounts/{account_id}/instagram-ice-breakers"
         )
 
     async def aget_telegram_commands(self, account_id: str) -> dict[str, Any]:
-        """Get Telegram bot commands (async)"""
+        """Get TG bot commands (async)"""
         return await self._client._aget(f"/v1/accounts/{account_id}/telegram-commands")
 
     async def aset_telegram_commands(
         self, account_id: str, commands: list[dict[str, Any]]
     ) -> dict[str, Any]:
-        """Set Telegram bot commands (async)"""
+        """Set TG bot commands (async)"""
         payload = self._build_payload(
             commands=commands,
         )
@@ -163,7 +163,7 @@ class AccountSettingsResource:
         )
 
     async def adelete_telegram_commands(self, account_id: str) -> dict[str, Any]:
-        """Delete Telegram bot commands (async)"""
+        """Delete TG bot commands (async)"""
         return await self._client._adelete(
             f"/v1/accounts/{account_id}/telegram-commands"
         )
