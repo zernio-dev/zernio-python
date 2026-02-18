@@ -1084,15 +1084,18 @@ components:
       properties:
         contentType:
           type: string
-          enum: [story]
-          description: Set to 'story' to publish as a Facebook Page Story (24-hour ephemeral content). Requires media.
+          enum: [story, reel]
+          description: Set to 'story' for Page Stories (24h ephemeral) or 'reel' for Reels (short vertical video). Defaults to feed post if omitted.
+        title:
+          type: string
+          description: Reel title (only for contentType=reel). Separate from the caption/content field.
         firstComment:
           type: string
-          description: Optional first comment to post immediately after publishing (feed posts only, not stories)
+          description: Optional first comment to post immediately after publishing (feed posts only, not stories or reels)
         pageId:
           type: string
           description: Target Facebook Page ID for multi-page posting. If omitted, uses the default page. Use GET /v1/accounts/{id}/facebook-page to list pages.
-      description: Up to 10 images for feed posts, cannot mix videos and images. Stories require single image or video (ephemeral 24h, no captions). Use pageId for multi-page posting.
+      description: Feed posts support up to 10 images (no mixed video+image). Stories require single media (24h, no captions). Reels require single vertical video (9:16, 3-60s).
 
     InstagramPlatformData:
       type: object
