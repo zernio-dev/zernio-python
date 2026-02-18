@@ -53,12 +53,21 @@ class ApiKeysResource:
         return self._client._get("/v1/api-keys")
 
     def create_api_key(
-        self, name: str, *, expires_in: int | None = None
+        self,
+        name: str,
+        *,
+        expires_in: int | None = None,
+        scope: str | None = "full",
+        profile_ids: list[str] | None = None,
+        permission: str | None = "read-write",
     ) -> dict[str, Any]:
         """Create key"""
         payload = self._build_payload(
             name=name,
             expires_in=expires_in,
+            scope=scope,
+            profile_ids=profile_ids,
+            permission=permission,
         )
         return self._client._post("/v1/api-keys", data=payload)
 
@@ -71,12 +80,21 @@ class ApiKeysResource:
         return await self._client._aget("/v1/api-keys")
 
     async def acreate_api_key(
-        self, name: str, *, expires_in: int | None = None
+        self,
+        name: str,
+        *,
+        expires_in: int | None = None,
+        scope: str | None = "full",
+        profile_ids: list[str] | None = None,
+        permission: str | None = "read-write",
     ) -> dict[str, Any]:
         """Create key (async)"""
         payload = self._build_payload(
             name=name,
             expires_in=expires_in,
+            scope=scope,
+            profile_ids=profile_ids,
+            permission=permission,
         )
         return await self._client._apost("/v1/api-keys", data=payload)
 

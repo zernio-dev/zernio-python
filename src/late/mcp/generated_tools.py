@@ -773,15 +773,30 @@ def register_generated_tools(mcp, _get_client):
             return f"Error: {e}"
 
     @mcp.tool()
-    def api_keys_create_api_key(name: str, expires_in: int = 0) -> str:
+    def api_keys_create_api_key(
+        name: str,
+        expires_in: int = 0,
+        scope: str = "full",
+        profile_ids: str = "",
+        permission: str = "read-write",
+    ) -> str:
         """Create key
 
         Args:
             name: (required)
-            expires_in: Days until expiry"""
+            expires_in: Days until expiry
+            scope: 'full' grants access to all profiles (default), 'profiles' restricts to specific profiles
+            profile_ids: Profile IDs this key can access. Required when scope is 'profiles'.
+            permission: 'read-write' allows all operations (default), 'read' restricts to GET requests only"""
         client = _get_client()
         try:
-            response = client.api_keys.create_api_key(name=name, expiresIn=expires_in)
+            response = client.api_keys.create_api_key(
+                name=name,
+                expiresIn=expires_in,
+                scope=scope,
+                profileIds=profile_ids,
+                permission=permission,
+            )
             return _format_response(response)
         except Exception as e:
             return f"Error: {e}"

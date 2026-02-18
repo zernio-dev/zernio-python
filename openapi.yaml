@@ -1488,6 +1488,25 @@ components:
         key:
           type: string
           description: Returned only once, on creation
+        scope:
+          type: string
+          enum: [full, profiles]
+          description: "'full' grants access to all profiles, 'profiles' restricts to specific profiles"
+          default: full
+        profileIds:
+          type: array
+          items:
+            type: object
+            properties:
+              _id: { type: string }
+              name: { type: string }
+              color: { type: string }
+          description: Profiles this key can access (populated with name and color). Only present when scope is 'profiles'.
+        permission:
+          type: string
+          enum: [read-write, read]
+          description: "'read-write' allows all operations, 'read' restricts to GET requests only"
+          default: read-write
     UsageStats:
       type: object
       properties:
@@ -4544,14 +4563,23 @@ paths:
                 apiKeys:
                   - id: "6507a1b2c3d4e5f6a7b8c9d0"
                     name: "Production API Key"
-                    keyPreview: "late_...xyz123"
+                    keyPreview: "sk_12345678...abcdef01"
                     expiresAt: "2025-12-31T23:59:59Z"
                     createdAt: "2024-01-15T10:30:00Z"
+                    scope: "full"
+                    profileIds: []
+                    permission: "read-write"
                   - id: "6507a1b2c3d4e5f6a7b8c9d1"
-                    name: "Development Key"
-                    keyPreview: "late_...abc789"
+                    name: "Analytics Read-Only"
+                    keyPreview: "sk_87654321...12345678"
                     expiresAt: null
                     createdAt: "2024-03-20T14:45:00Z"
+                    scope: "profiles"
+                    profileIds:
+                      - _id: "6507a1b2c3d4e5f6a7b8c9d0"
+                        name: "Main Brand"
+                        color: "#ffeda0"
+                    permission: "read"
         '401': { $ref: '#/components/responses/Unauthorized' }
     post:
       operationId: createApiKey
@@ -4570,9 +4598,25 @@ paths:
                 expiresIn:
                   type: integer
                   description: Days until expiry
+                scope:
+                  type: string
+                  enum: [full, profiles]
+                  description: "'full' grants access to all profiles (default), 'profiles' restricts to specific profiles"
+                  default: full
+                profileIds:
+                  type: array
+                  items: { type: string }
+                  description: Profile IDs this key can access. Required when scope is 'profiles'.
+                permission:
+                  type: string
+                  enum: [read-write, read]
+                  description: "'read-write' allows all operations (default), 'read' restricts to GET requests only"
+                  default: read-write
             example:
-              name: "Production API Key"
-              expiresIn: 365
+              name: "Analytics Read-Only Key"
+              scope: "profiles"
+              profileIds: ["6507a1b2c3d4e5f6a7b8c9d0"]
+              permission: "read"
       responses:
         '201':
           description: Created
@@ -4587,12 +4631,18 @@ paths:
                 message: "API key created successfully"
                 apiKey:
                   id: "6507a1b2c3d4e5f6a7b8c9d0"
-                  name: "Production API Key"
-                  keyPreview: "late_...xyz123"
-                  key: "late_sk_1234567890abcdef1234567890abcdef"
-                  expiresAt: "2025-12-31T23:59:59Z"
+                  name: "Analytics Read-Only Key"
+                  keyPreview: "sk_12345678...90abcdef"
+                  key: "sk_1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef"
+                  expiresAt: null
                   createdAt: "2024-01-15T10:30:00Z"
-        '400': { description: Invalid request }
+                  scope: "profiles"
+                  profileIds:
+                    - _id: "6507a1b2c3d4e5f6a7b8c9d0"
+                      name: "Main Brand"
+                      color: "#ffeda0"
+                  permission: "read"
+        '400': { description: Invalid request (missing name, invalid scope/permission, or missing profileIds when scope is 'profiles') }
         '401': { $ref: '#/components/responses/Unauthorized' }
   /v1/api-keys/{keyId}:
     delete:
