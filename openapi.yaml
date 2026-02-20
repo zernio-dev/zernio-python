@@ -919,6 +919,9 @@ components:
         url:
           type: string
           format: uri
+        title:
+          type: string
+          description: Optional title for the media item. Used as the document title for LinkedIn PDF/carousel posts. If omitted, falls back to the post title, then the filename.
         filename:
           type: string
         size:
@@ -1165,6 +1168,9 @@ components:
     LinkedInPlatformData:
       type: object
       properties:
+        documentTitle:
+          type: string
+          description: Title displayed on LinkedIn document (PDF/carousel) posts. Required by LinkedIn for document posts. If omitted, falls back to the media item title, then the filename.
         organizationUrn:
           type: string
           description: Target LinkedIn Organization URN (e.g. "urn:li:organization:123456789"). If omitted, uses the default org. Use GET /v1/accounts/{id}/linkedin-organizations to list orgs.
