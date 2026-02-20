@@ -9510,7 +9510,7 @@ paths:
           description: Filter by profile ID
         - name: platform
           in: query
-          schema: { type: string, enum: [facebook, instagram, twitter, bluesky, threads, youtube, linkedin, reddit, tiktok] }
+          schema: { type: string, enum: [facebook, instagram, twitter, bluesky, threads, youtube, linkedin, reddit] }
           description: Filter by platform
         - name: minComments
           in: query
@@ -9733,7 +9733,7 @@ paths:
       operationId: deleteInboxComment
       summary: Delete comment
       description: |
-        Delete a comment on a post. Supported by Facebook, Instagram, Bluesky, Reddit, YouTube, LinkedIn, and TikTok.
+        Delete a comment on a post. Supported by Facebook, Instagram, Bluesky, Reddit, YouTube, and LinkedIn.
         Requires accountId and commentId query parameters.
       tags: [Comments]
       security: [{ bearerAuth: [] }]
