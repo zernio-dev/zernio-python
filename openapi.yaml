@@ -133,6 +133,7 @@ x-documentation:
     - `account.connected` - Social account connected
     - `account.disconnected` - Social account disconnected (token expired)
     - `message.received` - New DM received
+    - `comment.received` - New comment received on a post
 
     Webhook payloads are signed with HMAC-SHA256 via the `X-Late-Signature` header.
 
@@ -203,7 +204,7 @@ tags:
       Platform-specific account settings: Facebook persistent menu, Instagram ice breakers, and Telegram bot commands.
   - name: Webhooks
     description: |
-      Configure webhooks for real-time notifications. Events: post.scheduled, post.published, post.failed, post.partial, account.connected, account.disconnected, message.received.
+      Configure webhooks for real-time notifications. Events: post.scheduled, post.published, post.failed, post.partial, account.connected, account.disconnected, message.received, comment.received.
       Security: optional HMAC-SHA256 signature in X-Late-Signature header. Configure a secret key to enable verification. Custom headers supported.
   - name: Logs
     description: |
@@ -448,7 +449,7 @@ components:
           type: array
           items:
             type: string
-            enum: [post.scheduled, post.published, post.failed, post.partial, account.connected, account.disconnected, message.received]
+            enum: [post.scheduled, post.published, post.failed, post.partial, account.connected, account.disconnected, message.received, comment.received]
           description: Events subscribed to
         isActive:
           type: boolean
@@ -479,7 +480,7 @@ components:
           description: Name of the webhook that was triggered
         event:
           type: string
-          enum: [post.scheduled, post.published, post.failed, post.partial, account.connected, account.disconnected, message.received, webhook.test]
+          enum: [post.scheduled, post.published, post.failed, post.partial, account.connected, account.disconnected, message.received, comment.received, webhook.test]
         url:
           type: string
           format: uri
@@ -602,9 +603,79 @@ components:
         timestamp:
           type: string
           format: date-time
+    WebhookPayloadComment:
+      type: object
+      description: Webhook payload for comment received events (Instagram, Facebook, Twitter/X, YouTube, LinkedIn, Bluesky, Reddit)
+      properties:
+        event:
+          type: string
+          enum: [comment.received]
+        comment:
+          type: object
+          properties:
+            id:
+              type: string
+              description: Platform comment ID
+            postId:
+              type: string
+              description: Internal post ID
+            platformPostId:
+              type: string
+              description: Platform's post ID
+            platform:
+              type: string
+              enum: [instagram, facebook, twitter, youtube, linkedin, bluesky, reddit]
+            text:
+              type: string
+              description: Comment text content
+            author:
+              type: object
+              properties:
+                id:
+                  type: string
+                  description: Author's platform ID
+                username:
+                  type: string
+                name:
+                  type: string
+                picture:
+                  type: string
+                  nullable: true
+            createdAt:
+              type: string
+              format: date-time
+            isReply:
+              type: boolean
+              description: Whether this is a reply to another comment
+            parentCommentId:
+              type: string
+              nullable: true
+              description: Parent comment ID if this is a reply
+        post:
+          type: object
+          properties:
+            id:
+              type: string
+              description: Internal post ID
+            platformPostId:
+              type: string
+              description: Platform's post ID
+        account:
+          type: object
+          properties:
+            id:
+              type: string
+              description: Social account ID
+            platform:
+              type: string
+            username:
+              type: string
+        timestamp:
+          type: string
+          format: date-time
     WebhookPayloadMessage:
       type: object
-      description: Webhook payload for message received events (DMs from Instagram, Telegram)
+      description: Webhook payload for message received events (DMs from Instagram, Facebook, Telegram, Bluesky, Reddit)
       properties:
         event:
           type: string
@@ -620,7 +691,7 @@ components:
               description: Internal conversation ID
             platform:
               type: string
-              enum: [instagram, facebook, telegram]
+              enum: [instagram, facebook, telegram, bluesky, reddit]
             platformMessageId:
               type: string
               description: Platform's message ID
@@ -3773,7 +3844,7 @@ paths:
         '401': { $ref: '#/components/responses/Unauthorized' }
         '429':
           description: |
-            Rate limit exceeded. Possible causes: API rate limit (requests per minute) or account cooldown (one or more accounts temporarily rate-limited).
+            Rate limit exceeded. Possible causes: API rate limit (requests per minute) or account cooldown (one or more accounts for platforms specified in the CSV are temporarily rate-limited).
           content:
             application/json:
               schema:
@@ -8215,7 +8286,7 @@ paths:
                   type: array
                   items:
                     type: string
-                    enum: [post.scheduled, post.published, post.failed, post.partial, account.connected, account.disconnected, message.received]
+                    enum: [post.scheduled, post.published, post.failed, post.partial, account.connected, account.disconnected, message.received, comment.received]
                   description: Events to subscribe to
                 isActive:
                   type: boolean
@@ -8232,7 +8303,7 @@ paths:
                   name: "My Production Webhook"
                   url: "https://example.com/webhook"
                   secret: "your-secret-key"
-                  events: ["post.scheduled", "post.published", "post.failed", "post.partial", "account.connected", "account.disconnected", "message.received"]
+                  events: ["post.scheduled", "post.published", "post.failed", "post.partial", "account.connected", "account.disconnected", "message.received", "comment.received"]
                   isActive: true
       responses:
         '200':
@@ -8284,7 +8355,7 @@ paths:
                   type: array
                   items:
                     type: string
-                    enum: [post.scheduled, post.published, post.failed, post.partial, account.connected, account.disconnected, message.received]
+                    enum: [post.scheduled, post.published, post.failed, post.partial, account.connected, account.disconnected, message.received, comment.received]
                   description: Events to subscribe to
                 isActive:
                   type: boolean
@@ -8426,7 +8497,7 @@ paths:
           description: Filter by event type
           schema:
             type: string
-            enum: [post.scheduled, post.published, post.failed, post.partial, account.connected, account.disconnected, message.received, webhook.test]
+            enum: [post.scheduled, post.published, post.failed, post.partial, account.connected, account.disconnected, message.received, comment.received, webhook.test]
         - name: webhookId
           in: query
           description: Filter by webhook ID
