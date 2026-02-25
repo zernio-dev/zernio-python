@@ -1127,6 +1127,10 @@ components:
     TwitterPlatformData:
       type: object
       properties:
+        replySettings:
+          type: string
+          enum: [following, mentionedUsers, subscribers]
+          description: Controls who can reply to the tweet. "following" allows only people you follow, "mentionedUsers" allows only mentioned users, "subscribers" allows only subscribers. Omit for default (everyone can reply). For threads, applies to the first tweet only.
         threadItems:
           type: array
           description: Sequence of tweets in a thread. First item is the root tweet.
