@@ -716,6 +716,81 @@ def register_generated_tools(mcp, _get_client):
             return f"Error: {e}"
 
     @mcp.tool()
+    def analytics_get_daily_metrics(
+        platform: str = "", profile_id: str = "", from_date: str = "", to_date: str = ""
+    ) -> str:
+        """Get daily aggregated metrics
+
+        Args:
+            platform: Filter by platform (e.g. "instagram", "tiktok"). Omit for all platforms.
+            profile_id: Filter by profile ID. Omit for all profiles.
+            from_date: Inclusive start date (ISO 8601). Defaults to 180 days ago.
+            to_date: Inclusive end date (ISO 8601). Defaults to now."""
+        client = _get_client()
+        try:
+            response = client.analytics.get_daily_metrics(
+                platform=platform,
+                profile_id=profile_id,
+                from_date=from_date,
+                to_date=to_date,
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool()
+    def analytics_get_best_time_to_post(
+        platform: str = "", profile_id: str = ""
+    ) -> str:
+        """Get best times to post
+
+        Args:
+            platform: Filter by platform (e.g. "instagram", "tiktok"). Omit for all platforms.
+            profile_id: Filter by profile ID. Omit for all profiles."""
+        client = _get_client()
+        try:
+            response = client.analytics.get_best_time_to_post(
+                platform=platform, profile_id=profile_id
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool()
+    def analytics_get_content_decay(platform: str = "", profile_id: str = "") -> str:
+        """Get content performance decay
+
+        Args:
+            platform: Filter by platform (e.g. "instagram", "tiktok"). Omit for all platforms.
+            profile_id: Filter by profile ID. Omit for all profiles."""
+        client = _get_client()
+        try:
+            response = client.analytics.get_content_decay(
+                platform=platform, profile_id=profile_id
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool()
+    def analytics_get_posting_frequency(
+        platform: str = "", profile_id: str = ""
+    ) -> str:
+        """Get posting frequency vs engagement
+
+        Args:
+            platform: Filter by platform (e.g. "instagram", "tiktok"). Omit for all platforms.
+            profile_id: Filter by profile ID. Omit for all profiles."""
+        client = _get_client()
+        try:
+            response = client.analytics.get_posting_frequency(
+                platform=platform, profile_id=profile_id
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool()
     def analytics_get_linked_in_aggregate_analytics(
         account_id: str,
         aggregation: str = "TOTAL",

@@ -199,8 +199,12 @@ except LateAPIError as e:
 | Method | Description |
 |--------|-------------|
 | `analytics.get_analytics()` | Get post analytics |
+| `analytics.get_best_time_to_post()` | Get best times to post |
+| `analytics.get_content_decay()` | Get content performance decay |
+| `analytics.get_daily_metrics()` | Get daily aggregated metrics |
 | `analytics.get_linked_in_aggregate_analytics()` | Get LinkedIn aggregate stats |
 | `analytics.get_linked_in_post_analytics()` | Get LinkedIn post stats |
+| `analytics.get_posting_frequency()` | Get posting frequency vs engagement |
 | `analytics.get_you_tube_daily_views()` | Get YouTube daily views |
 
 ### Account Groups

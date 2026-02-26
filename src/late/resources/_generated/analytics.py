@@ -10,6 +10,8 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Any
 
 if TYPE_CHECKING:
+    from datetime import datetime
+
     from ..client.base import BaseClient
 
 
@@ -94,6 +96,53 @@ class AnalyticsResource:
         )
         return self._client._get("/v1/analytics/youtube/daily-views", params=params)
 
+    def get_daily_metrics(
+        self,
+        *,
+        platform: str | None = None,
+        profile_id: str | None = None,
+        from_date: datetime | str | None = None,
+        to_date: datetime | str | None = None,
+    ) -> dict[str, Any]:
+        """Get daily aggregated metrics"""
+        params = self._build_params(
+            platform=platform,
+            profile_id=profile_id,
+            from_date=from_date,
+            to_date=to_date,
+        )
+        return self._client._get("/v1/analytics/daily-metrics", params=params)
+
+    def get_best_time_to_post(
+        self, *, platform: str | None = None, profile_id: str | None = None
+    ) -> dict[str, Any]:
+        """Get best times to post"""
+        params = self._build_params(
+            platform=platform,
+            profile_id=profile_id,
+        )
+        return self._client._get("/v1/analytics/best-time", params=params)
+
+    def get_content_decay(
+        self, *, platform: str | None = None, profile_id: str | None = None
+    ) -> dict[str, Any]:
+        """Get content performance decay"""
+        params = self._build_params(
+            platform=platform,
+            profile_id=profile_id,
+        )
+        return self._client._get("/v1/analytics/content-decay", params=params)
+
+    def get_posting_frequency(
+        self, *, platform: str | None = None, profile_id: str | None = None
+    ) -> dict[str, Any]:
+        """Get posting frequency vs engagement"""
+        params = self._build_params(
+            platform=platform,
+            profile_id=profile_id,
+        )
+        return self._client._get("/v1/analytics/posting-frequency", params=params)
+
     def get_linked_in_aggregate_analytics(
         self,
         account_id: str,
@@ -169,6 +218,55 @@ class AnalyticsResource:
         )
         return await self._client._aget(
             "/v1/analytics/youtube/daily-views", params=params
+        )
+
+    async def aget_daily_metrics(
+        self,
+        *,
+        platform: str | None = None,
+        profile_id: str | None = None,
+        from_date: datetime | str | None = None,
+        to_date: datetime | str | None = None,
+    ) -> dict[str, Any]:
+        """Get daily aggregated metrics (async)"""
+        params = self._build_params(
+            platform=platform,
+            profile_id=profile_id,
+            from_date=from_date,
+            to_date=to_date,
+        )
+        return await self._client._aget("/v1/analytics/daily-metrics", params=params)
+
+    async def aget_best_time_to_post(
+        self, *, platform: str | None = None, profile_id: str | None = None
+    ) -> dict[str, Any]:
+        """Get best times to post (async)"""
+        params = self._build_params(
+            platform=platform,
+            profile_id=profile_id,
+        )
+        return await self._client._aget("/v1/analytics/best-time", params=params)
+
+    async def aget_content_decay(
+        self, *, platform: str | None = None, profile_id: str | None = None
+    ) -> dict[str, Any]:
+        """Get content performance decay (async)"""
+        params = self._build_params(
+            platform=platform,
+            profile_id=profile_id,
+        )
+        return await self._client._aget("/v1/analytics/content-decay", params=params)
+
+    async def aget_posting_frequency(
+        self, *, platform: str | None = None, profile_id: str | None = None
+    ) -> dict[str, Any]:
+        """Get posting frequency vs engagement (async)"""
+        params = self._build_params(
+            platform=platform,
+            profile_id=profile_id,
+        )
+        return await self._client._aget(
+            "/v1/analytics/posting-frequency", params=params
         )
 
     async def aget_linked_in_aggregate_analytics(
