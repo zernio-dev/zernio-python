@@ -21,6 +21,7 @@ from .reviews import ReviewsResource
 from .tools import ToolsResource
 from .usage import UsageResource
 from .users import UsersResource
+from .validate import ValidateResource
 from .webhooks import WebhooksResource
 
 __all__ = [
@@ -43,5 +44,6 @@ __all__ = [
     "ToolsResource",
     "UsageResource",
     "UsersResource",
+    "ValidateResource",
     "WebhooksResource",
 ]

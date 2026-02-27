@@ -396,6 +396,14 @@ except LateAPIError as e:
 | `reviews.delete_inbox_review_reply()` | Delete review reply |
 | `reviews.reply_to_inbox_review()` | Reply to review |
 
+### Validate
+| Method | Description |
+|--------|-------------|
+| `validate.validate_media()` | Validate media URL |
+| `validate.validate_post()` | Validate post content |
+| `validate.validate_post_length()` | Validate post character count |
+| `validate.validate_subreddit()` | Check subreddit existence |
+
 ### Invites
 | Method | Description |
 |--------|-------------|

@@ -2622,6 +2622,64 @@ def register_generated_tools(mcp, _get_client):
         except Exception as e:
             return f"Error: {e}"
 
+    # VALIDATE
+
+    @mcp.tool()
+    def validate_post_length(text: str) -> str:
+        """Validate post character count
+
+        Args:
+            text: The post text to check (required)"""
+        client = _get_client()
+        try:
+            response = client.validate.validate_post_length(text=text)
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool()
+    def validate_post(platforms: str, content: str = "", media_items: str = "") -> str:
+        """Validate post content
+
+        Args:
+            content: Post text content
+            platforms: Target platforms (same format as POST /v1/posts) (required)
+            media_items: Root media items shared across platforms"""
+        client = _get_client()
+        try:
+            response = client.validate.validate_post(
+                content=content, platforms=platforms, mediaItems=media_items
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool()
+    def validate_media(url: str) -> str:
+        """Validate media URL
+
+        Args:
+            url: Public media URL to validate (required)"""
+        client = _get_client()
+        try:
+            response = client.validate.validate_media(url=url)
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool()
+    def validate_subreddit(name: str) -> str:
+        """Check subreddit existence
+
+        Args:
+            name: Subreddit name (with or without "r/" prefix) (required)"""
+        client = _get_client()
+        try:
+            response = client.validate.validate_subreddit(name=name)
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
     # WEBHOOKS
 
     @mcp.tool()

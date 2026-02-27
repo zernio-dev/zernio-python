@@ -199,6 +199,9 @@ tags:
       Media download and utility tools. Available to paid plans only.
       Rate limits: Build (50/day), Accelerate (500/day), Unlimited (unlimited).
       All responses include X-RateLimit-Limit, X-RateLimit-Remaining, and X-RateLimit-Reset headers.
+  - name: Validate
+    description: |
+      Pre-flight validation endpoints. Check post content, character limits, media URLs, and subreddit existence before publishing.
   - name: Account Settings
     description: |
       Platform-specific account settings: Facebook persistent menu, Instagram ice breakers, and Telegram bot commands.
@@ -2509,6 +2512,253 @@ paths:
                   text: { type: string }
                   downloadUrl: { type: string, format: uri }
                   thumbnail: { type: string, format: uri }
+
+  # ============================================
+  # Validate
+  # ============================================
+  /v1/tools/validate/post-length:
+    post:
+      operationId: validatePostLength
+      tags: [Validate]
+      summary: Validate post character count
+      description: |
+        Check weighted character count per platform and whether the text is within each platform's limit.
+
+        Twitter/X uses weighted counting (URLs = 23 chars via t.co, emojis = 2 chars). All other platforms use plain character length.
+
+        Returns counts and limits for all 15 supported platform variants.
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [text]
+              properties:
+                text:
+                  type: string
+                  description: The post text to check
+                  example: "Check out https://getlate.dev for scheduling posts!"
+      responses:
+        "200":
+          description: Character counts per platform
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  text: { type: string }
+                  platforms:
+                    type: object
+                    additionalProperties:
+                      type: object
+                      properties:
+                        count: { type: integer, description: "Character count for this platform" }
+                        limit: { type: integer, description: "Maximum allowed characters" }
+                        valid: { type: boolean, description: "Whether the text is within the limit" }
+                    example:
+                      twitter: { count: 51, limit: 280, valid: true }
+                      twitterPremium: { count: 51, limit: 25000, valid: true }
+                      instagram: { count: 51, limit: 2200, valid: true }
+                      bluesky: { count: 51, limit: 300, valid: true }
+                      snapchat: { count: 51, limit: 160, valid: true }
+
+  /v1/tools/validate/post:
+    post:
+      operationId: validatePost
+      tags: [Validate]
+      summary: Validate post content
+      description: |
+        Dry-run the full post validation pipeline without publishing. Catches issues like missing media for Instagram/TikTok/YouTube, hashtag limits, invalid thread formats, Facebook Reel requirements, and character limit violations.
+
+        Accepts the same body as `POST /v1/posts`. Does NOT validate accounts, process media, or track usage. This is content-only validation.
+
+        Returns errors for failures and warnings for near-limit content (>90% of character limit).
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [platforms]
+              properties:
+                content:
+                  type: string
+                  description: Post text content
+                  example: "Check out this video!"
+                platforms:
+                  type: array
+                  description: Target platforms (same format as POST /v1/posts)
+                  items:
+                    type: object
+                    required: [platform]
+                    properties:
+                      platform:
+                        type: string
+                        enum: [twitter, instagram, tiktok, youtube, facebook, linkedin, bluesky, threads, reddit, pinterest, telegram, snapchat, googlebusiness]
+                      customContent: { type: string }
+                      platformSpecificData: { type: object }
+                      customMedia:
+                        type: array
+                        items:
+                          type: object
+                          properties:
+                            url: { type: string }
+                            type: { type: string, enum: [image, video] }
+                  example:
+                    - platform: youtube
+                    - platform: twitter
+                mediaItems:
+                  type: array
+                  description: Root media items shared across platforms
+                  items:
+                    type: object
+                    properties:
+                      url: { type: string, format: uri }
+                      type: { type: string, enum: [image, video] }
+      responses:
+        "200":
+          description: Validation result
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - type: object
+                    description: Valid post
+                    properties:
+                      valid: { type: boolean, enum: [true] }
+                      message: { type: string, example: "No validation issues found." }
+                      warnings:
+                        type: array
+                        items:
+                          type: object
+                          properties:
+                            platform: { type: string }
+                            warning: { type: string }
+                  - type: object
+                    description: Invalid post
+                    properties:
+                      valid: { type: boolean, enum: [false] }
+                      errors:
+                        type: array
+                        items:
+                          type: object
+                          properties:
+                            platform: { type: string }
+                            error: { type: string }
+                      warnings:
+                        type: array
+                        items:
+                          type: object
+                          properties:
+                            platform: { type: string }
+                            warning: { type: string }
+
+  /v1/tools/validate/media:
+    post:
+      operationId: validateMedia
+      tags: [Validate]
+      summary: Validate media URL
+      description: |
+        Check if a media URL is accessible and return metadata (content type, file size) plus per-platform size limit comparisons.
+
+        Performs a HEAD request (with GET fallback) to detect content type and size. Rejects private/localhost URLs for SSRF protection.
+
+        Platform limits are sourced from each platform's actual upload constraints.
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [url]
+              properties:
+                url:
+                  type: string
+                  format: uri
+                  description: Public media URL to validate
+                  example: "https://example.com/image.jpg"
+      responses:
+        "200":
+          description: Media validation result
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  valid: { type: boolean }
+                  url: { type: string, format: uri }
+                  error: { type: string, description: "Error message if valid is false" }
+                  contentType: { type: string, example: "image/jpeg" }
+                  size: { type: integer, nullable: true, description: "File size in bytes" }
+                  sizeFormatted: { type: string, example: "245 KB" }
+                  type: { type: string, enum: [image, video, unknown] }
+                  platformLimits:
+                    type: object
+                    description: Per-platform size limit comparison (only present when size and type are known)
+                    additionalProperties:
+                      type: object
+                      properties:
+                        limit: { type: integer, description: "Platform size limit in bytes" }
+                        limitFormatted: { type: string }
+                        withinLimit: { type: boolean }
+                    example:
+                      instagram: { limit: 8388608, limitFormatted: "8.0 MB", withinLimit: true }
+                      twitter: { limit: 5242880, limitFormatted: "5.0 MB", withinLimit: true }
+                      bluesky: { limit: 1000000, limitFormatted: "977 KB", withinLimit: true }
+
+  /v1/tools/validate/subreddit:
+    get:
+      operationId: validateSubreddit
+      tags: [Validate]
+      summary: Check subreddit existence
+      description: |
+        Check if a subreddit exists and return basic info (title, subscriber count, NSFW status, post types allowed).
+
+        Uses Reddit's public JSON API (no Reddit auth needed). Returns `exists: false` for private, banned, or nonexistent subreddits.
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: name
+          in: query
+          required: true
+          description: Subreddit name (with or without "r/" prefix)
+          schema:
+            type: string
+            example: "programming"
+      responses:
+        "200":
+          description: Subreddit lookup result
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - type: object
+                    description: Subreddit exists
+                    properties:
+                      exists: { type: boolean, enum: [true] }
+                      subreddit:
+                        type: object
+                        properties:
+                          name: { type: string, example: "programming" }
+                          title: { type: string, example: "programming" }
+                          description: { type: string, example: "Computer Programming" }
+                          subscribers: { type: integer, example: 6844284 }
+                          isNSFW: { type: boolean }
+                          type: { type: string, enum: [public, private, restricted], example: "public" }
+                          allowImages: { type: boolean }
+                          allowVideos: { type: boolean }
+                  - type: object
+                    description: Subreddit not found
+                    properties:
+                      exists: { type: boolean, enum: [false] }
+                      error: { type: string }
 
   # ============================================
   # Analytics
