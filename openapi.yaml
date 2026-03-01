@@ -2630,7 +2630,7 @@ paths:
                   - type: object
                     description: Valid post
                     properties:
-                      valid: { type: boolean, enum: [true] }
+                      valid: { type: boolean }
                       message: { type: string, example: "No validation issues found." }
                       warnings:
                         type: array
@@ -2642,7 +2642,7 @@ paths:
                   - type: object
                     description: Invalid post
                     properties:
-                      valid: { type: boolean, enum: [false] }
+                      valid: { type: boolean }
                       errors:
                         type: array
                         items:
@@ -2742,7 +2742,7 @@ paths:
                   - type: object
                     description: Subreddit exists
                     properties:
-                      exists: { type: boolean, enum: [true] }
+                      exists: { type: boolean }
                       subreddit:
                         type: object
                         properties:
@@ -2757,7 +2757,7 @@ paths:
                   - type: object
                     description: Subreddit not found
                     properties:
-                      exists: { type: boolean, enum: [false] }
+                      exists: { type: boolean }
                       error: { type: string }
 
   # ============================================
