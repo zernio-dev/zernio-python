@@ -10349,7 +10349,6 @@ paths:
                 accountId: { type: string }
                 message: { type: string }
                 commentId: { type: string, description: Reply to specific comment (optional) }
-                subreddit: { type: string, description: (Reddit only) Subreddit name for replies }
                 parentCid: { type: string, description: (Bluesky only) Parent content identifier }
                 rootUri: { type: string, description: (Bluesky only) Root post URI }
                 rootCid: { type: string, description: (Bluesky only) Root post CID }

@@ -970,7 +970,6 @@ def register_generated_tools(mcp, _get_client):
         account_id: str,
         message: str,
         comment_id: str = "",
-        subreddit: str = "",
         parent_cid: str = "",
         root_uri: str = "",
         root_cid: str = "",
@@ -982,7 +981,6 @@ def register_generated_tools(mcp, _get_client):
             account_id: (required)
             message: (required)
             comment_id: Reply to specific comment (optional)
-            subreddit: (Reddit only) Subreddit name for replies
             parent_cid: (Bluesky only) Parent content identifier
             root_uri: (Bluesky only) Root post URI
             root_cid: (Bluesky only) Root post CID"""
@@ -993,7 +991,6 @@ def register_generated_tools(mcp, _get_client):
                 accountId=account_id,
                 message=message,
                 commentId=comment_id,
-                subreddit=subreddit,
                 parentCid=parent_cid,
                 rootUri=root_uri,
                 rootCid=root_cid,
