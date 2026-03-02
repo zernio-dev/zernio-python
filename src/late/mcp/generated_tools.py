@@ -258,17 +258,20 @@ def register_generated_tools(mcp, _get_client):
 
     @mcp.tool()
     def accounts_list_accounts(
-        profile_id: str = "", include_over_limit: bool = False
+        profile_id: str = "", platform: str = "", include_over_limit: bool = False
     ) -> str:
         """List accounts
 
         Args:
             profile_id: Filter accounts by profile ID
+            platform: Filter accounts by platform (e.g. "instagram", "twitter").
             include_over_limit: When true, includes accounts from over-limit profiles."""
         client = _get_client()
         try:
             response = client.accounts.list_accounts(
-                profile_id=profile_id, include_over_limit=include_over_limit
+                profile_id=profile_id,
+                platform=platform,
+                include_over_limit=include_over_limit,
             )
             return _format_response(response)
         except Exception as e:
@@ -717,7 +720,11 @@ def register_generated_tools(mcp, _get_client):
 
     @mcp.tool()
     def analytics_get_daily_metrics(
-        platform: str = "", profile_id: str = "", from_date: str = "", to_date: str = ""
+        platform: str = "",
+        profile_id: str = "",
+        from_date: str = "",
+        to_date: str = "",
+        source: str = "all",
     ) -> str:
         """Get daily aggregated metrics
 
@@ -725,7 +732,8 @@ def register_generated_tools(mcp, _get_client):
             platform: Filter by platform (e.g. "instagram", "tiktok"). Omit for all platforms.
             profile_id: Filter by profile ID. Omit for all profiles.
             from_date: Inclusive start date (ISO 8601). Defaults to 180 days ago.
-            to_date: Inclusive end date (ISO 8601). Defaults to now."""
+            to_date: Inclusive end date (ISO 8601). Defaults to now.
+            source: Filter by post origin. "late" for posts published via Late, "external" for posts imported from platforms."""
         client = _get_client()
         try:
             response = client.analytics.get_daily_metrics(
@@ -733,6 +741,7 @@ def register_generated_tools(mcp, _get_client):
                 profile_id=profile_id,
                 from_date=from_date,
                 to_date=to_date,
+                source=source,
             )
             return _format_response(response)
         except Exception as e:
@@ -740,33 +749,37 @@ def register_generated_tools(mcp, _get_client):
 
     @mcp.tool()
     def analytics_get_best_time_to_post(
-        platform: str = "", profile_id: str = ""
+        platform: str = "", profile_id: str = "", source: str = "all"
     ) -> str:
         """Get best times to post
 
         Args:
             platform: Filter by platform (e.g. "instagram", "tiktok"). Omit for all platforms.
-            profile_id: Filter by profile ID. Omit for all profiles."""
+            profile_id: Filter by profile ID. Omit for all profiles.
+            source: Filter by post origin. "late" for posts published via Late, "external" for posts imported from platforms."""
         client = _get_client()
         try:
             response = client.analytics.get_best_time_to_post(
-                platform=platform, profile_id=profile_id
+                platform=platform, profile_id=profile_id, source=source
             )
             return _format_response(response)
         except Exception as e:
             return f"Error: {e}"
 
     @mcp.tool()
-    def analytics_get_content_decay(platform: str = "", profile_id: str = "") -> str:
+    def analytics_get_content_decay(
+        platform: str = "", profile_id: str = "", source: str = "all"
+    ) -> str:
         """Get content performance decay
 
         Args:
             platform: Filter by platform (e.g. "instagram", "tiktok"). Omit for all platforms.
-            profile_id: Filter by profile ID. Omit for all profiles."""
+            profile_id: Filter by profile ID. Omit for all profiles.
+            source: Filter by post origin. "late" for posts published via Late, "external" for posts imported from platforms."""
         client = _get_client()
         try:
             response = client.analytics.get_content_decay(
-                platform=platform, profile_id=profile_id
+                platform=platform, profile_id=profile_id, source=source
             )
             return _format_response(response)
         except Exception as e:
@@ -774,17 +787,18 @@ def register_generated_tools(mcp, _get_client):
 
     @mcp.tool()
     def analytics_get_posting_frequency(
-        platform: str = "", profile_id: str = ""
+        platform: str = "", profile_id: str = "", source: str = "all"
     ) -> str:
         """Get posting frequency vs engagement
 
         Args:
             platform: Filter by platform (e.g. "instagram", "tiktok"). Omit for all platforms.
-            profile_id: Filter by profile ID. Omit for all profiles."""
+            profile_id: Filter by profile ID. Omit for all profiles.
+            source: Filter by post origin. "late" for posts published via Late, "external" for posts imported from platforms."""
         client = _get_client()
         try:
             response = client.analytics.get_posting_frequency(
-                platform=platform, profile_id=profile_id
+                platform=platform, profile_id=profile_id, source=source
             )
             return _format_response(response)
         except Exception as e:
@@ -1126,18 +1140,22 @@ def register_generated_tools(mcp, _get_client):
 
     @mcp.tool()
     def connect_get_connect_url(
-        platform: str, profile_id: str, redirect_url: str = ""
+        platform: str, profile_id: str, redirect_url: str = "", headless: bool = False
     ) -> str:
         """Get OAuth connect URL
 
         Args:
             platform: Social media platform to connect (required)
             profile_id: Your Late profile ID (get from /v1/profiles) (required)
-            redirect_url: Your custom redirect URL after connection completes. Standard mode appends ?connected={platform}&profileId=X&username=Y. Headless mode appends OAuth data params."""
+            redirect_url: Your custom redirect URL after connection completes. Standard mode appends ?connected={platform}&profileId=X&username=Y. Headless mode appends OAuth data params.
+            headless: When true, the user is redirected to your redirect_url with raw OAuth data (code, state) instead of Late's default account selection UI. Use this to build a custom connect experience."""
         client = _get_client()
         try:
             response = client.connect.get_connect_url(
-                platform=platform, profile_id=profile_id, redirect_url=redirect_url
+                platform=platform,
+                profile_id=profile_id,
+                redirect_url=redirect_url,
+                headless=headless,
             )
             return _format_response(response)
         except Exception as e:
@@ -1687,6 +1705,7 @@ def register_generated_tools(mcp, _get_client):
         days: int = 7,
         limit: int = 50,
         skip: int = 0,
+        search: str = "",
     ) -> str:
         """List publishing logs
 
@@ -1696,7 +1715,8 @@ def register_generated_tools(mcp, _get_client):
             action: Filter by action type
             days: Number of days to look back (max 7)
             limit: Maximum number of logs to return (max 100)
-            skip: Number of logs to skip (for pagination)"""
+            skip: Number of logs to skip (for pagination)
+            search: Search through log entries by text content."""
         client = _get_client()
         try:
             response = client.logs.list_posts_logs(
@@ -1706,6 +1726,7 @@ def register_generated_tools(mcp, _get_client):
                 days=days,
                 limit=limit,
                 skip=skip,
+                search=search,
             )
             return _format_response(response)
         except Exception as e:
@@ -1954,6 +1975,8 @@ def register_generated_tools(mcp, _get_client):
         date_from: str = "",
         date_to: str = "",
         include_hidden: bool = False,
+        search: str = "",
+        sort_by: str = "scheduled-desc",
     ) -> str:
         """List posts
 
@@ -1966,7 +1989,9 @@ def register_generated_tools(mcp, _get_client):
             created_by
             date_from
             date_to
-            include_hidden"""
+            include_hidden
+            search: Search posts by text content.
+            sort_by: Sort order for results."""
         client = _get_client()
         try:
             response = client.posts.list_posts(
@@ -1979,6 +2004,8 @@ def register_generated_tools(mcp, _get_client):
                 date_from=date_from,
                 date_to=date_to,
                 include_hidden=include_hidden,
+                search=search,
+                sort_by=sort_by,
             )
             return _format_response(response)
         except Exception as e:
@@ -2255,15 +2282,20 @@ def register_generated_tools(mcp, _get_client):
             return f"Error: {e}"
 
     @mcp.tool()
-    def queue_preview_queue(profile_id: str, count: int = 20) -> str:
+    def queue_preview_queue(
+        profile_id: str, queue_id: str = "", count: int = 20
+    ) -> str:
         """Preview upcoming slots
 
         Args:
             profile_id: (required)
+            queue_id: Filter by specific queue ID. Omit to use the default queue.
             count"""
         client = _get_client()
         try:
-            response = client.queue.preview_queue(profile_id=profile_id, count=count)
+            response = client.queue.preview_queue(
+                profile_id=profile_id, queue_id=queue_id, count=count
+            )
             return _format_response(response)
         except Exception as e:
             return f"Error: {e}"

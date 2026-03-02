@@ -49,12 +49,18 @@ class ConnectResource:
         return result
 
     def get_connect_url(
-        self, platform: str, profile_id: str, *, redirect_url: str | None = None
+        self,
+        platform: str,
+        profile_id: str,
+        *,
+        redirect_url: str | None = None,
+        headless: bool | None = False,
     ) -> dict[str, Any]:
         """Get OAuth connect URL"""
         params = self._build_params(
             profile_id=profile_id,
             redirect_url=redirect_url,
+            headless=headless,
         )
         return self._client._get(f"/v1/connect/{platform}", params=params)
 
@@ -372,12 +378,18 @@ class ConnectResource:
         )
 
     async def aget_connect_url(
-        self, platform: str, profile_id: str, *, redirect_url: str | None = None
+        self,
+        platform: str,
+        profile_id: str,
+        *,
+        redirect_url: str | None = None,
+        headless: bool | None = False,
     ) -> dict[str, Any]:
         """Get OAuth connect URL (async)"""
         params = self._build_params(
             profile_id=profile_id,
             redirect_url=redirect_url,
+            headless=headless,
         )
         return await self._client._aget(f"/v1/connect/{platform}", params=params)
 

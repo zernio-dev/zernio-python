@@ -112,11 +112,12 @@ class QueueResource:
         return self._client._delete("/v1/queue/slots", params=params)
 
     def preview_queue(
-        self, profile_id: str, *, count: int | None = 20
+        self, profile_id: str, *, queue_id: str | None = None, count: int | None = 20
     ) -> dict[str, Any]:
         """Preview upcoming slots"""
         params = self._build_params(
             profile_id=profile_id,
+            queue_id=queue_id,
             count=count,
         )
         return self._client._get("/v1/queue/preview", params=params)
@@ -197,11 +198,12 @@ class QueueResource:
         return await self._client._adelete("/v1/queue/slots", params=params)
 
     async def apreview_queue(
-        self, profile_id: str, *, count: int | None = 20
+        self, profile_id: str, *, queue_id: str | None = None, count: int | None = 20
     ) -> dict[str, Any]:
         """Preview upcoming slots (async)"""
         params = self._build_params(
             profile_id=profile_id,
+            queue_id=queue_id,
             count=count,
         )
         return await self._client._aget("/v1/queue/preview", params=params)

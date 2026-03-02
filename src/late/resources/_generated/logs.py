@@ -57,6 +57,7 @@ class LogsResource:
         days: int | None = 7,
         limit: int | None = 50,
         skip: int | None = 0,
+        search: str | None = None,
     ) -> dict[str, Any]:
         """List publishing logs"""
         params = self._build_params(
@@ -66,6 +67,7 @@ class LogsResource:
             days=days,
             limit=limit,
             skip=skip,
+            search=search,
         )
         return self._client._get("/v1/posts/logs", params=params)
 
@@ -106,6 +108,7 @@ class LogsResource:
         days: int | None = 7,
         limit: int | None = 50,
         skip: int | None = 0,
+        search: str | None = None,
     ) -> dict[str, Any]:
         """List publishing logs (async)"""
         params = self._build_params(
@@ -115,6 +118,7 @@ class LogsResource:
             days=days,
             limit=limit,
             skip=skip,
+            search=search,
         )
         return await self._client._aget("/v1/posts/logs", params=params)
 

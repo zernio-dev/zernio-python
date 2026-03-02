@@ -3078,6 +3078,13 @@ paths:
           in: query
           schema: { type: string, format: date-time }
           description: Inclusive end date (ISO 8601). Defaults to now.
+        - name: source
+          in: query
+          schema:
+            type: string
+            enum: [all, late, external]
+            default: all
+          description: Filter by post origin. "late" for posts published via Late, "external" for posts imported from platforms.
       responses:
         '200':
           description: Daily metrics and platform breakdown
@@ -3179,6 +3186,13 @@ paths:
           in: query
           schema: { type: string }
           description: Filter by profile ID. Omit for all profiles.
+        - name: source
+          in: query
+          schema:
+            type: string
+            enum: [all, late, external]
+            default: all
+          description: Filter by post origin. "late" for posts published via Late, "external" for posts imported from platforms.
       responses:
         '200':
           description: Best time slots
@@ -3242,6 +3256,13 @@ paths:
           in: query
           schema: { type: string }
           description: Filter by profile ID. Omit for all profiles.
+        - name: source
+          in: query
+          schema:
+            type: string
+            enum: [all, late, external]
+            default: all
+          description: Filter by post origin. "late" for posts published via Late, "external" for posts imported from platforms.
       responses:
         '200':
           description: Content decay buckets
@@ -3321,6 +3342,13 @@ paths:
           in: query
           schema: { type: string }
           description: Filter by profile ID. Omit for all profiles.
+        - name: source
+          in: query
+          schema:
+            type: string
+            enum: [all, late, external]
+            default: all
+          description: Filter by post origin. "late" for posts published via Late, "external" for posts imported from platforms.
       responses:
         '200':
           description: Posting frequency data
@@ -3803,6 +3831,17 @@ paths:
         - name: includeHidden
           in: query
           schema: { type: boolean, default: false }
+        - name: search
+          in: query
+          schema: { type: string }
+          description: Search posts by text content.
+        - name: sortBy
+          in: query
+          schema:
+            type: string
+            enum: [scheduled-desc, scheduled-asc, created-desc, created-asc, status, platform]
+            default: scheduled-desc
+          description: Sort order for results.
       responses:
         '200':
           description: Paginated posts
@@ -4814,6 +4853,10 @@ paths:
           in: query
           schema: { type: string }
           description: Filter accounts by profile ID
+        - name: platform
+          in: query
+          schema: { type: string }
+          description: Filter accounts by platform (e.g. "instagram", "twitter").
         - name: includeOverLimit
           in: query
           required: false
@@ -5398,6 +5441,10 @@ paths:
           in: query
           schema: { type: string, format: uri }
           description: Your custom redirect URL after connection completes. Standard mode appends ?connected={platform}&profileId=X&username=Y. Headless mode appends OAuth data params.
+        - name: headless
+          in: query
+          schema: { type: boolean, default: false }
+          description: When true, the user is redirected to your redirect_url with raw OAuth data (code, state) instead of Late's default account selection UI. Use this to build a custom connect experience.
       security:
         - bearerAuth: []
       responses:
@@ -8713,6 +8760,10 @@ paths:
           in: query
           required: true
           schema: { type: string }
+        - name: queueId
+          in: query
+          schema: { type: string }
+          description: Filter by specific queue ID. Omit to use the default queue.
         - name: count
           in: query
           schema: { type: integer, minimum: 1, maximum: 100, default: 20 }
@@ -9139,6 +9190,11 @@ paths:
             type: integer
             minimum: 0
             default: 0
+        - name: search
+          in: query
+          description: Search through log entries by text content.
+          schema:
+            type: string
       responses:
         '200':
           description: Publishing logs retrieved successfully

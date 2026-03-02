@@ -49,11 +49,16 @@ class AccountsResource:
         return result
 
     def list_accounts(
-        self, *, profile_id: str | None = None, include_over_limit: bool | None = False
+        self,
+        *,
+        profile_id: str | None = None,
+        platform: str | None = None,
+        include_over_limit: bool | None = False,
     ) -> dict[str, Any]:
         """List accounts"""
         params = self._build_params(
             profile_id=profile_id,
+            platform=platform,
             include_over_limit=include_over_limit,
         )
         return self._client._get("/v1/accounts", params=params)
@@ -292,11 +297,16 @@ class AccountsResource:
         )
 
     async def alist_accounts(
-        self, *, profile_id: str | None = None, include_over_limit: bool | None = False
+        self,
+        *,
+        profile_id: str | None = None,
+        platform: str | None = None,
+        include_over_limit: bool | None = False,
     ) -> dict[str, Any]:
         """List accounts (async)"""
         params = self._build_params(
             profile_id=profile_id,
+            platform=platform,
             include_over_limit=include_over_limit,
         )
         return await self._client._aget("/v1/accounts", params=params)
