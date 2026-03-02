@@ -104,6 +104,53 @@ from .models import *  # noqa: F401, F403
     print("Models generated successfully!")
     print(f"Output: {output_dir}")
     print()
+
+    # Validate that the parent models/__init__.py explicit imports
+    # all exist in the generated models. This catches renames/removals
+    # in the OpenAPI spec that would break the SDK at import time.
+    parent_init = output_dir.parent / "__init__.py"
+    if parent_init.exists():
+        print("Validating models/__init__.py imports against generated models...")
+        generated_source = output_file.read_text()
+
+        import ast
+        import re
+
+        # Extract all class/enum names from generated models
+        tree = ast.parse(generated_source)
+        generated_names = {
+            node.name
+            for node in ast.walk(tree)
+            if isinstance(node, ast.ClassDef)
+        }
+
+        # Extract explicit import names from the parent __init__.py
+        # (looks for "from ._generated.models import (...)" blocks)
+        init_source = parent_init.read_text()
+        import_names: list[str] = []
+        for match in re.finditer(
+            r"from \._generated\.models import \((.*?)\)",
+            init_source,
+            re.DOTALL,
+        ):
+            block = match.group(1)
+            for name in re.findall(r"\b([A-Z]\w+)\b", block):
+                import_names.append(name)
+
+        missing = [name for name in import_names if name not in generated_names]
+        if missing:
+            print()
+            print("ERROR: models/__init__.py imports names that don't exist in generated models:")
+            for name in missing:
+                print(f"  - {name}")
+            print()
+            print("The OpenAPI spec likely renamed or removed these models.")
+            print("Update src/late/models/__init__.py to match the generated models.")
+            return 1
+
+        print(f"  All {len(import_names)} explicit imports verified.")
+
+    print()
     print("Note: These are base models. Use the curated models in")
     print("src/late/models/ for the public API.")
 
