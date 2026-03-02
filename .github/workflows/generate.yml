@@ -72,7 +72,7 @@ jobs:
           uv run ruff format src/late/mcp/generated_tools.py || true
 
       - name: Run tests
-        run: uv run pytest tests -v --tb=short || echo "Tests failed but continuing..."
+        run: uv run pytest tests -v --tb=short
 
       - name: Check for changes
         id: changes
