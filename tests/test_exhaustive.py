@@ -258,17 +258,17 @@ class TestModelsValidation:
     """Test model validation."""
 
     def test_status_enum_values(self):
-        """Test Status enum has expected values."""
+        """Test Status enum has expected values.
+
+        Note: The generated Status enum is for webhook log status (success/failed).
+        Post status values (draft/scheduled/published/failed) are in Status3.
+        """
         from late.models import Status
 
-        # Enums use uppercase attribute names
-        assert hasattr(Status, "DRAFT")
-        assert hasattr(Status, "SCHEDULED")
-        assert hasattr(Status, "PUBLISHED")
+        assert hasattr(Status, "SUCCESS")
         assert hasattr(Status, "FAILED")
-        # Values are lowercase strings
-        assert Status.DRAFT.value == "draft"
-        assert Status.SCHEDULED.value == "scheduled"
+        assert Status.SUCCESS.value == "success"
+        assert Status.FAILED.value == "failed"
 
     def test_type_enum_values(self):
         """Test Type enum has expected values."""
@@ -284,13 +284,13 @@ class TestModelsValidation:
         from late.models import TikTokPlatformData
 
         settings = TikTokPlatformData(
-            allow_comment=True,
-            allow_duet=True,
-            allow_stitch=True,
-            privacy_level="PUBLIC",
+            allowComment=True,
+            allowDuet=True,
+            allowStitch=True,
+            privacyLevel="PUBLIC",
         )
-        assert settings.allow_comment is True
-        assert settings.privacy_level == "PUBLIC"
+        assert settings.allowComment is True
+        assert settings.privacyLevel == "PUBLIC"
 
     def test_media_item_creation(self):
         """Test MediaItem with type enum."""
