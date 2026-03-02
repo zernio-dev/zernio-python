@@ -60,7 +60,7 @@ from ._generated.models import (
     # Enums
     Status,
     # Platform-specific
-    TikTokSettings,
+    TikTokPlatformData,
     TranscriptResponse,
     TranscriptSegment,
     TwitterPlatformData,
@@ -95,7 +95,7 @@ __all__ = [
     "Type",
     "Visibility",
     # Platform-specific
-    "TikTokSettings",
+    "TikTokPlatformData",
     "TwitterPlatformData",
     "InstagramPlatformData",
     "FacebookPlatformData",

@@ -233,12 +233,12 @@ class TestModelsImport:
             InstagramPlatformData,
             LinkedInPlatformData,
             PinterestPlatformData,
-            TikTokSettings,
+            TikTokPlatformData,
             TwitterPlatformData,
             YouTubePlatformData,
         )
 
-        assert TikTokSettings is not None
+        assert TikTokPlatformData is not None
         assert TwitterPlatformData is not None
         assert InstagramPlatformData is not None
         assert FacebookPlatformData is not None
@@ -280,10 +280,10 @@ class TestModelsValidation:
         assert Type.VIDEO.value == "video"
 
     def test_tiktok_settings_creation(self):
-        """Test TikTokSettings model creation."""
-        from late.models import TikTokSettings
+        """Test TikTokPlatformData model creation."""
+        from late.models import TikTokPlatformData
 
-        settings = TikTokSettings(
+        settings = TikTokPlatformData(
             allow_comment=True,
             allow_duet=True,
             allow_stitch=True,
