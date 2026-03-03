@@ -2244,6 +2244,8 @@ paths:
                         duration: { type: number }
         "404":
           description: No transcript available
+        "503":
+          description: Transcript service temporarily unavailable
 
   /v1/tools/instagram/download:
     get:
