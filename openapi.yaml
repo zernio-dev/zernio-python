@@ -3397,6 +3397,120 @@ paths:
                   error: { type: string, example: "Analytics add-on required" }
                   requiresAddon: { type: boolean, example: true }
 
+  /v1/analytics/post-timeline:
+    get:
+      operationId: getPostTimeline
+      tags: [Analytics]
+      summary: Get post analytics timeline
+      description: |
+        Returns a daily timeline of analytics metrics for a specific post, showing how impressions, likes,
+        and other metrics evolved day-by-day since publishing. Each row represents one day of data per platform.
+        For multi-platform Late posts, returns separate rows for each platform. Requires the Analytics add-on.
+      parameters:
+        - name: postId
+          in: query
+          required: true
+          schema: { type: string }
+          description: |
+            The post to fetch timeline for. Accepts an ExternalPost ID, a platformPostId, or a Late Post ID.
+        - name: fromDate
+          in: query
+          schema: { type: string, format: date-time }
+          description: Start of date range (ISO 8601). Defaults to 90 days ago.
+        - name: toDate
+          in: query
+          schema: { type: string, format: date-time }
+          description: End of date range (ISO 8601). Defaults to now.
+      responses:
+        '200':
+          description: Daily analytics timeline
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  postId:
+                    type: string
+                    description: The postId that was requested
+                  timeline:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        date: { type: string, format: date, description: "Date in YYYY-MM-DD format" }
+                        platform: { type: string, description: "Platform name (e.g. instagram, tiktok)" }
+                        platformPostId: { type: string, description: "Platform-specific post ID" }
+                        impressions: { type: integer, description: "Total impressions on this date" }
+                        reach: { type: integer, description: "Total reach on this date" }
+                        likes: { type: integer, description: "Total likes on this date" }
+                        comments: { type: integer, description: "Total comments on this date" }
+                        shares: { type: integer, description: "Total shares on this date" }
+                        saves: { type: integer, description: "Total saves on this date" }
+                        clicks: { type: integer, description: "Total clicks on this date" }
+                        views: { type: integer, description: "Total views on this date" }
+              examples:
+                single_platform:
+                  summary: Single-platform post timeline
+                  value:
+                    postId: "6507a1b2c3d4e5f6a7b8c9d0"
+                    timeline:
+                      - date: "2025-01-15"
+                        platform: "instagram"
+                        platformPostId: "17902345678901234"
+                        impressions: 1200
+                        reach: 980
+                        likes: 45
+                        comments: 3
+                        shares: 12
+                        saves: 8
+                        clicks: 25
+                        views: 0
+                      - date: "2025-01-16"
+                        platform: "instagram"
+                        platformPostId: "17902345678901234"
+                        impressions: 2400
+                        reach: 1850
+                        likes: 92
+                        comments: 7
+                        shares: 21
+                        saves: 15
+                        clicks: 48
+                        views: 0
+        '400':
+          description: Missing required postId parameter
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error: { type: string, example: "Missing required parameter: postId" }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '402':
+          description: Analytics add-on required
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error: { type: string, example: "Analytics add-on required" }
+                  code: { type: string, example: "analytics_addon_required" }
+        '403':
+          description: Forbidden (post belongs to another user or API key scope violation)
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error: { type: string, example: "Forbidden" }
+        '404':
+          description: Post not found
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error: { type: string, example: "Post not found" }
+
   /v1/account-groups:
     get:
       operationId: listAccountGroups

@@ -204,6 +204,7 @@ except LateAPIError as e:
 | `analytics.get_daily_metrics()` | Get daily aggregated metrics |
 | `analytics.get_linked_in_aggregate_analytics()` | Get LinkedIn aggregate stats |
 | `analytics.get_linked_in_post_analytics()` | Get LinkedIn post stats |
+| `analytics.get_post_timeline()` | Get post analytics timeline |
 | `analytics.get_posting_frequency()` | Get posting frequency vs engagement |
 | `analytics.get_you_tube_daily_views()` | Get YouTube daily views |
 

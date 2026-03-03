@@ -160,6 +160,21 @@ class AnalyticsResource:
         )
         return self._client._get("/v1/analytics/posting-frequency", params=params)
 
+    def get_post_timeline(
+        self,
+        post_id: str,
+        *,
+        from_date: datetime | str | None = None,
+        to_date: datetime | str | None = None,
+    ) -> dict[str, Any]:
+        """Get post analytics timeline"""
+        params = self._build_params(
+            post_id=post_id,
+            from_date=from_date,
+            to_date=to_date,
+        )
+        return self._client._get("/v1/analytics/post-timeline", params=params)
+
     def get_linked_in_aggregate_analytics(
         self,
         account_id: str,
@@ -302,6 +317,21 @@ class AnalyticsResource:
         return await self._client._aget(
             "/v1/analytics/posting-frequency", params=params
         )
+
+    async def aget_post_timeline(
+        self,
+        post_id: str,
+        *,
+        from_date: datetime | str | None = None,
+        to_date: datetime | str | None = None,
+    ) -> dict[str, Any]:
+        """Get post analytics timeline (async)"""
+        params = self._build_params(
+            post_id=post_id,
+            from_date=from_date,
+            to_date=to_date,
+        )
+        return await self._client._aget("/v1/analytics/post-timeline", params=params)
 
     async def aget_linked_in_aggregate_analytics(
         self,

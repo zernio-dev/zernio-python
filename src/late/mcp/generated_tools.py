@@ -805,6 +805,26 @@ def register_generated_tools(mcp, _get_client):
             return f"Error: {e}"
 
     @mcp.tool()
+    def analytics_get_post_timeline(
+        post_id: str, from_date: str = "", to_date: str = ""
+    ) -> str:
+        """Get post analytics timeline
+
+           Args:
+               post_id: The post to fetch timeline for. Accepts an ExternalPost ID, a platformPostId, or a Late Post ID.
+        (required)
+               from_date: Start of date range (ISO 8601). Defaults to 90 days ago.
+               to_date: End of date range (ISO 8601). Defaults to now."""
+        client = _get_client()
+        try:
+            response = client.analytics.get_post_timeline(
+                post_id=post_id, from_date=from_date, to_date=to_date
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool()
     def analytics_get_linked_in_aggregate_analytics(
         account_id: str,
         aggregation: str = "TOTAL",
