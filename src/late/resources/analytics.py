@@ -1,28 +1,38 @@
 """
 Analytics resource for post analytics and usage statistics.
+
+Inherits all generated analytics methods (get_analytics, get_daily_metrics,
+get_best_time_to_post, etc.) and adds convenience aliases.
 """
 
 from __future__ import annotations
 
 from typing import Any, Literal
 
-from .base import BaseResource
+from ._generated.analytics import AnalyticsResource as _GeneratedAnalyticsResource
 
 Period = Literal["7d", "30d", "90d", "all"]
 
 
-class AnalyticsResource(BaseResource[Any]):
+class AnalyticsResource(_GeneratedAnalyticsResource):
     """
     Resource for analytics and usage statistics.
 
+    Inherits all generated analytics methods (get_analytics, get_daily_metrics,
+    get_best_time_to_post, etc.) and adds convenience aliases for backwards
+    compatibility with existing SDK users.
+
     Example:
         >>> client = Late(api_key="...")
-        >>> # Get post analytics
+        >>> # Get post analytics (generated method, used by MCP tools)
+        >>> analytics = client.analytics.get_analytics(period="30d")
+        >>> # Get post analytics (convenience alias)
         >>> analytics = client.analytics.get(period="30d")
         >>> # Get usage statistics
         >>> usage = client.analytics.get_usage()
     """
 
+    # Used by convenience get()/aget() methods below
     _BASE_PATH = "/v1/analytics"
 
     # -------------------------------------------------------------------------
