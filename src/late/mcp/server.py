@@ -25,7 +25,7 @@ from __future__ import annotations
 
 import os
 import re
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from typing import Any
 
 import httpx
@@ -334,7 +334,9 @@ def posts_create(
         params["publish_now"] = True
     else:
         minutes = schedule_minutes if schedule_minutes > 0 else 60
-        params["scheduled_for"] = datetime.now() + timedelta(minutes=minutes)
+        # Use UTC so the scheduled time matches what the API expects,
+        # regardless of the user's local timezone.
+        params["scheduled_for"] = datetime.now(timezone.utc) + timedelta(minutes=minutes)
 
     response = client.posts.create(**params)
     post = response.post
@@ -352,7 +354,7 @@ def posts_create(
     elif publish_now:
         return f"✅ Published to {platform} (@{username}){media_info}\nPost ID: {post_id}"
     else:
-        scheduled = params["scheduled_for"].strftime("%Y-%m-%d %H:%M")
+        scheduled = params["scheduled_for"].strftime("%Y-%m-%d %H:%M UTC")
         return f"✅ Scheduled for {platform} (@{username}){media_info}\nPost ID: {post_id}\nScheduled: {scheduled}"
 
 
@@ -422,7 +424,9 @@ def posts_cross_post(
     elif publish_now:
         params["publish_now"] = True
     else:
-        params["scheduled_for"] = datetime.now() + timedelta(hours=1)
+        # Use UTC so the scheduled time matches what the API expects,
+        # regardless of the user's local timezone.
+        params["scheduled_for"] = datetime.now(timezone.utc) + timedelta(hours=1)
 
     response = client.posts.create(**params)
     post = response.post
@@ -655,7 +659,7 @@ def _get_docs_content() -> str:
     # Check cache
     if cache_key in _docs_cache:
         content, cached_at = _docs_cache[cache_key]
-        if datetime.now() - cached_at < timedelta(hours=_CACHE_TTL_HOURS):
+        if datetime.now(timezone.utc) - cached_at < timedelta(hours=_CACHE_TTL_HOURS):
             return content
 
     # Fetch fresh content
@@ -663,7 +667,7 @@ def _get_docs_content() -> str:
         response = httpx.get(_DOCS_URL, timeout=30.0)
         response.raise_for_status()
         content = response.text
-        _docs_cache[cache_key] = (content, datetime.now())
+        _docs_cache[cache_key] = (content, datetime.now(timezone.utc))
         return content
     except Exception as e:
         # Return cached content if available, even if expired

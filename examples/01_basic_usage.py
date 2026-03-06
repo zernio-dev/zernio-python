@@ -8,7 +8,7 @@ This example demonstrates:
 """
 
 import os
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 
 from late import Late
 
@@ -43,7 +43,7 @@ def main() -> None:
     # Create a new post (example - uncomment to use)
     # if accounts.get("accounts"):
     #     account = accounts["accounts"][0]
-    #     scheduled_time = datetime.now() + timedelta(hours=1)
+    #     scheduled_time = datetime.now(timezone.utc) + timedelta(hours=1)
     #
     #     post = client.posts.create(
     #         content="Hello from Late Python SDK!",

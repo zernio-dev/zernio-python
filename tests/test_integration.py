@@ -13,7 +13,7 @@ To run with real API (requires LATE_API_KEY env var):
 from __future__ import annotations
 
 import json
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from typing import Any
 
 import httpx
@@ -163,7 +163,7 @@ class TestPostsResource:
             )
         )
 
-        scheduled_time = datetime.now() + timedelta(hours=1)
+        scheduled_time = datetime.now(timezone.utc) + timedelta(hours=1)
         result = client.posts.create(
             content="Test post",
             platforms=[{"platform": "twitter", "accountId": "acc_123"}],
@@ -277,7 +277,7 @@ class TestPostsResource:
         client.posts.update(
             "post_123",
             content="Updated content",
-            scheduled_for=datetime.now() + timedelta(days=1),
+            scheduled_for=datetime.now(timezone.utc) + timedelta(days=1),
         )
 
         assert route.called

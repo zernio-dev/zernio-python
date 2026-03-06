@@ -6,7 +6,7 @@ from __future__ import annotations
 
 import contextlib
 from dataclasses import dataclass
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
@@ -31,7 +31,7 @@ class RateLimitInfo:
         """Get seconds until rate limit resets."""
         if self.reset is None:
             return None
-        delta = self.reset - datetime.now()
+        delta = self.reset - datetime.now(timezone.utc)
         return max(0.0, delta.total_seconds())
 
 
@@ -90,7 +90,8 @@ class RateLimiter:
         if reset_str is not None:
             try:
                 timestamp = int(reset_str)
-                self._info.reset = datetime.fromtimestamp(timestamp)
+                # Use UTC so the reset comparison is timezone-consistent.
+                self._info.reset = datetime.fromtimestamp(timestamp, tz=timezone.utc)
             except (ValueError, OSError):
                 pass
 

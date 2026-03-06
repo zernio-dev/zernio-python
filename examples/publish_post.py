@@ -3,7 +3,7 @@ Example: Publish a post with Late SDK.
 """
 
 import os
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 
 from late import Late
 
@@ -29,7 +29,7 @@ def main() -> None:
     print(f"\nUsing: {account['platform']} ({account.get('username', '')})")
 
     # 3. Create post - scheduled for 1 hour from now
-    scheduled_time = datetime.now() + timedelta(hours=1)
+    scheduled_time = datetime.now(timezone.utc) + timedelta(hours=1)
 
     post = client.posts.create(
         content="Hello from Late Python SDK! 🚀",

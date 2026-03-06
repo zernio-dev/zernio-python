@@ -5,7 +5,7 @@ Pipeline for cross-posting content across multiple platforms.
 from __future__ import annotations
 
 from dataclasses import dataclass
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from typing import TYPE_CHECKING, Any
 
 from late.enums import Platform
@@ -111,7 +111,8 @@ class CrossPosterPipeline:
             List of results per platform
         """
         results: list[CrossPostResult] = []
-        current_time = base_time or datetime.now()
+        # Use UTC so scheduled times match what the API expects.
+        current_time = base_time or datetime.now(timezone.utc)
 
         for i, config in enumerate(platforms):
             try:
@@ -165,7 +166,8 @@ class CrossPosterPipeline:
     ) -> list[CrossPostResult]:
         """Synchronous version of cross-posting."""
         results: list[CrossPostResult] = []
-        current_time = kwargs.get("base_time") or datetime.now()
+        # Use UTC so scheduled times match what the API expects.
+        current_time = kwargs.get("base_time") or datetime.now(timezone.utc)
         adapt = kwargs.get("adapt_content", True)
 
         for i, config in enumerate(platforms):

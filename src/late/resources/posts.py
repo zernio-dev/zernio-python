@@ -29,6 +29,7 @@ class PostsResource(BaseResource[PostsListResponse]):
     Resource for managing posts.
 
     Example:
+        >>> from datetime import datetime, timedelta, timezone
         >>> from late import Platform, PostStatus
         >>> client = Late(api_key="...")
         >>> # List posts
@@ -37,7 +38,7 @@ class PostsResource(BaseResource[PostsListResponse]):
         >>> post = client.posts.create(
         ...     content="Hello!",
         ...     platforms=[{"platform": Platform.TWITTER, "accountId": "..."}],
-        ...     scheduled_for=datetime.now() + timedelta(hours=1),
+        ...     scheduled_for=datetime.now(timezone.utc) + timedelta(hours=1),
         ... )
         >>> # Update a post
         >>> client.posts.update(post_id, content="Updated!")

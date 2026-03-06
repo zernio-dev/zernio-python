@@ -17,7 +17,7 @@ pip install late-sdk
 ## Quick Start
 
 ```python
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from late import Late, Platform
 
 client = Late(api_key="your_api_key")
@@ -29,7 +29,7 @@ accounts = client.accounts.list()
 post = client.posts.create(
     content="Hello from Late!",
     platforms=[{"platform": Platform.TWITTER, "accountId": "your_account_id"}],
-    scheduled_for=datetime.now() + timedelta(hours=1),
+    scheduled_for=datetime.now(timezone.utc) + timedelta(hours=1),
 )
 ```
 
