@@ -2050,6 +2050,7 @@ def register_generated_tools(mcp, _get_client):
         content: str = "",
         scheduled_for: str = "",
         tiktok_settings: str = "",
+        recycling: str = "",
     ) -> str:
         """Update post
 
@@ -2057,7 +2058,8 @@ def register_generated_tools(mcp, _get_client):
             post_id: (required)
             content
             scheduled_for
-            tiktok_settings: Root-level TikTok settings applied to all TikTok platforms. Merged into each platform's platformSpecificData, with platform-specific settings taking precedence."""
+            tiktok_settings: Root-level TikTok settings applied to all TikTok platforms. Merged into each platform's platformSpecificData, with platform-specific settings taking precedence.
+            recycling"""
         client = _get_client()
         try:
             response = client.posts.update_post(
@@ -2065,6 +2067,7 @@ def register_generated_tools(mcp, _get_client):
                 content=content,
                 scheduledFor=scheduled_for,
                 tiktokSettings=tiktok_settings,
+                recycling=recycling,
             )
             return _format_response(response)
         except Exception as e:
