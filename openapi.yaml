@@ -8245,7 +8245,7 @@ paths:
     get:
       operationId: getLinkedInPostReactions
       tags: [Analytics]
-      summary: Get LinkedIn post reactions (who reacted)
+      summary: Get LinkedIn post reactions
       description: |
         Returns individual reactions for a specific LinkedIn post, including reactor profiles
         (name, headline/job title, profile picture, profile URL, reaction type).

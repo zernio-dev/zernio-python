@@ -873,7 +873,7 @@ def register_generated_tools(mcp, _get_client):
     def analytics_get_linked_in_post_reactions(
         account_id: str, urn: str, limit: int = 25, cursor: str = ""
     ) -> str:
-        """Get LinkedIn post reactions (who reacted)
+        """Get LinkedIn post reactions
 
         Args:
             account_id: The ID of the LinkedIn organization account (required)

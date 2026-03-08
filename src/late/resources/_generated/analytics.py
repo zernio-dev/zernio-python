@@ -212,7 +212,7 @@ class AnalyticsResource:
         limit: int | None = 25,
         cursor: str | None = None,
     ) -> dict[str, Any]:
-        """Get LinkedIn post reactions (who reacted)"""
+        """Get LinkedIn post reactions"""
         params = self._build_params(
             urn=urn,
             limit=limit,
@@ -390,7 +390,7 @@ class AnalyticsResource:
         limit: int | None = 25,
         cursor: str | None = None,
     ) -> dict[str, Any]:
-        """Get LinkedIn post reactions (who reacted) (async)"""
+        """Get LinkedIn post reactions (async)"""
         params = self._build_params(
             urn=urn,
             limit=limit,
