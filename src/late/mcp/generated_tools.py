@@ -1167,7 +1167,7 @@ def register_generated_tools(mcp, _get_client):
         Args:
             platform: Social media platform to connect (required)
             profile_id: Your Late profile ID (get from /v1/profiles) (required)
-            redirect_url: Your custom redirect URL after connection completes. Standard mode appends ?connected={platform}&profileId=X&username=Y. Headless mode appends OAuth data params.
+            redirect_url: Your custom redirect URL after connection completes. Standard mode appends ?connected={platform}&profileId=X&accountId=Y&username=Z. Headless mode appends OAuth data params for platforms requiring selection (e.g. LinkedIn orgs, Facebook pages). If no selection is needed, the account is created directly and the redirect includes accountId.
             headless: When true, the user is redirected to your redirect_url with raw OAuth data (code, state) instead of Late's default account selection UI. Use this to build a custom connect experience."""
         client = _get_client()
         try:
