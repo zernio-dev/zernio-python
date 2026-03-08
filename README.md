@@ -204,6 +204,7 @@ except LateAPIError as e:
 | `analytics.get_daily_metrics()` | Get daily aggregated metrics |
 | `analytics.get_linked_in_aggregate_analytics()` | Get LinkedIn aggregate stats |
 | `analytics.get_linked_in_post_analytics()` | Get LinkedIn post stats |
+| `analytics.get_linked_in_post_reactions()` | Get LinkedIn post reactions (who reacted) |
 | `analytics.get_post_timeline()` | Get post analytics timeline |
 | `analytics.get_posting_frequency()` | Get posting frequency vs engagement |
 | `analytics.get_you_tube_daily_views()` | Get YouTube daily views |
@@ -340,7 +341,6 @@ except LateAPIError as e:
 |--------|-------------|
 | `comments.list_inbox_comments()` | List commented posts |
 | `comments.get_inbox_post_comments()` | Get post comments |
-| `comments.get_post_reactions()` | Get post reactions (who reacted) |
 | `comments.delete_inbox_comment()` | Delete comment |
 | `comments.hide_inbox_comment()` | Hide comment |
 | `comments.like_inbox_comment()` | Like comment |

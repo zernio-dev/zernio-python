@@ -869,6 +869,26 @@ def register_generated_tools(mcp, _get_client):
         except Exception as e:
             return f"Error: {e}"
 
+    @mcp.tool()
+    def analytics_get_linked_in_post_reactions(
+        account_id: str, urn: str, limit: int = 25, cursor: str = ""
+    ) -> str:
+        """Get LinkedIn post reactions (who reacted)
+
+        Args:
+            account_id: The ID of the LinkedIn organization account (required)
+            urn: The LinkedIn post URN (required)
+            limit: Maximum number of reactions to return per page
+            cursor: Offset-based pagination start index"""
+        client = _get_client()
+        try:
+            response = client.analytics.get_linked_in_post_reactions(
+                account_id=account_id, urn=urn, limit=limit, cursor=cursor
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
     # API_KEYS
 
     @mcp.tool()
@@ -1047,26 +1067,6 @@ def register_generated_tools(mcp, _get_client):
         try:
             response = client.comments.delete_inbox_comment(
                 post_id=post_id, account_id=account_id, comment_id=comment_id
-            )
-            return _format_response(response)
-        except Exception as e:
-            return f"Error: {e}"
-
-    @mcp.tool()
-    def comments_get_post_reactions(
-        post_id: str, account_id: str, limit: int = 25, cursor: str = ""
-    ) -> str:
-        """Get post reactions (who reacted)
-
-        Args:
-            post_id: Late post ID or platform-specific post ID (LinkedIn activity URN or numeric ID). (required)
-            account_id: The social account ID (must be a LinkedIn organization account). (required)
-            limit: Maximum number of reactions to return per page.
-            cursor: Offset-based pagination start index."""
-        client = _get_client()
-        try:
-            response = client.comments.get_post_reactions(
-                post_id=post_id, account_id=account_id, limit=limit, cursor=cursor
             )
             return _format_response(response)
         except Exception as e:

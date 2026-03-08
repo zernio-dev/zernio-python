@@ -204,6 +204,24 @@ class AnalyticsResource:
             f"/v1/accounts/{account_id}/linkedin-post-analytics", params=params
         )
 
+    def get_linked_in_post_reactions(
+        self,
+        account_id: str,
+        urn: str,
+        *,
+        limit: int | None = 25,
+        cursor: str | None = None,
+    ) -> dict[str, Any]:
+        """Get LinkedIn post reactions (who reacted)"""
+        params = self._build_params(
+            urn=urn,
+            limit=limit,
+            cursor=cursor,
+        )
+        return self._client._get(
+            f"/v1/accounts/{account_id}/linkedin-post-reactions", params=params
+        )
+
     async def aget_analytics(
         self,
         *,
@@ -362,4 +380,22 @@ class AnalyticsResource:
         )
         return await self._client._aget(
             f"/v1/accounts/{account_id}/linkedin-post-analytics", params=params
+        )
+
+    async def aget_linked_in_post_reactions(
+        self,
+        account_id: str,
+        urn: str,
+        *,
+        limit: int | None = 25,
+        cursor: str | None = None,
+    ) -> dict[str, Any]:
+        """Get LinkedIn post reactions (who reacted) (async)"""
+        params = self._build_params(
+            urn=urn,
+            limit=limit,
+            cursor=cursor,
+        )
+        return await self._client._aget(
+            f"/v1/accounts/{account_id}/linkedin-post-reactions", params=params
         )

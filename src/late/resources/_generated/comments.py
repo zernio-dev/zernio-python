@@ -129,22 +129,6 @@ class CommentsResource:
         )
         return self._client._delete(f"/v1/inbox/comments/{post_id}", params=params)
 
-    def get_post_reactions(
-        self,
-        post_id: str,
-        account_id: str,
-        *,
-        limit: int | None = 25,
-        cursor: str | None = None,
-    ) -> dict[str, Any]:
-        """Get post reactions (who reacted)"""
-        params = self._build_params(
-            account_id=account_id,
-            limit=limit,
-            cursor=cursor,
-        )
-        return self._client._get(f"/v1/inbox/reactions/{post_id}", params=params)
-
     def hide_inbox_comment(
         self, post_id: str, comment_id: str, account_id: str
     ) -> dict[str, Any]:
@@ -288,22 +272,6 @@ class CommentsResource:
         return await self._client._adelete(
             f"/v1/inbox/comments/{post_id}", params=params
         )
-
-    async def aget_post_reactions(
-        self,
-        post_id: str,
-        account_id: str,
-        *,
-        limit: int | None = 25,
-        cursor: str | None = None,
-    ) -> dict[str, Any]:
-        """Get post reactions (who reacted) (async)"""
-        params = self._build_params(
-            account_id=account_id,
-            limit=limit,
-            cursor=cursor,
-        )
-        return await self._client._aget(f"/v1/inbox/reactions/{post_id}", params=params)
 
     async def ahide_inbox_comment(
         self, post_id: str, comment_id: str, account_id: str

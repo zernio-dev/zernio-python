@@ -8241,6 +8241,116 @@ paths:
                     code: "post_not_found"
                     postUrn: "urn:li:share:123"
 
+  /v1/accounts/{accountId}/linkedin-post-reactions:
+    get:
+      operationId: getLinkedInPostReactions
+      tags: [Analytics]
+      summary: Get LinkedIn post reactions (who reacted)
+      description: |
+        Returns individual reactions for a specific LinkedIn post, including reactor profiles
+        (name, headline/job title, profile picture, profile URL, reaction type).
+        Only works for **organization/company page** accounts. LinkedIn restricts reaction
+        data for personal profiles (r_member_social_feed is a closed permission).
+      parameters:
+        - name: accountId
+          in: path
+          required: true
+          description: The ID of the LinkedIn organization account
+          schema: { type: string }
+        - name: urn
+          in: query
+          required: true
+          description: The LinkedIn post URN
+          schema: { type: string }
+          example: "urn:li:share:7123456789012345678"
+        - name: limit
+          in: query
+          schema: { type: integer, minimum: 1, maximum: 100, default: 25 }
+          description: Maximum number of reactions to return per page
+        - name: cursor
+          in: query
+          schema: { type: string }
+          description: Offset-based pagination start index
+      responses:
+        '200':
+          description: Reactions with reactor profiles
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  accountId: { type: string }
+                  platform: { type: string, example: linkedin }
+                  accountType: { type: string, example: organization }
+                  username: { type: string }
+                  postUrn: { type: string }
+                  reactions:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        reactionType:
+                          type: string
+                          description: LinkedIn reaction enum (LIKE, PRAISE, EMPATHY, INTEREST, APPRECIATION, ENTERTAINMENT)
+                        reactionLabel:
+                          type: string
+                          description: User-friendly label (Like, Celebrate, Love, Insightful, Support, Funny)
+                        reactedAt: { type: string, format: date-time }
+                        from:
+                          type: object
+                          properties:
+                            urn: { type: string, description: "LinkedIn person or organization URN" }
+                            name: { type: string, description: "Reactor's display name" }
+                            headline: { type: string, description: "Reactor's headline/job title" }
+                            username: { type: string, description: "LinkedIn vanity name" }
+                            profilePicture: { type: string, description: "Profile picture URL" }
+                            profileUrl: { type: string, description: "Direct link to LinkedIn profile" }
+                  pagination:
+                    type: object
+                    properties:
+                      hasMore: { type: boolean }
+                      cursor: { type: string, description: "Offset for next page" }
+                      total: { type: integer, description: "Total number of reactions (when available)" }
+                  lastUpdated: { type: string, format: date-time }
+              example:
+                accountId: "64abc123def456"
+                platform: "linkedin"
+                accountType: "organization"
+                username: "Acme Corp"
+                postUrn: "urn:li:share:7123456789012345678"
+                reactions:
+                  - reactionType: "LIKE"
+                    reactionLabel: "Like"
+                    reactedAt: "2026-03-08T12:00:00.000Z"
+                    from:
+                      urn: "urn:li:person:abc123"
+                      name: "Jane Smith"
+                      headline: "Product Manager at Acme Corp"
+                      username: "janesmith"
+                      profilePicture: "https://media.licdn.com/..."
+                      profileUrl: "https://www.linkedin.com/in/janesmith"
+                pagination:
+                  hasMore: true
+                  cursor: "25"
+                  total: 156
+                lastUpdated: "2026-03-08T12:00:00.000Z"
+        '400':
+          description: Invalid request or platform limitation
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error: { type: string }
+                  code: { type: string, enum: [missing_urn, invalid_urn, invalid_platform, PLATFORM_LIMITATION] }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '402':
+          description: Analytics add-on required
+        '403':
+          description: Missing required LinkedIn scope
+        '404':
+          description: Account or post not found
+
   /v1/accounts/{accountId}/linkedin-organization:
     put:
       operationId: updateLinkedInOrganization
@@ -10697,93 +10807,6 @@ paths:
                 type: object
                 properties:
                   error: { type: string }
-        '401': { $ref: '#/components/responses/Unauthorized' }
-        '403':
-          description: Inbox addon required
-
-  /v1/inbox/reactions/{postId}:
-    get:
-      operationId: getPostReactions
-      summary: Get post reactions (who reacted)
-      description: |
-        Fetch individual reactions for a post, including reactor profiles (name, headline/title, picture, profile URL).
-        Currently only supported for **LinkedIn organization/company page** posts.
-        LinkedIn restricts reaction data for personal profiles (r_member_social_feed is a closed permission).
-      tags: [Comments]
-      security: [{ bearerAuth: [] }]
-      parameters:
-        - name: postId
-          in: path
-          required: true
-          description: Late post ID or platform-specific post ID (LinkedIn activity URN or numeric ID).
-          schema: { type: string }
-        - name: accountId
-          in: query
-          required: true
-          description: The social account ID (must be a LinkedIn organization account).
-          schema: { type: string }
-        - name: limit
-          in: query
-          schema: { type: integer, minimum: 1, maximum: 100, default: 25 }
-          description: Maximum number of reactions to return per page.
-        - name: cursor
-          in: query
-          schema: { type: string }
-          description: Offset-based pagination start index.
-      responses:
-        '200':
-          description: Reactions for the post with reactor profiles
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  status: { type: string }
-                  reactions:
-                    type: array
-                    items:
-                      type: object
-                      properties:
-                        reactionType:
-                          type: string
-                          description: LinkedIn reaction enum (LIKE, PRAISE, EMPATHY, INTEREST, APPRECIATION, ENTERTAINMENT)
-                        reactionLabel:
-                          type: string
-                          description: User-friendly label (Like, Celebrate, Love, Insightful, Support, Funny)
-                        reactedAt:
-                          type: string
-                          format: date-time
-                        from:
-                          type: object
-                          properties:
-                            urn: { type: string, description: "LinkedIn person or organization URN" }
-                            name: { type: string, description: "Reactor's display name" }
-                            headline: { type: string, description: "Reactor's headline/job title (LinkedIn only)" }
-                            username: { type: string, description: "LinkedIn vanity name" }
-                            profilePicture: { type: string, description: "Profile picture URL" }
-                            profileUrl: { type: string, description: "Direct link to reactor's LinkedIn profile" }
-                  pagination:
-                    type: object
-                    properties:
-                      hasMore: { type: boolean }
-                      cursor: { type: string, description: "Offset for next page" }
-                      total: { type: integer, description: "Total number of reactions (when available)" }
-                  meta:
-                    type: object
-                    properties:
-                      platform: { type: string }
-                      postId: { type: string }
-                      accountId: { type: string }
-                      lastUpdated: { type: string, format: date-time }
-        '400':
-          description: Platform limitation or invalid request
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  error: { type: string }
-                  code: { type: string, enum: [PLATFORM_LIMITATION] }
         '401': { $ref: '#/components/responses/Unauthorized' }
         '403':
           description: Inbox addon required
