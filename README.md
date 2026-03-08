@@ -340,6 +340,7 @@ except LateAPIError as e:
 |--------|-------------|
 | `comments.list_inbox_comments()` | List commented posts |
 | `comments.get_inbox_post_comments()` | Get post comments |
+| `comments.get_post_reactions()` | Get post reactions (who reacted) |
 | `comments.delete_inbox_comment()` | Delete comment |
 | `comments.hide_inbox_comment()` | Hide comment |
 | `comments.like_inbox_comment()` | Like comment |
