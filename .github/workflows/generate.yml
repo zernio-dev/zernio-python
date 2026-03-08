@@ -142,7 +142,7 @@ jobs:
             This release was automatically generated from the latest OpenAPI spec.
 
             ```bash
-            pip install getlate==${{ steps.version.outputs.new_version }}
+            pip install late-sdk==${{ steps.version.outputs.new_version }}
             ```
 
       - name: Publish to PyPI
