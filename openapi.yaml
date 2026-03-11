@@ -14,14 +14,14 @@ info:
   x-logo:
     url: https://getlate.dev/icon.png?v=3
   x-long-description: |
-    Late is the social media API that replaces 13 integrations. Schedule posts, retrieve analytics,
+    Late is the social media API that replaces 14 integrations. Schedule posts, retrieve analytics,
     manage DMs, comments, and reviews across Twitter/X, Instagram, TikTok, LinkedIn, Facebook,
     YouTube, Threads, Reddit, Pinterest, Bluesky, Telegram, Google Business, and Snapchat, all
     from a single REST API.
 
-    Key features: Unified posting to 13 platforms, aggregated analytics, unified inbox (DMs, comments, reviews), webhooks, OAuth connect, queue scheduling, and white-label support for agencies managing 5,000+ accounts.
+    Key features: Unified posting to 14 platforms, aggregated analytics, unified inbox (DMs, comments, reviews), webhooks, OAuth connect, queue scheduling, and white-label support for agencies managing 5,000+ accounts.
 
-    Supported platforms: Twitter/X, Instagram, Facebook, LinkedIn, TikTok, YouTube, Pinterest, Reddit, Bluesky, Threads, Google Business, Telegram, Snapchat.
+    Supported platforms: Twitter/X, Instagram, WhatsApp, Facebook, LinkedIn, TikTok, YouTube, Pinterest, Reddit, Bluesky, Threads, Google Business, Telegram, Snapchat.
   x-category: Social
   x-website: https://getlate.dev
   x-thumbnail: https://rapidapi-prod-apis.s3.amazonaws.com/b24d3df5-563c-4a50-9e1e-1ad3eb1fce69.png
@@ -53,7 +53,7 @@ x-documentation:
   readme: |
     # Late API
 
-    The social media API that replaces 13 integrations. Build social media features into your app in minutes, not months.
+    The social media API that replaces 14 integrations. Build social media features into your app in minutes, not months.
 
     ## Quick Start
 
