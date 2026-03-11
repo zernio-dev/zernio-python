@@ -1222,10 +1222,13 @@ components:
     TwitterPlatformData:
       type: object
       properties:
+        replyToTweetId:
+          type: string
+          description: ID of an existing tweet to reply to. The published tweet will appear as a reply in that tweet's thread. For threads, only the first tweet replies to the target; subsequent tweets chain normally.
         replySettings:
           type: string
-          enum: [following, mentionedUsers, subscribers]
-          description: Controls who can reply to the tweet. "following" allows only people you follow, "mentionedUsers" allows only mentioned users, "subscribers" allows only subscribers. Omit for default (everyone can reply). For threads, applies to the first tweet only.
+          enum: [following, mentionedUsers, subscribers, verified]
+          description: Controls who can reply to the tweet. "following" allows only people you follow, "mentionedUsers" allows only mentioned users, "subscribers" allows only subscribers, "verified" allows only verified users. Omit for default (everyone can reply). For threads, applies to the first tweet only. Cannot be combined with replyToTweetId.
         threadItems:
           type: array
           description: Sequence of tweets in a thread. First item is the root tweet.
