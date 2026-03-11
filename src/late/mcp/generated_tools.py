@@ -3505,43 +3505,6 @@ def register_generated_tools(mcp, _get_client):
             return f"Error: {e}"
 
     @mcp.tool()
-    def whatsapp_phone_numbers_search_available_whats_app_numbers(
-        prefix: str = "", locality: str = "", contains: str = "", limit: int = 20
-    ) -> str:
-        """Search available numbers
-
-        Args:
-            prefix: Area code to search (e.g., "212" for New York)
-            locality: City name (e.g., "New York")
-            contains: Pattern to match within the phone number
-            limit: Maximum results (default 20, max 100)"""
-        client = _get_client()
-        try:
-            response = client.whatsapp_phone_numbers.search_available_whats_app_numbers(
-                prefix=prefix, locality=locality, contains=contains, limit=limit
-            )
-            return _format_response(response)
-        except Exception as e:
-            return f"Error: {e}"
-
-    @mcp.tool()
-    def whatsapp_phone_numbers_get_preverified_whats_app_numbers(
-        profile_id: str,
-    ) -> str:
-        """Get pre-verified numbers
-
-        Args:
-            profile_id: Profile ID to filter by (required)"""
-        client = _get_client()
-        try:
-            response = client.whatsapp_phone_numbers.get_preverified_whats_app_numbers(
-                profile_id=profile_id
-            )
-            return _format_response(response)
-        except Exception as e:
-            return f"Error: {e}"
-
-    @mcp.tool()
     def whatsapp_phone_numbers_purchase_whats_app_phone_number(profile_id: str) -> str:
         """Purchase phone number
 
@@ -3583,44 +3546,6 @@ def register_generated_tools(mcp, _get_client):
         try:
             response = client.whatsapp_phone_numbers.release_whats_app_phone_number(
                 phone_number_id=phone_number_id
-            )
-            return _format_response(response)
-        except Exception as e:
-            return f"Error: {e}"
-
-    @mcp.tool()
-    def whatsapp_phone_numbers_request_whats_app_verification_code(
-        phone_number_id: str, method: str = "SMS"
-    ) -> str:
-        """Request OTP
-
-        Args:
-            phone_number_id: Phone number record ID (required)
-            method: Delivery method for the verification code"""
-        client = _get_client()
-        try:
-            response = (
-                client.whatsapp_phone_numbers.request_whats_app_verification_code(
-                    phone_number_id=phone_number_id, method=method
-                )
-            )
-            return _format_response(response)
-        except Exception as e:
-            return f"Error: {e}"
-
-    @mcp.tool()
-    def whatsapp_phone_numbers_verify_whats_app_phone_number(
-        phone_number_id: str, code: str
-    ) -> str:
-        """Verify OTP
-
-        Args:
-            phone_number_id: Phone number record ID (required)
-            code: 6-digit verification code (required)"""
-        client = _get_client()
-        try:
-            response = client.whatsapp_phone_numbers.verify_whats_app_phone_number(
-                phone_number_id=phone_number_id, code=code
             )
             return _format_response(response)
         except Exception as e:

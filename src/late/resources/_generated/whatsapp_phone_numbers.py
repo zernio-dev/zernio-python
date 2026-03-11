@@ -58,32 +58,6 @@ class WhatsappPhoneNumbersResource:
         )
         return self._client._get("/v1/whatsapp/phone-numbers", params=params)
 
-    def search_available_whats_app_numbers(
-        self,
-        *,
-        prefix: str | None = None,
-        locality: str | None = None,
-        contains: str | None = None,
-        limit: int | None = 20,
-    ) -> dict[str, Any]:
-        """Search available numbers"""
-        params = self._build_params(
-            prefix=prefix,
-            locality=locality,
-            contains=contains,
-            limit=limit,
-        )
-        return self._client._get("/v1/whatsapp/phone-numbers/available", params=params)
-
-    def get_preverified_whats_app_numbers(self, profile_id: str) -> dict[str, Any]:
-        """Get pre-verified numbers"""
-        params = self._build_params(
-            profile_id=profile_id,
-        )
-        return self._client._get(
-            "/v1/whatsapp/phone-numbers/preverified", params=params
-        )
-
     def purchase_whats_app_phone_number(self, profile_id: str) -> dict[str, Any]:
         """Purchase phone number"""
         payload = self._build_payload(
@@ -99,28 +73,6 @@ class WhatsappPhoneNumbersResource:
         """Release phone number"""
         return self._client._delete(f"/v1/whatsapp/phone-numbers/{phone_number_id}")
 
-    def request_whats_app_verification_code(
-        self, phone_number_id: str, *, method: str | None = "SMS"
-    ) -> dict[str, Any]:
-        """Request OTP"""
-        payload = self._build_payload(
-            method=method,
-        )
-        return self._client._post(
-            f"/v1/whatsapp/phone-numbers/{phone_number_id}/request-code", data=payload
-        )
-
-    def verify_whats_app_phone_number(
-        self, phone_number_id: str, code: str
-    ) -> dict[str, Any]:
-        """Verify OTP"""
-        payload = self._build_payload(
-            code=code,
-        )
-        return self._client._post(
-            f"/v1/whatsapp/phone-numbers/{phone_number_id}/verify", data=payload
-        )
-
     async def aget_whats_app_phone_numbers(
         self, *, status: str | None = None, profile_id: str | None = None
     ) -> dict[str, Any]:
@@ -130,36 +82,6 @@ class WhatsappPhoneNumbersResource:
             profile_id=profile_id,
         )
         return await self._client._aget("/v1/whatsapp/phone-numbers", params=params)
-
-    async def asearch_available_whats_app_numbers(
-        self,
-        *,
-        prefix: str | None = None,
-        locality: str | None = None,
-        contains: str | None = None,
-        limit: int | None = 20,
-    ) -> dict[str, Any]:
-        """Search available numbers (async)"""
-        params = self._build_params(
-            prefix=prefix,
-            locality=locality,
-            contains=contains,
-            limit=limit,
-        )
-        return await self._client._aget(
-            "/v1/whatsapp/phone-numbers/available", params=params
-        )
-
-    async def aget_preverified_whats_app_numbers(
-        self, profile_id: str
-    ) -> dict[str, Any]:
-        """Get pre-verified numbers (async)"""
-        params = self._build_params(
-            profile_id=profile_id,
-        )
-        return await self._client._aget(
-            "/v1/whatsapp/phone-numbers/preverified", params=params
-        )
 
     async def apurchase_whats_app_phone_number(self, profile_id: str) -> dict[str, Any]:
         """Purchase phone number (async)"""
@@ -180,26 +102,4 @@ class WhatsappPhoneNumbersResource:
         """Release phone number (async)"""
         return await self._client._adelete(
             f"/v1/whatsapp/phone-numbers/{phone_number_id}"
-        )
-
-    async def arequest_whats_app_verification_code(
-        self, phone_number_id: str, *, method: str | None = "SMS"
-    ) -> dict[str, Any]:
-        """Request OTP (async)"""
-        payload = self._build_payload(
-            method=method,
-        )
-        return await self._client._apost(
-            f"/v1/whatsapp/phone-numbers/{phone_number_id}/request-code", data=payload
-        )
-
-    async def averify_whats_app_phone_number(
-        self, phone_number_id: str, code: str
-    ) -> dict[str, Any]:
-        """Verify OTP (async)"""
-        payload = self._build_payload(
-            code=code,
-        )
-        return await self._client._apost(
-            f"/v1/whatsapp/phone-numbers/{phone_number_id}/verify", data=payload
         )

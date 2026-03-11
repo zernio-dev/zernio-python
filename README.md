@@ -442,14 +442,10 @@ except LateAPIError as e:
 ### WhatsApp Phone Numbers
 | Method | Description |
 |--------|-------------|
-| `whatsapp_phone_numbers.get_preverified_whats_app_numbers()` | Get pre-verified numbers |
 | `whatsapp_phone_numbers.get_whats_app_phone_number()` | Get phone number |
 | `whatsapp_phone_numbers.get_whats_app_phone_numbers()` | List phone numbers |
 | `whatsapp_phone_numbers.purchase_whats_app_phone_number()` | Purchase phone number |
 | `whatsapp_phone_numbers.release_whats_app_phone_number()` | Release phone number |
-| `whatsapp_phone_numbers.request_whats_app_verification_code()` | Request OTP |
-| `whatsapp_phone_numbers.search_available_whats_app_numbers()` | Search available numbers |
-| `whatsapp_phone_numbers.verify_whats_app_phone_number()` | Verify OTP |
 
 ### Invites
 | Method | Description |
