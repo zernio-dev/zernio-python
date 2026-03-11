@@ -23,6 +23,8 @@ from .usage import UsageResource
 from .users import UsersResource
 from .validate import ValidateResource
 from .webhooks import WebhooksResource
+from .whatsapp import WhatsappResource
+from .whatsapp_phone_numbers import WhatsappPhoneNumbersResource
 
 __all__ = [
     "AccountGroupsResource",
@@ -46,4 +48,6 @@ __all__ = [
     "UsersResource",
     "ValidateResource",
     "WebhooksResource",
+    "WhatsappResource",
+    "WhatsappPhoneNumbersResource",
 ]

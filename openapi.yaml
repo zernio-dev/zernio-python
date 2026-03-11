@@ -213,6 +213,14 @@ tags:
   - name: Logs
     description: |
       Publishing logs for transparency and debugging. Each log includes the platform API endpoint, HTTP status code, request/response bodies, duration, and retry attempts. Logs are automatically deleted after 7 days.
+  - name: WhatsApp
+    description: |
+      WhatsApp Business API for sending messages, managing contacts, templates, broadcasts, and conversations.
+      All endpoints require an accountId parameter identifying the WhatsApp-connected social account.
+  - name: WhatsApp Phone Numbers
+    description: |
+      Manage WhatsApp phone numbers: purchase, verify, and release numbers for your WhatsApp Business account.
+      Requires a paid plan.
 components:
   securitySchemes:
     bearerAuth:
@@ -11262,3 +11270,2139 @@ paths:
         '401': { $ref: '#/components/responses/Unauthorized' }
         '403':
           description: Inbox addon required
+  # ──────────────────────────────────────────────────────────────────────────
+  # BULK SEND
+  # ──────────────────────────────────────────────────────────────────────────
+
+  /v1/whatsapp/bulk:
+    post:
+      operationId: sendWhatsAppBulk
+      tags: [WhatsApp]
+      summary: Bulk send template messages
+      description: |
+        Send a template message to multiple recipients in a single request. Maximum 100 recipients per request.
+        Only template messages are supported for bulk sending (not free-form text).
+
+        Each recipient can have optional per-recipient template variables for personalization.
+        Returns detailed results for each recipient.
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - accountId
+                - recipients
+                - template
+              properties:
+                accountId:
+                  type: string
+                  description: WhatsApp social account ID
+                recipients:
+                  type: array
+                  maxItems: 100
+                  description: List of recipients (max 100)
+                  items:
+                    type: object
+                    required:
+                      - phone
+                    properties:
+                      phone:
+                        type: string
+                        description: Recipient phone number in E.164 format
+                      variables:
+                        type: object
+                        additionalProperties: { type: string }
+                        description: Per-recipient template variables keyed by index (e.g., "1", "2")
+                template:
+                  type: object
+                  required:
+                    - name
+                    - language
+                  properties:
+                    name:
+                      type: string
+                      description: Template name
+                    language:
+                      type: string
+                      description: Template language code
+                    components:
+                      type: array
+                      description: Base template components
+                      items:
+                        type: object
+            example:
+              accountId: "507f1f77bcf86cd799439011"
+              recipients:
+                - phone: "+1234567890"
+                  variables: { "1": "John" }
+                - phone: "+0987654321"
+                  variables: { "1": "Jane" }
+              template:
+                name: "welcome_message"
+                language: "en_US"
+      responses:
+        '200':
+          description: Bulk send completed
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success: { type: boolean }
+                  summary:
+                    type: object
+                    properties:
+                      total: { type: integer }
+                      sent: { type: integer }
+                      failed: { type: integer }
+                  results:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        phone: { type: string }
+                        success: { type: boolean }
+                        messageId: { type: string }
+                        error: { type: string }
+        '400': { description: Validation error (missing fields, too many recipients, etc.) }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404': { description: WhatsApp account not found }
+
+  # ──────────────────────────────────────────────────────────────────────────
+  # CONTACTS
+  # ──────────────────────────────────────────────────────────────────────────
+
+  /v1/whatsapp/contacts:
+    get:
+      operationId: getWhatsAppContacts
+      tags: [WhatsApp]
+      summary: List contacts
+      description: |
+        List WhatsApp contacts for an account. Supports filtering by tags, groups, opt-in status,
+        and text search. Returns contacts sorted by name with available filter options.
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: accountId
+          in: query
+          required: true
+          description: WhatsApp social account ID
+          schema:
+            type: string
+        - name: search
+          in: query
+          required: false
+          description: Search contacts by name, phone, email, or company
+          schema:
+            type: string
+        - name: tag
+          in: query
+          required: false
+          description: Filter by tag
+          schema:
+            type: string
+        - name: group
+          in: query
+          required: false
+          description: Filter by group
+          schema:
+            type: string
+        - name: optedIn
+          in: query
+          required: false
+          description: Filter by opt-in status
+          schema:
+            type: string
+            enum: ["true", "false"]
+        - name: limit
+          in: query
+          required: false
+          description: Maximum results (default 50)
+          schema:
+            type: integer
+            default: 50
+        - name: skip
+          in: query
+          required: false
+          description: Offset for pagination
+          schema:
+            type: integer
+            default: 0
+      responses:
+        '200':
+          description: Contacts retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success: { type: boolean }
+                  contacts:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id: { type: string }
+                        phone: { type: string }
+                        waId: { type: string }
+                        name: { type: string }
+                        email: { type: string }
+                        company: { type: string }
+                        tags:
+                          type: array
+                          items: { type: string }
+                        groups:
+                          type: array
+                          items: { type: string }
+                        isOptedIn: { type: boolean }
+                        lastMessageSentAt: { type: string, format: date-time }
+                        lastMessageReceivedAt: { type: string, format: date-time }
+                        messagesSentCount: { type: integer }
+                        messagesReceivedCount: { type: integer }
+                        customFields: { type: object }
+                        notes: { type: string }
+                        createdAt: { type: string, format: date-time }
+                  filters:
+                    type: object
+                    properties:
+                      tags:
+                        type: array
+                        items: { type: string }
+                      groups:
+                        type: array
+                        items: { type: string }
+                  pagination:
+                    type: object
+                    properties:
+                      total: { type: integer }
+                      limit: { type: integer }
+                      skip: { type: integer }
+                      hasMore: { type: boolean }
+        '400': { description: accountId is required }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404': { description: WhatsApp account not found }
+    post:
+      operationId: createWhatsAppContact
+      tags: [WhatsApp]
+      summary: Create contact
+      description: |
+        Create a new WhatsApp contact. Phone number must be unique per account
+        and in E.164 format (e.g., +1234567890).
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - accountId
+                - phone
+                - name
+              properties:
+                accountId:
+                  type: string
+                  description: WhatsApp social account ID
+                phone:
+                  type: string
+                  description: Phone number in E.164 format
+                name:
+                  type: string
+                  description: Contact name
+                email:
+                  type: string
+                  description: Contact email
+                company:
+                  type: string
+                  description: Company name
+                tags:
+                  type: array
+                  items: { type: string }
+                  description: Tags for categorization
+                groups:
+                  type: array
+                  items: { type: string }
+                  description: Groups the contact belongs to
+                isOptedIn:
+                  type: boolean
+                  default: true
+                  description: Whether the contact has opted in to receive messages
+                customFields:
+                  type: object
+                  additionalProperties: { type: string }
+                  description: Custom key-value fields
+                notes:
+                  type: string
+                  description: Notes about the contact
+            example:
+              accountId: "507f1f77bcf86cd799439011"
+              phone: "+1234567890"
+              name: "John Doe"
+              email: "john@example.com"
+              tags: ["vip", "newsletter"]
+              groups: ["customers"]
+      responses:
+        '200':
+          description: Contact created successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success: { type: boolean }
+                  contact:
+                    type: object
+                    properties:
+                      id: { type: string }
+                      phone: { type: string }
+                      name: { type: string }
+                      email: { type: string }
+                      company: { type: string }
+                      tags:
+                        type: array
+                        items: { type: string }
+                      groups:
+                        type: array
+                        items: { type: string }
+                      isOptedIn: { type: boolean }
+                      createdAt: { type: string, format: date-time }
+        '400': { description: Validation error (missing fields, invalid phone number) }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404': { description: WhatsApp account not found }
+        '409': { description: Contact with this phone number already exists }
+
+  /v1/whatsapp/contacts/{contactId}:
+    get:
+      operationId: getWhatsAppContact
+      tags: [WhatsApp]
+      summary: Get contact
+      description: Retrieve a single WhatsApp contact by ID with full details.
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: contactId
+          in: path
+          required: true
+          description: Contact ID
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Contact retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success: { type: boolean }
+                  contact:
+                    type: object
+                    properties:
+                      id: { type: string }
+                      phone: { type: string }
+                      waId: { type: string }
+                      name: { type: string }
+                      email: { type: string }
+                      company: { type: string }
+                      tags:
+                        type: array
+                        items: { type: string }
+                      groups:
+                        type: array
+                        items: { type: string }
+                      isOptedIn: { type: boolean }
+                      optInDate: { type: string, format: date-time }
+                      optOutDate: { type: string, format: date-time }
+                      isBlocked: { type: boolean }
+                      lastMessageSentAt: { type: string, format: date-time }
+                      lastMessageReceivedAt: { type: string, format: date-time }
+                      messagesSentCount: { type: integer }
+                      messagesReceivedCount: { type: integer }
+                      customFields: { type: object }
+                      notes: { type: string }
+                      createdAt: { type: string, format: date-time }
+                      updatedAt: { type: string, format: date-time }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404': { $ref: '#/components/responses/NotFound' }
+    put:
+      operationId: updateWhatsAppContact
+      tags: [WhatsApp]
+      summary: Update contact
+      description: |
+        Update an existing WhatsApp contact. All fields are optional; only provided fields will be updated.
+        Custom fields are merged with existing values. Set a custom field to null to remove it.
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: contactId
+          in: path
+          required: true
+          description: Contact ID
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                  description: Contact name
+                email:
+                  type: string
+                  description: Contact email
+                company:
+                  type: string
+                  description: Company name
+                tags:
+                  type: array
+                  items: { type: string }
+                  description: Tags (replaces existing)
+                groups:
+                  type: array
+                  items: { type: string }
+                  description: Groups (replaces existing)
+                isOptedIn:
+                  type: boolean
+                  description: Opt-in status (changes are timestamped)
+                isBlocked:
+                  type: boolean
+                  description: Block status
+                customFields:
+                  type: object
+                  additionalProperties: { type: string, nullable: true }
+                  description: Custom fields to merge (set value to null to remove a field)
+                notes:
+                  type: string
+                  description: Notes about the contact
+            example:
+              name: "John Doe Updated"
+              tags: ["vip", "premium"]
+              customFields: { "plan": "enterprise", "remove_me": null }
+      responses:
+        '200':
+          description: Contact updated successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success: { type: boolean }
+                  contact:
+                    type: object
+                    properties:
+                      id: { type: string }
+                      phone: { type: string }
+                      name: { type: string }
+                      email: { type: string }
+                      company: { type: string }
+                      tags:
+                        type: array
+                        items: { type: string }
+                      groups:
+                        type: array
+                        items: { type: string }
+                      isOptedIn: { type: boolean }
+                      isBlocked: { type: boolean }
+                      customFields: { type: object }
+                      notes: { type: string }
+                      updatedAt: { type: string, format: date-time }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404': { $ref: '#/components/responses/NotFound' }
+    delete:
+      operationId: deleteWhatsAppContact
+      tags: [WhatsApp]
+      summary: Delete contact
+      description: Permanently delete a WhatsApp contact.
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: contactId
+          in: path
+          required: true
+          description: Contact ID
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Contact deleted successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success: { type: boolean }
+                  message: { type: string }
+              example:
+                success: true
+                message: "Contact deleted successfully"
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404': { $ref: '#/components/responses/NotFound' }
+
+  /v1/whatsapp/contacts/import:
+    post:
+      operationId: importWhatsAppContacts
+      tags: [WhatsApp]
+      summary: Bulk import contacts
+      description: |
+        Import up to 1000 contacts at once. Each contact requires a phone number and name.
+        Duplicates are skipped by default. Supports default tags and groups applied to all imported contacts.
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - accountId
+                - contacts
+              properties:
+                accountId:
+                  type: string
+                  description: WhatsApp social account ID
+                contacts:
+                  type: array
+                  maxItems: 1000
+                  description: Contacts to import (max 1000)
+                  items:
+                    type: object
+                    required:
+                      - phone
+                      - name
+                    properties:
+                      phone:
+                        type: string
+                        description: Phone number in E.164 format
+                      name:
+                        type: string
+                        description: Contact name
+                      email:
+                        type: string
+                      company:
+                        type: string
+                      tags:
+                        type: array
+                        items: { type: string }
+                      groups:
+                        type: array
+                        items: { type: string }
+                      customFields:
+                        type: object
+                        additionalProperties: { type: string }
+                      notes:
+                        type: string
+                defaultTags:
+                  type: array
+                  items: { type: string }
+                  description: Tags applied to all imported contacts
+                defaultGroups:
+                  type: array
+                  items: { type: string }
+                  description: Groups applied to all imported contacts
+                skipDuplicates:
+                  type: boolean
+                  default: true
+                  description: Skip contacts with existing phone numbers
+            example:
+              accountId: "507f1f77bcf86cd799439011"
+              contacts:
+                - phone: "+1234567890"
+                  name: "John Doe"
+                  email: "john@example.com"
+                - phone: "+0987654321"
+                  name: "Jane Smith"
+              defaultTags: ["imported"]
+              defaultGroups: ["new-leads"]
+      responses:
+        '200':
+          description: Import completed
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success: { type: boolean }
+                  summary:
+                    type: object
+                    properties:
+                      total: { type: integer }
+                      created: { type: integer }
+                      skipped: { type: integer }
+                      failed: { type: integer }
+                  results:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        phone: { type: string }
+                        name: { type: string }
+                        success: { type: boolean }
+                        contactId: { type: string }
+                        error: { type: string }
+        '400': { description: Validation error (missing fields, too many contacts) }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404': { description: WhatsApp account not found }
+
+  /v1/whatsapp/contacts/bulk:
+    post:
+      operationId: bulkUpdateWhatsAppContacts
+      tags: [WhatsApp]
+      summary: Bulk update contacts
+      description: |
+        Perform bulk operations on multiple contacts (max 500 per request). Supported actions:
+        addTags, removeTags, addGroups, removeGroups, optIn, optOut, block, unblock.
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - action
+                - contactIds
+              properties:
+                action:
+                  type: string
+                  enum: [addTags, removeTags, addGroups, removeGroups, optIn, optOut, block, unblock]
+                  description: Bulk action to perform
+                contactIds:
+                  type: array
+                  maxItems: 500
+                  items: { type: string }
+                  description: Contact IDs to update (max 500)
+                tags:
+                  type: array
+                  items: { type: string }
+                  description: Tags to add or remove (required for addTags/removeTags)
+                groups:
+                  type: array
+                  items: { type: string }
+                  description: Groups to add or remove (required for addGroups/removeGroups)
+            examples:
+              addTags:
+                summary: Add tags to contacts
+                value:
+                  action: "addTags"
+                  contactIds: ["507f1f77bcf86cd799439011", "507f1f77bcf86cd799439012"]
+                  tags: ["vip", "priority"]
+              optOut:
+                summary: Opt out contacts
+                value:
+                  action: "optOut"
+                  contactIds: ["507f1f77bcf86cd799439011"]
+      responses:
+        '200':
+          description: Bulk update completed
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success: { type: boolean }
+                  action: { type: string }
+                  modified: { type: integer, description: Number of contacts modified }
+                  matched: { type: integer, description: Number of contacts matched }
+        '400': { description: Validation error (invalid action, missing required fields) }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+    delete:
+      operationId: bulkDeleteWhatsAppContacts
+      tags: [WhatsApp]
+      summary: Bulk delete contacts
+      description: Permanently delete multiple contacts at once (max 500 per request).
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - contactIds
+              properties:
+                contactIds:
+                  type: array
+                  maxItems: 500
+                  items: { type: string }
+                  description: Contact IDs to delete (max 500)
+            example:
+              contactIds: ["507f1f77bcf86cd799439011", "507f1f77bcf86cd799439012"]
+      responses:
+        '200':
+          description: Bulk delete completed
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success: { type: boolean }
+                  deleted: { type: integer, description: Number of contacts deleted }
+        '400': { description: contactIds array is required }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+
+  # ──────────────────────────────────────────────────────────────────────────
+  # GROUPS
+  # ──────────────────────────────────────────────────────────────────────────
+
+  /v1/whatsapp/groups:
+    get:
+      operationId: getWhatsAppGroups
+      tags: [WhatsApp]
+      summary: List contact groups
+      description: |
+        List all contact groups for a WhatsApp account with contact counts.
+        Groups are derived from the groups field on contacts, not stored as separate documents.
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: accountId
+          in: query
+          required: true
+          description: WhatsApp social account ID
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Groups retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success: { type: boolean }
+                  groups:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        name: { type: string }
+                        totalCount: { type: integer, description: Total contacts in this group }
+                        optedInCount: { type: integer, description: Opted-in contacts in this group }
+                  summary:
+                    type: object
+                    properties:
+                      totalContacts: { type: integer }
+                      optedInContacts: { type: integer }
+                      groupCount: { type: integer }
+        '400': { description: accountId is required }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404': { description: WhatsApp account not found }
+    post:
+      operationId: renameWhatsAppGroup
+      tags: [WhatsApp]
+      summary: Rename group
+      description: Rename a contact group. This updates the group name on all contacts that belong to the group.
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - accountId
+                - oldName
+                - newName
+              properties:
+                accountId:
+                  type: string
+                  description: WhatsApp social account ID
+                oldName:
+                  type: string
+                  description: Current group name
+                newName:
+                  type: string
+                  description: New group name
+            example:
+              accountId: "507f1f77bcf86cd799439011"
+              oldName: "customers"
+              newName: "active-customers"
+      responses:
+        '200':
+          description: Group renamed successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success: { type: boolean }
+                  message: { type: string }
+                  modified: { type: integer, description: Number of contacts updated }
+        '400': { description: Validation error (missing fields, same name) }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404': { description: WhatsApp account not found }
+    delete:
+      operationId: deleteWhatsAppGroup
+      tags: [WhatsApp]
+      summary: Delete group
+      description: Delete a contact group. This removes the group from all contacts but does not delete the contacts themselves.
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - accountId
+                - groupName
+              properties:
+                accountId:
+                  type: string
+                  description: WhatsApp social account ID
+                groupName:
+                  type: string
+                  description: Group name to delete
+            example:
+              accountId: "507f1f77bcf86cd799439011"
+              groupName: "old-leads"
+      responses:
+        '200':
+          description: Group deleted successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success: { type: boolean }
+                  message: { type: string }
+                  modified: { type: integer, description: Number of contacts updated }
+        '400': { description: Validation error (missing fields) }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404': { description: WhatsApp account not found }
+
+  # ──────────────────────────────────────────────────────────────────────────
+  # TEMPLATES
+  # ──────────────────────────────────────────────────────────────────────────
+
+  /v1/whatsapp/templates:
+    get:
+      operationId: getWhatsAppTemplates
+      tags: [WhatsApp]
+      summary: List templates
+      description: |
+        List all message templates for the WhatsApp Business Account (WABA) associated with the given account.
+        Templates are fetched directly from the WhatsApp Cloud API.
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: accountId
+          in: query
+          required: true
+          description: WhatsApp social account ID
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Templates retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success: { type: boolean }
+                  templates:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id: { type: string, description: WhatsApp template ID }
+                        name: { type: string }
+                        status: { type: string, enum: [APPROVED, PENDING, REJECTED] }
+                        category: { type: string, enum: [AUTHENTICATION, MARKETING, UTILITY] }
+                        language: { type: string }
+                        components:
+                          type: array
+                          items:
+                            type: object
+        '400': { description: accountId is required or WABA ID not found }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404': { description: WhatsApp account not found }
+    post:
+      operationId: createWhatsAppTemplate
+      tags: [WhatsApp]
+      summary: Create template
+      description: |
+        Create a new message template. Template names must be lowercase, start with a letter,
+        and contain only letters, numbers, and underscores. Templates are submitted to Meta for review.
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - accountId
+                - name
+                - category
+                - language
+                - components
+              properties:
+                accountId:
+                  type: string
+                  description: WhatsApp social account ID
+                name:
+                  type: string
+                  pattern: "^[a-z][a-z0-9_]*$"
+                  description: Template name (lowercase, letters/numbers/underscores, must start with a letter)
+                category:
+                  type: string
+                  enum: [AUTHENTICATION, MARKETING, UTILITY]
+                  description: Template category
+                language:
+                  type: string
+                  description: Template language code (e.g., en_US)
+                components:
+                  type: array
+                  description: Template components (header, body, footer, buttons)
+                  items:
+                    type: object
+            example:
+              accountId: "507f1f77bcf86cd799439011"
+              name: "order_confirmation"
+              category: "UTILITY"
+              language: "en_US"
+              components:
+                - type: "body"
+                  text: "Your order {{1}} has been confirmed. Expected delivery: {{2}}"
+      responses:
+        '200':
+          description: Template created and submitted for review
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success: { type: boolean }
+                  template:
+                    type: object
+                    properties:
+                      id: { type: string }
+                      name: { type: string }
+                      status: { type: string }
+                      category: { type: string }
+                      language: { type: string }
+        '400': { description: Validation error (invalid name format, missing fields, invalid category) }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404': { description: WhatsApp account not found }
+
+  /v1/whatsapp/templates/{templateName}:
+    get:
+      operationId: getWhatsAppTemplate
+      tags: [WhatsApp]
+      summary: Get template
+      description: Retrieve a single message template by name.
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: templateName
+          in: path
+          required: true
+          description: Template name
+          schema:
+            type: string
+        - name: accountId
+          in: query
+          required: true
+          description: WhatsApp social account ID
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Template retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success: { type: boolean }
+                  template:
+                    type: object
+                    properties:
+                      id: { type: string }
+                      name: { type: string }
+                      status: { type: string }
+                      category: { type: string }
+                      language: { type: string }
+                      components:
+                        type: array
+                        items:
+                          type: object
+        '400': { description: accountId is required }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404': { $ref: '#/components/responses/NotFound' }
+    patch:
+      operationId: updateWhatsAppTemplate
+      tags: [WhatsApp]
+      summary: Update template
+      description: |
+        Update a message template's components. Only certain fields can be updated depending on
+        the template's current approval state. Approved templates can only have components updated.
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: templateName
+          in: path
+          required: true
+          description: Template name
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - accountId
+                - components
+              properties:
+                accountId:
+                  type: string
+                  description: WhatsApp social account ID
+                components:
+                  type: array
+                  description: Updated template components
+                  items:
+                    type: object
+            example:
+              accountId: "507f1f77bcf86cd799439011"
+              components:
+                - type: "body"
+                  text: "Updated: Your order {{1}} is confirmed. Delivery by {{2}}"
+      responses:
+        '200':
+          description: Template updated successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success: { type: boolean }
+                  template:
+                    type: object
+                    properties:
+                      id: { type: string }
+                      name: { type: string }
+                      status: { type: string }
+        '400': { description: Validation error (missing fields) }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404': { $ref: '#/components/responses/NotFound' }
+    delete:
+      operationId: deleteWhatsAppTemplate
+      tags: [WhatsApp]
+      summary: Delete template
+      description: Permanently delete a message template by name.
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: templateName
+          in: path
+          required: true
+          description: Template name
+          schema:
+            type: string
+        - name: accountId
+          in: query
+          required: true
+          description: WhatsApp social account ID
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Template deleted successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success: { type: boolean }
+                  message: { type: string }
+              example:
+                success: true
+                message: "Template \"order_confirmation\" deleted successfully"
+        '400': { description: accountId or template name is required }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404': { $ref: '#/components/responses/NotFound' }
+
+  # ──────────────────────────────────────────────────────────────────────────
+  # BROADCASTS
+  # ──────────────────────────────────────────────────────────────────────────
+
+  /v1/whatsapp/broadcasts:
+    get:
+      operationId: getWhatsAppBroadcasts
+      tags: [WhatsApp]
+      summary: List broadcasts
+      description: |
+        List all WhatsApp broadcasts for an account. Returns broadcasts sorted by creation date
+        (newest first) without the full recipients list for performance.
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: accountId
+          in: query
+          required: true
+          description: WhatsApp social account ID
+          schema:
+            type: string
+        - name: status
+          in: query
+          required: false
+          description: Filter by broadcast status
+          schema:
+            type: string
+            enum: [draft, scheduled, sending, completed, failed, cancelled]
+        - name: limit
+          in: query
+          required: false
+          description: Maximum results (default 50)
+          schema:
+            type: integer
+            default: 50
+        - name: skip
+          in: query
+          required: false
+          description: Offset for pagination
+          schema:
+            type: integer
+            default: 0
+      responses:
+        '200':
+          description: Broadcasts retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success: { type: boolean }
+                  broadcasts:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id: { type: string }
+                        name: { type: string }
+                        description: { type: string }
+                        template:
+                          type: object
+                          properties:
+                            name: { type: string }
+                            language: { type: string }
+                        status: { type: string, enum: [draft, scheduled, sending, completed, failed, cancelled] }
+                        recipientCount: { type: integer }
+                        scheduledAt: { type: string, format: date-time }
+                        startedAt: { type: string, format: date-time }
+                        completedAt: { type: string, format: date-time }
+                        sentCount: { type: integer }
+                        deliveredCount: { type: integer }
+                        readCount: { type: integer }
+                        failedCount: { type: integer }
+                        createdAt: { type: string, format: date-time }
+                  pagination:
+                    type: object
+                    properties:
+                      total: { type: integer }
+                      limit: { type: integer }
+                      skip: { type: integer }
+                      hasMore: { type: boolean }
+        '400': { description: accountId is required }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404': { description: WhatsApp account not found }
+    post:
+      operationId: createWhatsAppBroadcast
+      tags: [WhatsApp]
+      summary: Create broadcast
+      description: |
+        Create a new draft broadcast. Optionally include initial recipients.
+        After creation, add recipients and then send or schedule the broadcast.
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - accountId
+                - name
+                - template
+              properties:
+                accountId:
+                  type: string
+                  description: WhatsApp social account ID
+                name:
+                  type: string
+                  description: Broadcast name
+                description:
+                  type: string
+                  description: Broadcast description
+                template:
+                  type: object
+                  required:
+                    - name
+                    - language
+                  properties:
+                    name:
+                      type: string
+                      description: Template name
+                    language:
+                      type: string
+                      description: Template language code
+                    components:
+                      type: array
+                      description: Base template components
+                      items:
+                        type: object
+                recipients:
+                  type: array
+                  description: Initial recipients (optional)
+                  items:
+                    type: object
+                    required:
+                      - phone
+                    properties:
+                      phone:
+                        type: string
+                        description: Phone number in E.164 format
+                      name:
+                        type: string
+                      variables:
+                        type: object
+                        additionalProperties: { type: string }
+                        description: Per-recipient template variables
+            example:
+              accountId: "507f1f77bcf86cd799439011"
+              name: "Weekly Newsletter"
+              description: "Weekly product updates"
+              template:
+                name: "weekly_update"
+                language: "en_US"
+              recipients:
+                - phone: "+1234567890"
+                  name: "John"
+                  variables: { "1": "John" }
+      responses:
+        '200':
+          description: Broadcast created as draft
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success: { type: boolean }
+                  broadcast:
+                    type: object
+                    properties:
+                      id: { type: string }
+                      name: { type: string }
+                      description: { type: string }
+                      template: { type: object }
+                      status: { type: string, description: Always "draft" for new broadcasts }
+                      recipientCount: { type: integer }
+                      createdAt: { type: string, format: date-time }
+        '400': { description: Validation error (missing name, template, etc.) }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404': { description: WhatsApp account not found }
+
+  /v1/whatsapp/broadcasts/{broadcastId}:
+    get:
+      operationId: getWhatsAppBroadcast
+      tags: [WhatsApp]
+      summary: Get broadcast
+      description: Retrieve detailed information about a single broadcast including delivery statistics.
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: broadcastId
+          in: path
+          required: true
+          description: Broadcast ID
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Broadcast retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success: { type: boolean }
+                  broadcast:
+                    type: object
+                    properties:
+                      id: { type: string }
+                      name: { type: string }
+                      description: { type: string }
+                      template: { type: object }
+                      status: { type: string, enum: [draft, scheduled, sending, completed, failed, cancelled] }
+                      recipientCount: { type: integer }
+                      scheduledAt: { type: string, format: date-time }
+                      startedAt: { type: string, format: date-time }
+                      completedAt: { type: string, format: date-time }
+                      sentCount: { type: integer }
+                      deliveredCount: { type: integer }
+                      readCount: { type: integer }
+                      failedCount: { type: integer }
+                      createdAt: { type: string, format: date-time }
+                      updatedAt: { type: string, format: date-time }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404': { $ref: '#/components/responses/NotFound' }
+    delete:
+      operationId: deleteWhatsAppBroadcast
+      tags: [WhatsApp]
+      summary: Delete broadcast
+      description: Delete a broadcast. Only draft or cancelled broadcasts can be deleted.
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: broadcastId
+          in: path
+          required: true
+          description: Broadcast ID
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Broadcast deleted successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success: { type: boolean }
+                  message: { type: string }
+              example:
+                success: true
+                message: "Broadcast deleted successfully"
+        '400': { description: Can only delete draft or cancelled broadcasts }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404': { $ref: '#/components/responses/NotFound' }
+
+  /v1/whatsapp/broadcasts/{broadcastId}/send:
+    post:
+      operationId: sendWhatsAppBroadcast
+      tags: [WhatsApp]
+      summary: Send broadcast
+      description: |
+        Start sending a broadcast immediately. The broadcast must be in draft or scheduled status
+        and have at least one recipient. Messages are sent sequentially with rate limiting.
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: broadcastId
+          in: path
+          required: true
+          description: Broadcast ID
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Broadcast send completed
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success: { type: boolean }
+                  status: { type: string, enum: [completed, failed], description: Final broadcast status }
+                  sent: { type: integer, description: Number of messages sent successfully }
+                  failed: { type: integer, description: Number of messages that failed }
+                  total: { type: integer, description: Total recipient count }
+              example:
+                success: true
+                status: "completed"
+                sent: 95
+                failed: 5
+                total: 100
+        '400': { description: Invalid broadcast status or no recipients }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404': { $ref: '#/components/responses/NotFound' }
+
+  /v1/whatsapp/broadcasts/{broadcastId}/schedule:
+    post:
+      operationId: scheduleWhatsAppBroadcast
+      tags: [WhatsApp]
+      summary: Schedule broadcast
+      description: |
+        Schedule a draft broadcast for future sending. The scheduled time must be in the future
+        and no more than 30 days in advance. The broadcast must be in draft status and have recipients.
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: broadcastId
+          in: path
+          required: true
+          description: Broadcast ID
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - scheduledAt
+              properties:
+                scheduledAt:
+                  type: string
+                  format: date-time
+                  description: ISO 8601 date-time for sending (must be in the future, max 30 days)
+            example:
+              scheduledAt: "2026-03-15T10:00:00Z"
+      responses:
+        '200':
+          description: Broadcast scheduled successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success: { type: boolean }
+                  broadcast:
+                    type: object
+                    properties:
+                      id: { type: string }
+                      status: { type: string, description: "\"scheduled\"" }
+                      scheduledAt: { type: string, format: date-time }
+        '400': { description: Invalid schedule time or broadcast not in draft status }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404': { $ref: '#/components/responses/NotFound' }
+    delete:
+      operationId: cancelWhatsAppBroadcastSchedule
+      tags: [WhatsApp]
+      summary: Cancel scheduled broadcast
+      description: |
+        Cancel a scheduled broadcast and return it to draft status. Only broadcasts in
+        scheduled status can be cancelled.
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: broadcastId
+          in: path
+          required: true
+          description: Broadcast ID
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Schedule cancelled, broadcast returned to draft
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success: { type: boolean }
+                  broadcast:
+                    type: object
+                    properties:
+                      id: { type: string }
+                      status: { type: string, description: "\"draft\"" }
+                  message: { type: string }
+              example:
+                success: true
+                broadcast:
+                  id: "507f1f77bcf86cd799439011"
+                  status: "draft"
+                message: "Broadcast returned to draft status"
+        '400': { description: Broadcast is not scheduled }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404': { $ref: '#/components/responses/NotFound' }
+
+  /v1/whatsapp/broadcasts/{broadcastId}/recipients:
+    get:
+      operationId: getWhatsAppBroadcastRecipients
+      tags: [WhatsApp]
+      summary: List recipients
+      description: |
+        List recipients of a broadcast with their delivery status. Supports filtering
+        by delivery status and pagination.
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: broadcastId
+          in: path
+          required: true
+          description: Broadcast ID
+          schema:
+            type: string
+        - name: status
+          in: query
+          required: false
+          description: Filter by recipient delivery status
+          schema:
+            type: string
+            enum: [pending, sent, delivered, read, failed]
+        - name: limit
+          in: query
+          required: false
+          description: Maximum results (default 100)
+          schema:
+            type: integer
+            default: 100
+        - name: skip
+          in: query
+          required: false
+          description: Offset for pagination
+          schema:
+            type: integer
+            default: 0
+      responses:
+        '200':
+          description: Recipients retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success: { type: boolean }
+                  recipients:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        phone: { type: string }
+                        name: { type: string }
+                        variables: { type: object }
+                        status: { type: string, enum: [pending, sent, delivered, read, failed] }
+                        messageId: { type: string }
+                        error: { type: string }
+                        sentAt: { type: string, format: date-time }
+                        deliveredAt: { type: string, format: date-time }
+                        readAt: { type: string, format: date-time }
+                  pagination:
+                    type: object
+                    properties:
+                      total: { type: integer }
+                      limit: { type: integer }
+                      skip: { type: integer }
+                      hasMore: { type: boolean }
+                  summary:
+                    type: object
+                    properties:
+                      total: { type: integer }
+                      pending: { type: integer }
+                      sent: { type: integer }
+                      delivered: { type: integer }
+                      read: { type: integer }
+                      failed: { type: integer }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404': { $ref: '#/components/responses/NotFound' }
+    patch:
+      operationId: addWhatsAppBroadcastRecipients
+      tags: [WhatsApp]
+      summary: Add recipients
+      description: |
+        Add recipients to a draft broadcast. Maximum 1000 recipients per request.
+        Duplicate phone numbers are automatically skipped.
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: broadcastId
+          in: path
+          required: true
+          description: Broadcast ID
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - recipients
+              properties:
+                recipients:
+                  type: array
+                  maxItems: 1000
+                  description: Recipients to add (max 1000)
+                  items:
+                    type: object
+                    required:
+                      - phone
+                    properties:
+                      phone:
+                        type: string
+                        description: Phone number in E.164 format
+                      name:
+                        type: string
+                      variables:
+                        type: object
+                        additionalProperties: { type: string }
+            example:
+              recipients:
+                - phone: "+1234567890"
+                  name: "John"
+                  variables: { "1": "John" }
+                - phone: "+0987654321"
+                  name: "Jane"
+      responses:
+        '200':
+          description: Recipients added successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success: { type: boolean }
+                  added: { type: integer, description: Number of new recipients added }
+                  duplicates: { type: integer, description: Number of duplicate phone numbers skipped }
+                  totalRecipients: { type: integer, description: Total recipient count after addition }
+        '400': { description: Validation error or broadcast not in draft status }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404': { $ref: '#/components/responses/NotFound' }
+    delete:
+      operationId: removeWhatsAppBroadcastRecipients
+      tags: [WhatsApp]
+      summary: Remove recipients
+      description: Remove recipients from a draft broadcast by phone number.
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: broadcastId
+          in: path
+          required: true
+          description: Broadcast ID
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - phones
+              properties:
+                phones:
+                  type: array
+                  items: { type: string }
+                  description: Phone numbers to remove
+            example:
+              phones: ["+1234567890", "+0987654321"]
+      responses:
+        '200':
+          description: Recipients removed successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success: { type: boolean }
+                  removed: { type: integer, description: Number of recipients removed }
+                  totalRecipients: { type: integer, description: Remaining recipient count }
+        '400': { description: Validation error or broadcast not in draft status }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404': { $ref: '#/components/responses/NotFound' }
+
+  # ──────────────────────────────────────────────────────────────────────────
+  # BUSINESS PROFILE
+  # ──────────────────────────────────────────────────────────────────────────
+
+  /v1/whatsapp/business-profile:
+    get:
+      operationId: getWhatsAppBusinessProfile
+      tags: [WhatsApp]
+      summary: Get business profile
+      description: Retrieve the WhatsApp Business profile for the account (about, address, description, email, websites, etc.).
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: accountId
+          in: query
+          required: true
+          description: WhatsApp social account ID
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Business profile retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success: { type: boolean }
+                  businessProfile:
+                    type: object
+                    properties:
+                      about: { type: string, description: Short description (max 139 chars) }
+                      address: { type: string }
+                      description: { type: string, description: Full description (max 512 chars) }
+                      email: { type: string }
+                      profilePictureUrl: { type: string, format: uri }
+                      websites:
+                        type: array
+                        items: { type: string }
+                        maxItems: 2
+                      vertical: { type: string, description: Business category }
+        '400': { description: accountId is required or phone number ID not found }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404': { description: WhatsApp account not found }
+    post:
+      operationId: updateWhatsAppBusinessProfile
+      tags: [WhatsApp]
+      summary: Update business profile
+      description: |
+        Update the WhatsApp Business profile. All fields are optional; only provided fields will be updated.
+        Constraints: about max 139 chars, description max 512 chars, max 2 websites.
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - accountId
+              properties:
+                accountId:
+                  type: string
+                  description: WhatsApp social account ID
+                about:
+                  type: string
+                  maxLength: 139
+                  description: Short business description (max 139 characters)
+                address:
+                  type: string
+                  description: Business address
+                description:
+                  type: string
+                  maxLength: 512
+                  description: Full business description (max 512 characters)
+                email:
+                  type: string
+                  format: email
+                  description: Business email
+                websites:
+                  type: array
+                  maxItems: 2
+                  items: { type: string, format: uri }
+                  description: Business websites (max 2)
+                vertical:
+                  type: string
+                  description: Business category (e.g., RETAIL, ENTERTAINMENT, etc.)
+                profilePictureHandle:
+                  type: string
+                  description: Handle from resumable upload for profile picture
+            example:
+              accountId: "507f1f77bcf86cd799439011"
+              about: "We help businesses grow"
+              description: "Premium business solutions for startups and enterprises"
+              email: "hello@example.com"
+              websites: ["https://example.com"]
+      responses:
+        '200':
+          description: Business profile updated successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success: { type: boolean }
+                  message: { type: string }
+              example:
+                success: true
+                message: "Business profile updated successfully"
+        '400': { description: Validation error (field too long, too many websites, etc.) }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404': { description: WhatsApp account not found }
+
+  # ──────────────────────────────────────────────────────────────────────────
+  # PHONE NUMBERS
+  # ──────────────────────────────────────────────────────────────────────────
+
+  /v1/whatsapp/phone-numbers:
+    get:
+      operationId: getWhatsAppPhoneNumbers
+      tags: [WhatsApp Phone Numbers]
+      summary: List phone numbers
+      description: |
+        List all WhatsApp phone numbers purchased by the authenticated user.
+        By default, released numbers are excluded.
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: status
+          in: query
+          required: false
+          description: Filter by status (by default excludes released numbers)
+          schema:
+            type: string
+            enum: [provisioning, active, suspended, releasing, released]
+        - name: profileId
+          in: query
+          required: false
+          description: Filter by profile
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Phone numbers retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  numbers:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        _id: { type: string }
+                        phoneNumber: { type: string }
+                        country: { type: string }
+                        status: { type: string, enum: [pending_payment, provisioning, active, suspended, releasing, released] }
+                        profileId: { type: object }
+                        provisionedAt: { type: string, format: date-time }
+                        metaPreverifiedId: { type: string }
+                        metaVerificationStatus: { type: string }
+                        createdAt: { type: string, format: date-time }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+
+  /v1/whatsapp/phone-numbers/available:
+    get:
+      operationId: searchAvailableWhatsAppNumbers
+      tags: [WhatsApp Phone Numbers]
+      summary: Search available numbers
+      description: |
+        Search for available US phone numbers that can be purchased for WhatsApp Business.
+        Requires a paid plan. Numbers are sourced from Telnyx.
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: prefix
+          in: query
+          required: false
+          description: Area code to search (e.g., "212" for New York)
+          schema:
+            type: string
+        - name: locality
+          in: query
+          required: false
+          description: City name (e.g., "New York")
+          schema:
+            type: string
+        - name: contains
+          in: query
+          required: false
+          description: Pattern to match within the phone number
+          schema:
+            type: string
+        - name: limit
+          in: query
+          required: false
+          description: Maximum results (default 20, max 100)
+          schema:
+            type: integer
+            default: 20
+            maximum: 100
+      responses:
+        '200':
+          description: Available numbers retrieved
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  numbers:
+                    type: array
+                    items:
+                      type: object
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { description: A paid plan is required }
+
+  /v1/whatsapp/phone-numbers/preverified:
+    get:
+      operationId: getPreverifiedWhatsAppNumbers
+      tags: [WhatsApp Phone Numbers]
+      summary: Get pre-verified numbers
+      description: |
+        Returns the user's pre-verified phone number IDs that are ready for OTP-free
+        Embedded Signup. Only returns numbers with verified Meta status and non-expired verification.
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: profileId
+          in: query
+          required: true
+          description: Profile ID to filter by
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Pre-verified numbers retrieved
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  preVerifiedIds:
+                    type: array
+                    items: { type: string }
+                    description: IDs to pass in FB.login() extras.setup.preVerifiedPhone.ids
+                  numbers:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id: { type: string }
+                        phoneNumber: { type: string }
+                        metaPreverifiedId: { type: string }
+                        metaVerifiedAt: { type: string, format: date-time }
+                        metaVerificationExpiresAt: { type: string, format: date-time }
+        '400': { description: profileId is required }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+
+  /v1/whatsapp/phone-numbers/purchase:
+    post:
+      operationId: purchaseWhatsAppPhoneNumber
+      tags: [WhatsApp Phone Numbers]
+      summary: Purchase phone number
+      description: |
+        Initiate purchasing a WhatsApp phone number. Payment-first flow: the user does not pick
+        a specific number. The system either creates a Stripe Checkout Session (first number)
+        or increments the existing subscription quantity and provisions inline (subsequent numbers).
+
+        Requires a paid plan. The maximum number of phone numbers is determined by the user's plan.
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - profileId
+              properties:
+                profileId:
+                  type: string
+                  description: Profile to associate the number with
+            example:
+              profileId: "507f1f77bcf86cd799439011"
+      responses:
+        '200':
+          description: |
+            Either a checkout URL (first number) or the provisioned phone number (subsequent numbers).
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - type: object
+                    description: Checkout session created (first number)
+                    properties:
+                      message: { type: string }
+                      checkoutUrl: { type: string, format: uri }
+                  - type: object
+                    description: Phone number provisioned inline (subsequent numbers)
+                    properties:
+                      message: { type: string }
+                      phoneNumber:
+                        type: object
+                        properties:
+                          id: { type: string }
+                          phoneNumber: { type: string }
+                          status: { type: string }
+                          country: { type: string }
+                          provisionedAt: { type: string, format: date-time }
+                          metaPreverifiedId: { type: string }
+                          metaVerificationStatus: { type: string }
+        '400': { description: Plan limit reached or profileId required }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { description: A paid plan is required }
+
+  /v1/whatsapp/phone-numbers/{phoneNumberId}:
+    get:
+      operationId: getWhatsAppPhoneNumber
+      tags: [WhatsApp Phone Numbers]
+      summary: Get phone number
+      description: |
+        Retrieve the current status of a purchased phone number. Used to poll for
+        Meta pre-verification completion after purchase.
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: phoneNumberId
+          in: path
+          required: true
+          description: Phone number record ID
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Phone number retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  phoneNumber:
+                    type: object
+                    properties:
+                      id: { type: string }
+                      phoneNumber: { type: string }
+                      status: { type: string, enum: [pending_payment, provisioning, active, suspended, releasing, released] }
+                      country: { type: string }
+                      metaPreverifiedId: { type: string }
+                      metaVerificationStatus: { type: string }
+                      provisionedAt: { type: string, format: date-time }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404': { $ref: '#/components/responses/NotFound' }
+    delete:
+      operationId: releaseWhatsAppPhoneNumber
+      tags: [WhatsApp Phone Numbers]
+      summary: Release phone number
+      description: |
+        Release a purchased phone number. This will:
+        1. Disconnect any linked WhatsApp social account
+        2. Decrement the Stripe subscription quantity (or cancel if last number)
+        3. Release the number from Telnyx
+        4. Mark the number as released
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: phoneNumberId
+          in: path
+          required: true
+          description: Phone number record ID
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Phone number released successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message: { type: string }
+                  phoneNumber:
+                    type: object
+                    properties:
+                      id: { type: string }
+                      phoneNumber: { type: string }
+                      status: { type: string, description: "\"released\"" }
+                      releasedAt: { type: string, format: date-time }
+        '400': { description: Phone number is already released or being released }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404': { $ref: '#/components/responses/NotFound' }
+
+  /v1/whatsapp/phone-numbers/{phoneNumberId}/request-code:
+    post:
+      operationId: requestWhatsAppVerificationCode
+      tags: [WhatsApp Phone Numbers]
+      summary: Request OTP
+      description: |
+        Request a new OTP verification code from Meta for a pre-verified phone number.
+        Useful when the initial SMS did not arrive or when re-verifying before the 90-day expiry.
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: phoneNumberId
+          in: path
+          required: true
+          description: Phone number record ID
+          schema:
+            type: string
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                method:
+                  type: string
+                  enum: [SMS, VOICE]
+                  default: SMS
+                  description: Delivery method for the verification code
+            example:
+              method: "SMS"
+      responses:
+        '200':
+          description: Verification code requested successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message: { type: string }
+                  method: { type: string, enum: [SMS, VOICE] }
+              example:
+                message: "Verification code sent via SMS"
+                method: "SMS"
+        '400': { description: Number has not been added to Meta pre-verified pool }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404': { $ref: '#/components/responses/NotFound' }
+
+  /v1/whatsapp/phone-numbers/{phoneNumberId}/verify:
+    post:
+      operationId: verifyWhatsAppPhoneNumber
+      tags: [WhatsApp Phone Numbers]
+      summary: Verify OTP
+      description: |
+        Manually verify a phone number by entering the OTP code received via SMS or voice call.
+        This is a fallback for when the auto-verification webhook does not capture the code.
+        Verification is valid for 90 days.
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: phoneNumberId
+          in: path
+          required: true
+          description: Phone number record ID
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - code
+              properties:
+                code:
+                  type: string
+                  description: 6-digit verification code
+            example:
+              code: "123456"
+      responses:
+        '200':
+          description: Phone number verified successfully (or already verified)
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message: { type: string }
+                  metaVerifiedAt: { type: string, format: date-time }
+                  metaVerificationExpiresAt: { type: string, format: date-time }
+              example:
+                message: "Phone number verified successfully"
+                metaVerifiedAt: "2026-03-11T12:00:00Z"
+                metaVerificationExpiresAt: "2026-06-09T12:00:00Z"
+        '400': { description: Invalid code or number not in Meta pre-verified pool }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404': { $ref: '#/components/responses/NotFound' }

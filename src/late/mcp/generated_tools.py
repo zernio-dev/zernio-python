@@ -2876,3 +2876,752 @@ def register_generated_tools(mcp, _get_client):
             return _format_response(response)
         except Exception as e:
             return f"Error: {e}"
+
+    # WHATSAPP
+
+    @mcp.tool()
+    def whatsapp_send_whats_app_bulk(
+        account_id: str, recipients: str, template: str
+    ) -> str:
+        """Bulk send template messages
+
+        Args:
+            account_id: WhatsApp social account ID (required)
+            recipients: List of recipients (max 100) (required)
+            template: (required)"""
+        client = _get_client()
+        try:
+            response = client.whatsapp.send_whats_app_bulk(
+                accountId=account_id, recipients=recipients, template=template
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool()
+    def whatsapp_get_whats_app_contacts(
+        account_id: str,
+        search: str = "",
+        tag: str = "",
+        group: str = "",
+        opted_in: str = "",
+        limit: int = 50,
+        skip: int = 0,
+    ) -> str:
+        """List contacts
+
+        Args:
+            account_id: WhatsApp social account ID (required)
+            search: Search contacts by name, phone, email, or company
+            tag: Filter by tag
+            group: Filter by group
+            opted_in: Filter by opt-in status
+            limit: Maximum results (default 50)
+            skip: Offset for pagination"""
+        client = _get_client()
+        try:
+            response = client.whatsapp.get_whats_app_contacts(
+                account_id=account_id,
+                search=search,
+                tag=tag,
+                group=group,
+                opted_in=opted_in,
+                limit=limit,
+                skip=skip,
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool()
+    def whatsapp_create_whats_app_contact(
+        account_id: str,
+        phone: str,
+        name: str,
+        email: str = "",
+        company: str = "",
+        tags: str = "",
+        groups: str = "",
+        is_opted_in: bool = True,
+        custom_fields: str = "",
+        notes: str = "",
+    ) -> str:
+        """Create contact
+
+        Args:
+            account_id: WhatsApp social account ID (required)
+            phone: Phone number in E.164 format (required)
+            name: Contact name (required)
+            email: Contact email
+            company: Company name
+            tags: Tags for categorization
+            groups: Groups the contact belongs to
+            is_opted_in: Whether the contact has opted in to receive messages
+            custom_fields: Custom key-value fields
+            notes: Notes about the contact"""
+        client = _get_client()
+        try:
+            response = client.whatsapp.create_whats_app_contact(
+                accountId=account_id,
+                phone=phone,
+                name=name,
+                email=email,
+                company=company,
+                tags=tags,
+                groups=groups,
+                isOptedIn=is_opted_in,
+                customFields=custom_fields,
+                notes=notes,
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool()
+    def whatsapp_get_whats_app_contact(contact_id: str) -> str:
+        """Get contact
+
+        Args:
+            contact_id: Contact ID (required)"""
+        client = _get_client()
+        try:
+            response = client.whatsapp.get_whats_app_contact(contact_id=contact_id)
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool()
+    def whatsapp_update_whats_app_contact(
+        contact_id: str,
+        name: str = "",
+        email: str = "",
+        company: str = "",
+        tags: str = "",
+        groups: str = "",
+        is_opted_in: bool = False,
+        is_blocked: bool = False,
+        custom_fields: str = "",
+        notes: str = "",
+    ) -> str:
+        """Update contact
+
+        Args:
+            contact_id: Contact ID (required)
+            name: Contact name
+            email: Contact email
+            company: Company name
+            tags: Tags (replaces existing)
+            groups: Groups (replaces existing)
+            is_opted_in: Opt-in status (changes are timestamped)
+            is_blocked: Block status
+            custom_fields: Custom fields to merge (set value to null to remove a field)
+            notes: Notes about the contact"""
+        client = _get_client()
+        try:
+            response = client.whatsapp.update_whats_app_contact(
+                contact_id=contact_id,
+                name=name,
+                email=email,
+                company=company,
+                tags=tags,
+                groups=groups,
+                isOptedIn=is_opted_in,
+                isBlocked=is_blocked,
+                customFields=custom_fields,
+                notes=notes,
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool()
+    def whatsapp_delete_whats_app_contact(contact_id: str) -> str:
+        """Delete contact
+
+        Args:
+            contact_id: Contact ID (required)"""
+        client = _get_client()
+        try:
+            response = client.whatsapp.delete_whats_app_contact(contact_id=contact_id)
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool()
+    def whatsapp_import_whats_app_contacts(
+        account_id: str,
+        contacts: str,
+        default_tags: str = "",
+        default_groups: str = "",
+        skip_duplicates: bool = True,
+    ) -> str:
+        """Bulk import contacts
+
+        Args:
+            account_id: WhatsApp social account ID (required)
+            contacts: Contacts to import (max 1000) (required)
+            default_tags: Tags applied to all imported contacts
+            default_groups: Groups applied to all imported contacts
+            skip_duplicates: Skip contacts with existing phone numbers"""
+        client = _get_client()
+        try:
+            response = client.whatsapp.import_whats_app_contacts(
+                accountId=account_id,
+                contacts=contacts,
+                defaultTags=default_tags,
+                defaultGroups=default_groups,
+                skipDuplicates=skip_duplicates,
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool()
+    def whatsapp_bulk_update_whats_app_contacts(
+        action: str, contact_ids: str, tags: str = "", groups: str = ""
+    ) -> str:
+        """Bulk update contacts
+
+        Args:
+            action: Bulk action to perform (required)
+            contact_ids: Contact IDs to update (max 500) (required)
+            tags: Tags to add or remove (required for addTags/removeTags)
+            groups: Groups to add or remove (required for addGroups/removeGroups)"""
+        client = _get_client()
+        try:
+            response = client.whatsapp.bulk_update_whats_app_contacts(
+                action=action, contactIds=contact_ids, tags=tags, groups=groups
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool()
+    def whatsapp_bulk_delete_whats_app_contacts(contact_ids: str) -> str:
+        """Bulk delete contacts
+
+        Args:
+            contact_ids: Contact IDs to delete (max 500) (required)"""
+        client = _get_client()
+        try:
+            response = client.whatsapp.bulk_delete_whats_app_contacts(
+                contactIds=contact_ids
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool()
+    def whatsapp_get_whats_app_groups(account_id: str) -> str:
+        """List contact groups
+
+        Args:
+            account_id: WhatsApp social account ID (required)"""
+        client = _get_client()
+        try:
+            response = client.whatsapp.get_whats_app_groups(account_id=account_id)
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool()
+    def whatsapp_rename_whats_app_group(
+        account_id: str, old_name: str, new_name: str
+    ) -> str:
+        """Rename group
+
+        Args:
+            account_id: WhatsApp social account ID (required)
+            old_name: Current group name (required)
+            new_name: New group name (required)"""
+        client = _get_client()
+        try:
+            response = client.whatsapp.rename_whats_app_group(
+                accountId=account_id, oldName=old_name, newName=new_name
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool()
+    def whatsapp_delete_whats_app_group(account_id: str, group_name: str) -> str:
+        """Delete group
+
+        Args:
+            account_id: WhatsApp social account ID (required)
+            group_name: Group name to delete (required)"""
+        client = _get_client()
+        try:
+            response = client.whatsapp.delete_whats_app_group(
+                accountId=account_id, groupName=group_name
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool()
+    def whatsapp_get_whats_app_templates(account_id: str) -> str:
+        """List templates
+
+        Args:
+            account_id: WhatsApp social account ID (required)"""
+        client = _get_client()
+        try:
+            response = client.whatsapp.get_whats_app_templates(account_id=account_id)
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool()
+    def whatsapp_create_whats_app_template(
+        account_id: str, name: str, category: str, language: str, components: str
+    ) -> str:
+        """Create template
+
+        Args:
+            account_id: WhatsApp social account ID (required)
+            name: Template name (lowercase, letters/numbers/underscores, must start with a letter) (required)
+            category: Template category (required)
+            language: Template language code (e.g., en_US) (required)
+            components: Template components (header, body, footer, buttons) (required)"""
+        client = _get_client()
+        try:
+            response = client.whatsapp.create_whats_app_template(
+                accountId=account_id,
+                name=name,
+                category=category,
+                language=language,
+                components=components,
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool()
+    def whatsapp_get_whats_app_template(template_name: str, account_id: str) -> str:
+        """Get template
+
+        Args:
+            template_name: Template name (required)
+            account_id: WhatsApp social account ID (required)"""
+        client = _get_client()
+        try:
+            response = client.whatsapp.get_whats_app_template(
+                template_name=template_name, account_id=account_id
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool()
+    def whatsapp_update_whats_app_template(
+        template_name: str, account_id: str, components: str
+    ) -> str:
+        """Update template
+
+        Args:
+            template_name: Template name (required)
+            account_id: WhatsApp social account ID (required)
+            components: Updated template components (required)"""
+        client = _get_client()
+        try:
+            response = client.whatsapp.update_whats_app_template(
+                template_name=template_name, accountId=account_id, components=components
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool()
+    def whatsapp_delete_whats_app_template(template_name: str, account_id: str) -> str:
+        """Delete template
+
+        Args:
+            template_name: Template name (required)
+            account_id: WhatsApp social account ID (required)"""
+        client = _get_client()
+        try:
+            response = client.whatsapp.delete_whats_app_template(
+                template_name=template_name, account_id=account_id
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool()
+    def whatsapp_get_whats_app_broadcasts(
+        account_id: str, status: str = "", limit: int = 50, skip: int = 0
+    ) -> str:
+        """List broadcasts
+
+        Args:
+            account_id: WhatsApp social account ID (required)
+            status: Filter by broadcast status
+            limit: Maximum results (default 50)
+            skip: Offset for pagination"""
+        client = _get_client()
+        try:
+            response = client.whatsapp.get_whats_app_broadcasts(
+                account_id=account_id, status=status, limit=limit, skip=skip
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool()
+    def whatsapp_create_whats_app_broadcast(
+        account_id: str,
+        name: str,
+        template: str,
+        description: str = "",
+        recipients: str = "",
+    ) -> str:
+        """Create broadcast
+
+        Args:
+            account_id: WhatsApp social account ID (required)
+            name: Broadcast name (required)
+            description: Broadcast description
+            template: (required)
+            recipients: Initial recipients (optional)"""
+        client = _get_client()
+        try:
+            response = client.whatsapp.create_whats_app_broadcast(
+                accountId=account_id,
+                name=name,
+                description=description,
+                template=template,
+                recipients=recipients,
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool()
+    def whatsapp_get_whats_app_broadcast(broadcast_id: str) -> str:
+        """Get broadcast
+
+        Args:
+            broadcast_id: Broadcast ID (required)"""
+        client = _get_client()
+        try:
+            response = client.whatsapp.get_whats_app_broadcast(
+                broadcast_id=broadcast_id
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool()
+    def whatsapp_delete_whats_app_broadcast(broadcast_id: str) -> str:
+        """Delete broadcast
+
+        Args:
+            broadcast_id: Broadcast ID (required)"""
+        client = _get_client()
+        try:
+            response = client.whatsapp.delete_whats_app_broadcast(
+                broadcast_id=broadcast_id
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool()
+    def whatsapp_send_whats_app_broadcast(broadcast_id: str) -> str:
+        """Send broadcast
+
+        Args:
+            broadcast_id: Broadcast ID (required)"""
+        client = _get_client()
+        try:
+            response = client.whatsapp.send_whats_app_broadcast(
+                broadcast_id=broadcast_id
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool()
+    def whatsapp_schedule_whats_app_broadcast(
+        broadcast_id: str, scheduled_at: str
+    ) -> str:
+        """Schedule broadcast
+
+        Args:
+            broadcast_id: Broadcast ID (required)
+            scheduled_at: ISO 8601 date-time for sending (must be in the future, max 30 days) (required)"""
+        client = _get_client()
+        try:
+            response = client.whatsapp.schedule_whats_app_broadcast(
+                broadcast_id=broadcast_id, scheduledAt=scheduled_at
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool()
+    def whatsapp_cancel_whats_app_broadcast_schedule(broadcast_id: str) -> str:
+        """Cancel scheduled broadcast
+
+        Args:
+            broadcast_id: Broadcast ID (required)"""
+        client = _get_client()
+        try:
+            response = client.whatsapp.cancel_whats_app_broadcast_schedule(
+                broadcast_id=broadcast_id
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool()
+    def whatsapp_get_whats_app_broadcast_recipients(
+        broadcast_id: str, status: str = "", limit: int = 100, skip: int = 0
+    ) -> str:
+        """List recipients
+
+        Args:
+            broadcast_id: Broadcast ID (required)
+            status: Filter by recipient delivery status
+            limit: Maximum results (default 100)
+            skip: Offset for pagination"""
+        client = _get_client()
+        try:
+            response = client.whatsapp.get_whats_app_broadcast_recipients(
+                broadcast_id=broadcast_id, status=status, limit=limit, skip=skip
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool()
+    def whatsapp_add_whats_app_broadcast_recipients(
+        broadcast_id: str, recipients: str
+    ) -> str:
+        """Add recipients
+
+        Args:
+            broadcast_id: Broadcast ID (required)
+            recipients: Recipients to add (max 1000) (required)"""
+        client = _get_client()
+        try:
+            response = client.whatsapp.add_whats_app_broadcast_recipients(
+                broadcast_id=broadcast_id, recipients=recipients
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool()
+    def whatsapp_remove_whats_app_broadcast_recipients(
+        broadcast_id: str, phones: str
+    ) -> str:
+        """Remove recipients
+
+        Args:
+            broadcast_id: Broadcast ID (required)
+            phones: Phone numbers to remove (required)"""
+        client = _get_client()
+        try:
+            response = client.whatsapp.remove_whats_app_broadcast_recipients(
+                broadcast_id=broadcast_id, phones=phones
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool()
+    def whatsapp_get_whats_app_business_profile(account_id: str) -> str:
+        """Get business profile
+
+        Args:
+            account_id: WhatsApp social account ID (required)"""
+        client = _get_client()
+        try:
+            response = client.whatsapp.get_whats_app_business_profile(
+                account_id=account_id
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool()
+    def whatsapp_update_whats_app_business_profile(
+        account_id: str,
+        about: str = "",
+        address: str = "",
+        description: str = "",
+        email: str = "",
+        websites: str = "",
+        vertical: str = "",
+        profile_picture_handle: str = "",
+    ) -> str:
+        """Update business profile
+
+        Args:
+            account_id: WhatsApp social account ID (required)
+            about: Short business description (max 139 characters)
+            address: Business address
+            description: Full business description (max 512 characters)
+            email: Business email
+            websites: Business websites (max 2)
+            vertical: Business category (e.g., RETAIL, ENTERTAINMENT, etc.)
+            profile_picture_handle: Handle from resumable upload for profile picture"""
+        client = _get_client()
+        try:
+            response = client.whatsapp.update_whats_app_business_profile(
+                accountId=account_id,
+                about=about,
+                address=address,
+                description=description,
+                email=email,
+                websites=websites,
+                vertical=vertical,
+                profilePictureHandle=profile_picture_handle,
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    # WHATSAPP_PHONE_NUMBERS
+
+    @mcp.tool()
+    def whatsapp_phone_numbers_get_whats_app_phone_numbers(
+        status: str = "", profile_id: str = ""
+    ) -> str:
+        """List phone numbers
+
+        Args:
+            status: Filter by status (by default excludes released numbers)
+            profile_id: Filter by profile"""
+        client = _get_client()
+        try:
+            response = client.whatsapp_phone_numbers.get_whats_app_phone_numbers(
+                status=status, profile_id=profile_id
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool()
+    def whatsapp_phone_numbers_search_available_whats_app_numbers(
+        prefix: str = "", locality: str = "", contains: str = "", limit: int = 20
+    ) -> str:
+        """Search available numbers
+
+        Args:
+            prefix: Area code to search (e.g., "212" for New York)
+            locality: City name (e.g., "New York")
+            contains: Pattern to match within the phone number
+            limit: Maximum results (default 20, max 100)"""
+        client = _get_client()
+        try:
+            response = client.whatsapp_phone_numbers.search_available_whats_app_numbers(
+                prefix=prefix, locality=locality, contains=contains, limit=limit
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool()
+    def whatsapp_phone_numbers_get_preverified_whats_app_numbers(
+        profile_id: str,
+    ) -> str:
+        """Get pre-verified numbers
+
+        Args:
+            profile_id: Profile ID to filter by (required)"""
+        client = _get_client()
+        try:
+            response = client.whatsapp_phone_numbers.get_preverified_whats_app_numbers(
+                profile_id=profile_id
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool()
+    def whatsapp_phone_numbers_purchase_whats_app_phone_number(profile_id: str) -> str:
+        """Purchase phone number
+
+        Args:
+            profile_id: Profile to associate the number with (required)"""
+        client = _get_client()
+        try:
+            response = client.whatsapp_phone_numbers.purchase_whats_app_phone_number(
+                profileId=profile_id
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool()
+    def whatsapp_phone_numbers_get_whats_app_phone_number(phone_number_id: str) -> str:
+        """Get phone number
+
+        Args:
+            phone_number_id: Phone number record ID (required)"""
+        client = _get_client()
+        try:
+            response = client.whatsapp_phone_numbers.get_whats_app_phone_number(
+                phone_number_id=phone_number_id
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool()
+    def whatsapp_phone_numbers_release_whats_app_phone_number(
+        phone_number_id: str,
+    ) -> str:
+        """Release phone number
+
+        Args:
+            phone_number_id: Phone number record ID (required)"""
+        client = _get_client()
+        try:
+            response = client.whatsapp_phone_numbers.release_whats_app_phone_number(
+                phone_number_id=phone_number_id
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool()
+    def whatsapp_phone_numbers_request_whats_app_verification_code(
+        phone_number_id: str, method: str = "SMS"
+    ) -> str:
+        """Request OTP
+
+        Args:
+            phone_number_id: Phone number record ID (required)
+            method: Delivery method for the verification code"""
+        client = _get_client()
+        try:
+            response = (
+                client.whatsapp_phone_numbers.request_whats_app_verification_code(
+                    phone_number_id=phone_number_id, method=method
+                )
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool()
+    def whatsapp_phone_numbers_verify_whats_app_phone_number(
+        phone_number_id: str, code: str
+    ) -> str:
+        """Verify OTP
+
+        Args:
+            phone_number_id: Phone number record ID (required)
+            code: 6-digit verification code (required)"""
+        client = _get_client()
+        try:
+            response = client.whatsapp_phone_numbers.verify_whats_app_phone_number(
+                phone_number_id=phone_number_id, code=code
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"

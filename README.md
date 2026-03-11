@@ -406,6 +406,51 @@ except LateAPIError as e:
 | `validate.validate_post_length()` | Validate post character count |
 | `validate.validate_subreddit()` | Check subreddit existence |
 
+### WhatsApp
+| Method | Description |
+|--------|-------------|
+| `whatsapp.bulk_delete_whats_app_contacts()` | Bulk delete contacts |
+| `whatsapp.bulk_update_whats_app_contacts()` | Bulk update contacts |
+| `whatsapp.create_whats_app_broadcast()` | Create broadcast |
+| `whatsapp.create_whats_app_contact()` | Create contact |
+| `whatsapp.create_whats_app_template()` | Create template |
+| `whatsapp.get_whats_app_broadcast()` | Get broadcast |
+| `whatsapp.get_whats_app_broadcast_recipients()` | List recipients |
+| `whatsapp.get_whats_app_broadcasts()` | List broadcasts |
+| `whatsapp.get_whats_app_business_profile()` | Get business profile |
+| `whatsapp.get_whats_app_contact()` | Get contact |
+| `whatsapp.get_whats_app_contacts()` | List contacts |
+| `whatsapp.get_whats_app_groups()` | List contact groups |
+| `whatsapp.get_whats_app_template()` | Get template |
+| `whatsapp.get_whats_app_templates()` | List templates |
+| `whatsapp.update_whats_app_business_profile()` | Update business profile |
+| `whatsapp.update_whats_app_contact()` | Update contact |
+| `whatsapp.update_whats_app_template()` | Update template |
+| `whatsapp.delete_whats_app_broadcast()` | Delete broadcast |
+| `whatsapp.delete_whats_app_contact()` | Delete contact |
+| `whatsapp.delete_whats_app_group()` | Delete group |
+| `whatsapp.delete_whats_app_template()` | Delete template |
+| `whatsapp.add_whats_app_broadcast_recipients()` | Add recipients |
+| `whatsapp.cancel_whats_app_broadcast_schedule()` | Cancel scheduled broadcast |
+| `whatsapp.import_whats_app_contacts()` | Bulk import contacts |
+| `whatsapp.remove_whats_app_broadcast_recipients()` | Remove recipients |
+| `whatsapp.rename_whats_app_group()` | Rename group |
+| `whatsapp.schedule_whats_app_broadcast()` | Schedule broadcast |
+| `whatsapp.send_whats_app_broadcast()` | Send broadcast |
+| `whatsapp.send_whats_app_bulk()` | Bulk send template messages |
+
+### WhatsApp Phone Numbers
+| Method | Description |
+|--------|-------------|
+| `whatsapp_phone_numbers.get_preverified_whats_app_numbers()` | Get pre-verified numbers |
+| `whatsapp_phone_numbers.get_whats_app_phone_number()` | Get phone number |
+| `whatsapp_phone_numbers.get_whats_app_phone_numbers()` | List phone numbers |
+| `whatsapp_phone_numbers.purchase_whats_app_phone_number()` | Purchase phone number |
+| `whatsapp_phone_numbers.release_whats_app_phone_number()` | Release phone number |
+| `whatsapp_phone_numbers.request_whats_app_verification_code()` | Request OTP |
+| `whatsapp_phone_numbers.search_available_whats_app_numbers()` | Search available numbers |
+| `whatsapp_phone_numbers.verify_whats_app_phone_number()` | Verify OTP |
+
 ### Invites
 | Method | Description |
 |--------|-------------|
