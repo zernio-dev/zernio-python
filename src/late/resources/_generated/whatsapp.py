@@ -414,6 +414,31 @@ class WhatsappResource:
         )
         return self._client._post("/v1/whatsapp/business-profile", data=payload)
 
+    def upload_whats_app_profile_photo(self) -> dict[str, Any]:
+        """Upload profile picture"""
+        return self._client._post("/v1/whatsapp/business-profile/photo")
+
+    def get_whats_app_display_name(self, account_id: str) -> dict[str, Any]:
+        """Get display name and review status"""
+        params = self._build_params(
+            account_id=account_id,
+        )
+        return self._client._get(
+            "/v1/whatsapp/business-profile/display-name", params=params
+        )
+
+    def update_whats_app_display_name(
+        self, account_id: str, display_name: str
+    ) -> dict[str, Any]:
+        """Request display name change"""
+        payload = self._build_payload(
+            account_id=account_id,
+            display_name=display_name,
+        )
+        return self._client._post(
+            "/v1/whatsapp/business-profile/display-name", data=payload
+        )
+
     async def asend_whats_app_bulk(
         self,
         account_id: str,
@@ -785,3 +810,28 @@ class WhatsappResource:
             profile_picture_handle=profile_picture_handle,
         )
         return await self._client._apost("/v1/whatsapp/business-profile", data=payload)
+
+    async def aupload_whats_app_profile_photo(self) -> dict[str, Any]:
+        """Upload profile picture (async)"""
+        return await self._client._apost("/v1/whatsapp/business-profile/photo")
+
+    async def aget_whats_app_display_name(self, account_id: str) -> dict[str, Any]:
+        """Get display name and review status (async)"""
+        params = self._build_params(
+            account_id=account_id,
+        )
+        return await self._client._aget(
+            "/v1/whatsapp/business-profile/display-name", params=params
+        )
+
+    async def aupdate_whats_app_display_name(
+        self, account_id: str, display_name: str
+    ) -> dict[str, Any]:
+        """Request display name change (async)"""
+        payload = self._build_payload(
+            account_id=account_id,
+            display_name=display_name,
+        )
+        return await self._client._apost(
+            "/v1/whatsapp/business-profile/display-name", data=payload
+        )

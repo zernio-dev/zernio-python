@@ -421,11 +421,13 @@ except LateAPIError as e:
 | `whatsapp.get_whats_app_business_profile()` | Get business profile |
 | `whatsapp.get_whats_app_contact()` | Get contact |
 | `whatsapp.get_whats_app_contacts()` | List contacts |
+| `whatsapp.get_whats_app_display_name()` | Get display name and review status |
 | `whatsapp.get_whats_app_groups()` | List contact groups |
 | `whatsapp.get_whats_app_template()` | Get template |
 | `whatsapp.get_whats_app_templates()` | List templates |
 | `whatsapp.update_whats_app_business_profile()` | Update business profile |
 | `whatsapp.update_whats_app_contact()` | Update contact |
+| `whatsapp.update_whats_app_display_name()` | Request display name change |
 | `whatsapp.update_whats_app_template()` | Update template |
 | `whatsapp.delete_whats_app_broadcast()` | Delete broadcast |
 | `whatsapp.delete_whats_app_contact()` | Delete contact |
@@ -439,6 +441,7 @@ except LateAPIError as e:
 | `whatsapp.schedule_whats_app_broadcast()` | Schedule broadcast |
 | `whatsapp.send_whats_app_broadcast()` | Send broadcast |
 | `whatsapp.send_whats_app_bulk()` | Bulk send template messages |
+| `whatsapp.upload_whats_app_profile_photo()` | Upload profile picture |
 
 ### WhatsApp Phone Numbers
 | Method | Description |

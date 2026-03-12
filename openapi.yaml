@@ -1664,6 +1664,23 @@ components:
             growth: { type: number, description: Follower change over period }
             growthPercentage: { type: number, description: Percentage growth }
             dataPoints: { type: number, description: Number of historical snapshots }
+            accountStats:
+              type: object
+              description: |
+                Platform-specific account stats from the latest daily snapshot.
+                Fields vary by platform. Only present if metadata has been captured.
+              properties:
+                followingCount: { type: number, description: Number of accounts being followed }
+                mediaCount: { type: number, description: Total media posts (Instagram) }
+                videoCount: { type: number, description: Total videos (YouTube, TikTok) }
+                tweetCount: { type: number, description: Total tweets (X/Twitter) }
+                postsCount: { type: number, description: Total posts (Bluesky) }
+                pinCount: { type: number, description: Total pins (Pinterest) }
+                totalViews: { type: number, description: Total channel views (YouTube) }
+                likesCount: { type: number, description: Total likes received (TikTok) }
+                monthlyViews: { type: number, description: Monthly profile views (Pinterest) }
+                listedCount: { type: number, description: Lists the user appears on (X/Twitter) }
+                boardCount: { type: number, description: Total boards (Pinterest) }
     ApiKey:
       type: object
       properties:
@@ -13212,6 +13229,131 @@ paths:
                 success: true
                 message: "Business profile updated successfully"
         '400': { description: Validation error (field too long, too many websites, etc.) }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404': { description: WhatsApp account not found }
+
+  /v1/whatsapp/business-profile/photo:
+    post:
+      operationId: uploadWhatsAppProfilePhoto
+      tags: [WhatsApp]
+      summary: Upload profile picture
+      description: |
+        Upload a new profile picture for the WhatsApp Business Profile.
+        Uses Meta's resumable upload API under the hood: creates an upload session,
+        uploads the image bytes, then updates the business profile with the resulting handle.
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required: [accountId, file]
+              properties:
+                accountId:
+                  type: string
+                  description: WhatsApp social account ID
+                file:
+                  type: string
+                  format: binary
+                  description: Image file (JPEG or PNG, max 5MB, recommended 640x640)
+      responses:
+        '200':
+          description: Profile picture updated successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success: { type: boolean }
+                  message: { type: string }
+        '400': { description: Invalid file type, file too large, or missing parameters }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404': { description: WhatsApp account not found }
+
+  /v1/whatsapp/business-profile/display-name:
+    get:
+      operationId: getWhatsAppDisplayName
+      tags: [WhatsApp]
+      summary: Get display name and review status
+      description: |
+        Fetch the current display name and its Meta review status for a WhatsApp Business account.
+        Display name changes require Meta approval and can take 1-3 business days.
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: accountId
+          in: query
+          required: true
+          description: WhatsApp social account ID
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Display name info retrieved
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success: { type: boolean }
+                  displayName:
+                    type: object
+                    properties:
+                      name: { type: string, description: Current verified display name }
+                      status:
+                        type: string
+                        enum: [APPROVED, PENDING_REVIEW, DECLINED, NONE]
+                        description: Meta review status for the display name
+                      phoneNumber: { type: string, description: Display phone number }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404': { description: WhatsApp account not found }
+    post:
+      operationId: updateWhatsAppDisplayName
+      tags: [WhatsApp]
+      summary: Request display name change
+      description: |
+        Submit a display name change request for the WhatsApp Business account.
+        The new name must follow WhatsApp naming guidelines (3-512 characters, must represent your business).
+        Changes require Meta review and approval, which typically takes 1-3 business days.
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [accountId, displayName]
+              properties:
+                accountId:
+                  type: string
+                  description: WhatsApp social account ID
+                displayName:
+                  type: string
+                  minLength: 3
+                  maxLength: 512
+                  description: New display name (must follow WhatsApp naming guidelines)
+            example:
+              accountId: "507f1f77bcf86cd799439011"
+              displayName: "My Business Name"
+      responses:
+        '200':
+          description: Display name change submitted for review
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success: { type: boolean }
+                  message: { type: string }
+                  displayName:
+                    type: object
+                    properties:
+                      name: { type: string }
+                      status: { type: string, enum: [PENDING_REVIEW] }
+        '400': { description: Invalid display name (too short, too long, or missing) }
         '401': { $ref: '#/components/responses/Unauthorized' }
         '404': { description: WhatsApp account not found }
 

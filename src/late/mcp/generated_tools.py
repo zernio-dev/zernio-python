@@ -3575,6 +3575,47 @@ def register_generated_tools(mcp, _get_client):
         except Exception as e:
             return f"Error: {e}"
 
+    @mcp.tool()
+    def whatsapp_upload_whats_app_profile_photo() -> str:
+        """Upload profile picture"""
+        client = _get_client()
+        try:
+            response = client.whatsapp.upload_whats_app_profile_photo()
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool()
+    def whatsapp_get_whats_app_display_name(account_id: str) -> str:
+        """Get display name and review status
+
+        Args:
+            account_id: WhatsApp social account ID (required)"""
+        client = _get_client()
+        try:
+            response = client.whatsapp.get_whats_app_display_name(account_id=account_id)
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool()
+    def whatsapp_update_whats_app_display_name(
+        account_id: str, display_name: str
+    ) -> str:
+        """Request display name change
+
+        Args:
+            account_id: WhatsApp social account ID (required)
+            display_name: New display name (must follow WhatsApp naming guidelines) (required)"""
+        client = _get_client()
+        try:
+            response = client.whatsapp.update_whats_app_display_name(
+                accountId=account_id, displayName=display_name
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
     # WHATSAPP_PHONE_NUMBERS
 
     @mcp.tool()
