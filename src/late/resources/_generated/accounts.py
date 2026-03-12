@@ -192,6 +192,8 @@ class AccountsResource:
         profile: dict[str, Any] | None = None,
         website_uri: str | None = None,
         phone_numbers: dict[str, Any] | None = None,
+        categories: dict[str, Any] | None = None,
+        service_items: list[dict[str, Any]] | None = None,
     ) -> dict[str, Any]:
         """Update location details"""
         payload = self._build_payload(
@@ -201,6 +203,8 @@ class AccountsResource:
             profile=profile,
             website_uri=website_uri,
             phone_numbers=phone_numbers,
+            categories=categories,
+            service_items=service_items,
         )
         return self._client._put(
             f"/v1/accounts/{account_id}/gmb-location-details", data=payload
@@ -484,6 +488,8 @@ class AccountsResource:
         profile: dict[str, Any] | None = None,
         website_uri: str | None = None,
         phone_numbers: dict[str, Any] | None = None,
+        categories: dict[str, Any] | None = None,
+        service_items: list[dict[str, Any]] | None = None,
     ) -> dict[str, Any]:
         """Update location details (async)"""
         payload = self._build_payload(
@@ -493,6 +499,8 @@ class AccountsResource:
             profile=profile,
             website_uri=website_uri,
             phone_numbers=phone_numbers,
+            categories=categories,
+            service_items=service_items,
         )
         return await self._client._aput(
             f"/v1/accounts/{account_id}/gmb-location-details", data=payload

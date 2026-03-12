@@ -446,7 +446,7 @@ def register_generated_tools(mcp, _get_client):
         Args:
             account_id: The Late account ID (from /v1/accounts) (required)
             location_id: Override which location to query. If omitted, uses the account's selected location. Use GET /gmb-locations to list valid IDs.
-            read_mask: Comma-separated fields to return. Available: name, title, phoneNumbers, categories, storefrontAddress, websiteUri, regularHours, specialHours, serviceArea, profile, openInfo, metadata, moreHours."""
+            read_mask: Comma-separated fields to return. Available: name, title, phoneNumbers, categories, storefrontAddress, websiteUri, regularHours, specialHours, serviceArea, serviceItems, profile, openInfo, metadata, moreHours."""
         client = _get_client()
         try:
             response = client.accounts.get_google_business_location_details(
@@ -466,18 +466,22 @@ def register_generated_tools(mcp, _get_client):
         profile: str = "",
         website_uri: str = "",
         phone_numbers: str = "",
+        categories: str = "",
+        service_items: str = "",
     ) -> str:
         """Update location details
 
         Args:
             account_id: The Late account ID (from /v1/accounts) (required)
             location_id: Override which location to target. If omitted, uses the account's selected location. Use GET /gmb-locations to list valid IDs.
-            update_mask: Required. Comma-separated fields to update (e.g. 'regularHours', 'specialHours', 'profile.description') (required)
+            update_mask: Required. Comma-separated fields to update (e.g. 'regularHours', 'specialHours', 'profile.description', 'categories', 'serviceItems'). Any valid Google Business Information API updateMask field is supported. (required)
             regular_hours
             special_hours
             profile
             website_uri
-            phone_numbers"""
+            phone_numbers
+            categories: Primary and additional business categories. Use updateMask='categories' to update.
+            service_items: Services offered by the business. Use updateMask='serviceItems' to update."""
         client = _get_client()
         try:
             response = client.accounts.update_google_business_location_details(
@@ -489,6 +493,8 @@ def register_generated_tools(mcp, _get_client):
                 profile=profile,
                 websiteUri=website_uri,
                 phoneNumbers=phone_numbers,
+                categories=categories,
+                serviceItems=service_items,
             )
             return _format_response(response)
         except Exception as e:

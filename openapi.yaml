@@ -6363,7 +6363,7 @@ paths:
       operationId: getGoogleBusinessLocationDetails
       tags: [GMB Location Details]
       summary: Get location details
-      description: Returns detailed GBP location info (hours, description, phone, website, categories). Use readMask to request specific fields.
+      description: Returns detailed GBP location info (hours, description, phone, website, categories, services). Use readMask to request specific fields.
       parameters:
         - name: accountId
           in: path
@@ -6378,7 +6378,7 @@ paths:
           in: query
           required: false
           schema: { type: string }
-          description: "Comma-separated fields to return. Available: name, title, phoneNumbers, categories, storefrontAddress, websiteUri, regularHours, specialHours, serviceArea, profile, openInfo, metadata, moreHours."
+          description: "Comma-separated fields to return. Available: name, title, phoneNumbers, categories, storefrontAddress, websiteUri, regularHours, specialHours, serviceArea, serviceItems, profile, openInfo, metadata, moreHours."
       security:
         - bearerAuth: []
       responses:
@@ -6428,6 +6428,48 @@ paths:
                     properties:
                       primaryPhone: { type: string }
                       additionalPhones: { type: array, items: { type: string } }
+                  categories:
+                    type: object
+                    description: "Business categories (returned when readMask includes 'categories')"
+                    properties:
+                      primaryCategory:
+                        type: object
+                        properties:
+                          name: { type: string, description: "Category resource name" }
+                          displayName: { type: string, description: "Human-readable category name" }
+                      additionalCategories:
+                        type: array
+                        items:
+                          type: object
+                          properties:
+                            name: { type: string }
+                            displayName: { type: string }
+                  serviceItems:
+                    type: array
+                    description: "Services offered (returned when readMask includes 'serviceItems')"
+                    items:
+                      type: object
+                      properties:
+                        structuredServiceItem:
+                          type: object
+                          properties:
+                            serviceTypeId: { type: string }
+                            description: { type: string }
+                        freeFormServiceItem:
+                          type: object
+                          properties:
+                            category: { type: string }
+                            label:
+                              type: object
+                              properties:
+                                displayName: { type: string }
+                                languageCode: { type: string }
+                        price:
+                          type: object
+                          properties:
+                            currencyCode: { type: string }
+                            units: { type: string }
+                            nanos: { type: integer }
               example:
                 success: true
                 accountId: "64e1f0a9e2b5af0012ab34cd"
@@ -6450,6 +6492,13 @@ paths:
                 profile:
                   description: "Authentic New York style pizza since 1985"
                 websiteUri: "https://joespizza.com"
+                categories:
+                  primaryCategory:
+                    name: "categories/gcid:pizza_restaurant"
+                    displayName: "Pizza restaurant"
+                  additionalCategories:
+                    - name: "categories/gcid:italian_restaurant"
+                      displayName: "Italian restaurant"
         '400':
           description: Invalid request
           content:
@@ -6465,7 +6514,10 @@ paths:
       operationId: updateGoogleBusinessLocationDetails
       tags: [GMB Location Details]
       summary: Update location details
-      description: Updates GBP location details (hours, description, phone, website). The updateMask field is required and specifies which fields to update.
+      description: |
+        Updates GBP location details. The updateMask field is required and specifies which fields to update.
+        This endpoint proxies Google's Business Information API locations.patch, so any valid updateMask field is supported.
+        Common fields: regularHours, specialHours, profile.description, websiteUri, phoneNumbers, categories, serviceItems.
       parameters:
         - name: accountId
           in: path
@@ -6488,7 +6540,7 @@ paths:
               properties:
                 updateMask:
                   type: string
-                  description: "Required. Comma-separated fields to update (e.g. 'regularHours', 'specialHours', 'profile.description')"
+                  description: "Required. Comma-separated fields to update (e.g. 'regularHours', 'specialHours', 'profile.description', 'categories', 'serviceItems'). Any valid Google Business Information API updateMask field is supported."
                 regularHours:
                   type: object
                   properties:
@@ -6524,25 +6576,111 @@ paths:
                   properties:
                     primaryPhone: { type: string }
                     additionalPhones: { type: array, items: { type: string } }
-            example:
-              updateMask: "regularHours,specialHours"
-              regularHours:
-                periods:
-                  - openDay: "MONDAY"
-                    openTime: "09:00"
-                    closeDay: "MONDAY"
-                    closeTime: "17:00"
-                  - openDay: "SATURDAY"
-                    openTime: "10:00"
-                    closeDay: "SATURDAY"
-                    closeTime: "14:00"
-              specialHours:
-                specialHourPeriods:
-                  - startDate: { year: 2026, month: 12, day: 25 }
-                    closed: true
-                  - startDate: { year: 2026, month: 12, day: 31 }
-                    openTime: "09:00"
-                    closeTime: "15:00"
+                categories:
+                  type: object
+                  description: "Primary and additional business categories. Use updateMask='categories' to update."
+                  properties:
+                    primaryCategory:
+                      type: object
+                      properties:
+                        name:
+                          type: string
+                          description: "Category resource name (e.g. 'categories/gcid:laundromat'). Use Google's Categories API to look up valid IDs."
+                    additionalCategories:
+                      type: array
+                      items:
+                        type: object
+                        properties:
+                          name:
+                            type: string
+                            description: "Category resource name (e.g. 'categories/gcid:dry_cleaner')"
+                serviceItems:
+                  type: array
+                  description: "Services offered by the business. Use updateMask='serviceItems' to update."
+                  items:
+                    type: object
+                    properties:
+                      structuredServiceItem:
+                        type: object
+                        description: "A predefined service from Google's service type catalog"
+                        properties:
+                          serviceTypeId:
+                            type: string
+                            description: "Service type ID from Google's catalog (e.g. 'job_type_id:plumbing_drain_repair')"
+                          description:
+                            type: string
+                            description: "Optional description of the service"
+                      freeFormServiceItem:
+                        type: object
+                        description: "A custom service not in Google's catalog"
+                        properties:
+                          category:
+                            type: string
+                            description: "Category resource name this service belongs to (e.g. 'categories/gcid:laundromat')"
+                          label:
+                            type: object
+                            properties:
+                              displayName:
+                                type: string
+                                description: "Service name as displayed to users"
+                              languageCode:
+                                type: string
+                                description: "Language code (e.g. 'en')"
+                      price:
+                        type: object
+                        description: "Optional price for the service"
+                        properties:
+                          currencyCode: { type: string, description: "ISO 4217 currency code (e.g. 'USD')" }
+                          units: { type: string, description: "Whole units of the amount" }
+                          nanos: { type: integer, description: "Nano units (10^-9) of the amount" }
+            examples:
+              updateHours:
+                summary: Update business hours
+                value:
+                  updateMask: "regularHours,specialHours"
+                  regularHours:
+                    periods:
+                      - openDay: "MONDAY"
+                        openTime: "09:00"
+                        closeDay: "MONDAY"
+                        closeTime: "17:00"
+                      - openDay: "SATURDAY"
+                        openTime: "10:00"
+                        closeDay: "SATURDAY"
+                        closeTime: "14:00"
+                  specialHours:
+                    specialHourPeriods:
+                      - startDate: { year: 2026, month: 12, day: 25 }
+                        closed: true
+                      - startDate: { year: 2026, month: 12, day: 31 }
+                        openTime: "09:00"
+                        closeTime: "15:00"
+              updateCategories:
+                summary: Update business categories
+                value:
+                  updateMask: "categories"
+                  categories:
+                    primaryCategory:
+                      name: "categories/gcid:laundromat"
+                    additionalCategories:
+                      - name: "categories/gcid:dry_cleaner"
+                      - name: "categories/gcid:laundry_service"
+              updateServices:
+                summary: Update service items
+                value:
+                  updateMask: "serviceItems"
+                  serviceItems:
+                    - structuredServiceItem:
+                        serviceTypeId: "job_type_id:plumbing_drain_repair"
+                        description: "Full drain cleaning and repair service"
+                    - freeFormServiceItem:
+                        category: "categories/gcid:laundromat"
+                        label:
+                          displayName: "Wash & Fold Service"
+                          languageCode: "en"
+                      price:
+                        currencyCode: "USD"
+                        units: "25"
       responses:
         '200':
           description: Location updated successfully
