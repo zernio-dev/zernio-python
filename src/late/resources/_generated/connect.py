@@ -259,6 +259,18 @@ class ConnectResource:
         )
         return self._client._post("/v1/connect/bluesky/credentials", data=payload)
 
+    def connect_whats_app_credentials(
+        self, profile_id: str, access_token: str, waba_id: str, phone_number_id: str
+    ) -> dict[str, Any]:
+        """Connect WhatsApp via credentials"""
+        payload = self._build_payload(
+            profile_id=profile_id,
+            access_token=access_token,
+            waba_id=waba_id,
+            phone_number_id=phone_number_id,
+        )
+        return self._client._post("/v1/connect/whatsapp/credentials", data=payload)
+
     def get_telegram_connect_status(self, profile_id: str) -> dict[str, Any]:
         """Generate Telegram code"""
         params = self._build_params(
@@ -606,6 +618,20 @@ class ConnectResource:
         )
         return await self._client._apost(
             "/v1/connect/bluesky/credentials", data=payload
+        )
+
+    async def aconnect_whats_app_credentials(
+        self, profile_id: str, access_token: str, waba_id: str, phone_number_id: str
+    ) -> dict[str, Any]:
+        """Connect WhatsApp via credentials (async)"""
+        payload = self._build_payload(
+            profile_id=profile_id,
+            access_token=access_token,
+            waba_id=waba_id,
+            phone_number_id=phone_number_id,
+        )
+        return await self._client._apost(
+            "/v1/connect/whatsapp/credentials", data=payload
         )
 
     async def aget_telegram_connect_status(self, profile_id: str) -> dict[str, Any]:

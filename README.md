@@ -309,6 +309,7 @@ except LateAPIError as e:
 | `connect.update_reddit_subreddits()` | Set default subreddit |
 | `connect.complete_telegram_connect()` | Check Telegram status |
 | `connect.connect_bluesky_credentials()` | Connect Bluesky account |
+| `connect.connect_whats_app_credentials()` | Connect WhatsApp via credentials |
 | `connect.handle_o_auth_callback()` | Complete OAuth callback |
 | `connect.initiate_telegram_connect()` | Connect Telegram directly |
 | `connect.select_facebook_page()` | Select Facebook page |

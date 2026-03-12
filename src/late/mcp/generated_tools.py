@@ -1503,6 +1503,29 @@ def register_generated_tools(mcp, _get_client):
             return f"Error: {e}"
 
     @mcp.tool()
+    def connect_whats_app_credentials(
+        profile_id: str, access_token: str, waba_id: str, phone_number_id: str
+    ) -> str:
+        """Connect WhatsApp via credentials
+
+        Args:
+            profile_id: Your Late profile ID (required)
+            access_token: Permanent System User access token from Meta Business Suite (required)
+            waba_id: WhatsApp Business Account ID from Meta (required)
+            phone_number_id: Phone Number ID from Meta WhatsApp Manager (required)"""
+        client = _get_client()
+        try:
+            response = client.connect.connect_whats_app_credentials(
+                profileId=profile_id,
+                accessToken=access_token,
+                wabaId=waba_id,
+                phoneNumberId=phone_number_id,
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool()
     def connect_get_telegram_connect_status(profile_id: str) -> str:
         """Generate Telegram code
 
@@ -3174,16 +3197,31 @@ def register_generated_tools(mcp, _get_client):
 
     @mcp.tool()
     def whatsapp_create_whats_app_template(
-        account_id: str, name: str, category: str, language: str, components: str
+        account_id: str,
+        name: str,
+        category: str,
+        language: str,
+        components: str = "",
+        library_template_name: str = "",
+        library_template_body_inputs: str = "",
+        library_template_button_inputs: str = "",
     ) -> str:
         """Create template
 
-        Args:
-            account_id: WhatsApp social account ID (required)
-            name: Template name (lowercase, letters/numbers/underscores, must start with a letter) (required)
-            category: Template category (required)
-            language: Template language code (e.g., en_US) (required)
-            components: Template components (header, body, footer, buttons) (required)"""
+            Args:
+                account_id: WhatsApp social account ID (required)
+                name: Template name (lowercase, letters/numbers/underscores, must start with a letter) (required)
+                category: Template category (required)
+                language: Template language code (e.g., en_US) (required)
+                components: Template components (header, body, footer, buttons). Required for custom templates, omit when using library_template_name.
+                library_template_name: Name of a pre-built template from Meta's template library (e.g., "appointment_reminder",
+        "auto_pay_reminder_1", "address_update"). When provided, the template is pre-approved
+        by Meta with no review wait. Omit `components` when using this field.
+                library_template_body_inputs: Optional body customizations for library templates. Available options depend on the
+        template (e.g., add_contact_number, add_learn_more_link, add_security_recommendation,
+        add_track_package_link, code_expiration_minutes).
+                library_template_button_inputs: Optional button customizations for library templates. Each item specifies button type
+        and configuration (e.g., URL, phone number, quick reply)."""
         client = _get_client()
         try:
             response = client.whatsapp.create_whats_app_template(
@@ -3192,6 +3230,9 @@ def register_generated_tools(mcp, _get_client):
                 category=category,
                 language=language,
                 components=components,
+                library_template_name=library_template_name,
+                library_template_body_inputs=library_template_body_inputs,
+                library_template_button_inputs=library_template_button_inputs,
             )
             return _format_response(response)
         except Exception as e:

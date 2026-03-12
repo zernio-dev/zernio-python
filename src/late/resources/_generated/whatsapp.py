@@ -229,7 +229,11 @@ class WhatsappResource:
         name: str,
         category: str,
         language: str,
-        components: list[dict[str, Any]],
+        *,
+        components: list[dict[str, Any]] | None = None,
+        library_template_name: str | None = None,
+        library_template_body_inputs: dict[str, Any] | None = None,
+        library_template_button_inputs: list[dict[str, Any]] | None = None,
     ) -> dict[str, Any]:
         """Create template"""
         payload = self._build_payload(
@@ -238,6 +242,9 @@ class WhatsappResource:
             category=category,
             language=language,
             components=components,
+            library_template_name=library_template_name,
+            library_template_body_inputs=library_template_body_inputs,
+            library_template_button_inputs=library_template_button_inputs,
         )
         return self._client._post("/v1/whatsapp/templates", data=payload)
 
@@ -590,7 +597,11 @@ class WhatsappResource:
         name: str,
         category: str,
         language: str,
-        components: list[dict[str, Any]],
+        *,
+        components: list[dict[str, Any]] | None = None,
+        library_template_name: str | None = None,
+        library_template_body_inputs: dict[str, Any] | None = None,
+        library_template_button_inputs: list[dict[str, Any]] | None = None,
     ) -> dict[str, Any]:
         """Create template (async)"""
         payload = self._build_payload(
@@ -599,6 +610,9 @@ class WhatsappResource:
             category=category,
             language=language,
             components=components,
+            library_template_name=library_template_name,
+            library_template_body_inputs=library_template_body_inputs,
+            library_template_button_inputs=library_template_button_inputs,
         )
         return await self._client._apost("/v1/whatsapp/templates", data=payload)
 

@@ -7628,6 +7628,91 @@ paths:
         '401': { $ref: '#/components/responses/Unauthorized' }
         '500': { description: Internal error }
 
+  /v1/connect/whatsapp/credentials:
+    post:
+      operationId: connectWhatsAppCredentials
+      tags: [Connect]
+      summary: Connect WhatsApp via credentials
+      description: |
+        Connect a WhatsApp Business Account by providing Meta credentials directly.
+        This is the headless alternative to the Embedded Signup browser flow.
+
+        To get the required credentials:
+        1. Go to Meta Business Suite (business.facebook.com)
+        2. Create or select a WhatsApp Business Account
+        3. In Business Settings > System Users, create a System User
+        4. Assign it the `whatsapp_business_management` and `whatsapp_business_messaging` permissions
+        5. Generate a permanent access token
+        6. Get the WABA ID from WhatsApp Manager > Account Tools > Phone Numbers
+        7. Get the Phone Number ID from the same page (click on the number)
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [profileId, accessToken, wabaId, phoneNumberId]
+              properties:
+                profileId:
+                  type: string
+                  description: Your Late profile ID
+                accessToken:
+                  type: string
+                  description: Permanent System User access token from Meta Business Suite
+                wabaId:
+                  type: string
+                  description: WhatsApp Business Account ID from Meta
+                phoneNumberId:
+                  type: string
+                  description: Phone Number ID from Meta WhatsApp Manager
+            example:
+              profileId: "6507a1b2c3d4e5f6a7b8c9d0"
+              accessToken: "EAABsbCS...your-system-user-token"
+              wabaId: "123456789012345"
+              phoneNumberId: "987654321098765"
+      responses:
+        '200':
+          description: WhatsApp connected successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message: { type: string }
+                  account:
+                    type: object
+                    properties:
+                      accountId: { type: string }
+                      platform: { type: string, enum: [whatsapp] }
+                      username: { type: string, description: Display phone number }
+                      displayName: { type: string, description: Meta-verified business name }
+                      isActive: { type: boolean }
+                      phoneNumber: { type: string }
+                      verifiedName: { type: string }
+                      qualityRating: { type: string, description: "GREEN, YELLOW, or RED" }
+              example:
+                message: "WhatsApp connected successfully"
+                account:
+                  accountId: "6507a1b2c3d4e5f6a7b8c9d0"
+                  platform: "whatsapp"
+                  username: "+1 555-123-4567"
+                  displayName: "Acme Corp"
+                  isActive: true
+                  phoneNumber: "+1 555-123-4567"
+                  verifiedName: "Acme Corp"
+                  qualityRating: "GREEN"
+        '400':
+          description: |
+            Invalid request. Either missing fields or the phoneNumberId was not found
+            in the specified WABA. If the phone was not found, the response includes
+            `availablePhoneNumbers` to help identify the correct ID.
+        '401':
+          description: Invalid or expired access token
+        '403':
+          description: Profile limit exceeded for this plan
+
   /v1/connect/telegram:
     get:
       operationId: getTelegramConnectStatus
@@ -12136,8 +12221,15 @@ paths:
       tags: [WhatsApp]
       summary: Create template
       description: |
-        Create a new message template. Template names must be lowercase, start with a letter,
-        and contain only letters, numbers, and underscores. Templates are submitted to Meta for review.
+        Create a new message template. Supports two modes:
+
+        **Custom template:** Provide `components` with your own content. Submitted to Meta for review (can take up to 24h).
+
+        **Library template:** Provide `library_template_name` instead of `components` to use a pre-built template
+        from Meta's template library. Library templates are **pre-approved** (no review wait). You can optionally
+        customize parameters and buttons via `library_template_body_inputs` and `library_template_button_inputs`.
+
+        Browse available library templates at: https://business.facebook.com/wa/manage/message-templates/
       security:
         - bearerAuth: []
       requestBody:
@@ -12151,7 +12243,6 @@ paths:
                 - name
                 - category
                 - language
-                - components
               properties:
                 accountId:
                   type: string
@@ -12169,20 +12260,64 @@ paths:
                   description: Template language code (e.g., en_US)
                 components:
                   type: array
-                  description: Template components (header, body, footer, buttons)
+                  description: "Template components (header, body, footer, buttons). Required for custom templates, omit when using library_template_name."
                   items:
                     type: object
-            example:
-              accountId: "507f1f77bcf86cd799439011"
-              name: "order_confirmation"
-              category: "UTILITY"
-              language: "en_US"
-              components:
-                - type: "body"
-                  text: "Your order {{1}} has been confirmed. Expected delivery: {{2}}"
+                library_template_name:
+                  type: string
+                  description: |
+                    Name of a pre-built template from Meta's template library (e.g., "appointment_reminder",
+                    "auto_pay_reminder_1", "address_update"). When provided, the template is pre-approved
+                    by Meta with no review wait. Omit `components` when using this field.
+                library_template_body_inputs:
+                  type: object
+                  description: |
+                    Optional body customizations for library templates. Available options depend on the
+                    template (e.g., add_contact_number, add_learn_more_link, add_security_recommendation,
+                    add_track_package_link, code_expiration_minutes).
+                library_template_button_inputs:
+                  type: array
+                  description: |
+                    Optional button customizations for library templates. Each item specifies button type
+                    and configuration (e.g., URL, phone number, quick reply).
+                  items:
+                    type: object
+                    properties:
+                      type:
+                        type: string
+                        enum: [QUICK_REPLY, URL, PHONE_NUMBER]
+                      url:
+                        type: object
+                        properties:
+                          base_url: { type: string }
+                      phone_number:
+                        type: string
+            examples:
+              custom:
+                summary: Custom template (requires review)
+                value:
+                  accountId: "507f1f77bcf86cd799439011"
+                  name: "order_confirmation"
+                  category: "UTILITY"
+                  language: "en_US"
+                  components:
+                    - type: "body"
+                      text: "Your order {{1}} has been confirmed. Expected delivery: {{2}}"
+              library:
+                summary: Library template (pre-approved, no review)
+                value:
+                  accountId: "507f1f77bcf86cd799439011"
+                  name: "my_appointment_reminder"
+                  category: "UTILITY"
+                  language: "en_US"
+                  library_template_name: "appointment_reminder"
+                  library_template_button_inputs:
+                    - type: "URL"
+                      url:
+                        base_url: "https://myapp.com/appointments/{{1}}"
       responses:
         '200':
-          description: Template created and submitted for review
+          description: Template created (pre-approved for library templates, pending review for custom)
           content:
             application/json:
               schema:
@@ -12194,7 +12329,7 @@ paths:
                     properties:
                       id: { type: string }
                       name: { type: string }
-                      status: { type: string }
+                      status: { type: string, description: "APPROVED for library templates, PENDING for custom" }
                       category: { type: string }
                       language: { type: string }
         '400': { description: Validation error (invalid name format, missing fields, invalid category) }
