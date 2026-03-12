@@ -1717,6 +1717,7 @@ components:
         planName: { type: string }
         billingPeriod: { type: string, enum: [monthly, yearly] }
         signupDate: { type: string, format: date-time }
+        billingAnchorDay: { type: integer, description: "Day of month (1-31) when the billing cycle resets" }
         limits:
           type: object
           properties:
@@ -4028,6 +4029,7 @@ paths:
                 planName: "Pro"
                 billingPeriod: "monthly"
                 signupDate: "2024-01-15T10:30:00Z"
+                billingAnchorDay: 15
                 limits:
                   uploads: 500
                   profiles: 10
