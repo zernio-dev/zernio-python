@@ -372,33 +372,43 @@ def register_generated_tools(mcp, _get_client):
 
     @mcp.tool()
     def accounts_get_google_business_reviews(
-        account_id: str, page_size: int = 50, page_token: str = ""
+        account_id: str,
+        location_id: str = "",
+        page_size: int = 50,
+        page_token: str = "",
     ) -> str:
         """Get reviews
 
         Args:
             account_id: The Late account ID (from /v1/accounts) (required)
+            location_id: Override which location to query. If omitted, uses the account's selected location. Use GET /gmb-locations to list valid IDs.
             page_size: Number of reviews to fetch per page (max 50)
             page_token: Pagination token from previous response"""
         client = _get_client()
         try:
             response = client.accounts.get_google_business_reviews(
-                account_id=account_id, page_size=page_size, page_token=page_token
+                account_id=account_id,
+                location_id=location_id,
+                page_size=page_size,
+                page_token=page_token,
             )
             return _format_response(response)
         except Exception as e:
             return f"Error: {e}"
 
     @mcp.tool()
-    def accounts_get_google_business_food_menus(account_id: str) -> str:
+    def accounts_get_google_business_food_menus(
+        account_id: str, location_id: str = ""
+    ) -> str:
         """Get food menus
 
         Args:
-            account_id: The Late account ID (from /v1/accounts) (required)"""
+            account_id: The Late account ID (from /v1/accounts) (required)
+            location_id: Override which location to query. If omitted, uses the account's selected location. Use GET /gmb-locations to list valid IDs."""
         client = _get_client()
         try:
             response = client.accounts.get_google_business_food_menus(
-                account_id=account_id
+                account_id=account_id, location_id=location_id
             )
             return _format_response(response)
         except Exception as e:
@@ -406,18 +416,22 @@ def register_generated_tools(mcp, _get_client):
 
     @mcp.tool()
     def accounts_update_google_business_food_menus(
-        account_id: str, menus: str, update_mask: str = ""
+        account_id: str, menus: str, location_id: str = "", update_mask: str = ""
     ) -> str:
         """Update food menus
 
         Args:
             account_id: The Late account ID (from /v1/accounts) (required)
+            location_id: Override which location to target. If omitted, uses the account's selected location. Use GET /gmb-locations to list valid IDs.
             menus: Array of food menus to set (required)
             update_mask: Field mask for partial updates (e.g. "menus")"""
         client = _get_client()
         try:
             response = client.accounts.update_google_business_food_menus(
-                account_id=account_id, menus=menus, updateMask=update_mask
+                account_id=account_id,
+                location_id=location_id,
+                menus=menus,
+                updateMask=update_mask,
             )
             return _format_response(response)
         except Exception as e:
@@ -425,17 +439,18 @@ def register_generated_tools(mcp, _get_client):
 
     @mcp.tool()
     def accounts_get_google_business_location_details(
-        account_id: str, read_mask: str = ""
+        account_id: str, location_id: str = "", read_mask: str = ""
     ) -> str:
         """Get location details
 
         Args:
             account_id: The Late account ID (from /v1/accounts) (required)
+            location_id: Override which location to query. If omitted, uses the account's selected location. Use GET /gmb-locations to list valid IDs.
             read_mask: Comma-separated fields to return. Available: name, title, phoneNumbers, categories, storefrontAddress, websiteUri, regularHours, specialHours, serviceArea, profile, openInfo, metadata, moreHours."""
         client = _get_client()
         try:
             response = client.accounts.get_google_business_location_details(
-                account_id=account_id, read_mask=read_mask
+                account_id=account_id, location_id=location_id, read_mask=read_mask
             )
             return _format_response(response)
         except Exception as e:
@@ -445,6 +460,7 @@ def register_generated_tools(mcp, _get_client):
     def accounts_update_google_business_location_details(
         account_id: str,
         update_mask: str,
+        location_id: str = "",
         regular_hours: str = "",
         special_hours: str = "",
         profile: str = "",
@@ -455,6 +471,7 @@ def register_generated_tools(mcp, _get_client):
 
         Args:
             account_id: The Late account ID (from /v1/accounts) (required)
+            location_id: Override which location to target. If omitted, uses the account's selected location. Use GET /gmb-locations to list valid IDs.
             update_mask: Required. Comma-separated fields to update (e.g. 'regularHours', 'specialHours', 'profile.description') (required)
             regular_hours
             special_hours
@@ -465,6 +482,7 @@ def register_generated_tools(mcp, _get_client):
         try:
             response = client.accounts.update_google_business_location_details(
                 account_id=account_id,
+                location_id=location_id,
                 updateMask=update_mask,
                 regularHours=regular_hours,
                 specialHours=special_hours,
@@ -478,18 +496,25 @@ def register_generated_tools(mcp, _get_client):
 
     @mcp.tool()
     def accounts_list_google_business_media(
-        account_id: str, page_size: int = 100, page_token: str = ""
+        account_id: str,
+        location_id: str = "",
+        page_size: int = 100,
+        page_token: str = "",
     ) -> str:
         """List media
 
         Args:
             account_id: (required)
+            location_id: Override which location to query. If omitted, uses the account's selected location. Use GET /gmb-locations to list valid IDs.
             page_size: Number of items to return (max 100)
             page_token: Pagination token from previous response"""
         client = _get_client()
         try:
             response = client.accounts.list_google_business_media(
-                account_id=account_id, page_size=page_size, page_token=page_token
+                account_id=account_id,
+                location_id=location_id,
+                page_size=page_size,
+                page_token=page_token,
             )
             return _format_response(response)
         except Exception as e:
@@ -499,6 +524,7 @@ def register_generated_tools(mcp, _get_client):
     def accounts_create_google_business_media(
         account_id: str,
         source_url: str,
+        location_id: str = "",
         media_format: str = "PHOTO",
         description: str = "",
         category: str = "",
@@ -507,6 +533,7 @@ def register_generated_tools(mcp, _get_client):
 
         Args:
             account_id: (required)
+            location_id: Override which location to target. If omitted, uses the account's selected location. Use GET /gmb-locations to list valid IDs.
             source_url: Publicly accessible image URL (required)
             media_format
             description: Photo description
@@ -515,6 +542,7 @@ def register_generated_tools(mcp, _get_client):
         try:
             response = client.accounts.create_google_business_media(
                 account_id=account_id,
+                location_id=location_id,
                 sourceUrl=source_url,
                 mediaFormat=media_format,
                 description=description,
@@ -525,31 +553,37 @@ def register_generated_tools(mcp, _get_client):
             return f"Error: {e}"
 
     @mcp.tool()
-    def accounts_delete_google_business_media(account_id: str, media_id: str) -> str:
+    def accounts_delete_google_business_media(
+        account_id: str, media_id: str, location_id: str = ""
+    ) -> str:
         """Delete photo
 
         Args:
             account_id: (required)
+            location_id: Override which location to target. If omitted, uses the account's selected location. Use GET /gmb-locations to list valid IDs.
             media_id: The media item ID to delete (required)"""
         client = _get_client()
         try:
             response = client.accounts.delete_google_business_media(
-                account_id=account_id, media_id=media_id
+                account_id=account_id, location_id=location_id, media_id=media_id
             )
             return _format_response(response)
         except Exception as e:
             return f"Error: {e}"
 
     @mcp.tool()
-    def accounts_get_google_business_attributes(account_id: str) -> str:
+    def accounts_get_google_business_attributes(
+        account_id: str, location_id: str = ""
+    ) -> str:
         """Get attributes
 
         Args:
-            account_id: (required)"""
+            account_id: (required)
+            location_id: Override which location to query. If omitted, uses the account's selected location. Use GET /gmb-locations to list valid IDs."""
         client = _get_client()
         try:
             response = client.accounts.get_google_business_attributes(
-                account_id=account_id
+                account_id=account_id, location_id=location_id
             )
             return _format_response(response)
         except Exception as e:
@@ -557,18 +591,20 @@ def register_generated_tools(mcp, _get_client):
 
     @mcp.tool()
     def accounts_update_google_business_attributes(
-        account_id: str, attributes: str, attribute_mask: str
+        account_id: str, attributes: str, attribute_mask: str, location_id: str = ""
     ) -> str:
         """Update attributes
 
         Args:
             account_id: (required)
+            location_id: Override which location to target. If omitted, uses the account's selected location. Use GET /gmb-locations to list valid IDs.
             attributes: (required)
             attribute_mask: Comma-separated attribute names to update (e.g. 'has_delivery,has_takeout') (required)"""
         client = _get_client()
         try:
             response = client.accounts.update_google_business_attributes(
                 account_id=account_id,
+                location_id=location_id,
                 attributes=attributes,
                 attributeMask=attribute_mask,
             )
@@ -578,18 +614,25 @@ def register_generated_tools(mcp, _get_client):
 
     @mcp.tool()
     def accounts_list_google_business_place_actions(
-        account_id: str, page_size: int = 100, page_token: str = ""
+        account_id: str,
+        location_id: str = "",
+        page_size: int = 100,
+        page_token: str = "",
     ) -> str:
         """List action links
 
         Args:
             account_id: (required)
+            location_id: Override which location to query. If omitted, uses the account's selected location. Use GET /gmb-locations to list valid IDs.
             page_size
             page_token"""
         client = _get_client()
         try:
             response = client.accounts.list_google_business_place_actions(
-                account_id=account_id, page_size=page_size, page_token=page_token
+                account_id=account_id,
+                location_id=location_id,
+                page_size=page_size,
+                page_token=page_token,
             )
             return _format_response(response)
         except Exception as e:
@@ -597,34 +640,41 @@ def register_generated_tools(mcp, _get_client):
 
     @mcp.tool()
     def accounts_create_google_business_place_action(
-        account_id: str, uri: str, place_action_type: str
+        account_id: str, uri: str, place_action_type: str, location_id: str = ""
     ) -> str:
         """Create action link
 
         Args:
             account_id: (required)
+            location_id: Override which location to target. If omitted, uses the account's selected location. Use GET /gmb-locations to list valid IDs.
             uri: The action URL (required)
             place_action_type: Type of action (required)"""
         client = _get_client()
         try:
             response = client.accounts.create_google_business_place_action(
-                account_id=account_id, uri=uri, placeActionType=place_action_type
+                account_id=account_id,
+                location_id=location_id,
+                uri=uri,
+                placeActionType=place_action_type,
             )
             return _format_response(response)
         except Exception as e:
             return f"Error: {e}"
 
     @mcp.tool()
-    def accounts_delete_google_business_place_action(account_id: str, name: str) -> str:
+    def accounts_delete_google_business_place_action(
+        account_id: str, name: str, location_id: str = ""
+    ) -> str:
         """Delete action link
 
         Args:
             account_id: (required)
+            location_id: Override which location to target. If omitted, uses the account's selected location. Use GET /gmb-locations to list valid IDs.
             name: The resource name of the place action link (e.g. locations/123/placeActionLinks/456) (required)"""
         client = _get_client()
         try:
             response = client.accounts.delete_google_business_place_action(
-                account_id=account_id, name=name
+                account_id=account_id, location_id=location_id, name=name
             )
             return _format_response(response)
         except Exception as e:

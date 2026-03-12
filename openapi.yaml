@@ -6051,6 +6051,10 @@ paths:
           required: true
           schema: { type: string }
           description: The Late account ID (from /v1/accounts)
+        - name: locationId
+          in: query
+          schema: { type: string }
+          description: Override which location to query. If omitted, uses the account's selected location. Use GET /gmb-locations to list valid IDs.
         - name: pageSize
           in: query
           schema: { type: integer, minimum: 1, maximum: 50, default: 50 }
@@ -6173,6 +6177,10 @@ paths:
           required: true
           schema: { type: string }
           description: The Late account ID (from /v1/accounts)
+        - name: locationId
+          in: query
+          schema: { type: string }
+          description: Override which location to query. If omitted, uses the account's selected location. Use GET /gmb-locations to list valid IDs.
       security:
         - bearerAuth: []
       responses:
@@ -6251,6 +6259,10 @@ paths:
           required: true
           schema: { type: string }
           description: The Late account ID (from /v1/accounts)
+        - name: locationId
+          in: query
+          schema: { type: string }
+          description: Override which location to target. If omitted, uses the account's selected location. Use GET /gmb-locations to list valid IDs.
       security:
         - bearerAuth: []
       requestBody:
@@ -6339,6 +6351,10 @@ paths:
           required: true
           schema: { type: string }
           description: The Late account ID (from /v1/accounts)
+        - name: locationId
+          in: query
+          schema: { type: string }
+          description: Override which location to query. If omitted, uses the account's selected location. Use GET /gmb-locations to list valid IDs.
         - name: readMask
           in: query
           required: false
@@ -6437,6 +6453,10 @@ paths:
           required: true
           schema: { type: string }
           description: The Late account ID (from /v1/accounts)
+        - name: locationId
+          in: query
+          schema: { type: string }
+          description: Override which location to target. If omitted, uses the account's selected location. Use GET /gmb-locations to list valid IDs.
       security:
         - bearerAuth: []
       requestBody:
@@ -6540,6 +6560,10 @@ paths:
           in: path
           required: true
           schema: { type: string }
+        - name: locationId
+          in: query
+          schema: { type: string }
+          description: Override which location to query. If omitted, uses the account's selected location. Use GET /gmb-locations to list valid IDs.
         - name: pageSize
           in: query
           schema: { type: integer, maximum: 100, default: 100 }
@@ -6602,6 +6626,10 @@ paths:
           in: path
           required: true
           schema: { type: string }
+        - name: locationId
+          in: query
+          schema: { type: string }
+          description: Override which location to target. If omitted, uses the account's selected location. Use GET /gmb-locations to list valid IDs.
       security:
         - bearerAuth: []
       requestBody:
@@ -6655,6 +6683,10 @@ paths:
           in: path
           required: true
           schema: { type: string }
+        - name: locationId
+          in: query
+          schema: { type: string }
+          description: Override which location to target. If omitted, uses the account's selected location. Use GET /gmb-locations to list valid IDs.
         - name: mediaId
           in: query
           required: true
@@ -6695,6 +6727,10 @@ paths:
           in: path
           required: true
           schema: { type: string }
+        - name: locationId
+          in: query
+          schema: { type: string }
+          description: Override which location to query. If omitted, uses the account's selected location. Use GET /gmb-locations to list valid IDs.
       security:
         - bearerAuth: []
       responses:
@@ -6760,6 +6796,10 @@ paths:
           in: path
           required: true
           schema: { type: string }
+        - name: locationId
+          in: query
+          schema: { type: string }
+          description: Override which location to target. If omitted, uses the account's selected location. Use GET /gmb-locations to list valid IDs.
       security:
         - bearerAuth: []
       requestBody:
@@ -6831,6 +6871,10 @@ paths:
           in: path
           required: true
           schema: { type: string }
+        - name: locationId
+          in: query
+          schema: { type: string }
+          description: Override which location to query. If omitted, uses the account's selected location. Use GET /gmb-locations to list valid IDs.
         - name: pageSize
           in: query
           schema: { type: integer, maximum: 100, default: 100 }
@@ -6893,6 +6937,10 @@ paths:
           in: path
           required: true
           schema: { type: string }
+        - name: locationId
+          in: query
+          schema: { type: string }
+          description: Override which location to target. If omitted, uses the account's selected location. Use GET /gmb-locations to list valid IDs.
       security:
         - bearerAuth: []
       requestBody:
@@ -6943,6 +6991,10 @@ paths:
           in: path
           required: true
           schema: { type: string }
+        - name: locationId
+          in: query
+          schema: { type: string }
+          description: Override which location to target. If omitted, uses the account's selected location. Use GET /gmb-locations to list valid IDs.
         - name: name
           in: query
           required: true
