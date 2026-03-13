@@ -195,6 +195,11 @@ tags:
       Unified inbox API for managing reviews on Facebook Pages and Google Business accounts.
       All endpoints aggregate data from multiple social accounts in a single API call.
       Requires Inbox addon.
+  - name: Twitter Engagement
+    description: |
+      X/Twitter-specific engagement endpoints for retweeting, bookmarking, and following.
+      All endpoints require an X API Basic tier ($200/mo) or higher. Users must reconnect their X account after upgrading to grant the required OAuth scopes.
+      Rate limits: 50 requests per 15-min window per user. Retweets share the 300/3hr creation limit with tweet creation.
   - name: Tools
     description: |
       Media download and utility tools. Available to paid plans only.
@@ -11150,8 +11155,9 @@ paths:
       operationId: hideInboxComment
       summary: Hide comment
       description: |
-        Hide a comment on a post. Supported by Facebook, Instagram, and Threads.
+        Hide a comment on a post. Supported by Facebook, Instagram, Threads, and X/Twitter.
         Hidden comments are only visible to the commenter and page admin.
+        For X/Twitter, the reply must belong to a conversation started by the authenticated user. Requires the tweet.moderate.write scope and X API Basic tier or higher.
       tags: [Comments]
       security: [{ bearerAuth: [] }]
       parameters:
@@ -11193,7 +11199,7 @@ paths:
       operationId: unhideInboxComment
       summary: Unhide comment
       description: |
-        Unhide a previously hidden comment. Supported by Facebook, Instagram, and Threads.
+        Unhide a previously hidden comment. Supported by Facebook, Instagram, Threads, and X/Twitter.
       tags: [Comments]
       security: [{ bearerAuth: [] }]
       parameters:
@@ -11407,6 +11413,210 @@ paths:
           description: Inbox addon required
         '404':
           description: Account not found
+
+  /v1/twitter/retweet:
+    post:
+      operationId: retweetPost
+      summary: Retweet a post
+      description: |
+        Retweet (repost) a tweet by ID. Requires X API Basic tier ($200/mo) or higher.
+        Rate limit: 50 requests per 15-min window. Shares the 300/3hr creation limit with tweet creation.
+      tags: [Twitter Engagement]
+      security: [{ bearerAuth: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [accountId, tweetId]
+              properties:
+                accountId: { type: string, description: The social account ID }
+                tweetId: { type: string, description: The ID of the tweet to retweet }
+      responses:
+        '200':
+          description: Tweet retweeted
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status: { type: string, example: success }
+                  tweetId: { type: string }
+                  retweeted: { type: boolean }
+                  platform: { type: string, example: twitter }
+        '400': { description: Bad request or platform limitation }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404': { description: Account not found }
+    delete:
+      operationId: undoRetweet
+      summary: Undo retweet
+      description: |
+        Undo a retweet (un-repost a tweet).
+      tags: [Twitter Engagement]
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - name: accountId
+          in: query
+          required: true
+          schema: { type: string }
+        - name: tweetId
+          in: query
+          required: true
+          schema: { type: string }
+          description: The ID of the original tweet to un-retweet
+      responses:
+        '200':
+          description: Retweet undone
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status: { type: string, example: success }
+                  tweetId: { type: string }
+                  retweeted: { type: boolean, example: false }
+                  platform: { type: string, example: twitter }
+        '400': { description: Bad request }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404': { description: Account not found }
+
+  /v1/twitter/bookmark:
+    post:
+      operationId: bookmarkPost
+      summary: Bookmark a tweet
+      description: |
+        Bookmark a tweet by ID. Requires X API Basic tier ($200/mo) or higher.
+        Requires the bookmark.write OAuth scope.
+        Rate limit: 50 requests per 15-min window.
+      tags: [Twitter Engagement]
+      security: [{ bearerAuth: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [accountId, tweetId]
+              properties:
+                accountId: { type: string, description: The social account ID }
+                tweetId: { type: string, description: The ID of the tweet to bookmark }
+      responses:
+        '200':
+          description: Tweet bookmarked
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status: { type: string, example: success }
+                  tweetId: { type: string }
+                  bookmarked: { type: boolean }
+                  platform: { type: string, example: twitter }
+        '400': { description: Bad request or platform limitation }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404': { description: Account not found }
+    delete:
+      operationId: removeBookmark
+      summary: Remove bookmark
+      description: |
+        Remove a bookmark from a tweet.
+      tags: [Twitter Engagement]
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - name: accountId
+          in: query
+          required: true
+          schema: { type: string }
+        - name: tweetId
+          in: query
+          required: true
+          schema: { type: string }
+          description: The ID of the tweet to unbookmark
+      responses:
+        '200':
+          description: Bookmark removed
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status: { type: string, example: success }
+                  tweetId: { type: string }
+                  bookmarked: { type: boolean, example: false }
+                  platform: { type: string, example: twitter }
+        '400': { description: Bad request }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404': { description: Account not found }
+
+  /v1/twitter/follow:
+    post:
+      operationId: followUser
+      summary: Follow a user
+      description: |
+        Follow a user on X/Twitter. Requires X API Basic tier ($200/mo) or higher.
+        Requires the follows.write OAuth scope.
+        For protected accounts, a follow request is sent instead (pending_follow will be true).
+      tags: [Twitter Engagement]
+      security: [{ bearerAuth: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [accountId, targetUserId]
+              properties:
+                accountId: { type: string, description: The social account ID }
+                targetUserId: { type: string, description: The Twitter ID of the user to follow }
+      responses:
+        '200':
+          description: User followed or follow request sent
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status: { type: string, example: success }
+                  targetUserId: { type: string }
+                  following: { type: boolean }
+                  pending_follow: { type: boolean, description: True if the target account is protected and a follow request was sent }
+                  platform: { type: string, example: twitter }
+        '400': { description: Bad request or platform limitation }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404': { description: Account not found }
+    delete:
+      operationId: unfollowUser
+      summary: Unfollow a user
+      description: |
+        Unfollow a user on X/Twitter.
+      tags: [Twitter Engagement]
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - name: accountId
+          in: query
+          required: true
+          schema: { type: string }
+        - name: targetUserId
+          in: query
+          required: true
+          schema: { type: string }
+          description: The Twitter ID of the user to unfollow
+      responses:
+        '200':
+          description: User unfollowed
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status: { type: string, example: success }
+                  targetUserId: { type: string }
+                  following: { type: boolean, example: false }
+                  platform: { type: string, example: twitter }
+        '400': { description: Bad request }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404': { description: Account not found }
 
   /v1/inbox/reviews:
     get:

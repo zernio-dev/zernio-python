@@ -2736,6 +2736,104 @@ def register_generated_tools(mcp, _get_client):
         except Exception as e:
             return f"Error: {e}"
 
+    # TWITTER_ENGAGEMENT
+
+    @mcp.tool()
+    def twitter_engagement_retweet_post(account_id: str, tweet_id: str) -> str:
+        """Retweet a post
+
+        Args:
+            account_id: The social account ID (required)
+            tweet_id: The ID of the tweet to retweet (required)"""
+        client = _get_client()
+        try:
+            response = client.twitter_engagement.retweet_post(
+                accountId=account_id, tweetId=tweet_id
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool()
+    def twitter_engagement_undo_retweet(account_id: str, tweet_id: str) -> str:
+        """Undo retweet
+
+        Args:
+            account_id: (required)
+            tweet_id: The ID of the original tweet to un-retweet (required)"""
+        client = _get_client()
+        try:
+            response = client.twitter_engagement.undo_retweet(
+                account_id=account_id, tweet_id=tweet_id
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool()
+    def twitter_engagement_bookmark_post(account_id: str, tweet_id: str) -> str:
+        """Bookmark a tweet
+
+        Args:
+            account_id: The social account ID (required)
+            tweet_id: The ID of the tweet to bookmark (required)"""
+        client = _get_client()
+        try:
+            response = client.twitter_engagement.bookmark_post(
+                accountId=account_id, tweetId=tweet_id
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool()
+    def twitter_engagement_remove_bookmark(account_id: str, tweet_id: str) -> str:
+        """Remove bookmark
+
+        Args:
+            account_id: (required)
+            tweet_id: The ID of the tweet to unbookmark (required)"""
+        client = _get_client()
+        try:
+            response = client.twitter_engagement.remove_bookmark(
+                account_id=account_id, tweet_id=tweet_id
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool()
+    def twitter_engagement_follow_user(account_id: str, target_user_id: str) -> str:
+        """Follow a user
+
+        Args:
+            account_id: The social account ID (required)
+            target_user_id: The Twitter ID of the user to follow (required)"""
+        client = _get_client()
+        try:
+            response = client.twitter_engagement.follow_user(
+                accountId=account_id, targetUserId=target_user_id
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool()
+    def twitter_engagement_unfollow_user(account_id: str, target_user_id: str) -> str:
+        """Unfollow a user
+
+        Args:
+            account_id: (required)
+            target_user_id: The Twitter ID of the user to unfollow (required)"""
+        client = _get_client()
+        try:
+            response = client.twitter_engagement.unfollow_user(
+                account_id=account_id, target_user_id=target_user_id
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
     # USAGE
 
     @mcp.tool()

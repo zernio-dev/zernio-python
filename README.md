@@ -399,6 +399,16 @@ except LateAPIError as e:
 | `reviews.delete_inbox_review_reply()` | Delete review reply |
 | `reviews.reply_to_inbox_review()` | Reply to review |
 
+### Twitter Engagement
+| Method | Description |
+|--------|-------------|
+| `twitter_engagement.bookmark_post()` | Bookmark a tweet |
+| `twitter_engagement.follow_user()` | Follow a user |
+| `twitter_engagement.remove_bookmark()` | Remove bookmark |
+| `twitter_engagement.retweet_post()` | Retweet a post |
+| `twitter_engagement.undo_retweet()` | Undo retweet |
+| `twitter_engagement.unfollow_user()` | Unfollow a user |
+
 ### Validate
 | Method | Description |
 |--------|-------------|
