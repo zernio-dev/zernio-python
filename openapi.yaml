@@ -144,7 +144,7 @@ x-documentation:
 
     ## SDKs
 
-    Official SDKs available for: [Node.js](https://www.npmjs.com/package/late), [Python](https://pypi.org/project/late), Go, Ruby, Java, PHP, .NET, and Rust.
+    Official SDKs available for: [Node.js](https://www.npmjs.com/package/@getlatedev/node), [Python](https://pypi.org/project/late-sdk), Go, Ruby, Java, PHP, .NET, and Rust.
 
 servers:
   - url: https://getlate.dev/api
@@ -1784,6 +1784,17 @@ components:
         platform: { type: string }
         platformPostUrl: { type: string, format: uri }
         isExternal: { type: boolean }
+        thumbnailUrl: { type: string, format: uri, nullable: true }
+        mediaType: { type: string, enum: [image, video, carousel, text], nullable: true }
+        mediaItems:
+          type: array
+          description: All media items for this post. Carousel posts contain one entry per slide.
+          items:
+            type: object
+            properties:
+              type: { type: string, enum: [image, video] }
+              url: { type: string, format: uri, description: Direct URL to the media }
+              thumbnail: { type: string, format: uri, description: Thumbnail URL (same as url for images) }
     AnalyticsListResponse:
       type: object
       properties:
@@ -1809,11 +1820,16 @@ components:
               platformPostUrl: { type: string, format: uri }
               isExternal: { type: boolean }
               thumbnailUrl: { type: string, format: uri }
-              mediaType: { type: string, enum: [image, video, gif, document] }
+              mediaType: { type: string, enum: [image, video, gif, document, carousel, text] }
               mediaItems:
                 type: array
+                description: All media items for this post. Carousel posts contain one entry per slide.
                 items:
-                  $ref: '#/components/schemas/MediaItem'
+                  type: object
+                  properties:
+                    type: { type: string, enum: [image, video] }
+                    url: { type: string, format: uri, description: Direct URL to the media }
+                    thumbnail: { type: string, format: uri, description: Thumbnail URL (same as url for images) }
         pagination:
           $ref: '#/components/schemas/Pagination'
         accounts:
@@ -2982,6 +2998,12 @@ paths:
                     platform: "twitter"
                     platformPostUrl: "https://twitter.com/acmecorp/status/123456789"
                     isExternal: false
+                    thumbnailUrl: "https://storage.example.com/image.jpg"
+                    mediaType: "image"
+                    mediaItems:
+                      - type: "image"
+                        url: "https://storage.example.com/image.jpg"
+                        thumbnail: "https://storage.example.com/image.jpg"
                 postList:
                   summary: Paginated analytics list
                   description: |
@@ -3018,7 +3040,14 @@ paths:
                         platformPostUrl: "https://www.instagram.com/reel/ABC123xyz/"
                         isExternal: true
                         thumbnailUrl: "https://storage.example.com/thumb.jpg"
-                        mediaType: "video"
+                        mediaType: "carousel"
+                        mediaItems:
+                          - type: "image"
+                            url: "https://storage.example.com/slide1.jpg"
+                            thumbnail: "https://storage.example.com/slide1.jpg"
+                          - type: "image"
+                            url: "https://storage.example.com/slide2.jpg"
+                            thumbnail: "https://storage.example.com/slide2.jpg"
                     pagination:
                       page: 1
                       limit: 50
