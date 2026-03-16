@@ -727,11 +727,11 @@ def register_generated_tools(mcp, _get_client):
             platform: Filter by platform (default "all")
             profile_id: Filter by profile ID (default "all")
             source: Filter by post source: late (posted via Late API), external (synced from platform), all (default)
-            from_date: Inclusive lower bound
-            to_date: Inclusive upper bound
+            from_date: Inclusive lower bound (YYYY-MM-DD). Defaults to 90 days ago if omitted. Max range is 366 days.
+            to_date: Inclusive upper bound (YYYY-MM-DD). Defaults to today if omitted.
             limit: Page size (default 50)
             page: Page number (default 1)
-            sort_by: Sort by date or engagement
+            sort_by: Sort by date, engagement, or a specific metric
             order: Sort order"""
         client = _get_client()
         try:
