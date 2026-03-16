@@ -4254,7 +4254,10 @@ paths:
                           - $ref: '#/components/schemas/BlueskyPlatformData'
                 scheduledFor: { type: string, format: date-time }
                 publishNow: { type: boolean, default: false }
-                isDraft: { type: boolean, default: false }
+                isDraft:
+                  type: boolean
+                  default: false
+                  description: When true, saves the post as a draft. When none of scheduledFor, publishNow, or queuedFromProfile are provided, the post defaults to draft automatically.
                 timezone: { type: string, default: UTC }
                 tags:
                   type: array
