@@ -8040,7 +8040,7 @@ paths:
                   code:
                     type: string
                     description: The access code to send to the Telegram bot
-                    example: "LATE-ABC123"
+                    example: "ZRN-ABC123"
                   expiresAt:
                     type: string
                     format: date-time
@@ -8058,14 +8058,14 @@ paths:
                     items: { type: string }
                     description: Step-by-step connection instructions
               example:
-                code: "LATE-ABC123"
+                code: "ZRN-ABC123"
                 expiresAt: "2024-01-15T12:30:00.000Z"
                 expiresIn: 900
                 botUsername: "LateScheduleBot"
                 instructions:
                   - "1. Add @ZernioScheduleBot as an administrator in your channel/group"
                   - "2. Open a private chat with @ZernioScheduleBot"
-                  - "3. Send: LATE-ABC123 @yourchannel (replace @yourchannel with your channel username)"
+                  - "3. Send: ZRN-ABC123 @yourchannel (replace @yourchannel with your channel username)"
                   - "4. Wait for confirmation - the connection will appear in your dashboard"
                   - "Tip: If your channel has no public username, forward a message from it along with the code"
         '400': { description: Profile ID required or invalid format }
@@ -8140,7 +8140,7 @@ paths:
           required: true
           schema: { type: string }
           description: The access code to check status for
-          example: "LATE-ABC123"
+          example: "ZRN-ABC123"
       responses:
         '200':
           description: Connection status
