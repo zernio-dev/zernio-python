@@ -380,7 +380,7 @@ def register_generated_tools(mcp, _get_client):
         """Get reviews
 
         Args:
-            account_id: The Late account ID (from /v1/accounts) (required)
+            account_id: The Zernio account ID (from /v1/accounts) (required)
             location_id: Override which location to query. If omitted, uses the account's selected location. Use GET /gmb-locations to list valid IDs.
             page_size: Number of reviews to fetch per page (max 50)
             page_token: Pagination token from previous response"""
@@ -403,7 +403,7 @@ def register_generated_tools(mcp, _get_client):
         """Get food menus
 
         Args:
-            account_id: The Late account ID (from /v1/accounts) (required)
+            account_id: The Zernio account ID (from /v1/accounts) (required)
             location_id: Override which location to query. If omitted, uses the account's selected location. Use GET /gmb-locations to list valid IDs."""
         client = _get_client()
         try:
@@ -421,7 +421,7 @@ def register_generated_tools(mcp, _get_client):
         """Update food menus
 
         Args:
-            account_id: The Late account ID (from /v1/accounts) (required)
+            account_id: The Zernio account ID (from /v1/accounts) (required)
             location_id: Override which location to target. If omitted, uses the account's selected location. Use GET /gmb-locations to list valid IDs.
             menus: Array of food menus to set (required)
             update_mask: Field mask for partial updates (e.g. "menus")"""
@@ -444,7 +444,7 @@ def register_generated_tools(mcp, _get_client):
         """Get location details
 
         Args:
-            account_id: The Late account ID (from /v1/accounts) (required)
+            account_id: The Zernio account ID (from /v1/accounts) (required)
             location_id: Override which location to query. If omitted, uses the account's selected location. Use GET /gmb-locations to list valid IDs.
             read_mask: Comma-separated fields to return. Available: name, title, phoneNumbers, categories, storefrontAddress, websiteUri, regularHours, specialHours, serviceArea, serviceItems, profile, openInfo, metadata, moreHours."""
         client = _get_client()
@@ -472,7 +472,7 @@ def register_generated_tools(mcp, _get_client):
         """Update location details
 
         Args:
-            account_id: The Late account ID (from /v1/accounts) (required)
+            account_id: The Zernio account ID (from /v1/accounts) (required)
             location_id: Override which location to target. If omitted, uses the account's selected location. Use GET /gmb-locations to list valid IDs.
             update_mask: Required. Comma-separated fields to update (e.g. 'regularHours', 'specialHours', 'profile.description', 'categories', 'serviceItems'). Any valid Google Business Information API updateMask field is supported. (required)
             regular_hours
@@ -723,10 +723,10 @@ def register_generated_tools(mcp, _get_client):
         """Get post analytics
 
         Args:
-            post_id: Returns analytics for a single post. Accepts both Late Post IDs and External Post IDs. Late IDs are auto-resolved to External Post analytics.
+            post_id: Returns analytics for a single post. Accepts both Zernio Post IDs and External Post IDs. Zernio IDs are auto-resolved to External Post analytics.
             platform: Filter by platform (default "all")
             profile_id: Filter by profile ID (default "all")
-            source: Filter by post source: late (posted via Late API), external (synced from platform), all (default)
+            source: Filter by post source: late (posted via Zernio API), external (synced from platform), all (default)
             from_date: Inclusive lower bound (YYYY-MM-DD). Defaults to 90 days ago if omitted. Max range is 366 days.
             to_date: Inclusive upper bound (YYYY-MM-DD). Defaults to today if omitted.
             limit: Page size (default 50)
@@ -759,7 +759,7 @@ def register_generated_tools(mcp, _get_client):
 
         Args:
             video_id: The YouTube video ID (e.g., "dQw4w9WgXcQ") (required)
-            account_id: The Late account ID for the YouTube account (required)
+            account_id: The Zernio account ID for the YouTube account (required)
             start_date: Start date (YYYY-MM-DD). Defaults to 30 days ago.
             end_date: End date (YYYY-MM-DD). Defaults to 3 days ago (YouTube data latency)."""
         client = _get_client()
@@ -789,7 +789,7 @@ def register_generated_tools(mcp, _get_client):
             profile_id: Filter by profile ID. Omit for all profiles.
             from_date: Inclusive start date (ISO 8601). Defaults to 180 days ago.
             to_date: Inclusive end date (ISO 8601). Defaults to now.
-            source: Filter by post origin. "late" for posts published via Late, "external" for posts imported from platforms."""
+            source: Filter by post origin. "late" for posts published via Zernio, "external" for posts imported from platforms."""
         client = _get_client()
         try:
             response = client.analytics.get_daily_metrics(
@@ -812,7 +812,7 @@ def register_generated_tools(mcp, _get_client):
         Args:
             platform: Filter by platform (e.g. "instagram", "tiktok"). Omit for all platforms.
             profile_id: Filter by profile ID. Omit for all profiles.
-            source: Filter by post origin. "late" for posts published via Late, "external" for posts imported from platforms."""
+            source: Filter by post origin. "late" for posts published via Zernio, "external" for posts imported from platforms."""
         client = _get_client()
         try:
             response = client.analytics.get_best_time_to_post(
@@ -831,7 +831,7 @@ def register_generated_tools(mcp, _get_client):
         Args:
             platform: Filter by platform (e.g. "instagram", "tiktok"). Omit for all platforms.
             profile_id: Filter by profile ID. Omit for all profiles.
-            source: Filter by post origin. "late" for posts published via Late, "external" for posts imported from platforms."""
+            source: Filter by post origin. "late" for posts published via Zernio, "external" for posts imported from platforms."""
         client = _get_client()
         try:
             response = client.analytics.get_content_decay(
@@ -850,7 +850,7 @@ def register_generated_tools(mcp, _get_client):
         Args:
             platform: Filter by platform (e.g. "instagram", "tiktok"). Omit for all platforms.
             profile_id: Filter by profile ID. Omit for all profiles.
-            source: Filter by post origin. "late" for posts published via Late, "external" for posts imported from platforms."""
+            source: Filter by post origin. "late" for posts published via Zernio, "external" for posts imported from platforms."""
         client = _get_client()
         try:
             response = client.analytics.get_posting_frequency(
@@ -867,7 +867,7 @@ def register_generated_tools(mcp, _get_client):
         """Get post analytics timeline
 
            Args:
-               post_id: The post to fetch timeline for. Accepts an ExternalPost ID, a platformPostId, or a Late Post ID.
+               post_id: The post to fetch timeline for. Accepts an ExternalPost ID, a platformPostId, or a Zernio Post ID.
         (required)
                from_date: Start of date range (ISO 8601). Defaults to 90 days ago.
                to_date: End of date range (ISO 8601). Defaults to now."""
@@ -1054,7 +1054,7 @@ def register_generated_tools(mcp, _get_client):
         """Get post comments
 
         Args:
-            post_id: Late post ID or platform-specific post ID. Late IDs are auto-resolved. LinkedIn third-party posts accept full activity URN or numeric ID. (required)
+            post_id: Zernio post ID or platform-specific post ID. Zernio IDs are auto-resolved. LinkedIn third-party posts accept full activity URN or numeric ID. (required)
             account_id: (required)
             subreddit: (Reddit only) Subreddit name
             limit: Maximum number of comments to return
@@ -1087,7 +1087,7 @@ def register_generated_tools(mcp, _get_client):
         """Reply to comment
 
         Args:
-            post_id: Late post ID or platform-specific post ID. LinkedIn third-party posts accept full activity URN or numeric ID. (required)
+            post_id: Zernio post ID or platform-specific post ID. LinkedIn third-party posts accept full activity URN or numeric ID. (required)
             account_id: (required)
             message: (required)
             comment_id: Reply to specific comment (optional)
@@ -1116,7 +1116,7 @@ def register_generated_tools(mcp, _get_client):
         """Delete comment
 
         Args:
-            post_id: Late post ID or platform-specific post ID. LinkedIn third-party posts accept full activity URN or numeric ID. (required)
+            post_id: Zernio post ID or platform-specific post ID. LinkedIn third-party posts accept full activity URN or numeric ID. (required)
             account_id: (required)
             comment_id: (required)"""
         client = _get_client()
@@ -1242,9 +1242,9 @@ def register_generated_tools(mcp, _get_client):
 
         Args:
             platform: Social media platform to connect (required)
-            profile_id: Your Late profile ID (get from /v1/profiles) (required)
+            profile_id: Your Zernio profile ID (get from /v1/profiles) (required)
             redirect_url: Your custom redirect URL after connection completes. Standard mode appends ?connected={platform}&profileId=X&accountId=Y&username=Z. Headless mode appends OAuth data params for platforms requiring selection (e.g. LinkedIn orgs, Facebook pages). If no selection is needed, the account is created directly and the redirect includes accountId.
-            headless: When true, the user is redirected to your redirect_url with raw OAuth data (code, state) instead of Late's default account selection UI. Use this to build a custom connect experience."""
+            headless: When true, the user is redirected to your redirect_url with raw OAuth data (code, state) instead of Zernio's default account selection UI. Use this to build a custom connect experience."""
         client = _get_client()
         try:
             response = client.connect.get_connect_url(
@@ -1435,7 +1435,7 @@ def register_generated_tools(mcp, _get_client):
         """List Pinterest boards
 
         Args:
-            profile_id: Your Late profile ID (required)
+            profile_id: Your Zernio profile ID (required)
             temp_token: Temporary Pinterest access token from the OAuth callback redirect (required)"""
         client = _get_client()
         try:
@@ -1460,7 +1460,7 @@ def register_generated_tools(mcp, _get_client):
         """Select Pinterest board
 
         Args:
-            profile_id: Your Late profile ID (required)
+            profile_id: Your Zernio profile ID (required)
             board_id: The Pinterest Board ID selected by the user (required)
             board_name: The board name (for display purposes)
             temp_token: Temporary Pinterest access token from OAuth (required)
@@ -1489,7 +1489,7 @@ def register_generated_tools(mcp, _get_client):
         """List Snapchat profiles
 
         Args:
-            profile_id: Your Late profile ID (required)
+            profile_id: Your Zernio profile ID (required)
             temp_token: Temporary Snapchat access token from the OAuth callback redirect (required)"""
         client = _get_client()
         try:
@@ -1513,7 +1513,7 @@ def register_generated_tools(mcp, _get_client):
         """Select Snapchat profile
 
         Args:
-            profile_id: Your Late profile ID (required)
+            profile_id: Your Zernio profile ID (required)
             selected_public_profile: The selected Snapchat Public Profile (required)
             temp_token: Temporary Snapchat access token from OAuth (required)
             user_profile: User profile data from OAuth redirect (required)

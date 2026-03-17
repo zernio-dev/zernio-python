@@ -1,6 +1,6 @@
 [project]
 name = "late-sdk"
-version = "1.2.89"
+version = "1.2.90"
 description = "The official Python library for the Late API"
 readme = "README.md"
 requires-python = ">=3.10"

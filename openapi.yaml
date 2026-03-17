@@ -1,20 +1,20 @@
 openapi: 3.1.0
 info:
-  title: Late API
+  title: Zernio API
   version: "1.0.1"
   description: |
-    API reference for Late. Authenticate with a Bearer API key.
-    Base URL: https://getlate.dev/api
-  termsOfService: https://getlate.dev/tos
+    API reference for Zernio. Authenticate with a Bearer API key.
+    Base URL: https://zernio.com/api
+  termsOfService: https://zernio.com/tos
   contact:
-    name: Late Support
-    url: https://getlate.dev
-    email: support@getlate.dev
+    name: Zernio Support
+    url: https://zernio.com
+    email: support@zernio.com
   # RapidAPI extensions for Hub listing
   x-logo:
-    url: https://getlate.dev/icon.png?v=3
+    url: https://zernio.com/icon.png?v=3
   x-long-description: |
-    Late is the social media API that replaces 14 integrations. Schedule posts, retrieve analytics,
+    Zernio is the social media API that replaces 14 integrations. Schedule posts, retrieve analytics,
     manage DMs, comments, and reviews across Twitter/X, Instagram, TikTok, LinkedIn, Facebook,
     YouTube, Threads, Reddit, Pinterest, Bluesky, Telegram, Google Business, and Snapchat, all
     from a single REST API.
@@ -23,7 +23,7 @@ info:
 
     Supported platforms: Twitter/X, Instagram, WhatsApp, Facebook, LinkedIn, TikTok, YouTube, Pinterest, Reddit, Bluesky, Threads, Google Business, Telegram, Snapchat.
   x-category: Social
-  x-website: https://getlate.dev
+  x-website: https://zernio.com
   x-thumbnail: https://rapidapi-prod-apis.s3.amazonaws.com/b24d3df5-563c-4a50-9e1e-1ad3eb1fce69.png
   x-version-lifecycle: ACTIVE
   x-badges:
@@ -51,22 +51,22 @@ info:
 # RapidAPI Hub documentation tab (README)
 x-documentation:
   readme: |
-    # Late API
+    # Zernio API
 
     The social media API that replaces 14 integrations. Build social media features into your app in minutes, not months.
 
     ## Quick Start
 
-    **Base URL:** `https://getlate.dev/api/v1`
+    **Base URL:** `https://zernio.com/api/v1`
 
     **Authentication:** All requests require a Bearer API key in the `Authorization` header.
 
     ```bash
-    curl https://getlate.dev/api/v1/user \
+    curl https://zernio.com/api/v1/user \
       -H "Authorization: Bearer YOUR_API_KEY"
     ```
 
-    Get your API key at [getlate.dev/dashboard/api-keys](https://getlate.dev/dashboard/api-keys).
+    Get your API key at [zernio.com/dashboard/api-keys](https://zernio.com/dashboard/api-keys).
 
     ## Core Concepts
 
@@ -80,12 +80,12 @@ x-documentation:
     ## Create a Post
 
     ```bash
-    curl -X POST https://getlate.dev/api/v1/post \
+    curl -X POST https://zernio.com/api/v1/post \
       -H "Authorization: Bearer YOUR_API_KEY" \
       -H "Content-Type: application/json" \
       -d '{
         "profileId": "your-profile-id",
-        "text": "Hello from Late API!",
+        "text": "Hello from Zernio API!",
         "socialAccountIds": ["account-1", "account-2"],
         "scheduledAt": "2025-01-15T10:00:00Z"
       }'
@@ -136,18 +136,18 @@ x-documentation:
     - `message.received` - New DM received
     - `comment.received` - New comment received on a post
 
-    Webhook payloads are signed with HMAC-SHA256 via the `X-Late-Signature` header.
+    Webhook payloads are signed with HMAC-SHA256 via the `X-Zernio-Signature` header.
 
     ## Full Documentation
 
-    For complete guides, platform-specific details, and SDK references, visit [docs.getlate.dev](https://docs.getlate.dev).
+    For complete guides, platform-specific details, and SDK references, visit [docs.zernio.com](https://docs.zernio.com).
 
     ## SDKs
 
-    Official SDKs available for: [Node.js](https://www.npmjs.com/package/@getlatedev/node), [Python](https://pypi.org/project/late-sdk), Go, Ruby, Java, PHP, .NET, and Rust.
+    Official SDKs available for: [Node.js](https://www.npmjs.com/package/@zernio/node), [Python](https://pypi.org/project/zernio-sdk), Go, Ruby, Java, PHP, .NET, and Rust.
 
 servers:
-  - url: https://getlate.dev/api
+  - url: https://zernio.com/api
     description: Production
   - url: http://localhost:3000/api
     description: Local
@@ -213,7 +213,7 @@ tags:
   - name: Webhooks
     description: |
       Configure webhooks for real-time notifications. Events: post.scheduled, post.published, post.failed, post.partial, post.recycled, account.connected, account.disconnected, message.received, comment.received.
-      Security: optional HMAC-SHA256 signature in X-Late-Signature header. Configure a secret key to enable verification. Custom headers supported.
+      Security: optional HMAC-SHA256 signature in X-Zernio-Signature header. Configure a secret key to enable verification. Custom headers supported.
   - name: Logs
     description: |
       Publishing logs for transparency and debugging. Each log includes the platform API endpoint, HTTP status code, request/response bodies, duration, and retry attempts. Logs are automatically deleted after 7 days.
@@ -231,7 +231,7 @@ components:
       type: http
       scheme: bearer
       bearerFormat: JWT
-      description: API key authentication - use your Late API key as a Bearer token
+      description: API key authentication - use your Zernio API key as a Bearer token
     connectToken:
       type: apiKey
       in: header
@@ -998,7 +998,7 @@ components:
           format: date-time
     MediaItem:
       type: object
-      description: Media referenced in posts. URLs must be publicly reachable over HTTPS. Use POST /v1/media/presign for uploads up to 5GB. Late auto-compresses images and videos that exceed platform limits (videos over 200 MB may not be compressed).
+      description: Media referenced in posts. URLs must be publicly reachable over HTTPS. Use POST /v1/media/presign for uploads up to 5GB. Zernio auto-compresses images and videos that exceed platform limits (videos over 200 MB may not be compressed).
       properties:
         type:
           type: string
@@ -1090,11 +1090,11 @@ components:
         errorCategory:
           type: string
           enum: [auth_expired, user_content, user_abuse, account_issue, platform_rejected, platform_error, system_error, unknown]
-          description: "Error category for programmatic handling: auth_expired (token expired/revoked), user_content (wrong format/too long), user_abuse (rate limits/spam), account_issue (config problems), platform_rejected (policy violation), platform_error (5xx/maintenance), system_error (Late infra), unknown"
+          description: "Error category for programmatic handling: auth_expired (token expired/revoked), user_content (wrong format/too long), user_abuse (rate limits/spam), account_issue (config problems), platform_rejected (policy violation), platform_error (5xx/maintenance), system_error (Zernio infra), unknown"
         errorSource:
           type: string
           enum: [user, platform, system]
-          description: "Who caused the error: user (fix content/reconnect), platform (outage/API change), system (Late issue, rare)"
+          description: "Who caused the error: user (fix content/reconnect), platform (outage/API change), system (Zernio issue, rare)"
     Post:
       type: object
       properties:
@@ -2690,7 +2690,7 @@ paths:
                 text:
                   type: string
                   description: The post text to check
-                  example: "Check out https://getlate.dev for scheduling posts!"
+                  example: "Check out https://zernio.com for scheduling posts!"
       responses:
         "200":
           description: Character counts per platform
@@ -2920,13 +2920,13 @@ paths:
       summary: Get post analytics
       description: |
         Returns analytics for posts. With postId, returns a single post. Without it, returns a paginated list with overview stats.
-        Accepts both Late Post IDs and External Post IDs (auto-resolved). fromDate defaults to 90 days ago if omitted, max range 366 days.
+        Accepts both Zernio Post IDs and External Post IDs (auto-resolved). fromDate defaults to 90 days ago if omitted, max range 366 days.
         Single post lookups may return 202 (sync pending) or 424 (all platforms failed). For follower stats, use /v1/accounts/follower-stats.
       parameters:
         - name: postId
           in: query
           schema: { type: string }
-          description: Returns analytics for a single post. Accepts both Late Post IDs and External Post IDs. Late IDs are auto-resolved to External Post analytics.
+          description: Returns analytics for a single post. Accepts both Zernio Post IDs and External Post IDs. Zernio IDs are auto-resolved to External Post analytics.
         - name: platform
           in: query
           schema: { type: string }
@@ -2938,7 +2938,7 @@ paths:
         - name: source
           in: query
           schema: { type: string, enum: [all, late, external], default: all }
-          description: "Filter by post source: late (posted via Late API), external (synced from platform), all (default)"
+          description: "Filter by post source: late (posted via Zernio API), external (synced from platform), all (default)"
         - name: fromDate
           in: query
           schema: { type: string, format: date }
@@ -3026,7 +3026,9 @@ paths:
                 postList:
                   summary: Paginated analytics list
                   description: |
-                    Posts originally scheduled via Late will have latePostId populated.
+                    Note: The list endpoint returns External Post IDs. Posts originally
+                    scheduled via Zernio will have isExternal: true in this response.
+                    Use platformPostUrl to correlate with your original Zernio Post IDs.
                   value:
                     overview:
                       totalPosts: 156
@@ -3155,7 +3157,7 @@ paths:
           in: query
           required: true
           schema: { type: string }
-          description: The Late account ID for the YouTube account
+          description: The Zernio account ID for the YouTube account
         - name: startDate
           in: query
           schema: { type: string, format: date }
@@ -3295,7 +3297,7 @@ paths:
             type: string
             enum: [all, late, external]
             default: all
-          description: Filter by post origin. "late" for posts published via Late, "external" for posts imported from platforms.
+          description: Filter by post origin. "late" for posts published via Zernio, "external" for posts imported from platforms.
       responses:
         '200':
           description: Daily metrics and platform breakdown
@@ -3403,7 +3405,7 @@ paths:
             type: string
             enum: [all, late, external]
             default: all
-          description: Filter by post origin. "late" for posts published via Late, "external" for posts imported from platforms.
+          description: Filter by post origin. "late" for posts published via Zernio, "external" for posts imported from platforms.
       responses:
         '200':
           description: Best time slots
@@ -3473,7 +3475,7 @@ paths:
             type: string
             enum: [all, late, external]
             default: all
-          description: Filter by post origin. "late" for posts published via Late, "external" for posts imported from platforms.
+          description: Filter by post origin. "late" for posts published via Zernio, "external" for posts imported from platforms.
       responses:
         '200':
           description: Content decay buckets
@@ -3559,7 +3561,7 @@ paths:
             type: string
             enum: [all, late, external]
             default: all
-          description: Filter by post origin. "late" for posts published via Late, "external" for posts imported from platforms.
+          description: Filter by post origin. "late" for posts published via Zernio, "external" for posts imported from platforms.
       responses:
         '200':
           description: Posting frequency data
@@ -3616,14 +3618,14 @@ paths:
       description: |
         Returns a daily timeline of analytics metrics for a specific post, showing how impressions, likes,
         and other metrics evolved day-by-day since publishing. Each row represents one day of data per platform.
-        For multi-platform Late posts, returns separate rows for each platform. Requires the Analytics add-on.
+        For multi-platform Zernio posts, returns separate rows for each platform. Requires the Analytics add-on.
       parameters:
         - name: postId
           in: query
           required: true
           schema: { type: string }
           description: |
-            The post to fetch timeline for. Accepts an ExternalPost ID, a platformPostId, or a Late Post ID.
+            The post to fetch timeline for. Accepts an ExternalPost ID, a platformPostId, or a Zernio Post ID.
         - name: fromDate
           in: query
           schema: { type: string, format: date-time }
@@ -3949,7 +3951,7 @@ paths:
                     description: Detected file type based on content type
               example:
                 uploadUrl: "<presigned-upload-url>"
-                publicUrl: "https://media.getlate.dev/temp/1234567890_abc123_my-video.mp4"
+                publicUrl: "https://media.zernio.com/temp/1234567890_abc123_my-video.mp4"
                 key: "temp/1234567890_abc123_my-video.mp4"
                 type: "video"
         '400':
@@ -4718,7 +4720,7 @@ paths:
       operationId: deletePost
       tags: [Posts]
       summary: Delete post
-      description: Delete a draft or scheduled post from Late. Published posts cannot be deleted; use the Unpublish endpoint instead. Upload quota is automatically refunded.
+      description: Delete a draft or scheduled post from Zernio. Published posts cannot be deleted; use the Unpublish endpoint instead. Upload quota is automatically refunded.
       parameters:
         - name: postId
           in: path
@@ -4875,7 +4877,7 @@ paths:
       tags: [Posts]
       summary: Unpublish post
       description: |
-        Deletes a published post from the specified platform. The post record in Late is kept but its status is updated to cancelled.
+        Deletes a published post from the specified platform. The post record in Zernio is kept but its status is updated to cancelled.
         Not supported on Instagram, TikTok, or Snapchat. Threaded posts delete all items. YouTube deletion is permanent.
       parameters:
         - name: postId
@@ -5760,7 +5762,7 @@ paths:
                   - "64f0a1b2c3d4e5f6a7b8c9d0"
                   - "64f0a1b2c3d4e5f6a7b8c9d1"
                 expiresAt: "2024-11-08T10:30:00Z"
-                inviteUrl: "https://getlate.dev/invite/inv_abc123def456ghi789"
+                inviteUrl: "https://zernio.com/invite/inv_abc123def456ghi789"
         '400': { description: Invalid request }
         '401': { $ref: '#/components/responses/Unauthorized' }
         '403': { description: One or more profiles not found or not owned }
@@ -5772,7 +5774,7 @@ paths:
       summary: Get OAuth connect URL
       description: |
         Initiate an OAuth connection flow. Returns an authUrl to redirect the user to.
-        Standard flow: Late hosts the selection UI, then redirects to your redirect_url. Headless mode (headless=true): user is redirected to your redirect_url with OAuth data for custom UI. Use the platform-specific selection endpoints to complete.
+        Standard flow: Zernio hosts the selection UI, then redirects to your redirect_url. Headless mode (headless=true): user is redirected to your redirect_url with OAuth data for custom UI. Use the platform-specific selection endpoints to complete.
       parameters:
         - name: platform
           in: path
@@ -5785,7 +5787,7 @@ paths:
           in: query
           required: true
           schema: { type: string }
-          description: Your Late profile ID (get from /v1/profiles)
+          description: Your Zernio profile ID (get from /v1/profiles)
         - name: redirect_url
           in: query
           schema: { type: string, format: uri }
@@ -5793,7 +5795,7 @@ paths:
         - name: headless
           in: query
           schema: { type: boolean, default: false }
-          description: When true, the user is redirected to your redirect_url with raw OAuth data (code, state) instead of Late's default account selection UI. Use this to build a custom connect experience.
+          description: When true, the user is redirected to your redirect_url with raw OAuth data (code, state) instead of Zernio's default account selection UI. Use this to build a custom connect experience.
       security:
         - bearerAuth: []
       responses:
@@ -6160,7 +6162,7 @@ paths:
           in: path
           required: true
           schema: { type: string }
-          description: The Late account ID (from /v1/accounts)
+          description: The Zernio account ID (from /v1/accounts)
         - name: locationId
           in: query
           schema: { type: string }
@@ -6287,7 +6289,7 @@ paths:
           in: path
           required: true
           schema: { type: string }
-          description: The Late account ID (from /v1/accounts)
+          description: The Zernio account ID (from /v1/accounts)
         - name: locationId
           in: query
           schema: { type: string }
@@ -6370,7 +6372,7 @@ paths:
           in: path
           required: true
           schema: { type: string }
-          description: The Late account ID (from /v1/accounts)
+          description: The Zernio account ID (from /v1/accounts)
         - name: locationId
           in: query
           schema: { type: string }
@@ -6462,7 +6464,7 @@ paths:
           in: path
           required: true
           schema: { type: string }
-          description: The Late account ID (from /v1/accounts)
+          description: The Zernio account ID (from /v1/accounts)
         - name: locationId
           in: query
           schema: { type: string }
@@ -6616,7 +6618,7 @@ paths:
           in: path
           required: true
           schema: { type: string }
-          description: The Late account ID (from /v1/accounts)
+          description: The Zernio account ID (from /v1/accounts)
         - name: locationId
           in: query
           schema: { type: string }
@@ -7299,7 +7301,7 @@ paths:
                     description: The platform (e.g., "linkedin")
                   profileId:
                     type: string
-                    description: The Late profile ID
+                    description: The Zernio profile ID
                   tempToken:
                     type: string
                     description: Temporary access token for the platform
@@ -7549,7 +7551,7 @@ paths:
           in: query
           required: true
           schema: { type: string }
-          description: Your Late profile ID
+          description: Your Zernio profile ID
         - name: tempToken
           in: query
           required: true
@@ -7602,7 +7604,7 @@ paths:
               properties:
                 profileId:
                   type: string
-                  description: Your Late profile ID
+                  description: Your Zernio profile ID
                 boardId:
                   type: string
                   description: The Pinterest Board ID selected by the user
@@ -7706,7 +7708,7 @@ paths:
           in: query
           required: true
           schema: { type: string }
-          description: Your Late profile ID
+          description: Your Zernio profile ID
         - name: tempToken
           in: query
           required: true
@@ -7767,7 +7769,7 @@ paths:
               properties:
                 profileId:
                   type: string
-                  description: Your Late profile ID
+                  description: Your Zernio profile ID
                 selectedPublicProfile:
                   type: object
                   description: The selected Snapchat Public Profile
@@ -7925,7 +7927,7 @@ paths:
                   username: "yourhandle.bsky.social"
                   displayName: "Your Name"
                   isActive: true
-                redirectUrl: "https://getlate.dev/dashboard/profiles/64f0.../accounts"
+                redirectUrl: "https://zernio.com/dashboard/profiles/64f0.../accounts"
         '400': { description: Invalid request - missing fields or invalid state format }
         '401': { $ref: '#/components/responses/Unauthorized' }
         '500': { description: Internal error }
@@ -8061,8 +8063,8 @@ paths:
                 expiresIn: 900
                 botUsername: "LateScheduleBot"
                 instructions:
-                  - "1. Add @LateScheduleBot as an administrator in your channel/group"
-                  - "2. Open a private chat with @LateScheduleBot"
+                  - "1. Add @ZernioScheduleBot as an administrator in your channel/group"
+                  - "2. Open a private chat with @ZernioScheduleBot"
                   - "3. Send: LATE-ABC123 @yourchannel (replace @yourchannel with your channel username)"
                   - "4. Wait for confirmation - the connection will appear in your dashboard"
                   - "Tip: If your channel has no public username, forward a message from it along with the code"
@@ -9977,7 +9979,7 @@ paths:
                       contentPreview: "Check out our new feature!"
                       mediaCount: 1
                       mediaTypes: ["image"]
-                      mediaUrls: ["https://storage.getlate.dev/abc123.jpg"]
+                      mediaUrls: ["https://storage.zernio.com/abc123.jpg"]
                     response:
                       platformPostId: "17895695668004550"
                       platformPostUrl: "https://www.instagram.com/p/ABC123/"
@@ -11034,7 +11036,7 @@ paths:
         - name: postId
           in: path
           required: true
-          description: Late post ID or platform-specific post ID. Late IDs are auto-resolved. LinkedIn third-party posts accept full activity URN or numeric ID.
+          description: Zernio post ID or platform-specific post ID. Zernio IDs are auto-resolved. LinkedIn third-party posts accept full activity URN or numeric ID.
           schema: { type: string }
         - name: accountId
           in: query
@@ -11128,7 +11130,7 @@ paths:
         - name: postId
           in: path
           required: true
-          description: Late post ID or platform-specific post ID. LinkedIn third-party posts accept full activity URN or numeric ID.
+          description: Zernio post ID or platform-specific post ID. LinkedIn third-party posts accept full activity URN or numeric ID.
           schema: { type: string }
       requestBody:
         required: true
@@ -11174,7 +11176,7 @@ paths:
         - name: postId
           in: path
           required: true
-          description: Late post ID or platform-specific post ID. LinkedIn third-party posts accept full activity URN or numeric ID.
+          description: Zernio post ID or platform-specific post ID. LinkedIn third-party posts accept full activity URN or numeric ID.
           schema: { type: string }
         - name: accountId
           in: query
