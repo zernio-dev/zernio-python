@@ -94,8 +94,42 @@ jobs:
           name: v${{ steps.version.outputs.version }}
           files: dist/*
           generate_release_notes: true
+          body: |
+            ## Install
 
-      - name: Publish to PyPI
+            This package is published under two names:
+
+            ```bash
+            pip install late-sdk==${{ steps.version.outputs.version }}
+            # or
+            pip install zernio-sdk==${{ steps.version.outputs.version }}
+            ```
+
+      - name: Publish late-sdk to PyPI
+        if: steps.check_tag.outputs.exists == 'false'
+        uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          password: ${{ secrets.PYPI_API_TOKEN }}
+
+      - name: Swap package name to zernio-sdk
+        if: steps.check_tag.outputs.exists == 'false'
+        run: |
+          python3 -c "
+          import re
+          with open('pyproject.toml', 'r') as f:
+              content = f.read()
+          content = re.sub(r'name = \"late-sdk\"', 'name = \"zernio-sdk\"', content)
+          with open('pyproject.toml', 'w') as f:
+              f.write(content)
+          "
+
+      - name: Build as zernio-sdk
+        if: steps.check_tag.outputs.exists == 'false'
+        run: |
+          rm -rf dist/
+          uv build
+
+      - name: Publish zernio-sdk to PyPI
         if: steps.check_tag.outputs.exists == 'false'
         uses: pypa/gh-action-pypi-publish@release/v1
         with:
