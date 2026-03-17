@@ -1,13 +1,13 @@
 <p align="center">
-  <a href="https://getlate.dev">
-    <img src="https://getlate.dev/images/icon_light.svg" alt="Late" width="60">
+  <a href="https://zernio.com">
+    <img src="https://zernio.com/images/icon_light.svg" alt="Zernio" width="60">
   </a>
 </p>
 
-<h1 align="center">Late Python SDK</h1>
+<h1 align="center">Zernio Python SDK</h1>
 
 <p align="center">
-  <a href="https://pypi.org/project/late-sdk/"><img src="https://img.shields.io/pypi/v/late-sdk.svg" alt="PyPI version"></a>
+  <a href="https://pypi.org/project/zernio-sdk/"><img src="https://img.shields.io/pypi/v/zernio-sdk.svg" alt="PyPI version"></a>
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-Apache--2.0-blue.svg" alt="License"></a>
 </p>
 
@@ -15,12 +15,12 @@
   <strong>One API to post everywhere. 14 platforms, zero headaches.</strong>
 </p>
 
-The official Python SDK for the [Late API](https://getlate.dev) — schedule and publish social media posts across Instagram, TikTok, YouTube, LinkedIn, X/Twitter, Facebook, Pinterest, Threads, Bluesky, Reddit, Snapchat, Telegram, WhatsApp, and Google Business Profile with a single integration.
+The official Python SDK for the [Zernio API](https://zernio.com) — schedule and publish social media posts across Instagram, TikTok, YouTube, LinkedIn, X/Twitter, Facebook, Pinterest, Threads, Bluesky, Reddit, Snapchat, Telegram, WhatsApp, and Google Business Profile with a single integration.
 
 ## Installation
 
 ```bash
-pip install late-sdk
+pip install zernio-sdk
 ```
 
 ## Quick Start
@@ -49,7 +49,7 @@ print(f"Published to {len(post['post']['platforms'])} platforms!")
 ```python
 late = Late(
     api_key="your-api-key",  # Required
-    base_url="https://getlate.dev/api",  # Optional, this is the default
+    base_url="https://zernio.com/api",  # Optional, this is the default
     timeout=30.0,  # Optional, request timeout in seconds
 )
 ```
@@ -468,22 +468,22 @@ except LateAPIError as e:
 
 ## MCP Server (Claude Desktop)
 
-The SDK includes a Model Context Protocol (MCP) server for integration with Claude Desktop. See [MCP documentation](https://docs.getlate.dev/resources/mcp) for setup instructions.
+The SDK includes a Model Context Protocol (MCP) server for integration with Claude Desktop. See [MCP documentation](https://docs.zernio.com/resources/mcp) for setup instructions.
 
 ```bash
-pip install late-sdk[mcp]
+pip install zernio-sdk[mcp]
 ```
 
 ## Requirements
 
 - Python 3.10+
-- [Late API key](https://getlate.dev) (free tier available)
+- [Zernio API key](https://zernio.com) (free tier available)
 
 ## Links
 
-- [Documentation](https://docs.getlate.dev)
-- [Dashboard](https://getlate.dev/dashboard)
-- [Changelog](https://docs.getlate.dev/changelog)
+- [Documentation](https://docs.zernio.com)
+- [Dashboard](https://zernio.com/dashboard)
+- [Changelog](https://docs.zernio.com/changelog)
 
 ## License
 
