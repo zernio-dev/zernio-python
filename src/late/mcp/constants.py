@@ -20,4 +20,4 @@ ENDPOINT_SSE = "/sse"
 ENDPOINT_MESSAGES = "/messages/"
 
 # Documentation
-DOCS_URL = "https://docs.getlate.dev"
+DOCS_URL = "https://docs.zernio.com"

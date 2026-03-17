@@ -460,7 +460,7 @@ def main() -> int:
 
     if not openapi_path.exists():
         print(f"Error: OpenAPI spec not found at {openapi_path}")
-        print("Run 'curl -o openapi.yaml https://getlate.dev/openapi.yaml' first")
+        print("Run 'curl -o openapi.yaml https://zernio.com/openapi.yaml' first")
         return 1
 
     with openapi_path.open() as f:

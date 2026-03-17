@@ -33,7 +33,7 @@ class BaseClient:
     automatic retries, and full HTTP/2 support.
     """
 
-    DEFAULT_BASE_URL = "https://getlate.dev/api"
+    DEFAULT_BASE_URL = "https://zernio.com/api"
     DEFAULT_TIMEOUT = 30.0
     DEFAULT_MAX_RETRIES = 3
     SDK_VERSION = "1.0.0"
@@ -51,7 +51,7 @@ class BaseClient:
 
         Args:
             api_key: Late API key for authentication
-            base_url: Base URL for the API (default: https://getlate.dev/api)
+            base_url: Base URL for the API (default: https://zernio.com/api)
             timeout: Request timeout in seconds (default: 30)
             max_retries: Maximum retries for failed requests (default: 3)
         """

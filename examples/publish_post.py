@@ -17,7 +17,7 @@ def main() -> None:
     accounts = accounts_response.get("accounts", [])
 
     if not accounts:
-        print("No accounts connected. Connect an account at https://getlate.dev")
+        print("No accounts connected. Connect an account at https://zernio.com")
         return
 
     print(f"Found {len(accounts)} account(s):")
@@ -32,7 +32,7 @@ def main() -> None:
     scheduled_time = datetime.now() + timedelta(hours=1)
 
     post = client.posts.create(
-        content="Hello from Late Python SDK! 🚀",
+        content="Hello from Late Python SDK! \ud83d\ude80",
         platforms=[
             {
                 "platform": account["platform"],
@@ -42,7 +42,7 @@ def main() -> None:
         scheduled_for=scheduled_time,
     )
 
-    print(f"\n✅ Post created!")
+    print(f"\n\u2705 Post created!")
     print(f"   ID: {post['post']['_id']}")
     print(f"   Status: {post['post']['status']}")
     print(f"   Scheduled: {scheduled_time.strftime('%Y-%m-%d %H:%M')}")

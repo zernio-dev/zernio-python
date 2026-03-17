@@ -29,7 +29,7 @@ def main() -> int:
     # Validate OpenAPI spec exists (should be fetched first)
     if not openapi_spec.exists():
         print(f"Error: OpenAPI spec not found at {openapi_spec}")
-        print("Run 'curl -o openapi.yaml https://getlate.dev/openapi.yaml' first")
+        print("Run 'curl -o openapi.yaml https://zernio.com/openapi.yaml' first")
         return 1
 
     # Create output directory

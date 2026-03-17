@@ -36,7 +36,7 @@ Add this configuration:
 }
 ```
 
-> Get your API key at [getlate.dev/dashboard/api-keys](https://getlate.dev/dashboard/api-keys)
+> Get your API key at [zernio.com/dashboard/api-keys](https://zernio.com/dashboard/api-keys)
 
 ### 3. Restart Claude Desktop
 
@@ -72,7 +72,7 @@ pip install getlate[mcp]
 Since Claude can't access local files, use the browser upload flow:
 
 1. Ask Claude: *"I want to post an image to Instagram"*
-2. Claude gives you an upload link → open it in your browser
+2. Claude gives you an upload link -> open it in your browser
 3. Upload your file and tell Claude *"done"*
 4. Claude creates the post with your media
 

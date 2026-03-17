@@ -6,7 +6,7 @@ readme = "README.md"
 requires-python = ">=3.10"
 license = { text = "Apache-2.0" }
 authors = [
-    { name = "Late", email = "hello@getlate.dev" }
+    { name = "Late", email = "hello@zernio.com" }
 ]
 keywords = [
     "late",
@@ -81,11 +81,11 @@ late-mcp = "late.mcp.server:main"
 late-mcp-http = "late.mcp.http_server:main"
 
 [project.urls]
-Homepage = "https://getlate.dev"
-Documentation = "https://docs.getlate.dev"
-Repository = "https://github.com/getlatedev/late-python"
-Issues = "https://github.com/getlatedev/late-python/issues"
-Changelog = "https://docs.getlate.dev/changelog"
+Homepage = "https://zernio.com"
+Documentation = "https://docs.zernio.com"
+Repository = "https://github.com/zernio-dev/zernio-python"
+Issues = "https://github.com/zernio-dev/zernio-python/issues"
+Changelog = "https://docs.zernio.com/changelog"
 
 [build-system]
 requires = ["hatchling"]

@@ -63,7 +63,7 @@ class Late(BaseClient):
 
         Args:
             api_key: Late API key
-            base_url: Base URL (default: https://getlate.dev/api)
+            base_url: Base URL (default: https://zernio.com/api)
             timeout: Request timeout in seconds
             max_retries: Maximum retries for failed requests
         """

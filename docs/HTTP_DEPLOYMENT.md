@@ -115,4 +115,4 @@ The server validates the API key by making a test request to the Late API. If va
 
 ## Get Your Late API Key
 
-Visit https://getlate.dev to sign up and get your API key.
+Visit https://zernio.com to sign up and get your API key.

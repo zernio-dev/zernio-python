@@ -41,7 +41,7 @@ _late_api_key: ContextVar[str | None] = ContextVar("late_api_key", default=None)
 
 # Cache for documentation content
 _docs_cache: dict[str, tuple[str, datetime]] = {}
-_DOCS_URL = "https://docs.getlate.dev/llms-full.txt"
+_DOCS_URL = "https://docs.zernio.com/llms-full.txt"
 _CACHE_TTL_HOURS = 24
 
 # Initialize MCP server
@@ -114,7 +114,7 @@ def accounts_list() -> str:
     accounts = response.accounts or []
 
     if not accounts:
-        return "No accounts connected. Connect accounts at https://getlate.dev"
+        return "No accounts connected. Connect accounts at https://zernio.com"
 
     lines = [f"Found {len(accounts)} connected account(s):\n"]
     for acc in accounts:
@@ -203,7 +203,7 @@ def profiles_create(name: str, description: str = "", color: str = "") -> str:
     response = client.profiles.create(**params)
     profile = response.profile
 
-    return f"✅ Profile created!\nName: {profile.name if profile else 'N/A'}\nID: {profile.field_id if profile else 'N/A'}"
+    return f"\u2705 Profile created!\nName: {profile.name if profile else 'N/A'}\nID: {profile.field_id if profile else 'N/A'}"
 
 
 @mcp.tool()
@@ -228,12 +228,12 @@ def profiles_update(
         params["is_default"] = True
 
     if not params:
-        return "⚠️ No changes specified. Provide at least one field to update."
+        return "\u26a0\ufe0f No changes specified. Provide at least one field to update."
 
     response = client.profiles.update(profile_id, **params)
     profile = response.profile
 
-    return f"✅ Profile updated!\nName: {profile.name if profile else 'N/A'}\nID: {profile.field_id if profile else 'N/A'}"
+    return f"\u2705 Profile updated!\nName: {profile.name if profile else 'N/A'}\nID: {profile.field_id if profile else 'N/A'}"
 
 
 @mcp.tool()
@@ -241,7 +241,7 @@ def profiles_update(
 def profiles_delete(profile_id: str) -> str:
     client = _get_client()
     client.profiles.delete(profile_id)
-    return f"✅ Profile {profile_id} deleted"
+    return f"\u2705 Profile {profile_id} deleted"
 
 
 # ============================================================================
@@ -383,12 +383,12 @@ def posts_create(
 
     post_id = post.field_id if post else "N/A"
     if is_draft:
-        return f"📝 Draft saved for {platform} (@{username}){media_info}\nPost ID: {post_id}\nStatus: draft"
+        return f"\ud83d\udcdd Draft saved for {platform} (@{username}){media_info}\nPost ID: {post_id}\nStatus: draft"
     elif publish_now:
-        return f"✅ Published to {platform} (@{username}){media_info}\nPost ID: {post_id}"
+        return f"\u2705 Published to {platform} (@{username}){media_info}\nPost ID: {post_id}"
     else:
         scheduled = params["scheduled_for"].strftime("%Y-%m-%d %H:%M")
-        return f"✅ Scheduled for {platform} (@{username}){media_info}\nPost ID: {post_id}\nScheduled: {scheduled}"
+        return f"\u2705 Scheduled for {platform} (@{username}){media_info}\nPost ID: {post_id}\nScheduled: {scheduled}"
 
 
 @mcp.tool()
@@ -471,12 +471,12 @@ def posts_cross_post(
 
     post_id = post.field_id if post else "N/A"
     if is_draft:
-        result = f"📝 Draft saved for: {', '.join(posted_to)}{media_info}\nPost ID: {post_id}\nStatus: draft"
+        result = f"\ud83d\udcdd Draft saved for: {', '.join(posted_to)}{media_info}\nPost ID: {post_id}\nStatus: draft"
     else:
-        result = f"✅ {'Published' if publish_now else 'Scheduled'} to: {', '.join(posted_to)}{media_info}\nPost ID: {post_id}"
+        result = f"\u2705 {'Published' if publish_now else 'Scheduled'} to: {', '.join(posted_to)}{media_info}\nPost ID: {post_id}"
 
     if not_found:
-        result += f"\n⚠️ Accounts not found for: {', '.join(not_found)}"
+        result += f"\n\u26a0\ufe0f Accounts not found for: {', '.join(not_found)}"
 
     return result
 
@@ -500,14 +500,14 @@ def posts_update(
         params["title"] = title
 
     if not params:
-        return "⚠️ No changes specified. Provide at least one field to update."
+        return "\u26a0\ufe0f No changes specified. Provide at least one field to update."
 
     response = client.posts.update(post_id, **params)
     post = response.post
 
     post_id_str = post.field_id if post else "N/A"
     status = post.status if post else "N/A"
-    return f"✅ Post updated!\nID: {post_id_str}\nStatus: {status}"
+    return f"\u2705 Post updated!\nID: {post_id_str}\nStatus: {status}"
 
 
 @mcp.tool()
@@ -515,7 +515,7 @@ def posts_update(
 def posts_delete(post_id: str) -> str:
     client = _get_client()
     client.posts.delete(post_id)
-    return f"✅ Post {post_id} deleted"
+    return f"\u2705 Post {post_id} deleted"
 
 
 @mcp.tool()
@@ -527,17 +527,17 @@ def posts_retry(post_id: str) -> str:
         post_response = client.posts.get(post_id)
         post = post_response.post
         if not post:
-            return f"❌ Post {post_id} not found"
+            return f"\u274c Post {post_id} not found"
         if post.status != PostStatus.FAILED:
-            return f"⚠️ Post {post_id} is not in failed status (current: {post.status})"
+            return f"\u26a0\ufe0f Post {post_id} is not in failed status (current: {post.status})"
     except Exception as e:
-        return f"❌ Could not find post {post_id}: {e}"
+        return f"\u274c Could not find post {post_id}: {e}"
 
     try:
         client.posts.retry(post_id)
-        return f"✅ Post {post_id} has been queued for retry"
+        return f"\u2705 Post {post_id} has been queued for retry"
     except Exception as e:
-        return f"❌ Failed to retry post: {e}"
+        return f"\u274c Failed to retry post: {e}"
 
 
 @mcp.tool()
@@ -584,11 +584,11 @@ def posts_retry_all_failed() -> str:
             success_count += 1
         except Exception as e:
             fail_count += 1
-            results.append(f"❌ {post.field_id}: {e}")
+            results.append(f"\u274c {post.field_id}: {e}")
 
-    summary = f"✅ Retried {success_count} post(s)"
+    summary = f"\u2705 Retried {success_count} post(s)"
     if fail_count > 0:
-        summary += f"\n❌ Failed to retry {fail_count} post(s)"
+        summary += f"\n\u274c Failed to retry {fail_count} post(s)"
         summary += "\n" + "\n".join(results)
 
     return summary
@@ -611,7 +611,7 @@ def media_generate_upload_link() -> str:
         token = response.token or ""
         expires_at = str(response.expiresAt) if response.expiresAt else ""
 
-        return f"""📤 Upload link generated!
+        return f"""\ud83d\udce4 Upload link generated!
 
 **Open this link in your browser to upload files:**
 {upload_url}
@@ -622,7 +622,7 @@ Expires: {expires_at}
 Once you've uploaded your files, let me know and I'll check the status to get the URLs."""
 
     except Exception as e:
-        return f"❌ Failed to generate upload link: {e}"
+        return f"\u274c Failed to generate upload link: {e}"
 
 
 @mcp.tool()
@@ -637,22 +637,22 @@ def media_check_upload_status(token: str) -> str:
         files = response.files or []
 
         if status == "pending":
-            return f"""⏳ Upload pending
+            return f"""\u23f3 Upload pending
 
 The user hasn't uploaded files yet. Please wait for them to complete the upload in their browser.
 
 Token: {token}"""
 
         elif status == "expired":
-            return """⏰ Upload link expired
+            return """\u23f0 Upload link expired
 
 The upload link has expired. Use media_generate_upload_link to create a new one."""
 
         elif status == "completed":
             if not files:
-                return "✅ Upload completed but no files were found."
+                return "\u2705 Upload completed but no files were found."
 
-            lines = [f"✅ Upload completed! {len(files)} file(s) uploaded:\n"]
+            lines = [f"\u2705 Upload completed! {len(files)} file(s) uploaded:\n"]
             media_urls = []
 
             for f in files:
@@ -665,7 +665,7 @@ The upload link has expired. Use media_generate_upload_link to create a new one.
                 lines.append("")
 
             lines.append(
-                "\n📝 You can now create a post with these media URLs using posts_create with the media_urls parameter."
+                "\n\ud83d\udcdd You can now create a post with these media URLs using posts_create with the media_urls parameter."
             )
             lines.append(f"\nMedia URLs: {','.join(media_urls)}")
 
@@ -675,7 +675,7 @@ The upload link has expired. Use media_generate_upload_link to create a new one.
             return f"Unknown status: {status}"
 
     except Exception as e:
-        return f"❌ Failed to check upload status: {e}"
+        return f"\u274c Failed to check upload status: {e}"
 
 
 # ============================================================================
@@ -783,7 +783,7 @@ def docs_search(query: str) -> str:
         return "\n".join(lines)
 
     except Exception as e:
-        return f"❌ Failed to search documentation: {e}"
+        return f"\u274c Failed to search documentation: {e}"
 
 
 # ============================================================================

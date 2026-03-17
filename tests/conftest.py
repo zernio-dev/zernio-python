@@ -12,4 +12,4 @@ def api_key() -> str:
 @pytest.fixture
 def base_url() -> str:
     """Test base URL."""
-    return "https://getlate.dev/api"
+    return "https://zernio.com/api"

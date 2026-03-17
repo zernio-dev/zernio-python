@@ -12,7 +12,7 @@ class TestLateClient:
         """Test client initialization."""
         client = Late(api_key=api_key)
         assert client.api_key == api_key
-        assert client.base_url == "https://getlate.dev/api"
+        assert client.base_url == "https://zernio.com/api"
 
     def test_client_custom_base_url(self, api_key: str) -> None:
         """Test client with custom base URL."""
