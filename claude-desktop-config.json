@@ -1,15 +1,12 @@
 {
   "mcpServers": {
-    "late": {
-      "command": "uv",
+    "zernio": {
+      "command": "uvx",
       "args": [
-        "run",
-        "--directory",
-        "/Users/carlos/Documents/WebDev/Freelance/miquel-palet/late-python-starter",
-        "late-mcp"
+        "zernio-mcp"
       ],
       "env": {
-        "LATE_API_KEY": "YOUR_API_KEY_HERE"
+        "ZERNIO_API_KEY": "YOUR_API_KEY_HERE"
       }
     }
   }
