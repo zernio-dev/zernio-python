@@ -1,5 +1,5 @@
 [project]
-name = "zernio-sdk"
+name = "late-sdk"
 version = "1.2.92"
 description = "The official Python library for the Zernio API"
 readme = "README.md"
