@@ -1,14 +1,15 @@
 [project]
-name = "late-sdk"
-version = "1.2.91"
-description = "The official Python library for the Late API"
+name = "zernio-sdk"
+version = "1.2.92"
+description = "The official Python library for the Zernio API"
 readme = "README.md"
 requires-python = ">=3.10"
 license = { text = "Apache-2.0" }
 authors = [
-    { name = "Late", email = "hello@zernio.com" }
+    { name = "Zernio", email = "hello@zernio.com" }
 ]
 keywords = [
+    "zernio",
     "late",
     "social-media",
     "scheduling",
@@ -77,6 +78,10 @@ dev = [
 ]
 
 [project.scripts]
+# New Zernio-branded entry points
+zernio-mcp = "late.mcp.server:main"
+zernio-mcp-http = "late.mcp.http_server:main"
+# Backward-compatible entry points (kept for existing users)
 late-mcp = "late.mcp.server:main"
 late-mcp-http = "late.mcp.http_server:main"
 
