@@ -54,7 +54,7 @@ jobs:
         if: steps.check_tag.outputs.exists == 'false'
         run: |
           VERSION="${{ steps.version.outputs.version }}"
-          HTTP_STATUS=$(curl -s -o /dev/null -w "%{http_code}" "https://pypi.org/pypi/late-sdk/$VERSION/json")
+          HTTP_STATUS=$(curl -s -o /dev/null -w "%{http_code}" "https://pypi.org/pypi/zernio-sdk/$VERSION/json")
           if [ "$HTTP_STATUS" = "200" ]; then
             echo "::error::❌ Version $VERSION already exists on PyPI! Bump the version in pyproject.toml"
             exit 1
@@ -77,7 +77,7 @@ jobs:
           else
             echo "| Action | 🚀 **New Release** |" >> $GITHUB_STEP_SUMMARY
             echo "| GitHub Release | v${{ steps.version.outputs.version }} |" >> $GITHUB_STEP_SUMMARY
-            echo "| PyPI | late-sdk==${{ steps.version.outputs.version }} |" >> $GITHUB_STEP_SUMMARY
+            echo "| PyPI | zernio-sdk==${{ steps.version.outputs.version }} |" >> $GITHUB_STEP_SUMMARY
           fi
 
       - name: Build package
@@ -105,31 +105,31 @@ jobs:
             pip install zernio-sdk==${{ steps.version.outputs.version }}
             ```
 
-      - name: Publish late-sdk to PyPI
+      - name: Publish zernio-sdk to PyPI
         if: steps.check_tag.outputs.exists == 'false'
         uses: pypa/gh-action-pypi-publish@release/v1
         with:
           password: ${{ secrets.PYPI_API_TOKEN }}
 
-      - name: Swap package name to zernio-sdk
+      - name: Swap package name to late-sdk
         if: steps.check_tag.outputs.exists == 'false'
         run: |
           python3 -c "
           import re
           with open('pyproject.toml', 'r') as f:
               content = f.read()
-          content = re.sub(r'name = \"late-sdk\"', 'name = \"zernio-sdk\"', content)
+          content = re.sub(r'name = \"zernio-sdk\"', 'name = \"late-sdk\"', content)
           with open('pyproject.toml', 'w') as f:
               f.write(content)
           "
 
-      - name: Build as zernio-sdk
+      - name: Build as late-sdk
         if: steps.check_tag.outputs.exists == 'false'
         run: |
           rm -rf dist/
           uv build
 
-      - name: Publish zernio-sdk to PyPI
+      - name: Publish late-sdk to PyPI
         if: steps.check_tag.outputs.exists == 'false'
         uses: pypa/gh-action-pypi-publish@release/v1
         with:
@@ -142,9 +142,9 @@ jobs:
           echo "## ✅ Release Complete" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "- 🏷️ GitHub: [v${{ steps.version.outputs.version }}](https://github.com/${{ github.repository }}/releases/tag/v${{ steps.version.outputs.version }})" >> $GITHUB_STEP_SUMMARY
-          echo "- 📦 PyPI: [late-sdk ${{ steps.version.outputs.version }}](https://pypi.org/project/late-sdk/${{ steps.version.outputs.version }}/)" >> $GITHUB_STEP_SUMMARY
+          echo "- 📦 PyPI: [zernio-sdk ${{ steps.version.outputs.version }}](https://pypi.org/project/zernio-sdk/${{ steps.version.outputs.version }}/)" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "Install with:" >> $GITHUB_STEP_SUMMARY
           echo "\`\`\`bash" >> $GITHUB_STEP_SUMMARY
-          echo "pip install late-sdk==${{ steps.version.outputs.version }}" >> $GITHUB_STEP_SUMMARY
+          echo "pip install zernio-sdk==${{ steps.version.outputs.version }}" >> $GITHUB_STEP_SUMMARY
           echo "\`\`\`" >> $GITHUB_STEP_SUMMARY

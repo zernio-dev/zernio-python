@@ -149,31 +149,31 @@ jobs:
             pip install zernio-sdk==${{ steps.version.outputs.new_version }}
             ```
 
-      - name: Publish late-sdk to PyPI
+      - name: Publish zernio-sdk to PyPI
         if: steps.changes.outputs.has_changes == 'true'
         uses: pypa/gh-action-pypi-publish@release/v1
         with:
           password: ${{ secrets.PYPI_API_TOKEN }}
 
-      - name: Swap package name to zernio-sdk
+      - name: Swap package name to late-sdk
         if: steps.changes.outputs.has_changes == 'true'
         run: |
           python3 -c "
           import re
           with open('pyproject.toml', 'r') as f:
               content = f.read()
-          content = re.sub(r'name = \"late-sdk\"', 'name = \"zernio-sdk\"', content)
+          content = re.sub(r'name = \"zernio-sdk\"', 'name = \"late-sdk\"', content)
           with open('pyproject.toml', 'w') as f:
               f.write(content)
           "
 
-      - name: Build as zernio-sdk
+      - name: Build as late-sdk
         if: steps.changes.outputs.has_changes == 'true'
         run: |
           rm -rf dist/
           uv build
 
-      - name: Publish zernio-sdk to PyPI
+      - name: Publish late-sdk to PyPI
         if: steps.changes.outputs.has_changes == 'true'
         uses: pypa/gh-action-pypi-publish@release/v1
         with:
