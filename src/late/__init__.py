@@ -1,7 +1,9 @@
 """
-Late SDK - Python client for Late API.
+Zernio SDK - Python client for the Zernio API.
 
 Schedule social media posts across multiple platforms.
+
+All original ``Late*`` names are still available for backwards compatibility.
 """
 
 from .client.exceptions import (
@@ -14,8 +16,17 @@ from .client.exceptions import (
     LateRateLimitError,
     LateTimeoutError,
     LateValidationError,
+    ZernioAPIError,
+    ZernioAuthenticationError,
+    ZernioConnectionError,
+    ZernioError,
+    ZernioForbiddenError,
+    ZernioNotFoundError,
+    ZernioRateLimitError,
+    ZernioTimeoutError,
+    ZernioValidationError,
 )
-from .client.late_client import Late
+from .client.late_client import Late, Zernio
 from .enums import (
     CaptionTone,
     DayOfWeek,
@@ -31,10 +42,11 @@ from .enums import (
     Visibility,
 )
 
-__version__ = "1.2.94"
+__version__ = "1.3.0"
 
 __all__ = [
     # Client
+    "Zernio",
     "Late",
     # Enums - Core
     "Platform",
@@ -51,7 +63,17 @@ __all__ = [
     # Enums - Tools & Queue
     "CaptionTone",
     "DayOfWeek",
-    # Exceptions
+    # Exceptions - Zernio-branded
+    "ZernioAPIError",
+    "ZernioAuthenticationError",
+    "ZernioConnectionError",
+    "ZernioError",
+    "ZernioForbiddenError",
+    "ZernioNotFoundError",
+    "ZernioRateLimitError",
+    "ZernioTimeoutError",
+    "ZernioValidationError",
+    # Exceptions - Legacy (backwards-compatible)
     "LateAPIError",
     "LateAuthenticationError",
     "LateConnectionError",

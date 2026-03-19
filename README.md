@@ -26,13 +26,14 @@ pip install zernio-sdk
 ## Quick Start
 
 ```python
-from late import Late
+from late import Zernio
 
-late = Late(api_key="your-api-key")
+# Reads ZERNIO_API_KEY from environment (or pass explicitly)
+client = Zernio()
 
 # Publish to multiple platforms with one call
-post = late.posts.create(
-    content="Hello world from Late!",
+post = client.posts.create(
+    content="Hello world from Zernio!",
     platforms=[
         {"platform": "twitter", "accountId": "acc_xxx"},
         {"platform": "linkedin", "accountId": "acc_yyy"},
@@ -47,8 +48,8 @@ print(f"Published to {len(post['post']['platforms'])} platforms!")
 ## Configuration
 
 ```python
-late = Late(
-    api_key="your-api-key",  # Required
+client = Zernio(
+    api_key="your-api-key",  # Or set ZERNIO_API_KEY env var
     base_url="https://zernio.com/api",  # Optional, this is the default
     timeout=30.0,  # Optional, request timeout in seconds
 )
@@ -59,7 +60,7 @@ late = Late(
 ### Schedule a Post
 
 ```python
-post = late.posts.create(
+post = client.posts.create(
     content="This post will go live tomorrow at 10am",
     platforms=[{"platform": "instagram", "accountId": "acc_xxx"}],
     scheduled_for="2025-02-01T10:00:00Z",
@@ -71,7 +72,7 @@ post = late.posts.create(
 Customize content per platform while posting to all at once:
 
 ```python
-post = late.posts.create(
+post = client.posts.create(
     content="Default content",
     platforms=[
         {
@@ -93,15 +94,15 @@ post = late.posts.create(
 
 ```python
 # Option 1: Direct upload (simplest)
-result = late.media.upload("path/to/video.mp4")
+result = client.media.upload("path/to/video.mp4")
 media_url = result["publicUrl"]
 
 # Option 2: Upload from bytes
-result = late.media.upload_bytes(video_bytes, "video.mp4", "video/mp4")
+result = client.media.upload_bytes(video_bytes, "video.mp4", "video/mp4")
 media_url = result["publicUrl"]
 
 # Create post with media
-post = late.posts.create(
+post = client.posts.create(
     content="Check out this video!",
     media_urls=[media_url],
     platforms=[
@@ -115,7 +116,7 @@ post = late.posts.create(
 ### Get Analytics
 
 ```python
-data = late.analytics.get(period="30d")
+data = client.analytics.get(period="30d")
 
 print("Analytics:", data)
 ```
@@ -123,7 +124,7 @@ print("Analytics:", data)
 ### List Connected Accounts
 
 ```python
-data = late.accounts.list()
+data = client.accounts.list()
 
 for account in data["accounts"]:
     print(f"{account['platform']}: @{account['username']}")
@@ -133,11 +134,11 @@ for account in data["accounts"]:
 
 ```python
 import asyncio
-from late import Late
+from late import Zernio
 
 async def main():
-    async with Late(api_key="your-api-key") as late:
-        posts = await late.posts.alist(status="scheduled")
+    async with Zernio(api_key="your-api-key") as client:
+        posts = await client.posts.alist(status="scheduled")
         print(f"Found {len(posts['posts'])} scheduled posts")
 
 asyncio.run(main())
@@ -146,19 +147,35 @@ asyncio.run(main())
 ## Error Handling
 
 ```python
-from late import Late, LateAPIError, LateRateLimitError, LateValidationError
+from late import Zernio, ZernioAPIError, ZernioRateLimitError, ZernioValidationError
 
-late = Late(api_key="your-api-key")
+client = Zernio(api_key="your-api-key")
 
 try:
-    late.posts.create(content="Hello!", platforms=[...])
-except LateRateLimitError as e:
+    client.posts.create(content="Hello!", platforms=[...])
+except ZernioRateLimitError as e:
     print(f"Rate limited: {e}")
-except LateValidationError as e:
+except ZernioValidationError as e:
     print(f"Invalid request: {e}")
-except LateAPIError as e:
+except ZernioAPIError as e:
     print(f"API error: {e}")
 ```
+
+## Migration from Late
+
+All old names continue to work. No code changes are required:
+
+```python
+# Old style (still works)
+from late import Late, LateAPIError
+client = Late(api_key="...")
+
+# New style
+from late import Zernio, ZernioAPIError
+client = Zernio()  # reads ZERNIO_API_KEY env var
+```
+
+The `LATE_API_KEY` environment variable is also still supported as a fallback when `ZERNIO_API_KEY` is not set.
 
 ## SDK Reference
 

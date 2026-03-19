@@ -1,8 +1,13 @@
 """
-Main Late API client.
+Main Zernio API client.
+
+Provides the primary client class for interacting with the Zernio API.
+The ``Late`` alias is kept for backwards compatibility.
 """
 
 from __future__ import annotations
+
+import os
 
 from ..resources import (
     AccountGroupsResource,
@@ -25,15 +30,18 @@ from ..resources import (
 from .base import BaseClient
 
 
-class Late(BaseClient):
+class Zernio(BaseClient):
     """
-    Late API client for scheduling social media posts.
+    Zernio API client for scheduling social media posts.
 
     Example:
-        >>> from late import Late, Platform
+        >>> from late import Zernio, Platform
         >>>
-        >>> # Initialize client
-        >>> client = Late(api_key="your_api_key")
+        >>> # Initialize client (reads ZERNIO_API_KEY or LATE_API_KEY from env)
+        >>> client = Zernio()
+        >>>
+        >>> # Or pass the key explicitly
+        >>> client = Zernio(api_key="your_api_key")
         >>>
         >>> # List profiles
         >>> profiles = client.profiles.list()
@@ -46,29 +54,42 @@ class Late(BaseClient):
         ... )
         >>>
         >>> # Async usage
-        >>> async with Late(api_key="...") as client:
+        >>> async with Zernio(api_key="...") as client:
         ...     posts = await client.posts.alist()
     """
 
     def __init__(
         self,
-        api_key: str,
+        api_key: str | None = None,
         *,
         base_url: str | None = None,
         timeout: float = 30.0,
         max_retries: int = 3,
     ) -> None:
         """
-        Initialize the Late client.
+        Initialize the Zernio client.
 
         Args:
-            api_key: Late API key
+            api_key: Zernio API key. If not provided, reads from ZERNIO_API_KEY
+                     or LATE_API_KEY environment variable (in that order).
             base_url: Base URL (default: https://zernio.com/api)
             timeout: Request timeout in seconds
             max_retries: Maximum retries for failed requests
+
+        Raises:
+            ValueError: If no API key is provided and neither ZERNIO_API_KEY
+                        nor LATE_API_KEY environment variable is set.
         """
+        # Resolve API key: explicit arg > ZERNIO_API_KEY env > LATE_API_KEY env
+        resolved_key = api_key or os.environ.get("ZERNIO_API_KEY") or os.environ.get("LATE_API_KEY")
+        if not resolved_key:
+            raise ValueError(
+                "API key is required. Pass api_key= or set the ZERNIO_API_KEY "
+                "(or LATE_API_KEY) environment variable."
+            )
+
         super().__init__(
-            api_key, base_url=base_url, timeout=timeout, max_retries=max_retries
+            resolved_key, base_url=base_url, timeout=timeout, max_retries=max_retries
         )
 
         # Core resources (manual with Pydantic validation)
@@ -91,10 +112,14 @@ class Late(BaseClient):
         self.usage = UsageResource(self)
         self.reddit = RedditResource(self)
 
-    async def __aenter__(self) -> Late:
+    async def __aenter__(self) -> Zernio:
         """Async context manager entry."""
         return self
 
     async def __aexit__(self, exc_type, exc_val, exc_tb) -> None:  # type: ignore[no-untyped-def]
         """Async context manager exit."""
         pass
+
+
+# Backwards-compatible alias so ``from late import Late`` keeps working
+Late = Zernio

@@ -97,3 +97,17 @@ class LateTimeoutError(LateError):
     """Exception raised when a request times out."""
 
     pass
+
+
+# ---------------------------------------------------------------------------
+# Zernio-branded aliases (backwards-compatible, all old names still work)
+# ---------------------------------------------------------------------------
+ZernioError = LateError
+ZernioAPIError = LateAPIError
+ZernioAuthenticationError = LateAuthenticationError
+ZernioRateLimitError = LateRateLimitError
+ZernioNotFoundError = LateNotFoundError
+ZernioForbiddenError = LateForbiddenError
+ZernioValidationError = LateValidationError
+ZernioConnectionError = LateConnectionError
+ZernioTimeoutError = LateTimeoutError
