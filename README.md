@@ -26,7 +26,7 @@ pip install zernio-sdk
 ## Quick Start
 
 ```python
-from late import Zernio
+from zernio import Zernio
 
 # Reads ZERNIO_API_KEY from environment (or pass explicitly)
 client = Zernio()
@@ -134,7 +134,7 @@ for account in data["accounts"]:
 
 ```python
 import asyncio
-from late import Zernio
+from zernio import Zernio
 
 async def main():
     async with Zernio(api_key="your-api-key") as client:
@@ -147,7 +147,7 @@ asyncio.run(main())
 ## Error Handling
 
 ```python
-from late import Zernio, ZernioAPIError, ZernioRateLimitError, ZernioValidationError
+from zernio import Zernio, ZernioAPIError, ZernioRateLimitError, ZernioValidationError
 
 client = Zernio(api_key="your-api-key")
 
@@ -171,11 +171,11 @@ from late import Late, LateAPIError
 client = Late(api_key="...")
 
 # New style
-from late import Zernio, ZernioAPIError
+from zernio import Zernio, ZernioAPIError
 client = Zernio()  # reads ZERNIO_API_KEY env var
 ```
 
-The `LATE_API_KEY` environment variable is also still supported as a fallback when `ZERNIO_API_KEY` is not set.
+Both `from zernio import ...` and `from late import ...` work identically. The `LATE_API_KEY` environment variable is also still supported as a fallback when `ZERNIO_API_KEY` is not set.
 
 ## SDK Reference
 
