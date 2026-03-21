@@ -119,6 +119,17 @@ class AccountsResource:
         """Check account health"""
         return self._client._get(f"/v1/accounts/{account_id}/health")
 
+    def get_tik_tok_creator_info(
+        self, account_id: str, *, media_type: str | None = "video"
+    ) -> dict[str, Any]:
+        """Get TikTok creator info"""
+        params = self._build_params(
+            media_type=media_type,
+        )
+        return self._client._get(
+            f"/v1/accounts/{account_id}/tiktok/creator-info", params=params
+        )
+
     def get_google_business_reviews(
         self,
         account_id: str,
@@ -414,6 +425,17 @@ class AccountsResource:
     async def aget_account_health(self, account_id: str) -> dict[str, Any]:
         """Check account health (async)"""
         return await self._client._aget(f"/v1/accounts/{account_id}/health")
+
+    async def aget_tik_tok_creator_info(
+        self, account_id: str, *, media_type: str | None = "video"
+    ) -> dict[str, Any]:
+        """Get TikTok creator info (async)"""
+        params = self._build_params(
+            media_type=media_type,
+        )
+        return await self._client._aget(
+            f"/v1/accounts/{account_id}/tiktok/creator-info", params=params
+        )
 
     async def aget_google_business_reviews(
         self,

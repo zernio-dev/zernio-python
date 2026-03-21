@@ -200,6 +200,7 @@ Both `from zernio import ...` and `from late import ...` work identically. The `
 | `accounts.get_follower_stats()` | Get follower stats |
 | `accounts.get_google_business_reviews()` | Get reviews |
 | `accounts.get_linked_in_mentions()` | Resolve LinkedIn mention |
+| `accounts.get_tik_tok_creator_info()` | Get TikTok creator info |
 | `accounts.update_account()` | Update account |
 | `accounts.delete_account()` | Disconnect account |
 

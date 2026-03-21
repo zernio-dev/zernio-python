@@ -371,6 +371,24 @@ def register_generated_tools(mcp, _get_client):
             return f"Error: {e}"
 
     @mcp.tool()
+    def accounts_get_tik_tok_creator_info(
+        account_id: str, media_type: str = "video"
+    ) -> str:
+        """Get TikTok creator info
+
+        Args:
+            account_id: The TikTok account ID (required)
+            media_type: The media type to get creator info for (affects available interaction settings)"""
+        client = _get_client()
+        try:
+            response = client.accounts.get_tik_tok_creator_info(
+                account_id=account_id, media_type=media_type
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool()
     def accounts_get_google_business_reviews(
         account_id: str,
         location_id: str = "",

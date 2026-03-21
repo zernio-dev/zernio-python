@@ -1485,8 +1485,12 @@ components:
           description: Optional override. Defaults based on provided media items.
         videoCoverTimestampMs:
           type: integer
-          description: Optional for video posts. Timestamp in milliseconds to select which frame to use as thumbnail (defaults to 1000ms/1 second).
+          description: Optional for video posts. Timestamp in milliseconds to select which frame to use as thumbnail (defaults to 1000ms/1 second). Ignored when videoCoverImageUrl is provided.
           minimum: 0
+        videoCoverImageUrl:
+          type: string
+          format: uri
+          description: Optional for video posts. URL of a custom thumbnail image (JPG, PNG, or WebP, max 20MB). The image is prepended as a 1-second still frame to the video and used as the cover. Overrides videoCoverTimestampMs when provided.
         photoCoverIndex:
           type: integer
           description: Optional for photo carousels. Index of image to use as cover, 0-based (defaults to 0/first image).
@@ -5584,6 +5588,114 @@ paths:
                 recommendations: []
         '401': { $ref: '#/components/responses/Unauthorized' }
         '404': { $ref: '#/components/responses/NotFound' }
+  /v1/accounts/{accountId}/tiktok/creator-info:
+    get:
+      operationId: getTikTokCreatorInfo
+      tags: [Accounts]
+      summary: Get TikTok creator info
+      description: Returns TikTok creator details, available privacy levels, posting limits, and commercial content options for a specific TikTok account. Only works with TikTok accounts.
+      parameters:
+        - name: accountId
+          in: path
+          required: true
+          schema: { type: string }
+          description: The TikTok account ID
+        - name: mediaType
+          in: query
+          required: false
+          schema:
+            type: string
+            enum: [video, photo]
+            default: video
+          description: The media type to get creator info for (affects available interaction settings)
+      responses:
+        '200':
+          description: TikTok creator info and posting options
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  creator:
+                    type: object
+                    properties:
+                      nickname: { type: string, description: Creator display name }
+                      avatarUrl: { type: string, description: Creator avatar URL }
+                      isVerified: { type: boolean, description: Whether the creator is verified }
+                      canPostMore: { type: boolean, description: Whether the creator can publish more posts right now }
+                  privacyLevels:
+                    type: array
+                    description: Available privacy level options for this creator
+                    items:
+                      type: object
+                      properties:
+                        value: { type: string, description: "Privacy level value to use when creating posts (e.g. PUBLIC_TO_EVERYONE, MUTUAL_FOLLOW_FRIENDS, FOLLOWER_OF_CREATOR, SELF_ONLY)" }
+                        label: { type: string, description: Human-readable label }
+                  postingLimits:
+                    type: object
+                    properties:
+                      maxVideoDurationSec: { type: integer, description: Maximum video duration in seconds }
+                      interactionSettings:
+                        type: object
+                        description: Available interaction toggles (comment, duet, stitch) and their defaults
+                  commercialContentTypes:
+                    type: array
+                    description: Available commercial content disclosure options
+                    items:
+                      type: object
+                      properties:
+                        value: { type: string }
+                        label: { type: string }
+                        requires:
+                          type: array
+                          items: { type: string }
+              example:
+                creator:
+                  nickname: "myaccount"
+                  avatarUrl: "https://example.com/avatar.jpg"
+                  isVerified: false
+                  canPostMore: true
+                privacyLevels:
+                  - value: "PUBLIC_TO_EVERYONE"
+                    label: "Public To Everyone"
+                  - value: "MUTUAL_FOLLOW_FRIENDS"
+                    label: "Mutual Follow Friends"
+                  - value: "SELF_ONLY"
+                    label: "Self Only"
+                postingLimits:
+                  maxVideoDurationSec: 600
+                  interactionSettings:
+                    comment: true
+                    duet: true
+                    stitch: true
+                commercialContentTypes:
+                  - value: "none"
+                    label: "No Commercial Content"
+                  - value: "brand_organic"
+                    label: "Your Brand"
+                    requires: ["is_brand_organic_post"]
+        '400':
+          description: Account is not a TikTok account
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error: { type: string }
+              example:
+                error: "This endpoint is only available for TikTok accounts"
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '429':
+          description: Creator has reached TikTok daily posting limit
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error: { type: string }
+              example:
+                error: "TikTok creator has reached the daily posting limit. Please try again later."
   /v1/api-keys:
     get:
       operationId: listApiKeys
