@@ -1490,7 +1490,7 @@ components:
         videoCoverImageUrl:
           type: string
           format: uri
-          description: Optional for video posts. URL of a custom thumbnail image (JPG, PNG, or WebP, max 20MB). The image is prepended as a 1-second still frame to the video and used as the cover. Overrides videoCoverTimestampMs when provided.
+          description: Optional for video posts. URL of a custom thumbnail image (JPG, PNG, or WebP, max 20MB). The image is stitched as a single frame at the start of the video and used as the cover. Overrides videoCoverTimestampMs when provided.
         photoCoverIndex:
           type: integer
           description: Optional for photo carousels. Index of image to use as cover, 0-based (defaults to 0/first image).
