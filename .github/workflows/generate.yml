@@ -151,6 +151,7 @@ jobs:
 
       - name: Publish zernio-sdk to PyPI
         if: steps.changes.outputs.has_changes == 'true'
+        continue-on-error: true
         uses: pypa/gh-action-pypi-publish@release/v1
         with:
           password: ${{ secrets.PYPI_API_TOKEN }}
@@ -175,6 +176,7 @@ jobs:
 
       - name: Publish late-sdk to PyPI
         if: steps.changes.outputs.has_changes == 'true'
+        continue-on-error: true
         uses: pypa/gh-action-pypi-publish@release/v1
         with:
           password: ${{ secrets.PYPI_API_TOKEN }}
