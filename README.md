@@ -220,6 +220,8 @@ Both `from zernio import ...` and `from late import ...` work identically. The `
 | `analytics.get_best_time_to_post()` | Get best times to post |
 | `analytics.get_content_decay()` | Get content performance decay |
 | `analytics.get_daily_metrics()` | Get daily aggregated metrics |
+| `analytics.get_instagram_account_insights()` | Get Instagram account-level insights |
+| `analytics.get_instagram_demographics()` | Get Instagram audience demographics |
 | `analytics.get_linked_in_aggregate_analytics()` | Get LinkedIn aggregate stats |
 | `analytics.get_linked_in_post_analytics()` | Get LinkedIn post stats |
 | `analytics.get_linked_in_post_reactions()` | Get LinkedIn post reactions |

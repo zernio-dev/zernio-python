@@ -96,6 +96,46 @@ class AnalyticsResource:
         )
         return self._client._get("/v1/analytics/youtube/daily-views", params=params)
 
+    def get_instagram_account_insights(
+        self,
+        account_id: str,
+        *,
+        metrics: str | None = None,
+        since: str | None = None,
+        until: str | None = None,
+        metric_type: str | None = "total_value",
+        breakdown: str | None = None,
+    ) -> dict[str, Any]:
+        """Get Instagram account-level insights"""
+        params = self._build_params(
+            account_id=account_id,
+            metrics=metrics,
+            since=since,
+            until=until,
+            metric_type=metric_type,
+            breakdown=breakdown,
+        )
+        return self._client._get(
+            "/v1/analytics/instagram/account-insights", params=params
+        )
+
+    def get_instagram_demographics(
+        self,
+        account_id: str,
+        *,
+        metric: str | None = "follower_demographics",
+        breakdown: str | None = None,
+        timeframe: str | None = "this_month",
+    ) -> dict[str, Any]:
+        """Get Instagram audience demographics"""
+        params = self._build_params(
+            account_id=account_id,
+            metric=metric,
+            breakdown=breakdown,
+            timeframe=timeframe,
+        )
+        return self._client._get("/v1/analytics/instagram/demographics", params=params)
+
     def get_daily_metrics(
         self,
         *,
@@ -268,6 +308,48 @@ class AnalyticsResource:
         )
         return await self._client._aget(
             "/v1/analytics/youtube/daily-views", params=params
+        )
+
+    async def aget_instagram_account_insights(
+        self,
+        account_id: str,
+        *,
+        metrics: str | None = None,
+        since: str | None = None,
+        until: str | None = None,
+        metric_type: str | None = "total_value",
+        breakdown: str | None = None,
+    ) -> dict[str, Any]:
+        """Get Instagram account-level insights (async)"""
+        params = self._build_params(
+            account_id=account_id,
+            metrics=metrics,
+            since=since,
+            until=until,
+            metric_type=metric_type,
+            breakdown=breakdown,
+        )
+        return await self._client._aget(
+            "/v1/analytics/instagram/account-insights", params=params
+        )
+
+    async def aget_instagram_demographics(
+        self,
+        account_id: str,
+        *,
+        metric: str | None = "follower_demographics",
+        breakdown: str | None = None,
+        timeframe: str | None = "this_month",
+    ) -> dict[str, Any]:
+        """Get Instagram audience demographics (async)"""
+        params = self._build_params(
+            account_id=account_id,
+            metric=metric,
+            breakdown=breakdown,
+            timeframe=timeframe,
+        )
+        return await self._client._aget(
+            "/v1/analytics/instagram/demographics", params=params
         )
 
     async def aget_daily_metrics(

@@ -793,6 +793,70 @@ def register_generated_tools(mcp, _get_client):
             return f"Error: {e}"
 
     @mcp.tool()
+    def analytics_get_instagram_account_insights(
+        account_id: str,
+        metrics: str = "",
+        since: str = "",
+        until: str = "",
+        metric_type: str = "total_value",
+        breakdown: str = "",
+    ) -> str:
+        """Get Instagram account-level insights
+
+            Args:
+                account_id: The Zernio SocialAccount ID for the Instagram account (required)
+                metrics: Comma-separated list of metrics. Defaults to "reach,views,accounts_engaged,total_interactions".
+        Valid metrics: reach, views, accounts_engaged, total_interactions, comments, likes, saves, shares,
+        replies, reposts, follows_and_unfollows, profile_links_taps.
+        Note: only "reach" supports metricType=time_series. All other metrics are total_value only.
+                since: Start date (YYYY-MM-DD). Defaults to 30 days ago.
+                until: End date (YYYY-MM-DD). Defaults to today.
+                metric_type: "total_value" (default) returns aggregated totals and supports breakdowns.
+        "time_series" returns daily values but only works with the "reach" metric.
+                breakdown: Breakdown dimension (only valid with metricType=total_value).
+        Valid values depend on the metric: media_product_type, follow_type, follower_type, contact_button_type."""
+        client = _get_client()
+        try:
+            response = client.analytics.get_instagram_account_insights(
+                account_id=account_id,
+                metrics=metrics,
+                since=since,
+                until=until,
+                metric_type=metric_type,
+                breakdown=breakdown,
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool()
+    def analytics_get_instagram_demographics(
+        account_id: str,
+        metric: str = "follower_demographics",
+        breakdown: str = "",
+        timeframe: str = "this_month",
+    ) -> str:
+        """Get Instagram audience demographics
+
+            Args:
+                account_id: The Zernio SocialAccount ID for the Instagram account (required)
+                metric: "follower_demographics" for follower audience data, or "engaged_audience_demographics" for engaged viewers.
+                breakdown: Comma-separated list of demographic dimensions: age, city, country, gender.
+        Defaults to all four if omitted.
+                timeframe: Time period for demographic data. Defaults to "this_month"."""
+        client = _get_client()
+        try:
+            response = client.analytics.get_instagram_demographics(
+                account_id=account_id,
+                metric=metric,
+                breakdown=breakdown,
+                timeframe=timeframe,
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool()
     def analytics_get_daily_metrics(
         platform: str = "",
         profile_id: str = "",

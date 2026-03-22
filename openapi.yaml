@@ -443,6 +443,104 @@ components:
               type: string
               format: uri
               description: URL to redirect user for reauthorization
+    InstagramAccountInsightsResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        accountId:
+          type: string
+          description: The Zernio SocialAccount ID
+        platform:
+          type: string
+          example: "instagram"
+        dateRange:
+          type: object
+          properties:
+            since:
+              type: string
+              format: date
+            until:
+              type: string
+              format: date
+        metricType:
+          type: string
+          enum: [time_series, total_value]
+        breakdown:
+          type: string
+          description: Breakdown dimension used (only present when breakdown was requested)
+        metrics:
+          type: object
+          description: |
+            Object keyed by metric name. For time_series: each metric has "total" (number) and "values" (array of {date, value}).
+            For total_value: each metric has "total" (number) and optionally "breakdowns" (array of {dimension, value}).
+          additionalProperties:
+            type: object
+            properties:
+              total:
+                type: number
+                description: Sum or aggregate value for the metric
+              values:
+                type: array
+                description: Daily values (only for time_series)
+                items:
+                  type: object
+                  properties:
+                    date:
+                      type: string
+                      format: date
+                    value:
+                      type: number
+              breakdowns:
+                type: array
+                description: Breakdown values (only for total_value with breakdown)
+                items:
+                  type: object
+                  properties:
+                    dimension:
+                      type: string
+                    value:
+                      type: number
+        dataDelay:
+          type: string
+          example: "Data may be delayed up to 48 hours"
+    InstagramDemographicsResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        accountId:
+          type: string
+          description: The Zernio SocialAccount ID
+        platform:
+          type: string
+          example: "instagram"
+        metric:
+          type: string
+          enum: [follower_demographics, engaged_audience_demographics]
+        timeframe:
+          type: string
+          enum: [this_week, this_month]
+          description: The timeframe used for demographic data
+        demographics:
+          type: object
+          description: Object keyed by breakdown dimension (age, city, country, gender)
+          additionalProperties:
+            type: array
+            items:
+              type: object
+              properties:
+                dimension:
+                  type: string
+                  description: The dimension value (e.g., "25-34", "US", "M")
+                value:
+                  type: number
+                  description: Count of accounts in this dimension
+        note:
+          type: string
+          example: "Demographics show top 45 entries per dimension. Requires 100+ followers."
     Webhook:
       type: object
       description: Individual webhook configuration for receiving real-time notifications
@@ -3268,6 +3366,270 @@ paths:
                 properties:
                   success: { type: boolean, example: false }
                   error: { type: string }
+
+  /v1/analytics/instagram/account-insights:
+    get:
+      operationId: getInstagramAccountInsights
+      tags: [Analytics]
+      summary: Get Instagram account-level insights
+      description: |
+        Returns account-level Instagram insights such as reach, views, accounts engaged, and total interactions.
+        These metrics reflect the entire account's performance across all content surfaces (feed, stories, explore, profile),
+        and are fundamentally different from post-level metrics. Data may be delayed up to 48 hours.
+        Max 90 days, defaults to last 30 days. Requires the Analytics add-on.
+      parameters:
+        - name: accountId
+          in: query
+          required: true
+          schema: { type: string }
+          description: The Zernio SocialAccount ID for the Instagram account
+        - name: metrics
+          in: query
+          schema: { type: string }
+          description: |
+            Comma-separated list of metrics. Defaults to "reach,views,accounts_engaged,total_interactions".
+            Valid metrics: reach, views, accounts_engaged, total_interactions, comments, likes, saves, shares,
+            replies, reposts, follows_and_unfollows, profile_links_taps.
+            Note: only "reach" supports metricType=time_series. All other metrics are total_value only.
+        - name: since
+          in: query
+          schema: { type: string, format: date }
+          description: Start date (YYYY-MM-DD). Defaults to 30 days ago.
+        - name: until
+          in: query
+          schema: { type: string, format: date }
+          description: End date (YYYY-MM-DD). Defaults to today.
+        - name: metricType
+          in: query
+          schema:
+            type: string
+            enum: [time_series, total_value]
+            default: total_value
+          description: |
+            "total_value" (default) returns aggregated totals and supports breakdowns.
+            "time_series" returns daily values but only works with the "reach" metric.
+        - name: breakdown
+          in: query
+          schema: { type: string }
+          description: |
+            Breakdown dimension (only valid with metricType=total_value).
+            Valid values depend on the metric: media_product_type, follow_type, follower_type, contact_button_type.
+      responses:
+        '200':
+          description: Account insights data
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InstagramAccountInsightsResponse'
+              examples:
+                timeSeries:
+                  summary: Time series response with daily values
+                  value:
+                    success: true
+                    accountId: "64e1a2b3c4d5e6f7a8b9c0d1"
+                    platform: "instagram"
+                    dateRange:
+                      since: "2026-03-01"
+                      until: "2026-03-22"
+                    metricType: "time_series"
+                    metrics:
+                      reach:
+                        total: 12500
+                        values:
+                          - date: "2026-03-01"
+                            value: 420
+                          - date: "2026-03-02"
+                            value: 385
+                      views:
+                        total: 45000
+                        values:
+                          - date: "2026-03-01"
+                            value: 1520
+                          - date: "2026-03-02"
+                            value: 1380
+                    dataDelay: "Data may be delayed up to 48 hours"
+                totalValueWithBreakdown:
+                  summary: Total value response with media type breakdown
+                  value:
+                    success: true
+                    accountId: "64e1a2b3c4d5e6f7a8b9c0d1"
+                    platform: "instagram"
+                    dateRange:
+                      since: "2026-03-01"
+                      until: "2026-03-22"
+                    metricType: "total_value"
+                    breakdown: "media_product_type"
+                    metrics:
+                      reach:
+                        total: 12500
+                        breakdowns:
+                          - dimension: "FEED"
+                            value: 5000
+                          - dimension: "REELS"
+                            value: 7500
+                    dataDelay: "Data may be delayed up to 48 hours"
+        '400':
+          description: Bad request (invalid parameters)
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error: { type: string }
+              examples:
+                invalidMetric:
+                  value:
+                    error: "Invalid metrics: impressions"
+                    validMetrics: ["accounts_engaged", "comments", "follows_and_unfollows", "likes", "profile_links_taps", "reach", "replies", "reposts", "saves", "shares", "total_interactions", "views"]
+                breakdownWithTimeSeries:
+                  value:
+                    error: "Breakdowns are only supported with metricType=total_value"
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '402':
+          description: Analytics add-on required
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error: { type: string, example: "Analytics add-on required" }
+                  code: { type: string, example: "analytics_addon_required" }
+        '403':
+          description: Access denied to this account
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error: { type: string, example: "Access denied to this account" }
+        '404':
+          description: Account not found
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error: { type: string, example: "Account not found" }
+
+  /v1/analytics/instagram/demographics:
+    get:
+      operationId: getInstagramDemographics
+      tags: [Analytics]
+      summary: Get Instagram audience demographics
+      description: |
+        Returns audience demographic insights for an Instagram account, broken down by age, city, country, and/or gender.
+        Requires at least 100 followers. Returns top 45 entries per dimension.
+        Data may be delayed up to 48 hours. Requires the Analytics add-on.
+      parameters:
+        - name: accountId
+          in: query
+          required: true
+          schema: { type: string }
+          description: The Zernio SocialAccount ID for the Instagram account
+        - name: metric
+          in: query
+          schema:
+            type: string
+            enum: [follower_demographics, engaged_audience_demographics]
+            default: follower_demographics
+          description: |
+            "follower_demographics" for follower audience data, or "engaged_audience_demographics" for engaged viewers.
+        - name: breakdown
+          in: query
+          schema: { type: string }
+          description: |
+            Comma-separated list of demographic dimensions: age, city, country, gender.
+            Defaults to all four if omitted.
+        - name: timeframe
+          in: query
+          schema:
+            type: string
+            enum: [this_week, this_month]
+            default: this_month
+          description: |
+            Time period for demographic data. Defaults to "this_month".
+      responses:
+        '200':
+          description: Demographic insights data
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InstagramDemographicsResponse'
+              examples:
+                allBreakdowns:
+                  summary: All four demographic breakdowns
+                  value:
+                    success: true
+                    accountId: "64e1a2b3c4d5e6f7a8b9c0d1"
+                    platform: "instagram"
+                    metric: "follower_demographics"
+                    timeframe: "last_30_days"
+                    demographics:
+                      age:
+                        - dimension: "25-34"
+                          value: 4500
+                        - dimension: "18-24"
+                          value: 3200
+                      gender:
+                        - dimension: "M"
+                          value: 3000
+                        - dimension: "F"
+                          value: 4800
+                      city:
+                        - dimension: "New York, New York"
+                          value: 800
+                        - dimension: "Los Angeles, California"
+                          value: 650
+                      country:
+                        - dimension: "US"
+                          value: 5000
+                        - dimension: "GB"
+                          value: 1200
+                    note: "Demographics show top 45 entries per dimension. Requires 100+ followers."
+        '400':
+          description: Bad request (invalid parameters)
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error: { type: string }
+              examples:
+                invalidBreakdown:
+                  value:
+                    error: "Invalid breakdowns: location"
+                    validBreakdowns: ["age", "city", "country", "gender"]
+                insufficientFollowers:
+                  value:
+                    success: false
+                    error: "Demographic insights require at least 100 followers."
+                    code: "instagram_insufficient_followers"
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '402':
+          description: Analytics add-on required
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error: { type: string, example: "Analytics add-on required" }
+                  code: { type: string, example: "analytics_addon_required" }
+        '403':
+          description: Access denied to this account
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error: { type: string, example: "Access denied to this account" }
+        '404':
+          description: Account not found
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error: { type: string, example: "Account not found" }
 
   /v1/analytics/daily-metrics:
     get:
