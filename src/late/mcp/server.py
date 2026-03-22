@@ -1,7 +1,7 @@
 """
-Late MCP Server.
+Zernio MCP Server.
 
-Exposes Late API functionality through Model Context Protocol.
+Exposes Zernio API functionality through Model Context Protocol.
 
 Usage:
     # Run directly
@@ -10,11 +10,11 @@ Usage:
     # Or in Claude Desktop config:
     {
         "mcpServers": {
-            "late": {
+            "zernio": {
                 "command": "uvx",
-                "args": ["--from", "late-sdk[mcp]", "late-mcp"],
+                "args": ["--from", "zernio-sdk[mcp]", "zernio-mcp"],
                 "env": {
-                    "LATE_API_KEY": "your_api_key"
+                    "ZERNIO_API_KEY": "your_api_key"
                 }
             }
         }
@@ -36,8 +36,8 @@ from late import Late, MediaType, PostStatus
 
 from .tool_definitions import use_tool_def
 
-# Context variable to store the Late API key for the current connection
-_late_api_key: ContextVar[str | None] = ContextVar("late_api_key", default=None)
+# Context variable to store the Zernio API key for the current connection
+_zernio_api_key: ContextVar[str | None] = ContextVar("zernio_api_key", default=None)
 
 # Cache for documentation content
 _docs_cache: dict[str, tuple[str, datetime]] = {}
@@ -46,36 +46,39 @@ _CACHE_TTL_HOURS = 24
 
 # Initialize MCP server
 mcp = FastMCP(
-    "Late",
+    "Zernio",
     instructions="""
-Late API server for scheduling social media posts.
+Zernio API server for scheduling social media posts.
 
 Available tools are prefixed by resource:
 - accounts_* : Manage connected social media accounts
 - profiles_* : Manage profiles (groups of accounts)
 - posts_*    : Create, list, update, delete posts
 - media_*    : Upload images and videos
-- docs_*     : Search Late API documentation
+- docs_*     : Search Zernio API documentation
 """,
 )
 
 
 def set_late_api_key(api_key: str) -> None:
     """
-    Set the Late API key for the current async context.
+    Set the Zernio API key for the current async context.
+
+    Kept as set_late_api_key for backwards compatibility with HTTP server routes.
 
     Args:
-        api_key: The Late API key to use for this connection.
+        api_key: The Zernio API key to use for this connection.
     """
-    _late_api_key.set(api_key)
+    _zernio_api_key.set(api_key)
 
 
 def _get_client() -> Late:
     """
-    Get Late client with API key from context or environment.
+    Get Zernio client with API key from context or environment.
 
     For HTTP/SSE connections, uses the API key from the current context.
-    For STDIO connections (Claude Desktop), falls back to LATE_API_KEY env var.
+    For STDIO connections (Claude Desktop), falls back to env vars.
+    Priority: ZERNIO_API_KEY > LATE_API_KEY (legacy).
 
     Returns:
         Late client instance.
@@ -84,20 +87,20 @@ def _get_client() -> Late:
         ValueError: If no API key is available.
     """
     # Try to get API key from context (HTTP/SSE mode)
-    api_key = _late_api_key.get()
+    api_key = _zernio_api_key.get()
 
-    # Fall back to environment variable (STDIO mode for Claude Desktop)
+    # Fall back to environment variables (STDIO mode for Claude Desktop)
     if not api_key:
-        api_key = os.getenv("LATE_API_KEY", "")
+        api_key = os.getenv("ZERNIO_API_KEY") or os.getenv("LATE_API_KEY", "")
 
     if not api_key:
         raise ValueError(
-            "Late API key is required. "
-            "For HTTP/SSE: provide via X-Late-API-Key header. "
-            "For STDIO: set LATE_API_KEY environment variable."
+            "Zernio API key is required. "
+            "For HTTP/SSE: provide via Authorization: Bearer header. "
+            "For STDIO: set ZERNIO_API_KEY environment variable."
         )
 
-    base_url = os.getenv("LATE_BASE_URL", None)
+    base_url = os.getenv("ZERNIO_BASE_URL") or os.getenv("LATE_BASE_URL", None)
     return Late(api_key=api_key, base_url=base_url)
 
 

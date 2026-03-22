@@ -1,4 +1,4 @@
-"""Route handlers for Late MCP HTTP server."""
+"""Route handlers for Zernio MCP HTTP server."""
 
 import sys
 
@@ -31,7 +31,7 @@ async def handle_root(_request: Request) -> JSONResponse:
                 "health": f"{ENDPOINT_HEALTH} (GET) - Health check",
             },
             "documentation": DOCS_URL,
-            "authentication": "Required: 'Authorization: Bearer YOUR_LATE_API_KEY'",
+            "authentication": "Required: 'Authorization: Bearer YOUR_API_KEY'",
         }
     )
 
@@ -41,7 +41,7 @@ async def handle_health(_request: Request) -> JSONResponse:
     return JSONResponse(
         {
             "status": "healthy",
-            "service": "late-mcp-http",
+            "service": "zernio-mcp-http",
             "version": SERVICE_VERSION,
             "transport": TRANSPORT_TYPE,
         }
@@ -63,30 +63,30 @@ def create_sse_handler(mcp_server, sse_transport: SseServerTransport, debug: boo
 
     async def handle_sse(request: Request) -> Response:
         """Handle SSE connection with authentication."""
-        # Extract Late API key from request
-        late_api_key = extract_late_api_key(request)
-        if not late_api_key:
+        # Extract API key from request
+        api_key = extract_late_api_key(request)
+        if not api_key:
             return JSONResponse(
-                {"error": "Missing Late API key. Provide via Authorization header: 'Authorization: Bearer YOUR_API_KEY'"},
+                {"error": "Missing API key. Provide via Authorization header: 'Authorization: Bearer YOUR_API_KEY'"},
                 status_code=401
             )
 
-        # Verify Late API key by making test request
-        if not await verify_late_api_key(late_api_key):
+        # Verify API key by making test request
+        if not await verify_late_api_key(api_key):
             return JSONResponse(
-                {"error": "Invalid Late API key"},
+                {"error": "Invalid API key"},
                 status_code=401
             )
 
         # Store API key in request state for use in MCP tools
-        request.state.late_api_key = late_api_key
+        request.state.late_api_key = api_key
 
         # Establish SSE connection
         try:
             # Import here to set context variable before running MCP
             from late.mcp.server import set_late_api_key
 
-            set_late_api_key(late_api_key)
+            set_late_api_key(api_key)
 
             async with sse_transport.connect_sse(
                 request.scope,
@@ -100,7 +100,7 @@ def create_sse_handler(mcp_server, sse_transport: SseServerTransport, debug: boo
                 )
         except Exception as e:
             if debug:
-                print(f"❌ SSE connection error: {e}", file=sys.stderr)
+                print(f"SSE connection error: {e}", file=sys.stderr)
             return JSONResponse(
                 {"error": "SSE connection failed"}, status_code=500
             )

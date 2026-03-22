@@ -1,7 +1,7 @@
-"""Constants for Late MCP HTTP server."""
+"""Constants for Zernio MCP HTTP server."""
 
 # Server information
-SERVICE_NAME = "Late MCP Server"
+SERVICE_NAME = "Zernio MCP Server"
 SERVICE_VERSION = "1.1.2"
 TRANSPORT_TYPE = "sse"
 

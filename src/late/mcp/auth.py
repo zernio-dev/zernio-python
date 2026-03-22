@@ -1,4 +1,4 @@
-"""Authentication module for Late MCP HTTP server."""
+"""Authentication module for Zernio MCP HTTP server."""
 
 import httpx
 from starlette.requests import Request
@@ -6,9 +6,11 @@ from starlette.requests import Request
 
 def extract_late_api_key(request: Request) -> str | None:
     """
-    Extract Late API key from request Authorization header.
+    Extract Zernio API key from request Authorization header.
 
-    Expects: Authorization: Bearer <your_late_api_key>
+    Expects: Authorization: Bearer <your_api_key>
+
+    Function name kept as extract_late_api_key for backwards compatibility.
 
     Args:
         request: The incoming Starlette request.
@@ -24,10 +26,12 @@ def extract_late_api_key(request: Request) -> str | None:
 
 async def verify_late_api_key(api_key: str) -> bool:
     """
-    Verify Late API key by making a test request to Late API.
+    Verify Zernio API key by making a test request to Zernio API.
+
+    Function name kept as verify_late_api_key for backwards compatibility.
 
     Args:
-        api_key: The Late API key to verify.
+        api_key: The Zernio API key to verify.
 
     Returns:
         True if API key is valid, False otherwise.
