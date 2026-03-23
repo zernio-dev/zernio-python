@@ -14899,7 +14899,24 @@ paths:
                     tags: { type: array, items: { type: string } }
                     isSubscribed: { type: boolean }
       responses:
-        '200': { description: Broadcast created }
+        '200':
+          description: Broadcast created
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success: { type: boolean }
+                  broadcast:
+                    type: object
+                    properties:
+                      id: { type: string }
+                      name: { type: string }
+                      description: { type: string }
+                      platform: { type: string }
+                      accountId: { type: string }
+                      status: { type: string }
+                      createdAt: { type: string, format: date-time }
         '401': { $ref: '#/components/responses/Unauthorized' }
 
   /v1/broadcasts/{broadcastId}:
@@ -15227,7 +15244,24 @@ paths:
                 exitOnReply: { type: boolean, default: true }
                 exitOnUnsubscribe: { type: boolean, default: true }
       responses:
-        '200': { description: Sequence created }
+        '200':
+          description: Sequence created
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success: { type: boolean }
+                  sequence:
+                    type: object
+                    properties:
+                      id: { type: string }
+                      name: { type: string }
+                      description: { type: string }
+                      platform: { type: string }
+                      status: { type: string }
+                      stepsCount: { type: integer }
+                      createdAt: { type: string, format: date-time }
         '401': { $ref: '#/components/responses/Unauthorized' }
 
   /v1/sequences/{sequenceId}:
