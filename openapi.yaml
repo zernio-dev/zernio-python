@@ -10980,6 +10980,11 @@ paths:
               properties:
                 accountId: { type: string, description: Social account ID }
                 message: { type: string, description: Message text }
+                attachmentUrl: { type: string, description: "URL of the attachment to send (image, video, audio, or file). The URL must be publicly accessible. For binary file uploads, use multipart/form-data instead." }
+                attachmentType:
+                  type: string
+                  enum: [image, video, audio, file]
+                  description: "Type of attachment. Defaults to file if not specified."
                 quickReplies:
                   type: array
                   maxItems: 13

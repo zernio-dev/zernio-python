@@ -2095,6 +2095,8 @@ def register_generated_tools(mcp, _get_client):
         conversation_id: str,
         account_id: str,
         message: str = "",
+        attachment_url: str = "",
+        attachment_type: str = "",
         quick_replies: str = "",
         buttons: str = "",
         template: str = "",
@@ -2109,6 +2111,8 @@ def register_generated_tools(mcp, _get_client):
             conversation_id: The conversation ID (id field from list conversations endpoint). This is the platform-specific conversation identifier, not an internal database ID. (required)
             account_id: Social account ID (required)
             message: Message text
+            attachment_url: URL of the attachment to send (image, video, audio, or file). The URL must be publicly accessible. For binary file uploads, use multipart/form-data instead.
+            attachment_type: Type of attachment. Defaults to file if not specified.
             quick_replies: Quick reply buttons. Mutually exclusive with buttons. Max 13 items.
             buttons: Action buttons. Mutually exclusive with quickReplies. Max 3 items.
             template: Generic template for carousels (Instagram/Facebook only, ignored on Telegram).
@@ -2122,6 +2126,8 @@ def register_generated_tools(mcp, _get_client):
                 conversation_id=conversation_id,
                 accountId=account_id,
                 message=message,
+                attachmentUrl=attachment_url,
+                attachmentType=attachment_type,
                 quickReplies=quick_replies,
                 buttons=buttons,
                 template=template,
