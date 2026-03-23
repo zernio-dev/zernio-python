@@ -1081,6 +1081,343 @@ def register_generated_tools(mcp, _get_client):
         except Exception as e:
             return f"Error: {e}"
 
+    # BROADCASTS
+
+    @mcp.tool()
+    def broadcasts_list_broadcasts(
+        profile_id: str,
+        status: str = "",
+        platform: str = "",
+        limit: int = 50,
+        skip: int = 0,
+    ) -> str:
+        """List broadcasts
+
+        Args:
+            profile_id: (required)
+            status
+            platform
+            limit
+            skip"""
+        client = _get_client()
+        try:
+            response = client.broadcasts.list_broadcasts(
+                profile_id=profile_id,
+                status=status,
+                platform=platform,
+                limit=limit,
+                skip=skip,
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool()
+    def broadcasts_create_broadcast(
+        profile_id: str,
+        account_id: str,
+        platform: str,
+        name: str,
+        description: str = "",
+        message: str = "",
+        template: str = "",
+        segment_filters: str = "",
+    ) -> str:
+        """Create a broadcast draft
+
+        Args:
+            profile_id: (required)
+            account_id: (required)
+            platform: (required)
+            name: (required)
+            description
+            message
+            template: WhatsApp template (required when platform is whatsapp)
+            segment_filters"""
+        client = _get_client()
+        try:
+            response = client.broadcasts.create_broadcast(
+                profileId=profile_id,
+                accountId=account_id,
+                platform=platform,
+                name=name,
+                description=description,
+                message=message,
+                template=template,
+                segmentFilters=segment_filters,
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool()
+    def broadcasts_get_broadcast(broadcast_id: str) -> str:
+        """Get broadcast details
+
+        Args:
+            broadcast_id: (required)"""
+        client = _get_client()
+        try:
+            response = client.broadcasts.get_broadcast(broadcast_id=broadcast_id)
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool()
+    def broadcasts_update_broadcast(broadcast_id: str) -> str:
+        """Update a broadcast
+
+        Args:
+            broadcast_id: (required)"""
+        client = _get_client()
+        try:
+            response = client.broadcasts.update_broadcast(broadcast_id=broadcast_id)
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool()
+    def broadcasts_delete_broadcast(broadcast_id: str) -> str:
+        """Delete a broadcast (draft only)
+
+        Args:
+            broadcast_id: (required)"""
+        client = _get_client()
+        try:
+            response = client.broadcasts.delete_broadcast(broadcast_id=broadcast_id)
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool()
+    def broadcasts_send_broadcast(broadcast_id: str) -> str:
+        """Trigger immediate send
+
+        Args:
+            broadcast_id: (required)"""
+        client = _get_client()
+        try:
+            response = client.broadcasts.send_broadcast(broadcast_id=broadcast_id)
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool()
+    def broadcasts_schedule_broadcast(broadcast_id: str, scheduled_at: str) -> str:
+        """Schedule broadcast for later
+
+        Args:
+            broadcast_id: (required)
+            scheduled_at: (required)"""
+        client = _get_client()
+        try:
+            response = client.broadcasts.schedule_broadcast(
+                broadcast_id=broadcast_id, scheduledAt=scheduled_at
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool()
+    def broadcasts_cancel_broadcast(broadcast_id: str) -> str:
+        """Cancel a broadcast
+
+        Args:
+            broadcast_id: (required)"""
+        client = _get_client()
+        try:
+            response = client.broadcasts.cancel_broadcast(broadcast_id=broadcast_id)
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool()
+    def broadcasts_list_broadcast_recipients(
+        broadcast_id: str, status: str = "", limit: int = 50, skip: int = 0
+    ) -> str:
+        """List broadcast recipients
+
+        Args:
+            broadcast_id: (required)
+            status
+            limit
+            skip"""
+        client = _get_client()
+        try:
+            response = client.broadcasts.list_broadcast_recipients(
+                broadcast_id=broadcast_id, status=status, limit=limit, skip=skip
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool()
+    def broadcasts_add_broadcast_recipients(
+        broadcast_id: str, contact_ids: str = "", use_segment: bool = False
+    ) -> str:
+        """Add recipients to a broadcast
+
+        Args:
+            broadcast_id: (required)
+            contact_ids: Specific contact IDs to add
+            use_segment: Auto-populate from broadcast segment filters"""
+        client = _get_client()
+        try:
+            response = client.broadcasts.add_broadcast_recipients(
+                broadcast_id=broadcast_id,
+                contactIds=contact_ids,
+                useSegment=use_segment,
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    # COMMENT_AUTOMATIONS
+
+    @mcp.tool()
+    def comment_automations_list_comment_automations(profile_id: str) -> str:
+        """List comment-to-DM automations
+
+        Args:
+            profile_id: Profile ID (required)"""
+        client = _get_client()
+        try:
+            response = client.comment_automations.list_comment_automations(
+                profile_id=profile_id
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool()
+    def comment_automations_create_comment_automation(
+        profile_id: str,
+        account_id: str,
+        platform_post_id: str,
+        name: str,
+        dm_message: str,
+        post_id: str = "",
+        post_title: str = "",
+        keywords: str = "",
+        match_mode: str = "contains",
+        comment_reply: str = "",
+    ) -> str:
+        """Create a comment-to-DM automation
+
+        Args:
+            profile_id: (required)
+            account_id: Instagram or Facebook account ID (required)
+            platform_post_id: Platform media/post ID (required)
+            post_id: Zernio post ID (optional)
+            post_title: Post content snippet for display
+            name: Automation label (required)
+            keywords: Trigger keywords (empty = any comment triggers)
+            match_mode
+            dm_message: DM text to send to commenter (required)
+            comment_reply: Optional public reply to the comment"""
+        client = _get_client()
+        try:
+            response = client.comment_automations.create_comment_automation(
+                profileId=profile_id,
+                accountId=account_id,
+                platformPostId=platform_post_id,
+                postId=post_id,
+                postTitle=post_title,
+                name=name,
+                keywords=keywords,
+                matchMode=match_mode,
+                dmMessage=dm_message,
+                commentReply=comment_reply,
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool()
+    def comment_automations_get_comment_automation(automation_id: str) -> str:
+        """Get automation details with recent logs
+
+        Args:
+            automation_id: (required)"""
+        client = _get_client()
+        try:
+            response = client.comment_automations.get_comment_automation(
+                automation_id=automation_id
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool()
+    def comment_automations_update_comment_automation(
+        automation_id: str,
+        name: str = "",
+        keywords: str = "",
+        match_mode: str = "",
+        dm_message: str = "",
+        comment_reply: str = "",
+        is_active: bool = False,
+    ) -> str:
+        """Update automation settings
+
+        Args:
+            automation_id: (required)
+            name
+            keywords
+            match_mode
+            dm_message
+            comment_reply
+            is_active"""
+        client = _get_client()
+        try:
+            response = client.comment_automations.update_comment_automation(
+                automation_id=automation_id,
+                name=name,
+                keywords=keywords,
+                matchMode=match_mode,
+                dmMessage=dm_message,
+                commentReply=comment_reply,
+                isActive=is_active,
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool()
+    def comment_automations_delete_comment_automation(automation_id: str) -> str:
+        """Delete automation and all logs
+
+        Args:
+            automation_id: (required)"""
+        client = _get_client()
+        try:
+            response = client.comment_automations.delete_comment_automation(
+                automation_id=automation_id
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool()
+    def comment_automations_list_comment_automation_logs(
+        automation_id: str, status: str = "", limit: int = 50, skip: int = 0
+    ) -> str:
+        """List trigger logs for an automation
+
+        Args:
+            automation_id: (required)
+            status: Filter by result status
+            limit
+            skip"""
+        client = _get_client()
+        try:
+            response = client.comment_automations.list_comment_automation_logs(
+                automation_id=automation_id, status=status, limit=limit, skip=skip
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
     # COMMENTS
 
     @mcp.tool()
@@ -1878,6 +2215,296 @@ def register_generated_tools(mcp, _get_client):
         except Exception as e:
             return f"Error: {e}"
 
+    # CONTACTS
+
+    @mcp.tool()
+    def contacts_list_contacts(
+        profile_id: str,
+        search: str = "",
+        tag: str = "",
+        platform: str = "",
+        is_subscribed: str = "",
+        limit: int = 50,
+        skip: int = 0,
+    ) -> str:
+        """List contacts
+
+        Args:
+            profile_id: (required)
+            search
+            tag
+            platform
+            is_subscribed
+            limit
+            skip"""
+        client = _get_client()
+        try:
+            response = client.contacts.list_contacts(
+                profile_id=profile_id,
+                search=search,
+                tag=tag,
+                platform=platform,
+                is_subscribed=is_subscribed,
+                limit=limit,
+                skip=skip,
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool()
+    def contacts_create_contact(
+        profile_id: str,
+        name: str,
+        email: str = "",
+        company: str = "",
+        tags: str = "",
+        is_subscribed: bool = True,
+        notes: str = "",
+        account_id: str = "",
+        platform: str = "",
+        platform_identifier: str = "",
+        display_identifier: str = "",
+    ) -> str:
+        """Create a contact
+
+        Args:
+            profile_id: (required)
+            name: (required)
+            email
+            company
+            tags
+            is_subscribed
+            notes
+            account_id: Optional. Creates a channel if provided with platform + platformIdentifier
+            platform
+            platform_identifier
+            display_identifier"""
+        client = _get_client()
+        try:
+            response = client.contacts.create_contact(
+                profileId=profile_id,
+                name=name,
+                email=email,
+                company=company,
+                tags=tags,
+                isSubscribed=is_subscribed,
+                notes=notes,
+                accountId=account_id,
+                platform=platform,
+                platformIdentifier=platform_identifier,
+                displayIdentifier=display_identifier,
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool()
+    def contacts_get_contact(contact_id: str) -> str:
+        """Get contact with channels
+
+        Args:
+            contact_id: (required)"""
+        client = _get_client()
+        try:
+            response = client.contacts.get_contact(contact_id=contact_id)
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool()
+    def contacts_update_contact(
+        contact_id: str,
+        name: str = "",
+        email: str = "",
+        company: str = "",
+        avatar_url: str = "",
+        tags: str = "",
+        is_subscribed: bool = False,
+        is_blocked: bool = False,
+        notes: str = "",
+    ) -> str:
+        """Update a contact
+
+        Args:
+            contact_id: (required)
+            name
+            email
+            company
+            avatar_url
+            tags
+            is_subscribed
+            is_blocked
+            notes"""
+        client = _get_client()
+        try:
+            response = client.contacts.update_contact(
+                contact_id=contact_id,
+                name=name,
+                email=email,
+                company=company,
+                avatarUrl=avatar_url,
+                tags=tags,
+                isSubscribed=is_subscribed,
+                isBlocked=is_blocked,
+                notes=notes,
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool()
+    def contacts_delete_contact(contact_id: str) -> str:
+        """Delete a contact
+
+        Args:
+            contact_id: (required)"""
+        client = _get_client()
+        try:
+            response = client.contacts.delete_contact(contact_id=contact_id)
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool()
+    def contacts_get_contact_channels(contact_id: str) -> str:
+        """List channels for a contact
+
+        Args:
+            contact_id: (required)"""
+        client = _get_client()
+        try:
+            response = client.contacts.get_contact_channels(contact_id=contact_id)
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool()
+    def contacts_bulk_create_contacts(
+        profile_id: str, account_id: str, platform: str, contacts: str
+    ) -> str:
+        """Bulk create contacts
+
+        Args:
+            profile_id: (required)
+            account_id: (required)
+            platform: (required)
+            contacts: (required)"""
+        client = _get_client()
+        try:
+            response = client.contacts.bulk_create_contacts(
+                profileId=profile_id,
+                accountId=account_id,
+                platform=platform,
+                contacts=contacts,
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    # CUSTOM_FIELDS
+
+    @mcp.tool()
+    def custom_fields_set_contact_field_value(
+        contact_id: str, slug: str, value: str
+    ) -> str:
+        """Set a custom field value
+
+        Args:
+            contact_id: (required)
+            slug: (required)
+            value: Field value (type depends on field definition) (required)"""
+        client = _get_client()
+        try:
+            response = client.custom_fields.set_contact_field_value(
+                contact_id=contact_id, slug=slug, value=value
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool()
+    def custom_fields_clear_contact_field_value(contact_id: str, slug: str) -> str:
+        """Clear a custom field value
+
+        Args:
+            contact_id: (required)
+            slug: (required)"""
+        client = _get_client()
+        try:
+            response = client.custom_fields.clear_contact_field_value(
+                contact_id=contact_id, slug=slug
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool()
+    def custom_fields_list_custom_fields(profile_id: str) -> str:
+        """List custom field definitions
+
+        Args:
+            profile_id: (required)"""
+        client = _get_client()
+        try:
+            response = client.custom_fields.list_custom_fields(profile_id=profile_id)
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool()
+    def custom_fields_create_custom_field(
+        profile_id: str, name: str, type: str, slug: str = "", options: str = ""
+    ) -> str:
+        """Create a custom field definition
+
+        Args:
+            profile_id: (required)
+            name: (required)
+            slug: Auto-generated from name if not provided
+            type: (required)
+            options: Required for select type"""
+        client = _get_client()
+        try:
+            response = client.custom_fields.create_custom_field(
+                profileId=profile_id, name=name, slug=slug, type=type, options=options
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool()
+    def custom_fields_update_custom_field(
+        field_id: str, name: str = "", options: str = ""
+    ) -> str:
+        """Update a custom field definition
+
+        Args:
+            field_id: (required)
+            name
+            options"""
+        client = _get_client()
+        try:
+            response = client.custom_fields.update_custom_field(
+                field_id=field_id, name=name, options=options
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool()
+    def custom_fields_delete_custom_field(field_id: str) -> str:
+        """Delete a custom field definition
+
+        Args:
+            field_id: (required)"""
+        client = _get_client()
+        try:
+            response = client.custom_fields.delete_custom_field(field_id=field_id)
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
     # INVITES
 
     @mcp.tool()
@@ -2671,6 +3298,186 @@ def register_generated_tools(mcp, _get_client):
         try:
             response = client.reviews.delete_inbox_review_reply(
                 review_id=review_id, accountId=account_id
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    # SEQUENCES
+
+    @mcp.tool()
+    def sequences_list_sequences(
+        profile_id: str, status: str = "", limit: int = 50, skip: int = 0
+    ) -> str:
+        """List sequences
+
+        Args:
+            profile_id: (required)
+            status
+            limit
+            skip"""
+        client = _get_client()
+        try:
+            response = client.sequences.list_sequences(
+                profile_id=profile_id, status=status, limit=limit, skip=skip
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool()
+    def sequences_create_sequence(
+        profile_id: str,
+        account_id: str,
+        platform: str,
+        name: str,
+        description: str = "",
+        steps: str = "",
+        exit_on_reply: bool = True,
+        exit_on_unsubscribe: bool = True,
+    ) -> str:
+        """Create a sequence
+
+        Args:
+            profile_id: (required)
+            account_id: (required)
+            platform: (required)
+            name: (required)
+            description
+            steps
+            exit_on_reply
+            exit_on_unsubscribe"""
+        client = _get_client()
+        try:
+            response = client.sequences.create_sequence(
+                profileId=profile_id,
+                accountId=account_id,
+                platform=platform,
+                name=name,
+                description=description,
+                steps=steps,
+                exitOnReply=exit_on_reply,
+                exitOnUnsubscribe=exit_on_unsubscribe,
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool()
+    def sequences_get_sequence(sequence_id: str) -> str:
+        """Get sequence with steps
+
+        Args:
+            sequence_id: (required)"""
+        client = _get_client()
+        try:
+            response = client.sequences.get_sequence(sequence_id=sequence_id)
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool()
+    def sequences_update_sequence(sequence_id: str) -> str:
+        """Update a sequence
+
+        Args:
+            sequence_id: (required)"""
+        client = _get_client()
+        try:
+            response = client.sequences.update_sequence(sequence_id=sequence_id)
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool()
+    def sequences_delete_sequence(sequence_id: str) -> str:
+        """Delete a sequence
+
+        Args:
+            sequence_id: (required)"""
+        client = _get_client()
+        try:
+            response = client.sequences.delete_sequence(sequence_id=sequence_id)
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool()
+    def sequences_activate_sequence(sequence_id: str) -> str:
+        """Activate a sequence
+
+        Args:
+            sequence_id: (required)"""
+        client = _get_client()
+        try:
+            response = client.sequences.activate_sequence(sequence_id=sequence_id)
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool()
+    def sequences_pause_sequence(sequence_id: str) -> str:
+        """Pause a sequence
+
+        Args:
+            sequence_id: (required)"""
+        client = _get_client()
+        try:
+            response = client.sequences.pause_sequence(sequence_id=sequence_id)
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool()
+    def sequences_enroll_contacts(
+        sequence_id: str, contact_ids: str, channel_ids: str = ""
+    ) -> str:
+        """Enroll contacts in a sequence
+
+        Args:
+            sequence_id: (required)
+            contact_ids: (required)
+            channel_ids: Optional. Auto-detected if not provided."""
+        client = _get_client()
+        try:
+            response = client.sequences.enroll_contacts(
+                sequence_id=sequence_id, contactIds=contact_ids, channelIds=channel_ids
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool()
+    def sequences_unenroll_contact(sequence_id: str, contact_id: str) -> str:
+        """Unenroll a contact from a sequence
+
+        Args:
+            sequence_id: (required)
+            contact_id: (required)"""
+        client = _get_client()
+        try:
+            response = client.sequences.unenroll_contact(
+                sequence_id=sequence_id, contact_id=contact_id
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool()
+    def sequences_list_sequence_enrollments(
+        sequence_id: str, status: str = "", limit: int = 50, skip: int = 0
+    ) -> str:
+        """List enrollments for a sequence
+
+        Args:
+            sequence_id: (required)
+            status
+            limit
+            skip"""
+        client = _get_client()
+        try:
+            response = client.sequences.list_sequence_enrollments(
+                sequence_id=sequence_id, status=status, limit=limit, skip=skip
             )
             return _format_response(response)
         except Exception as e:

@@ -357,6 +357,30 @@ Both `from zernio import ...` and `from late import ...` work identically. The `
 | `account_settings.set_messenger_menu()` | Set FB persistent menu |
 | `account_settings.set_telegram_commands()` | Set TG bot commands |
 
+### Broadcasts
+| Method | Description |
+|--------|-------------|
+| `broadcasts.list_broadcast_recipients()` | List broadcast recipients |
+| `broadcasts.list_broadcasts()` | List broadcasts |
+| `broadcasts.create_broadcast()` | Create a broadcast draft |
+| `broadcasts.get_broadcast()` | Get broadcast details |
+| `broadcasts.update_broadcast()` | Update a broadcast |
+| `broadcasts.delete_broadcast()` | Delete a broadcast (draft only) |
+| `broadcasts.add_broadcast_recipients()` | Add recipients to a broadcast |
+| `broadcasts.cancel_broadcast()` | Cancel a broadcast |
+| `broadcasts.schedule_broadcast()` | Schedule broadcast for later |
+| `broadcasts.send_broadcast()` | Trigger immediate send |
+
+### Comment Automations
+| Method | Description |
+|--------|-------------|
+| `comment_automations.list_comment_automation_logs()` | List trigger logs for an automation |
+| `comment_automations.list_comment_automations()` | List comment-to-DM automations |
+| `comment_automations.create_comment_automation()` | Create a comment-to-DM automation |
+| `comment_automations.get_comment_automation()` | Get automation details with recent logs |
+| `comment_automations.update_comment_automation()` | Update automation settings |
+| `comment_automations.delete_comment_automation()` | Delete automation and all logs |
+
 ### Comments (Inbox)
 | Method | Description |
 |--------|-------------|
@@ -369,6 +393,27 @@ Both `from zernio import ...` and `from late import ...` work identically. The `
 | `comments.send_private_reply_to_comment()` | Send private reply |
 | `comments.unhide_inbox_comment()` | Unhide comment |
 | `comments.unlike_inbox_comment()` | Unlike comment |
+
+### Contacts
+| Method | Description |
+|--------|-------------|
+| `contacts.list_contacts()` | List contacts |
+| `contacts.bulk_create_contacts()` | Bulk create contacts |
+| `contacts.create_contact()` | Create a contact |
+| `contacts.get_contact()` | Get contact with channels |
+| `contacts.get_contact_channels()` | List channels for a contact |
+| `contacts.update_contact()` | Update a contact |
+| `contacts.delete_contact()` | Delete a contact |
+
+### Custom Fields
+| Method | Description |
+|--------|-------------|
+| `custom_fields.list_custom_fields()` | List custom field definitions |
+| `custom_fields.create_custom_field()` | Create a custom field definition |
+| `custom_fields.update_custom_field()` | Update a custom field definition |
+| `custom_fields.delete_custom_field()` | Delete a custom field definition |
+| `custom_fields.clear_contact_field_value()` | Clear a custom field value |
+| `custom_fields.set_contact_field_value()` | Set a custom field value |
 
 ### GMB Attributes
 | Method | Description |
@@ -418,6 +463,20 @@ Both `from zernio import ...` and `from late import ...` work identically. The `
 | `reviews.list_inbox_reviews()` | List reviews |
 | `reviews.delete_inbox_review_reply()` | Delete review reply |
 | `reviews.reply_to_inbox_review()` | Reply to review |
+
+### Sequences
+| Method | Description |
+|--------|-------------|
+| `sequences.list_sequence_enrollments()` | List enrollments for a sequence |
+| `sequences.list_sequences()` | List sequences |
+| `sequences.create_sequence()` | Create a sequence |
+| `sequences.get_sequence()` | Get sequence with steps |
+| `sequences.update_sequence()` | Update a sequence |
+| `sequences.delete_sequence()` | Delete a sequence |
+| `sequences.activate_sequence()` | Activate a sequence |
+| `sequences.enroll_contacts()` | Enroll contacts in a sequence |
+| `sequences.pause_sequence()` | Pause a sequence |
+| `sequences.unenroll_contact()` | Unenroll a contact from a sequence |
 
 ### Twitter Engagement
 | Method | Description |

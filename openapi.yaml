@@ -210,6 +210,27 @@ tags:
   - name: Account Settings
     description: |
       Platform-specific account settings: Facebook persistent menu, Instagram ice breakers, and Telegram bot commands.
+  - name: Contacts
+    description: |
+      Cross-platform contact management (CRM). Contacts are unified identities linked to platform-specific
+      channels (phone, IGSID, etc.). Created automatically when messages arrive, or manually via API.
+  - name: Custom Fields
+    description: |
+      Custom field definitions for contacts. Define fields (text, number, date, boolean, select) that can be
+      set on any contact for segmentation and personalization.
+  - name: Broadcasts
+    description: |
+      Platform-agnostic broadcast campaigns. Send bulk messages to contacts via any inbox platform.
+      WhatsApp broadcasts use templates; other platforms use generic messages.
+  - name: Sequences
+    description: |
+      Drip campaign sequences. Send a series of messages to enrolled contacts with configurable delays
+      between steps. Supports auto-exit on reply or unsubscribe.
+  - name: Comment Automations
+    description: |
+      Comment-to-DM growth automations. Set up keyword triggers on Instagram/Facebook posts so
+      commenters automatically receive a DM. Supports dedup, optional public comment reply, and
+      auto-creates contacts.
   - name: Webhooks
     description: |
       Configure webhooks for real-time notifications. Events: post.scheduled, post.published, post.failed, post.partial, post.recycled, account.connected, account.disconnected, message.received, comment.received.
@@ -219,7 +240,9 @@ tags:
       Publishing logs for transparency and debugging. Each log includes the platform API endpoint, HTTP status code, request/response bodies, duration, and retry attempts. Logs are automatically deleted after 7 days.
   - name: WhatsApp
     description: |
-      WhatsApp Business API for sending messages, managing contacts, templates, broadcasts, and conversations.
+      WhatsApp Business API. Contact, broadcast, and group endpoints are **deprecated** in favor of the
+      cross-platform `/v1/contacts`, `/v1/broadcasts`, and `/v1/sequences` endpoints.
+      Template, business profile, and phone number endpoints remain active (no cross-platform equivalent).
       All endpoints require an accountId parameter identifying the WhatsApp-connected social account.
   - name: WhatsApp Phone Numbers
     description: |
@@ -12365,15 +12388,21 @@ paths:
         '403':
           description: Inbox addon required
   # ──────────────────────────────────────────────────────────────────────────
-  # BULK SEND
+  # WHATSAPP-SPECIFIC ENDPOINTS
+  # Contacts, broadcasts, groups: DEPRECATED (use cross-platform endpoints)
+  # Templates, business profile, phone numbers: ACTIVE (no equivalent)
   # ──────────────────────────────────────────────────────────────────────────
+
+  # ── BULK SEND ──────────────────────────────────────────────────────────
 
   /v1/whatsapp/bulk:
     post:
       operationId: sendWhatsAppBulk
+      deprecated: true
       tags: [WhatsApp]
       summary: Bulk send template messages
       description: |
+        **Deprecated.** Use `POST /v1/broadcasts` to create a broadcast, `POST /v1/broadcasts/{id}/recipients` to add recipients, then `POST /v1/broadcasts/{id}/send` to send.
         Send a template message to multiple recipients in a single request. Maximum 100 recipients per request.
         Only template messages are supported for bulk sending (not free-form text).
 
@@ -12473,9 +12502,11 @@ paths:
   /v1/whatsapp/contacts:
     get:
       operationId: getWhatsAppContacts
+      deprecated: true
       tags: [WhatsApp]
       summary: List contacts
       description: |
+        **Deprecated.** Use `GET /v1/contacts?profileId={profileId}` instead.
         List WhatsApp contacts for an account. Supports filtering by tags, groups, opt-in status,
         and text search. Returns contacts sorted by name with available filter options.
       security:
@@ -12581,9 +12612,11 @@ paths:
         '404': { description: WhatsApp account not found }
     post:
       operationId: createWhatsAppContact
+      deprecated: true
       tags: [WhatsApp]
       summary: Create contact
       description: |
+        **Deprecated.** Use `POST /v1/contacts` instead.
         Create a new WhatsApp contact. Phone number must be unique per account
         and in E.164 format (e.g., +1234567890).
       security:
@@ -12673,9 +12706,12 @@ paths:
   /v1/whatsapp/contacts/{contactId}:
     get:
       operationId: getWhatsAppContact
+      deprecated: true
       tags: [WhatsApp]
       summary: Get contact
-      description: Retrieve a single WhatsApp contact by ID with full details.
+      description: |
+        **Deprecated.** Use `GET /v1/contacts/{id}` instead.
+        Retrieve a single WhatsApp contact by ID with full details.
       security:
         - bearerAuth: []
       parameters:
@@ -12725,9 +12761,11 @@ paths:
         '404': { $ref: '#/components/responses/NotFound' }
     put:
       operationId: updateWhatsAppContact
+      deprecated: true
       tags: [WhatsApp]
       summary: Update contact
       description: |
+        **Deprecated.** Use `PATCH /v1/contacts/{id}` instead.
         Update an existing WhatsApp contact. All fields are optional; only provided fields will be updated.
         Custom fields are merged with existing values. Set a custom field to null to remove it.
       security:
@@ -12812,9 +12850,12 @@ paths:
         '404': { $ref: '#/components/responses/NotFound' }
     delete:
       operationId: deleteWhatsAppContact
+      deprecated: true
       tags: [WhatsApp]
       summary: Delete contact
-      description: Permanently delete a WhatsApp contact.
+      description: |
+        **Deprecated.** Use `DELETE /v1/contacts/{id}` instead.
+        Permanently delete a WhatsApp contact.
       security:
         - bearerAuth: []
       parameters:
@@ -12843,9 +12884,11 @@ paths:
   /v1/whatsapp/contacts/import:
     post:
       operationId: importWhatsAppContacts
+      deprecated: true
       tags: [WhatsApp]
       summary: Bulk import contacts
       description: |
+        **Deprecated.** Use `POST /v1/contacts/bulk` instead.
         Import up to 1000 contacts at once. Each contact requires a phone number and name.
         Duplicates are skipped by default. Supports default tags and groups applied to all imported contacts.
       security:
@@ -12949,9 +12992,11 @@ paths:
   /v1/whatsapp/contacts/bulk:
     post:
       operationId: bulkUpdateWhatsAppContacts
+      deprecated: true
       tags: [WhatsApp]
       summary: Bulk update contacts
       description: |
+        **Deprecated.** Use `PATCH /v1/contacts/{id}` for individual updates instead.
         Perform bulk operations on multiple contacts (max 500 per request). Supported actions:
         addTags, removeTags, addGroups, removeGroups, optIn, optOut, block, unblock.
       security:
@@ -13011,9 +13056,12 @@ paths:
         '401': { $ref: '#/components/responses/Unauthorized' }
     delete:
       operationId: bulkDeleteWhatsAppContacts
+      deprecated: true
       tags: [WhatsApp]
       summary: Bulk delete contacts
-      description: Permanently delete multiple contacts at once (max 500 per request).
+      description: |
+        **Deprecated.** Use `DELETE /v1/contacts/{id}` for individual deletes instead.
+        Permanently delete multiple contacts at once (max 500 per request).
       security:
         - bearerAuth: []
       requestBody:
@@ -13052,9 +13100,11 @@ paths:
   /v1/whatsapp/groups:
     get:
       operationId: getWhatsAppGroups
+      deprecated: true
       tags: [WhatsApp]
       summary: List contact groups
       description: |
+        **Deprecated.** Use contact tags via `GET /v1/contacts` for grouping instead. WhatsApp groups have no cross-platform equivalent.
         List all contact groups for a WhatsApp account with contact counts.
         Groups are derived from the groups field on contacts, not stored as separate documents.
       security:
@@ -13094,9 +13144,12 @@ paths:
         '404': { description: WhatsApp account not found }
     post:
       operationId: renameWhatsAppGroup
+      deprecated: true
       tags: [WhatsApp]
       summary: Rename group
-      description: Rename a contact group. This updates the group name on all contacts that belong to the group.
+      description: |
+        **Deprecated.** Use contact tags via `PATCH /v1/contacts/{id}` instead.
+        Rename a contact group. This updates the group name on all contacts that belong to the group.
       security:
         - bearerAuth: []
       requestBody:
@@ -13139,9 +13192,12 @@ paths:
         '404': { description: WhatsApp account not found }
     delete:
       operationId: deleteWhatsAppGroup
+      deprecated: true
       tags: [WhatsApp]
       summary: Delete group
-      description: Delete a contact group. This removes the group from all contacts but does not delete the contacts themselves.
+      description: |
+        **Deprecated.** Use contact tags via `PATCH /v1/contacts/{id}` instead.
+        Delete a contact group. This removes the group from all contacts but does not delete the contacts themselves.
       security:
         - bearerAuth: []
       requestBody:
@@ -13350,7 +13406,8 @@ paths:
       operationId: getWhatsAppTemplate
       tags: [WhatsApp]
       summary: Get template
-      description: Retrieve a single message template by name.
+      description: |
+        Retrieve a single message template by name.
       security:
         - bearerAuth: []
       parameters:
@@ -13451,7 +13508,8 @@ paths:
       operationId: deleteWhatsAppTemplate
       tags: [WhatsApp]
       summary: Delete template
-      description: Permanently delete a message template by name.
+      description: |
+        Permanently delete a message template by name.
       security:
         - bearerAuth: []
       parameters:
@@ -13491,9 +13549,11 @@ paths:
   /v1/whatsapp/broadcasts:
     get:
       operationId: getWhatsAppBroadcasts
+      deprecated: true
       tags: [WhatsApp]
       summary: List broadcasts
       description: |
+        **Deprecated.** Use `GET /v1/broadcasts?profileId={profileId}` instead.
         List all WhatsApp broadcasts for an account. Returns broadcasts sorted by creation date
         (newest first) without the full recipients list for performance.
       security:
@@ -13570,9 +13630,11 @@ paths:
         '404': { description: WhatsApp account not found }
     post:
       operationId: createWhatsAppBroadcast
+      deprecated: true
       tags: [WhatsApp]
       summary: Create broadcast
       description: |
+        **Deprecated.** Use `POST /v1/broadcasts` instead.
         Create a new draft broadcast. Optionally include initial recipients.
         After creation, add recipients and then send or schedule the broadcast.
       security:
@@ -13668,9 +13730,12 @@ paths:
   /v1/whatsapp/broadcasts/{broadcastId}:
     get:
       operationId: getWhatsAppBroadcast
+      deprecated: true
       tags: [WhatsApp]
       summary: Get broadcast
-      description: Retrieve detailed information about a single broadcast including delivery statistics.
+      description: |
+        **Deprecated.** Use `GET /v1/broadcasts/{id}` instead.
+        Retrieve detailed information about a single broadcast including delivery statistics.
       security:
         - bearerAuth: []
       parameters:
@@ -13711,9 +13776,12 @@ paths:
         '404': { $ref: '#/components/responses/NotFound' }
     delete:
       operationId: deleteWhatsAppBroadcast
+      deprecated: true
       tags: [WhatsApp]
       summary: Delete broadcast
-      description: Delete a broadcast. Only draft or cancelled broadcasts can be deleted.
+      description: |
+        **Deprecated.** Use `DELETE /v1/broadcasts/{id}` instead.
+        Delete a broadcast. Only draft or cancelled broadcasts can be deleted.
       security:
         - bearerAuth: []
       parameters:
@@ -13743,9 +13811,11 @@ paths:
   /v1/whatsapp/broadcasts/{broadcastId}/send:
     post:
       operationId: sendWhatsAppBroadcast
+      deprecated: true
       tags: [WhatsApp]
       summary: Send broadcast
       description: |
+        **Deprecated.** Use `POST /v1/broadcasts/{id}/send` instead.
         Start sending a broadcast immediately. The broadcast must be in draft or scheduled status
         and have at least one recipient. Messages are sent sequentially with rate limiting.
       security:
@@ -13783,9 +13853,11 @@ paths:
   /v1/whatsapp/broadcasts/{broadcastId}/schedule:
     post:
       operationId: scheduleWhatsAppBroadcast
+      deprecated: true
       tags: [WhatsApp]
       summary: Schedule broadcast
       description: |
+        **Deprecated.** Use `POST /v1/broadcasts/{id}/schedule` instead.
         Schedule a draft broadcast for future sending. The scheduled time must be in the future
         and no more than 30 days in advance. The broadcast must be in draft status and have recipients.
       security:
@@ -13832,9 +13904,11 @@ paths:
         '404': { $ref: '#/components/responses/NotFound' }
     delete:
       operationId: cancelWhatsAppBroadcastSchedule
+      deprecated: true
       tags: [WhatsApp]
       summary: Cancel scheduled broadcast
       description: |
+        **Deprecated.** Use `POST /v1/broadcasts/{id}/cancel` instead.
         Cancel a scheduled broadcast and return it to draft status. Only broadcasts in
         scheduled status can be cancelled.
       security:
@@ -13874,9 +13948,11 @@ paths:
   /v1/whatsapp/broadcasts/{broadcastId}/recipients:
     get:
       operationId: getWhatsAppBroadcastRecipients
+      deprecated: true
       tags: [WhatsApp]
       summary: List recipients
       description: |
+        **Deprecated.** Use `GET /v1/broadcasts/{id}/recipients` instead.
         List recipients of a broadcast with their delivery status. Supports filtering
         by delivery status and pagination.
       security:
@@ -13952,9 +14028,11 @@ paths:
         '404': { $ref: '#/components/responses/NotFound' }
     patch:
       operationId: addWhatsAppBroadcastRecipients
+      deprecated: true
       tags: [WhatsApp]
       summary: Add recipients
       description: |
+        **Deprecated.** Use `POST /v1/broadcasts/{id}/recipients` instead.
         Add recipients to a draft broadcast. Maximum 1000 recipients per request.
         Duplicate phone numbers are automatically skipped.
       security:
@@ -14016,9 +14094,12 @@ paths:
         '404': { $ref: '#/components/responses/NotFound' }
     delete:
       operationId: removeWhatsAppBroadcastRecipients
+      deprecated: true
       tags: [WhatsApp]
       summary: Remove recipients
-      description: Remove recipients from a draft broadcast by phone number.
+      description: |
+        **Deprecated.** Use `POST /v1/broadcasts/{id}/recipients` with removal flag instead.
+        Remove recipients from a draft broadcast by phone number.
       security:
         - bearerAuth: []
       parameters:
@@ -14067,7 +14148,8 @@ paths:
       operationId: getWhatsAppBusinessProfile
       tags: [WhatsApp]
       summary: Get business profile
-      description: Retrieve the WhatsApp Business profile for the account (about, address, description, email, websites, etc.).
+      description: |
+        Retrieve the WhatsApp Business profile for the account (about, address, description, email, websites, etc.).
       security:
         - bearerAuth: []
       parameters:
@@ -14480,6 +14562,720 @@ paths:
                       status: { type: string, description: "\"released\"" }
                       releasedAt: { type: string, format: date-time }
         '400': { description: Phone number is already released or being released }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404': { $ref: '#/components/responses/NotFound' }
+
+  # ─── Contacts ─────────────────────────────────────────────────────
+
+  /v1/contacts:
+    get:
+      operationId: listContacts
+      summary: List contacts
+      description: List and search contacts for a profile. Supports filtering by tags, platform, subscription status, and full-text search.
+      tags: [Contacts]
+      parameters:
+        - { name: profileId, in: query, required: true, schema: { type: string } }
+        - { name: search, in: query, schema: { type: string } }
+        - { name: tag, in: query, schema: { type: string } }
+        - { name: platform, in: query, schema: { type: string, enum: [instagram, facebook, telegram, twitter, bluesky, reddit, whatsapp] } }
+        - { name: isSubscribed, in: query, schema: { type: string, enum: ['true', 'false'] } }
+        - { name: limit, in: query, schema: { type: integer, default: 50, maximum: 200 } }
+        - { name: skip, in: query, schema: { type: integer, default: 0 } }
+      responses:
+        '200': { description: Contacts list with pagination and filter metadata }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+    post:
+      operationId: createContact
+      summary: Create a contact
+      description: Create a new contact. Optionally create a platform channel in the same request by providing accountId, platform, and platformIdentifier.
+      tags: [Contacts]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [profileId, name]
+              properties:
+                profileId: { type: string }
+                name: { type: string }
+                email: { type: string }
+                company: { type: string }
+                tags: { type: array, items: { type: string } }
+                isSubscribed: { type: boolean, default: true }
+                notes: { type: string }
+                accountId: { type: string, description: Optional. Creates a channel if provided with platform + platformIdentifier }
+                platform: { type: string }
+                platformIdentifier: { type: string }
+                displayIdentifier: { type: string }
+      responses:
+        '200': { description: Contact created }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '409': { description: Duplicate contact }
+
+  /v1/contacts/{contactId}:
+    get:
+      operationId: getContact
+      summary: Get contact with channels
+      tags: [Contacts]
+      parameters:
+        - { name: contactId, in: path, required: true, schema: { type: string } }
+      responses:
+        '200': { description: Contact with channels }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404': { $ref: '#/components/responses/NotFound' }
+    patch:
+      operationId: updateContact
+      summary: Update a contact
+      tags: [Contacts]
+      parameters:
+        - { name: contactId, in: path, required: true, schema: { type: string } }
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name: { type: string }
+                email: { type: string }
+                company: { type: string }
+                avatarUrl: { type: string }
+                tags: { type: array, items: { type: string } }
+                isSubscribed: { type: boolean }
+                isBlocked: { type: boolean }
+                notes: { type: string }
+      responses:
+        '200': { description: Contact updated }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404': { $ref: '#/components/responses/NotFound' }
+    delete:
+      operationId: deleteContact
+      summary: Delete a contact
+      tags: [Contacts]
+      parameters:
+        - { name: contactId, in: path, required: true, schema: { type: string } }
+      responses:
+        '200': { description: Contact deleted }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404': { $ref: '#/components/responses/NotFound' }
+
+  /v1/contacts/{contactId}/channels:
+    get:
+      operationId: getContactChannels
+      summary: List channels for a contact
+      tags: [Contacts]
+      parameters:
+        - { name: contactId, in: path, required: true, schema: { type: string } }
+      responses:
+        '200': { description: List of contact channels }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404': { $ref: '#/components/responses/NotFound' }
+
+  /v1/contacts/bulk:
+    post:
+      operationId: bulkCreateContacts
+      summary: Bulk create contacts
+      description: Import up to 1000 contacts at a time. Skips duplicates.
+      tags: [Contacts]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [profileId, accountId, platform, contacts]
+              properties:
+                profileId: { type: string }
+                accountId: { type: string }
+                platform: { type: string }
+                contacts:
+                  type: array
+                  maxItems: 1000
+                  items:
+                    type: object
+                    required: [name, platformIdentifier]
+                    properties:
+                      name: { type: string }
+                      platformIdentifier: { type: string }
+                      displayIdentifier: { type: string }
+                      email: { type: string }
+                      company: { type: string }
+                      tags: { type: array, items: { type: string } }
+      responses:
+        '200': { description: Bulk import results }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+
+  /v1/contacts/{contactId}/fields/{slug}:
+    put:
+      operationId: setContactFieldValue
+      summary: Set a custom field value
+      tags: [Custom Fields]
+      parameters:
+        - { name: contactId, in: path, required: true, schema: { type: string } }
+        - { name: slug, in: path, required: true, schema: { type: string } }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [value]
+              properties:
+                value: { description: Field value (type depends on field definition) }
+      responses:
+        '200': { description: Field value set }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404': { $ref: '#/components/responses/NotFound' }
+    delete:
+      operationId: clearContactFieldValue
+      summary: Clear a custom field value
+      tags: [Custom Fields]
+      parameters:
+        - { name: contactId, in: path, required: true, schema: { type: string } }
+        - { name: slug, in: path, required: true, schema: { type: string } }
+      responses:
+        '200': { description: Field value cleared }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404': { $ref: '#/components/responses/NotFound' }
+
+  # ─── Custom Fields ────────────────────────────────────────────────
+
+  /v1/custom-fields:
+    get:
+      operationId: listCustomFields
+      summary: List custom field definitions
+      tags: [Custom Fields]
+      parameters:
+        - { name: profileId, in: query, required: true, schema: { type: string } }
+      responses:
+        '200': { description: List of custom field definitions }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+    post:
+      operationId: createCustomField
+      summary: Create a custom field definition
+      tags: [Custom Fields]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [profileId, name, type]
+              properties:
+                profileId: { type: string }
+                name: { type: string }
+                slug: { type: string, description: Auto-generated from name if not provided }
+                type: { type: string, enum: [text, number, date, boolean, select] }
+                options: { type: array, items: { type: string }, description: Required for select type }
+      responses:
+        '200': { description: Custom field created }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '409': { description: Duplicate slug }
+
+  /v1/custom-fields/{fieldId}:
+    patch:
+      operationId: updateCustomField
+      summary: Update a custom field definition
+      tags: [Custom Fields]
+      parameters:
+        - { name: fieldId, in: path, required: true, schema: { type: string } }
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name: { type: string }
+                options: { type: array, items: { type: string } }
+      responses:
+        '200': { description: Custom field updated }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404': { $ref: '#/components/responses/NotFound' }
+    delete:
+      operationId: deleteCustomField
+      summary: Delete a custom field definition
+      tags: [Custom Fields]
+      parameters:
+        - { name: fieldId, in: path, required: true, schema: { type: string } }
+      responses:
+        '200': { description: Custom field deleted }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404': { $ref: '#/components/responses/NotFound' }
+
+  # ─── Broadcasts ───────────────────────────────────────────────────
+
+  /v1/broadcasts:
+    get:
+      operationId: listBroadcasts
+      summary: List broadcasts
+      tags: [Broadcasts]
+      parameters:
+        - { name: profileId, in: query, required: true, schema: { type: string } }
+        - { name: status, in: query, schema: { type: string, enum: [draft, scheduled, sending, completed, failed, cancelled] } }
+        - { name: platform, in: query, schema: { type: string } }
+        - { name: limit, in: query, schema: { type: integer, default: 50 } }
+        - { name: skip, in: query, schema: { type: integer, default: 0 } }
+      responses:
+        '200': { description: Broadcasts list }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+    post:
+      operationId: createBroadcast
+      summary: Create a broadcast draft
+      tags: [Broadcasts]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [profileId, accountId, platform, name]
+              properties:
+                profileId: { type: string }
+                accountId: { type: string }
+                platform: { type: string, enum: [instagram, facebook, telegram, twitter, bluesky, reddit, whatsapp] }
+                name: { type: string }
+                description: { type: string }
+                message:
+                  type: object
+                  properties:
+                    text: { type: string }
+                    attachments: { type: array, items: { type: object, properties: { type: { type: string }, url: { type: string }, filename: { type: string } } } }
+                template:
+                  type: object
+                  description: WhatsApp template (required when platform is whatsapp)
+                  properties:
+                    name: { type: string }
+                    language: { type: string }
+                    components: { type: array }
+                segmentFilters:
+                  type: object
+                  properties:
+                    tags: { type: array, items: { type: string } }
+                    isSubscribed: { type: boolean }
+      responses:
+        '200': { description: Broadcast created }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+
+  /v1/broadcasts/{broadcastId}:
+    get:
+      operationId: getBroadcast
+      summary: Get broadcast details
+      tags: [Broadcasts]
+      parameters:
+        - { name: broadcastId, in: path, required: true, schema: { type: string } }
+      responses:
+        '200': { description: Broadcast details with stats }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404': { $ref: '#/components/responses/NotFound' }
+    patch:
+      operationId: updateBroadcast
+      summary: Update a broadcast
+      tags: [Broadcasts]
+      parameters:
+        - { name: broadcastId, in: path, required: true, schema: { type: string } }
+      responses:
+        '200': { description: Broadcast updated }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404': { $ref: '#/components/responses/NotFound' }
+    delete:
+      operationId: deleteBroadcast
+      summary: Delete a broadcast (draft only)
+      tags: [Broadcasts]
+      parameters:
+        - { name: broadcastId, in: path, required: true, schema: { type: string } }
+      responses:
+        '200': { description: Broadcast deleted }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404': { $ref: '#/components/responses/NotFound' }
+
+  /v1/broadcasts/{broadcastId}/send:
+    post:
+      operationId: sendBroadcast
+      summary: Trigger immediate send
+      tags: [Broadcasts]
+      parameters:
+        - { name: broadcastId, in: path, required: true, schema: { type: string } }
+      responses:
+        '200': { description: Broadcast sending started }
+        '400': { description: Invalid status or no recipients }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404': { $ref: '#/components/responses/NotFound' }
+
+  /v1/broadcasts/{broadcastId}/schedule:
+    post:
+      operationId: scheduleBroadcast
+      summary: Schedule broadcast for later
+      tags: [Broadcasts]
+      parameters:
+        - { name: broadcastId, in: path, required: true, schema: { type: string } }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [scheduledAt]
+              properties:
+                scheduledAt: { type: string, format: date-time }
+      responses:
+        '200': { description: Broadcast scheduled }
+        '400': { description: Invalid date or status }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404': { $ref: '#/components/responses/NotFound' }
+
+  /v1/broadcasts/{broadcastId}/cancel:
+    post:
+      operationId: cancelBroadcast
+      summary: Cancel a broadcast
+      tags: [Broadcasts]
+      parameters:
+        - { name: broadcastId, in: path, required: true, schema: { type: string } }
+      responses:
+        '200': { description: Broadcast cancelled }
+        '400': { description: Cannot cancel in current status }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404': { $ref: '#/components/responses/NotFound' }
+
+  /v1/broadcasts/{broadcastId}/recipients:
+    get:
+      operationId: listBroadcastRecipients
+      summary: List broadcast recipients
+      tags: [Broadcasts]
+      parameters:
+        - { name: broadcastId, in: path, required: true, schema: { type: string } }
+        - { name: status, in: query, schema: { type: string, enum: [pending, sent, delivered, read, failed] } }
+        - { name: limit, in: query, schema: { type: integer, default: 50 } }
+        - { name: skip, in: query, schema: { type: integer, default: 0 } }
+      responses:
+        '200': { description: Recipients list with delivery status }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404': { $ref: '#/components/responses/NotFound' }
+    post:
+      operationId: addBroadcastRecipients
+      summary: Add recipients to a broadcast
+      tags: [Broadcasts]
+      parameters:
+        - { name: broadcastId, in: path, required: true, schema: { type: string } }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                contactIds: { type: array, items: { type: string }, description: Specific contact IDs to add }
+                useSegment: { type: boolean, description: Auto-populate from broadcast segment filters }
+      responses:
+        '200': { description: Recipients added }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404': { $ref: '#/components/responses/NotFound' }
+
+  # ─── Sequences ────────────────────────────────────────────────────
+
+  /v1/sequences:
+    get:
+      operationId: listSequences
+      summary: List sequences
+      tags: [Sequences]
+      parameters:
+        - { name: profileId, in: query, required: true, schema: { type: string } }
+        - { name: status, in: query, schema: { type: string, enum: [draft, active, paused] } }
+        - { name: limit, in: query, schema: { type: integer, default: 50 } }
+        - { name: skip, in: query, schema: { type: integer, default: 0 } }
+      responses:
+        '200': { description: Sequences list }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+    post:
+      operationId: createSequence
+      summary: Create a sequence
+      tags: [Sequences]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [profileId, accountId, platform, name]
+              properties:
+                profileId: { type: string }
+                accountId: { type: string }
+                platform: { type: string, enum: [instagram, facebook, telegram, twitter, bluesky, reddit, whatsapp] }
+                name: { type: string }
+                description: { type: string }
+                steps:
+                  type: array
+                  items:
+                    type: object
+                    required: [order, delayMinutes]
+                    properties:
+                      order: { type: integer }
+                      delayMinutes: { type: integer }
+                      message: { type: object, properties: { text: { type: string } } }
+                      template: { type: object, properties: { name: { type: string }, language: { type: string } } }
+                exitOnReply: { type: boolean, default: true }
+                exitOnUnsubscribe: { type: boolean, default: true }
+      responses:
+        '200': { description: Sequence created }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+
+  /v1/sequences/{sequenceId}:
+    get:
+      operationId: getSequence
+      summary: Get sequence with steps
+      tags: [Sequences]
+      parameters:
+        - { name: sequenceId, in: path, required: true, schema: { type: string } }
+      responses:
+        '200': { description: Sequence details with steps }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404': { $ref: '#/components/responses/NotFound' }
+    patch:
+      operationId: updateSequence
+      summary: Update a sequence
+      tags: [Sequences]
+      parameters:
+        - { name: sequenceId, in: path, required: true, schema: { type: string } }
+      responses:
+        '200': { description: Sequence updated }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404': { $ref: '#/components/responses/NotFound' }
+    delete:
+      operationId: deleteSequence
+      summary: Delete a sequence
+      tags: [Sequences]
+      parameters:
+        - { name: sequenceId, in: path, required: true, schema: { type: string } }
+      responses:
+        '200': { description: Sequence deleted }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404': { $ref: '#/components/responses/NotFound' }
+
+  /v1/sequences/{sequenceId}/activate:
+    post:
+      operationId: activateSequence
+      summary: Activate a sequence
+      tags: [Sequences]
+      parameters:
+        - { name: sequenceId, in: path, required: true, schema: { type: string } }
+      responses:
+        '200': { description: Sequence activated }
+        '400': { description: Invalid status or no steps }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404': { $ref: '#/components/responses/NotFound' }
+
+  /v1/sequences/{sequenceId}/pause:
+    post:
+      operationId: pauseSequence
+      summary: Pause a sequence
+      tags: [Sequences]
+      parameters:
+        - { name: sequenceId, in: path, required: true, schema: { type: string } }
+      responses:
+        '200': { description: Sequence paused }
+        '400': { description: Sequence is not active }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404': { $ref: '#/components/responses/NotFound' }
+
+  /v1/sequences/{sequenceId}/enroll:
+    post:
+      operationId: enrollContacts
+      summary: Enroll contacts in a sequence
+      tags: [Sequences]
+      parameters:
+        - { name: sequenceId, in: path, required: true, schema: { type: string } }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [contactIds]
+              properties:
+                contactIds: { type: array, items: { type: string } }
+                channelIds: { type: array, items: { type: string }, description: Optional. Auto-detected if not provided. }
+      responses:
+        '200': { description: Enrollment results }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404': { $ref: '#/components/responses/NotFound' }
+
+  /v1/sequences/{sequenceId}/enroll/{contactId}:
+    delete:
+      operationId: unenrollContact
+      summary: Unenroll a contact from a sequence
+      tags: [Sequences]
+      parameters:
+        - { name: sequenceId, in: path, required: true, schema: { type: string } }
+        - { name: contactId, in: path, required: true, schema: { type: string } }
+      responses:
+        '200': { description: Contact unenrolled }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404': { $ref: '#/components/responses/NotFound' }
+
+  /v1/sequences/{sequenceId}/enrollments:
+    get:
+      operationId: listSequenceEnrollments
+      summary: List enrollments for a sequence
+      tags: [Sequences]
+      parameters:
+        - { name: sequenceId, in: path, required: true, schema: { type: string } }
+        - { name: status, in: query, schema: { type: string, enum: [active, completed, exited, paused] } }
+        - { name: limit, in: query, schema: { type: integer, default: 50 } }
+        - { name: skip, in: query, schema: { type: integer, default: 0 } }
+      responses:
+        '200': { description: Enrollments list with progress }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404': { $ref: '#/components/responses/NotFound' }
+
+  # ──────────────────────────────────────────────────────────────────────────
+  # COMMENT AUTOMATIONS (Comment-to-DM)
+  # ──────────────────────────────────────────────────────────────────────────
+
+  /v1/comment-automations:
+    get:
+      operationId: listCommentAutomations
+      tags: [Comment Automations]
+      summary: List comment-to-DM automations
+      description: List all comment-to-DM automations for a profile. Returns automations with their stats.
+      security:
+        - bearerAuth: []
+      parameters:
+        - { name: profileId, in: query, required: true, schema: { type: string }, description: Profile ID }
+      responses:
+        '200':
+          description: Automations list
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success: { type: boolean }
+                  automations:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id: { type: string }
+                        name: { type: string }
+                        platform: { type: string, enum: [instagram, facebook] }
+                        accountId: { type: string }
+                        platformPostId: { type: string }
+                        postTitle: { type: string }
+                        keywords: { type: array, items: { type: string } }
+                        matchMode: { type: string, enum: [exact, contains] }
+                        dmMessage: { type: string }
+                        commentReply: { type: string }
+                        isActive: { type: boolean }
+                        stats:
+                          type: object
+                          properties:
+                            triggered: { type: integer }
+                            dmsSent: { type: integer }
+                            dmsFailed: { type: integer }
+                            uniqueContacts: { type: integer }
+                        createdAt: { type: string, format: date-time }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+    post:
+      operationId: createCommentAutomation
+      tags: [Comment Automations]
+      summary: Create a comment-to-DM automation
+      description: |
+        Create a keyword-triggered DM automation on an Instagram or Facebook post.
+        When someone comments a matching keyword, they automatically receive a DM.
+        Only one active automation per post is allowed.
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [profileId, accountId, platformPostId, name, dmMessage]
+              properties:
+                profileId: { type: string }
+                accountId: { type: string, description: Instagram or Facebook account ID }
+                platformPostId: { type: string, description: Platform media/post ID }
+                postId: { type: string, description: Zernio post ID (optional) }
+                postTitle: { type: string, description: Post content snippet for display }
+                name: { type: string, description: Automation label }
+                keywords:
+                  type: array
+                  items: { type: string }
+                  description: Trigger keywords (empty = any comment triggers)
+                matchMode: { type: string, enum: [exact, contains], default: contains }
+                dmMessage: { type: string, description: DM text to send to commenter }
+                commentReply: { type: string, description: Optional public reply to the comment }
+      responses:
+        '200': { description: Automation created }
+        '400': { description: Validation error }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '409': { description: Active automation already exists for this post }
+
+  /v1/comment-automations/{automationId}:
+    get:
+      operationId: getCommentAutomation
+      tags: [Comment Automations]
+      summary: Get automation details with recent logs
+      security:
+        - bearerAuth: []
+      parameters:
+        - { name: automationId, in: path, required: true, schema: { type: string } }
+      responses:
+        '200': { description: Automation details with stats and recent trigger logs }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404': { $ref: '#/components/responses/NotFound' }
+    patch:
+      operationId: updateCommentAutomation
+      tags: [Comment Automations]
+      summary: Update automation settings
+      security:
+        - bearerAuth: []
+      parameters:
+        - { name: automationId, in: path, required: true, schema: { type: string } }
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name: { type: string }
+                keywords: { type: array, items: { type: string } }
+                matchMode: { type: string, enum: [exact, contains] }
+                dmMessage: { type: string }
+                commentReply: { type: string }
+                isActive: { type: boolean }
+      responses:
+        '200': { description: Automation updated }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404': { $ref: '#/components/responses/NotFound' }
+    delete:
+      operationId: deleteCommentAutomation
+      tags: [Comment Automations]
+      summary: Delete automation and all logs
+      security:
+        - bearerAuth: []
+      parameters:
+        - { name: automationId, in: path, required: true, schema: { type: string } }
+      responses:
+        '200': { description: Automation deleted }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404': { $ref: '#/components/responses/NotFound' }
+
+  /v1/comment-automations/{automationId}/logs:
+    get:
+      operationId: listCommentAutomationLogs
+      tags: [Comment Automations]
+      summary: List trigger logs for an automation
+      description: Paginated list of every comment that triggered this automation, with send status and commenter info.
+      security:
+        - bearerAuth: []
+      parameters:
+        - { name: automationId, in: path, required: true, schema: { type: string } }
+        - { name: status, in: query, schema: { type: string, enum: [sent, failed, skipped] }, description: Filter by result status }
+        - { name: limit, in: query, schema: { type: integer, default: 50 } }
+        - { name: skip, in: query, schema: { type: integer, default: 0 } }
+      responses:
+        '200': { description: Trigger logs with pagination }
         '401': { $ref: '#/components/responses/Unauthorized' }
         '404': { $ref: '#/components/responses/NotFound' }
 

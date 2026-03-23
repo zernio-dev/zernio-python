@@ -7,8 +7,12 @@ from .account_settings import AccountSettingsResource
 from .accounts import AccountsResource
 from .analytics import AnalyticsResource
 from .api_keys import ApiKeysResource
+from .broadcasts import BroadcastsResource
+from .comment_automations import CommentAutomationsResource
 from .comments import CommentsResource
 from .connect import ConnectResource
+from .contacts import ContactsResource
+from .custom_fields import CustomFieldsResource
 from .invites import InvitesResource
 from .logs import LogsResource
 from .media import MediaResource
@@ -18,6 +22,7 @@ from .profiles import ProfilesResource
 from .queue import QueueResource
 from .reddit import RedditResource
 from .reviews import ReviewsResource
+from .sequences import SequencesResource
 from .tools import ToolsResource
 from .twitter_engagement import TwitterEngagementResource
 from .usage import UsageResource
@@ -33,8 +38,12 @@ __all__ = [
     "AccountsResource",
     "AnalyticsResource",
     "ApiKeysResource",
+    "BroadcastsResource",
+    "CommentAutomationsResource",
     "CommentsResource",
     "ConnectResource",
+    "ContactsResource",
+    "CustomFieldsResource",
     "InvitesResource",
     "LogsResource",
     "MediaResource",
@@ -44,6 +53,7 @@ __all__ = [
     "QueueResource",
     "RedditResource",
     "ReviewsResource",
+    "SequencesResource",
     "ToolsResource",
     "TwitterEngagementResource",
     "UsageResource",
