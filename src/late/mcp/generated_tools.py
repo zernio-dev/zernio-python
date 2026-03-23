@@ -1085,7 +1085,7 @@ def register_generated_tools(mcp, _get_client):
 
     @mcp.tool()
     def broadcasts_list_broadcasts(
-        profile_id: str,
+        profile_id: str = "",
         status: str = "",
         platform: str = "",
         limit: int = 50,
@@ -1094,7 +1094,7 @@ def register_generated_tools(mcp, _get_client):
         """List broadcasts
 
         Args:
-            profile_id: (required)
+            profile_id: Filter by profile. Omit to list across all profiles
             status
             platform
             limit
@@ -1275,11 +1275,11 @@ def register_generated_tools(mcp, _get_client):
     # COMMENT_AUTOMATIONS
 
     @mcp.tool()
-    def comment_automations_list_comment_automations(profile_id: str) -> str:
+    def comment_automations_list_comment_automations(profile_id: str = "") -> str:
         """List comment-to-DM automations
 
         Args:
-            profile_id: Profile ID (required)"""
+            profile_id: Filter by profile. Omit to list across all profiles"""
         client = _get_client()
         try:
             response = client.comment_automations.list_comment_automations(
@@ -2219,7 +2219,7 @@ def register_generated_tools(mcp, _get_client):
 
     @mcp.tool()
     def contacts_list_contacts(
-        profile_id: str,
+        profile_id: str = "",
         search: str = "",
         tag: str = "",
         platform: str = "",
@@ -2230,7 +2230,7 @@ def register_generated_tools(mcp, _get_client):
         """List contacts
 
         Args:
-            profile_id: (required)
+            profile_id: Filter by profile. Omit to list across all profiles
             search
             tag
             platform
@@ -2440,11 +2440,11 @@ def register_generated_tools(mcp, _get_client):
             return f"Error: {e}"
 
     @mcp.tool()
-    def custom_fields_list_custom_fields(profile_id: str) -> str:
+    def custom_fields_list_custom_fields(profile_id: str = "") -> str:
         """List custom field definitions
 
         Args:
-            profile_id: (required)"""
+            profile_id: Filter by profile. Omit to list across all profiles"""
         client = _get_client()
         try:
             response = client.custom_fields.list_custom_fields(profile_id=profile_id)
@@ -3307,12 +3307,12 @@ def register_generated_tools(mcp, _get_client):
 
     @mcp.tool()
     def sequences_list_sequences(
-        profile_id: str, status: str = "", limit: int = 50, skip: int = 0
+        profile_id: str = "", status: str = "", limit: int = 50, skip: int = 0
     ) -> str:
         """List sequences
 
         Args:
-            profile_id: (required)
+            profile_id: Filter by profile. Omit to list across all profiles
             status
             limit
             skip"""

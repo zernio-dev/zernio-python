@@ -52,8 +52,8 @@ class BroadcastsResource:
 
     def list_broadcasts(
         self,
-        profile_id: str,
         *,
+        profile_id: str | None = None,
         status: str | None = None,
         platform: str | None = None,
         limit: int | None = 50,
@@ -161,8 +161,8 @@ class BroadcastsResource:
 
     async def alist_broadcasts(
         self,
-        profile_id: str,
         *,
+        profile_id: str | None = None,
         status: str | None = None,
         platform: str | None = None,
         limit: int | None = 50,

@@ -50,8 +50,8 @@ class SequencesResource:
 
     def list_sequences(
         self,
-        profile_id: str,
         *,
+        profile_id: str | None = None,
         status: str | None = None,
         limit: int | None = 50,
         skip: int | None = 0,
@@ -148,8 +148,8 @@ class SequencesResource:
 
     async def alist_sequences(
         self,
-        profile_id: str,
         *,
+        profile_id: str | None = None,
         status: str | None = None,
         limit: int | None = 50,
         skip: int | None = 0,

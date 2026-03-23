@@ -50,8 +50,8 @@ class ContactsResource:
 
     def list_contacts(
         self,
-        profile_id: str,
         *,
+        profile_id: str | None = None,
         search: str | None = None,
         tag: str | None = None,
         platform: str | None = None,
@@ -158,8 +158,8 @@ class ContactsResource:
 
     async def alist_contacts(
         self,
-        profile_id: str,
         *,
+        profile_id: str | None = None,
         search: str | None = None,
         tag: str | None = None,
         platform: str | None = None,

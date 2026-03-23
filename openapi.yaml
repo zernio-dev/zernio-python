@@ -14574,7 +14574,7 @@ paths:
       description: List and search contacts for a profile. Supports filtering by tags, platform, subscription status, and full-text search.
       tags: [Contacts]
       parameters:
-        - { name: profileId, in: query, required: true, schema: { type: string } }
+        - { name: profileId, in: query, schema: { type: string }, description: Filter by profile. Omit to list across all profiles }
         - { name: search, in: query, schema: { type: string } }
         - { name: tag, in: query, schema: { type: string } }
         - { name: platform, in: query, schema: { type: string, enum: [instagram, facebook, telegram, twitter, bluesky, reddit, whatsapp] } }
@@ -14746,7 +14746,7 @@ paths:
       summary: List custom field definitions
       tags: [Custom Fields]
       parameters:
-        - { name: profileId, in: query, required: true, schema: { type: string } }
+        - { name: profileId, in: query, schema: { type: string }, description: Filter by profile. Omit to list across all profiles }
       responses:
         '200': { description: List of custom field definitions }
         '401': { $ref: '#/components/responses/Unauthorized' }
@@ -14810,7 +14810,7 @@ paths:
       summary: List broadcasts
       tags: [Broadcasts]
       parameters:
-        - { name: profileId, in: query, required: true, schema: { type: string } }
+        - { name: profileId, in: query, schema: { type: string }, description: Filter by profile. Omit to list across all profiles }
         - { name: status, in: query, schema: { type: string, enum: [draft, scheduled, sending, completed, failed, cancelled] } }
         - { name: platform, in: query, schema: { type: string } }
         - { name: limit, in: query, schema: { type: integer, default: 50 } }
@@ -14978,7 +14978,7 @@ paths:
       summary: List sequences
       tags: [Sequences]
       parameters:
-        - { name: profileId, in: query, required: true, schema: { type: string } }
+        - { name: profileId, in: query, schema: { type: string }, description: Filter by profile. Omit to list across all profiles }
         - { name: status, in: query, schema: { type: string, enum: [draft, active, paused] } }
         - { name: limit, in: query, schema: { type: integer, default: 50 } }
         - { name: skip, in: query, schema: { type: integer, default: 0 } }
@@ -15139,7 +15139,7 @@ paths:
       security:
         - bearerAuth: []
       parameters:
-        - { name: profileId, in: query, required: true, schema: { type: string }, description: Profile ID }
+        - { name: profileId, in: query, schema: { type: string }, description: Filter by profile. Omit to list across all profiles }
       responses:
         '200':
           description: Automations list

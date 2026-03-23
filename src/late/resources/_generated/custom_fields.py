@@ -63,7 +63,7 @@ class CustomFieldsResource:
         """Clear a custom field value"""
         return self._client._delete(f"/v1/contacts/{contact_id}/fields/{slug}")
 
-    def list_custom_fields(self, profile_id: str) -> dict[str, Any]:
+    def list_custom_fields(self, *, profile_id: str | None = None) -> dict[str, Any]:
         """List custom field definitions"""
         params = self._build_params(
             profile_id=profile_id,
@@ -124,7 +124,9 @@ class CustomFieldsResource:
         """Clear a custom field value (async)"""
         return await self._client._adelete(f"/v1/contacts/{contact_id}/fields/{slug}")
 
-    async def alist_custom_fields(self, profile_id: str) -> dict[str, Any]:
+    async def alist_custom_fields(
+        self, *, profile_id: str | None = None
+    ) -> dict[str, Any]:
         """List custom field definitions (async)"""
         params = self._build_params(
             profile_id=profile_id,

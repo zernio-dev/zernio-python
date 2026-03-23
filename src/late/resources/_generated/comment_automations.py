@@ -48,7 +48,9 @@ class CommentAutomationsResource:
                 result[to_camel(k)] = v
         return result
 
-    def list_comment_automations(self, profile_id: str) -> dict[str, Any]:
+    def list_comment_automations(
+        self, *, profile_id: str | None = None
+    ) -> dict[str, Any]:
         """List comment-to-DM automations"""
         params = self._build_params(
             profile_id=profile_id,
@@ -134,7 +136,9 @@ class CommentAutomationsResource:
             f"/v1/comment-automations/{automation_id}/logs", params=params
         )
 
-    async def alist_comment_automations(self, profile_id: str) -> dict[str, Any]:
+    async def alist_comment_automations(
+        self, *, profile_id: str | None = None
+    ) -> dict[str, Any]:
         """List comment-to-DM automations (async)"""
         params = self._build_params(
             profile_id=profile_id,
