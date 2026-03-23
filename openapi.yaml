@@ -15021,7 +15021,19 @@ paths:
                       order: { type: integer }
                       delayMinutes: { type: integer }
                       message: { type: object, properties: { text: { type: string } } }
-                      template: { type: object, properties: { name: { type: string }, language: { type: string } } }
+                      template:
+                        type: object
+                        properties:
+                          name: { type: string }
+                          language: { type: string }
+                          variableMapping:
+                            type: object
+                            description: Maps template variable positions to contact fields. Keys are position strings ("1", "2"), values are objects with field and optional customValue
+                            additionalProperties:
+                              type: object
+                              properties:
+                                field: { type: string, enum: [name, phone, email, company, custom] }
+                                customValue: { type: string, description: Static value when field is "custom" }
                 exitOnReply: { type: boolean, default: true }
                 exitOnUnsubscribe: { type: boolean, default: true }
       responses:
