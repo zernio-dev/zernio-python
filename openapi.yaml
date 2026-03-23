@@ -14973,6 +14973,7 @@ paths:
               type: object
               properties:
                 contactIds: { type: array, items: { type: string }, description: Specific contact IDs to add }
+                phones: { type: array, items: { type: string }, description: Raw phone numbers (auto-creates contacts). Useful for WhatsApp/Telegram manual entry }
                 useSegment: { type: boolean, description: Auto-populate from broadcast segment filters }
       responses:
         '200': { description: Recipients added }

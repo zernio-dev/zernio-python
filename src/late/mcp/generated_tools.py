@@ -1259,19 +1259,24 @@ def register_generated_tools(mcp, _get_client):
 
     @mcp.tool()
     def broadcasts_add_broadcast_recipients(
-        broadcast_id: str, contact_ids: str = "", use_segment: bool = False
+        broadcast_id: str,
+        contact_ids: str = "",
+        phones: str = "",
+        use_segment: bool = False,
     ) -> str:
         """Add recipients to a broadcast
 
         Args:
             broadcast_id: (required)
             contact_ids: Specific contact IDs to add
+            phones: Raw phone numbers (auto-creates contacts). Useful for WhatsApp/Telegram manual entry
             use_segment: Auto-populate from broadcast segment filters"""
         client = _get_client()
         try:
             response = client.broadcasts.add_broadcast_recipients(
                 broadcast_id=broadcast_id,
                 contactIds=contact_ids,
+                phones=phones,
                 useSegment=use_segment,
             )
             return _format_response(response)

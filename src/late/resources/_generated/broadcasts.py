@@ -148,11 +148,13 @@ class BroadcastsResource:
         broadcast_id: str,
         *,
         contact_ids: list[str] | None = None,
+        phones: list[str] | None = None,
         use_segment: bool | None = None,
     ) -> dict[str, Any]:
         """Add recipients to a broadcast"""
         payload = self._build_payload(
             contact_ids=contact_ids,
+            phones=phones,
             use_segment=use_segment,
         )
         return self._client._post(
@@ -257,11 +259,13 @@ class BroadcastsResource:
         broadcast_id: str,
         *,
         contact_ids: list[str] | None = None,
+        phones: list[str] | None = None,
         use_segment: bool | None = None,
     ) -> dict[str, Any]:
         """Add recipients to a broadcast (async)"""
         payload = self._build_payload(
             contact_ids=contact_ids,
+            phones=phones,
             use_segment=use_segment,
         )
         return await self._client._apost(
