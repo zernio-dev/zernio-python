@@ -1349,6 +1349,27 @@ components:
               mediaItems:
                 type: array
                 items: { $ref: '#/components/schemas/MediaItem' }
+        poll:
+          type: object
+          description: Create a poll with this tweet. Mutually exclusive with media attachments and threads.
+          properties:
+            options:
+              type: array
+              minItems: 2
+              maxItems: 4
+              items:
+                type: string
+                minLength: 1
+                maxLength: 25
+              description: Poll options (2-4 choices, max 25 characters each)
+            duration_minutes:
+              type: integer
+              minimum: 5
+              maximum: 10080
+              description: Poll duration in minutes (5 min to 7 days)
+          required:
+            - options
+            - duration_minutes
 
     ThreadsPlatformData:
       type: object
