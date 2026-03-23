@@ -14826,7 +14826,43 @@ paths:
         - { name: limit, in: query, schema: { type: integer, default: 50 } }
         - { name: skip, in: query, schema: { type: integer, default: 0 } }
       responses:
-        '200': { description: Broadcasts list }
+        '200':
+          description: Broadcasts list
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success: { type: boolean }
+                  broadcasts:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id: { type: string }
+                        name: { type: string }
+                        description: { type: string }
+                        platform: { type: string }
+                        accountId: { type: string }
+                        accountName: { type: string, description: Display name of the sending account }
+                        status: { type: string, enum: [draft, scheduled, sending, completed, failed, cancelled] }
+                        messagePreview: { type: string, description: Template name or message text snippet }
+                        scheduledAt: { type: string, format: date-time }
+                        startedAt: { type: string, format: date-time }
+                        completedAt: { type: string, format: date-time }
+                        recipientCount: { type: integer }
+                        sentCount: { type: integer }
+                        deliveredCount: { type: integer }
+                        readCount: { type: integer }
+                        failedCount: { type: integer }
+                        createdAt: { type: string, format: date-time }
+                  pagination:
+                    type: object
+                    properties:
+                      total: { type: integer }
+                      limit: { type: integer }
+                      skip: { type: integer }
+                      hasMore: { type: boolean }
         '401': { $ref: '#/components/responses/Unauthorized' }
     post:
       operationId: createBroadcast
@@ -14906,7 +14942,18 @@ paths:
       parameters:
         - { name: broadcastId, in: path, required: true, schema: { type: string } }
       responses:
-        '200': { description: Broadcast sending started }
+        '200':
+          description: Broadcast sending started
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success: { type: boolean }
+                  status: { type: string, enum: [sending, completed, failed], description: Current broadcast status after processing first batch }
+                  sent: { type: integer, description: Recipients sent in this batch }
+                  failed: { type: integer, description: Recipients failed in this batch }
+                  recipientCount: { type: integer, description: Total recipient count }
         '400': { description: Invalid status or no recipients }
         '401': { $ref: '#/components/responses/Unauthorized' }
         '404': { $ref: '#/components/responses/NotFound' }
@@ -14994,7 +15041,41 @@ paths:
         - { name: limit, in: query, schema: { type: integer, default: 50 } }
         - { name: skip, in: query, schema: { type: integer, default: 0 } }
       responses:
-        '200': { description: Sequences list }
+        '200':
+          description: Sequences list
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success: { type: boolean }
+                  sequences:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id: { type: string }
+                        name: { type: string }
+                        description: { type: string }
+                        platform: { type: string }
+                        accountId: { type: string }
+                        accountName: { type: string, description: Display name of the sending account }
+                        messagePreview: { type: string, description: First step template name or message text snippet }
+                        status: { type: string, enum: [draft, active, paused] }
+                        stepsCount: { type: integer }
+                        exitOnReply: { type: boolean }
+                        exitOnUnsubscribe: { type: boolean }
+                        totalEnrolled: { type: integer }
+                        totalCompleted: { type: integer }
+                        totalExited: { type: integer }
+                        createdAt: { type: string, format: date-time }
+                  pagination:
+                    type: object
+                    properties:
+                      total: { type: integer }
+                      limit: { type: integer }
+                      skip: { type: integer }
+                      hasMore: { type: boolean }
         '401': { $ref: '#/components/responses/Unauthorized' }
     post:
       operationId: createSequence
