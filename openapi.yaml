@@ -14910,7 +14910,36 @@ paths:
       parameters:
         - { name: broadcastId, in: path, required: true, schema: { type: string } }
       responses:
-        '200': { description: Broadcast details with stats }
+        '200':
+          description: Broadcast details with stats
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success: { type: boolean }
+                  broadcast:
+                    type: object
+                    properties:
+                      id: { type: string }
+                      name: { type: string }
+                      description: { type: string }
+                      platform: { type: string }
+                      accountId: { type: string }
+                      message: { type: object, properties: { text: { type: string } } }
+                      template: { type: object, properties: { name: { type: string }, language: { type: string } } }
+                      segmentFilters: { type: object, properties: { tags: { type: array, items: { type: string } } } }
+                      status: { type: string, enum: [draft, scheduled, sending, completed, failed, cancelled] }
+                      scheduledAt: { type: string, format: date-time }
+                      startedAt: { type: string, format: date-time }
+                      completedAt: { type: string, format: date-time }
+                      recipientCount: { type: integer }
+                      sentCount: { type: integer }
+                      deliveredCount: { type: integer }
+                      readCount: { type: integer }
+                      failedCount: { type: integer }
+                      createdAt: { type: string, format: date-time }
+                      updatedAt: { type: string, format: date-time }
         '401': { $ref: '#/components/responses/Unauthorized' }
         '404': { $ref: '#/components/responses/NotFound' }
     patch:
@@ -14920,7 +14949,22 @@ paths:
       parameters:
         - { name: broadcastId, in: path, required: true, schema: { type: string } }
       responses:
-        '200': { description: Broadcast updated }
+        '200':
+          description: Broadcast updated
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success: { type: boolean }
+                  broadcast:
+                    type: object
+                    properties:
+                      id: { type: string }
+                      name: { type: string }
+                      description: { type: string }
+                      status: { type: string }
+                      updatedAt: { type: string, format: date-time }
         '401': { $ref: '#/components/responses/Unauthorized' }
         '404': { $ref: '#/components/responses/NotFound' }
     delete:
@@ -14975,7 +15019,20 @@ paths:
               properties:
                 scheduledAt: { type: string, format: date-time }
       responses:
-        '200': { description: Broadcast scheduled }
+        '200':
+          description: Broadcast scheduled
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success: { type: boolean }
+                  broadcast:
+                    type: object
+                    properties:
+                      id: { type: string }
+                      status: { type: string }
+                      scheduledAt: { type: string, format: date-time }
         '400': { description: Invalid date or status }
         '401': { $ref: '#/components/responses/Unauthorized' }
         '404': { $ref: '#/components/responses/NotFound' }
@@ -14988,7 +15045,19 @@ paths:
       parameters:
         - { name: broadcastId, in: path, required: true, schema: { type: string } }
       responses:
-        '200': { description: Broadcast cancelled }
+        '200':
+          description: Broadcast cancelled
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success: { type: boolean }
+                  broadcast:
+                    type: object
+                    properties:
+                      id: { type: string }
+                      status: { type: string }
         '400': { description: Cannot cancel in current status }
         '401': { $ref: '#/components/responses/Unauthorized' }
         '404': { $ref: '#/components/responses/NotFound' }
@@ -15004,7 +15073,37 @@ paths:
         - { name: limit, in: query, schema: { type: integer, default: 50 } }
         - { name: skip, in: query, schema: { type: integer, default: 0 } }
       responses:
-        '200': { description: Recipients list with delivery status }
+        '200':
+          description: Recipients list with delivery status
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success: { type: boolean }
+                  recipients:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id: { type: string }
+                        contactId: { type: string }
+                        channelId: { type: string }
+                        platformIdentifier: { type: string }
+                        contactName: { type: string }
+                        status: { type: string, enum: [pending, sent, delivered, read, failed] }
+                        messageId: { type: string }
+                        error: { type: string }
+                        sentAt: { type: string, format: date-time }
+                        deliveredAt: { type: string, format: date-time }
+                        readAt: { type: string, format: date-time }
+                  pagination:
+                    type: object
+                    properties:
+                      total: { type: integer }
+                      limit: { type: integer }
+                      skip: { type: integer }
+                      hasMore: { type: boolean }
         '401': { $ref: '#/components/responses/Unauthorized' }
         '404': { $ref: '#/components/responses/NotFound' }
     post:
@@ -15024,7 +15123,16 @@ paths:
                 phones: { type: array, items: { type: string }, description: Raw phone numbers (auto-creates contacts). Useful for WhatsApp/Telegram manual entry }
                 useSegment: { type: boolean, description: Auto-populate from broadcast segment filters }
       responses:
-        '200': { description: Recipients added }
+        '200':
+          description: Recipients added
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success: { type: boolean }
+                  added: { type: integer, description: Number of recipients successfully added }
+                  skipped: { type: integer, description: Number skipped (duplicates or missing channels) }
         '401': { $ref: '#/components/responses/Unauthorized' }
         '404': { $ref: '#/components/responses/NotFound' }
 
@@ -15130,7 +15238,39 @@ paths:
       parameters:
         - { name: sequenceId, in: path, required: true, schema: { type: string } }
       responses:
-        '200': { description: Sequence details with steps }
+        '200':
+          description: Sequence details with steps
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success: { type: boolean }
+                  sequence:
+                    type: object
+                    properties:
+                      id: { type: string }
+                      name: { type: string }
+                      description: { type: string }
+                      platform: { type: string }
+                      accountId: { type: string }
+                      status: { type: string, enum: [draft, active, paused] }
+                      steps:
+                        type: array
+                        items:
+                          type: object
+                          properties:
+                            order: { type: integer }
+                            delayMinutes: { type: integer }
+                            message: { type: object, properties: { text: { type: string } } }
+                            template: { type: object, properties: { name: { type: string }, language: { type: string }, variableMapping: { type: object } } }
+                      exitOnReply: { type: boolean }
+                      exitOnUnsubscribe: { type: boolean }
+                      totalEnrolled: { type: integer }
+                      totalCompleted: { type: integer }
+                      totalExited: { type: integer }
+                      createdAt: { type: string, format: date-time }
+                      updatedAt: { type: string, format: date-time }
         '401': { $ref: '#/components/responses/Unauthorized' }
         '404': { $ref: '#/components/responses/NotFound' }
     patch:
@@ -15140,7 +15280,25 @@ paths:
       parameters:
         - { name: sequenceId, in: path, required: true, schema: { type: string } }
       responses:
-        '200': { description: Sequence updated }
+        '200':
+          description: Sequence updated
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success: { type: boolean }
+                  sequence:
+                    type: object
+                    properties:
+                      id: { type: string }
+                      name: { type: string }
+                      description: { type: string }
+                      status: { type: string }
+                      steps: { type: array, items: { type: object } }
+                      exitOnReply: { type: boolean }
+                      exitOnUnsubscribe: { type: boolean }
+                      updatedAt: { type: string, format: date-time }
         '401': { $ref: '#/components/responses/Unauthorized' }
         '404': { $ref: '#/components/responses/NotFound' }
     delete:
@@ -15162,7 +15320,19 @@ paths:
       parameters:
         - { name: sequenceId, in: path, required: true, schema: { type: string } }
       responses:
-        '200': { description: Sequence activated }
+        '200':
+          description: Sequence activated
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success: { type: boolean }
+                  sequence:
+                    type: object
+                    properties:
+                      id: { type: string }
+                      status: { type: string }
         '400': { description: Invalid status or no steps }
         '401': { $ref: '#/components/responses/Unauthorized' }
         '404': { $ref: '#/components/responses/NotFound' }
@@ -15175,7 +15345,19 @@ paths:
       parameters:
         - { name: sequenceId, in: path, required: true, schema: { type: string } }
       responses:
-        '200': { description: Sequence paused }
+        '200':
+          description: Sequence paused
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success: { type: boolean }
+                  sequence:
+                    type: object
+                    properties:
+                      id: { type: string }
+                      status: { type: string }
         '400': { description: Sequence is not active }
         '401': { $ref: '#/components/responses/Unauthorized' }
         '404': { $ref: '#/components/responses/NotFound' }
@@ -15198,7 +15380,16 @@ paths:
                 contactIds: { type: array, items: { type: string } }
                 channelIds: { type: array, items: { type: string }, description: Optional. Auto-detected if not provided. }
       responses:
-        '200': { description: Enrollment results }
+        '200':
+          description: Enrollment results
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success: { type: boolean }
+                  enrolled: { type: integer, description: Number of contacts successfully enrolled }
+                  skipped: { type: integer, description: Number skipped (already enrolled or missing channel) }
         '401': { $ref: '#/components/responses/Unauthorized' }
         '404': { $ref: '#/components/responses/NotFound' }
 
@@ -15226,7 +15417,38 @@ paths:
         - { name: limit, in: query, schema: { type: integer, default: 50 } }
         - { name: skip, in: query, schema: { type: integer, default: 0 } }
       responses:
-        '200': { description: Enrollments list with progress }
+        '200':
+          description: Enrollments list with progress
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success: { type: boolean }
+                  enrollments:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id: { type: string }
+                        contactId: { type: string }
+                        channelId: { type: string }
+                        platformIdentifier: { type: string }
+                        contactName: { type: string }
+                        currentStepIndex: { type: integer }
+                        status: { type: string, enum: [active, completed, exited, paused] }
+                        exitReason: { type: string }
+                        nextStepAt: { type: string, format: date-time }
+                        stepsSent: { type: integer }
+                        lastStepSentAt: { type: string, format: date-time }
+                        createdAt: { type: string, format: date-time }
+                  pagination:
+                    type: object
+                    properties:
+                      total: { type: integer }
+                      limit: { type: integer }
+                      skip: { type: integer }
+                      hasMore: { type: boolean }
         '401': { $ref: '#/components/responses/Unauthorized' }
         '404': { $ref: '#/components/responses/NotFound' }
 
