@@ -1,5 +1,4 @@
-"""
-Main Zernio API client.
+"""Main Zernio API client.
 
 Provides the primary client class for interacting with the Zernio API.
 The ``Late`` alias is kept for backwards compatibility.
@@ -14,14 +13,18 @@ from ..resources import (
     AccountsResource,
     AnalyticsResource,
     ApiKeysResource,
+    CommentsResource,
     ConnectResource,
+    InboxResource,
     InvitesResource,
     LogsResource,
     MediaResource,
+    MessagesResource,
     PostsResource,
     ProfilesResource,
     QueueResource,
     RedditResource,
+    ReviewsResource,
     ToolsResource,
     UsageResource,
     UsersResource,
@@ -52,6 +55,11 @@ class Zernio(BaseClient):
         ...     platforms=[{"platform": Platform.TWITTER, "accountId": "..."}],
         ...     scheduled_for="2024-12-25T10:00:00Z",
         ... )
+        >>>
+        >>> # Inbox: list comments, conversations, reviews
+        >>> comments = client.comments.list_inbox_comments()
+        >>> conversations = client.inbox.list_inbox_conversations()
+        >>> reviews = client.reviews.list_inbox_reviews()
         >>>
         >>> # Async usage
         >>> async with Zernio(api_key="...") as client:
@@ -101,6 +109,12 @@ class Zernio(BaseClient):
         self.analytics = AnalyticsResource(self)
         self.tools = ToolsResource(self)
         self.queue = QueueResource(self)
+
+        # Inbox resources (comments, DMs, reviews)
+        self.inbox = InboxResource(self)
+        self.comments = CommentsResource(self)
+        self.messages = MessagesResource(self)
+        self.reviews = ReviewsResource(self)
 
         # Additional resources (auto-generated)
         self.webhooks = WebhooksResource(self)
