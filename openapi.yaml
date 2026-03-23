@@ -13618,6 +13618,7 @@ paths:
                             name: { type: string }
                             language: { type: string }
                         status: { type: string, enum: [draft, scheduled, sending, completed, failed, cancelled] }
+                        messagePreview: { type: string, description: Template name or message text snippet }
                         recipientCount: { type: integer }
                         scheduledAt: { type: string, format: date-time }
                         startedAt: { type: string, format: date-time }
