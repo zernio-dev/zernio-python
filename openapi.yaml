@@ -4693,6 +4693,7 @@ paths:
                       url: { type: string, format: uri }
                 platforms:
                   type: array
+                  description: Target platforms and accounts for this post. Required for non-draft posts (returns 400 if empty). Drafts can omit platforms.
                   items:
                     type: object
                     properties:
