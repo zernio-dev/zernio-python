@@ -730,6 +730,7 @@ def register_generated_tools(mcp, _get_client):
         post_id: str = "",
         platform: str = "",
         profile_id: str = "",
+        account_id: str = "",
         source: str = "all",
         from_date: str = "",
         to_date: str = "",
@@ -744,6 +745,7 @@ def register_generated_tools(mcp, _get_client):
             post_id: Returns analytics for a single post. Accepts both Zernio Post IDs and External Post IDs. Zernio IDs are auto-resolved to External Post analytics.
             platform: Filter by platform (default "all")
             profile_id: Filter by profile ID (default "all")
+            account_id: Filter by social account ID
             source: Filter by post source: late (posted via Zernio API), external (synced from platform), all (default)
             from_date: Inclusive lower bound (YYYY-MM-DD). Defaults to 90 days ago if omitted. Max range is 366 days.
             to_date: Inclusive upper bound (YYYY-MM-DD). Defaults to today if omitted.
@@ -757,6 +759,7 @@ def register_generated_tools(mcp, _get_client):
                 post_id=post_id,
                 platform=platform,
                 profile_id=profile_id,
+                account_id=account_id,
                 source=source,
                 from_date=from_date,
                 to_date=to_date,
@@ -860,6 +863,7 @@ def register_generated_tools(mcp, _get_client):
     def analytics_get_daily_metrics(
         platform: str = "",
         profile_id: str = "",
+        account_id: str = "",
         from_date: str = "",
         to_date: str = "",
         source: str = "all",
@@ -869,6 +873,7 @@ def register_generated_tools(mcp, _get_client):
         Args:
             platform: Filter by platform (e.g. "instagram", "tiktok"). Omit for all platforms.
             profile_id: Filter by profile ID. Omit for all profiles.
+            account_id: Filter by social account ID
             from_date: Inclusive start date (ISO 8601). Defaults to 180 days ago.
             to_date: Inclusive end date (ISO 8601). Defaults to now.
             source: Filter by post origin. "late" for posts published via Zernio, "external" for posts imported from platforms."""
@@ -877,6 +882,7 @@ def register_generated_tools(mcp, _get_client):
             response = client.analytics.get_daily_metrics(
                 platform=platform,
                 profile_id=profile_id,
+                account_id=account_id,
                 from_date=from_date,
                 to_date=to_date,
                 source=source,

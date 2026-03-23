@@ -3081,6 +3081,10 @@ paths:
           in: query
           schema: { type: string }
           description: Filter by profile ID (default "all")
+        - name: accountId
+          in: query
+          schema: { type: string }
+          description: Filter by social account ID
         - name: source
           in: query
           schema: { type: string, enum: [all, late, external], default: all }
@@ -3693,6 +3697,10 @@ paths:
           in: query
           schema: { type: string }
           description: Filter by profile ID. Omit for all profiles.
+        - name: accountId
+          in: query
+          schema: { type: string }
+          description: Filter by social account ID
         - name: fromDate
           in: query
           schema: { type: string, format: date-time }
