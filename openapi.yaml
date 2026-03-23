@@ -14592,7 +14592,48 @@ paths:
         - { name: limit, in: query, schema: { type: integer, default: 50, maximum: 200 } }
         - { name: skip, in: query, schema: { type: integer, default: 0 } }
       responses:
-        '200': { description: Contacts list with pagination and filter metadata }
+        '200':
+          description: Contacts list with pagination and filter metadata
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success: { type: boolean }
+                  contacts:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id: { type: string }
+                        name: { type: string }
+                        email: { type: string }
+                        company: { type: string }
+                        avatarUrl: { type: string }
+                        tags: { type: array, items: { type: string } }
+                        isSubscribed: { type: boolean }
+                        isBlocked: { type: boolean }
+                        lastMessageSentAt: { type: string, format: date-time }
+                        lastMessageReceivedAt: { type: string, format: date-time }
+                        messagesSentCount: { type: integer }
+                        messagesReceivedCount: { type: integer }
+                        customFields: { type: object }
+                        notes: { type: string }
+                        createdAt: { type: string, format: date-time }
+                        platform: { type: string }
+                        platformIdentifier: { type: string }
+                        displayIdentifier: { type: string }
+                  filters:
+                    type: object
+                    properties:
+                      tags: { type: array, items: { type: string } }
+                  pagination:
+                    type: object
+                    properties:
+                      total: { type: integer }
+                      limit: { type: integer }
+                      skip: { type: integer }
+                      hasMore: { type: boolean }
         '401': { $ref: '#/components/responses/Unauthorized' }
     post:
       operationId: createContact
@@ -14619,7 +14660,36 @@ paths:
                 platformIdentifier: { type: string }
                 displayIdentifier: { type: string }
       responses:
-        '200': { description: Contact created }
+        '200':
+          description: Contact created
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success: { type: boolean }
+                  contact:
+                    type: object
+                    properties:
+                      id: { type: string }
+                      name: { type: string }
+                      email: { type: string }
+                      company: { type: string }
+                      tags: { type: array, items: { type: string } }
+                      isSubscribed: { type: boolean }
+                      isBlocked: { type: boolean }
+                      customFields: { type: object }
+                      notes: { type: string }
+                      createdAt: { type: string, format: date-time }
+                  channel:
+                    type: object
+                    description: Created when accountId, platform, and platformIdentifier are provided
+                    properties:
+                      id: { type: string }
+                      platform: { type: string }
+                      platformIdentifier: { type: string }
+                      displayIdentifier: { type: string }
+                  warning: { type: string }
         '401': { $ref: '#/components/responses/Unauthorized' }
         '409': { description: Duplicate contact }
 
@@ -14631,7 +14701,43 @@ paths:
       parameters:
         - { name: contactId, in: path, required: true, schema: { type: string } }
       responses:
-        '200': { description: Contact with channels }
+        '200':
+          description: Contact with channels
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success: { type: boolean }
+                  contact:
+                    type: object
+                    properties:
+                      id: { type: string }
+                      name: { type: string }
+                      email: { type: string }
+                      company: { type: string }
+                      avatarUrl: { type: string }
+                      tags: { type: array, items: { type: string } }
+                      isSubscribed: { type: boolean }
+                      isBlocked: { type: boolean }
+                      customFields: { type: object }
+                      notes: { type: string }
+                      conversationIds: { type: array, items: { type: string } }
+                      createdAt: { type: string, format: date-time }
+                      updatedAt: { type: string, format: date-time }
+                  channels:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id: { type: string }
+                        accountId: { type: string }
+                        platform: { type: string }
+                        platformIdentifier: { type: string }
+                        displayIdentifier: { type: string }
+                        isSubscribed: { type: boolean }
+                        conversationId: { type: string }
+                        createdAt: { type: string, format: date-time }
         '401': { $ref: '#/components/responses/Unauthorized' }
         '404': { $ref: '#/components/responses/NotFound' }
     patch:
@@ -14655,7 +14761,27 @@ paths:
                 isBlocked: { type: boolean }
                 notes: { type: string }
       responses:
-        '200': { description: Contact updated }
+        '200':
+          description: Contact updated
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success: { type: boolean }
+                  contact:
+                    type: object
+                    properties:
+                      id: { type: string }
+                      name: { type: string }
+                      email: { type: string }
+                      company: { type: string }
+                      avatarUrl: { type: string }
+                      tags: { type: array, items: { type: string } }
+                      isSubscribed: { type: boolean }
+                      isBlocked: { type: boolean }
+                      notes: { type: string }
+                      updatedAt: { type: string, format: date-time }
         '401': { $ref: '#/components/responses/Unauthorized' }
         '404': { $ref: '#/components/responses/NotFound' }
     delete:
@@ -14677,7 +14803,28 @@ paths:
       parameters:
         - { name: contactId, in: path, required: true, schema: { type: string } }
       responses:
-        '200': { description: List of contact channels }
+        '200':
+          description: List of contact channels
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success: { type: boolean }
+                  channels:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id: { type: string }
+                        accountId: { type: string }
+                        platform: { type: string }
+                        platformIdentifier: { type: string }
+                        displayIdentifier: { type: string }
+                        isSubscribed: { type: boolean }
+                        conversationId: { type: string }
+                        metadata: { type: object }
+                        createdAt: { type: string, format: date-time }
         '401': { $ref: '#/components/responses/Unauthorized' }
         '404': { $ref: '#/components/responses/NotFound' }
 
@@ -14712,7 +14859,18 @@ paths:
                       company: { type: string }
                       tags: { type: array, items: { type: string } }
       responses:
-        '200': { description: Bulk import results }
+        '200':
+          description: Bulk import results
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success: { type: boolean }
+                  created: { type: integer }
+                  skipped: { type: integer }
+                  errors: { type: array, items: { type: object } }
+                  total: { type: integer }
         '401': { $ref: '#/components/responses/Unauthorized' }
 
   /v1/contacts/{contactId}/fields/{slug}:
@@ -14758,7 +14916,25 @@ paths:
       parameters:
         - { name: profileId, in: query, schema: { type: string }, description: Filter by profile. Omit to list across all profiles }
       responses:
-        '200': { description: List of custom field definitions }
+        '200':
+          description: List of custom field definitions
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success: { type: boolean }
+                  fields:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id: { type: string }
+                        name: { type: string }
+                        slug: { type: string }
+                        type: { type: string, enum: [text, number, date, boolean, select] }
+                        options: { type: array, items: { type: string } }
+                        createdAt: { type: string, format: date-time }
         '401': { $ref: '#/components/responses/Unauthorized' }
     post:
       operationId: createCustomField
@@ -14778,7 +14954,23 @@ paths:
                 type: { type: string, enum: [text, number, date, boolean, select] }
                 options: { type: array, items: { type: string }, description: Required for select type }
       responses:
-        '200': { description: Custom field created }
+        '200':
+          description: Custom field created
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success: { type: boolean }
+                  field:
+                    type: object
+                    properties:
+                      id: { type: string }
+                      name: { type: string }
+                      slug: { type: string }
+                      type: { type: string, enum: [text, number, date, boolean, select] }
+                      options: { type: array, items: { type: string } }
+                      createdAt: { type: string, format: date-time }
         '401': { $ref: '#/components/responses/Unauthorized' }
         '409': { description: Duplicate slug }
 
@@ -14798,7 +14990,22 @@ paths:
                 name: { type: string }
                 options: { type: array, items: { type: string } }
       responses:
-        '200': { description: Custom field updated }
+        '200':
+          description: Custom field updated
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success: { type: boolean }
+                  field:
+                    type: object
+                    properties:
+                      id: { type: string }
+                      name: { type: string }
+                      slug: { type: string }
+                      type: { type: string }
+                      options: { type: array, items: { type: string } }
         '401': { $ref: '#/components/responses/Unauthorized' }
         '404': { $ref: '#/components/responses/NotFound' }
     delete:
@@ -15566,7 +15773,28 @@ paths:
                 dmMessage: { type: string, description: DM text to send to commenter }
                 commentReply: { type: string, description: Optional public reply to the comment }
       responses:
-        '200': { description: Automation created }
+        '200':
+          description: Automation created
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success: { type: boolean }
+                  automation:
+                    type: object
+                    properties:
+                      id: { type: string }
+                      name: { type: string }
+                      platform: { type: string }
+                      platformPostId: { type: string }
+                      keywords: { type: array, items: { type: string } }
+                      matchMode: { type: string, enum: [exact, contains] }
+                      dmMessage: { type: string }
+                      commentReply: { type: string }
+                      isActive: { type: boolean }
+                      stats: { type: object, properties: { totalTriggered: { type: integer }, totalSent: { type: integer }, totalFailed: { type: integer } } }
+                      createdAt: { type: string, format: date-time }
         '400': { description: Validation error }
         '401': { $ref: '#/components/responses/Unauthorized' }
         '409': { description: Active automation already exists for this post }
@@ -15581,7 +15809,45 @@ paths:
       parameters:
         - { name: automationId, in: path, required: true, schema: { type: string } }
       responses:
-        '200': { description: Automation details with stats and recent trigger logs }
+        '200':
+          description: Automation details with stats and recent trigger logs
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success: { type: boolean }
+                  automation:
+                    type: object
+                    properties:
+                      id: { type: string }
+                      name: { type: string }
+                      platform: { type: string }
+                      accountId: { type: string }
+                      platformPostId: { type: string }
+                      postId: { type: string }
+                      postTitle: { type: string }
+                      keywords: { type: array, items: { type: string } }
+                      matchMode: { type: string, enum: [exact, contains] }
+                      dmMessage: { type: string }
+                      commentReply: { type: string }
+                      isActive: { type: boolean }
+                      stats: { type: object, properties: { totalTriggered: { type: integer }, totalSent: { type: integer }, totalFailed: { type: integer } } }
+                      createdAt: { type: string, format: date-time }
+                      updatedAt: { type: string, format: date-time }
+                  logs:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id: { type: string }
+                        commentId: { type: string }
+                        commenterId: { type: string }
+                        commenterName: { type: string }
+                        commentText: { type: string }
+                        status: { type: string, enum: [sent, failed, skipped] }
+                        error: { type: string }
+                        createdAt: { type: string, format: date-time }
         '401': { $ref: '#/components/responses/Unauthorized' }
         '404': { $ref: '#/components/responses/NotFound' }
     patch:
@@ -15605,7 +15871,25 @@ paths:
                 commentReply: { type: string }
                 isActive: { type: boolean }
       responses:
-        '200': { description: Automation updated }
+        '200':
+          description: Automation updated
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success: { type: boolean }
+                  automation:
+                    type: object
+                    properties:
+                      id: { type: string }
+                      name: { type: string }
+                      keywords: { type: array, items: { type: string } }
+                      matchMode: { type: string, enum: [exact, contains] }
+                      dmMessage: { type: string }
+                      commentReply: { type: string }
+                      isActive: { type: boolean }
+                      updatedAt: { type: string, format: date-time }
         '401': { $ref: '#/components/responses/Unauthorized' }
         '404': { $ref: '#/components/responses/NotFound' }
     delete:
@@ -15635,7 +15919,34 @@ paths:
         - { name: limit, in: query, schema: { type: integer, default: 50 } }
         - { name: skip, in: query, schema: { type: integer, default: 0 } }
       responses:
-        '200': { description: Trigger logs with pagination }
+        '200':
+          description: Trigger logs with pagination
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success: { type: boolean }
+                  logs:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id: { type: string }
+                        commentId: { type: string }
+                        commenterId: { type: string }
+                        commenterName: { type: string }
+                        commentText: { type: string }
+                        status: { type: string, enum: [sent, failed, skipped] }
+                        error: { type: string }
+                        createdAt: { type: string, format: date-time }
+                  pagination:
+                    type: object
+                    properties:
+                      total: { type: integer }
+                      limit: { type: integer }
+                      skip: { type: integer }
+                      hasMore: { type: boolean }
         '401': { $ref: '#/components/responses/Unauthorized' }
         '404': { $ref: '#/components/responses/NotFound' }
 
