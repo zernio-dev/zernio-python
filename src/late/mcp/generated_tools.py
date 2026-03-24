@@ -1995,7 +1995,7 @@ def register_generated_tools(mcp, _get_client):
         """Connect WhatsApp via credentials
 
         Args:
-            profile_id: Your Late profile ID (required)
+            profile_id: Your Zernio profile ID (required)
             access_token: Permanent System User access token from Meta Business Suite (required)
             waba_id: WhatsApp Business Account ID from Meta (required)
             phone_number_id: Phone Number ID from Meta WhatsApp Manager (required)"""

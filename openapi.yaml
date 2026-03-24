@@ -1934,7 +1934,7 @@ components:
       type: object
       properties:
         postId: { type: string }
-        latePostId: { type: string, nullable: true, description: 'Original Late post ID if scheduled via Late' }
+        latePostId: { type: string, nullable: true, description: 'Original Zernio post ID if scheduled via Zernio' }
         status: { type: string, enum: [published, failed, partial], description: 'Overall post status. "partial" when some platforms published and others failed.' }
         content: { type: string }
         scheduledFor: { type: string, format: date-time }
@@ -1972,7 +1972,7 @@ components:
             type: object
             properties:
               _id: { type: string }
-              latePostId: { type: string, nullable: true, description: 'Original Late post ID if scheduled via Late' }
+              latePostId: { type: string, nullable: true, description: 'Original Zernio post ID if scheduled via Zernio' }
               content: { type: string }
               scheduledFor: { type: string, format: date-time }
               publishedAt: { type: string, format: date-time }
@@ -3135,7 +3135,7 @@ paths:
                   - $ref: '#/components/schemas/AnalyticsListResponse'
               examples:
                 singlePost:
-                  summary: Single post analytics (Late post with synced analytics)
+                  summary: Single post analytics (Zernio post with synced analytics)
                   value:
                     postId: "65f1c0a9e2b5af0012ab34cd"
                     latePostId: null
@@ -8500,7 +8500,7 @@ paths:
               properties:
                 profileId:
                   type: string
-                  description: Your Late profile ID
+                  description: Your Zernio profile ID
                 accessToken:
                   type: string
                   description: Permanent System User access token from Meta Business Suite
