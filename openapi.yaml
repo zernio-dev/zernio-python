@@ -1397,6 +1397,11 @@ components:
     ThreadsPlatformData:
       type: object
       properties:
+        topic_tag:
+          type: string
+          minLength: 1
+          maxLength: 50
+          description: Topic tag for post categorization and discoverability on Threads. Must be 1-50 characters, cannot contain periods (.) or ampersands (&). Overrides auto-extraction from content hashtags when provided.
         threadItems:
           type: array
           description: Sequence of posts in a Threads thread (root then replies in order).
