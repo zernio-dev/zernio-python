@@ -4661,6 +4661,224 @@ def register_generated_tools(mcp, _get_client):
         except Exception as e:
             return f"Error: {e}"
 
+    @mcp.tool()
+    def whatsapp_list_whats_app_group_chats(
+        account_id: str, limit: int = 25, after: str = ""
+    ) -> str:
+        """List active groups
+
+        Args:
+            account_id: WhatsApp social account ID (required)
+            limit: Max groups to return
+            after: Pagination cursor"""
+        client = _get_client()
+        try:
+            response = client.whatsapp.list_whats_app_group_chats(
+                account_id=account_id, limit=limit, after=after
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool()
+    def whatsapp_create_whats_app_group_chat(
+        account_id: str,
+        subject: str,
+        description: str = "",
+        join_approval_mode: str = "",
+    ) -> str:
+        """Create group
+
+        Args:
+            account_id: WhatsApp social account ID (required)
+            subject: Group name (max 128 characters) (required)
+            description: Group description (max 2048 characters)
+            join_approval_mode: Whether users need approval to join via invite link"""
+        client = _get_client()
+        try:
+            response = client.whatsapp.create_whats_app_group_chat(
+                accountId=account_id,
+                subject=subject,
+                description=description,
+                joinApprovalMode=join_approval_mode,
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool()
+    def whatsapp_get_whats_app_group_chat(group_id: str, account_id: str) -> str:
+        """Get group info
+
+        Args:
+            group_id: Group ID (required)
+            account_id: WhatsApp social account ID (required)"""
+        client = _get_client()
+        try:
+            response = client.whatsapp.get_whats_app_group_chat(
+                group_id=group_id, account_id=account_id
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool()
+    def whatsapp_update_whats_app_group_chat(
+        group_id: str,
+        account_id: str,
+        subject: str = "",
+        description: str = "",
+        join_approval_mode: str = "",
+    ) -> str:
+        """Update group settings
+
+        Args:
+            group_id: Group ID (required)
+            account_id: WhatsApp social account ID (required)
+            subject
+            description
+            join_approval_mode"""
+        client = _get_client()
+        try:
+            response = client.whatsapp.update_whats_app_group_chat(
+                group_id=group_id,
+                account_id=account_id,
+                subject=subject,
+                description=description,
+                joinApprovalMode=join_approval_mode,
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool()
+    def whatsapp_delete_whats_app_group_chat(group_id: str, account_id: str) -> str:
+        """Delete group
+
+        Args:
+            group_id: Group ID (required)
+            account_id: WhatsApp social account ID (required)"""
+        client = _get_client()
+        try:
+            response = client.whatsapp.delete_whats_app_group_chat(
+                group_id=group_id, account_id=account_id
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool()
+    def whatsapp_add_whats_app_group_participants(
+        group_id: str, account_id: str, phone_numbers: str
+    ) -> str:
+        """Add participants
+
+        Args:
+            group_id: Group ID (required)
+            account_id: WhatsApp social account ID (required)
+            phone_numbers: Phone numbers in E.164 format (max 8) (required)"""
+        client = _get_client()
+        try:
+            response = client.whatsapp.add_whats_app_group_participants(
+                group_id=group_id, account_id=account_id, phoneNumbers=phone_numbers
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool()
+    def whatsapp_remove_whats_app_group_participants(
+        group_id: str, account_id: str, phone_numbers: str
+    ) -> str:
+        """Remove participants
+
+        Args:
+            group_id: Group ID (required)
+            account_id: WhatsApp social account ID (required)
+            phone_numbers: Phone numbers to remove (required)"""
+        client = _get_client()
+        try:
+            response = client.whatsapp.remove_whats_app_group_participants(
+                group_id=group_id, account_id=account_id, phoneNumbers=phone_numbers
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool()
+    def whatsapp_create_whats_app_group_invite_link(
+        group_id: str, account_id: str
+    ) -> str:
+        """Create invite link
+
+        Args:
+            group_id: Group ID (required)
+            account_id: WhatsApp social account ID (required)"""
+        client = _get_client()
+        try:
+            response = client.whatsapp.create_whats_app_group_invite_link(
+                group_id=group_id, account_id=account_id
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool()
+    def whatsapp_list_whats_app_group_join_requests(
+        group_id: str, account_id: str
+    ) -> str:
+        """List join requests
+
+        Args:
+            group_id: Group ID (required)
+            account_id: WhatsApp social account ID (required)"""
+        client = _get_client()
+        try:
+            response = client.whatsapp.list_whats_app_group_join_requests(
+                group_id=group_id, account_id=account_id
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool()
+    def whatsapp_approve_whats_app_group_join_requests(
+        group_id: str, account_id: str, phone_numbers: str
+    ) -> str:
+        """Approve join requests
+
+        Args:
+            group_id: Group ID (required)
+            account_id: WhatsApp social account ID (required)
+            phone_numbers: Phone numbers to approve (required)"""
+        client = _get_client()
+        try:
+            response = client.whatsapp.approve_whats_app_group_join_requests(
+                group_id=group_id, account_id=account_id, phoneNumbers=phone_numbers
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool()
+    def whatsapp_reject_whats_app_group_join_requests(
+        group_id: str, account_id: str, phone_numbers: str
+    ) -> str:
+        """Reject join requests
+
+        Args:
+            group_id: Group ID (required)
+            account_id: WhatsApp social account ID (required)
+            phone_numbers: Phone numbers to reject (required)"""
+        client = _get_client()
+        try:
+            response = client.whatsapp.reject_whats_app_group_join_requests(
+                group_id=group_id, account_id=account_id, phoneNumbers=phone_numbers
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
     # WHATSAPP_PHONE_NUMBERS
 
     @mcp.tool()

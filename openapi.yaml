@@ -14702,6 +14702,377 @@ paths:
         '401': { $ref: '#/components/responses/Unauthorized' }
         '404': { $ref: '#/components/responses/NotFound' }
 
+  # ─── WhatsApp Group Chats (platform groups, not contact groups) ──
+
+  /v1/whatsapp/wa-groups:
+    get:
+      operationId: listWhatsAppGroupChats
+      tags: [WhatsApp]
+      summary: List active groups
+      description: |
+        List active WhatsApp group chats for a business phone number.
+        These are actual WhatsApp group conversations on the platform.
+      security:
+        - bearerAuth: []
+      parameters:
+        - { name: accountId, in: query, required: true, schema: { type: string }, description: WhatsApp social account ID }
+        - { name: limit, in: query, schema: { type: integer, default: 25, maximum: 1024 }, description: Max groups to return }
+        - { name: after, in: query, schema: { type: string }, description: Pagination cursor }
+      responses:
+        '200':
+          description: List of active groups
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  groups:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id: { type: string, description: Group ID }
+                        subject: { type: string, description: Group name }
+                        createdAt: { type: string, description: Group creation timestamp }
+                  paging:
+                    type: object
+                    properties:
+                      cursors:
+                        type: object
+                        properties:
+                          after: { type: string }
+                          before: { type: string }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+    post:
+      operationId: createWhatsAppGroupChat
+      tags: [WhatsApp]
+      summary: Create group
+      description: |
+        Create a new WhatsApp group chat. Returns the group ID and optionally an invite link.
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [accountId, subject]
+              properties:
+                accountId: { type: string, description: WhatsApp social account ID }
+                subject: { type: string, maxLength: 128, description: Group name (max 128 characters) }
+                description: { type: string, maxLength: 2048, description: Group description (max 2048 characters) }
+                joinApprovalMode:
+                  type: string
+                  enum: [approval_required, auto_approve]
+                  description: Whether users need approval to join via invite link
+      responses:
+        '201':
+          description: Group created
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success: { type: boolean }
+                  group:
+                    type: object
+                    properties:
+                      groupId: { type: string }
+                      inviteLink: { type: string }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+
+  /v1/whatsapp/wa-groups/{groupId}:
+    get:
+      operationId: getWhatsAppGroupChat
+      tags: [WhatsApp]
+      summary: Get group info
+      description: |
+        Retrieve metadata about a WhatsApp group including subject, description,
+        participants, and settings.
+      security:
+        - bearerAuth: []
+      parameters:
+        - { name: groupId, in: path, required: true, schema: { type: string }, description: Group ID }
+        - { name: accountId, in: query, required: true, schema: { type: string }, description: WhatsApp social account ID }
+      responses:
+        '200':
+          description: Group info
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success: { type: boolean }
+                  group:
+                    type: object
+                    properties:
+                      id: { type: string }
+                      subject: { type: string }
+                      description: { type: string }
+                      joinApprovalMode: { type: string }
+                      participants:
+                        type: array
+                        items:
+                          type: object
+                          properties:
+                            user: { type: string, description: Phone number }
+                            admin: { type: string }
+                      participantCount: { type: integer }
+                      createdAt: { type: integer, description: UNIX timestamp }
+                      isSuspended: { type: boolean }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404': { $ref: '#/components/responses/NotFound' }
+    post:
+      operationId: updateWhatsAppGroupChat
+      tags: [WhatsApp]
+      summary: Update group settings
+      description: |
+        Update the subject, description, or join approval mode of a WhatsApp group.
+      security:
+        - bearerAuth: []
+      parameters:
+        - { name: groupId, in: path, required: true, schema: { type: string }, description: Group ID }
+        - { name: accountId, in: query, required: true, schema: { type: string }, description: WhatsApp social account ID }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                subject: { type: string, maxLength: 128 }
+                description: { type: string, maxLength: 2048 }
+                joinApprovalMode: { type: string, enum: [approval_required, auto_approve] }
+      responses:
+        '200':
+          description: Group updated
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success: { type: boolean }
+                  message: { type: string }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404': { $ref: '#/components/responses/NotFound' }
+    delete:
+      operationId: deleteWhatsAppGroupChat
+      tags: [WhatsApp]
+      summary: Delete group
+      description: |
+        Delete a WhatsApp group and remove all participants.
+      security:
+        - bearerAuth: []
+      parameters:
+        - { name: groupId, in: path, required: true, schema: { type: string }, description: Group ID }
+        - { name: accountId, in: query, required: true, schema: { type: string }, description: WhatsApp social account ID }
+      responses:
+        '200':
+          description: Group deleted
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success: { type: boolean }
+                  message: { type: string }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404': { $ref: '#/components/responses/NotFound' }
+
+  /v1/whatsapp/wa-groups/{groupId}/participants:
+    post:
+      operationId: addWhatsAppGroupParticipants
+      tags: [WhatsApp]
+      summary: Add participants
+      description: |
+        Add participants to a WhatsApp group. Maximum 8 participants per request.
+      security:
+        - bearerAuth: []
+      parameters:
+        - { name: groupId, in: path, required: true, schema: { type: string }, description: Group ID }
+        - { name: accountId, in: query, required: true, schema: { type: string }, description: WhatsApp social account ID }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [phoneNumbers]
+              properties:
+                phoneNumbers:
+                  type: array
+                  maxItems: 8
+                  items: { type: string }
+                  description: Phone numbers in E.164 format (max 8)
+      responses:
+        '200':
+          description: Participants added
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success: { type: boolean }
+                  message: { type: string }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+    delete:
+      operationId: removeWhatsAppGroupParticipants
+      tags: [WhatsApp]
+      summary: Remove participants
+      description: |
+        Remove participants from a WhatsApp group.
+      security:
+        - bearerAuth: []
+      parameters:
+        - { name: groupId, in: path, required: true, schema: { type: string }, description: Group ID }
+        - { name: accountId, in: query, required: true, schema: { type: string }, description: WhatsApp social account ID }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [phoneNumbers]
+              properties:
+                phoneNumbers:
+                  type: array
+                  items: { type: string }
+                  description: Phone numbers to remove
+      responses:
+        '200':
+          description: Participants removed
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success: { type: boolean }
+                  message: { type: string }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+
+  /v1/whatsapp/wa-groups/{groupId}/invite-link:
+    post:
+      operationId: createWhatsAppGroupInviteLink
+      tags: [WhatsApp]
+      summary: Create invite link
+      description: |
+        Create a new invite link for a WhatsApp group. The previous link is revoked.
+      security:
+        - bearerAuth: []
+      parameters:
+        - { name: groupId, in: path, required: true, schema: { type: string }, description: Group ID }
+        - { name: accountId, in: query, required: true, schema: { type: string }, description: WhatsApp social account ID }
+      responses:
+        '200':
+          description: Invite link created
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success: { type: boolean }
+                  inviteLink: { type: string }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+
+  /v1/whatsapp/wa-groups/{groupId}/join-requests:
+    get:
+      operationId: listWhatsAppGroupJoinRequests
+      tags: [WhatsApp]
+      summary: List join requests
+      description: |
+        List pending join requests for a WhatsApp group (only for groups with approval_required mode).
+      security:
+        - bearerAuth: []
+      parameters:
+        - { name: groupId, in: path, required: true, schema: { type: string }, description: Group ID }
+        - { name: accountId, in: query, required: true, schema: { type: string }, description: WhatsApp social account ID }
+      responses:
+        '200':
+          description: Join requests
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success: { type: boolean }
+                  joinRequests:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        user: { type: string, description: Phone number }
+                        timestamp: { type: integer, description: UNIX timestamp of request }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+    post:
+      operationId: approveWhatsAppGroupJoinRequests
+      tags: [WhatsApp]
+      summary: Approve join requests
+      description: |
+        Approve pending join requests for a WhatsApp group.
+      security:
+        - bearerAuth: []
+      parameters:
+        - { name: groupId, in: path, required: true, schema: { type: string }, description: Group ID }
+        - { name: accountId, in: query, required: true, schema: { type: string }, description: WhatsApp social account ID }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [phoneNumbers]
+              properties:
+                phoneNumbers:
+                  type: array
+                  items: { type: string }
+                  description: Phone numbers to approve
+      responses:
+        '200':
+          description: Requests approved
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success: { type: boolean }
+                  message: { type: string }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+    delete:
+      operationId: rejectWhatsAppGroupJoinRequests
+      tags: [WhatsApp]
+      summary: Reject join requests
+      description: |
+        Reject pending join requests for a WhatsApp group.
+      security:
+        - bearerAuth: []
+      parameters:
+        - { name: groupId, in: path, required: true, schema: { type: string }, description: Group ID }
+        - { name: accountId, in: query, required: true, schema: { type: string }, description: WhatsApp social account ID }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [phoneNumbers]
+              properties:
+                phoneNumbers:
+                  type: array
+                  items: { type: string }
+                  description: Phone numbers to reject
+      responses:
+        '200':
+          description: Requests rejected
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success: { type: boolean }
+                  message: { type: string }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+
   # ─── Contacts ─────────────────────────────────────────────────────
 
   /v1/contacts:

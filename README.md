@@ -500,10 +500,14 @@ Both `from zernio import ...` and `from late import ...` work identically. The `
 ### WhatsApp
 | Method | Description |
 |--------|-------------|
+| `whatsapp.list_whats_app_group_chats()` | List active groups |
+| `whatsapp.list_whats_app_group_join_requests()` | List join requests |
 | `whatsapp.bulk_delete_whats_app_contacts()` | Bulk delete contacts |
 | `whatsapp.bulk_update_whats_app_contacts()` | Bulk update contacts |
 | `whatsapp.create_whats_app_broadcast()` | Create broadcast |
 | `whatsapp.create_whats_app_contact()` | Create contact |
+| `whatsapp.create_whats_app_group_chat()` | Create group |
+| `whatsapp.create_whats_app_group_invite_link()` | Create invite link |
 | `whatsapp.create_whats_app_template()` | Create template |
 | `whatsapp.get_whats_app_broadcast()` | Get broadcast |
 | `whatsapp.get_whats_app_broadcast_recipients()` | List recipients |
@@ -512,21 +516,28 @@ Both `from zernio import ...` and `from late import ...` work identically. The `
 | `whatsapp.get_whats_app_contact()` | Get contact |
 | `whatsapp.get_whats_app_contacts()` | List contacts |
 | `whatsapp.get_whats_app_display_name()` | Get display name and review status |
+| `whatsapp.get_whats_app_group_chat()` | Get group info |
 | `whatsapp.get_whats_app_groups()` | List contact groups |
 | `whatsapp.get_whats_app_template()` | Get template |
 | `whatsapp.get_whats_app_templates()` | List templates |
 | `whatsapp.update_whats_app_business_profile()` | Update business profile |
 | `whatsapp.update_whats_app_contact()` | Update contact |
 | `whatsapp.update_whats_app_display_name()` | Request display name change |
+| `whatsapp.update_whats_app_group_chat()` | Update group settings |
 | `whatsapp.update_whats_app_template()` | Update template |
 | `whatsapp.delete_whats_app_broadcast()` | Delete broadcast |
 | `whatsapp.delete_whats_app_contact()` | Delete contact |
 | `whatsapp.delete_whats_app_group()` | Delete group |
+| `whatsapp.delete_whats_app_group_chat()` | Delete group |
 | `whatsapp.delete_whats_app_template()` | Delete template |
 | `whatsapp.add_whats_app_broadcast_recipients()` | Add recipients |
+| `whatsapp.add_whats_app_group_participants()` | Add participants |
+| `whatsapp.approve_whats_app_group_join_requests()` | Approve join requests |
 | `whatsapp.cancel_whats_app_broadcast_schedule()` | Cancel scheduled broadcast |
 | `whatsapp.import_whats_app_contacts()` | Bulk import contacts |
+| `whatsapp.reject_whats_app_group_join_requests()` | Reject join requests |
 | `whatsapp.remove_whats_app_broadcast_recipients()` | Remove recipients |
+| `whatsapp.remove_whats_app_group_participants()` | Remove participants |
 | `whatsapp.rename_whats_app_group()` | Rename group |
 | `whatsapp.schedule_whats_app_broadcast()` | Schedule broadcast |
 | `whatsapp.send_whats_app_broadcast()` | Send broadcast |
