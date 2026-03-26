@@ -186,7 +186,7 @@ def extract_parameters(operation: dict[str, Any]) -> list[dict[str, Any]]:
                 "required": is_required,
                 "default": default_str,
                 "description": prop_schema.get("description", ""),
-                "sdk_name": prop_name,
+                "sdk_name": py_name,
             })
 
     return params
