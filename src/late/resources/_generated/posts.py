@@ -168,6 +168,28 @@ class PostsResource:
         )
         return self._client._post(f"/v1/posts/{post_id}/unpublish", data=payload)
 
+    def update_post_metadata(
+        self,
+        post_id: str,
+        platform: str,
+        *,
+        title: str | None = None,
+        description: str | None = None,
+        tags: list[str] | None = None,
+        category_id: str | None = None,
+        privacy_status: str | None = None,
+    ) -> dict[str, Any]:
+        """Update post metadata"""
+        payload = self._build_payload(
+            platform=platform,
+            title=title,
+            description=description,
+            tags=tags,
+            category_id=category_id,
+            privacy_status=privacy_status,
+        )
+        return self._client._post(f"/v1/posts/{post_id}/update-metadata", data=payload)
+
     async def alist_posts(
         self,
         *,
@@ -287,3 +309,27 @@ class PostsResource:
             platform=platform,
         )
         return await self._client._apost(f"/v1/posts/{post_id}/unpublish", data=payload)
+
+    async def aupdate_post_metadata(
+        self,
+        post_id: str,
+        platform: str,
+        *,
+        title: str | None = None,
+        description: str | None = None,
+        tags: list[str] | None = None,
+        category_id: str | None = None,
+        privacy_status: str | None = None,
+    ) -> dict[str, Any]:
+        """Update post metadata (async)"""
+        payload = self._build_payload(
+            platform=platform,
+            title=title,
+            description=description,
+            tags=tags,
+            category_id=category_id,
+            privacy_status=privacy_status,
+        )
+        return await self._client._apost(
+            f"/v1/posts/{post_id}/update-metadata", data=payload
+        )

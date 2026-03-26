@@ -2938,6 +2938,41 @@ def register_generated_tools(mcp, _get_client):
         except Exception as e:
             return f"Error: {e}"
 
+    @mcp.tool()
+    def posts_update_post_metadata(
+        post_id: str,
+        platform: str,
+        title: str = "",
+        description: str = "",
+        tags: str = "",
+        category_id: str = "",
+        privacy_status: str = "",
+    ) -> str:
+        """Update post metadata
+
+        Args:
+            post_id: (required)
+            platform: The platform to update metadata on (required)
+            title: New video title (max 100 characters for YouTube)
+            description: New video description
+            tags: Array of keyword tags (max 500 characters combined for YouTube)
+            category_id: YouTube video category ID
+            privacy_status: Video privacy setting"""
+        client = _get_client()
+        try:
+            response = client.posts.update_post_metadata(
+                post_id=post_id,
+                platform=platform,
+                title=title,
+                description=description,
+                tags=tags,
+                categoryId=category_id,
+                privacyStatus=privacy_status,
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
     # PROFILES
 
     @mcp.tool()

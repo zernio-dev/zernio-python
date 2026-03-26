@@ -5360,6 +5360,83 @@ paths:
         '404': { $ref: '#/components/responses/NotFound' }
         '500':
           description: Platform API deletion failed
+  /v1/posts/{postId}/update-metadata:
+    post:
+      operationId: updatePostMetadata
+      tags: [Posts]
+      summary: Update post metadata
+      description: |
+        Updates metadata of an already-published post on the specified platform without re-uploading the media.
+        Currently only supported for YouTube videos (title, description, tags, category, privacy status).
+        The post must have "published" status on the target platform. At least one updatable field is required.
+      parameters:
+        - name: postId
+          in: path
+          required: true
+          schema: { type: string }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [platform]
+              properties:
+                platform:
+                  type: string
+                  description: The platform to update metadata on
+                  enum:
+                    - youtube
+                title:
+                  type: string
+                  maxLength: 100
+                  description: New video title (max 100 characters for YouTube)
+                description:
+                  type: string
+                  description: New video description
+                tags:
+                  type: array
+                  items:
+                    type: string
+                    maxLength: 100
+                  description: Array of keyword tags (max 500 characters combined for YouTube)
+                categoryId:
+                  type: string
+                  description: YouTube video category ID
+                privacyStatus:
+                  type: string
+                  enum: [public, private, unlisted]
+                  description: Video privacy setting
+            example:
+              platform: "youtube"
+              title: "Updated Video Title"
+              description: "New SEO-optimized description"
+              tags: ["seo", "marketing", "tutorial"]
+      responses:
+        '200':
+          description: Metadata updated successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success: { type: boolean }
+                  message: { type: string }
+                  updatedFields:
+                    type: array
+                    items: { type: string }
+              example:
+                success: true
+                message: "Video metadata updated on youtube successfully"
+                updatedFields: ["title", "description", "tags"]
+        '400':
+          description: "Invalid request: unsupported platform, post not published, missing fields, or validation error."
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403':
+          description: Forbidden
+        '404': { $ref: '#/components/responses/NotFound' }
+        '500':
+          description: Platform API update failed
   /v1/users:
     get:
       operationId: listUsers
