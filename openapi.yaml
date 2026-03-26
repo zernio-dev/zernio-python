@@ -5366,14 +5366,21 @@ paths:
       tags: [Posts]
       summary: Update post metadata
       description: |
-        Updates metadata of an already-published post on the specified platform without re-uploading the media.
-        Currently only supported for YouTube videos (title, description, tags, category, privacy status).
-        The post must have "published" status on the target platform. At least one updatable field is required.
+        Updates metadata of a published video on the specified platform without re-uploading.
+        Currently only supported for YouTube. At least one updatable field is required.
+
+        **Two modes:**
+
+        1. **Post-based** (video published through Zernio): pass the Zernio postId in the URL and `platform` in the body.
+        2. **Direct video ID** (video uploaded outside Zernio, e.g. directly to YouTube): use `_` as the postId,
+           and pass `videoId` + `accountId` + `platform` in the body. The accountId is the Zernio social account ID
+           for the connected YouTube channel.
       parameters:
         - name: postId
           in: path
           required: true
           schema: { type: string }
+          description: Zernio post ID, or "_" when using direct video ID mode
       requestBody:
         required: true
         content:
@@ -5387,6 +5394,12 @@ paths:
                   description: The platform to update metadata on
                   enum:
                     - youtube
+                videoId:
+                  type: string
+                  description: YouTube video ID (required for direct mode, ignored for post-based mode)
+                accountId:
+                  type: string
+                  description: Zernio social account ID (required for direct mode, ignored for post-based mode)
                 title:
                   type: string
                   maxLength: 100
@@ -5407,11 +5420,22 @@ paths:
                   type: string
                   enum: [public, private, unlisted]
                   description: Video privacy setting
-            example:
-              platform: "youtube"
-              title: "Updated Video Title"
-              description: "New SEO-optimized description"
-              tags: ["seo", "marketing", "tutorial"]
+            examples:
+              post-based:
+                summary: Update a video published through Zernio
+                value:
+                  platform: "youtube"
+                  title: "Updated Video Title"
+                  description: "New SEO-optimized description"
+                  tags: ["seo", "marketing", "tutorial"]
+              direct-video-id:
+                summary: Update a video uploaded directly to YouTube
+                value:
+                  platform: "youtube"
+                  videoId: "dQw4w9WgXcQ"
+                  accountId: "68fb37418bbca9c10cbfef26"
+                  title: "Updated Title with SEO Keywords"
+                  tags: ["seo", "youtube", "optimization"]
       responses:
         '200':
           description: Metadata updated successfully
@@ -5422,12 +5446,13 @@ paths:
                 properties:
                   success: { type: boolean }
                   message: { type: string }
+                  videoId: { type: string, description: Only present in direct video ID mode }
                   updatedFields:
                     type: array
                     items: { type: string }
               example:
                 success: true
-                message: "Video metadata updated on youtube successfully"
+                message: "YouTube video metadata updated successfully"
                 updatedFields: ["title", "description", "tags"]
         '400':
           description: "Invalid request: unsupported platform, post not published, missing fields, or validation error."
