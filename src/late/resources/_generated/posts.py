@@ -173,6 +173,8 @@ class PostsResource:
         post_id: str,
         platform: str,
         *,
+        video_id: str | None = None,
+        account_id: str | None = None,
         title: str | None = None,
         description: str | None = None,
         tags: list[str] | None = None,
@@ -182,6 +184,8 @@ class PostsResource:
         """Update post metadata"""
         payload = self._build_payload(
             platform=platform,
+            video_id=video_id,
+            account_id=account_id,
             title=title,
             description=description,
             tags=tags,
@@ -315,6 +319,8 @@ class PostsResource:
         post_id: str,
         platform: str,
         *,
+        video_id: str | None = None,
+        account_id: str | None = None,
         title: str | None = None,
         description: str | None = None,
         tags: list[str] | None = None,
@@ -324,6 +330,8 @@ class PostsResource:
         """Update post metadata (async)"""
         payload = self._build_payload(
             platform=platform,
+            video_id=video_id,
+            account_id=account_id,
             title=title,
             description=description,
             tags=tags,
