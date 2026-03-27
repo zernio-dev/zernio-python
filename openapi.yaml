@@ -126,15 +126,17 @@ x-documentation:
 
     Receive real-time notifications for post status changes, account events, and incoming messages:
 
-    - `post.scheduled` - Post successfully scheduled
+    - `post.scheduled` - Post created and scheduled for publishing
     - `post.published` - Post successfully published
     - `post.failed` - Post failed on all platforms
     - `post.partial` - Post published to some platforms, failed on others
-    - `post.recycled` - A new scheduled copy was created from a recycling post
+    - `post.cancelled` - Post publishing was cancelled
+    - `post.recycled` - Post recycled (cloned and re-scheduled)
     - `account.connected` - Social account connected
     - `account.disconnected` - Social account disconnected (token expired)
     - `message.received` - New DM received
     - `comment.received` - New comment received on a post
+    - `webhook.test` - Test event sent when verifying a webhook endpoint
 
     Webhook payloads are signed with HMAC-SHA256 via the `X-Zernio-Signature` header.
 
@@ -233,8 +235,11 @@ tags:
       auto-creates contacts.
   - name: Webhooks
     description: |
-      Configure webhooks for real-time notifications. Events: post.scheduled, post.published, post.failed, post.partial, post.recycled, account.connected, account.disconnected, message.received, comment.received.
+      Configure webhooks for real-time notifications. Events: post.scheduled, post.published, post.failed, post.partial, post.cancelled, post.recycled, account.connected, account.disconnected, message.received, comment.received, webhook.test.
       Security: optional HMAC-SHA256 signature in X-Zernio-Signature header. Configure a secret key to enable verification. Custom headers supported.
+  - name: Webhook Events
+    description: |
+      Incoming webhook deliveries sent by Zernio to your configured endpoint URL.
   - name: Logs
     description: |
       Publishing logs for transparency and debugging. Each log includes the platform API endpoint, HTTP status code, request/response bodies, duration, and retry attempts. Logs are automatically deleted after 7 days.
@@ -586,7 +591,7 @@ components:
           type: array
           items:
             type: string
-            enum: [post.scheduled, post.published, post.failed, post.partial, post.recycled, account.connected, account.disconnected, message.received, comment.received]
+            enum: [post.scheduled, post.published, post.failed, post.partial, post.cancelled, post.recycled, account.connected, account.disconnected, message.received, comment.received]
           description: Events subscribed to
         isActive:
           type: boolean
@@ -617,7 +622,7 @@ components:
           description: Name of the webhook that was triggered
         event:
           type: string
-          enum: [post.scheduled, post.published, post.failed, post.partial, post.recycled, account.connected, account.disconnected, message.received, comment.received, webhook.test]
+          enum: [post.scheduled, post.published, post.failed, post.partial, post.cancelled, post.recycled, account.connected, account.disconnected, message.received, comment.received, webhook.test]
         url:
           type: string
           format: uri
@@ -648,12 +653,17 @@ components:
     WebhookPayloadPost:
       type: object
       description: Webhook payload for post events
+      required: [id, event, post, timestamp]
       properties:
+        id:
+          type: string
+          description: Stable webhook event ID
         event:
           type: string
-          enum: [post.scheduled, post.published, post.failed, post.partial, post.recycled]
+          enum: [post.scheduled, post.published, post.failed, post.partial, post.cancelled, post.recycled]
         post:
           type: object
+          required: [id, content, status, scheduledFor, platforms]
           properties:
             id:
               type: string
@@ -671,10 +681,13 @@ components:
               type: array
               items:
                 type: object
+                required: [platform, status]
                 properties:
                   platform:
                     type: string
                   status:
+                    type: string
+                  platformPostId:
                     type: string
                   publishedUrl:
                     type: string
@@ -686,12 +699,17 @@ components:
     WebhookPayloadAccountConnected:
       type: object
       description: Webhook payload for account connected events
+      required: [id, event, account, timestamp]
       properties:
+        id:
+          type: string
+          description: Stable webhook event ID
         event:
           type: string
           enum: [account.connected]
         account:
           type: object
+          required: [accountId, profileId, platform, username]
           properties:
             accountId:
               type: string
@@ -711,12 +729,17 @@ components:
     WebhookPayloadAccountDisconnected:
       type: object
       description: Webhook payload for account disconnected events
+      required: [id, event, account, timestamp]
       properties:
+        id:
+          type: string
+          description: Stable webhook event ID
         event:
           type: string
           enum: [account.disconnected]
         account:
           type: object
+          required: [accountId, profileId, platform, username, disconnectionType, reason]
           properties:
             accountId:
               type: string
@@ -743,12 +766,17 @@ components:
     WebhookPayloadComment:
       type: object
       description: Webhook payload for comment received events (Instagram, Facebook, Twitter/X, YouTube, LinkedIn, Bluesky, Reddit)
+      required: [id, event, comment, post, account, timestamp]
       properties:
+        id:
+          type: string
+          description: Stable webhook event ID
         event:
           type: string
           enum: [comment.received]
         comment:
           type: object
+          required: [id, postId, platformPostId, platform, text, author, createdAt, isReply, parentCommentId]
           properties:
             id:
               type: string
@@ -767,6 +795,7 @@ components:
               description: Comment text content
             author:
               type: object
+              required: [id]
               properties:
                 id:
                   type: string
@@ -790,6 +819,7 @@ components:
               description: Parent comment ID if this is a reply
         post:
           type: object
+          required: [id, platformPostId]
           properties:
             id:
               type: string
@@ -799,6 +829,7 @@ components:
               description: Platform's post ID
         account:
           type: object
+          required: [id, platform, username]
           properties:
             id:
               type: string
@@ -812,13 +843,18 @@ components:
           format: date-time
     WebhookPayloadMessage:
       type: object
-      description: Webhook payload for message received events (DMs from Instagram, Facebook, Telegram, Bluesky, Reddit)
+      description: Webhook payload for message received events
+      required: [id, event, message, conversation, account, timestamp]
       properties:
+        id:
+          type: string
+          description: Stable webhook event ID
         event:
           type: string
           enum: [message.received]
         message:
           type: object
+          required: [id, conversationId, platform, platformMessageId, direction, text, attachments, sender, sentAt, isRead]
           properties:
             id:
               type: string
@@ -828,13 +864,13 @@ components:
               description: Internal conversation ID
             platform:
               type: string
-              enum: [instagram, facebook, telegram, bluesky, reddit]
+              enum: [instagram, facebook, telegram, whatsapp]
             platformMessageId:
               type: string
               description: Platform's message ID
             direction:
               type: string
-              enum: [incoming]
+              enum: [incoming, outgoing]
             text:
               type: string
               nullable: true
@@ -843,6 +879,7 @@ components:
               type: array
               items:
                 type: object
+                required: [type, url]
                 properties:
                   type:
                     type: string
@@ -855,6 +892,7 @@ components:
                     description: Additional attachment metadata
             sender:
               type: object
+              required: [id]
               properties:
                 id:
                   type: string
@@ -866,7 +904,6 @@ components:
                   type: string
                 instagramProfile:
                   type: object
-                  nullable: true
                   description: Instagram profile data for the sender. Only present for Instagram conversations.
                   properties:
                     isFollower:
@@ -892,6 +929,7 @@ components:
               type: boolean
         conversation:
           type: object
+          required: [id, platformConversationId, status]
           properties:
             id:
               type: string
@@ -905,16 +943,12 @@ components:
               type: string
             participantPicture:
               type: string
-            participantVerifiedType:
-              type: string
-              nullable: true
-              enum: [blue, government, business, none]
-              description: X/Twitter verified badge type. Only present for Twitter/X conversations.
             status:
               type: string
               enum: [active, archived]
         account:
           type: object
+          required: [id, platform, username]
           properties:
             id:
               type: string
@@ -942,6 +976,23 @@ components:
             callbackData:
               type: string
               description: Callback data from an inline keyboard button tap (Telegram)
+        timestamp:
+          type: string
+          format: date-time
+    WebhookPayloadTest:
+      type: object
+      description: Webhook payload for test deliveries
+      required: [id, event, message, timestamp]
+      properties:
+        id:
+          type: string
+          description: Stable webhook event ID
+        event:
+          type: string
+          enum: [webhook.test]
+        message:
+          type: string
+          description: Human-readable test message
         timestamp:
           type: string
           format: date-time
@@ -2413,6 +2464,172 @@ components:
       properties:
         user:
           $ref: '#/components/schemas/User'
+webhooks:
+  post.scheduled:
+    post:
+      operationId: onPostScheduled
+      summary: Post scheduled event
+      description: Fired when a post is created and scheduled for publishing.
+      tags: [Webhook Events]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/WebhookPayloadPost'
+      responses:
+        '200':
+          description: Webhook received successfully
+  post.published:
+    post:
+      operationId: onPostPublished
+      summary: Post published event
+      description: Fired when a post is successfully published.
+      tags: [Webhook Events]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/WebhookPayloadPost'
+      responses:
+        '200':
+          description: Webhook received successfully
+  post.failed:
+    post:
+      operationId: onPostFailed
+      summary: Post failed event
+      description: Fired when a post fails to publish on all target platforms.
+      tags: [Webhook Events]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/WebhookPayloadPost'
+      responses:
+        '200':
+          description: Webhook received successfully
+  post.partial:
+    post:
+      operationId: onPostPartial
+      summary: Post partial event
+      description: Fired when a post publishes on some platforms and fails on others.
+      tags: [Webhook Events]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/WebhookPayloadPost'
+      responses:
+        '200':
+          description: Webhook received successfully
+  post.cancelled:
+    post:
+      operationId: onPostCancelled
+      summary: Post cancelled event
+      description: Fired when a post publishing job is cancelled.
+      tags: [Webhook Events]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/WebhookPayloadPost'
+      responses:
+        '200':
+          description: Webhook received successfully
+  post.recycled:
+    post:
+      operationId: onPostRecycled
+      summary: Post recycled event
+      description: Fired when a post is recycled (cloned and re-scheduled for publishing).
+      tags: [Webhook Events]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/WebhookPayloadPost'
+      responses:
+        '200':
+          description: Webhook received successfully
+  account.connected:
+    post:
+      operationId: onAccountConnected
+      summary: Account connected event
+      description: Fired when a social account is successfully connected.
+      tags: [Webhook Events]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/WebhookPayloadAccountConnected'
+      responses:
+        '200':
+          description: Webhook received successfully
+  account.disconnected:
+    post:
+      operationId: onAccountDisconnected
+      summary: Account disconnected event
+      description: Fired when a connected social account becomes disconnected.
+      tags: [Webhook Events]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/WebhookPayloadAccountDisconnected'
+      responses:
+        '200':
+          description: Webhook received successfully
+  message.received:
+    post:
+      operationId: onMessageReceived
+      summary: Message received event
+      description: Fired when a new inbox message is received.
+      tags: [Webhook Events]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/WebhookPayloadMessage'
+      responses:
+        '200':
+          description: Webhook received successfully
+  comment.received:
+    post:
+      operationId: onCommentReceived
+      summary: Comment received event
+      description: Fired when a new comment is received on a tracked post.
+      tags: [Webhook Events]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/WebhookPayloadComment'
+      responses:
+        '200':
+          description: Webhook received successfully
+  webhook.test:
+    post:
+      operationId: onWebhookTest
+      summary: Webhook test event
+      description: Fired when sending a test webhook to verify the endpoint configuration.
+      tags: [Webhook Events]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/WebhookPayloadTest'
+      responses:
+        '200':
+          description: Webhook received successfully
 security:
   - bearerAuth: []
 paths:
@@ -10305,7 +10522,7 @@ paths:
                   type: array
                   items:
                     type: string
-                    enum: [post.scheduled, post.published, post.failed, post.partial, post.recycled, account.connected, account.disconnected, message.received, comment.received]
+                    enum: [post.scheduled, post.published, post.failed, post.partial, post.cancelled, post.recycled, account.connected, account.disconnected, message.received, comment.received]
                   description: Events to subscribe to
                 isActive:
                   type: boolean
@@ -10322,7 +10539,7 @@ paths:
                   name: "My Production Webhook"
                   url: "https://example.com/webhook"
                   secret: "your-secret-key"
-                  events: ["post.scheduled", "post.published", "post.failed", "post.partial", "account.connected", "account.disconnected", "message.received", "comment.received"]
+                  events: ["post.scheduled", "post.published", "post.failed", "post.partial", "post.cancelled", "post.recycled", "account.connected", "account.disconnected", "message.received", "comment.received"]
                   isActive: true
       responses:
         '200':
@@ -10374,7 +10591,7 @@ paths:
                   type: array
                   items:
                     type: string
-                    enum: [post.scheduled, post.published, post.failed, post.partial, post.recycled, account.connected, account.disconnected, message.received, comment.received]
+                    enum: [post.scheduled, post.published, post.failed, post.partial, post.cancelled, post.recycled, account.connected, account.disconnected, message.received, comment.received]
                   description: Events to subscribe to
                 isActive:
                   type: boolean
@@ -10516,7 +10733,7 @@ paths:
           description: Filter by event type
           schema:
             type: string
-            enum: [post.scheduled, post.published, post.failed, post.partial, post.recycled, account.connected, account.disconnected, message.received, comment.received, webhook.test]
+            enum: [post.scheduled, post.published, post.failed, post.partial, post.cancelled, post.recycled, account.connected, account.disconnected, message.received, comment.received, webhook.test]
         - name: webhookId
           in: query
           description: Filter by webhook ID
@@ -16472,4 +16689,3 @@ paths:
                       hasMore: { type: boolean }
         '401': { $ref: '#/components/responses/Unauthorized' }
         '404': { $ref: '#/components/responses/NotFound' }
-
