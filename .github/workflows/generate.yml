@@ -8,6 +8,10 @@ on:
   # Allow manual trigger
   workflow_dispatch:
 
+concurrency:
+  group: regenerate-sdk-python
+  cancel-in-progress: false
+
 jobs:
   generate:
     name: Regenerate from OpenAPI
@@ -155,6 +159,7 @@ jobs:
         uses: pypa/gh-action-pypi-publish@release/v1
         with:
           password: ${{ secrets.PYPI_API_TOKEN }}
+          skip_existing: true
 
       - name: Swap package name to late-sdk
         if: steps.changes.outputs.has_changes == 'true'
@@ -180,3 +185,4 @@ jobs:
         uses: pypa/gh-action-pypi-publish@release/v1
         with:
           password: ${{ secrets.PYPI_API_TOKEN }}
+          skip_existing: true
