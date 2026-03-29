@@ -11610,6 +11610,230 @@ paths:
         '401': { $ref: '#/components/responses/Unauthorized' }
         '403':
           description: Inbox addon required
+    delete:
+      operationId: deleteInboxMessage
+      summary: Delete message
+      description: |
+        Delete a message from a conversation. Platform support varies:
+        - **Telegram**: Full delete (bot's own messages anytime, others if admin)
+        - **X/Twitter**: Full delete (own DM events only)
+        - **Bluesky**: Delete for self only (recipient still sees it)
+        - **Reddit**: Delete from sender's view only
+        - **Facebook, Instagram, WhatsApp**: Not supported (returns 400)
+      tags: [Messages]
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - name: conversationId
+          in: path
+          required: true
+          schema: { type: string }
+          description: The conversation ID
+        - name: messageId
+          in: path
+          required: true
+          schema: { type: string }
+          description: The platform message ID to delete
+        - name: accountId
+          in: query
+          required: true
+          schema: { type: string }
+          description: Social account ID
+      responses:
+        '200':
+          description: Message deleted
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success: { type: boolean }
+        '400':
+          description: Platform does not support deletion or invalid request
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403':
+          description: Inbox addon required
+        '404':
+          description: Account or conversation not found
+
+  /v1/inbox/conversations/{conversationId}/typing:
+    post:
+      operationId: sendTypingIndicator
+      summary: Send typing indicator
+      description: |
+        Show a typing indicator in a conversation. Platform support:
+        - **Facebook Messenger**: Shows "Page is typing..." for 20 seconds
+        - **Telegram**: Shows "Bot is typing..." for 5 seconds
+        - **All others**: Returns 200 but no-op (platform doesn't support it)
+
+        Typing indicators are best-effort. The endpoint always returns 200 even if the platform call fails.
+      tags: [Messages]
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - name: conversationId
+          in: path
+          required: true
+          schema: { type: string }
+          description: The conversation ID
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [accountId]
+              properties:
+                accountId: { type: string, description: Social account ID }
+      responses:
+        '200':
+          description: Typing indicator sent (or no-op on unsupported platforms)
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success: { type: boolean }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403':
+          description: Inbox addon required
+        '404':
+          description: Account or conversation not found
+
+  /v1/inbox/conversations/{conversationId}/messages/{messageId}/reactions:
+    post:
+      operationId: addMessageReaction
+      summary: Add reaction
+      description: |
+        Add an emoji reaction to a message. Platform support:
+        - **Telegram**: Supports a subset of Unicode emoji reactions
+        - **WhatsApp**: Supports any standard emoji (one reaction per message per sender)
+        - **All others**: Returns 400 (not supported)
+      tags: [Messages]
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - name: conversationId
+          in: path
+          required: true
+          schema: { type: string }
+          description: The conversation ID
+        - name: messageId
+          in: path
+          required: true
+          schema: { type: string }
+          description: The platform message ID to react to
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [accountId, emoji]
+              properties:
+                accountId: { type: string, description: Social account ID }
+                emoji: { type: string, description: 'Emoji character (e.g. "👍", "❤️")', example: '👍' }
+      responses:
+        '200':
+          description: Reaction added
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success: { type: boolean }
+        '400':
+          description: Platform does not support reactions or invalid request
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403':
+          description: Inbox addon required
+        '404':
+          description: Account or conversation not found
+    delete:
+      operationId: removeMessageReaction
+      summary: Remove reaction
+      description: |
+        Remove a reaction from a message. Platform support:
+        - **Telegram**: Send empty reaction array to clear
+        - **WhatsApp**: Send empty emoji to remove
+        - **All others**: Returns 400 (not supported)
+      tags: [Messages]
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - name: conversationId
+          in: path
+          required: true
+          schema: { type: string }
+          description: The conversation ID
+        - name: messageId
+          in: path
+          required: true
+          schema: { type: string }
+          description: The platform message ID
+        - name: accountId
+          in: query
+          required: true
+          schema: { type: string }
+          description: Social account ID
+      responses:
+        '200':
+          description: Reaction removed
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success: { type: boolean }
+        '400':
+          description: Platform does not support reactions or invalid request
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403':
+          description: Inbox addon required
+        '404':
+          description: Account or conversation not found
+
+  /v1/media/upload-direct:
+    post:
+      operationId: uploadMediaDirect
+      summary: Upload media file
+      description: |
+        Upload a media file using API key authentication and get back a publicly accessible URL.
+        The URL can be used as `attachmentUrl` when sending inbox messages.
+
+        Files are stored in temporary storage and auto-delete after 7 days.
+        Maximum file size is 25MB.
+
+        Unlike `/v1/media/upload` (which uses upload tokens for end-user flows),
+        this endpoint uses standard Bearer token authentication for programmatic use.
+      tags: [Messages]
+      security: [{ bearerAuth: [] }]
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required: [file]
+              properties:
+                file:
+                  type: string
+                  format: binary
+                  description: The file to upload (max 25MB)
+                contentType:
+                  type: string
+                  description: 'Override MIME type (e.g. "image/jpeg"). Auto-detected from file if not provided.'
+      responses:
+        '200':
+          description: File uploaded successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  url: { type: string, description: Publicly accessible URL for the uploaded file }
+                  filename: { type: string, description: Generated unique filename }
+                  contentType: { type: string, description: MIME type of the file }
+                  size: { type: integer, description: File size in bytes }
+        '400':
+          description: No file provided or file too large
+        '401': { $ref: '#/components/responses/Unauthorized' }
 
   /v1/accounts/{accountId}/messenger-menu:
     get:

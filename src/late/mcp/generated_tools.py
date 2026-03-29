@@ -2807,6 +2807,97 @@ def register_generated_tools(mcp, _get_client):
         except Exception as e:
             return f"Error: {e}"
 
+    @mcp.tool()
+    def messages_delete_inbox_message(
+        conversation_id: str, message_id: str, account_id: str
+    ) -> str:
+        """Delete message
+
+        Args:
+            conversation_id: The conversation ID (required)
+            message_id: The platform message ID to delete (required)
+            account_id: Social account ID (required)"""
+        client = _get_client()
+        try:
+            response = client.messages.delete_inbox_message(
+                conversation_id=conversation_id,
+                message_id=message_id,
+                account_id=account_id,
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool()
+    def messages_send_typing_indicator(conversation_id: str, account_id: str) -> str:
+        """Send typing indicator
+
+        Args:
+            conversation_id: The conversation ID (required)
+            account_id: Social account ID (required)"""
+        client = _get_client()
+        try:
+            response = client.messages.send_typing_indicator(
+                conversation_id=conversation_id, account_id=account_id
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool()
+    def messages_add_message_reaction(
+        conversation_id: str, message_id: str, account_id: str, emoji: str
+    ) -> str:
+        """Add reaction
+
+        Args:
+            conversation_id: The conversation ID (required)
+            message_id: The platform message ID to react to (required)
+            account_id: Social account ID (required)
+            emoji: Emoji character (e.g. "👍", "❤️") (required)"""
+        client = _get_client()
+        try:
+            response = client.messages.add_message_reaction(
+                conversation_id=conversation_id,
+                message_id=message_id,
+                account_id=account_id,
+                emoji=emoji,
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool()
+    def messages_remove_message_reaction(
+        conversation_id: str, message_id: str, account_id: str
+    ) -> str:
+        """Remove reaction
+
+        Args:
+            conversation_id: The conversation ID (required)
+            message_id: The platform message ID (required)
+            account_id: Social account ID (required)"""
+        client = _get_client()
+        try:
+            response = client.messages.remove_message_reaction(
+                conversation_id=conversation_id,
+                message_id=message_id,
+                account_id=account_id,
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool()
+    def messages_upload_media_direct() -> str:
+        """Upload media file"""
+        client = _get_client()
+        try:
+            response = client.messages.upload_media_direct()
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
     # POSTS
 
     @mcp.tool()
