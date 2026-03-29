@@ -455,8 +455,13 @@ Both `from zernio import ...` and `from late import ...` work identically. The `
 | `messages.get_inbox_conversation()` | Get conversation |
 | `messages.get_inbox_conversation_messages()` | List messages |
 | `messages.update_inbox_conversation()` | Update conversation status |
+| `messages.delete_inbox_message()` | Delete message |
+| `messages.add_message_reaction()` | Add reaction |
 | `messages.edit_inbox_message()` | Edit message |
+| `messages.remove_message_reaction()` | Remove reaction |
 | `messages.send_inbox_message()` | Send message |
+| `messages.send_typing_indicator()` | Send typing indicator |
+| `messages.upload_media_direct()` | Upload media file |
 
 ### Reviews (Inbox)
 | Method | Description |
