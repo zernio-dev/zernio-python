@@ -73,6 +73,13 @@ from ._generated.models import (
     UserGetResponse,
     UsersListResponse,
     Visibility,
+    # WhatsApp template models
+    WhatsAppBodyComponent,
+    WhatsAppButtonsComponent,
+    WhatsAppFooterComponent,
+    WhatsAppHeaderComponent,
+    WhatsAppTemplateButton,
+    WhatsAppTemplateComponent,
     YouTubePlatformData,
 )
 
@@ -102,6 +109,13 @@ __all__ = [
     "LinkedInPlatformData",
     "YouTubePlatformData",
     "PinterestPlatformData",
+    # WhatsApp template models
+    "WhatsAppBodyComponent",
+    "WhatsAppButtonsComponent",
+    "WhatsAppFooterComponent",
+    "WhatsAppHeaderComponent",
+    "WhatsAppTemplateButton",
+    "WhatsAppTemplateComponent",
     # Base responses
     "Pagination",
     "ErrorResponse",
