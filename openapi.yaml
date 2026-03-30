@@ -1201,7 +1201,7 @@ components:
         instagramThumbnail:
           type: string
           format: uri
-          description: Optional custom cover image URL for Instagram Reels
+          description: "Custom cover image URL for Instagram Reels. Can also be set via platformSpecificData.instagramThumbnail or platformSpecificData.reelCover. Resolution order: this field > platformSpecificData.instagramThumbnail > platformSpecificData.reelCover > platformSpecificData.thumbnailUrl (legacy)."
         tiktokProcessed:
           type: boolean
           description: Internal flag indicating the image was resized for TikTok
@@ -1550,8 +1550,16 @@ components:
         thumbOffset:
           type: integer
           minimum: 0
-          description: Millisecond offset from video start for the Reel thumbnail. Ignored if a custom thumbnail URL is provided. Defaults to 0.
+          description: Millisecond offset from video start for the Reel cover frame. Ignored when instagramThumbnail or reelCover is provided. Defaults to 0.
           example: 5000
+        instagramThumbnail:
+          type: string
+          format: uri
+          description: Custom cover image URL for Instagram Reels (JPG or PNG, publicly accessible). Overrides thumbOffset when provided. Also accepted as reelCover (alias).
+        reelCover:
+          type: string
+          format: uri
+          description: Alias for instagramThumbnail. If both are provided, instagramThumbnail takes priority.
       description: Feed aspect ratio 0.8-1.91, carousels up to 10 items, stories require media (no captions). User tag coordinates 0.0-1.0 from top-left. Images over 8 MB and videos over platform limits are auto-compressed.
 
     LinkedInPlatformData:
