@@ -2151,6 +2151,40 @@ def register_generated_tools(mcp, _get_client):
             return f"Error: {e}"
 
     @mcp.tool()
+    def connect_get_youtube_playlists(account_id: str) -> str:
+        """List YouTube playlists
+
+        Args:
+            account_id: (required)"""
+        client = _get_client()
+        try:
+            response = client.connect.get_youtube_playlists(account_id=account_id)
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool()
+    def connect_update_youtube_default_playlist(
+        account_id: str, default_playlist_id: str, default_playlist_name: str = ""
+    ) -> str:
+        """Set default YouTube playlist
+
+        Args:
+            account_id: (required)
+            default_playlist_id: (required)
+            default_playlist_name"""
+        client = _get_client()
+        try:
+            response = client.connect.update_youtube_default_playlist(
+                account_id=account_id,
+                default_playlist_id=default_playlist_id,
+                default_playlist_name=default_playlist_name,
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool()
     def connect_get_gmb_locations(account_id: str) -> str:
         """List GBP locations
 

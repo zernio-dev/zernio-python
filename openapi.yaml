@@ -1629,6 +1629,9 @@ components:
           type: string
           default: '22'
           description: "YouTube video category ID. Defaults to 22 (People & Blogs). Common: 1 (Film), 2 (Autos), 10 (Music), 15 (Pets), 17 (Sports), 20 (Gaming), 23 (Comedy), 24 (Entertainment), 25 (News), 26 (Howto), 27 (Education), 28 (Science & Tech)."
+        playlistId:
+          type: string
+          description: "Optional YouTube playlist ID to add the video to after upload (e.g. 'PLxxxxxxxxxxxxx'). Use GET /v1/accounts/{id}/youtube-playlists to list available playlists. Works for both immediate and scheduled uploads. Quota cost: 50 YouTube API units per call."
       description: Videos under 3 min auto-detected as Shorts. Custom thumbnails for regular videos only. Scheduled videos are uploaded immediately with the specified visibility.
 
     GoogleBusinessPlatformData:
@@ -9893,6 +9896,95 @@ paths:
                   username: "mybrand"
                   displayName: "My Brand"
                   isActive: true
+        '400': { description: Invalid request }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404': { description: Account not found }
+
+  /v1/accounts/{accountId}/youtube-playlists:
+    get:
+      operationId: getYoutubePlaylists
+      tags: [Connect]
+      summary: List YouTube playlists
+      description: Returns the playlists available for a connected YouTube account. Use this to get a playlist ID when creating a YouTube post with the `playlistId` field.
+      parameters:
+        - name: accountId
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        '200':
+          description: Playlists list
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  playlists:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id: { type: string }
+                        title: { type: string }
+                        description: { type: string }
+                        privacy: { type: string, enum: [public, private, unlisted] }
+                        itemCount: { type: integer }
+                        thumbnailUrl: { type: string }
+                  defaultPlaylistId:
+                    type: string
+                    nullable: true
+              example:
+                playlists:
+                  - id: "PLxxxxxxxxxxxxx"
+                    title: "Tutorials"
+                    description: "Step-by-step video tutorials"
+                    privacy: "public"
+                    itemCount: 24
+                    thumbnailUrl: "https://i.ytimg.com/vi/xxx/mqdefault.jpg"
+                  - id: "PLyyyyyyyyyyyyy"
+                    title: "Vlogs"
+                    description: "Weekly vlogs"
+                    privacy: "public"
+                    itemCount: 52
+                    thumbnailUrl: "https://i.ytimg.com/vi/yyy/mqdefault.jpg"
+                defaultPlaylistId: null
+        '400': { description: Not a YouTube account }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404': { description: Account not found }
+    put:
+      operationId: updateYoutubeDefaultPlaylist
+      tags: [Connect]
+      summary: Set default YouTube playlist
+      description: Sets the default playlist used when publishing videos for this account. When a post does not specify a `playlistId`, the default playlist is not automatically used (it is stored for client-side convenience).
+      parameters:
+        - name: accountId
+          in: path
+          required: true
+          schema: { type: string }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [defaultPlaylistId]
+              properties:
+                defaultPlaylistId: { type: string }
+                defaultPlaylistName: { type: string }
+            example:
+              defaultPlaylistId: "PLxxxxxxxxxxxxx"
+              defaultPlaylistName: "Tutorials"
+      responses:
+        '200':
+          description: Default playlist set
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success: { type: boolean }
+              example:
+                success: true
         '400': { description: Invalid request }
         '401': { $ref: '#/components/responses/Unauthorized' }
         '404': { description: Account not found }
