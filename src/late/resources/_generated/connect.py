@@ -350,6 +350,26 @@ class ConnectResource:
             f"/v1/accounts/{account_id}/pinterest-boards", data=payload
         )
 
+    def get_youtube_playlists(self, account_id: str) -> dict[str, Any]:
+        """List YouTube playlists"""
+        return self._client._get(f"/v1/accounts/{account_id}/youtube-playlists")
+
+    def update_youtube_default_playlist(
+        self,
+        account_id: str,
+        default_playlist_id: str,
+        *,
+        default_playlist_name: str | None = None,
+    ) -> dict[str, Any]:
+        """Set default YouTube playlist"""
+        payload = self._build_payload(
+            default_playlist_id=default_playlist_id,
+            default_playlist_name=default_playlist_name,
+        )
+        return self._client._put(
+            f"/v1/accounts/{account_id}/youtube-playlists", data=payload
+        )
+
     def get_gmb_locations(self, account_id: str) -> dict[str, Any]:
         """List GBP locations"""
         return self._client._get(f"/v1/accounts/{account_id}/gmb-locations")
@@ -713,6 +733,26 @@ class ConnectResource:
         )
         return await self._client._aput(
             f"/v1/accounts/{account_id}/pinterest-boards", data=payload
+        )
+
+    async def aget_youtube_playlists(self, account_id: str) -> dict[str, Any]:
+        """List YouTube playlists (async)"""
+        return await self._client._aget(f"/v1/accounts/{account_id}/youtube-playlists")
+
+    async def aupdate_youtube_default_playlist(
+        self,
+        account_id: str,
+        default_playlist_id: str,
+        *,
+        default_playlist_name: str | None = None,
+    ) -> dict[str, Any]:
+        """Set default YouTube playlist (async)"""
+        payload = self._build_payload(
+            default_playlist_id=default_playlist_id,
+            default_playlist_name=default_playlist_name,
+        )
+        return await self._client._aput(
+            f"/v1/accounts/{account_id}/youtube-playlists", data=payload
         )
 
     async def aget_gmb_locations(self, account_id: str) -> dict[str, Any]:

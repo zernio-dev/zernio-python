@@ -323,11 +323,13 @@ Both `from zernio import ...` and `from late import ...` work identically. The `
 | `connect.get_reddit_flairs()` | List subreddit flairs |
 | `connect.get_reddit_subreddits()` | List Reddit subreddits |
 | `connect.get_telegram_connect_status()` | Generate Telegram code |
+| `connect.get_youtube_playlists()` | List YouTube playlists |
 | `connect.update_facebook_page()` | Update Facebook page |
 | `connect.update_gmb_location()` | Update GBP location |
 | `connect.update_linked_in_organization()` | Switch LinkedIn account type |
 | `connect.update_pinterest_boards()` | Set default Pinterest board |
 | `connect.update_reddit_subreddits()` | Set default subreddit |
+| `connect.update_youtube_default_playlist()` | Set default YouTube playlist |
 | `connect.complete_telegram_connect()` | Check Telegram status |
 | `connect.connect_bluesky_credentials()` | Connect Bluesky account |
 | `connect.connect_whats_app_credentials()` | Connect WhatsApp via credentials |
