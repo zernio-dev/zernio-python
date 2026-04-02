@@ -19,7 +19,7 @@ info:
     YouTube, Threads, Reddit, Pinterest, Bluesky, Telegram, Google Business, and Snapchat, all
     from a single REST API.
 
-    Key features: Unified posting to 14 platforms, aggregated analytics, unified inbox (DMs, comments, reviews), webhooks, OAuth connect, queue scheduling, and white-label support for agencies managing 5,000+ accounts.
+    Key features: Unified posting to 14 platforms, aggregated analytics, unified inbox (DMs, comments, reviews), webhooks, OAuth connect, queue scheduling, and white-label support for agencies managing unlimited accounts.
 
     Supported platforms: Twitter/X, Instagram, WhatsApp, Facebook, LinkedIn, TikTok, YouTube, Pinterest, Reddit, Bluesky, Threads, Google Business, Telegram, Snapchat.
   x-category: Social

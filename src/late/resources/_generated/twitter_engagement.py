@@ -23,17 +23,21 @@ class TwitterEngagementResource:
 
     def _build_params(self, **kwargs: Any) -> dict[str, Any]:
         """Build query parameters, filtering None values."""
+
         def to_camel(s: str) -> str:
             parts = s.split("_")
             return parts[0] + "".join(p.title() for p in parts[1:])
+
         return {to_camel(k): v for k, v in kwargs.items() if v is not None}
 
     def _build_payload(self, **kwargs: Any) -> dict[str, Any]:
         """Build request payload, filtering None values."""
         from datetime import datetime
+
         def to_camel(s: str) -> str:
             parts = s.split("_")
             return parts[0] + "".join(p.title() for p in parts[1:])
+
         result: dict[str, Any] = {}
         for k, v in kwargs.items():
             if v is None:
@@ -124,7 +128,9 @@ class TwitterEngagementResource:
         )
         return await self._client._adelete("/v1/twitter/bookmark", params=params)
 
-    async def afollow_user(self, account_id: str, target_user_id: str) -> dict[str, Any]:
+    async def afollow_user(
+        self, account_id: str, target_user_id: str
+    ) -> dict[str, Any]:
         """Follow a user (async)"""
         payload = self._build_payload(
             account_id=account_id,
@@ -132,7 +138,9 @@ class TwitterEngagementResource:
         )
         return await self._client._apost("/v1/twitter/follow", data=payload)
 
-    async def aunfollow_user(self, account_id: str, target_user_id: str) -> dict[str, Any]:
+    async def aunfollow_user(
+        self, account_id: str, target_user_id: str
+    ) -> dict[str, Any]:
         """Unfollow a user (async)"""
         params = self._build_params(
             account_id=account_id,

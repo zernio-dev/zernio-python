@@ -25,17 +25,21 @@ class CommentsResource:
 
     def _build_params(self, **kwargs: Any) -> dict[str, Any]:
         """Build query parameters, filtering None values."""
+
         def to_camel(s: str) -> str:
             parts = s.split("_")
             return parts[0] + "".join(p.title() for p in parts[1:])
+
         return {to_camel(k): v for k, v in kwargs.items() if v is not None}
 
     def _build_payload(self, **kwargs: Any) -> dict[str, Any]:
         """Build request payload, filtering None values."""
         from datetime import datetime
+
         def to_camel(s: str) -> str:
             parts = s.split("_")
             return parts[0] + "".join(p.title() for p in parts[1:])
+
         result: dict[str, Any] = {}
         for k, v in kwargs.items():
             if v is None:
@@ -46,7 +50,19 @@ class CommentsResource:
                 result[to_camel(k)] = v
         return result
 
-    def list_inbox_comments(self, *, profile_id: str | None = None, platform: str | None = None, min_comments: int | None = None, since: datetime | str | None = None, sort_by: str | None = "date", sort_order: str | None = "desc", limit: int | None = 50, cursor: str | None = None, account_id: str | None = None) -> dict[str, Any]:
+    def list_inbox_comments(
+        self,
+        *,
+        profile_id: str | None = None,
+        platform: str | None = None,
+        min_comments: int | None = None,
+        since: datetime | str | None = None,
+        sort_by: str | None = "date",
+        sort_order: str | None = "desc",
+        limit: int | None = 50,
+        cursor: str | None = None,
+        account_id: str | None = None,
+    ) -> dict[str, Any]:
         """List commented posts"""
         params = self._build_params(
             profile_id=profile_id,
@@ -61,7 +77,16 @@ class CommentsResource:
         )
         return self._client._get("/v1/inbox/comments", params=params)
 
-    def get_inbox_post_comments(self, post_id: str, account_id: str, *, subreddit: str | None = None, limit: int | None = 25, cursor: str | None = None, comment_id: str | None = None) -> dict[str, Any]:
+    def get_inbox_post_comments(
+        self,
+        post_id: str,
+        account_id: str,
+        *,
+        subreddit: str | None = None,
+        limit: int | None = 25,
+        cursor: str | None = None,
+        comment_id: str | None = None,
+    ) -> dict[str, Any]:
         """Get post comments"""
         params = self._build_params(
             account_id=account_id,
@@ -72,7 +97,17 @@ class CommentsResource:
         )
         return self._client._get(f"/v1/inbox/comments/{post_id}", params=params)
 
-    def reply_to_inbox_post(self, post_id: str, account_id: str, message: str, *, comment_id: str | None = None, parent_cid: str | None = None, root_uri: str | None = None, root_cid: str | None = None) -> dict[str, Any]:
+    def reply_to_inbox_post(
+        self,
+        post_id: str,
+        account_id: str,
+        message: str,
+        *,
+        comment_id: str | None = None,
+        parent_cid: str | None = None,
+        root_uri: str | None = None,
+        root_cid: str | None = None,
+    ) -> dict[str, Any]:
         """Reply to comment"""
         payload = self._build_payload(
             account_id=account_id,
@@ -84,7 +119,9 @@ class CommentsResource:
         )
         return self._client._post(f"/v1/inbox/comments/{post_id}", data=payload)
 
-    def delete_inbox_comment(self, post_id: str, account_id: str, comment_id: str) -> dict[str, Any]:
+    def delete_inbox_comment(
+        self, post_id: str, account_id: str, comment_id: str
+    ) -> dict[str, Any]:
         """Delete comment"""
         params = self._build_params(
             account_id=account_id,
@@ -92,45 +129,82 @@ class CommentsResource:
         )
         return self._client._delete(f"/v1/inbox/comments/{post_id}", params=params)
 
-    def hide_inbox_comment(self, post_id: str, comment_id: str, account_id: str) -> dict[str, Any]:
+    def hide_inbox_comment(
+        self, post_id: str, comment_id: str, account_id: str
+    ) -> dict[str, Any]:
         """Hide comment"""
         payload = self._build_payload(
             account_id=account_id,
         )
-        return self._client._post(f"/v1/inbox/comments/{post_id}/{comment_id}/hide", data=payload)
+        return self._client._post(
+            f"/v1/inbox/comments/{post_id}/{comment_id}/hide", data=payload
+        )
 
-    def unhide_inbox_comment(self, post_id: str, comment_id: str, account_id: str) -> dict[str, Any]:
+    def unhide_inbox_comment(
+        self, post_id: str, comment_id: str, account_id: str
+    ) -> dict[str, Any]:
         """Unhide comment"""
         params = self._build_params(
             account_id=account_id,
         )
-        return self._client._delete(f"/v1/inbox/comments/{post_id}/{comment_id}/hide", params=params)
+        return self._client._delete(
+            f"/v1/inbox/comments/{post_id}/{comment_id}/hide", params=params
+        )
 
-    def like_inbox_comment(self, post_id: str, comment_id: str, account_id: str, *, cid: str | None = None) -> dict[str, Any]:
+    def like_inbox_comment(
+        self, post_id: str, comment_id: str, account_id: str, *, cid: str | None = None
+    ) -> dict[str, Any]:
         """Like comment"""
         payload = self._build_payload(
             account_id=account_id,
             cid=cid,
         )
-        return self._client._post(f"/v1/inbox/comments/{post_id}/{comment_id}/like", data=payload)
+        return self._client._post(
+            f"/v1/inbox/comments/{post_id}/{comment_id}/like", data=payload
+        )
 
-    def unlike_inbox_comment(self, post_id: str, comment_id: str, account_id: str, *, like_uri: str | None = None) -> dict[str, Any]:
+    def unlike_inbox_comment(
+        self,
+        post_id: str,
+        comment_id: str,
+        account_id: str,
+        *,
+        like_uri: str | None = None,
+    ) -> dict[str, Any]:
         """Unlike comment"""
         params = self._build_params(
             account_id=account_id,
             like_uri=like_uri,
         )
-        return self._client._delete(f"/v1/inbox/comments/{post_id}/{comment_id}/like", params=params)
+        return self._client._delete(
+            f"/v1/inbox/comments/{post_id}/{comment_id}/like", params=params
+        )
 
-    def send_private_reply_to_comment(self, post_id: str, comment_id: str, account_id: str, message: str) -> dict[str, Any]:
+    def send_private_reply_to_comment(
+        self, post_id: str, comment_id: str, account_id: str, message: str
+    ) -> dict[str, Any]:
         """Send private reply"""
         payload = self._build_payload(
             account_id=account_id,
             message=message,
         )
-        return self._client._post(f"/v1/inbox/comments/{post_id}/{comment_id}/private-reply", data=payload)
+        return self._client._post(
+            f"/v1/inbox/comments/{post_id}/{comment_id}/private-reply", data=payload
+        )
 
-    async def alist_inbox_comments(self, *, profile_id: str | None = None, platform: str | None = None, min_comments: int | None = None, since: datetime | str | None = None, sort_by: str | None = "date", sort_order: str | None = "desc", limit: int | None = 50, cursor: str | None = None, account_id: str | None = None) -> dict[str, Any]:
+    async def alist_inbox_comments(
+        self,
+        *,
+        profile_id: str | None = None,
+        platform: str | None = None,
+        min_comments: int | None = None,
+        since: datetime | str | None = None,
+        sort_by: str | None = "date",
+        sort_order: str | None = "desc",
+        limit: int | None = 50,
+        cursor: str | None = None,
+        account_id: str | None = None,
+    ) -> dict[str, Any]:
         """List commented posts (async)"""
         params = self._build_params(
             profile_id=profile_id,
@@ -145,7 +219,16 @@ class CommentsResource:
         )
         return await self._client._aget("/v1/inbox/comments", params=params)
 
-    async def aget_inbox_post_comments(self, post_id: str, account_id: str, *, subreddit: str | None = None, limit: int | None = 25, cursor: str | None = None, comment_id: str | None = None) -> dict[str, Any]:
+    async def aget_inbox_post_comments(
+        self,
+        post_id: str,
+        account_id: str,
+        *,
+        subreddit: str | None = None,
+        limit: int | None = 25,
+        cursor: str | None = None,
+        comment_id: str | None = None,
+    ) -> dict[str, Any]:
         """Get post comments (async)"""
         params = self._build_params(
             account_id=account_id,
@@ -156,7 +239,17 @@ class CommentsResource:
         )
         return await self._client._aget(f"/v1/inbox/comments/{post_id}", params=params)
 
-    async def areply_to_inbox_post(self, post_id: str, account_id: str, message: str, *, comment_id: str | None = None, parent_cid: str | None = None, root_uri: str | None = None, root_cid: str | None = None) -> dict[str, Any]:
+    async def areply_to_inbox_post(
+        self,
+        post_id: str,
+        account_id: str,
+        message: str,
+        *,
+        comment_id: str | None = None,
+        parent_cid: str | None = None,
+        root_uri: str | None = None,
+        root_cid: str | None = None,
+    ) -> dict[str, Any]:
         """Reply to comment (async)"""
         payload = self._build_payload(
             account_id=account_id,
@@ -168,48 +261,77 @@ class CommentsResource:
         )
         return await self._client._apost(f"/v1/inbox/comments/{post_id}", data=payload)
 
-    async def adelete_inbox_comment(self, post_id: str, account_id: str, comment_id: str) -> dict[str, Any]:
+    async def adelete_inbox_comment(
+        self, post_id: str, account_id: str, comment_id: str
+    ) -> dict[str, Any]:
         """Delete comment (async)"""
         params = self._build_params(
             account_id=account_id,
             comment_id=comment_id,
         )
-        return await self._client._adelete(f"/v1/inbox/comments/{post_id}", params=params)
+        return await self._client._adelete(
+            f"/v1/inbox/comments/{post_id}", params=params
+        )
 
-    async def ahide_inbox_comment(self, post_id: str, comment_id: str, account_id: str) -> dict[str, Any]:
+    async def ahide_inbox_comment(
+        self, post_id: str, comment_id: str, account_id: str
+    ) -> dict[str, Any]:
         """Hide comment (async)"""
         payload = self._build_payload(
             account_id=account_id,
         )
-        return await self._client._apost(f"/v1/inbox/comments/{post_id}/{comment_id}/hide", data=payload)
+        return await self._client._apost(
+            f"/v1/inbox/comments/{post_id}/{comment_id}/hide", data=payload
+        )
 
-    async def aunhide_inbox_comment(self, post_id: str, comment_id: str, account_id: str) -> dict[str, Any]:
+    async def aunhide_inbox_comment(
+        self, post_id: str, comment_id: str, account_id: str
+    ) -> dict[str, Any]:
         """Unhide comment (async)"""
         params = self._build_params(
             account_id=account_id,
         )
-        return await self._client._adelete(f"/v1/inbox/comments/{post_id}/{comment_id}/hide", params=params)
+        return await self._client._adelete(
+            f"/v1/inbox/comments/{post_id}/{comment_id}/hide", params=params
+        )
 
-    async def alike_inbox_comment(self, post_id: str, comment_id: str, account_id: str, *, cid: str | None = None) -> dict[str, Any]:
+    async def alike_inbox_comment(
+        self, post_id: str, comment_id: str, account_id: str, *, cid: str | None = None
+    ) -> dict[str, Any]:
         """Like comment (async)"""
         payload = self._build_payload(
             account_id=account_id,
             cid=cid,
         )
-        return await self._client._apost(f"/v1/inbox/comments/{post_id}/{comment_id}/like", data=payload)
+        return await self._client._apost(
+            f"/v1/inbox/comments/{post_id}/{comment_id}/like", data=payload
+        )
 
-    async def aunlike_inbox_comment(self, post_id: str, comment_id: str, account_id: str, *, like_uri: str | None = None) -> dict[str, Any]:
+    async def aunlike_inbox_comment(
+        self,
+        post_id: str,
+        comment_id: str,
+        account_id: str,
+        *,
+        like_uri: str | None = None,
+    ) -> dict[str, Any]:
         """Unlike comment (async)"""
         params = self._build_params(
             account_id=account_id,
             like_uri=like_uri,
         )
-        return await self._client._adelete(f"/v1/inbox/comments/{post_id}/{comment_id}/like", params=params)
+        return await self._client._adelete(
+            f"/v1/inbox/comments/{post_id}/{comment_id}/like", params=params
+        )
 
-    async def asend_private_reply_to_comment(self, post_id: str, comment_id: str, account_id: str, message: str) -> dict[str, Any]:
+    async def asend_private_reply_to_comment(
+        self, post_id: str, comment_id: str, account_id: str, message: str
+    ) -> dict[str, Any]:
         """Send private reply (async)"""
         payload = self._build_payload(
             account_id=account_id,
             message=message,
         )
-        return await self._client._apost(f"/v1/inbox/comments/{post_id}/{comment_id}/private-reply", data=payload)
+        return await self._client._apost(
+            f"/v1/inbox/comments/{post_id}/{comment_id}/private-reply", data=payload
+        )

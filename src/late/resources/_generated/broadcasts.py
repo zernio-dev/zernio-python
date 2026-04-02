@@ -25,17 +25,21 @@ class BroadcastsResource:
 
     def _build_params(self, **kwargs: Any) -> dict[str, Any]:
         """Build query parameters, filtering None values."""
+
         def to_camel(s: str) -> str:
             parts = s.split("_")
             return parts[0] + "".join(p.title() for p in parts[1:])
+
         return {to_camel(k): v for k, v in kwargs.items() if v is not None}
 
     def _build_payload(self, **kwargs: Any) -> dict[str, Any]:
         """Build request payload, filtering None values."""
         from datetime import datetime
+
         def to_camel(s: str) -> str:
             parts = s.split("_")
             return parts[0] + "".join(p.title() for p in parts[1:])
+
         result: dict[str, Any] = {}
         for k, v in kwargs.items():
             if v is None:
@@ -46,7 +50,15 @@ class BroadcastsResource:
                 result[to_camel(k)] = v
         return result
 
-    def list_broadcasts(self, *, profile_id: str | None = None, status: str | None = None, platform: str | None = None, limit: int | None = 50, skip: int | None = 0) -> dict[str, Any]:
+    def list_broadcasts(
+        self,
+        *,
+        profile_id: str | None = None,
+        status: str | None = None,
+        platform: str | None = None,
+        limit: int | None = 50,
+        skip: int | None = 0,
+    ) -> dict[str, Any]:
         """List broadcasts"""
         params = self._build_params(
             profile_id=profile_id,
@@ -57,7 +69,18 @@ class BroadcastsResource:
         )
         return self._client._get("/v1/broadcasts", params=params)
 
-    def create_broadcast(self, profile_id: str, account_id: str, platform: str, name: str, *, description: str | None = None, message: dict[str, Any] | None = None, template: dict[str, Any] | None = None, segment_filters: dict[str, Any] | None = None) -> dict[str, Any]:
+    def create_broadcast(
+        self,
+        profile_id: str,
+        account_id: str,
+        platform: str,
+        name: str,
+        *,
+        description: str | None = None,
+        message: dict[str, Any] | None = None,
+        template: dict[str, Any] | None = None,
+        segment_filters: dict[str, Any] | None = None,
+    ) -> dict[str, Any]:
         """Create a broadcast draft"""
         payload = self._build_payload(
             profile_id=profile_id,
@@ -87,36 +110,66 @@ class BroadcastsResource:
         """Trigger immediate send"""
         return self._client._post(f"/v1/broadcasts/{broadcast_id}/send")
 
-    def schedule_broadcast(self, broadcast_id: str, scheduled_at: datetime | str) -> dict[str, Any]:
+    def schedule_broadcast(
+        self, broadcast_id: str, scheduled_at: datetime | str
+    ) -> dict[str, Any]:
         """Schedule broadcast for later"""
         payload = self._build_payload(
             scheduled_at=scheduled_at,
         )
-        return self._client._post(f"/v1/broadcasts/{broadcast_id}/schedule", data=payload)
+        return self._client._post(
+            f"/v1/broadcasts/{broadcast_id}/schedule", data=payload
+        )
 
     def cancel_broadcast(self, broadcast_id: str) -> dict[str, Any]:
         """Cancel a broadcast"""
         return self._client._post(f"/v1/broadcasts/{broadcast_id}/cancel")
 
-    def list_broadcast_recipients(self, broadcast_id: str, *, status: str | None = None, limit: int | None = 50, skip: int | None = 0) -> dict[str, Any]:
+    def list_broadcast_recipients(
+        self,
+        broadcast_id: str,
+        *,
+        status: str | None = None,
+        limit: int | None = 50,
+        skip: int | None = 0,
+    ) -> dict[str, Any]:
         """List broadcast recipients"""
         params = self._build_params(
             status=status,
             limit=limit,
             skip=skip,
         )
-        return self._client._get(f"/v1/broadcasts/{broadcast_id}/recipients", params=params)
+        return self._client._get(
+            f"/v1/broadcasts/{broadcast_id}/recipients", params=params
+        )
 
-    def add_broadcast_recipients(self, broadcast_id: str, *, contact_ids: list[str] | None = None, phones: list[str] | None = None, use_segment: bool | None = None) -> dict[str, Any]:
+    def add_broadcast_recipients(
+        self,
+        broadcast_id: str,
+        *,
+        contact_ids: list[str] | None = None,
+        phones: list[str] | None = None,
+        use_segment: bool | None = None,
+    ) -> dict[str, Any]:
         """Add recipients to a broadcast"""
         payload = self._build_payload(
             contact_ids=contact_ids,
             phones=phones,
             use_segment=use_segment,
         )
-        return self._client._post(f"/v1/broadcasts/{broadcast_id}/recipients", data=payload)
+        return self._client._post(
+            f"/v1/broadcasts/{broadcast_id}/recipients", data=payload
+        )
 
-    async def alist_broadcasts(self, *, profile_id: str | None = None, status: str | None = None, platform: str | None = None, limit: int | None = 50, skip: int | None = 0) -> dict[str, Any]:
+    async def alist_broadcasts(
+        self,
+        *,
+        profile_id: str | None = None,
+        status: str | None = None,
+        platform: str | None = None,
+        limit: int | None = 50,
+        skip: int | None = 0,
+    ) -> dict[str, Any]:
         """List broadcasts (async)"""
         params = self._build_params(
             profile_id=profile_id,
@@ -127,7 +180,18 @@ class BroadcastsResource:
         )
         return await self._client._aget("/v1/broadcasts", params=params)
 
-    async def acreate_broadcast(self, profile_id: str, account_id: str, platform: str, name: str, *, description: str | None = None, message: dict[str, Any] | None = None, template: dict[str, Any] | None = None, segment_filters: dict[str, Any] | None = None) -> dict[str, Any]:
+    async def acreate_broadcast(
+        self,
+        profile_id: str,
+        account_id: str,
+        platform: str,
+        name: str,
+        *,
+        description: str | None = None,
+        message: dict[str, Any] | None = None,
+        template: dict[str, Any] | None = None,
+        segment_filters: dict[str, Any] | None = None,
+    ) -> dict[str, Any]:
         """Create a broadcast draft (async)"""
         payload = self._build_payload(
             profile_id=profile_id,
@@ -157,31 +221,53 @@ class BroadcastsResource:
         """Trigger immediate send (async)"""
         return await self._client._apost(f"/v1/broadcasts/{broadcast_id}/send")
 
-    async def aschedule_broadcast(self, broadcast_id: str, scheduled_at: datetime | str) -> dict[str, Any]:
+    async def aschedule_broadcast(
+        self, broadcast_id: str, scheduled_at: datetime | str
+    ) -> dict[str, Any]:
         """Schedule broadcast for later (async)"""
         payload = self._build_payload(
             scheduled_at=scheduled_at,
         )
-        return await self._client._apost(f"/v1/broadcasts/{broadcast_id}/schedule", data=payload)
+        return await self._client._apost(
+            f"/v1/broadcasts/{broadcast_id}/schedule", data=payload
+        )
 
     async def acancel_broadcast(self, broadcast_id: str) -> dict[str, Any]:
         """Cancel a broadcast (async)"""
         return await self._client._apost(f"/v1/broadcasts/{broadcast_id}/cancel")
 
-    async def alist_broadcast_recipients(self, broadcast_id: str, *, status: str | None = None, limit: int | None = 50, skip: int | None = 0) -> dict[str, Any]:
+    async def alist_broadcast_recipients(
+        self,
+        broadcast_id: str,
+        *,
+        status: str | None = None,
+        limit: int | None = 50,
+        skip: int | None = 0,
+    ) -> dict[str, Any]:
         """List broadcast recipients (async)"""
         params = self._build_params(
             status=status,
             limit=limit,
             skip=skip,
         )
-        return await self._client._aget(f"/v1/broadcasts/{broadcast_id}/recipients", params=params)
+        return await self._client._aget(
+            f"/v1/broadcasts/{broadcast_id}/recipients", params=params
+        )
 
-    async def aadd_broadcast_recipients(self, broadcast_id: str, *, contact_ids: list[str] | None = None, phones: list[str] | None = None, use_segment: bool | None = None) -> dict[str, Any]:
+    async def aadd_broadcast_recipients(
+        self,
+        broadcast_id: str,
+        *,
+        contact_ids: list[str] | None = None,
+        phones: list[str] | None = None,
+        use_segment: bool | None = None,
+    ) -> dict[str, Any]:
         """Add recipients to a broadcast (async)"""
         payload = self._build_payload(
             contact_ids=contact_ids,
             phones=phones,
             use_segment=use_segment,
         )
-        return await self._client._apost(f"/v1/broadcasts/{broadcast_id}/recipients", data=payload)
+        return await self._client._apost(
+            f"/v1/broadcasts/{broadcast_id}/recipients", data=payload
+        )

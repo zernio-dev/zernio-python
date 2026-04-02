@@ -23,17 +23,21 @@ class ProfilesResource:
 
     def _build_params(self, **kwargs: Any) -> dict[str, Any]:
         """Build query parameters, filtering None values."""
+
         def to_camel(s: str) -> str:
             parts = s.split("_")
             return parts[0] + "".join(p.title() for p in parts[1:])
+
         return {to_camel(k): v for k, v in kwargs.items() if v is not None}
 
     def _build_payload(self, **kwargs: Any) -> dict[str, Any]:
         """Build request payload, filtering None values."""
         from datetime import datetime
+
         def to_camel(s: str) -> str:
             parts = s.split("_")
             return parts[0] + "".join(p.title() for p in parts[1:])
+
         result: dict[str, Any] = {}
         for k, v in kwargs.items():
             if v is None:
@@ -44,14 +48,18 @@ class ProfilesResource:
                 result[to_camel(k)] = v
         return result
 
-    def list_profiles(self, *, include_over_limit: bool | None = False) -> dict[str, Any]:
+    def list_profiles(
+        self, *, include_over_limit: bool | None = False
+    ) -> dict[str, Any]:
         """List profiles"""
         params = self._build_params(
             include_over_limit=include_over_limit,
         )
         return self._client._get("/v1/profiles", params=params)
 
-    def create_profile(self, name: str, *, description: str | None = None, color: str | None = None) -> dict[str, Any]:
+    def create_profile(
+        self, name: str, *, description: str | None = None, color: str | None = None
+    ) -> dict[str, Any]:
         """Create profile"""
         payload = self._build_payload(
             name=name,
@@ -64,7 +72,15 @@ class ProfilesResource:
         """Get profile"""
         return self._client._get(f"/v1/profiles/{profile_id}")
 
-    def update_profile(self, profile_id: str, *, name: str | None = None, description: str | None = None, color: str | None = None, is_default: bool | None = None) -> dict[str, Any]:
+    def update_profile(
+        self,
+        profile_id: str,
+        *,
+        name: str | None = None,
+        description: str | None = None,
+        color: str | None = None,
+        is_default: bool | None = None,
+    ) -> dict[str, Any]:
         """Update profile"""
         payload = self._build_payload(
             name=name,
@@ -78,14 +94,18 @@ class ProfilesResource:
         """Delete profile"""
         return self._client._delete(f"/v1/profiles/{profile_id}")
 
-    async def alist_profiles(self, *, include_over_limit: bool | None = False) -> dict[str, Any]:
+    async def alist_profiles(
+        self, *, include_over_limit: bool | None = False
+    ) -> dict[str, Any]:
         """List profiles (async)"""
         params = self._build_params(
             include_over_limit=include_over_limit,
         )
         return await self._client._aget("/v1/profiles", params=params)
 
-    async def acreate_profile(self, name: str, *, description: str | None = None, color: str | None = None) -> dict[str, Any]:
+    async def acreate_profile(
+        self, name: str, *, description: str | None = None, color: str | None = None
+    ) -> dict[str, Any]:
         """Create profile (async)"""
         payload = self._build_payload(
             name=name,
@@ -98,7 +118,15 @@ class ProfilesResource:
         """Get profile (async)"""
         return await self._client._aget(f"/v1/profiles/{profile_id}")
 
-    async def aupdate_profile(self, profile_id: str, *, name: str | None = None, description: str | None = None, color: str | None = None, is_default: bool | None = None) -> dict[str, Any]:
+    async def aupdate_profile(
+        self,
+        profile_id: str,
+        *,
+        name: str | None = None,
+        description: str | None = None,
+        color: str | None = None,
+        is_default: bool | None = None,
+    ) -> dict[str, Any]:
         """Update profile (async)"""
         payload = self._build_payload(
             name=name,

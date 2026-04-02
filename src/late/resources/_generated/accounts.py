@@ -23,17 +23,21 @@ class AccountsResource:
 
     def _build_params(self, **kwargs: Any) -> dict[str, Any]:
         """Build query parameters, filtering None values."""
+
         def to_camel(s: str) -> str:
             parts = s.split("_")
             return parts[0] + "".join(p.title() for p in parts[1:])
+
         return {to_camel(k): v for k, v in kwargs.items() if v is not None}
 
     def _build_payload(self, **kwargs: Any) -> dict[str, Any]:
         """Build request payload, filtering None values."""
         from datetime import datetime
+
         def to_camel(s: str) -> str:
             parts = s.split("_")
             return parts[0] + "".join(p.title() for p in parts[1:])
+
         result: dict[str, Any] = {}
         for k, v in kwargs.items():
             if v is None:
@@ -44,7 +48,15 @@ class AccountsResource:
                 result[to_camel(k)] = v
         return result
 
-    def list_accounts(self, *, profile_id: str | None = None, platform: str | None = None, include_over_limit: bool | None = False, page: int | None = None, limit: int | None = None) -> dict[str, Any]:
+    def list_accounts(
+        self,
+        *,
+        profile_id: str | None = None,
+        platform: str | None = None,
+        include_over_limit: bool | None = False,
+        page: int | None = None,
+        limit: int | None = None,
+    ) -> dict[str, Any]:
         """List accounts"""
         params = self._build_params(
             profile_id=profile_id,
@@ -55,7 +67,15 @@ class AccountsResource:
         )
         return self._client._get("/v1/accounts", params=params)
 
-    def get_follower_stats(self, *, account_ids: str | None = None, profile_id: str | None = None, from_date: str | None = None, to_date: str | None = None, granularity: str | None = "daily") -> dict[str, Any]:
+    def get_follower_stats(
+        self,
+        *,
+        account_ids: str | None = None,
+        profile_id: str | None = None,
+        from_date: str | None = None,
+        to_date: str | None = None,
+        granularity: str | None = "daily",
+    ) -> dict[str, Any]:
         """Get follower stats"""
         params = self._build_params(
             account_ids=account_ids,
@@ -66,7 +86,13 @@ class AccountsResource:
         )
         return self._client._get("/v1/accounts/follower-stats", params=params)
 
-    def update_account(self, account_id: str, *, username: str | None = None, display_name: str | None = None) -> dict[str, Any]:
+    def update_account(
+        self,
+        account_id: str,
+        *,
+        username: str | None = None,
+        display_name: str | None = None,
+    ) -> dict[str, Any]:
         """Update account"""
         payload = self._build_payload(
             username=username,
@@ -78,7 +104,13 @@ class AccountsResource:
         """Disconnect account"""
         return self._client._delete(f"/v1/accounts/{account_id}")
 
-    def get_all_accounts_health(self, *, profile_id: str | None = None, platform: str | None = None, status: str | None = None) -> dict[str, Any]:
+    def get_all_accounts_health(
+        self,
+        *,
+        profile_id: str | None = None,
+        platform: str | None = None,
+        status: str | None = None,
+    ) -> dict[str, Any]:
         """Check accounts health"""
         params = self._build_params(
             profile_id=profile_id,
@@ -91,46 +123,93 @@ class AccountsResource:
         """Check account health"""
         return self._client._get(f"/v1/accounts/{account_id}/health")
 
-    def get_tik_tok_creator_info(self, account_id: str, *, media_type: str | None = "video") -> dict[str, Any]:
+    def get_tik_tok_creator_info(
+        self, account_id: str, *, media_type: str | None = "video"
+    ) -> dict[str, Any]:
         """Get TikTok creator info"""
         params = self._build_params(
             media_type=media_type,
         )
-        return self._client._get(f"/v1/accounts/{account_id}/tiktok/creator-info", params=params)
+        return self._client._get(
+            f"/v1/accounts/{account_id}/tiktok/creator-info", params=params
+        )
 
-    def get_google_business_reviews(self, account_id: str, *, location_id: str | None = None, page_size: int | None = 50, page_token: str | None = None) -> dict[str, Any]:
+    def get_google_business_reviews(
+        self,
+        account_id: str,
+        *,
+        location_id: str | None = None,
+        page_size: int | None = 50,
+        page_token: str | None = None,
+    ) -> dict[str, Any]:
         """Get reviews"""
         params = self._build_params(
             location_id=location_id,
             page_size=page_size,
             page_token=page_token,
         )
-        return self._client._get(f"/v1/accounts/{account_id}/gmb-reviews", params=params)
+        return self._client._get(
+            f"/v1/accounts/{account_id}/gmb-reviews", params=params
+        )
 
-    def get_google_business_food_menus(self, account_id: str, *, location_id: str | None = None) -> dict[str, Any]:
+    def get_google_business_food_menus(
+        self, account_id: str, *, location_id: str | None = None
+    ) -> dict[str, Any]:
         """Get food menus"""
         params = self._build_params(
             location_id=location_id,
         )
-        return self._client._get(f"/v1/accounts/{account_id}/gmb-food-menus", params=params)
+        return self._client._get(
+            f"/v1/accounts/{account_id}/gmb-food-menus", params=params
+        )
 
-    def update_google_business_food_menus(self, account_id: str, menus: list[Any], *, location_id: str | None = None, update_mask: str | None = None) -> dict[str, Any]:
+    def update_google_business_food_menus(
+        self,
+        account_id: str,
+        menus: list[Any],
+        *,
+        location_id: str | None = None,
+        update_mask: str | None = None,
+    ) -> dict[str, Any]:
         """Update food menus"""
         payload = self._build_payload(
             menus=menus,
             update_mask=update_mask,
         )
-        return self._client._put(f"/v1/accounts/{account_id}/gmb-food-menus", data=payload)
+        return self._client._put(
+            f"/v1/accounts/{account_id}/gmb-food-menus", data=payload
+        )
 
-    def get_google_business_location_details(self, account_id: str, *, location_id: str | None = None, read_mask: str | None = None) -> dict[str, Any]:
+    def get_google_business_location_details(
+        self,
+        account_id: str,
+        *,
+        location_id: str | None = None,
+        read_mask: str | None = None,
+    ) -> dict[str, Any]:
         """Get location details"""
         params = self._build_params(
             location_id=location_id,
             read_mask=read_mask,
         )
-        return self._client._get(f"/v1/accounts/{account_id}/gmb-location-details", params=params)
+        return self._client._get(
+            f"/v1/accounts/{account_id}/gmb-location-details", params=params
+        )
 
-    def update_google_business_location_details(self, account_id: str, update_mask: str, *, location_id: str | None = None, regular_hours: dict[str, Any] | None = None, special_hours: dict[str, Any] | None = None, profile: dict[str, Any] | None = None, website_uri: str | None = None, phone_numbers: dict[str, Any] | None = None, categories: dict[str, Any] | None = None, service_items: list[dict[str, Any]] | None = None) -> dict[str, Any]:
+    def update_google_business_location_details(
+        self,
+        account_id: str,
+        update_mask: str,
+        *,
+        location_id: str | None = None,
+        regular_hours: dict[str, Any] | None = None,
+        special_hours: dict[str, Any] | None = None,
+        profile: dict[str, Any] | None = None,
+        website_uri: str | None = None,
+        phone_numbers: dict[str, Any] | None = None,
+        categories: dict[str, Any] | None = None,
+        service_items: list[dict[str, Any]] | None = None,
+    ) -> dict[str, Any]:
         """Update location details"""
         payload = self._build_payload(
             update_mask=update_mask,
@@ -142,9 +221,18 @@ class AccountsResource:
             categories=categories,
             service_items=service_items,
         )
-        return self._client._put(f"/v1/accounts/{account_id}/gmb-location-details", data=payload)
+        return self._client._put(
+            f"/v1/accounts/{account_id}/gmb-location-details", data=payload
+        )
 
-    def list_google_business_media(self, account_id: str, *, location_id: str | None = None, page_size: int | None = 100, page_token: str | None = None) -> dict[str, Any]:
+    def list_google_business_media(
+        self,
+        account_id: str,
+        *,
+        location_id: str | None = None,
+        page_size: int | None = 100,
+        page_token: str | None = None,
+    ) -> dict[str, Any]:
         """List media"""
         params = self._build_params(
             location_id=location_id,
@@ -153,7 +241,16 @@ class AccountsResource:
         )
         return self._client._get(f"/v1/accounts/{account_id}/gmb-media", params=params)
 
-    def create_google_business_media(self, account_id: str, source_url: str, *, location_id: str | None = None, media_format: str | None = "PHOTO", description: str | None = None, category: str | None = None) -> dict[str, Any]:
+    def create_google_business_media(
+        self,
+        account_id: str,
+        source_url: str,
+        *,
+        location_id: str | None = None,
+        media_format: str | None = "PHOTO",
+        description: str | None = None,
+        category: str | None = None,
+    ) -> dict[str, Any]:
         """Upload photo"""
         payload = self._build_payload(
             source_url=source_url,
@@ -163,63 +260,114 @@ class AccountsResource:
         )
         return self._client._post(f"/v1/accounts/{account_id}/gmb-media", data=payload)
 
-    def delete_google_business_media(self, account_id: str, media_id: str, *, location_id: str | None = None) -> dict[str, Any]:
+    def delete_google_business_media(
+        self, account_id: str, media_id: str, *, location_id: str | None = None
+    ) -> dict[str, Any]:
         """Delete photo"""
         params = self._build_params(
             location_id=location_id,
             media_id=media_id,
         )
-        return self._client._delete(f"/v1/accounts/{account_id}/gmb-media", params=params)
+        return self._client._delete(
+            f"/v1/accounts/{account_id}/gmb-media", params=params
+        )
 
-    def get_google_business_attributes(self, account_id: str, *, location_id: str | None = None) -> dict[str, Any]:
+    def get_google_business_attributes(
+        self, account_id: str, *, location_id: str | None = None
+    ) -> dict[str, Any]:
         """Get attributes"""
         params = self._build_params(
             location_id=location_id,
         )
-        return self._client._get(f"/v1/accounts/{account_id}/gmb-attributes", params=params)
+        return self._client._get(
+            f"/v1/accounts/{account_id}/gmb-attributes", params=params
+        )
 
-    def update_google_business_attributes(self, account_id: str, attributes: list[dict[str, Any]], attribute_mask: str, *, location_id: str | None = None) -> dict[str, Any]:
+    def update_google_business_attributes(
+        self,
+        account_id: str,
+        attributes: list[dict[str, Any]],
+        attribute_mask: str,
+        *,
+        location_id: str | None = None,
+    ) -> dict[str, Any]:
         """Update attributes"""
         payload = self._build_payload(
             attributes=attributes,
             attribute_mask=attribute_mask,
         )
-        return self._client._put(f"/v1/accounts/{account_id}/gmb-attributes", data=payload)
+        return self._client._put(
+            f"/v1/accounts/{account_id}/gmb-attributes", data=payload
+        )
 
-    def list_google_business_place_actions(self, account_id: str, *, location_id: str | None = None, page_size: int | None = 100, page_token: str | None = None) -> dict[str, Any]:
+    def list_google_business_place_actions(
+        self,
+        account_id: str,
+        *,
+        location_id: str | None = None,
+        page_size: int | None = 100,
+        page_token: str | None = None,
+    ) -> dict[str, Any]:
         """List action links"""
         params = self._build_params(
             location_id=location_id,
             page_size=page_size,
             page_token=page_token,
         )
-        return self._client._get(f"/v1/accounts/{account_id}/gmb-place-actions", params=params)
+        return self._client._get(
+            f"/v1/accounts/{account_id}/gmb-place-actions", params=params
+        )
 
-    def create_google_business_place_action(self, account_id: str, uri: str, place_action_type: str, *, location_id: str | None = None) -> dict[str, Any]:
+    def create_google_business_place_action(
+        self,
+        account_id: str,
+        uri: str,
+        place_action_type: str,
+        *,
+        location_id: str | None = None,
+    ) -> dict[str, Any]:
         """Create action link"""
         payload = self._build_payload(
             uri=uri,
             place_action_type=place_action_type,
         )
-        return self._client._post(f"/v1/accounts/{account_id}/gmb-place-actions", data=payload)
+        return self._client._post(
+            f"/v1/accounts/{account_id}/gmb-place-actions", data=payload
+        )
 
-    def delete_google_business_place_action(self, account_id: str, name: str, *, location_id: str | None = None) -> dict[str, Any]:
+    def delete_google_business_place_action(
+        self, account_id: str, name: str, *, location_id: str | None = None
+    ) -> dict[str, Any]:
         """Delete action link"""
         params = self._build_params(
             location_id=location_id,
             name=name,
         )
-        return self._client._delete(f"/v1/accounts/{account_id}/gmb-place-actions", params=params)
+        return self._client._delete(
+            f"/v1/accounts/{account_id}/gmb-place-actions", params=params
+        )
 
-    def get_linked_in_mentions(self, account_id: str, url: str, *, display_name: str | None = None) -> dict[str, Any]:
+    def get_linked_in_mentions(
+        self, account_id: str, url: str, *, display_name: str | None = None
+    ) -> dict[str, Any]:
         """Resolve LinkedIn mention"""
         params = self._build_params(
             url=url,
             display_name=display_name,
         )
-        return self._client._get(f"/v1/accounts/{account_id}/linkedin-mentions", params=params)
+        return self._client._get(
+            f"/v1/accounts/{account_id}/linkedin-mentions", params=params
+        )
 
-    async def alist_accounts(self, *, profile_id: str | None = None, platform: str | None = None, include_over_limit: bool | None = False, page: int | None = None, limit: int | None = None) -> dict[str, Any]:
+    async def alist_accounts(
+        self,
+        *,
+        profile_id: str | None = None,
+        platform: str | None = None,
+        include_over_limit: bool | None = False,
+        page: int | None = None,
+        limit: int | None = None,
+    ) -> dict[str, Any]:
         """List accounts (async)"""
         params = self._build_params(
             profile_id=profile_id,
@@ -230,7 +378,15 @@ class AccountsResource:
         )
         return await self._client._aget("/v1/accounts", params=params)
 
-    async def aget_follower_stats(self, *, account_ids: str | None = None, profile_id: str | None = None, from_date: str | None = None, to_date: str | None = None, granularity: str | None = "daily") -> dict[str, Any]:
+    async def aget_follower_stats(
+        self,
+        *,
+        account_ids: str | None = None,
+        profile_id: str | None = None,
+        from_date: str | None = None,
+        to_date: str | None = None,
+        granularity: str | None = "daily",
+    ) -> dict[str, Any]:
         """Get follower stats (async)"""
         params = self._build_params(
             account_ids=account_ids,
@@ -241,7 +397,13 @@ class AccountsResource:
         )
         return await self._client._aget("/v1/accounts/follower-stats", params=params)
 
-    async def aupdate_account(self, account_id: str, *, username: str | None = None, display_name: str | None = None) -> dict[str, Any]:
+    async def aupdate_account(
+        self,
+        account_id: str,
+        *,
+        username: str | None = None,
+        display_name: str | None = None,
+    ) -> dict[str, Any]:
         """Update account (async)"""
         payload = self._build_payload(
             username=username,
@@ -253,7 +415,13 @@ class AccountsResource:
         """Disconnect account (async)"""
         return await self._client._adelete(f"/v1/accounts/{account_id}")
 
-    async def aget_all_accounts_health(self, *, profile_id: str | None = None, platform: str | None = None, status: str | None = None) -> dict[str, Any]:
+    async def aget_all_accounts_health(
+        self,
+        *,
+        profile_id: str | None = None,
+        platform: str | None = None,
+        status: str | None = None,
+    ) -> dict[str, Any]:
         """Check accounts health (async)"""
         params = self._build_params(
             profile_id=profile_id,
@@ -266,46 +434,93 @@ class AccountsResource:
         """Check account health (async)"""
         return await self._client._aget(f"/v1/accounts/{account_id}/health")
 
-    async def aget_tik_tok_creator_info(self, account_id: str, *, media_type: str | None = "video") -> dict[str, Any]:
+    async def aget_tik_tok_creator_info(
+        self, account_id: str, *, media_type: str | None = "video"
+    ) -> dict[str, Any]:
         """Get TikTok creator info (async)"""
         params = self._build_params(
             media_type=media_type,
         )
-        return await self._client._aget(f"/v1/accounts/{account_id}/tiktok/creator-info", params=params)
+        return await self._client._aget(
+            f"/v1/accounts/{account_id}/tiktok/creator-info", params=params
+        )
 
-    async def aget_google_business_reviews(self, account_id: str, *, location_id: str | None = None, page_size: int | None = 50, page_token: str | None = None) -> dict[str, Any]:
+    async def aget_google_business_reviews(
+        self,
+        account_id: str,
+        *,
+        location_id: str | None = None,
+        page_size: int | None = 50,
+        page_token: str | None = None,
+    ) -> dict[str, Any]:
         """Get reviews (async)"""
         params = self._build_params(
             location_id=location_id,
             page_size=page_size,
             page_token=page_token,
         )
-        return await self._client._aget(f"/v1/accounts/{account_id}/gmb-reviews", params=params)
+        return await self._client._aget(
+            f"/v1/accounts/{account_id}/gmb-reviews", params=params
+        )
 
-    async def aget_google_business_food_menus(self, account_id: str, *, location_id: str | None = None) -> dict[str, Any]:
+    async def aget_google_business_food_menus(
+        self, account_id: str, *, location_id: str | None = None
+    ) -> dict[str, Any]:
         """Get food menus (async)"""
         params = self._build_params(
             location_id=location_id,
         )
-        return await self._client._aget(f"/v1/accounts/{account_id}/gmb-food-menus", params=params)
+        return await self._client._aget(
+            f"/v1/accounts/{account_id}/gmb-food-menus", params=params
+        )
 
-    async def aupdate_google_business_food_menus(self, account_id: str, menus: list[Any], *, location_id: str | None = None, update_mask: str | None = None) -> dict[str, Any]:
+    async def aupdate_google_business_food_menus(
+        self,
+        account_id: str,
+        menus: list[Any],
+        *,
+        location_id: str | None = None,
+        update_mask: str | None = None,
+    ) -> dict[str, Any]:
         """Update food menus (async)"""
         payload = self._build_payload(
             menus=menus,
             update_mask=update_mask,
         )
-        return await self._client._aput(f"/v1/accounts/{account_id}/gmb-food-menus", data=payload)
+        return await self._client._aput(
+            f"/v1/accounts/{account_id}/gmb-food-menus", data=payload
+        )
 
-    async def aget_google_business_location_details(self, account_id: str, *, location_id: str | None = None, read_mask: str | None = None) -> dict[str, Any]:
+    async def aget_google_business_location_details(
+        self,
+        account_id: str,
+        *,
+        location_id: str | None = None,
+        read_mask: str | None = None,
+    ) -> dict[str, Any]:
         """Get location details (async)"""
         params = self._build_params(
             location_id=location_id,
             read_mask=read_mask,
         )
-        return await self._client._aget(f"/v1/accounts/{account_id}/gmb-location-details", params=params)
+        return await self._client._aget(
+            f"/v1/accounts/{account_id}/gmb-location-details", params=params
+        )
 
-    async def aupdate_google_business_location_details(self, account_id: str, update_mask: str, *, location_id: str | None = None, regular_hours: dict[str, Any] | None = None, special_hours: dict[str, Any] | None = None, profile: dict[str, Any] | None = None, website_uri: str | None = None, phone_numbers: dict[str, Any] | None = None, categories: dict[str, Any] | None = None, service_items: list[dict[str, Any]] | None = None) -> dict[str, Any]:
+    async def aupdate_google_business_location_details(
+        self,
+        account_id: str,
+        update_mask: str,
+        *,
+        location_id: str | None = None,
+        regular_hours: dict[str, Any] | None = None,
+        special_hours: dict[str, Any] | None = None,
+        profile: dict[str, Any] | None = None,
+        website_uri: str | None = None,
+        phone_numbers: dict[str, Any] | None = None,
+        categories: dict[str, Any] | None = None,
+        service_items: list[dict[str, Any]] | None = None,
+    ) -> dict[str, Any]:
         """Update location details (async)"""
         payload = self._build_payload(
             update_mask=update_mask,
@@ -317,18 +532,38 @@ class AccountsResource:
             categories=categories,
             service_items=service_items,
         )
-        return await self._client._aput(f"/v1/accounts/{account_id}/gmb-location-details", data=payload)
+        return await self._client._aput(
+            f"/v1/accounts/{account_id}/gmb-location-details", data=payload
+        )
 
-    async def alist_google_business_media(self, account_id: str, *, location_id: str | None = None, page_size: int | None = 100, page_token: str | None = None) -> dict[str, Any]:
+    async def alist_google_business_media(
+        self,
+        account_id: str,
+        *,
+        location_id: str | None = None,
+        page_size: int | None = 100,
+        page_token: str | None = None,
+    ) -> dict[str, Any]:
         """List media (async)"""
         params = self._build_params(
             location_id=location_id,
             page_size=page_size,
             page_token=page_token,
         )
-        return await self._client._aget(f"/v1/accounts/{account_id}/gmb-media", params=params)
+        return await self._client._aget(
+            f"/v1/accounts/{account_id}/gmb-media", params=params
+        )
 
-    async def acreate_google_business_media(self, account_id: str, source_url: str, *, location_id: str | None = None, media_format: str | None = "PHOTO", description: str | None = None, category: str | None = None) -> dict[str, Any]:
+    async def acreate_google_business_media(
+        self,
+        account_id: str,
+        source_url: str,
+        *,
+        location_id: str | None = None,
+        media_format: str | None = "PHOTO",
+        description: str | None = None,
+        category: str | None = None,
+    ) -> dict[str, Any]:
         """Upload photo (async)"""
         payload = self._build_payload(
             source_url=source_url,
@@ -336,60 +571,105 @@ class AccountsResource:
             description=description,
             category=category,
         )
-        return await self._client._apost(f"/v1/accounts/{account_id}/gmb-media", data=payload)
+        return await self._client._apost(
+            f"/v1/accounts/{account_id}/gmb-media", data=payload
+        )
 
-    async def adelete_google_business_media(self, account_id: str, media_id: str, *, location_id: str | None = None) -> dict[str, Any]:
+    async def adelete_google_business_media(
+        self, account_id: str, media_id: str, *, location_id: str | None = None
+    ) -> dict[str, Any]:
         """Delete photo (async)"""
         params = self._build_params(
             location_id=location_id,
             media_id=media_id,
         )
-        return await self._client._adelete(f"/v1/accounts/{account_id}/gmb-media", params=params)
+        return await self._client._adelete(
+            f"/v1/accounts/{account_id}/gmb-media", params=params
+        )
 
-    async def aget_google_business_attributes(self, account_id: str, *, location_id: str | None = None) -> dict[str, Any]:
+    async def aget_google_business_attributes(
+        self, account_id: str, *, location_id: str | None = None
+    ) -> dict[str, Any]:
         """Get attributes (async)"""
         params = self._build_params(
             location_id=location_id,
         )
-        return await self._client._aget(f"/v1/accounts/{account_id}/gmb-attributes", params=params)
+        return await self._client._aget(
+            f"/v1/accounts/{account_id}/gmb-attributes", params=params
+        )
 
-    async def aupdate_google_business_attributes(self, account_id: str, attributes: list[dict[str, Any]], attribute_mask: str, *, location_id: str | None = None) -> dict[str, Any]:
+    async def aupdate_google_business_attributes(
+        self,
+        account_id: str,
+        attributes: list[dict[str, Any]],
+        attribute_mask: str,
+        *,
+        location_id: str | None = None,
+    ) -> dict[str, Any]:
         """Update attributes (async)"""
         payload = self._build_payload(
             attributes=attributes,
             attribute_mask=attribute_mask,
         )
-        return await self._client._aput(f"/v1/accounts/{account_id}/gmb-attributes", data=payload)
+        return await self._client._aput(
+            f"/v1/accounts/{account_id}/gmb-attributes", data=payload
+        )
 
-    async def alist_google_business_place_actions(self, account_id: str, *, location_id: str | None = None, page_size: int | None = 100, page_token: str | None = None) -> dict[str, Any]:
+    async def alist_google_business_place_actions(
+        self,
+        account_id: str,
+        *,
+        location_id: str | None = None,
+        page_size: int | None = 100,
+        page_token: str | None = None,
+    ) -> dict[str, Any]:
         """List action links (async)"""
         params = self._build_params(
             location_id=location_id,
             page_size=page_size,
             page_token=page_token,
         )
-        return await self._client._aget(f"/v1/accounts/{account_id}/gmb-place-actions", params=params)
+        return await self._client._aget(
+            f"/v1/accounts/{account_id}/gmb-place-actions", params=params
+        )
 
-    async def acreate_google_business_place_action(self, account_id: str, uri: str, place_action_type: str, *, location_id: str | None = None) -> dict[str, Any]:
+    async def acreate_google_business_place_action(
+        self,
+        account_id: str,
+        uri: str,
+        place_action_type: str,
+        *,
+        location_id: str | None = None,
+    ) -> dict[str, Any]:
         """Create action link (async)"""
         payload = self._build_payload(
             uri=uri,
             place_action_type=place_action_type,
         )
-        return await self._client._apost(f"/v1/accounts/{account_id}/gmb-place-actions", data=payload)
+        return await self._client._apost(
+            f"/v1/accounts/{account_id}/gmb-place-actions", data=payload
+        )
 
-    async def adelete_google_business_place_action(self, account_id: str, name: str, *, location_id: str | None = None) -> dict[str, Any]:
+    async def adelete_google_business_place_action(
+        self, account_id: str, name: str, *, location_id: str | None = None
+    ) -> dict[str, Any]:
         """Delete action link (async)"""
         params = self._build_params(
             location_id=location_id,
             name=name,
         )
-        return await self._client._adelete(f"/v1/accounts/{account_id}/gmb-place-actions", params=params)
+        return await self._client._adelete(
+            f"/v1/accounts/{account_id}/gmb-place-actions", params=params
+        )
 
-    async def aget_linked_in_mentions(self, account_id: str, url: str, *, display_name: str | None = None) -> dict[str, Any]:
+    async def aget_linked_in_mentions(
+        self, account_id: str, url: str, *, display_name: str | None = None
+    ) -> dict[str, Any]:
         """Resolve LinkedIn mention (async)"""
         params = self._build_params(
             url=url,
             display_name=display_name,
         )
-        return await self._client._aget(f"/v1/accounts/{account_id}/linkedin-mentions", params=params)
+        return await self._client._aget(
+            f"/v1/accounts/{account_id}/linkedin-mentions", params=params
+        )
