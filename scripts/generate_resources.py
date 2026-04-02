@@ -435,13 +435,21 @@ def generate_init_file(generated_resources: list[str], manual_resources: list[st
 
     all_resources = sorted(set(generated_resources) | set(manual_resources))
 
-    # Imports: prefer manual over auto-generated
-    for resource in all_resources:
+    # Split into auto-generated and manual groups (ruff requires sorted import blocks
+    # grouped by source: ._generated first, then local .)
+    auto_only = sorted(r for r in all_resources if r not in manual_resources)
+    manual_only = sorted(r for r in all_resources if r in manual_resources)
+
+    for resource in auto_only:
         class_name = "".join(word.title() for word in resource.split("_")) + "Resource"
-        if resource in manual_resources:
-            lines.append(f"from .{resource} import {class_name}")
-        else:
-            lines.append(f"from ._generated.{resource} import {class_name}")
+        lines.append(f"from ._generated.{resource} import {class_name}")
+
+    if auto_only and manual_only:
+        lines.append("")  # blank line between import groups
+
+    for resource in manual_only:
+        class_name = "".join(word.title() for word in resource.split("_")) + "Resource"
+        lines.append(f"from .{resource} import {class_name}")
 
     lines.append("")
     lines.append("__all__ = [")
