@@ -39,8 +39,8 @@ from ..resources import (
     UsersResource,
     ValidateResource,
     WebhooksResource,
-    WhatsappResource,
     WhatsappPhoneNumbersResource,
+    WhatsappResource,
 )
 from .base import BaseClient
 

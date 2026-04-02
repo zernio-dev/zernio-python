@@ -435,21 +435,20 @@ def generate_init_file(generated_resources: list[str], manual_resources: list[st
 
     all_resources = sorted(set(generated_resources) | set(manual_resources))
 
-    # Split into auto-generated and manual groups (ruff requires sorted import blocks
-    # grouped by source: ._generated first, then local .)
-    auto_only = sorted(r for r in all_resources if r not in manual_resources)
-    manual_only = sorted(r for r in all_resources if r in manual_resources)
-
-    for resource in auto_only:
+    # Build import lines sorted by full module path to match ruff isort.
+    # ruff sorts all relative imports as one block by module path:
+    # ._generated.x comes before .x (since '_' < 'a' in ASCII).
+    import_lines: list[tuple[str, str]] = []
+    for resource in all_resources:
         class_name = "".join(word.title() for word in resource.split("_")) + "Resource"
-        lines.append(f"from ._generated.{resource} import {class_name}")
+        if resource in manual_resources:
+            import_lines.append((f".{resource}", f"from .{resource} import {class_name}"))
+        else:
+            import_lines.append((f"._generated.{resource}", f"from ._generated.{resource} import {class_name}"))
 
-    if auto_only and manual_only:
-        lines.append("")  # blank line between import groups
-
-    for resource in manual_only:
-        class_name = "".join(word.title() for word in resource.split("_")) + "Resource"
-        lines.append(f"from .{resource} import {class_name}")
+    import_lines.sort(key=lambda x: x[0])
+    for _, line in import_lines:
+        lines.append(line)
 
     lines.append("")
     lines.append("__all__ = [")
@@ -469,11 +468,11 @@ def update_client_file(client_path: Path, all_resources: list[str]) -> None:
     """
     content = client_path.read_text()
 
-    # Build new import block
-    class_names = []
-    for resource in sorted(all_resources):
-        class_name = "".join(word.title() for word in resource.split("_")) + "Resource"
-        class_names.append(class_name)
+    # Build new import block, sorted by class name to match ruff isort
+    class_names = sorted(
+        "".join(word.title() for word in r.split("_")) + "Resource"
+        for r in all_resources
+    )
 
     import_block = "from ..resources import (\n"
     for cn in class_names:

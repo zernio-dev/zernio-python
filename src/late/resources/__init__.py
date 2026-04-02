@@ -30,7 +30,6 @@ from ._generated.validate import ValidateResource
 from ._generated.webhooks import WebhooksResource
 from ._generated.whatsapp import WhatsappResource
 from ._generated.whatsapp_phone_numbers import WhatsappPhoneNumbersResource
-
 from .accounts import AccountsResource
 from .analytics import AnalyticsResource
 from .media import MediaResource
