@@ -230,7 +230,7 @@ class WhatsappResource:
         category: str,
         language: str,
         *,
-        components: list[dict[str, Any]] | None = None,
+        components: list[Any] | None = None,
         library_template_name: str | None = None,
         library_template_body_inputs: dict[str, Any] | None = None,
         library_template_button_inputs: list[dict[str, Any]] | None = None,
@@ -260,7 +260,7 @@ class WhatsappResource:
         )
 
     def update_whats_app_template(
-        self, template_name: str, account_id: str, components: list[dict[str, Any]]
+        self, template_name: str, account_id: str, components: list[Any]
     ) -> dict[str, Any]:
         """Update template"""
         payload = self._build_payload(
@@ -752,7 +752,7 @@ class WhatsappResource:
         category: str,
         language: str,
         *,
-        components: list[dict[str, Any]] | None = None,
+        components: list[Any] | None = None,
         library_template_name: str | None = None,
         library_template_body_inputs: dict[str, Any] | None = None,
         library_template_button_inputs: list[dict[str, Any]] | None = None,
@@ -782,7 +782,7 @@ class WhatsappResource:
         )
 
     async def aupdate_whats_app_template(
-        self, template_name: str, account_id: str, components: list[dict[str, Any]]
+        self, template_name: str, account_id: str, components: list[Any]
     ) -> dict[str, Any]:
         """Update template (async)"""
         payload = self._build_payload(

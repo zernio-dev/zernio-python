@@ -180,6 +180,10 @@ class PostsResource:
         tags: list[str] | None = None,
         category_id: str | None = None,
         privacy_status: str | None = None,
+        thumbnail_url: str | None = None,
+        made_for_kids: bool | None = None,
+        contains_synthetic_media: bool | None = None,
+        playlist_id: str | None = None,
     ) -> dict[str, Any]:
         """Update post metadata"""
         payload = self._build_payload(
@@ -191,6 +195,10 @@ class PostsResource:
             tags=tags,
             category_id=category_id,
             privacy_status=privacy_status,
+            thumbnail_url=thumbnail_url,
+            made_for_kids=made_for_kids,
+            contains_synthetic_media=contains_synthetic_media,
+            playlist_id=playlist_id,
         )
         return self._client._post(f"/v1/posts/{post_id}/update-metadata", data=payload)
 
@@ -326,6 +334,10 @@ class PostsResource:
         tags: list[str] | None = None,
         category_id: str | None = None,
         privacy_status: str | None = None,
+        thumbnail_url: str | None = None,
+        made_for_kids: bool | None = None,
+        contains_synthetic_media: bool | None = None,
+        playlist_id: str | None = None,
     ) -> dict[str, Any]:
         """Update post metadata (async)"""
         payload = self._build_payload(
@@ -337,6 +349,10 @@ class PostsResource:
             tags=tags,
             category_id=category_id,
             privacy_status=privacy_status,
+            thumbnail_url=thumbnail_url,
+            made_for_kids=made_for_kids,
+            contains_synthetic_media=contains_synthetic_media,
+            playlist_id=playlist_id,
         )
         return await self._client._apost(
             f"/v1/posts/{post_id}/update-metadata", data=payload

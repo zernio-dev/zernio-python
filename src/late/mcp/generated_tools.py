@@ -258,20 +258,28 @@ def register_generated_tools(mcp, _get_client):
 
     @mcp.tool()
     def accounts_list_accounts(
-        profile_id: str = "", platform: str = "", include_over_limit: bool = False
+        profile_id: str = "",
+        platform: str = "",
+        include_over_limit: bool = False,
+        page: int = 0,
+        limit: int = 0,
     ) -> str:
         """List accounts
 
         Args:
             profile_id: Filter accounts by profile ID
             platform: Filter accounts by platform (e.g. "instagram", "twitter").
-            include_over_limit: When true, includes accounts from over-limit profiles."""
+            include_over_limit: When true, includes accounts from over-limit profiles.
+            page: Page number (1-based). When provided with limit, enables server-side pagination. Omit for all accounts.
+            limit: Page size. Required alongside page for pagination."""
         client = _get_client()
         try:
             response = client.accounts.list_accounts(
                 profile_id=profile_id,
                 platform=platform,
                 include_over_limit=include_over_limit,
+                page=page,
+                limit=limit,
             )
             return _format_response(response)
         except Exception as e:
@@ -719,6 +727,504 @@ def register_generated_tools(mcp, _get_client):
             response = client.accounts.get_linked_in_mentions(
                 account_id=account_id, url=url, display_name=display_name
             )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    # AD_AUDIENCES
+
+    @mcp.tool()
+    def ad_audiences_list_ad_audiences(
+        account_id: str, ad_account_id: str, platform: str = ""
+    ) -> str:
+        """List custom audiences
+
+        Args:
+            account_id: Social account ID (required)
+            ad_account_id: Platform ad account ID (required)
+            platform"""
+        client = _get_client()
+        try:
+            response = client.ad_audiences.list_ad_audiences(
+                account_id=account_id, ad_account_id=ad_account_id, platform=platform
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool()
+    def ad_audiences_create_ad_audience(
+        account_id: str,
+        ad_account_id: str,
+        name: str,
+        type: str,
+        description: str = "",
+        pixel_id: str = "",
+        retention_days: int = 0,
+        source_audience_id: str = "",
+        country: str = "",
+        ratio: float = 0.0,
+        rule: str = "",
+        customer_file_source: str = "",
+    ) -> str:
+        """Create a custom audience (Meta only)
+
+        Args:
+            account_id: (required)
+            ad_account_id: Must start with act_ (required)
+            name: (required)
+            description
+            type: (required)
+            pixel_id: Required for website audiences
+            retention_days: Required for website audiences
+            source_audience_id: Required for lookalike audiences
+            country: 2-letter code, required for lookalike audiences
+            ratio: Required for lookalike audiences
+            rule: Pixel event rule for website audiences (optional)
+            customer_file_source: Data source declaration for GDPR compliance (customer_list only)"""
+        client = _get_client()
+        try:
+            response = client.ad_audiences.create_ad_audience(
+                account_id=account_id,
+                ad_account_id=ad_account_id,
+                name=name,
+                description=description,
+                type=type,
+                pixel_id=pixel_id,
+                retention_days=retention_days,
+                source_audience_id=source_audience_id,
+                country=country,
+                ratio=ratio,
+                rule=rule,
+                customer_file_source=customer_file_source,
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool()
+    def ad_audiences_get_ad_audience(audience_id: str) -> str:
+        """Get audience details
+
+        Args:
+            audience_id: (required)"""
+        client = _get_client()
+        try:
+            response = client.ad_audiences.get_ad_audience(audience_id=audience_id)
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool()
+    def ad_audiences_delete_ad_audience(audience_id: str) -> str:
+        """Delete a custom audience
+
+        Args:
+            audience_id: (required)"""
+        client = _get_client()
+        try:
+            response = client.ad_audiences.delete_ad_audience(audience_id=audience_id)
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool()
+    def ad_audiences_add_users_to_ad_audience(audience_id: str, users: str) -> str:
+        """Add users to a customer list audience
+
+        Args:
+            audience_id: (required)
+            users: (required)"""
+        client = _get_client()
+        try:
+            response = client.ad_audiences.add_users_to_ad_audience(
+                audience_id=audience_id, users=users
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    # AD_CAMPAIGNS
+
+    @mcp.tool()
+    def ad_campaigns_list_ad_campaigns(
+        page: int = 1,
+        limit: int = 20,
+        source: str = "zernio",
+        platform: str = "",
+        status: str = "",
+        ad_account_id: str = "",
+        account_id: str = "",
+        profile_id: str = "",
+    ) -> str:
+        """List campaigns with aggregate metrics
+
+        Args:
+            page: Page number
+            limit
+            source
+            platform
+            status: Filter by derived campaign status (post-aggregation)
+            ad_account_id: Platform ad account ID (e.g. act_123 for Meta)
+            account_id: Social account ID
+            profile_id: Profile ID"""
+        client = _get_client()
+        try:
+            response = client.ad_campaigns.list_ad_campaigns(
+                page=page,
+                limit=limit,
+                source=source,
+                platform=platform,
+                status=status,
+                ad_account_id=ad_account_id,
+                account_id=account_id,
+                profile_id=profile_id,
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool()
+    def ad_campaigns_update_ad_campaign_status(
+        campaign_id: str, status: str, platform: str
+    ) -> str:
+        """Pause or resume a campaign
+
+        Args:
+            campaign_id: Platform campaign ID (required)
+            status: (required)
+            platform: (required)"""
+        client = _get_client()
+        try:
+            response = client.ad_campaigns.update_ad_campaign_status(
+                campaign_id=campaign_id, status=status, platform=platform
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool()
+    def ad_campaigns_get_ad_tree(
+        page: int = 1,
+        limit: int = 20,
+        source: str = "zernio",
+        platform: str = "",
+        status: str = "",
+        ad_account_id: str = "",
+        account_id: str = "",
+        profile_id: str = "",
+    ) -> str:
+        """Get nested campaign/ad-set/ad tree
+
+        Args:
+            page: Page number
+            limit: Campaigns per page
+            source
+            platform
+            status: Filter by derived campaign status (post-aggregation)
+            ad_account_id: Platform ad account ID
+            account_id: Social account ID
+            profile_id: Profile ID"""
+        client = _get_client()
+        try:
+            response = client.ad_campaigns.get_ad_tree(
+                page=page,
+                limit=limit,
+                source=source,
+                platform=platform,
+                status=status,
+                ad_account_id=ad_account_id,
+                account_id=account_id,
+                profile_id=profile_id,
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    # ADS
+
+    @mcp.tool()
+    def ads_list_ads(
+        page: int = 1,
+        limit: int = 50,
+        source: str = "zernio",
+        status: str = "",
+        platform: str = "",
+        account_id: str = "",
+        profile_id: str = "",
+        campaign_id: str = "",
+    ) -> str:
+        """List ads
+
+        Args:
+            page: Page number
+            limit
+            source: zernio = Zernio-created only, all = include external ads
+            status
+            platform
+            account_id: Social account ID
+            profile_id: Profile ID
+            campaign_id: Platform campaign ID (filter ads within a campaign)"""
+        client = _get_client()
+        try:
+            response = client.ads.list_ads(
+                page=page,
+                limit=limit,
+                source=source,
+                status=status,
+                platform=platform,
+                account_id=account_id,
+                profile_id=profile_id,
+                campaign_id=campaign_id,
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool()
+    def ads_get_ad(ad_id: str) -> str:
+        """Get ad details
+
+        Args:
+            ad_id: (required)"""
+        client = _get_client()
+        try:
+            response = client.ads.get_ad(ad_id=ad_id)
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool()
+    def ads_update_ad(
+        ad_id: str,
+        status: str = "",
+        budget: str = "",
+        targeting: str = "",
+        name: str = "",
+    ) -> str:
+        """Update ad (pause/resume, budget, targeting, name)
+
+        Args:
+            ad_id: (required)
+            status
+            budget
+            targeting: Meta-only. Targeting updates for other platforms are not supported after creation.
+            name"""
+        client = _get_client()
+        try:
+            response = client.ads.update_ad(
+                ad_id=ad_id,
+                status=status,
+                budget=budget,
+                targeting=targeting,
+                name=name,
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool()
+    def ads_delete_ad(ad_id: str) -> str:
+        """Cancel an ad
+
+        Args:
+            ad_id: (required)"""
+        client = _get_client()
+        try:
+            response = client.ads.delete_ad(ad_id=ad_id)
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool()
+    def ads_get_ad_analytics(ad_id: str, breakdowns: str = "") -> str:
+        """Get ad analytics with daily breakdown
+
+        Args:
+            ad_id: (required)
+            breakdowns: Comma-separated breakdown dimensions. Meta: age, gender, country, publisher_platform, device_platform, region. TikTok: gender, age, country_code, platform, ac, language."""
+        client = _get_client()
+        try:
+            response = client.ads.get_ad_analytics(ad_id=ad_id, breakdowns=breakdowns)
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool()
+    def ads_list_ad_accounts(account_id: str) -> str:
+        """List ad accounts for a social account
+
+        Args:
+            account_id: Social account ID (required)"""
+        client = _get_client()
+        try:
+            response = client.ads.list_ad_accounts(account_id=account_id)
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool()
+    def ads_boost_post(
+        account_id: str,
+        ad_account_id: str,
+        name: str,
+        goal: str,
+        budget: str,
+        post_id: str = "",
+        platform_post_id: str = "",
+        currency: str = "",
+        schedule: str = "",
+        targeting: str = "",
+        bid_amount: float = 0.0,
+        tracking: str = "",
+        special_ad_categories: str = "",
+    ) -> str:
+        """Boost an existing post as a paid ad
+
+        Args:
+            post_id: Zernio post ID (provide this or platformPostId)
+            platform_post_id: Platform post ID (alternative to postId)
+            account_id: Social account ID (required)
+            ad_account_id: Platform ad account ID (required)
+            name: (required)
+            goal: (required)
+            budget: (required)
+            currency
+            schedule
+            targeting
+            bid_amount: Max bid cap (Meta only)
+            tracking: Meta only. Tracking specs (pixel, URL tags).
+            special_ad_categories: Meta only. Required for housing, employment, credit, or political ads."""
+        client = _get_client()
+        try:
+            response = client.ads.boost_post(
+                post_id=post_id,
+                platform_post_id=platform_post_id,
+                account_id=account_id,
+                ad_account_id=ad_account_id,
+                name=name,
+                goal=goal,
+                budget=budget,
+                currency=currency,
+                schedule=schedule,
+                targeting=targeting,
+                bid_amount=bid_amount,
+                tracking=tracking,
+                special_ad_categories=special_ad_categories,
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool()
+    def ads_create_standalone_ad(
+        account_id: str,
+        ad_account_id: str,
+        name: str,
+        goal: str,
+        budget_amount: float,
+        budget_type: str,
+        body: str,
+        currency: str = "",
+        headline: str = "",
+        long_headline: str = "",
+        call_to_action: str = "",
+        link_url: str = "",
+        image_url: str = "",
+        business_name: str = "",
+        board_id: str = "",
+        countries: str = "",
+        age_min: int = 0,
+        age_max: int = 0,
+        interests: str = "",
+        end_date: str = "",
+        audience_id: str = "",
+        campaign_type: str = "display",
+        keywords: str = "",
+        additional_headlines: str = "",
+        additional_descriptions: str = "",
+    ) -> str:
+        """Create a standalone ad with custom creative
+
+        Args:
+            account_id: (required)
+            ad_account_id: (required)
+            name: (required)
+            goal: (required)
+            budget_amount: (required)
+            budget_type: (required)
+            currency
+            headline: Required for most platforms. Max: Meta=255, Google=30, Pinterest=100
+            long_headline: Google Display only
+            body: Max: Google=90, Pinterest=500 (required)
+            call_to_action: Meta only
+            link_url
+            image_url: Image URL (or video URL for TikTok). Not required for Google Search campaigns.
+            business_name: Google Display only
+            board_id: Pinterest only. Board ID (auto-creates if not provided).
+            countries
+            age_min
+            age_max
+            interests
+            end_date: Required for lifetime budgets
+            audience_id: Custom audience ID for targeting
+            campaign_type: Google only
+            keywords: Google Search only
+            additional_headlines: Google Search RSA only. Extra headlines.
+            additional_descriptions: Google Search RSA only. Extra descriptions."""
+        client = _get_client()
+        try:
+            response = client.ads.create_standalone_ad(
+                account_id=account_id,
+                ad_account_id=ad_account_id,
+                name=name,
+                goal=goal,
+                budget_amount=budget_amount,
+                budget_type=budget_type,
+                currency=currency,
+                headline=headline,
+                long_headline=long_headline,
+                body=body,
+                call_to_action=call_to_action,
+                link_url=link_url,
+                image_url=image_url,
+                business_name=business_name,
+                board_id=board_id,
+                countries=countries,
+                age_min=age_min,
+                age_max=age_max,
+                interests=interests,
+                end_date=end_date,
+                audience_id=audience_id,
+                campaign_type=campaign_type,
+                keywords=keywords,
+                additional_headlines=additional_headlines,
+                additional_descriptions=additional_descriptions,
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool()
+    def ads_sync_external_ads() -> str:
+        """Sync external ads from platform ad managers"""
+        client = _get_client()
+        try:
+            response = client.ads.sync_external_ads()
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool()
+    def ads_search_ad_interests(q: str, account_id: str) -> str:
+        """Search targeting interests
+
+        Args:
+            q: Search query (required)
+            account_id: Social account ID (required)"""
+        client = _get_client()
+        try:
+            response = client.ads.search_ad_interests(q=q, account_id=account_id)
             return _format_response(response)
         except Exception as e:
             return f"Error: {e}"
@@ -3074,6 +3580,10 @@ def register_generated_tools(mcp, _get_client):
         tags: str = "",
         category_id: str = "",
         privacy_status: str = "",
+        thumbnail_url: str = "",
+        made_for_kids: bool = False,
+        contains_synthetic_media: bool = False,
+        playlist_id: str = "",
     ) -> str:
         """Update post metadata
 
@@ -3086,7 +3596,11 @@ def register_generated_tools(mcp, _get_client):
             description: New video description
             tags: Array of keyword tags (max 500 characters combined for YouTube)
             category_id: YouTube video category ID
-            privacy_status: Video privacy setting"""
+            privacy_status: Video privacy setting
+            thumbnail_url: Public URL of a custom thumbnail image (JPEG, PNG, or GIF, max 2 MB, recommended 1280x720). Works on any video you own, including existing videos not published through Zernio. The channel must be verified (phone verification) to set custom thumbnails.
+            made_for_kids: COPPA compliance flag. Set true for child-directed content (restricts comments, notifications, ad targeting).
+            contains_synthetic_media: AI-generated content disclosure. Set true if the video contains synthetic content that could be mistaken for real. YouTube may add a label.
+            playlist_id: YouTube playlist ID to add the video to (e.g. 'PLxxxxxxxxxxxxx'). Use GET /v1/accounts/{id}/youtube-playlists to list available playlists. Only playlists owned by the channel are supported."""
         client = _get_client()
         try:
             response = client.posts.update_post_metadata(
@@ -3099,6 +3613,10 @@ def register_generated_tools(mcp, _get_client):
                 tags=tags,
                 category_id=category_id,
                 privacy_status=privacy_status,
+                thumbnail_url=thumbnail_url,
+                made_for_kids=made_for_kids,
+                contains_synthetic_media=contains_synthetic_media,
+                playlist_id=playlist_id,
             )
             return _format_response(response)
         except Exception as e:
@@ -3658,154 +4176,6 @@ def register_generated_tools(mcp, _get_client):
             response = client.sequences.list_sequence_enrollments(
                 sequence_id=sequence_id, status=status, limit=limit, skip=skip
             )
-            return _format_response(response)
-        except Exception as e:
-            return f"Error: {e}"
-
-    # TOOLS
-
-    @mcp.tool()
-    def tools_download_you_tube_video(
-        url: str,
-        action: str = "download",
-        format: str = "video",
-        quality: str = "hd",
-        format_id: str = "",
-    ) -> str:
-        """Download YouTube video
-
-        Args:
-            url: YouTube video URL or video ID (required)
-            action: Action to perform: 'download' returns download URL, 'formats' lists available formats
-            format: Desired format (when action=download)
-            quality: Desired quality (when action=download)
-            format_id: Specific format ID from formats list"""
-        client = _get_client()
-        try:
-            response = client.tools.download_you_tube_video(
-                url=url,
-                action=action,
-                format=format,
-                quality=quality,
-                format_id=format_id,
-            )
-            return _format_response(response)
-        except Exception as e:
-            return f"Error: {e}"
-
-    @mcp.tool()
-    def tools_get_you_tube_transcript(url: str, lang: str = "en") -> str:
-        """Get YouTube transcript
-
-        Args:
-            url: YouTube video URL or video ID (required)
-            lang: Language code for transcript"""
-        client = _get_client()
-        try:
-            response = client.tools.get_you_tube_transcript(url=url, lang=lang)
-            return _format_response(response)
-        except Exception as e:
-            return f"Error: {e}"
-
-    @mcp.tool()
-    def tools_download_instagram_media(url: str) -> str:
-        """Download Instagram media
-
-        Args:
-            url: Instagram reel or post URL (required)"""
-        client = _get_client()
-        try:
-            response = client.tools.download_instagram_media(url=url)
-            return _format_response(response)
-        except Exception as e:
-            return f"Error: {e}"
-
-    @mcp.tool()
-    def tools_check_instagram_hashtags(hashtags: str) -> str:
-        """Check IG hashtag bans
-
-        Args:
-            hashtags: (required)"""
-        client = _get_client()
-        try:
-            response = client.tools.check_instagram_hashtags(hashtags=hashtags)
-            return _format_response(response)
-        except Exception as e:
-            return f"Error: {e}"
-
-    @mcp.tool()
-    def tools_download_tik_tok_video(
-        url: str, action: str = "download", format_id: str = ""
-    ) -> str:
-        """Download TikTok video
-
-        Args:
-            url: TikTok video URL or ID (required)
-            action: 'formats' to list available formats
-            format_id: Specific format ID (0 = no watermark, etc.)"""
-        client = _get_client()
-        try:
-            response = client.tools.download_tik_tok_video(
-                url=url, action=action, format_id=format_id
-            )
-            return _format_response(response)
-        except Exception as e:
-            return f"Error: {e}"
-
-    @mcp.tool()
-    def tools_download_twitter_media(
-        url: str, action: str = "download", format_id: str = ""
-    ) -> str:
-        """Download Twitter/X media
-
-        Args:
-            url: Twitter/X post URL (required)
-            action
-            format_id"""
-        client = _get_client()
-        try:
-            response = client.tools.download_twitter_media(
-                url=url, action=action, format_id=format_id
-            )
-            return _format_response(response)
-        except Exception as e:
-            return f"Error: {e}"
-
-    @mcp.tool()
-    def tools_download_facebook_video(url: str) -> str:
-        """Download Facebook video
-
-        Args:
-            url: Facebook video or reel URL (required)"""
-        client = _get_client()
-        try:
-            response = client.tools.download_facebook_video(url=url)
-            return _format_response(response)
-        except Exception as e:
-            return f"Error: {e}"
-
-    @mcp.tool()
-    def tools_download_linked_in_video(url: str) -> str:
-        """Download LinkedIn video
-
-        Args:
-            url: LinkedIn post URL (required)"""
-        client = _get_client()
-        try:
-            response = client.tools.download_linked_in_video(url=url)
-            return _format_response(response)
-        except Exception as e:
-            return f"Error: {e}"
-
-    @mcp.tool()
-    def tools_download_bluesky_media(url: str) -> str:
-        """Download Bluesky media
-
-        Args:
-            url: Bluesky post URL (required)"""
-        client = _get_client()
-        try:
-            response = client.tools.download_bluesky_media(url=url)
             return _format_response(response)
         except Exception as e:
             return f"Error: {e}"

@@ -5,6 +5,9 @@ from __future__ import annotations
 from .account_groups import AccountGroupsResource
 from .account_settings import AccountSettingsResource
 from .accounts import AccountsResource
+from .ad_audiences import AdAudiencesResource
+from .ad_campaigns import AdCampaignsResource
+from .ads import AdsResource
 from .analytics import AnalyticsResource
 from .api_keys import ApiKeysResource
 from .broadcasts import BroadcastsResource
@@ -23,7 +26,6 @@ from .queue import QueueResource
 from .reddit import RedditResource
 from .reviews import ReviewsResource
 from .sequences import SequencesResource
-from .tools import ToolsResource
 from .twitter_engagement import TwitterEngagementResource
 from .usage import UsageResource
 from .users import UsersResource
@@ -36,6 +38,9 @@ __all__ = [
     "AccountGroupsResource",
     "AccountSettingsResource",
     "AccountsResource",
+    "AdAudiencesResource",
+    "AdCampaignsResource",
+    "AdsResource",
     "AnalyticsResource",
     "ApiKeysResource",
     "BroadcastsResource",
@@ -54,7 +59,6 @@ __all__ = [
     "RedditResource",
     "ReviewsResource",
     "SequencesResource",
-    "ToolsResource",
     "TwitterEngagementResource",
     "UsageResource",
     "UsersResource",
