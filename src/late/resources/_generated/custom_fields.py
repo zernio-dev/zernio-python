@@ -23,21 +23,17 @@ class CustomFieldsResource:
 
     def _build_params(self, **kwargs: Any) -> dict[str, Any]:
         """Build query parameters, filtering None values."""
-
         def to_camel(s: str) -> str:
             parts = s.split("_")
             return parts[0] + "".join(p.title() for p in parts[1:])
-
         return {to_camel(k): v for k, v in kwargs.items() if v is not None}
 
     def _build_payload(self, **kwargs: Any) -> dict[str, Any]:
         """Build request payload, filtering None values."""
         from datetime import datetime
-
         def to_camel(s: str) -> str:
             parts = s.split("_")
             return parts[0] + "".join(p.title() for p in parts[1:])
-
         result: dict[str, Any] = {}
         for k, v in kwargs.items():
             if v is None:
@@ -48,16 +44,12 @@ class CustomFieldsResource:
                 result[to_camel(k)] = v
         return result
 
-    def set_contact_field_value(
-        self, contact_id: str, slug: str, value: Any
-    ) -> dict[str, Any]:
+    def set_contact_field_value(self, contact_id: str, slug: str, value: Any) -> dict[str, Any]:
         """Set a custom field value"""
         payload = self._build_payload(
             value=value,
         )
-        return self._client._put(
-            f"/v1/contacts/{contact_id}/fields/{slug}", data=payload
-        )
+        return self._client._put(f"/v1/contacts/{contact_id}/fields/{slug}", data=payload)
 
     def clear_contact_field_value(self, contact_id: str, slug: str) -> dict[str, Any]:
         """Clear a custom field value"""
@@ -70,15 +62,7 @@ class CustomFieldsResource:
         )
         return self._client._get("/v1/custom-fields", params=params)
 
-    def create_custom_field(
-        self,
-        profile_id: str,
-        name: str,
-        type: str,
-        *,
-        slug: str | None = None,
-        options: list[str] | None = None,
-    ) -> dict[str, Any]:
+    def create_custom_field(self, profile_id: str, name: str, type: str, *, slug: str | None = None, options: list[str] | None = None) -> dict[str, Any]:
         """Create a custom field definition"""
         payload = self._build_payload(
             profile_id=profile_id,
@@ -89,13 +73,7 @@ class CustomFieldsResource:
         )
         return self._client._post("/v1/custom-fields", data=payload)
 
-    def update_custom_field(
-        self,
-        field_id: str,
-        *,
-        name: str | None = None,
-        options: list[str] | None = None,
-    ) -> dict[str, Any]:
+    def update_custom_field(self, field_id: str, *, name: str | None = None, options: list[str] | None = None) -> dict[str, Any]:
         """Update a custom field definition"""
         payload = self._build_payload(
             name=name,
@@ -107,41 +85,25 @@ class CustomFieldsResource:
         """Delete a custom field definition"""
         return self._client._delete(f"/v1/custom-fields/{field_id}")
 
-    async def aset_contact_field_value(
-        self, contact_id: str, slug: str, value: Any
-    ) -> dict[str, Any]:
+    async def aset_contact_field_value(self, contact_id: str, slug: str, value: Any) -> dict[str, Any]:
         """Set a custom field value (async)"""
         payload = self._build_payload(
             value=value,
         )
-        return await self._client._aput(
-            f"/v1/contacts/{contact_id}/fields/{slug}", data=payload
-        )
+        return await self._client._aput(f"/v1/contacts/{contact_id}/fields/{slug}", data=payload)
 
-    async def aclear_contact_field_value(
-        self, contact_id: str, slug: str
-    ) -> dict[str, Any]:
+    async def aclear_contact_field_value(self, contact_id: str, slug: str) -> dict[str, Any]:
         """Clear a custom field value (async)"""
         return await self._client._adelete(f"/v1/contacts/{contact_id}/fields/{slug}")
 
-    async def alist_custom_fields(
-        self, *, profile_id: str | None = None
-    ) -> dict[str, Any]:
+    async def alist_custom_fields(self, *, profile_id: str | None = None) -> dict[str, Any]:
         """List custom field definitions (async)"""
         params = self._build_params(
             profile_id=profile_id,
         )
         return await self._client._aget("/v1/custom-fields", params=params)
 
-    async def acreate_custom_field(
-        self,
-        profile_id: str,
-        name: str,
-        type: str,
-        *,
-        slug: str | None = None,
-        options: list[str] | None = None,
-    ) -> dict[str, Any]:
+    async def acreate_custom_field(self, profile_id: str, name: str, type: str, *, slug: str | None = None, options: list[str] | None = None) -> dict[str, Any]:
         """Create a custom field definition (async)"""
         payload = self._build_payload(
             profile_id=profile_id,
@@ -152,13 +114,7 @@ class CustomFieldsResource:
         )
         return await self._client._apost("/v1/custom-fields", data=payload)
 
-    async def aupdate_custom_field(
-        self,
-        field_id: str,
-        *,
-        name: str | None = None,
-        options: list[str] | None = None,
-    ) -> dict[str, Any]:
+    async def aupdate_custom_field(self, field_id: str, *, name: str | None = None, options: list[str] | None = None) -> dict[str, Any]:
         """Update a custom field definition (async)"""
         payload = self._build_payload(
             name=name,

@@ -275,19 +275,6 @@ Both `from zernio import ...` and `from late import ...` work identically. The `
 | `media.upload_large_bytes()` | Upload large file from bytes |
 | `media.upload_multiple()` | Upload multiple files |
 
-### Tools
-| Method | Description |
-|--------|-------------|
-| `tools.get_you_tube_transcript()` | Get YouTube transcript |
-| `tools.check_instagram_hashtags()` | Check IG hashtag bans |
-| `tools.download_bluesky_media()` | Download Bluesky media |
-| `tools.download_facebook_video()` | Download Facebook video |
-| `tools.download_instagram_media()` | Download Instagram media |
-| `tools.download_linked_in_video()` | Download LinkedIn video |
-| `tools.download_tik_tok_video()` | Download TikTok video |
-| `tools.download_twitter_media()` | Download Twitter/X media |
-| `tools.download_you_tube_video()` | Download YouTube video |
-
 ### Users
 | Method | Description |
 |--------|-------------|
@@ -323,11 +310,13 @@ Both `from zernio import ...` and `from late import ...` work identically. The `
 | `connect.get_reddit_flairs()` | List subreddit flairs |
 | `connect.get_reddit_subreddits()` | List Reddit subreddits |
 | `connect.get_telegram_connect_status()` | Generate Telegram code |
+| `connect.get_youtube_playlists()` | List YouTube playlists |
 | `connect.update_facebook_page()` | Update Facebook page |
 | `connect.update_gmb_location()` | Update GBP location |
 | `connect.update_linked_in_organization()` | Switch LinkedIn account type |
 | `connect.update_pinterest_boards()` | Set default Pinterest board |
 | `connect.update_reddit_subreddits()` | Set default subreddit |
+| `connect.update_youtube_default_playlist()` | Set default YouTube playlist |
 | `connect.complete_telegram_connect()` | Check Telegram status |
 | `connect.connect_bluesky_credentials()` | Connect Bluesky account |
 | `connect.connect_whats_app_credentials()` | Connect WhatsApp via credentials |
@@ -357,6 +346,36 @@ Both `from zernio import ...` and `from late import ...` work identically. The `
 | `account_settings.set_instagram_ice_breakers()` | Set IG ice breakers |
 | `account_settings.set_messenger_menu()` | Set FB persistent menu |
 | `account_settings.set_telegram_commands()` | Set TG bot commands |
+
+### Ad Audiences
+| Method | Description |
+|--------|-------------|
+| `ad_audiences.list_ad_audiences()` | List custom audiences |
+| `ad_audiences.create_ad_audience()` | Create a custom audience (Meta only) |
+| `ad_audiences.get_ad_audience()` | Get audience details |
+| `ad_audiences.delete_ad_audience()` | Delete a custom audience |
+| `ad_audiences.add_users_to_ad_audience()` | Add users to a customer list audience |
+
+### Ad Campaigns
+| Method | Description |
+|--------|-------------|
+| `ad_campaigns.list_ad_campaigns()` | List campaigns with aggregate metrics |
+| `ad_campaigns.get_ad_tree()` | Get nested campaign/ad-set/ad tree |
+| `ad_campaigns.update_ad_campaign_status()` | Pause or resume a campaign |
+
+### Ads
+| Method | Description |
+|--------|-------------|
+| `ads.list_ad_accounts()` | List ad accounts for a social account |
+| `ads.list_ads()` | List ads |
+| `ads.create_standalone_ad()` | Create a standalone ad with custom creative |
+| `ads.get_ad()` | Get ad details |
+| `ads.get_ad_analytics()` | Get ad analytics with daily breakdown |
+| `ads.update_ad()` | Update ad (pause/resume, budget, targeting, name) |
+| `ads.delete_ad()` | Cancel an ad |
+| `ads.boost_post()` | Boost an existing post as a paid ad |
+| `ads.search_ad_interests()` | Search targeting interests |
+| `ads.sync_external_ads()` | Sync external ads from platform ad managers |
 
 ### Broadcasts
 | Method | Description |
@@ -455,8 +474,13 @@ Both `from zernio import ...` and `from late import ...` work identically. The `
 | `messages.get_inbox_conversation()` | Get conversation |
 | `messages.get_inbox_conversation_messages()` | List messages |
 | `messages.update_inbox_conversation()` | Update conversation status |
+| `messages.delete_inbox_message()` | Delete message |
+| `messages.add_message_reaction()` | Add reaction |
 | `messages.edit_inbox_message()` | Edit message |
+| `messages.remove_message_reaction()` | Remove reaction |
 | `messages.send_inbox_message()` | Send message |
+| `messages.send_typing_indicator()` | Send typing indicator |
+| `messages.upload_media_direct()` | Upload media file |
 
 ### Reviews (Inbox)
 | Method | Description |

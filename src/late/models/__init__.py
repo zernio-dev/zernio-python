@@ -11,41 +11,29 @@ from ._generated.models import *  # noqa: F401, F403
 # Import specific commonly used models for convenience
 from ._generated.models import (
     AccountGetResponse,
-    # Accounts responses
     AccountsListResponse,
     AccountWithFollowerStats,
-    CaptionResponse,
-    DownloadFormat,
-    # Tools responses
-    DownloadResponse,
     ErrorResponse,
     FacebookPlatformData,
     FollowerStatsResponse,
-    HashtagCheckResponse,
-    HashtagInfo,
     InstagramPlatformData,
     LinkedInPlatformData,
     MediaItem,
-    # Media responses
     MediaUploadResponse,
-    # Base responses
     Pagination,
     PinterestPlatformData,
     PlatformTarget,
-    # Core models
     Post,
     PostCreateResponse,
     PostDeleteResponse,
     PostGetResponse,
     PostRetryResponse,
-    # Posts responses
     PostsListResponse,
     PostUpdateResponse,
     Profile,
     ProfileCreateResponse,
     ProfileDeleteResponse,
     ProfileGetResponse,
-    # Profiles responses
     ProfilesListResponse,
     ProfileUpdateResponse,
     QueueDeleteResponse,
@@ -53,22 +41,16 @@ from ._generated.models import (
     QueuePreviewResponse,
     QueueSchedule,
     QueueSlot,
-    # Queue responses
     QueueSlotsResponse,
     QueueUpdateResponse,
     SocialAccount,
-    # Enums
     Status,
-    # Platform-specific
     TikTokPlatformData,
-    TranscriptResponse,
-    TranscriptSegment,
     TwitterPlatformData,
     Type,
     UploadedFile,
     UploadTokenResponse,
     UploadTokenStatusResponse,
-    # Users responses
     User,
     UserGetResponse,
     UsersListResponse,
@@ -76,13 +58,19 @@ from ._generated.models import (
     YouTubePlatformData,
 )
 
-# SDK-specific models (not from OpenAPI)
-from .responses import (
+# SDK-specific models (not from OpenAPI) — intentionally override generated stubs
+from .responses import (  # type: ignore[assignment]
+    CaptionResponse,
+    DownloadFormat,
+    DownloadResponse,
+    HashtagCheckResponse,
+    HashtagInfo,
     MediaLargeUploadResponse,
+    TranscriptResponse,
+    TranscriptSegment,
 )
 
 __all__ = [
-    # Core models
     "Post",
     "MediaItem",
     "PlatformTarget",
@@ -90,11 +78,9 @@ __all__ = [
     "SocialAccount",
     "QueueSlot",
     "QueueSchedule",
-    # Enums
     "Status",
     "Type",
     "Visibility",
-    # Platform-specific
     "TikTokPlatformData",
     "TwitterPlatformData",
     "InstagramPlatformData",
@@ -102,40 +88,33 @@ __all__ = [
     "LinkedInPlatformData",
     "YouTubePlatformData",
     "PinterestPlatformData",
-    # Base responses
     "Pagination",
     "ErrorResponse",
-    # Posts responses
     "PostsListResponse",
     "PostGetResponse",
     "PostCreateResponse",
     "PostUpdateResponse",
     "PostDeleteResponse",
     "PostRetryResponse",
-    # Profiles responses
     "ProfilesListResponse",
     "ProfileGetResponse",
     "ProfileCreateResponse",
     "ProfileUpdateResponse",
     "ProfileDeleteResponse",
-    # Accounts responses
     "AccountsListResponse",
     "AccountGetResponse",
     "FollowerStatsResponse",
     "AccountWithFollowerStats",
-    # Media responses
     "MediaUploadResponse",
     "MediaLargeUploadResponse",
     "UploadedFile",
     "UploadTokenResponse",
     "UploadTokenStatusResponse",
-    # Queue responses
     "QueueSlotsResponse",
     "QueueUpdateResponse",
     "QueueDeleteResponse",
     "QueuePreviewResponse",
     "QueueNextSlotResponse",
-    # Tools responses
     "DownloadResponse",
     "DownloadFormat",
     "TranscriptResponse",
@@ -143,7 +122,6 @@ __all__ = [
     "HashtagCheckResponse",
     "HashtagInfo",
     "CaptionResponse",
-    # Users responses
     "User",
     "UsersListResponse",
     "UserGetResponse",

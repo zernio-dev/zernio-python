@@ -23,21 +23,17 @@ class CommentAutomationsResource:
 
     def _build_params(self, **kwargs: Any) -> dict[str, Any]:
         """Build query parameters, filtering None values."""
-
         def to_camel(s: str) -> str:
             parts = s.split("_")
             return parts[0] + "".join(p.title() for p in parts[1:])
-
         return {to_camel(k): v for k, v in kwargs.items() if v is not None}
 
     def _build_payload(self, **kwargs: Any) -> dict[str, Any]:
         """Build request payload, filtering None values."""
         from datetime import datetime
-
         def to_camel(s: str) -> str:
             parts = s.split("_")
             return parts[0] + "".join(p.title() for p in parts[1:])
-
         result: dict[str, Any] = {}
         for k, v in kwargs.items():
             if v is None:
@@ -48,29 +44,14 @@ class CommentAutomationsResource:
                 result[to_camel(k)] = v
         return result
 
-    def list_comment_automations(
-        self, *, profile_id: str | None = None
-    ) -> dict[str, Any]:
+    def list_comment_automations(self, *, profile_id: str | None = None) -> dict[str, Any]:
         """List comment-to-DM automations"""
         params = self._build_params(
             profile_id=profile_id,
         )
         return self._client._get("/v1/comment-automations", params=params)
 
-    def create_comment_automation(
-        self,
-        profile_id: str,
-        account_id: str,
-        platform_post_id: str,
-        name: str,
-        dm_message: str,
-        *,
-        post_id: str | None = None,
-        post_title: str | None = None,
-        keywords: list[str] | None = None,
-        match_mode: str | None = "contains",
-        comment_reply: str | None = None,
-    ) -> dict[str, Any]:
+    def create_comment_automation(self, profile_id: str, account_id: str, platform_post_id: str, name: str, dm_message: str, *, post_id: str | None = None, post_title: str | None = None, keywords: list[str] | None = None, match_mode: str | None = "contains", comment_reply: str | None = None) -> dict[str, Any]:
         """Create a comment-to-DM automation"""
         payload = self._build_payload(
             profile_id=profile_id,
@@ -90,17 +71,7 @@ class CommentAutomationsResource:
         """Get automation details with recent logs"""
         return self._client._get(f"/v1/comment-automations/{automation_id}")
 
-    def update_comment_automation(
-        self,
-        automation_id: str,
-        *,
-        name: str | None = None,
-        keywords: list[str] | None = None,
-        match_mode: str | None = None,
-        dm_message: str | None = None,
-        comment_reply: str | None = None,
-        is_active: bool | None = None,
-    ) -> dict[str, Any]:
+    def update_comment_automation(self, automation_id: str, *, name: str | None = None, keywords: list[str] | None = None, match_mode: str | None = None, dm_message: str | None = None, comment_reply: str | None = None, is_active: bool | None = None) -> dict[str, Any]:
         """Update automation settings"""
         payload = self._build_payload(
             name=name,
@@ -110,55 +81,29 @@ class CommentAutomationsResource:
             comment_reply=comment_reply,
             is_active=is_active,
         )
-        return self._client._patch(
-            f"/v1/comment-automations/{automation_id}", data=payload
-        )
+        return self._client._patch(f"/v1/comment-automations/{automation_id}", data=payload)
 
     def delete_comment_automation(self, automation_id: str) -> dict[str, Any]:
         """Delete automation and all logs"""
         return self._client._delete(f"/v1/comment-automations/{automation_id}")
 
-    def list_comment_automation_logs(
-        self,
-        automation_id: str,
-        *,
-        status: str | None = None,
-        limit: int | None = 50,
-        skip: int | None = 0,
-    ) -> dict[str, Any]:
+    def list_comment_automation_logs(self, automation_id: str, *, status: str | None = None, limit: int | None = 50, skip: int | None = 0) -> dict[str, Any]:
         """List trigger logs for an automation"""
         params = self._build_params(
             status=status,
             limit=limit,
             skip=skip,
         )
-        return self._client._get(
-            f"/v1/comment-automations/{automation_id}/logs", params=params
-        )
+        return self._client._get(f"/v1/comment-automations/{automation_id}/logs", params=params)
 
-    async def alist_comment_automations(
-        self, *, profile_id: str | None = None
-    ) -> dict[str, Any]:
+    async def alist_comment_automations(self, *, profile_id: str | None = None) -> dict[str, Any]:
         """List comment-to-DM automations (async)"""
         params = self._build_params(
             profile_id=profile_id,
         )
         return await self._client._aget("/v1/comment-automations", params=params)
 
-    async def acreate_comment_automation(
-        self,
-        profile_id: str,
-        account_id: str,
-        platform_post_id: str,
-        name: str,
-        dm_message: str,
-        *,
-        post_id: str | None = None,
-        post_title: str | None = None,
-        keywords: list[str] | None = None,
-        match_mode: str | None = "contains",
-        comment_reply: str | None = None,
-    ) -> dict[str, Any]:
+    async def acreate_comment_automation(self, profile_id: str, account_id: str, platform_post_id: str, name: str, dm_message: str, *, post_id: str | None = None, post_title: str | None = None, keywords: list[str] | None = None, match_mode: str | None = "contains", comment_reply: str | None = None) -> dict[str, Any]:
         """Create a comment-to-DM automation (async)"""
         payload = self._build_payload(
             profile_id=profile_id,
@@ -178,17 +123,7 @@ class CommentAutomationsResource:
         """Get automation details with recent logs (async)"""
         return await self._client._aget(f"/v1/comment-automations/{automation_id}")
 
-    async def aupdate_comment_automation(
-        self,
-        automation_id: str,
-        *,
-        name: str | None = None,
-        keywords: list[str] | None = None,
-        match_mode: str | None = None,
-        dm_message: str | None = None,
-        comment_reply: str | None = None,
-        is_active: bool | None = None,
-    ) -> dict[str, Any]:
+    async def aupdate_comment_automation(self, automation_id: str, *, name: str | None = None, keywords: list[str] | None = None, match_mode: str | None = None, dm_message: str | None = None, comment_reply: str | None = None, is_active: bool | None = None) -> dict[str, Any]:
         """Update automation settings (async)"""
         payload = self._build_payload(
             name=name,
@@ -198,28 +133,17 @@ class CommentAutomationsResource:
             comment_reply=comment_reply,
             is_active=is_active,
         )
-        return await self._client._apatch(
-            f"/v1/comment-automations/{automation_id}", data=payload
-        )
+        return await self._client._apatch(f"/v1/comment-automations/{automation_id}", data=payload)
 
     async def adelete_comment_automation(self, automation_id: str) -> dict[str, Any]:
         """Delete automation and all logs (async)"""
         return await self._client._adelete(f"/v1/comment-automations/{automation_id}")
 
-    async def alist_comment_automation_logs(
-        self,
-        automation_id: str,
-        *,
-        status: str | None = None,
-        limit: int | None = 50,
-        skip: int | None = 0,
-    ) -> dict[str, Any]:
+    async def alist_comment_automation_logs(self, automation_id: str, *, status: str | None = None, limit: int | None = 50, skip: int | None = 0) -> dict[str, Any]:
         """List trigger logs for an automation (async)"""
         params = self._build_params(
             status=status,
             limit=limit,
             skip=skip,
         )
-        return await self._client._aget(
-            f"/v1/comment-automations/{automation_id}/logs", params=params
-        )
+        return await self._client._aget(f"/v1/comment-automations/{automation_id}/logs", params=params)

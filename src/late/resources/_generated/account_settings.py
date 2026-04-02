@@ -23,21 +23,17 @@ class AccountSettingsResource:
 
     def _build_params(self, **kwargs: Any) -> dict[str, Any]:
         """Build query parameters, filtering None values."""
-
         def to_camel(s: str) -> str:
             parts = s.split("_")
             return parts[0] + "".join(p.title() for p in parts[1:])
-
         return {to_camel(k): v for k, v in kwargs.items() if v is not None}
 
     def _build_payload(self, **kwargs: Any) -> dict[str, Any]:
         """Build request payload, filtering None values."""
         from datetime import datetime
-
         def to_camel(s: str) -> str:
             parts = s.split("_")
             return parts[0] + "".join(p.title() for p in parts[1:])
-
         result: dict[str, Any] = {}
         for k, v in kwargs.items():
             if v is None:
@@ -52,16 +48,12 @@ class AccountSettingsResource:
         """Get FB persistent menu"""
         return self._client._get(f"/v1/accounts/{account_id}/messenger-menu")
 
-    def set_messenger_menu(
-        self, account_id: str, persistent_menu: list[dict[str, Any]]
-    ) -> dict[str, Any]:
+    def set_messenger_menu(self, account_id: str, persistent_menu: list[dict[str, Any]]) -> dict[str, Any]:
         """Set FB persistent menu"""
         payload = self._build_payload(
             persistent_menu=persistent_menu,
         )
-        return self._client._put(
-            f"/v1/accounts/{account_id}/messenger-menu", data=payload
-        )
+        return self._client._put(f"/v1/accounts/{account_id}/messenger-menu", data=payload)
 
     def delete_messenger_menu(self, account_id: str) -> dict[str, Any]:
         """Delete FB persistent menu"""
@@ -71,16 +63,12 @@ class AccountSettingsResource:
         """Get IG ice breakers"""
         return self._client._get(f"/v1/accounts/{account_id}/instagram-ice-breakers")
 
-    def set_instagram_ice_breakers(
-        self, account_id: str, ice_breakers: list[dict[str, Any]]
-    ) -> dict[str, Any]:
+    def set_instagram_ice_breakers(self, account_id: str, ice_breakers: list[dict[str, Any]]) -> dict[str, Any]:
         """Set IG ice breakers"""
         payload = self._build_payload(
             ice_breakers=ice_breakers,
         )
-        return self._client._put(
-            f"/v1/accounts/{account_id}/instagram-ice-breakers", data=payload
-        )
+        return self._client._put(f"/v1/accounts/{account_id}/instagram-ice-breakers", data=payload)
 
     def delete_instagram_ice_breakers(self, account_id: str) -> dict[str, Any]:
         """Delete IG ice breakers"""
@@ -90,16 +78,12 @@ class AccountSettingsResource:
         """Get TG bot commands"""
         return self._client._get(f"/v1/accounts/{account_id}/telegram-commands")
 
-    def set_telegram_commands(
-        self, account_id: str, commands: list[dict[str, Any]]
-    ) -> dict[str, Any]:
+    def set_telegram_commands(self, account_id: str, commands: list[dict[str, Any]]) -> dict[str, Any]:
         """Set TG bot commands"""
         payload = self._build_payload(
             commands=commands,
         )
-        return self._client._put(
-            f"/v1/accounts/{account_id}/telegram-commands", data=payload
-        )
+        return self._client._put(f"/v1/accounts/{account_id}/telegram-commands", data=payload)
 
     def delete_telegram_commands(self, account_id: str) -> dict[str, Any]:
         """Delete TG bot commands"""
@@ -109,16 +93,12 @@ class AccountSettingsResource:
         """Get FB persistent menu (async)"""
         return await self._client._aget(f"/v1/accounts/{account_id}/messenger-menu")
 
-    async def aset_messenger_menu(
-        self, account_id: str, persistent_menu: list[dict[str, Any]]
-    ) -> dict[str, Any]:
+    async def aset_messenger_menu(self, account_id: str, persistent_menu: list[dict[str, Any]]) -> dict[str, Any]:
         """Set FB persistent menu (async)"""
         payload = self._build_payload(
             persistent_menu=persistent_menu,
         )
-        return await self._client._aput(
-            f"/v1/accounts/{account_id}/messenger-menu", data=payload
-        )
+        return await self._client._aput(f"/v1/accounts/{account_id}/messenger-menu", data=payload)
 
     async def adelete_messenger_menu(self, account_id: str) -> dict[str, Any]:
         """Delete FB persistent menu (async)"""
@@ -126,44 +106,30 @@ class AccountSettingsResource:
 
     async def aget_instagram_ice_breakers(self, account_id: str) -> dict[str, Any]:
         """Get IG ice breakers (async)"""
-        return await self._client._aget(
-            f"/v1/accounts/{account_id}/instagram-ice-breakers"
-        )
+        return await self._client._aget(f"/v1/accounts/{account_id}/instagram-ice-breakers")
 
-    async def aset_instagram_ice_breakers(
-        self, account_id: str, ice_breakers: list[dict[str, Any]]
-    ) -> dict[str, Any]:
+    async def aset_instagram_ice_breakers(self, account_id: str, ice_breakers: list[dict[str, Any]]) -> dict[str, Any]:
         """Set IG ice breakers (async)"""
         payload = self._build_payload(
             ice_breakers=ice_breakers,
         )
-        return await self._client._aput(
-            f"/v1/accounts/{account_id}/instagram-ice-breakers", data=payload
-        )
+        return await self._client._aput(f"/v1/accounts/{account_id}/instagram-ice-breakers", data=payload)
 
     async def adelete_instagram_ice_breakers(self, account_id: str) -> dict[str, Any]:
         """Delete IG ice breakers (async)"""
-        return await self._client._adelete(
-            f"/v1/accounts/{account_id}/instagram-ice-breakers"
-        )
+        return await self._client._adelete(f"/v1/accounts/{account_id}/instagram-ice-breakers")
 
     async def aget_telegram_commands(self, account_id: str) -> dict[str, Any]:
         """Get TG bot commands (async)"""
         return await self._client._aget(f"/v1/accounts/{account_id}/telegram-commands")
 
-    async def aset_telegram_commands(
-        self, account_id: str, commands: list[dict[str, Any]]
-    ) -> dict[str, Any]:
+    async def aset_telegram_commands(self, account_id: str, commands: list[dict[str, Any]]) -> dict[str, Any]:
         """Set TG bot commands (async)"""
         payload = self._build_payload(
             commands=commands,
         )
-        return await self._client._aput(
-            f"/v1/accounts/{account_id}/telegram-commands", data=payload
-        )
+        return await self._client._aput(f"/v1/accounts/{account_id}/telegram-commands", data=payload)
 
     async def adelete_telegram_commands(self, account_id: str) -> dict[str, Any]:
         """Delete TG bot commands (async)"""
-        return await self._client._adelete(
-            f"/v1/accounts/{account_id}/telegram-commands"
-        )
+        return await self._client._adelete(f"/v1/accounts/{account_id}/telegram-commands")
