@@ -274,7 +274,6 @@ class TestModelsValidation:
         """Test MediaItem type field accepts media types."""
         from late.models._generated.models import MediaItem
 
-        MediaType = MediaItem.model_fields["type"].annotation
         assert MediaItem(type="image").type.value == "image"
         assert MediaItem(type="video").type.value == "video"
 

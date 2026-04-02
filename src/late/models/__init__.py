@@ -55,17 +55,11 @@ from ._generated.models import (
     UserGetResponse,
     UsersListResponse,
     Visibility,
-    WhatsAppBodyComponent,
-    WhatsAppButtonsComponent,
-    WhatsAppFooterComponent,
-    WhatsAppHeaderComponent,
-    WhatsAppTemplateButton,
-    WhatsAppTemplateComponent,
     YouTubePlatformData,
 )
 
-# SDK-specific models (not from OpenAPI)
-from .responses import (
+# SDK-specific models (not from OpenAPI) — intentionally override generated stubs
+from .responses import (  # type: ignore[assignment]
     CaptionResponse,
     DownloadFormat,
     DownloadResponse,
@@ -94,12 +88,6 @@ __all__ = [
     "LinkedInPlatformData",
     "YouTubePlatformData",
     "PinterestPlatformData",
-    "WhatsAppBodyComponent",
-    "WhatsAppButtonsComponent",
-    "WhatsAppFooterComponent",
-    "WhatsAppHeaderComponent",
-    "WhatsAppTemplateButton",
-    "WhatsAppTemplateComponent",
     "Pagination",
     "ErrorResponse",
     "PostsListResponse",
