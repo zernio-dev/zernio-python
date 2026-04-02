@@ -46,6 +46,7 @@ TAG_TO_RESOURCE: dict[str, str] = {
     "GMB Attributes": "accounts",
     "GMB Place Actions": "accounts",
     "LinkedIn Mentions": "accounts",
+    "Validate": "validate",
 }
 
 # Operations to SKIP (not useful for MCP)

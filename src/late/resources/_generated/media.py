@@ -23,21 +23,17 @@ class MediaResource:
 
     def _build_params(self, **kwargs: Any) -> dict[str, Any]:
         """Build query parameters, filtering None values."""
-
         def to_camel(s: str) -> str:
             parts = s.split("_")
             return parts[0] + "".join(p.title() for p in parts[1:])
-
         return {to_camel(k): v for k, v in kwargs.items() if v is not None}
 
     def _build_payload(self, **kwargs: Any) -> dict[str, Any]:
         """Build request payload, filtering None values."""
         from datetime import datetime
-
         def to_camel(s: str) -> str:
             parts = s.split("_")
             return parts[0] + "".join(p.title() for p in parts[1:])
-
         result: dict[str, Any] = {}
         for k, v in kwargs.items():
             if v is None:
@@ -48,9 +44,7 @@ class MediaResource:
                 result[to_camel(k)] = v
         return result
 
-    def get_media_presigned_url(
-        self, filename: str, content_type: str, *, size: int | None = None
-    ) -> dict[str, Any]:
+    def get_media_presigned_url(self, filename: str, content_type: str, *, size: int | None = None) -> dict[str, Any]:
         """Get presigned upload URL"""
         payload = self._build_payload(
             filename=filename,
@@ -59,9 +53,7 @@ class MediaResource:
         )
         return self._client._post("/v1/media/presign", data=payload)
 
-    async def aget_media_presigned_url(
-        self, filename: str, content_type: str, *, size: int | None = None
-    ) -> dict[str, Any]:
+    async def aget_media_presigned_url(self, filename: str, content_type: str, *, size: int | None = None) -> dict[str, Any]:
         """Get presigned upload URL (async)"""
         payload = self._build_payload(
             filename=filename,

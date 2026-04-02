@@ -25,21 +25,17 @@ class WhatsappResource:
 
     def _build_params(self, **kwargs: Any) -> dict[str, Any]:
         """Build query parameters, filtering None values."""
-
         def to_camel(s: str) -> str:
             parts = s.split("_")
             return parts[0] + "".join(p.title() for p in parts[1:])
-
         return {to_camel(k): v for k, v in kwargs.items() if v is not None}
 
     def _build_payload(self, **kwargs: Any) -> dict[str, Any]:
         """Build request payload, filtering None values."""
         from datetime import datetime
-
         def to_camel(s: str) -> str:
             parts = s.split("_")
             return parts[0] + "".join(p.title() for p in parts[1:])
-
         result: dict[str, Any] = {}
         for k, v in kwargs.items():
             if v is None:
@@ -50,12 +46,7 @@ class WhatsappResource:
                 result[to_camel(k)] = v
         return result
 
-    def send_whats_app_bulk(
-        self,
-        account_id: str,
-        recipients: list[dict[str, Any]],
-        template: dict[str, Any],
-    ) -> dict[str, Any]:
+    def send_whats_app_bulk(self, account_id: str, recipients: list[dict[str, Any]], template: dict[str, Any]) -> dict[str, Any]:
         """Bulk send template messages"""
         payload = self._build_payload(
             account_id=account_id,
@@ -64,17 +55,7 @@ class WhatsappResource:
         )
         return self._client._post("/v1/whatsapp/bulk", data=payload)
 
-    def get_whats_app_contacts(
-        self,
-        account_id: str,
-        *,
-        search: str | None = None,
-        tag: str | None = None,
-        group: str | None = None,
-        opted_in: str | None = None,
-        limit: int | None = 50,
-        skip: int | None = 0,
-    ) -> dict[str, Any]:
+    def get_whats_app_contacts(self, account_id: str, *, search: str | None = None, tag: str | None = None, group: str | None = None, opted_in: str | None = None, limit: int | None = 50, skip: int | None = 0) -> dict[str, Any]:
         """List contacts"""
         params = self._build_params(
             account_id=account_id,
@@ -87,20 +68,7 @@ class WhatsappResource:
         )
         return self._client._get("/v1/whatsapp/contacts", params=params)
 
-    def create_whats_app_contact(
-        self,
-        account_id: str,
-        phone: str,
-        name: str,
-        *,
-        email: str | None = None,
-        company: str | None = None,
-        tags: list[str] | None = None,
-        groups: list[str] | None = None,
-        is_opted_in: bool | None = True,
-        custom_fields: dict[str, Any] | None = None,
-        notes: str | None = None,
-    ) -> dict[str, Any]:
+    def create_whats_app_contact(self, account_id: str, phone: str, name: str, *, email: str | None = None, company: str | None = None, tags: list[str] | None = None, groups: list[str] | None = None, is_opted_in: bool | None = True, custom_fields: dict[str, Any] | None = None, notes: str | None = None) -> dict[str, Any]:
         """Create contact"""
         payload = self._build_payload(
             account_id=account_id,
@@ -120,20 +88,7 @@ class WhatsappResource:
         """Get contact"""
         return self._client._get(f"/v1/whatsapp/contacts/{contact_id}")
 
-    def update_whats_app_contact(
-        self,
-        contact_id: str,
-        *,
-        name: str | None = None,
-        email: str | None = None,
-        company: str | None = None,
-        tags: list[str] | None = None,
-        groups: list[str] | None = None,
-        is_opted_in: bool | None = None,
-        is_blocked: bool | None = None,
-        custom_fields: dict[str, Any] | None = None,
-        notes: str | None = None,
-    ) -> dict[str, Any]:
+    def update_whats_app_contact(self, contact_id: str, *, name: str | None = None, email: str | None = None, company: str | None = None, tags: list[str] | None = None, groups: list[str] | None = None, is_opted_in: bool | None = None, is_blocked: bool | None = None, custom_fields: dict[str, Any] | None = None, notes: str | None = None) -> dict[str, Any]:
         """Update contact"""
         payload = self._build_payload(
             name=name,
@@ -152,15 +107,7 @@ class WhatsappResource:
         """Delete contact"""
         return self._client._delete(f"/v1/whatsapp/contacts/{contact_id}")
 
-    def import_whats_app_contacts(
-        self,
-        account_id: str,
-        contacts: list[dict[str, Any]],
-        *,
-        default_tags: list[str] | None = None,
-        default_groups: list[str] | None = None,
-        skip_duplicates: bool | None = True,
-    ) -> dict[str, Any]:
+    def import_whats_app_contacts(self, account_id: str, contacts: list[dict[str, Any]], *, default_tags: list[str] | None = None, default_groups: list[str] | None = None, skip_duplicates: bool | None = True) -> dict[str, Any]:
         """Bulk import contacts"""
         payload = self._build_payload(
             account_id=account_id,
@@ -171,14 +118,7 @@ class WhatsappResource:
         )
         return self._client._post("/v1/whatsapp/contacts/import", data=payload)
 
-    def bulk_update_whats_app_contacts(
-        self,
-        action: str,
-        contact_ids: list[str],
-        *,
-        tags: list[str] | None = None,
-        groups: list[str] | None = None,
-    ) -> dict[str, Any]:
+    def bulk_update_whats_app_contacts(self, action: str, contact_ids: list[str], *, tags: list[str] | None = None, groups: list[str] | None = None) -> dict[str, Any]:
         """Bulk update contacts"""
         payload = self._build_payload(
             action=action,
@@ -199,9 +139,7 @@ class WhatsappResource:
         )
         return self._client._get("/v1/whatsapp/groups", params=params)
 
-    def rename_whats_app_group(
-        self, account_id: str, old_name: str, new_name: str
-    ) -> dict[str, Any]:
+    def rename_whats_app_group(self, account_id: str, old_name: str, new_name: str) -> dict[str, Any]:
         """Rename group"""
         payload = self._build_payload(
             account_id=account_id,
@@ -210,9 +148,7 @@ class WhatsappResource:
         )
         return self._client._post("/v1/whatsapp/groups", data=payload)
 
-    def delete_whats_app_group(
-        self, account_id: str, group_name: str
-    ) -> dict[str, Any]:
+    def delete_whats_app_group(self, account_id: str, group_name: str) -> dict[str, Any]:
         """Delete group"""
         return self._client._delete("/v1/whatsapp/groups")
 
@@ -223,18 +159,7 @@ class WhatsappResource:
         )
         return self._client._get("/v1/whatsapp/templates", params=params)
 
-    def create_whats_app_template(
-        self,
-        account_id: str,
-        name: str,
-        category: str,
-        language: str,
-        *,
-        components: list[Any] | None = None,
-        library_template_name: str | None = None,
-        library_template_body_inputs: dict[str, Any] | None = None,
-        library_template_button_inputs: list[dict[str, Any]] | None = None,
-    ) -> dict[str, Any]:
+    def create_whats_app_template(self, account_id: str, name: str, category: str, language: str, *, components: list[Any] | None = None, library_template_name: str | None = None, library_template_body_inputs: dict[str, Any] | None = None, library_template_button_inputs: list[dict[str, Any]] | None = None) -> dict[str, Any]:
         """Create template"""
         payload = self._build_payload(
             account_id=account_id,
@@ -248,48 +173,29 @@ class WhatsappResource:
         )
         return self._client._post("/v1/whatsapp/templates", data=payload)
 
-    def get_whats_app_template(
-        self, template_name: str, account_id: str
-    ) -> dict[str, Any]:
+    def get_whats_app_template(self, template_name: str, account_id: str) -> dict[str, Any]:
         """Get template"""
         params = self._build_params(
             account_id=account_id,
         )
-        return self._client._get(
-            f"/v1/whatsapp/templates/{template_name}", params=params
-        )
+        return self._client._get(f"/v1/whatsapp/templates/{template_name}", params=params)
 
-    def update_whats_app_template(
-        self, template_name: str, account_id: str, components: list[Any]
-    ) -> dict[str, Any]:
+    def update_whats_app_template(self, template_name: str, account_id: str, components: list[Any]) -> dict[str, Any]:
         """Update template"""
         payload = self._build_payload(
             account_id=account_id,
             components=components,
         )
-        return self._client._patch(
-            f"/v1/whatsapp/templates/{template_name}", data=payload
-        )
+        return self._client._patch(f"/v1/whatsapp/templates/{template_name}", data=payload)
 
-    def delete_whats_app_template(
-        self, template_name: str, account_id: str
-    ) -> dict[str, Any]:
+    def delete_whats_app_template(self, template_name: str, account_id: str) -> dict[str, Any]:
         """Delete template"""
         params = self._build_params(
             account_id=account_id,
         )
-        return self._client._delete(
-            f"/v1/whatsapp/templates/{template_name}", params=params
-        )
+        return self._client._delete(f"/v1/whatsapp/templates/{template_name}", params=params)
 
-    def get_whats_app_broadcasts(
-        self,
-        account_id: str,
-        *,
-        status: str | None = None,
-        limit: int | None = 50,
-        skip: int | None = 0,
-    ) -> dict[str, Any]:
+    def get_whats_app_broadcasts(self, account_id: str, *, status: str | None = None, limit: int | None = 50, skip: int | None = 0) -> dict[str, Any]:
         """List broadcasts"""
         params = self._build_params(
             account_id=account_id,
@@ -299,15 +205,7 @@ class WhatsappResource:
         )
         return self._client._get("/v1/whatsapp/broadcasts", params=params)
 
-    def create_whats_app_broadcast(
-        self,
-        account_id: str,
-        name: str,
-        template: dict[str, Any],
-        *,
-        description: str | None = None,
-        recipients: list[dict[str, Any]] | None = None,
-    ) -> dict[str, Any]:
+    def create_whats_app_broadcast(self, account_id: str, name: str, template: dict[str, Any], *, description: str | None = None, recipients: list[dict[str, Any]] | None = None) -> dict[str, Any]:
         """Create broadcast"""
         payload = self._build_payload(
             account_id=account_id,
@@ -330,57 +228,36 @@ class WhatsappResource:
         """Send broadcast"""
         return self._client._post(f"/v1/whatsapp/broadcasts/{broadcast_id}/send")
 
-    def schedule_whats_app_broadcast(
-        self, broadcast_id: str, scheduled_at: datetime | str
-    ) -> dict[str, Any]:
+    def schedule_whats_app_broadcast(self, broadcast_id: str, scheduled_at: datetime | str) -> dict[str, Any]:
         """Schedule broadcast"""
         payload = self._build_payload(
             scheduled_at=scheduled_at,
         )
-        return self._client._post(
-            f"/v1/whatsapp/broadcasts/{broadcast_id}/schedule", data=payload
-        )
+        return self._client._post(f"/v1/whatsapp/broadcasts/{broadcast_id}/schedule", data=payload)
 
     def cancel_whats_app_broadcast_schedule(self, broadcast_id: str) -> dict[str, Any]:
         """Cancel scheduled broadcast"""
         return self._client._delete(f"/v1/whatsapp/broadcasts/{broadcast_id}/schedule")
 
-    def get_whats_app_broadcast_recipients(
-        self,
-        broadcast_id: str,
-        *,
-        status: str | None = None,
-        limit: int | None = 100,
-        skip: int | None = 0,
-    ) -> dict[str, Any]:
+    def get_whats_app_broadcast_recipients(self, broadcast_id: str, *, status: str | None = None, limit: int | None = 100, skip: int | None = 0) -> dict[str, Any]:
         """List recipients"""
         params = self._build_params(
             status=status,
             limit=limit,
             skip=skip,
         )
-        return self._client._get(
-            f"/v1/whatsapp/broadcasts/{broadcast_id}/recipients", params=params
-        )
+        return self._client._get(f"/v1/whatsapp/broadcasts/{broadcast_id}/recipients", params=params)
 
-    def add_whats_app_broadcast_recipients(
-        self, broadcast_id: str, recipients: list[dict[str, Any]]
-    ) -> dict[str, Any]:
+    def add_whats_app_broadcast_recipients(self, broadcast_id: str, recipients: list[dict[str, Any]]) -> dict[str, Any]:
         """Add recipients"""
         payload = self._build_payload(
             recipients=recipients,
         )
-        return self._client._patch(
-            f"/v1/whatsapp/broadcasts/{broadcast_id}/recipients", data=payload
-        )
+        return self._client._patch(f"/v1/whatsapp/broadcasts/{broadcast_id}/recipients", data=payload)
 
-    def remove_whats_app_broadcast_recipients(
-        self, broadcast_id: str, phones: list[str]
-    ) -> dict[str, Any]:
+    def remove_whats_app_broadcast_recipients(self, broadcast_id: str, phones: list[str]) -> dict[str, Any]:
         """Remove recipients"""
-        return self._client._delete(
-            f"/v1/whatsapp/broadcasts/{broadcast_id}/recipients"
-        )
+        return self._client._delete(f"/v1/whatsapp/broadcasts/{broadcast_id}/recipients")
 
     def get_whats_app_business_profile(self, account_id: str) -> dict[str, Any]:
         """Get business profile"""
@@ -389,18 +266,7 @@ class WhatsappResource:
         )
         return self._client._get("/v1/whatsapp/business-profile", params=params)
 
-    def update_whats_app_business_profile(
-        self,
-        account_id: str,
-        *,
-        about: str | None = None,
-        address: str | None = None,
-        description: str | None = None,
-        email: str | None = None,
-        websites: list[str] | None = None,
-        vertical: str | None = None,
-        profile_picture_handle: str | None = None,
-    ) -> dict[str, Any]:
+    def update_whats_app_business_profile(self, account_id: str, *, about: str | None = None, address: str | None = None, description: str | None = None, email: str | None = None, websites: list[str] | None = None, vertical: str | None = None, profile_picture_handle: str | None = None) -> dict[str, Any]:
         """Update business profile"""
         payload = self._build_payload(
             account_id=account_id,
@@ -423,25 +289,17 @@ class WhatsappResource:
         params = self._build_params(
             account_id=account_id,
         )
-        return self._client._get(
-            "/v1/whatsapp/business-profile/display-name", params=params
-        )
+        return self._client._get("/v1/whatsapp/business-profile/display-name", params=params)
 
-    def update_whats_app_display_name(
-        self, account_id: str, display_name: str
-    ) -> dict[str, Any]:
+    def update_whats_app_display_name(self, account_id: str, display_name: str) -> dict[str, Any]:
         """Request display name change"""
         payload = self._build_payload(
             account_id=account_id,
             display_name=display_name,
         )
-        return self._client._post(
-            "/v1/whatsapp/business-profile/display-name", data=payload
-        )
+        return self._client._post("/v1/whatsapp/business-profile/display-name", data=payload)
 
-    def list_whats_app_group_chats(
-        self, account_id: str, *, limit: int | None = 25, after: str | None = None
-    ) -> dict[str, Any]:
+    def list_whats_app_group_chats(self, account_id: str, *, limit: int | None = 25, after: str | None = None) -> dict[str, Any]:
         """List active groups"""
         params = self._build_params(
             account_id=account_id,
@@ -450,14 +308,7 @@ class WhatsappResource:
         )
         return self._client._get("/v1/whatsapp/wa-groups", params=params)
 
-    def create_whats_app_group_chat(
-        self,
-        account_id: str,
-        subject: str,
-        *,
-        description: str | None = None,
-        join_approval_mode: str | None = None,
-    ) -> dict[str, Any]:
+    def create_whats_app_group_chat(self, account_id: str, subject: str, *, description: str | None = None, join_approval_mode: str | None = None) -> dict[str, Any]:
         """Create group"""
         payload = self._build_payload(
             account_id=account_id,
@@ -467,24 +318,14 @@ class WhatsappResource:
         )
         return self._client._post("/v1/whatsapp/wa-groups", data=payload)
 
-    def get_whats_app_group_chat(
-        self, group_id: str, account_id: str
-    ) -> dict[str, Any]:
+    def get_whats_app_group_chat(self, group_id: str, account_id: str) -> dict[str, Any]:
         """Get group info"""
         params = self._build_params(
             account_id=account_id,
         )
         return self._client._get(f"/v1/whatsapp/wa-groups/{group_id}", params=params)
 
-    def update_whats_app_group_chat(
-        self,
-        group_id: str,
-        account_id: str,
-        *,
-        subject: str | None = None,
-        description: str | None = None,
-        join_approval_mode: str | None = None,
-    ) -> dict[str, Any]:
+    def update_whats_app_group_chat(self, group_id: str, account_id: str, *, subject: str | None = None, description: str | None = None, join_approval_mode: str | None = None) -> dict[str, Any]:
         """Update group settings"""
         payload = self._build_payload(
             subject=subject,
@@ -493,87 +334,56 @@ class WhatsappResource:
         )
         return self._client._post(f"/v1/whatsapp/wa-groups/{group_id}", data=payload)
 
-    def delete_whats_app_group_chat(
-        self, group_id: str, account_id: str
-    ) -> dict[str, Any]:
+    def delete_whats_app_group_chat(self, group_id: str, account_id: str) -> dict[str, Any]:
         """Delete group"""
         params = self._build_params(
             account_id=account_id,
         )
         return self._client._delete(f"/v1/whatsapp/wa-groups/{group_id}", params=params)
 
-    def add_whats_app_group_participants(
-        self, group_id: str, account_id: str, phone_numbers: list[str]
-    ) -> dict[str, Any]:
+    def add_whats_app_group_participants(self, group_id: str, account_id: str, phone_numbers: list[str]) -> dict[str, Any]:
         """Add participants"""
         payload = self._build_payload(
             phone_numbers=phone_numbers,
         )
-        return self._client._post(
-            f"/v1/whatsapp/wa-groups/{group_id}/participants", data=payload
-        )
+        return self._client._post(f"/v1/whatsapp/wa-groups/{group_id}/participants", data=payload)
 
-    def remove_whats_app_group_participants(
-        self, group_id: str, account_id: str, phone_numbers: list[str]
-    ) -> dict[str, Any]:
+    def remove_whats_app_group_participants(self, group_id: str, account_id: str, phone_numbers: list[str]) -> dict[str, Any]:
         """Remove participants"""
         params = self._build_params(
             account_id=account_id,
         )
-        return self._client._delete(
-            f"/v1/whatsapp/wa-groups/{group_id}/participants", params=params
-        )
+        return self._client._delete(f"/v1/whatsapp/wa-groups/{group_id}/participants", params=params)
 
-    def create_whats_app_group_invite_link(
-        self, group_id: str, account_id: str
-    ) -> dict[str, Any]:
+    def create_whats_app_group_invite_link(self, group_id: str, account_id: str) -> dict[str, Any]:
         """Create invite link"""
         params = self._build_params(
             account_id=account_id,
         )
-        return self._client._post(
-            f"/v1/whatsapp/wa-groups/{group_id}/invite-link", params=params
-        )
+        return self._client._post(f"/v1/whatsapp/wa-groups/{group_id}/invite-link", params=params)
 
-    def list_whats_app_group_join_requests(
-        self, group_id: str, account_id: str
-    ) -> dict[str, Any]:
+    def list_whats_app_group_join_requests(self, group_id: str, account_id: str) -> dict[str, Any]:
         """List join requests"""
         params = self._build_params(
             account_id=account_id,
         )
-        return self._client._get(
-            f"/v1/whatsapp/wa-groups/{group_id}/join-requests", params=params
-        )
+        return self._client._get(f"/v1/whatsapp/wa-groups/{group_id}/join-requests", params=params)
 
-    def approve_whats_app_group_join_requests(
-        self, group_id: str, account_id: str, phone_numbers: list[str]
-    ) -> dict[str, Any]:
+    def approve_whats_app_group_join_requests(self, group_id: str, account_id: str, phone_numbers: list[str]) -> dict[str, Any]:
         """Approve join requests"""
         payload = self._build_payload(
             phone_numbers=phone_numbers,
         )
-        return self._client._post(
-            f"/v1/whatsapp/wa-groups/{group_id}/join-requests", data=payload
-        )
+        return self._client._post(f"/v1/whatsapp/wa-groups/{group_id}/join-requests", data=payload)
 
-    def reject_whats_app_group_join_requests(
-        self, group_id: str, account_id: str, phone_numbers: list[str]
-    ) -> dict[str, Any]:
+    def reject_whats_app_group_join_requests(self, group_id: str, account_id: str, phone_numbers: list[str]) -> dict[str, Any]:
         """Reject join requests"""
         params = self._build_params(
             account_id=account_id,
         )
-        return self._client._delete(
-            f"/v1/whatsapp/wa-groups/{group_id}/join-requests", params=params
-        )
+        return self._client._delete(f"/v1/whatsapp/wa-groups/{group_id}/join-requests", params=params)
 
-    async def asend_whats_app_bulk(
-        self,
-        account_id: str,
-        recipients: list[dict[str, Any]],
-        template: dict[str, Any],
-    ) -> dict[str, Any]:
+    async def asend_whats_app_bulk(self, account_id: str, recipients: list[dict[str, Any]], template: dict[str, Any]) -> dict[str, Any]:
         """Bulk send template messages (async)"""
         payload = self._build_payload(
             account_id=account_id,
@@ -582,17 +392,7 @@ class WhatsappResource:
         )
         return await self._client._apost("/v1/whatsapp/bulk", data=payload)
 
-    async def aget_whats_app_contacts(
-        self,
-        account_id: str,
-        *,
-        search: str | None = None,
-        tag: str | None = None,
-        group: str | None = None,
-        opted_in: str | None = None,
-        limit: int | None = 50,
-        skip: int | None = 0,
-    ) -> dict[str, Any]:
+    async def aget_whats_app_contacts(self, account_id: str, *, search: str | None = None, tag: str | None = None, group: str | None = None, opted_in: str | None = None, limit: int | None = 50, skip: int | None = 0) -> dict[str, Any]:
         """List contacts (async)"""
         params = self._build_params(
             account_id=account_id,
@@ -605,20 +405,7 @@ class WhatsappResource:
         )
         return await self._client._aget("/v1/whatsapp/contacts", params=params)
 
-    async def acreate_whats_app_contact(
-        self,
-        account_id: str,
-        phone: str,
-        name: str,
-        *,
-        email: str | None = None,
-        company: str | None = None,
-        tags: list[str] | None = None,
-        groups: list[str] | None = None,
-        is_opted_in: bool | None = True,
-        custom_fields: dict[str, Any] | None = None,
-        notes: str | None = None,
-    ) -> dict[str, Any]:
+    async def acreate_whats_app_contact(self, account_id: str, phone: str, name: str, *, email: str | None = None, company: str | None = None, tags: list[str] | None = None, groups: list[str] | None = None, is_opted_in: bool | None = True, custom_fields: dict[str, Any] | None = None, notes: str | None = None) -> dict[str, Any]:
         """Create contact (async)"""
         payload = self._build_payload(
             account_id=account_id,
@@ -638,20 +425,7 @@ class WhatsappResource:
         """Get contact (async)"""
         return await self._client._aget(f"/v1/whatsapp/contacts/{contact_id}")
 
-    async def aupdate_whats_app_contact(
-        self,
-        contact_id: str,
-        *,
-        name: str | None = None,
-        email: str | None = None,
-        company: str | None = None,
-        tags: list[str] | None = None,
-        groups: list[str] | None = None,
-        is_opted_in: bool | None = None,
-        is_blocked: bool | None = None,
-        custom_fields: dict[str, Any] | None = None,
-        notes: str | None = None,
-    ) -> dict[str, Any]:
+    async def aupdate_whats_app_contact(self, contact_id: str, *, name: str | None = None, email: str | None = None, company: str | None = None, tags: list[str] | None = None, groups: list[str] | None = None, is_opted_in: bool | None = None, is_blocked: bool | None = None, custom_fields: dict[str, Any] | None = None, notes: str | None = None) -> dict[str, Any]:
         """Update contact (async)"""
         payload = self._build_payload(
             name=name,
@@ -664,23 +438,13 @@ class WhatsappResource:
             custom_fields=custom_fields,
             notes=notes,
         )
-        return await self._client._aput(
-            f"/v1/whatsapp/contacts/{contact_id}", data=payload
-        )
+        return await self._client._aput(f"/v1/whatsapp/contacts/{contact_id}", data=payload)
 
     async def adelete_whats_app_contact(self, contact_id: str) -> dict[str, Any]:
         """Delete contact (async)"""
         return await self._client._adelete(f"/v1/whatsapp/contacts/{contact_id}")
 
-    async def aimport_whats_app_contacts(
-        self,
-        account_id: str,
-        contacts: list[dict[str, Any]],
-        *,
-        default_tags: list[str] | None = None,
-        default_groups: list[str] | None = None,
-        skip_duplicates: bool | None = True,
-    ) -> dict[str, Any]:
+    async def aimport_whats_app_contacts(self, account_id: str, contacts: list[dict[str, Any]], *, default_tags: list[str] | None = None, default_groups: list[str] | None = None, skip_duplicates: bool | None = True) -> dict[str, Any]:
         """Bulk import contacts (async)"""
         payload = self._build_payload(
             account_id=account_id,
@@ -691,14 +455,7 @@ class WhatsappResource:
         )
         return await self._client._apost("/v1/whatsapp/contacts/import", data=payload)
 
-    async def abulk_update_whats_app_contacts(
-        self,
-        action: str,
-        contact_ids: list[str],
-        *,
-        tags: list[str] | None = None,
-        groups: list[str] | None = None,
-    ) -> dict[str, Any]:
+    async def abulk_update_whats_app_contacts(self, action: str, contact_ids: list[str], *, tags: list[str] | None = None, groups: list[str] | None = None) -> dict[str, Any]:
         """Bulk update contacts (async)"""
         payload = self._build_payload(
             action=action,
@@ -708,9 +465,7 @@ class WhatsappResource:
         )
         return await self._client._apost("/v1/whatsapp/contacts/bulk", data=payload)
 
-    async def abulk_delete_whats_app_contacts(
-        self, contact_ids: list[str]
-    ) -> dict[str, Any]:
+    async def abulk_delete_whats_app_contacts(self, contact_ids: list[str]) -> dict[str, Any]:
         """Bulk delete contacts (async)"""
         return await self._client._adelete("/v1/whatsapp/contacts/bulk")
 
@@ -721,9 +476,7 @@ class WhatsappResource:
         )
         return await self._client._aget("/v1/whatsapp/groups", params=params)
 
-    async def arename_whats_app_group(
-        self, account_id: str, old_name: str, new_name: str
-    ) -> dict[str, Any]:
+    async def arename_whats_app_group(self, account_id: str, old_name: str, new_name: str) -> dict[str, Any]:
         """Rename group (async)"""
         payload = self._build_payload(
             account_id=account_id,
@@ -732,9 +485,7 @@ class WhatsappResource:
         )
         return await self._client._apost("/v1/whatsapp/groups", data=payload)
 
-    async def adelete_whats_app_group(
-        self, account_id: str, group_name: str
-    ) -> dict[str, Any]:
+    async def adelete_whats_app_group(self, account_id: str, group_name: str) -> dict[str, Any]:
         """Delete group (async)"""
         return await self._client._adelete("/v1/whatsapp/groups")
 
@@ -745,18 +496,7 @@ class WhatsappResource:
         )
         return await self._client._aget("/v1/whatsapp/templates", params=params)
 
-    async def acreate_whats_app_template(
-        self,
-        account_id: str,
-        name: str,
-        category: str,
-        language: str,
-        *,
-        components: list[Any] | None = None,
-        library_template_name: str | None = None,
-        library_template_body_inputs: dict[str, Any] | None = None,
-        library_template_button_inputs: list[dict[str, Any]] | None = None,
-    ) -> dict[str, Any]:
+    async def acreate_whats_app_template(self, account_id: str, name: str, category: str, language: str, *, components: list[Any] | None = None, library_template_name: str | None = None, library_template_body_inputs: dict[str, Any] | None = None, library_template_button_inputs: list[dict[str, Any]] | None = None) -> dict[str, Any]:
         """Create template (async)"""
         payload = self._build_payload(
             account_id=account_id,
@@ -770,48 +510,29 @@ class WhatsappResource:
         )
         return await self._client._apost("/v1/whatsapp/templates", data=payload)
 
-    async def aget_whats_app_template(
-        self, template_name: str, account_id: str
-    ) -> dict[str, Any]:
+    async def aget_whats_app_template(self, template_name: str, account_id: str) -> dict[str, Any]:
         """Get template (async)"""
         params = self._build_params(
             account_id=account_id,
         )
-        return await self._client._aget(
-            f"/v1/whatsapp/templates/{template_name}", params=params
-        )
+        return await self._client._aget(f"/v1/whatsapp/templates/{template_name}", params=params)
 
-    async def aupdate_whats_app_template(
-        self, template_name: str, account_id: str, components: list[Any]
-    ) -> dict[str, Any]:
+    async def aupdate_whats_app_template(self, template_name: str, account_id: str, components: list[Any]) -> dict[str, Any]:
         """Update template (async)"""
         payload = self._build_payload(
             account_id=account_id,
             components=components,
         )
-        return await self._client._apatch(
-            f"/v1/whatsapp/templates/{template_name}", data=payload
-        )
+        return await self._client._apatch(f"/v1/whatsapp/templates/{template_name}", data=payload)
 
-    async def adelete_whats_app_template(
-        self, template_name: str, account_id: str
-    ) -> dict[str, Any]:
+    async def adelete_whats_app_template(self, template_name: str, account_id: str) -> dict[str, Any]:
         """Delete template (async)"""
         params = self._build_params(
             account_id=account_id,
         )
-        return await self._client._adelete(
-            f"/v1/whatsapp/templates/{template_name}", params=params
-        )
+        return await self._client._adelete(f"/v1/whatsapp/templates/{template_name}", params=params)
 
-    async def aget_whats_app_broadcasts(
-        self,
-        account_id: str,
-        *,
-        status: str | None = None,
-        limit: int | None = 50,
-        skip: int | None = 0,
-    ) -> dict[str, Any]:
+    async def aget_whats_app_broadcasts(self, account_id: str, *, status: str | None = None, limit: int | None = 50, skip: int | None = 0) -> dict[str, Any]:
         """List broadcasts (async)"""
         params = self._build_params(
             account_id=account_id,
@@ -821,15 +542,7 @@ class WhatsappResource:
         )
         return await self._client._aget("/v1/whatsapp/broadcasts", params=params)
 
-    async def acreate_whats_app_broadcast(
-        self,
-        account_id: str,
-        name: str,
-        template: dict[str, Any],
-        *,
-        description: str | None = None,
-        recipients: list[dict[str, Any]] | None = None,
-    ) -> dict[str, Any]:
+    async def acreate_whats_app_broadcast(self, account_id: str, name: str, template: dict[str, Any], *, description: str | None = None, recipients: list[dict[str, Any]] | None = None) -> dict[str, Any]:
         """Create broadcast (async)"""
         payload = self._build_payload(
             account_id=account_id,
@@ -852,61 +565,36 @@ class WhatsappResource:
         """Send broadcast (async)"""
         return await self._client._apost(f"/v1/whatsapp/broadcasts/{broadcast_id}/send")
 
-    async def aschedule_whats_app_broadcast(
-        self, broadcast_id: str, scheduled_at: datetime | str
-    ) -> dict[str, Any]:
+    async def aschedule_whats_app_broadcast(self, broadcast_id: str, scheduled_at: datetime | str) -> dict[str, Any]:
         """Schedule broadcast (async)"""
         payload = self._build_payload(
             scheduled_at=scheduled_at,
         )
-        return await self._client._apost(
-            f"/v1/whatsapp/broadcasts/{broadcast_id}/schedule", data=payload
-        )
+        return await self._client._apost(f"/v1/whatsapp/broadcasts/{broadcast_id}/schedule", data=payload)
 
-    async def acancel_whats_app_broadcast_schedule(
-        self, broadcast_id: str
-    ) -> dict[str, Any]:
+    async def acancel_whats_app_broadcast_schedule(self, broadcast_id: str) -> dict[str, Any]:
         """Cancel scheduled broadcast (async)"""
-        return await self._client._adelete(
-            f"/v1/whatsapp/broadcasts/{broadcast_id}/schedule"
-        )
+        return await self._client._adelete(f"/v1/whatsapp/broadcasts/{broadcast_id}/schedule")
 
-    async def aget_whats_app_broadcast_recipients(
-        self,
-        broadcast_id: str,
-        *,
-        status: str | None = None,
-        limit: int | None = 100,
-        skip: int | None = 0,
-    ) -> dict[str, Any]:
+    async def aget_whats_app_broadcast_recipients(self, broadcast_id: str, *, status: str | None = None, limit: int | None = 100, skip: int | None = 0) -> dict[str, Any]:
         """List recipients (async)"""
         params = self._build_params(
             status=status,
             limit=limit,
             skip=skip,
         )
-        return await self._client._aget(
-            f"/v1/whatsapp/broadcasts/{broadcast_id}/recipients", params=params
-        )
+        return await self._client._aget(f"/v1/whatsapp/broadcasts/{broadcast_id}/recipients", params=params)
 
-    async def aadd_whats_app_broadcast_recipients(
-        self, broadcast_id: str, recipients: list[dict[str, Any]]
-    ) -> dict[str, Any]:
+    async def aadd_whats_app_broadcast_recipients(self, broadcast_id: str, recipients: list[dict[str, Any]]) -> dict[str, Any]:
         """Add recipients (async)"""
         payload = self._build_payload(
             recipients=recipients,
         )
-        return await self._client._apatch(
-            f"/v1/whatsapp/broadcasts/{broadcast_id}/recipients", data=payload
-        )
+        return await self._client._apatch(f"/v1/whatsapp/broadcasts/{broadcast_id}/recipients", data=payload)
 
-    async def aremove_whats_app_broadcast_recipients(
-        self, broadcast_id: str, phones: list[str]
-    ) -> dict[str, Any]:
+    async def aremove_whats_app_broadcast_recipients(self, broadcast_id: str, phones: list[str]) -> dict[str, Any]:
         """Remove recipients (async)"""
-        return await self._client._adelete(
-            f"/v1/whatsapp/broadcasts/{broadcast_id}/recipients"
-        )
+        return await self._client._adelete(f"/v1/whatsapp/broadcasts/{broadcast_id}/recipients")
 
     async def aget_whats_app_business_profile(self, account_id: str) -> dict[str, Any]:
         """Get business profile (async)"""
@@ -915,18 +603,7 @@ class WhatsappResource:
         )
         return await self._client._aget("/v1/whatsapp/business-profile", params=params)
 
-    async def aupdate_whats_app_business_profile(
-        self,
-        account_id: str,
-        *,
-        about: str | None = None,
-        address: str | None = None,
-        description: str | None = None,
-        email: str | None = None,
-        websites: list[str] | None = None,
-        vertical: str | None = None,
-        profile_picture_handle: str | None = None,
-    ) -> dict[str, Any]:
+    async def aupdate_whats_app_business_profile(self, account_id: str, *, about: str | None = None, address: str | None = None, description: str | None = None, email: str | None = None, websites: list[str] | None = None, vertical: str | None = None, profile_picture_handle: str | None = None) -> dict[str, Any]:
         """Update business profile (async)"""
         payload = self._build_payload(
             account_id=account_id,
@@ -949,25 +626,17 @@ class WhatsappResource:
         params = self._build_params(
             account_id=account_id,
         )
-        return await self._client._aget(
-            "/v1/whatsapp/business-profile/display-name", params=params
-        )
+        return await self._client._aget("/v1/whatsapp/business-profile/display-name", params=params)
 
-    async def aupdate_whats_app_display_name(
-        self, account_id: str, display_name: str
-    ) -> dict[str, Any]:
+    async def aupdate_whats_app_display_name(self, account_id: str, display_name: str) -> dict[str, Any]:
         """Request display name change (async)"""
         payload = self._build_payload(
             account_id=account_id,
             display_name=display_name,
         )
-        return await self._client._apost(
-            "/v1/whatsapp/business-profile/display-name", data=payload
-        )
+        return await self._client._apost("/v1/whatsapp/business-profile/display-name", data=payload)
 
-    async def alist_whats_app_group_chats(
-        self, account_id: str, *, limit: int | None = 25, after: str | None = None
-    ) -> dict[str, Any]:
+    async def alist_whats_app_group_chats(self, account_id: str, *, limit: int | None = 25, after: str | None = None) -> dict[str, Any]:
         """List active groups (async)"""
         params = self._build_params(
             account_id=account_id,
@@ -976,14 +645,7 @@ class WhatsappResource:
         )
         return await self._client._aget("/v1/whatsapp/wa-groups", params=params)
 
-    async def acreate_whats_app_group_chat(
-        self,
-        account_id: str,
-        subject: str,
-        *,
-        description: str | None = None,
-        join_approval_mode: str | None = None,
-    ) -> dict[str, Any]:
+    async def acreate_whats_app_group_chat(self, account_id: str, subject: str, *, description: str | None = None, join_approval_mode: str | None = None) -> dict[str, Any]:
         """Create group (async)"""
         payload = self._build_payload(
             account_id=account_id,
@@ -993,109 +655,67 @@ class WhatsappResource:
         )
         return await self._client._apost("/v1/whatsapp/wa-groups", data=payload)
 
-    async def aget_whats_app_group_chat(
-        self, group_id: str, account_id: str
-    ) -> dict[str, Any]:
+    async def aget_whats_app_group_chat(self, group_id: str, account_id: str) -> dict[str, Any]:
         """Get group info (async)"""
         params = self._build_params(
             account_id=account_id,
         )
-        return await self._client._aget(
-            f"/v1/whatsapp/wa-groups/{group_id}", params=params
-        )
+        return await self._client._aget(f"/v1/whatsapp/wa-groups/{group_id}", params=params)
 
-    async def aupdate_whats_app_group_chat(
-        self,
-        group_id: str,
-        account_id: str,
-        *,
-        subject: str | None = None,
-        description: str | None = None,
-        join_approval_mode: str | None = None,
-    ) -> dict[str, Any]:
+    async def aupdate_whats_app_group_chat(self, group_id: str, account_id: str, *, subject: str | None = None, description: str | None = None, join_approval_mode: str | None = None) -> dict[str, Any]:
         """Update group settings (async)"""
         payload = self._build_payload(
             subject=subject,
             description=description,
             join_approval_mode=join_approval_mode,
         )
-        return await self._client._apost(
-            f"/v1/whatsapp/wa-groups/{group_id}", data=payload
-        )
+        return await self._client._apost(f"/v1/whatsapp/wa-groups/{group_id}", data=payload)
 
-    async def adelete_whats_app_group_chat(
-        self, group_id: str, account_id: str
-    ) -> dict[str, Any]:
+    async def adelete_whats_app_group_chat(self, group_id: str, account_id: str) -> dict[str, Any]:
         """Delete group (async)"""
         params = self._build_params(
             account_id=account_id,
         )
-        return await self._client._adelete(
-            f"/v1/whatsapp/wa-groups/{group_id}", params=params
-        )
+        return await self._client._adelete(f"/v1/whatsapp/wa-groups/{group_id}", params=params)
 
-    async def aadd_whats_app_group_participants(
-        self, group_id: str, account_id: str, phone_numbers: list[str]
-    ) -> dict[str, Any]:
+    async def aadd_whats_app_group_participants(self, group_id: str, account_id: str, phone_numbers: list[str]) -> dict[str, Any]:
         """Add participants (async)"""
         payload = self._build_payload(
             phone_numbers=phone_numbers,
         )
-        return await self._client._apost(
-            f"/v1/whatsapp/wa-groups/{group_id}/participants", data=payload
-        )
+        return await self._client._apost(f"/v1/whatsapp/wa-groups/{group_id}/participants", data=payload)
 
-    async def aremove_whats_app_group_participants(
-        self, group_id: str, account_id: str, phone_numbers: list[str]
-    ) -> dict[str, Any]:
+    async def aremove_whats_app_group_participants(self, group_id: str, account_id: str, phone_numbers: list[str]) -> dict[str, Any]:
         """Remove participants (async)"""
         params = self._build_params(
             account_id=account_id,
         )
-        return await self._client._adelete(
-            f"/v1/whatsapp/wa-groups/{group_id}/participants", params=params
-        )
+        return await self._client._adelete(f"/v1/whatsapp/wa-groups/{group_id}/participants", params=params)
 
-    async def acreate_whats_app_group_invite_link(
-        self, group_id: str, account_id: str
-    ) -> dict[str, Any]:
+    async def acreate_whats_app_group_invite_link(self, group_id: str, account_id: str) -> dict[str, Any]:
         """Create invite link (async)"""
         params = self._build_params(
             account_id=account_id,
         )
-        return await self._client._apost(
-            f"/v1/whatsapp/wa-groups/{group_id}/invite-link", params=params
-        )
+        return await self._client._apost(f"/v1/whatsapp/wa-groups/{group_id}/invite-link", params=params)
 
-    async def alist_whats_app_group_join_requests(
-        self, group_id: str, account_id: str
-    ) -> dict[str, Any]:
+    async def alist_whats_app_group_join_requests(self, group_id: str, account_id: str) -> dict[str, Any]:
         """List join requests (async)"""
         params = self._build_params(
             account_id=account_id,
         )
-        return await self._client._aget(
-            f"/v1/whatsapp/wa-groups/{group_id}/join-requests", params=params
-        )
+        return await self._client._aget(f"/v1/whatsapp/wa-groups/{group_id}/join-requests", params=params)
 
-    async def aapprove_whats_app_group_join_requests(
-        self, group_id: str, account_id: str, phone_numbers: list[str]
-    ) -> dict[str, Any]:
+    async def aapprove_whats_app_group_join_requests(self, group_id: str, account_id: str, phone_numbers: list[str]) -> dict[str, Any]:
         """Approve join requests (async)"""
         payload = self._build_payload(
             phone_numbers=phone_numbers,
         )
-        return await self._client._apost(
-            f"/v1/whatsapp/wa-groups/{group_id}/join-requests", data=payload
-        )
+        return await self._client._apost(f"/v1/whatsapp/wa-groups/{group_id}/join-requests", data=payload)
 
-    async def areject_whats_app_group_join_requests(
-        self, group_id: str, account_id: str, phone_numbers: list[str]
-    ) -> dict[str, Any]:
+    async def areject_whats_app_group_join_requests(self, group_id: str, account_id: str, phone_numbers: list[str]) -> dict[str, Any]:
         """Reject join requests (async)"""
         params = self._build_params(
             account_id=account_id,
         )
-        return await self._client._adelete(
-            f"/v1/whatsapp/wa-groups/{group_id}/join-requests", params=params
-        )
+        return await self._client._adelete(f"/v1/whatsapp/wa-groups/{group_id}/join-requests", params=params)

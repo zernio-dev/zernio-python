@@ -10,12 +10,19 @@ import os
 
 from ..resources import (
     AccountGroupsResource,
+    AccountSettingsResource,
     AccountsResource,
+    AdAudiencesResource,
+    AdCampaignsResource,
+    AdsResource,
     AnalyticsResource,
     ApiKeysResource,
+    BroadcastsResource,
+    CommentAutomationsResource,
     CommentsResource,
     ConnectResource,
-    InboxResource,
+    ContactsResource,
+    CustomFieldsResource,
     InvitesResource,
     LogsResource,
     MediaResource,
@@ -25,10 +32,15 @@ from ..resources import (
     QueueResource,
     RedditResource,
     ReviewsResource,
+    SequencesResource,
     ToolsResource,
+    TwitterEngagementResource,
     UsageResource,
     UsersResource,
+    ValidateResource,
     WebhooksResource,
+    WhatsappResource,
+    WhatsappPhoneNumbersResource,
 )
 from .base import BaseClient
 
@@ -100,31 +112,40 @@ class Zernio(BaseClient):
             resolved_key, base_url=base_url, timeout=timeout, max_retries=max_retries
         )
 
-        # Core resources (manual with Pydantic validation)
+        # --- auto-registered resources (do not edit) ---
+        self.account_groups = AccountGroupsResource(self)
+        self.account_settings = AccountSettingsResource(self)
+        self.accounts = AccountsResource(self)
+        self.ad_audiences = AdAudiencesResource(self)
+        self.ad_campaigns = AdCampaignsResource(self)
+        self.ads = AdsResource(self)
+        self.analytics = AnalyticsResource(self)
+        self.api_keys = ApiKeysResource(self)
+        self.broadcasts = BroadcastsResource(self)
+        self.comment_automations = CommentAutomationsResource(self)
+        self.comments = CommentsResource(self)
+        self.connect = ConnectResource(self)
+        self.contacts = ContactsResource(self)
+        self.custom_fields = CustomFieldsResource(self)
+        self.invites = InvitesResource(self)
+        self.logs = LogsResource(self)
+        self.media = MediaResource(self)
+        self.messages = MessagesResource(self)
         self.posts = PostsResource(self)
         self.profiles = ProfilesResource(self)
-        self.accounts = AccountsResource(self)
-        self.users = UsersResource(self)
-        self.media = MediaResource(self)
-        self.analytics = AnalyticsResource(self)
-        self.tools = ToolsResource(self)
         self.queue = QueueResource(self)
-
-        # Inbox resources (comments, DMs, reviews)
-        self.inbox = InboxResource(self)
-        self.comments = CommentsResource(self)
-        self.messages = MessagesResource(self)
-        self.reviews = ReviewsResource(self)
-
-        # Additional resources (auto-generated)
-        self.webhooks = WebhooksResource(self)
-        self.logs = LogsResource(self)
-        self.connect = ConnectResource(self)
-        self.invites = InvitesResource(self)
-        self.api_keys = ApiKeysResource(self)
-        self.account_groups = AccountGroupsResource(self)
-        self.usage = UsageResource(self)
         self.reddit = RedditResource(self)
+        self.reviews = ReviewsResource(self)
+        self.sequences = SequencesResource(self)
+        self.tools = ToolsResource(self)
+        self.twitter_engagement = TwitterEngagementResource(self)
+        self.usage = UsageResource(self)
+        self.users = UsersResource(self)
+        self.validate = ValidateResource(self)
+        self.webhooks = WebhooksResource(self)
+        self.whatsapp = WhatsappResource(self)
+        self.whatsapp_phone_numbers = WhatsappPhoneNumbersResource(self)
+        # --- end auto-registered resources ---
 
     async def __aenter__(self) -> Zernio:
         """Async context manager entry."""
