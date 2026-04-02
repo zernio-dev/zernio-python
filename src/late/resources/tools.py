@@ -6,7 +6,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from late.models import (
+from late.models.responses import (
     CaptionResponse,
     DownloadResponse,
     HashtagCheckResponse,
