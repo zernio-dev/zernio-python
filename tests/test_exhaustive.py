@@ -271,13 +271,12 @@ class TestModelsValidation:
         assert Status.FAILED.value == "failed"
 
     def test_type_enum_values(self):
-        """Test Type enum has expected values."""
-        from late.models import Type
+        """Test MediaItem type field accepts media types."""
+        from late.models._generated.models import MediaItem
 
-        assert hasattr(Type, "IMAGE")
-        assert hasattr(Type, "VIDEO")
-        assert Type.IMAGE.value == "image"
-        assert Type.VIDEO.value == "video"
+        MediaType = MediaItem.model_fields["type"].annotation
+        assert MediaItem(type="image").type.value == "image"
+        assert MediaItem(type="video").type.value == "video"
 
     def test_tiktok_settings_creation(self):
         """Test TikTokPlatformData model creation."""
@@ -294,11 +293,10 @@ class TestModelsValidation:
 
     def test_media_item_creation(self):
         """Test MediaItem with type enum."""
-        from late.models import Type
         from late.models._generated.models import MediaItem
 
-        item = MediaItem(type=Type.IMAGE)
-        assert item.type == Type.IMAGE
+        item = MediaItem(type="image")
+        assert item.type.value == "image"
 
 
 # ============================================================================
