@@ -32,6 +32,7 @@ from .users import UsersResource
 from .validate import ValidateResource
 from .webhooks import WebhooksResource
 from .whatsapp import WhatsappResource
+from .whatsapp_flows import WhatsappFlowsResource
 from .whatsapp_phone_numbers import WhatsappPhoneNumbersResource
 
 __all__ = [
@@ -65,5 +66,6 @@ __all__ = [
     "ValidateResource",
     "WebhooksResource",
     "WhatsappResource",
+    "WhatsappFlowsResource",
     "WhatsappPhoneNumbersResource",
 ]

@@ -138,6 +138,23 @@ class AnalyticsResource:
         )
         return self._client._get("/v1/analytics/instagram/demographics", params=params)
 
+    def get_you_tube_demographics(
+        self,
+        account_id: str,
+        *,
+        breakdown: str | None = None,
+        start_date: str | None = None,
+        end_date: str | None = None,
+    ) -> dict[str, Any]:
+        """Get YouTube audience demographics"""
+        params = self._build_params(
+            account_id=account_id,
+            breakdown=breakdown,
+            start_date=start_date,
+            end_date=end_date,
+        )
+        return self._client._get("/v1/analytics/youtube/demographics", params=params)
+
     def get_daily_metrics(
         self,
         *,
@@ -356,6 +373,25 @@ class AnalyticsResource:
         )
         return await self._client._aget(
             "/v1/analytics/instagram/demographics", params=params
+        )
+
+    async def aget_you_tube_demographics(
+        self,
+        account_id: str,
+        *,
+        breakdown: str | None = None,
+        start_date: str | None = None,
+        end_date: str | None = None,
+    ) -> dict[str, Any]:
+        """Get YouTube audience demographics (async)"""
+        params = self._build_params(
+            account_id=account_id,
+            breakdown=breakdown,
+            start_date=start_date,
+            end_date=end_date,
+        )
+        return await self._client._aget(
+            "/v1/analytics/youtube/demographics", params=params
         )
 
     async def aget_daily_metrics(

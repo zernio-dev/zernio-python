@@ -1366,6 +1366,30 @@ def register_generated_tools(mcp, _get_client):
             return f"Error: {e}"
 
     @mcp.tool()
+    def analytics_get_you_tube_demographics(
+        account_id: str, breakdown: str = "", start_date: str = "", end_date: str = ""
+    ) -> str:
+        """Get YouTube audience demographics
+
+            Args:
+                account_id: The Zernio SocialAccount ID for the YouTube account (required)
+                breakdown: Comma-separated list of demographic dimensions: age, gender, country.
+        Defaults to all three if omitted.
+                start_date: Start date in YYYY-MM-DD format. Defaults to 90 days ago.
+                end_date: End date in YYYY-MM-DD format. Defaults to 3 days ago (YouTube data latency)."""
+        client = _get_client()
+        try:
+            response = client.analytics.get_you_tube_demographics(
+                account_id=account_id,
+                breakdown=breakdown,
+                start_date=start_date,
+                end_date=end_date,
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool()
     def analytics_get_daily_metrics(
         platform: str = "",
         profile_id: str = "",
@@ -5379,6 +5403,213 @@ def register_generated_tools(mcp, _get_client):
         try:
             response = client.whatsapp.reject_whats_app_group_join_requests(
                 group_id=group_id, account_id=account_id, phone_numbers=phone_numbers
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    # WHATSAPP_FLOWS
+
+    @mcp.tool()
+    def whatsapp_flows_list_whats_app_flows(account_id: str) -> str:
+        """List flows
+
+        Args:
+            account_id: WhatsApp social account ID (required)"""
+        client = _get_client()
+        try:
+            response = client.whatsapp_flows.list_whats_app_flows(account_id=account_id)
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool()
+    def whatsapp_flows_create_whats_app_flow(
+        account_id: str, name: str, categories: str, clone_flow_id: str = ""
+    ) -> str:
+        """Create flow
+
+        Args:
+            account_id: WhatsApp social account ID (required)
+            name: Flow display name (required)
+            categories: Flow categories (required)
+            clone_flow_id: Optional: ID of an existing flow to clone"""
+        client = _get_client()
+        try:
+            response = client.whatsapp_flows.create_whats_app_flow(
+                account_id=account_id,
+                name=name,
+                categories=categories,
+                clone_flow_id=clone_flow_id,
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool()
+    def whatsapp_flows_get_whats_app_flow(
+        flow_id: str, account_id: str, fields: str = ""
+    ) -> str:
+        """Get flow
+
+        Args:
+            flow_id: Flow ID (required)
+            account_id: WhatsApp social account ID (required)
+            fields: Comma-separated fields to return (default: id,name,status,categories,validation_errors,json_version,preview,data_api_version,endpoint_uri)"""
+        client = _get_client()
+        try:
+            response = client.whatsapp_flows.get_whats_app_flow(
+                flow_id=flow_id, account_id=account_id, fields=fields
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool()
+    def whatsapp_flows_update_whats_app_flow(
+        flow_id: str, account_id: str, name: str = "", categories: str = ""
+    ) -> str:
+        """Update flow
+
+        Args:
+            flow_id: Flow ID (required)
+            account_id: WhatsApp social account ID (required)
+            name: New flow name
+            categories"""
+        client = _get_client()
+        try:
+            response = client.whatsapp_flows.update_whats_app_flow(
+                flow_id=flow_id, account_id=account_id, name=name, categories=categories
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool()
+    def whatsapp_flows_delete_whats_app_flow(flow_id: str, account_id: str) -> str:
+        """Delete flow
+
+        Args:
+            flow_id: Flow ID (required)
+            account_id: WhatsApp social account ID (required)"""
+        client = _get_client()
+        try:
+            response = client.whatsapp_flows.delete_whats_app_flow(
+                flow_id=flow_id, account_id=account_id
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool()
+    def whatsapp_flows_get_whats_app_flow_json(flow_id: str, account_id: str) -> str:
+        """Get flow JSON asset
+
+        Args:
+            flow_id: Flow ID (required)
+            account_id: WhatsApp social account ID (required)"""
+        client = _get_client()
+        try:
+            response = client.whatsapp_flows.get_whats_app_flow_json(
+                flow_id=flow_id, account_id=account_id
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool()
+    def whatsapp_flows_upload_whats_app_flow_json(
+        flow_id: str, account_id: str, flow_json: str
+    ) -> str:
+        """Upload flow JSON
+
+        Args:
+            flow_id: Flow ID (required)
+            account_id: WhatsApp social account ID (required)
+            flow_json: The Flow JSON content. Pass as a JSON object or a JSON string. (required)"""
+        client = _get_client()
+        try:
+            response = client.whatsapp_flows.upload_whats_app_flow_json(
+                flow_id=flow_id, account_id=account_id, flow_json=flow_json
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool()
+    def whatsapp_flows_publish_whats_app_flow(flow_id: str, account_id: str) -> str:
+        """Publish flow
+
+        Args:
+            flow_id: Flow ID (required)
+            account_id: WhatsApp social account ID (required)"""
+        client = _get_client()
+        try:
+            response = client.whatsapp_flows.publish_whats_app_flow(
+                flow_id=flow_id, account_id=account_id
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool()
+    def whatsapp_flows_deprecate_whats_app_flow(flow_id: str, account_id: str) -> str:
+        """Deprecate flow
+
+        Args:
+            flow_id: Flow ID (required)
+            account_id: WhatsApp social account ID (required)"""
+        client = _get_client()
+        try:
+            response = client.whatsapp_flows.deprecate_whats_app_flow(
+                flow_id=flow_id, account_id=account_id
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool()
+    def whatsapp_flows_send_whats_app_flow_message(
+        account_id: str,
+        to: str,
+        flow_id: str,
+        flow_cta: str,
+        body: str,
+        flow_action: str = "navigate",
+        flow_token: str = "",
+        flow_action_payload: str = "",
+        header: str = "",
+        footer: str = "",
+        draft: bool = False,
+    ) -> str:
+        """Send flow message
+
+        Args:
+            account_id: WhatsApp social account ID (required)
+            to: Recipient phone number (E.164 format, e.g. +1234567890) (required)
+            flow_id: Published flow ID (required)
+            flow_cta: CTA button text (e.g. 'Book Now', 'Sign Up') (required)
+            flow_action: Action type: navigate opens a screen directly, data_exchange hits your endpoint first
+            flow_token: Unique token to correlate responses. Auto-generated UUID if omitted.
+            flow_action_payload
+            body: Message body text (required)
+            header
+            footer: Optional footer text
+            draft: Set true to test an unpublished (DRAFT) flow"""
+        client = _get_client()
+        try:
+            response = client.whatsapp_flows.send_whats_app_flow_message(
+                account_id=account_id,
+                to=to,
+                flow_id=flow_id,
+                flow_cta=flow_cta,
+                flow_action=flow_action,
+                flow_token=flow_token,
+                flow_action_payload=flow_action_payload,
+                body=body,
+                header=header,
+                footer=footer,
+                draft=draft,
             )
             return _format_response(response)
         except Exception as e:

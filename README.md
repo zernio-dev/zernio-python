@@ -229,6 +229,7 @@ Both `from zernio import ...` and `from late import ...` work identically. The `
 | `analytics.get_post_timeline()` | Get post analytics timeline |
 | `analytics.get_posting_frequency()` | Get posting frequency vs engagement |
 | `analytics.get_you_tube_daily_views()` | Get YouTube daily views |
+| `analytics.get_you_tube_demographics()` | Get YouTube audience demographics |
 
 ### Account Groups
 | Method | Description |
@@ -567,6 +568,20 @@ Both `from zernio import ...` and `from late import ...` work identically. The `
 | `whatsapp.send_whats_app_broadcast()` | Send broadcast |
 | `whatsapp.send_whats_app_bulk()` | Bulk send template messages |
 | `whatsapp.upload_whats_app_profile_photo()` | Upload profile picture |
+
+### WhatsApp Flows
+| Method | Description |
+|--------|-------------|
+| `whatsapp_flows.list_whats_app_flows()` | List flows |
+| `whatsapp_flows.create_whats_app_flow()` | Create flow |
+| `whatsapp_flows.get_whats_app_flow()` | Get flow |
+| `whatsapp_flows.get_whats_app_flow_json()` | Get flow JSON asset |
+| `whatsapp_flows.update_whats_app_flow()` | Update flow |
+| `whatsapp_flows.delete_whats_app_flow()` | Delete flow |
+| `whatsapp_flows.deprecate_whats_app_flow()` | Deprecate flow |
+| `whatsapp_flows.publish_whats_app_flow()` | Publish flow |
+| `whatsapp_flows.send_whats_app_flow_message()` | Send flow message |
+| `whatsapp_flows.upload_whats_app_flow_json()` | Upload flow JSON |
 
 ### WhatsApp Phone Numbers
 | Method | Description |

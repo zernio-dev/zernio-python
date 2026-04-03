@@ -39,6 +39,7 @@ from ..resources import (
     UsersResource,
     ValidateResource,
     WebhooksResource,
+    WhatsappFlowsResource,
     WhatsappPhoneNumbersResource,
     WhatsappResource,
 )
@@ -144,6 +145,7 @@ class Zernio(BaseClient):
         self.validate = ValidateResource(self)
         self.webhooks = WebhooksResource(self)
         self.whatsapp = WhatsappResource(self)
+        self.whatsapp_flows = WhatsappFlowsResource(self)
         self.whatsapp_phone_numbers = WhatsappPhoneNumbersResource(self)
         # --- end auto-registered resources ---
 
