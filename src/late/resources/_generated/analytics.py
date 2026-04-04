@@ -236,6 +236,42 @@ class AnalyticsResource:
         )
         return self._client._get("/v1/analytics/post-timeline", params=params)
 
+    def get_google_business_performance(
+        self,
+        account_id: str,
+        *,
+        metrics: str | None = None,
+        start_date: str | None = None,
+        end_date: str | None = None,
+    ) -> dict[str, Any]:
+        """Get Google Business Profile performance metrics"""
+        params = self._build_params(
+            account_id=account_id,
+            metrics=metrics,
+            start_date=start_date,
+            end_date=end_date,
+        )
+        return self._client._get(
+            "/v1/analytics/googlebusiness/performance", params=params
+        )
+
+    def get_google_business_search_keywords(
+        self,
+        account_id: str,
+        *,
+        start_month: str | None = None,
+        end_month: str | None = None,
+    ) -> dict[str, Any]:
+        """Get Google Business Profile search keywords"""
+        params = self._build_params(
+            account_id=account_id,
+            start_month=start_month,
+            end_month=end_month,
+        )
+        return self._client._get(
+            "/v1/analytics/googlebusiness/search-keywords", params=params
+        )
+
     def get_linked_in_aggregate_analytics(
         self,
         account_id: str,
@@ -476,6 +512,42 @@ class AnalyticsResource:
             to_date=to_date,
         )
         return await self._client._aget("/v1/analytics/post-timeline", params=params)
+
+    async def aget_google_business_performance(
+        self,
+        account_id: str,
+        *,
+        metrics: str | None = None,
+        start_date: str | None = None,
+        end_date: str | None = None,
+    ) -> dict[str, Any]:
+        """Get Google Business Profile performance metrics (async)"""
+        params = self._build_params(
+            account_id=account_id,
+            metrics=metrics,
+            start_date=start_date,
+            end_date=end_date,
+        )
+        return await self._client._aget(
+            "/v1/analytics/googlebusiness/performance", params=params
+        )
+
+    async def aget_google_business_search_keywords(
+        self,
+        account_id: str,
+        *,
+        start_month: str | None = None,
+        end_month: str | None = None,
+    ) -> dict[str, Any]:
+        """Get Google Business Profile search keywords (async)"""
+        params = self._build_params(
+            account_id=account_id,
+            start_month=start_month,
+            end_month=end_month,
+        )
+        return await self._client._aget(
+            "/v1/analytics/googlebusiness/search-keywords", params=params
+        )
 
     async def aget_linked_in_aggregate_analytics(
         self,

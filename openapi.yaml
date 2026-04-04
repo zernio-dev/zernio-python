@@ -4342,6 +4342,222 @@ paths:
                 properties:
                   error: { type: string, example: "Post not found" }
 
+  /v1/analytics/googlebusiness/performance:
+    get:
+      operationId: getGoogleBusinessPerformance
+      tags: [Analytics]
+      summary: Get Google Business Profile performance metrics
+      description: |
+        Returns daily performance metrics for a Google Business Profile location.
+        Metrics include impressions (Maps/Search, desktop/mobile), website clicks,
+        call clicks, direction requests, conversations, bookings, and food orders.
+        Data may be delayed 2-3 days. Max 18 months of historical data.
+        Requires the Analytics add-on.
+      parameters:
+        - name: accountId
+          in: query
+          required: true
+          schema: { type: string }
+          description: The Zernio SocialAccount ID for the Google Business Profile account.
+        - name: metrics
+          in: query
+          schema: { type: string }
+          description: |
+            Comma-separated metric names. Defaults to all available metrics.
+            Valid values: BUSINESS_IMPRESSIONS_DESKTOP_MAPS, BUSINESS_IMPRESSIONS_DESKTOP_SEARCH,
+            BUSINESS_IMPRESSIONS_MOBILE_MAPS, BUSINESS_IMPRESSIONS_MOBILE_SEARCH,
+            BUSINESS_CONVERSATIONS, BUSINESS_DIRECTION_REQUESTS, CALL_CLICKS, WEBSITE_CLICKS,
+            BUSINESS_BOOKINGS, BUSINESS_FOOD_ORDERS, BUSINESS_FOOD_MENU_CLICKS
+        - name: startDate
+          in: query
+          schema: { type: string, format: date }
+          description: Start date (YYYY-MM-DD). Defaults to 30 days ago. Max 18 months back.
+        - name: endDate
+          in: query
+          schema: { type: string, format: date }
+          description: End date (YYYY-MM-DD). Defaults to today.
+      responses:
+        '200':
+          description: Performance metrics with daily time series
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success: { type: boolean, example: true }
+                  accountId: { type: string }
+                  platform: { type: string, example: "googlebusiness" }
+                  dateRange:
+                    type: object
+                    properties:
+                      startDate: { type: string, format: date, example: "2026-03-01" }
+                      endDate: { type: string, format: date, example: "2026-03-31" }
+                  metrics:
+                    type: object
+                    description: Each key is a metric name containing total and daily values.
+                    additionalProperties:
+                      type: object
+                      properties:
+                        total: { type: integer, description: "Sum of all daily values in the range" }
+                        values:
+                          type: array
+                          items:
+                            type: object
+                            properties:
+                              date: { type: string, format: date }
+                              value: { type: integer }
+                  dataDelay: { type: string, example: "Data may be delayed 2-3 days" }
+              examples:
+                performance_data:
+                  summary: Performance metrics for a location
+                  value:
+                    success: true
+                    accountId: "69300690f43160a0bc999e07"
+                    platform: "googlebusiness"
+                    dateRange:
+                      startDate: "2026-03-01"
+                      endDate: "2026-03-31"
+                    metrics:
+                      WEBSITE_CLICKS:
+                        total: 42
+                        values:
+                          - date: "2026-03-01"
+                            value: 3
+                          - date: "2026-03-02"
+                            value: 1
+                      CALL_CLICKS:
+                        total: 7
+                        values:
+                          - date: "2026-03-01"
+                            value: 1
+                      BUSINESS_IMPRESSIONS_MOBILE_SEARCH:
+                        total: 156
+                        values:
+                          - date: "2026-03-01"
+                            value: 8
+                    dataDelay: "Data may be delayed 2-3 days"
+        '400':
+          description: Invalid parameters
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error: { type: string, example: "Invalid metrics: INVALID_METRIC" }
+                  validMetrics:
+                    type: array
+                    items: { type: string }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '402':
+          description: Analytics add-on required
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error: { type: string, example: "Analytics add-on required" }
+                  code: { type: string, example: "analytics_addon_required" }
+        '403':
+          description: Access denied
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error: { type: string, example: "Access denied to this account" }
+
+  /v1/analytics/googlebusiness/search-keywords:
+    get:
+      operationId: getGoogleBusinessSearchKeywords
+      tags: [Analytics]
+      summary: Get Google Business Profile search keywords
+      description: |
+        Returns search keywords that triggered impressions for a Google Business Profile location.
+        Data is aggregated monthly. Keywords below a minimum impression threshold set by Google are excluded.
+        Max 18 months of historical data. Requires the Analytics add-on.
+      parameters:
+        - name: accountId
+          in: query
+          required: true
+          schema: { type: string }
+          description: The Zernio SocialAccount ID for the Google Business Profile account.
+        - name: startMonth
+          in: query
+          schema: { type: string, pattern: "^\\d{4}-\\d{2}$" }
+          description: Start month (YYYY-MM). Defaults to 3 months ago.
+        - name: endMonth
+          in: query
+          schema: { type: string, pattern: "^\\d{4}-\\d{2}$" }
+          description: End month (YYYY-MM). Defaults to current month.
+      responses:
+        '200':
+          description: Search keywords with impression counts
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success: { type: boolean, example: true }
+                  accountId: { type: string }
+                  platform: { type: string, example: "googlebusiness" }
+                  monthRange:
+                    type: object
+                    properties:
+                      startMonth: { type: string, example: "2026-01" }
+                      endMonth: { type: string, example: "2026-03" }
+                  keywords:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        keyword: { type: string, example: "restaurant near me" }
+                        impressions: { type: integer, example: 245 }
+                  note: { type: string, example: "Keywords below a minimum impression threshold are excluded by Google" }
+              examples:
+                keywords_data:
+                  summary: Search keywords for a location
+                  value:
+                    success: true
+                    accountId: "69300690f43160a0bc999e07"
+                    platform: "googlebusiness"
+                    monthRange:
+                      startMonth: "2026-01"
+                      endMonth: "2026-03"
+                    keywords:
+                      - keyword: "restaurant near me"
+                        impressions: 245
+                      - keyword: "best tapas barcelona"
+                        impressions: 89
+                      - keyword: "arbichat"
+                        impressions: 34
+                    note: "Keywords below a minimum impression threshold are excluded by Google"
+        '400':
+          description: Invalid parameters
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error: { type: string, example: "Invalid startMonth format. Use YYYY-MM." }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '402':
+          description: Analytics add-on required
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error: { type: string, example: "Analytics add-on required" }
+                  code: { type: string, example: "analytics_addon_required" }
+        '403':
+          description: Access denied
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error: { type: string, example: "Access denied to this account" }
+
   /v1/account-groups:
     get:
       operationId: listAccountGroups

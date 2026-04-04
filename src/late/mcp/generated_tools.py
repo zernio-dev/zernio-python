@@ -1499,6 +1499,52 @@ def register_generated_tools(mcp, _get_client):
             return f"Error: {e}"
 
     @mcp.tool()
+    def analytics_get_google_business_performance(
+        account_id: str, metrics: str = "", start_date: str = "", end_date: str = ""
+    ) -> str:
+        """Get Google Business Profile performance metrics
+
+            Args:
+                account_id: The Zernio SocialAccount ID for the Google Business Profile account. (required)
+                metrics: Comma-separated metric names. Defaults to all available metrics.
+        Valid values: BUSINESS_IMPRESSIONS_DESKTOP_MAPS, BUSINESS_IMPRESSIONS_DESKTOP_SEARCH,
+        BUSINESS_IMPRESSIONS_MOBILE_MAPS, BUSINESS_IMPRESSIONS_MOBILE_SEARCH,
+        BUSINESS_CONVERSATIONS, BUSINESS_DIRECTION_REQUESTS, CALL_CLICKS, WEBSITE_CLICKS,
+        BUSINESS_BOOKINGS, BUSINESS_FOOD_ORDERS, BUSINESS_FOOD_MENU_CLICKS
+                start_date: Start date (YYYY-MM-DD). Defaults to 30 days ago. Max 18 months back.
+                end_date: End date (YYYY-MM-DD). Defaults to today."""
+        client = _get_client()
+        try:
+            response = client.analytics.get_google_business_performance(
+                account_id=account_id,
+                metrics=metrics,
+                start_date=start_date,
+                end_date=end_date,
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool()
+    def analytics_get_google_business_search_keywords(
+        account_id: str, start_month: str = "", end_month: str = ""
+    ) -> str:
+        """Get Google Business Profile search keywords
+
+        Args:
+            account_id: The Zernio SocialAccount ID for the Google Business Profile account. (required)
+            start_month: Start month (YYYY-MM). Defaults to 3 months ago.
+            end_month: End month (YYYY-MM). Defaults to current month."""
+        client = _get_client()
+        try:
+            response = client.analytics.get_google_business_search_keywords(
+                account_id=account_id, start_month=start_month, end_month=end_month
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool()
     def analytics_get_linked_in_aggregate_analytics(
         account_id: str,
         aggregation: str = "TOTAL",
