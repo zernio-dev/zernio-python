@@ -1633,6 +1633,10 @@ components:
           required:
             - options
             - duration_minutes
+        longVideo:
+          type: boolean
+          default: false
+          description: Enable long video uploads (over 140 seconds) using amplify_video media category. Requires the connected X account to have an active X Premium subscription. When true, videos are uploaded with the amplify_video category which supports longer durations (up to 10 minutes via API). When false or omitted, the standard tweet_video category is used (140 second limit). Note that not all Premium accounts have API long-video access, as X may require separate allowlisting.
 
     ThreadsPlatformData:
       type: object
@@ -1657,6 +1661,10 @@ components:
     FacebookPlatformData:
       type: object
       properties:
+        draft:
+          type: boolean
+          description: When true, creates the post as an unpublished draft visible in Facebook Publishing Tools instead of publishing immediately. Supported for feed posts (text, link, image, video) and reels. Not supported for stories. Drafts expire after ~30 days.
+          default: false
         contentType:
           type: string
           enum: [story, reel]
@@ -1666,7 +1674,7 @@ components:
           description: Reel title (only for contentType=reel). Separate from the caption/content field.
         firstComment:
           type: string
-          description: Optional first comment to post immediately after publishing (feed posts only, not stories or reels)
+          description: Optional first comment to post immediately after publishing (feed posts only, not stories or reels). Skipped when draft is true.
         pageId:
           type: string
           description: Target Facebook Page ID for multi-page posting. If omitted, uses the default page. Use GET /v1/accounts/{id}/facebook-page to list pages.
@@ -5164,6 +5172,9 @@ paths:
                 tiktokSettings:
                   $ref: '#/components/schemas/TikTokPlatformData'
                   description: Root-level TikTok settings applied to all TikTok platforms. Merged into each platform's platformSpecificData, with platform-specific settings taking precedence.
+                facebookSettings:
+                  $ref: '#/components/schemas/FacebookPlatformData'
+                  description: Root-level Facebook settings applied to all Facebook platforms. Merged into each platform's platformSpecificData, with platform-specific settings taking precedence.
                 recycling:
                   $ref: '#/components/schemas/RecyclingConfig'
                 queuedFromProfile:
@@ -5176,6 +5187,16 @@ paths:
                     Only used when queuedFromProfile is also provided.
                     If omitted, uses the profile's default queue.
             examples:
+              facebookDraft:
+                summary: Facebook draft post (visible in Publishing Tools)
+                value:
+                  content: "Draft post for review before publishing"
+                  platforms:
+                    - platform: facebook
+                      accountId: "64e1f0a9e2b5af0012ab34cd"
+                  publishNow: true
+                  facebookSettings:
+                    draft: true
               recyclingPost:
                 summary: Post with weekly recycling and content variations
                 value:
@@ -5521,6 +5542,9 @@ paths:
                 tiktokSettings:
                   $ref: '#/components/schemas/TikTokPlatformData'
                   description: Root-level TikTok settings applied to all TikTok platforms. Merged into each platform's platformSpecificData, with platform-specific settings taking precedence.
+                facebookSettings:
+                  $ref: '#/components/schemas/FacebookPlatformData'
+                  description: Root-level Facebook settings applied to all Facebook platforms. Merged into each platform's platformSpecificData, with platform-specific settings taking precedence.
                 recycling:
                   $ref: '#/components/schemas/RecyclingConfig'
               additionalProperties: true
@@ -5762,6 +5786,69 @@ paths:
         '404': { $ref: '#/components/responses/NotFound' }
         '500':
           description: Platform API deletion failed
+  /v1/posts/{postId}/edit:
+    post:
+      operationId: editPost
+      tags: [Posts]
+      summary: Edit published post
+      description: |
+        Edit a published post on a social media platform. Currently only supported for X (Twitter).
+
+        **Requirements:**
+        - Connected X account must have an active X Premium subscription
+        - Must be within 1 hour of original publish time
+        - Maximum 5 edits per tweet (enforced by X)
+        - Text-only edits (media changes are not supported)
+
+        The post record in Zernio is updated with the new content and edit history.
+      parameters:
+        - name: postId
+          in: path
+          required: true
+          schema: { type: string }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [platform, content]
+              properties:
+                platform:
+                  type: string
+                  description: The platform to edit the post on. Currently only twitter is supported.
+                  enum: [twitter]
+                content:
+                  type: string
+                  description: The new tweet text content
+            example:
+              platform: "twitter"
+              content: "Updated tweet text with corrected information"
+      responses:
+        '200':
+          description: Post edited successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success: { type: boolean }
+                  id: { type: string, description: New tweet ID assigned by X after edit }
+                  url: { type: string, format: uri, description: URL of the edited tweet }
+                  message: { type: string }
+              example:
+                success: true
+                id: "1234567890123456790"
+                url: "https://twitter.com/i/web/status/1234567890123456790"
+                message: "Tweet edited successfully"
+        '400':
+          description: "Invalid request: platform not supported, post not published, edit window expired, not Premium, or missing content."
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403':
+          description: Forbidden
+        '404': { $ref: '#/components/responses/NotFound' }
+        '500':
+          description: Platform API edit failed
   /v1/posts/{postId}/update-metadata:
     post:
       operationId: updatePostMetadata
@@ -11492,6 +11579,125 @@ paths:
         '401': { $ref: '#/components/responses/Unauthorized' }
         '403':
           description: Inbox addon required
+    post:
+      operationId: createInboxConversation
+      summary: Create conversation
+      description: |
+        Initiate a new direct message conversation with a specified user. If a conversation already exists with the recipient, the message is added to the existing thread.
+
+        **Currently supported platforms:** Twitter/X only. Other platforms will return `PLATFORM_NOT_SUPPORTED`.
+
+        **DM eligibility:** Before sending, the endpoint checks if the recipient accepts DMs from your account (via the `receives_your_dm` field). If not, a 422 error with code `DM_NOT_ALLOWED` is returned. You can skip this check with `skipDmCheck: true` if you have already verified eligibility.
+
+        **X API tier requirement:** DM write endpoints require X API Pro tier ($5,000/month) or Enterprise access. This applies to BYOK (Bring Your Own Key) users who provide their own X API credentials.
+
+        **Rate limits:** 200 requests per 15 minutes, 1,000 per 24 hours per user, 15,000 per 24 hours per app (shared across all DM endpoints).
+      tags: [Messages]
+      security: [{ bearerAuth: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [accountId]
+              properties:
+                accountId:
+                  type: string
+                  description: The social account ID to send from
+                participantId:
+                  type: string
+                  description: Twitter numeric user ID of the recipient. Provide either this or `participantUsername`.
+                participantUsername:
+                  type: string
+                  description: Twitter username (with or without @) of the recipient. Resolved to a user ID via lookup. Provide either this or `participantId`.
+                message:
+                  type: string
+                  description: Text content of the message. At least one of `message` or attachment is required.
+                skipDmCheck:
+                  type: boolean
+                  default: false
+                  description: Skip the `receives_your_dm` eligibility check before sending. Use if you have already verified the recipient accepts DMs.
+          multipart/form-data:
+            schema:
+              type: object
+              required: [accountId]
+              properties:
+                accountId:
+                  type: string
+                  description: The social account ID to send from
+                participantId:
+                  type: string
+                  description: Twitter numeric user ID of the recipient
+                participantUsername:
+                  type: string
+                  description: Twitter username (with or without @) of the recipient
+                message:
+                  type: string
+                  description: Text content of the message
+                attachment:
+                  type: string
+                  format: binary
+                  description: Media attachment (image or video). One attachment per message.
+                skipDmCheck:
+                  type: string
+                  enum: ['true', 'false']
+                  default: 'false'
+                  description: Skip the DM eligibility check
+      responses:
+        '201':
+          description: Conversation created successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success: { type: boolean, example: true }
+                  data:
+                    type: object
+                    properties:
+                      messageId:
+                        type: string
+                        description: Platform message ID (dm_event_id)
+                      conversationId:
+                        type: string
+                        description: Platform conversation ID (dm_conversation_id)
+                      participantId:
+                        type: string
+                        description: Twitter numeric user ID of the recipient
+                      participantName:
+                        type: string
+                        nullable: true
+                        description: Display name of the recipient
+                      participantUsername:
+                        type: string
+                        nullable: true
+                        description: Twitter username of the recipient
+        '400':
+          description: Validation error or platform not supported
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error: { type: string }
+                  code: { type: string, enum: [PLATFORM_NOT_SUPPORTED] }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403':
+          description: Inbox addon required or profile limit reached
+        '404':
+          description: Account or recipient user not found
+        '422':
+          description: Recipient does not accept DMs from this account
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error: { type: string }
+                  code: { type: string, enum: [DM_NOT_ALLOWED] }
+        '429':
+          description: X API rate limit exceeded
   /v1/inbox/conversations/{conversationId}:
     get:
       operationId: getInboxConversation

@@ -98,6 +98,7 @@ class PostsResource:
         crossposting_enabled: bool | None = True,
         metadata: dict[str, Any] | None = None,
         tiktok_settings: Any | None = None,
+        facebook_settings: Any | None = None,
         recycling: Any | None = None,
         queued_from_profile: str | None = None,
         queue_id: str | None = None,
@@ -118,6 +119,7 @@ class PostsResource:
             crossposting_enabled=crossposting_enabled,
             metadata=metadata,
             tiktok_settings=tiktok_settings,
+            facebook_settings=facebook_settings,
             recycling=recycling,
             queued_from_profile=queued_from_profile,
             queue_id=queue_id,
@@ -135,6 +137,7 @@ class PostsResource:
         content: str | None = None,
         scheduled_for: datetime | str | None = None,
         tiktok_settings: Any | None = None,
+        facebook_settings: Any | None = None,
         recycling: Any | None = None,
     ) -> dict[str, Any]:
         """Update post"""
@@ -142,6 +145,7 @@ class PostsResource:
             content=content,
             scheduled_for=scheduled_for,
             tiktok_settings=tiktok_settings,
+            facebook_settings=facebook_settings,
             recycling=recycling,
         )
         return self._client._put(f"/v1/posts/{post_id}", data=payload)
@@ -167,6 +171,14 @@ class PostsResource:
             platform=platform,
         )
         return self._client._post(f"/v1/posts/{post_id}/unpublish", data=payload)
+
+    def edit_post(self, post_id: str, platform: str, content: str) -> dict[str, Any]:
+        """Edit published post"""
+        payload = self._build_payload(
+            platform=platform,
+            content=content,
+        )
+        return self._client._post(f"/v1/posts/{post_id}/edit", data=payload)
 
     def update_post_metadata(
         self,
@@ -250,6 +262,7 @@ class PostsResource:
         crossposting_enabled: bool | None = True,
         metadata: dict[str, Any] | None = None,
         tiktok_settings: Any | None = None,
+        facebook_settings: Any | None = None,
         recycling: Any | None = None,
         queued_from_profile: str | None = None,
         queue_id: str | None = None,
@@ -270,6 +283,7 @@ class PostsResource:
             crossposting_enabled=crossposting_enabled,
             metadata=metadata,
             tiktok_settings=tiktok_settings,
+            facebook_settings=facebook_settings,
             recycling=recycling,
             queued_from_profile=queued_from_profile,
             queue_id=queue_id,
@@ -287,6 +301,7 @@ class PostsResource:
         content: str | None = None,
         scheduled_for: datetime | str | None = None,
         tiktok_settings: Any | None = None,
+        facebook_settings: Any | None = None,
         recycling: Any | None = None,
     ) -> dict[str, Any]:
         """Update post (async)"""
@@ -294,6 +309,7 @@ class PostsResource:
             content=content,
             scheduled_for=scheduled_for,
             tiktok_settings=tiktok_settings,
+            facebook_settings=facebook_settings,
             recycling=recycling,
         )
         return await self._client._aput(f"/v1/posts/{post_id}", data=payload)
@@ -321,6 +337,16 @@ class PostsResource:
             platform=platform,
         )
         return await self._client._apost(f"/v1/posts/{post_id}/unpublish", data=payload)
+
+    async def aedit_post(
+        self, post_id: str, platform: str, content: str
+    ) -> dict[str, Any]:
+        """Edit published post (async)"""
+        payload = self._build_payload(
+            platform=platform,
+            content=content,
+        )
+        return await self._client._apost(f"/v1/posts/{post_id}/edit", data=payload)
 
     async def aupdate_post_metadata(
         self,

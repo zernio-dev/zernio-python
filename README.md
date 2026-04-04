@@ -189,6 +189,7 @@ Both `from zernio import ...` and `from late import ...` work identically. The `
 | `posts.update_post()` | Update post |
 | `posts.update_post_metadata()` | Update post metadata |
 | `posts.delete_post()` | Delete post |
+| `posts.edit_post()` | Edit published post |
 | `posts.retry_post()` | Retry failed post |
 | `posts.unpublish_post()` | Unpublish post |
 
@@ -474,6 +475,7 @@ Both `from zernio import ...` and `from late import ...` work identically. The `
 | Method | Description |
 |--------|-------------|
 | `messages.list_inbox_conversations()` | List conversations |
+| `messages.create_inbox_conversation()` | Create conversation |
 | `messages.get_inbox_conversation()` | Get conversation |
 | `messages.get_inbox_conversation_messages()` | List messages |
 | `messages.update_inbox_conversation()` | Update conversation status |

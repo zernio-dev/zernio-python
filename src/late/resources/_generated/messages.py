@@ -71,6 +71,25 @@ class MessagesResource:
         )
         return self._client._get("/v1/inbox/conversations", params=params)
 
+    def create_inbox_conversation(
+        self,
+        account_id: str,
+        *,
+        participant_id: str | None = None,
+        participant_username: str | None = None,
+        message: str | None = None,
+        skip_dm_check: bool | None = False,
+    ) -> dict[str, Any]:
+        """Create conversation"""
+        payload = self._build_payload(
+            account_id=account_id,
+            participant_id=participant_id,
+            participant_username=participant_username,
+            message=message,
+            skip_dm_check=skip_dm_check,
+        )
+        return self._client._post("/v1/inbox/conversations", data=payload)
+
     def get_inbox_conversation(
         self, conversation_id: str, account_id: str
     ) -> dict[str, Any]:
@@ -233,6 +252,25 @@ class MessagesResource:
             account_id=account_id,
         )
         return await self._client._aget("/v1/inbox/conversations", params=params)
+
+    async def acreate_inbox_conversation(
+        self,
+        account_id: str,
+        *,
+        participant_id: str | None = None,
+        participant_username: str | None = None,
+        message: str | None = None,
+        skip_dm_check: bool | None = False,
+    ) -> dict[str, Any]:
+        """Create conversation (async)"""
+        payload = self._build_payload(
+            account_id=account_id,
+            participant_id=participant_id,
+            participant_username=participant_username,
+            message=message,
+            skip_dm_check=skip_dm_check,
+        )
+        return await self._client._apost("/v1/inbox/conversations", data=payload)
 
     async def aget_inbox_conversation(
         self, conversation_id: str, account_id: str

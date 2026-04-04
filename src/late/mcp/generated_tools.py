@@ -3286,6 +3286,35 @@ def register_generated_tools(mcp, _get_client):
             return f"Error: {e}"
 
     @mcp.tool()
+    def messages_create_inbox_conversation(
+        account_id: str,
+        participant_id: str = "",
+        participant_username: str = "",
+        message: str = "",
+        skip_dm_check: bool = False,
+    ) -> str:
+        """Create conversation
+
+        Args:
+            account_id: The social account ID to send from (required)
+            participant_id: Twitter numeric user ID of the recipient. Provide either this or `participantUsername`.
+            participant_username: Twitter username (with or without @) of the recipient. Resolved to a user ID via lookup. Provide either this or `participantId`.
+            message: Text content of the message. At least one of `message` or attachment is required.
+            skip_dm_check: Skip the `receives_your_dm` eligibility check before sending. Use if you have already verified the recipient accepts DMs."""
+        client = _get_client()
+        try:
+            response = client.messages.create_inbox_conversation(
+                account_id=account_id,
+                participant_id=participant_id,
+                participant_username=participant_username,
+                message=message,
+                skip_dm_check=skip_dm_check,
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool()
     def messages_get_inbox_conversation(conversation_id: str, account_id: str) -> str:
         """Get conversation
 
@@ -3576,6 +3605,7 @@ def register_generated_tools(mcp, _get_client):
         content: str = "",
         scheduled_for: str = "",
         tiktok_settings: str = "",
+        facebook_settings: str = "",
         recycling: str = "",
     ) -> str:
         """Update post
@@ -3585,6 +3615,7 @@ def register_generated_tools(mcp, _get_client):
             content
             scheduled_for
             tiktok_settings: Root-level TikTok settings applied to all TikTok platforms. Merged into each platform's platformSpecificData, with platform-specific settings taking precedence.
+            facebook_settings: Root-level Facebook settings applied to all Facebook platforms. Merged into each platform's platformSpecificData, with platform-specific settings taking precedence.
             recycling"""
         client = _get_client()
         try:
@@ -3593,6 +3624,7 @@ def register_generated_tools(mcp, _get_client):
                 content=content,
                 scheduled_for=scheduled_for,
                 tiktok_settings=tiktok_settings,
+                facebook_settings=facebook_settings,
                 recycling=recycling,
             )
             return _format_response(response)
@@ -3635,6 +3667,23 @@ def register_generated_tools(mcp, _get_client):
         client = _get_client()
         try:
             response = client.posts.unpublish_post(post_id=post_id, platform=platform)
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool()
+    def posts_edit_post(post_id: str, platform: str, content: str) -> str:
+        """Edit published post
+
+        Args:
+            post_id: (required)
+            platform: The platform to edit the post on. Currently only twitter is supported. (required)
+            content: The new tweet text content (required)"""
+        client = _get_client()
+        try:
+            response = client.posts.edit_post(
+                post_id=post_id, platform=platform, content=content
+            )
             return _format_response(response)
         except Exception as e:
             return f"Error: {e}"
