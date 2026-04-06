@@ -77,10 +77,13 @@ class ValidateResource:
         )
         return self._client._post("/v1/tools/validate/media", data=payload)
 
-    def validate_subreddit(self, name: str) -> dict[str, Any]:
+    def validate_subreddit(
+        self, name: str, *, account_id: str | None = None
+    ) -> dict[str, Any]:
         """Check subreddit existence"""
         params = self._build_params(
             name=name,
+            account_id=account_id,
         )
         return self._client._get("/v1/tools/validate/subreddit", params=params)
 
@@ -113,9 +116,12 @@ class ValidateResource:
         )
         return await self._client._apost("/v1/tools/validate/media", data=payload)
 
-    async def avalidate_subreddit(self, name: str) -> dict[str, Any]:
+    async def avalidate_subreddit(
+        self, name: str, *, account_id: str | None = None
+    ) -> dict[str, Any]:
         """Check subreddit existence (async)"""
         params = self._build_params(
             name=name,
+            account_id=account_id,
         )
         return await self._client._aget("/v1/tools/validate/subreddit", params=params)

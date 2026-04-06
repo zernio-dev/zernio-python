@@ -317,6 +317,29 @@ components:
                 type: string
                 example: Not found
   schemas:
+    RedditPost:
+      type: object
+      description: A normalized Reddit post returned by the feed and search endpoints
+      properties:
+        id: { type: string, description: Reddit post ID (without type prefix) }
+        fullname: { type: string, description: "Reddit fullname (e.g. t3_abc123)" }
+        title: { type: string }
+        author: { type: string }
+        subreddit: { type: string }
+        url: { type: string, description: Post URL (may be a gallery URL, external link, or self-post URL) }
+        permalink: { type: string, description: Full permalink to the Reddit post }
+        selftext: { type: string, description: Self-post body text (empty string for link posts) }
+        createdUtc: { type: number, description: Unix timestamp of post creation }
+        score: { type: integer }
+        numComments: { type: integer }
+        over18: { type: boolean, description: Whether the post is marked NSFW }
+        stickied: { type: boolean }
+        flairText: { type: string, nullable: true, description: Link flair text if set }
+        isGallery: { type: boolean, description: Whether the post is a gallery with multiple images }
+        galleryImages:
+          type: array
+          description: Individual image URLs for gallery posts (only present when isGallery is true)
+          items: { type: string, format: uri }
     ErrorResponse:
       type: object
       properties:
@@ -3109,7 +3132,7 @@ paths:
       description: |
         Check if a subreddit exists and return basic info (title, subscriber count, NSFW status, post types allowed).
 
-        Uses Reddit's public JSON API (no Reddit auth needed). Returns `exists: false` for private, banned, or nonexistent subreddits.
+        When accountId is provided, uses authenticated Reddit OAuth API with automatic token refresh (recommended). Falls back to Reddit's public JSON API, which may be unreliable from server IPs. Returns `exists: false` for private, banned, or nonexistent subreddits.
       security:
         - bearerAuth: []
       parameters:
@@ -3120,6 +3143,11 @@ paths:
           schema:
             type: string
             example: "programming"
+        - name: accountId
+          in: query
+          description: Reddit social account ID for authenticated lookup (recommended for reliable results)
+          schema:
+            type: string
       responses:
         "200":
           description: Subreddit lookup result
@@ -4850,33 +4878,31 @@ paths:
               schema:
                 type: object
                 properties:
-                  posts:
+                  items:
                     type: array
                     items:
-                      type: object
-                      properties:
-                        id: { type: string }
-                        title: { type: string }
-                        selftext: { type: string }
-                        author: { type: string }
-                        subreddit: { type: string }
-                        score: { type: integer }
-                        num_comments: { type: integer }
-                        created_utc: { type: number }
-                        permalink: { type: string }
-                  after: { type: string }
+                      $ref: '#/components/schemas/RedditPost'
+                  after: { type: string, nullable: true }
+                  before: { type: string, nullable: true }
               example:
-                posts:
+                items:
                   - id: "1abc234"
+                    fullname: "t3_1abc234"
                     title: "How to grow on social media in 2025"
                     selftext: "Here are my tips..."
                     author: "marketingpro"
                     subreddit: "socialmedia"
+                    url: "https://www.reddit.com/r/socialmedia/comments/1abc234/"
+                    permalink: "https://www.reddit.com/r/socialmedia/comments/1abc234/how_to_grow/"
                     score: 156
-                    num_comments: 42
-                    created_utc: 1730000000
-                    permalink: "/r/socialmedia/comments/1abc234/how_to_grow/"
+                    numComments: 42
+                    createdUtc: 1730000000
+                    over18: false
+                    stickied: false
+                    flairText: null
+                    isGallery: false
                 after: "t3_1abc234"
+                before: null
         '400': { description: Missing params }
         '401': { $ref: '#/components/responses/Unauthorized' }
         '404': { description: Account not found }
@@ -4914,30 +4940,47 @@ paths:
               schema:
                 type: object
                 properties:
-                  posts:
+                  items:
                     type: array
                     items:
-                      type: object
-                  after: { type: string }
+                      $ref: '#/components/schemas/RedditPost'
+                  after: { type: string, nullable: true }
+                  before: { type: string, nullable: true }
               example:
-                posts:
+                items:
                   - id: "1xyz789"
+                    fullname: "t3_1xyz789"
                     title: "Top marketing trends this week"
                     author: "trendwatcher"
                     subreddit: "marketing"
+                    url: "https://www.reddit.com/r/marketing/comments/1xyz789/"
+                    permalink: "https://www.reddit.com/r/marketing/comments/1xyz789/top_marketing_trends/"
                     score: 892
-                    num_comments: 134
-                    created_utc: 1730100000
-                    permalink: "/r/marketing/comments/1xyz789/top_marketing_trends/"
+                    numComments: 134
+                    createdUtc: 1730100000
+                    over18: false
+                    stickied: false
+                    flairText: null
+                    isGallery: false
                   - id: "1def456"
-                    title: "My social media strategy that worked"
+                    fullname: "t3_1def456"
+                    title: "Check out my grow setup"
                     author: "growthexpert"
-                    subreddit: "marketing"
+                    subreddit: "gardening"
+                    url: "https://www.reddit.com/gallery/1def456"
+                    permalink: "https://www.reddit.com/r/gardening/comments/1def456/check_out_my_grow_setup/"
                     score: 567
-                    num_comments: 89
-                    created_utc: 1730050000
-                    permalink: "/r/marketing/comments/1def456/my_social_media_strategy/"
+                    numComments: 89
+                    createdUtc: 1730050000
+                    over18: false
+                    stickied: false
+                    flairText: null
+                    isGallery: true
+                    galleryImages:
+                      - "https://i.redd.it/abc123.jpg"
+                      - "https://i.redd.it/def456.jpg"
                 after: "t3_1def456"
+                before: null
         '400': { description: Missing params }
         '401': { $ref: '#/components/responses/Unauthorized' }
         '404': { description: Account not found }

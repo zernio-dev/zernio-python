@@ -4480,14 +4480,17 @@ def register_generated_tools(mcp, _get_client):
             return f"Error: {e}"
 
     @mcp.tool()
-    def validate_subreddit(name: str) -> str:
+    def validate_subreddit(name: str, account_id: str = "") -> str:
         """Check subreddit existence
 
         Args:
-            name: Subreddit name (with or without "r/" prefix) (required)"""
+            name: Subreddit name (with or without "r/" prefix) (required)
+            account_id: Reddit social account ID for authenticated lookup (recommended for reliable results)"""
         client = _get_client()
         try:
-            response = client.validate.validate_subreddit(name=name)
+            response = client.validate.validate_subreddit(
+                name=name, account_id=account_id
+            )
             return _format_response(response)
         except Exception as e:
             return f"Error: {e}"
