@@ -103,11 +103,16 @@ class ConnectResource:
         return self._client._post("/v1/connect/facebook/select-page", data=payload)
 
     def list_google_business_locations(
-        self, profile_id: str, temp_token: str
+        self,
+        *,
+        profile_id: str | None = None,
+        pending_data_token: str | None = None,
+        temp_token: str | None = None,
     ) -> dict[str, Any]:
         """List GBP locations"""
         params = self._build_params(
             profile_id=profile_id,
+            pending_data_token=pending_data_token,
             temp_token=temp_token,
         )
         return self._client._get("/v1/connect/googlebusiness/locations", params=params)
@@ -116,17 +121,15 @@ class ConnectResource:
         self,
         profile_id: str,
         location_id: str,
-        temp_token: str,
+        pending_data_token: str,
         *,
-        user_profile: dict[str, Any] | None = None,
         redirect_url: str | None = None,
     ) -> dict[str, Any]:
         """Select GBP location"""
         payload = self._build_payload(
             profile_id=profile_id,
             location_id=location_id,
-            temp_token=temp_token,
-            user_profile=user_profile,
+            pending_data_token=pending_data_token,
             redirect_url=redirect_url,
         )
         return self._client._post(
@@ -470,11 +473,16 @@ class ConnectResource:
         )
 
     async def alist_google_business_locations(
-        self, profile_id: str, temp_token: str
+        self,
+        *,
+        profile_id: str | None = None,
+        pending_data_token: str | None = None,
+        temp_token: str | None = None,
     ) -> dict[str, Any]:
         """List GBP locations (async)"""
         params = self._build_params(
             profile_id=profile_id,
+            pending_data_token=pending_data_token,
             temp_token=temp_token,
         )
         return await self._client._aget(
@@ -485,17 +493,15 @@ class ConnectResource:
         self,
         profile_id: str,
         location_id: str,
-        temp_token: str,
+        pending_data_token: str,
         *,
-        user_profile: dict[str, Any] | None = None,
         redirect_url: str | None = None,
     ) -> dict[str, Any]:
         """Select GBP location (async)"""
         payload = self._build_payload(
             profile_id=profile_id,
             location_id=location_id,
-            temp_token=temp_token,
-            user_profile=user_profile,
+            pending_data_token=pending_data_token,
             redirect_url=redirect_url,
         )
         return await self._client._apost(

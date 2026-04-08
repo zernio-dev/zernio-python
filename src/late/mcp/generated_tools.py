@@ -2329,16 +2329,21 @@ def register_generated_tools(mcp, _get_client):
             return f"Error: {e}"
 
     @mcp.tool()
-    def connect_list_google_business_locations(profile_id: str, temp_token: str) -> str:
+    def connect_list_google_business_locations(
+        profile_id: str = "", pending_data_token: str = "", temp_token: str = ""
+    ) -> str:
         """List GBP locations
 
         Args:
-            profile_id: Profile ID from your connection flow (required)
-            temp_token: Temporary Google access token from the OAuth callback redirect (required)"""
+            profile_id: Profile ID from your connection flow. Required for auth validation when provided.
+            pending_data_token: Token from the OAuth callback redirect. Preferred over tempToken because it preserves server-side token storage. One of pendingDataToken or tempToken is required.
+            temp_token: Legacy. Direct Google access token. Use pendingDataToken instead when available."""
         client = _get_client()
         try:
             response = client.connect.list_google_business_locations(
-                profile_id=profile_id, temp_token=temp_token
+                profile_id=profile_id,
+                pending_data_token=pending_data_token,
+                temp_token=temp_token,
             )
             return _format_response(response)
         except Exception as e:
@@ -2348,8 +2353,7 @@ def register_generated_tools(mcp, _get_client):
     def connect_select_google_business_location(
         profile_id: str,
         location_id: str,
-        temp_token: str,
-        user_profile: str = "",
+        pending_data_token: str,
         redirect_url: str = "",
     ) -> str:
         """Select GBP location
@@ -2357,16 +2361,14 @@ def register_generated_tools(mcp, _get_client):
         Args:
             profile_id: Profile ID from your connection flow (required)
             location_id: The Google Business location ID selected by the user (required)
-            temp_token: Temporary Google access token from OAuth (required)
-            user_profile: Decoded user profile from the OAuth callback. Contains the refresh token. Always include this field.
+            pending_data_token: Token from the OAuth callback redirect (pendingDataToken query param). Tokens and profile data are retrieved server-side from this token. (required)
             redirect_url: Optional custom redirect URL to return to after selection"""
         client = _get_client()
         try:
             response = client.connect.select_google_business_location(
                 profile_id=profile_id,
                 location_id=location_id,
-                temp_token=temp_token,
-                user_profile=user_profile,
+                pending_data_token=pending_data_token,
                 redirect_url=redirect_url,
             )
             return _format_response(response)
