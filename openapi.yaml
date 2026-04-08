@@ -1627,7 +1627,11 @@ components:
           description: Controls who can reply to the tweet. "following" allows only people you follow, "mentionedUsers" allows only mentioned users, "subscribers" allows only subscribers, "verified" allows only verified users. Omit for default (everyone can reply). For threads, applies to the first tweet only. Cannot be combined with replyToTweetId.
         threadItems:
           type: array
-          description: Sequence of tweets in a thread. First item is the root tweet.
+          description: >
+            Complete sequence of tweets in a thread. The first item becomes the root tweet,
+            subsequent items are chained as replies. When threadItems is provided, the top-level
+            content field is used only for display and search purposes, it is NOT published.
+            You must include your first tweet as threadItems[0].
           items:
             type: object
             properties:
@@ -1671,7 +1675,11 @@ components:
           description: Topic tag for post categorization and discoverability on Threads. Must be 1-50 characters, cannot contain periods (.) or ampersands (&). Overrides auto-extraction from content hashtags when provided.
         threadItems:
           type: array
-          description: Sequence of posts in a Threads thread (root then replies in order).
+          description: >
+            Complete sequence of posts in a Threads thread. The first item becomes the root post,
+            subsequent items are chained as replies. When threadItems is provided, the top-level
+            content field is used only for display and search purposes, it is NOT published.
+            You must include your first post as threadItems[0].
           items:
             type: object
             properties:
@@ -1992,7 +2000,11 @@ components:
       properties:
         threadItems:
           type: array
-          description: Sequence of posts in a Bluesky thread (root then replies in order).
+          description: >
+            Complete sequence of posts in a Bluesky thread. The first item becomes the root post,
+            subsequent items are chained as replies. When threadItems is provided, the top-level
+            content field is used only for display and search purposes, it is NOT published.
+            You must include your first post as threadItems[0].
           items:
             type: object
             properties:
