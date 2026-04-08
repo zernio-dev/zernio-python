@@ -294,6 +294,7 @@ Both `from zernio import ...` and `from late import ...` work identically. The `
 | Method | Description |
 |--------|-------------|
 | `logs.list_connection_logs()` | List connection logs |
+| `logs.list_logs()` | List activity logs |
 | `logs.list_posts_logs()` | List publishing logs |
 | `logs.get_post_logs()` | Get post logs |
 
@@ -322,6 +323,7 @@ Both `from zernio import ...` and `from late import ...` work identically. The `
 | `connect.update_reddit_subreddits()` | Set default subreddit |
 | `connect.update_youtube_default_playlist()` | Set default YouTube playlist |
 | `connect.complete_telegram_connect()` | Check Telegram status |
+| `connect.connect_ads()` | Connect ads for a platform |
 | `connect.connect_bluesky_credentials()` | Connect Bluesky account |
 | `connect.connect_whats_app_credentials()` | Connect WhatsApp via credentials |
 | `connect.handle_o_auth_callback()` | Complete OAuth callback |

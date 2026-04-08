@@ -2284,6 +2284,35 @@ def register_generated_tools(mcp, _get_client):
             return f"Error: {e}"
 
     @mcp.tool()
+    def connect_ads(
+        platform: str,
+        profile_id: str,
+        account_id: str = "",
+        redirect_url: str = "",
+        headless: bool = False,
+    ) -> str:
+        """Connect ads for a platform
+
+        Args:
+            platform: Platform to connect ads for. Only platforms with ads support are accepted. (required)
+            profile_id: Your Zernio profile ID (required)
+            account_id: Existing SocialAccount ID. Required for separate-token platforms (tiktok, twitter, pinterest). Ignored for same-token and ads-only platforms.
+            redirect_url: Custom redirect URL after OAuth completes (same-token platforms only)
+            headless: Enable headless mode (same-token platforms only)"""
+        client = _get_client()
+        try:
+            response = client.connect.connect_ads(
+                platform=platform,
+                profile_id=profile_id,
+                account_id=account_id,
+                redirect_url=redirect_url,
+                headless=headless,
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool()
     def connect_list_facebook_pages(profile_id: str, temp_token: str) -> str:
         """List Facebook pages
 
@@ -3147,6 +3176,44 @@ def register_generated_tools(mcp, _get_client):
             return f"Error: {e}"
 
     # LOGS
+
+    @mcp.tool()
+    def logs_list_logs(
+        type: str = "publishing",
+        status: str = "",
+        platform: str = "",
+        action: str = "",
+        search: str = "",
+        days: int = 90,
+        limit: int = 50,
+        skip: int = 0,
+    ) -> str:
+        """List activity logs
+
+        Args:
+            type: Log category to query
+            status: Filter by status
+            platform: Filter by platform
+            action: Filter by action (e.g., post.published, message.sent, account.connected, webhook.delivered)
+            search: Free-text search across log fields
+            days: Number of days to look back (max 90)
+            limit: Maximum number of logs to return (max 100)
+            skip: Number of logs to skip (for pagination)"""
+        client = _get_client()
+        try:
+            response = client.logs.list_logs(
+                type=type,
+                status=status,
+                platform=platform,
+                action=action,
+                search=search,
+                days=days,
+                limit=limit,
+                skip=skip,
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
 
     @mcp.tool()
     def logs_list_posts_logs(

@@ -75,6 +75,24 @@ class ConnectResource:
         )
         return self._client._post(f"/v1/connect/{platform}", data=payload)
 
+    def connect_ads(
+        self,
+        platform: str,
+        profile_id: str,
+        *,
+        account_id: str | None = None,
+        redirect_url: str | None = None,
+        headless: bool | None = False,
+    ) -> dict[str, Any]:
+        """Connect ads for a platform"""
+        params = self._build_params(
+            profile_id=profile_id,
+            account_id=account_id,
+            redirect_url=redirect_url,
+            headless=headless,
+        )
+        return self._client._get(f"/v1/connect/{platform}/ads", params=params)
+
     def list_facebook_pages(self, profile_id: str, temp_token: str) -> dict[str, Any]:
         """List Facebook pages"""
         params = self._build_params(
@@ -438,6 +456,24 @@ class ConnectResource:
             profile_id=profile_id,
         )
         return await self._client._apost(f"/v1/connect/{platform}", data=payload)
+
+    async def aconnect_ads(
+        self,
+        platform: str,
+        profile_id: str,
+        *,
+        account_id: str | None = None,
+        redirect_url: str | None = None,
+        headless: bool | None = False,
+    ) -> dict[str, Any]:
+        """Connect ads for a platform (async)"""
+        params = self._build_params(
+            profile_id=profile_id,
+            account_id=account_id,
+            redirect_url=redirect_url,
+            headless=headless,
+        )
+        return await self._client._aget(f"/v1/connect/{platform}/ads", params=params)
 
     async def alist_facebook_pages(
         self, profile_id: str, temp_token: str

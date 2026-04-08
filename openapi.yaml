@@ -2102,6 +2102,14 @@ components:
           type: string
           format: date-time
           description: Last time follower count was updated (only included if user has analytics add-on)
+        adsStatus:
+          type: string
+          enum: [connected, not_connected, not_available]
+          description: |
+            Ads connection status for this account.
+            - `connected`: Ads are ready to use (same-token platforms like Meta/LinkedIn, or separate ads token is present).
+            - `not_connected`: Platform supports ads but requires a separate ads OAuth. Use `GET /v1/connect/{platform}/ads` to connect.
+            - `not_available`: Platform does not support ads (e.g., YouTube, Reddit, Bluesky).
         metadata:
           type: object
           description: |
@@ -7069,6 +7077,90 @@ paths:
         '403': { description: BYOK required for AppSumo Twitter }
         '500': { description: Failed to connect account }
 
+  /v1/connect/{platform}/ads:
+    get:
+      operationId: connectAds
+      tags: [Connect]
+      summary: Connect ads for a platform
+      description: |
+        Unified ads connection endpoint. Handles all platforms through a single route:
+
+        **Same-token platforms** (facebook, instagram, linkedin): If a posting account already exists, returns `alreadyConnected: true` immediately (no extra OAuth needed). If not, starts the normal OAuth flow, and the resulting account supports both posting and ads.
+
+        **Separate-token platforms** (tiktok, twitter, pinterest): Requires an existing posting account (`accountId` param). If ads are already connected, returns `alreadyConnected: true`. Otherwise, starts the platform-specific marketing API OAuth flow.
+
+        **Ads-only platforms** (googleads): If a Google Ads account exists, returns `alreadyConnected: true`. Otherwise, starts the Google Ads OAuth flow.
+
+        Use the `adsStatus` field from `GET /v1/accounts` to check which accounts need ads connection.
+      parameters:
+        - name: platform
+          in: path
+          required: true
+          schema:
+            type: string
+            enum: [facebook, instagram, linkedin, tiktok, twitter, pinterest, googleads]
+          description: Platform to connect ads for. Only platforms with ads support are accepted.
+        - name: profileId
+          in: query
+          required: true
+          schema: { type: string }
+          description: Your Zernio profile ID
+        - name: accountId
+          in: query
+          schema: { type: string }
+          description: Existing SocialAccount ID. Required for separate-token platforms (tiktok, twitter, pinterest). Ignored for same-token and ads-only platforms.
+        - name: redirect_url
+          in: query
+          schema: { type: string, format: uri }
+          description: Custom redirect URL after OAuth completes (same-token platforms only)
+        - name: headless
+          in: query
+          schema: { type: boolean, default: false }
+          description: Enable headless mode (same-token platforms only)
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Either an OAuth URL to redirect to, or confirmation that ads are already connected
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - type: object
+                    description: Ads already connected (no OAuth needed)
+                    properties:
+                      alreadyConnected: { type: boolean, example: true }
+                      accountId: { type: string }
+                      platform: { type: string }
+                      username: { type: string }
+                      displayName: { type: string }
+                  - type: object
+                    description: OAuth URL to redirect user to
+                    properties:
+                      authUrl: { type: string, format: uri }
+                      state: { type: string }
+              examples:
+                alreadyConnected:
+                  summary: Same-token platform (Meta) with existing account
+                  value:
+                    alreadyConnected: true
+                    accountId: "664a1b2c3d4e5f6789012345"
+                    platform: "instagram"
+                    username: "@mybrand"
+                    displayName: "My Brand"
+                oauthRequired:
+                  summary: Separate-token platform (TikTok) needing ads OAuth
+                  value:
+                    authUrl: "https://business-api.tiktok.com/portal/auth?app_id=..."
+                    state: "user123-profile456-account789-1234567890"
+        '400':
+          description: "Platform doesn't support ads, or missing accountId for separate-token platform"
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403':
+          description: "Ads add-on required, or no access to profile"
+        '404':
+          description: "Profile or posting account not found"
+
   /v1/connect/facebook/select-page:
     get:
       operationId: listFacebookPages
@@ -11149,13 +11241,144 @@ paths:
                 success: false
                 message: "Test webhook failed"
 
+  /v1/logs:
+    get:
+      operationId: listLogs
+      tags: [Logs]
+      summary: List activity logs
+      description: |
+        Unified logs endpoint. Returns logs for publishing, connections, webhooks, and messaging.
+        Filter by type, platform, status, and time range. Logs are retained for 90 days.
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: type
+          in: query
+          description: Log category to query
+          schema:
+            type: string
+            enum: [publishing, connections, webhooks, messaging]
+            default: publishing
+        - name: status
+          in: query
+          description: Filter by status
+          schema:
+            type: string
+            enum: [success, failed, pending, skipped, all]
+        - name: platform
+          in: query
+          description: Filter by platform
+          schema:
+            type: string
+            enum: [tiktok, instagram, whatsapp, facebook, youtube, linkedin, twitter, threads, pinterest, reddit, bluesky, googlebusiness, telegram, snapchat, all]
+        - name: action
+          in: query
+          description: Filter by action (e.g., post.published, message.sent, account.connected, webhook.delivered)
+          schema:
+            type: string
+        - name: search
+          in: query
+          description: Free-text search across log fields
+          schema:
+            type: string
+        - name: days
+          in: query
+          description: Number of days to look back (max 90)
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 90
+            default: 90
+        - name: limit
+          in: query
+          description: Maximum number of logs to return (max 100)
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 50
+        - name: skip
+          in: query
+          description: Number of logs to skip (for pagination)
+          schema:
+            type: integer
+            minimum: 0
+            default: 0
+      responses:
+        '200':
+          description: Logs retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  logs:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        type:
+                          type: string
+                          description: Log category (publishing, connections, webhooks, messaging)
+                        action:
+                          type: string
+                          description: Specific action (post.published, message.sent, account.connected, etc.)
+                        user_id:
+                          type: string
+                        platform:
+                          type: string
+                        account_id:
+                          type: string
+                        status:
+                          type: string
+                          enum: [success, failed, pending, skipped]
+                        status_code:
+                          type: integer
+                        error_message:
+                          type: string
+                        error_code:
+                          type: string
+                        duration_ms:
+                          type: integer
+                        endpoint:
+                          type: string
+                          description: The API endpoint that triggered this log
+                        request_body:
+                          type: string
+                          description: Request JSON (truncated to 5KB)
+                        response_body:
+                          type: string
+                          description: Response JSON (truncated to 10KB)
+                        created_at:
+                          type: string
+                          format: date-time
+                        metadata:
+                          type: string
+                          description: Additional context as JSON string
+                  pagination:
+                    type: object
+                    properties:
+                      total:
+                        type: integer
+                      limit:
+                        type: integer
+                      skip:
+                        type: integer
+                      pages:
+                        type: integer
+                      hasMore:
+                        type: boolean
+        '401': { $ref: '#/components/responses/Unauthorized' }
+
   /v1/webhooks/logs:
     get:
       operationId: getWebhookLogs
       tags: [Webhooks]
       summary: Get delivery logs
+      deprecated: true
       description: |
-        Retrieve webhook delivery history. Logs are automatically deleted after 7 days.
+        **Deprecated.** Use `GET /v1/logs?type=webhooks` instead.
+        Retrieve webhook delivery history. Logs are retained for 90 days.
       security:
         - bearerAuth: []
       parameters:
@@ -11203,8 +11426,10 @@ paths:
       operationId: listPostsLogs
       tags: [Logs]
       summary: List publishing logs
+      deprecated: true
       description: |
-        Retrieve publishing logs for all posts with detailed information about each publishing attempt. Filter by status, platform, or action. Logs are automatically deleted after 7 days.
+        **Deprecated.** Use `GET /v1/logs?type=publishing` instead.
+        Retrieve publishing logs for all posts. Logs are retained for 90 days.
       security:
         - bearerAuth: []
       parameters:
@@ -11320,9 +11545,10 @@ paths:
       operationId: listConnectionLogs
       tags: [Logs]
       summary: List connection logs
+      deprecated: true
       description: |
-        Retrieve connection event logs showing account connection and disconnection history. Event types: connect_success, connect_failed, disconnect, reconnect_success, reconnect_failed.
-        Logs are automatically deleted after 7 days.
+        **Deprecated.** Use `GET /v1/logs?type=connections` instead.
+        Retrieve connection event logs. Logs are retained for 90 days.
       security:
         - bearerAuth: []
       parameters:

@@ -48,6 +48,31 @@ class LogsResource:
                 result[to_camel(k)] = v
         return result
 
+    def list_logs(
+        self,
+        *,
+        type: str | None = "publishing",
+        status: str | None = None,
+        platform: str | None = None,
+        action: str | None = None,
+        search: str | None = None,
+        days: int | None = 90,
+        limit: int | None = 50,
+        skip: int | None = 0,
+    ) -> dict[str, Any]:
+        """List activity logs"""
+        params = self._build_params(
+            type=type,
+            status=status,
+            platform=platform,
+            action=action,
+            search=search,
+            days=days,
+            limit=limit,
+            skip=skip,
+        )
+        return self._client._get("/v1/logs", params=params)
+
     def list_posts_logs(
         self,
         *,
@@ -98,6 +123,31 @@ class LogsResource:
             limit=limit,
         )
         return self._client._get(f"/v1/posts/{post_id}/logs", params=params)
+
+    async def alist_logs(
+        self,
+        *,
+        type: str | None = "publishing",
+        status: str | None = None,
+        platform: str | None = None,
+        action: str | None = None,
+        search: str | None = None,
+        days: int | None = 90,
+        limit: int | None = 50,
+        skip: int | None = 0,
+    ) -> dict[str, Any]:
+        """List activity logs (async)"""
+        params = self._build_params(
+            type=type,
+            status=status,
+            platform=platform,
+            action=action,
+            search=search,
+            days=days,
+            limit=limit,
+            skip=skip,
+        )
+        return await self._client._aget("/v1/logs", params=params)
 
     async def alist_posts_logs(
         self,
