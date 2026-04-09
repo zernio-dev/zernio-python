@@ -205,6 +205,7 @@ Both `from zernio import ...` and `from late import ...` work identically. The `
 | `accounts.get_tik_tok_creator_info()` | Get TikTok creator info |
 | `accounts.update_account()` | Update account |
 | `accounts.delete_account()` | Disconnect account |
+| `accounts.disconnect_ads()` | Disconnect ads from an account |
 
 ### Profiles
 | Method | Description |
@@ -381,7 +382,6 @@ Both `from zernio import ...` and `from late import ...` work identically. The `
 | `ads.delete_ad()` | Cancel an ad |
 | `ads.boost_post()` | Boost an existing post as a paid ad |
 | `ads.search_ad_interests()` | Search targeting interests |
-| `ads.sync_external_ads()` | Sync external ads from platform ad managers |
 
 ### Broadcasts
 | Method | Description |

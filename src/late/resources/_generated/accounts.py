@@ -104,6 +104,15 @@ class AccountsResource:
         """Disconnect account"""
         return self._client._delete(f"/v1/accounts/{account_id}")
 
+    def disconnect_ads(self, account_id: str, ads_platform: str) -> dict[str, Any]:
+        """Disconnect ads from an account"""
+        payload = self._build_payload(
+            ads_platform=ads_platform,
+        )
+        return self._client._post(
+            f"/v1/accounts/{account_id}/disconnect-ads", data=payload
+        )
+
     def get_all_accounts_health(
         self,
         *,
@@ -414,6 +423,17 @@ class AccountsResource:
     async def adelete_account(self, account_id: str) -> dict[str, Any]:
         """Disconnect account (async)"""
         return await self._client._adelete(f"/v1/accounts/{account_id}")
+
+    async def adisconnect_ads(
+        self, account_id: str, ads_platform: str
+    ) -> dict[str, Any]:
+        """Disconnect ads from an account (async)"""
+        payload = self._build_payload(
+            ads_platform=ads_platform,
+        )
+        return await self._client._apost(
+            f"/v1/accounts/{account_id}/disconnect-ads", data=payload
+        )
 
     async def aget_all_accounts_health(
         self,

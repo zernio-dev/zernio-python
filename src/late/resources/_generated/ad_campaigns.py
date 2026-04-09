@@ -96,6 +96,8 @@ class AdCampaignsResource:
         ad_account_id: str | None = None,
         account_id: str | None = None,
         profile_id: str | None = None,
+        from_date: str | None = None,
+        to_date: str | None = None,
     ) -> dict[str, Any]:
         """Get nested campaign/ad-set/ad tree"""
         params = self._build_params(
@@ -107,6 +109,8 @@ class AdCampaignsResource:
             ad_account_id=ad_account_id,
             account_id=account_id,
             profile_id=profile_id,
+            from_date=from_date,
+            to_date=to_date,
         )
         return self._client._get("/v1/ads/tree", params=params)
 
@@ -158,6 +162,8 @@ class AdCampaignsResource:
         ad_account_id: str | None = None,
         account_id: str | None = None,
         profile_id: str | None = None,
+        from_date: str | None = None,
+        to_date: str | None = None,
     ) -> dict[str, Any]:
         """Get nested campaign/ad-set/ad tree (async)"""
         params = self._build_params(
@@ -169,5 +175,7 @@ class AdCampaignsResource:
             ad_account_id=ad_account_id,
             account_id=account_id,
             profile_id=profile_id,
+            from_date=from_date,
+            to_date=to_date,
         )
         return await self._client._aget("/v1/ads/tree", params=params)

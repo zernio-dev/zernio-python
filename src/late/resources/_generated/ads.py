@@ -61,6 +61,8 @@ class AdsResource:
         account_id: str | None = None,
         profile_id: str | None = None,
         campaign_id: str | None = None,
+        from_date: str | None = None,
+        to_date: str | None = None,
     ) -> dict[str, Any]:
         """List ads"""
         params = self._build_params(
@@ -72,6 +74,8 @@ class AdsResource:
             account_id=account_id,
             profile_id=profile_id,
             campaign_id=campaign_id,
+            from_date=from_date,
+            to_date=to_date,
         )
         return self._client._get("/v1/ads", params=params)
 
@@ -102,10 +106,17 @@ class AdsResource:
         return self._client._delete(f"/v1/ads/{ad_id}")
 
     def get_ad_analytics(
-        self, ad_id: str, *, breakdowns: str | None = None
+        self,
+        ad_id: str,
+        *,
+        from_date: str | None = None,
+        to_date: str | None = None,
+        breakdowns: str | None = None,
     ) -> dict[str, Any]:
         """Get ad analytics with daily breakdown"""
         params = self._build_params(
+            from_date=from_date,
+            to_date=to_date,
             breakdowns=breakdowns,
         )
         return self._client._get(f"/v1/ads/{ad_id}/analytics", params=params)
@@ -211,10 +222,6 @@ class AdsResource:
         )
         return self._client._post("/v1/ads/create", data=payload)
 
-    def sync_external_ads(self) -> dict[str, Any]:
-        """Sync external ads from platform ad managers"""
-        return self._client._post("/v1/ads/sync")
-
     def search_ad_interests(self, q: str, account_id: str) -> dict[str, Any]:
         """Search targeting interests"""
         params = self._build_params(
@@ -234,6 +241,8 @@ class AdsResource:
         account_id: str | None = None,
         profile_id: str | None = None,
         campaign_id: str | None = None,
+        from_date: str | None = None,
+        to_date: str | None = None,
     ) -> dict[str, Any]:
         """List ads (async)"""
         params = self._build_params(
@@ -245,6 +254,8 @@ class AdsResource:
             account_id=account_id,
             profile_id=profile_id,
             campaign_id=campaign_id,
+            from_date=from_date,
+            to_date=to_date,
         )
         return await self._client._aget("/v1/ads", params=params)
 
@@ -275,10 +286,17 @@ class AdsResource:
         return await self._client._adelete(f"/v1/ads/{ad_id}")
 
     async def aget_ad_analytics(
-        self, ad_id: str, *, breakdowns: str | None = None
+        self,
+        ad_id: str,
+        *,
+        from_date: str | None = None,
+        to_date: str | None = None,
+        breakdowns: str | None = None,
     ) -> dict[str, Any]:
         """Get ad analytics with daily breakdown (async)"""
         params = self._build_params(
+            from_date=from_date,
+            to_date=to_date,
             breakdowns=breakdowns,
         )
         return await self._client._aget(f"/v1/ads/{ad_id}/analytics", params=params)
@@ -383,10 +401,6 @@ class AdsResource:
             additional_descriptions=additional_descriptions,
         )
         return await self._client._apost("/v1/ads/create", data=payload)
-
-    async def async_external_ads(self) -> dict[str, Any]:
-        """Sync external ads from platform ad managers (async)"""
-        return await self._client._apost("/v1/ads/sync")
 
     async def asearch_ad_interests(self, q: str, account_id: str) -> dict[str, Any]:
         """Search targeting interests (async)"""

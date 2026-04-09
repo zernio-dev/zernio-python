@@ -347,6 +347,22 @@ def register_generated_tools(mcp, _get_client):
             return f"Error: {e}"
 
     @mcp.tool()
+    def accounts_disconnect_ads(account_id: str, ads_platform: str) -> str:
+        """Disconnect ads from an account
+
+        Args:
+            account_id: The SocialAccount ID (parent posting account for same-token/separate-token platforms) (required)
+            ads_platform: The ads platform to disconnect (required)"""
+        client = _get_client()
+        try:
+            response = client.accounts.disconnect_ads(
+                account_id=account_id, ads_platform=ads_platform
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool()
     def accounts_get_all_accounts_health(
         profile_id: str = "", platform: str = "", status: str = ""
     ) -> str:
@@ -913,6 +929,8 @@ def register_generated_tools(mcp, _get_client):
         ad_account_id: str = "",
         account_id: str = "",
         profile_id: str = "",
+        from_date: str = "",
+        to_date: str = "",
     ) -> str:
         """Get nested campaign/ad-set/ad tree
 
@@ -924,7 +942,9 @@ def register_generated_tools(mcp, _get_client):
             status: Filter by derived campaign status (post-aggregation)
             ad_account_id: Platform ad account ID
             account_id: Social account ID
-            profile_id: Profile ID"""
+            profile_id: Profile ID
+            from_date: Start of metrics date range (YYYY-MM-DD). Defaults to 90 days ago.
+            to_date: End of metrics date range (YYYY-MM-DD). Defaults to today. Max 90-day range."""
         client = _get_client()
         try:
             response = client.ad_campaigns.get_ad_tree(
@@ -936,6 +956,8 @@ def register_generated_tools(mcp, _get_client):
                 ad_account_id=ad_account_id,
                 account_id=account_id,
                 profile_id=profile_id,
+                from_date=from_date,
+                to_date=to_date,
             )
             return _format_response(response)
         except Exception as e:
@@ -953,6 +975,8 @@ def register_generated_tools(mcp, _get_client):
         account_id: str = "",
         profile_id: str = "",
         campaign_id: str = "",
+        from_date: str = "",
+        to_date: str = "",
     ) -> str:
         """List ads
 
@@ -964,7 +988,9 @@ def register_generated_tools(mcp, _get_client):
             platform
             account_id: Social account ID
             profile_id: Profile ID
-            campaign_id: Platform campaign ID (filter ads within a campaign)"""
+            campaign_id: Platform campaign ID (filter ads within a campaign)
+            from_date: Start of metrics date range (YYYY-MM-DD). Defaults to 90 days ago.
+            to_date: End of metrics date range (YYYY-MM-DD). Defaults to today. Max 90-day range."""
         client = _get_client()
         try:
             response = client.ads.list_ads(
@@ -976,6 +1002,8 @@ def register_generated_tools(mcp, _get_client):
                 account_id=account_id,
                 profile_id=profile_id,
                 campaign_id=campaign_id,
+                from_date=from_date,
+                to_date=to_date,
             )
             return _format_response(response)
         except Exception as e:
@@ -1037,15 +1065,21 @@ def register_generated_tools(mcp, _get_client):
             return f"Error: {e}"
 
     @mcp.tool()
-    def ads_get_ad_analytics(ad_id: str, breakdowns: str = "") -> str:
+    def ads_get_ad_analytics(
+        ad_id: str, from_date: str = "", to_date: str = "", breakdowns: str = ""
+    ) -> str:
         """Get ad analytics with daily breakdown
 
         Args:
             ad_id: (required)
+            from_date: Start of date range (YYYY-MM-DD). Defaults to 90 days ago.
+            to_date: End of date range (YYYY-MM-DD). Defaults to today. Max 90-day range.
             breakdowns: Comma-separated breakdown dimensions. Meta: age, gender, country, publisher_platform, device_platform, region. TikTok: gender, age, country_code, platform, ac, language."""
         client = _get_client()
         try:
-            response = client.ads.get_ad_analytics(ad_id=ad_id, breakdowns=breakdowns)
+            response = client.ads.get_ad_analytics(
+                ad_id=ad_id, from_date=from_date, to_date=to_date, breakdowns=breakdowns
+            )
             return _format_response(response)
         except Exception as e:
             return f"Error: {e}"
@@ -1201,16 +1235,6 @@ def register_generated_tools(mcp, _get_client):
                 additional_headlines=additional_headlines,
                 additional_descriptions=additional_descriptions,
             )
-            return _format_response(response)
-        except Exception as e:
-            return f"Error: {e}"
-
-    @mcp.tool()
-    def ads_sync_external_ads() -> str:
-        """Sync external ads from platform ad managers"""
-        client = _get_client()
-        try:
-            response = client.ads.sync_external_ads()
             return _format_response(response)
         except Exception as e:
             return f"Error: {e}"
@@ -2296,7 +2320,7 @@ def register_generated_tools(mcp, _get_client):
         Args:
             platform: Platform to connect ads for. Only platforms with ads support are accepted. (required)
             profile_id: Your Zernio profile ID (required)
-            account_id: Existing SocialAccount ID. Required for separate-token platforms (tiktok, twitter, pinterest). Ignored for same-token and ads-only platforms.
+            account_id: Existing SocialAccount ID. Required for separate-token platforms (tiktok, twitter). Ignored for same-token and ads-only platforms.
             redirect_url: Custom redirect URL after OAuth completes (same-token platforms only)
             headless: Enable headless mode (same-token platforms only)"""
         client = _get_client()
