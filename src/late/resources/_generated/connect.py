@@ -106,8 +106,8 @@ class ConnectResource:
         profile_id: str,
         page_id: str,
         temp_token: str,
+        user_profile: dict[str, Any],
         *,
-        user_profile: dict[str, Any] | None = None,
         redirect_url: str | None = None,
     ) -> dict[str, Any]:
         """Select Facebook page"""
@@ -492,8 +492,8 @@ class ConnectResource:
         profile_id: str,
         page_id: str,
         temp_token: str,
+        user_profile: dict[str, Any],
         *,
-        user_profile: dict[str, Any] | None = None,
         redirect_url: str | None = None,
     ) -> dict[str, Any]:
         """Select Facebook page (async)"""

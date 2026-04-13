@@ -347,12 +347,12 @@ def register_generated_tools(mcp, _get_client):
             return f"Error: {e}"
 
     @mcp.tool()
-    def accounts_disconnect_ads(account_id: str, ads_platform: str) -> str:
+    def accounts_disconnect_ads(account_id: str, ads_platform: str = "") -> str:
         """Disconnect ads from an account
 
         Args:
-            account_id: The SocialAccount ID (parent posting account for same-token/separate-token platforms) (required)
-            ads_platform: The ads platform to disconnect (required)"""
+            account_id: The ads SocialAccount ID to disconnect (required)
+            ads_platform: The ads platform (optional, used for logging only)"""
         client = _get_client()
         try:
             response = client.accounts.disconnect_ads(
@@ -2320,7 +2320,7 @@ def register_generated_tools(mcp, _get_client):
         Args:
             platform: Platform to connect ads for. Only platforms with ads support are accepted. (required)
             profile_id: Your Zernio profile ID (required)
-            account_id: Existing SocialAccount ID. Required for separate-token platforms (tiktok, twitter). Ignored for same-token and ads-only platforms.
+            account_id: Existing SocialAccount ID. Required for separate-token platforms (tiktok, twitter). Ignored for same-token and standalone platforms.
             redirect_url: Custom redirect URL after OAuth completes (same-token platforms only)
             headless: Enable headless mode (same-token platforms only)"""
         client = _get_client()
@@ -2357,7 +2357,7 @@ def register_generated_tools(mcp, _get_client):
         profile_id: str,
         page_id: str,
         temp_token: str,
-        user_profile: str = "",
+        user_profile: str,
         redirect_url: str = "",
     ) -> str:
         """Select Facebook page
@@ -2366,7 +2366,7 @@ def register_generated_tools(mcp, _get_client):
             profile_id: Profile ID from your connection flow (required)
             page_id: The Facebook Page ID selected by the user (required)
             temp_token: Temporary Facebook access token from OAuth (required)
-            user_profile: Decoded user profile object from the OAuth callback
+            user_profile: Decoded user profile object from the OAuth callback (required)
             redirect_url: Optional custom redirect URL to return to after selection"""
         client = _get_client()
         try:

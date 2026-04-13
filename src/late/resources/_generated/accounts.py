@@ -104,7 +104,9 @@ class AccountsResource:
         """Disconnect account"""
         return self._client._delete(f"/v1/accounts/{account_id}")
 
-    def disconnect_ads(self, account_id: str, ads_platform: str) -> dict[str, Any]:
+    def disconnect_ads(
+        self, account_id: str, *, ads_platform: str | None = None
+    ) -> dict[str, Any]:
         """Disconnect ads from an account"""
         payload = self._build_payload(
             ads_platform=ads_platform,
@@ -425,7 +427,7 @@ class AccountsResource:
         return await self._client._adelete(f"/v1/accounts/{account_id}")
 
     async def adisconnect_ads(
-        self, account_id: str, ads_platform: str
+        self, account_id: str, *, ads_platform: str | None = None
     ) -> dict[str, Any]:
         """Disconnect ads from an account (async)"""
         payload = self._build_payload(

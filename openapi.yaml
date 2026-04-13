@@ -100,7 +100,7 @@ x-documentation:
     | Twitter/X | Yes | - | Yes | Yes |
     | Instagram | Yes | Yes | Yes | Yes |
     | Facebook | Yes | Stories | Yes | Yes |
-    | LinkedIn | Yes | - | Yes | - |
+    | LinkedIn | Yes | - | Partial | - |
     | TikTok | Yes | - | Yes | - |
     | YouTube | Yes | Shorts | Yes | Yes |
     | Pinterest | Yes | - | Yes | - |
@@ -110,6 +110,8 @@ x-documentation:
     | Google Business | Yes | - | - | Yes |
     | Telegram | Yes | - | - | - |
     | Snapchat | Yes | - | - | - |
+
+    > **LinkedIn Analytics Note:** For personal LinkedIn accounts, analytics are only available for posts published through Zernio. This is a LinkedIn API limitation: the `memberCreatorPostAnalytics` endpoint only returns metrics for posts authored by the authenticated user. Company/organization page analytics are not affected and work for all posts.
 
     ## Rate Limits
 
@@ -136,6 +138,11 @@ x-documentation:
     - `account.disconnected` - Social account disconnected (token expired)
     - `message.received` - New DM received
     - `message.sent` - DM sent via the API
+    - `message.edited` - A sender edited a message (Instagram, Messenger, Telegram)
+    - `message.deleted` - A sender deleted ("unsent") a message (Instagram; WhatsApp when the business deletes a sent message)
+    - `message.delivered` - An outgoing message was delivered (WhatsApp, Messenger)
+    - `message.read` - An outgoing message was read by the recipient (WhatsApp, Messenger, Instagram)
+    - `message.failed` - An outgoing message failed delivery (WhatsApp)
     - `comment.received` - New comment received on a post
     - `webhook.test` - Test event sent when verifying a webhook endpoint
 
@@ -798,7 +805,7 @@ components:
           type: array
           items:
             type: string
-            enum: [post.scheduled, post.published, post.failed, post.partial, post.cancelled, post.recycled, account.connected, account.disconnected, message.received, message.sent, comment.received]
+            enum: [post.scheduled, post.published, post.failed, post.partial, post.cancelled, post.recycled, account.connected, account.disconnected, message.received, message.sent, message.edited, message.deleted, message.delivered, message.read, message.failed, comment.received]
           description: Events subscribed to
         isActive:
           type: boolean
@@ -829,7 +836,7 @@ components:
           description: Name of the webhook that was triggered
         event:
           type: string
-          enum: [post.scheduled, post.published, post.failed, post.partial, post.cancelled, post.recycled, account.connected, account.disconnected, message.received, message.sent, comment.received, webhook.test]
+          enum: [post.scheduled, post.published, post.failed, post.partial, post.cancelled, post.recycled, account.connected, account.disconnected, message.received, message.sent, message.edited, message.deleted, message.delivered, message.read, message.failed, comment.received, webhook.test]
         url:
           type: string
           format: uri
@@ -850,7 +857,7 @@ components:
           description: Error message if delivery failed
         attemptNumber:
           type: integer
-          description: Delivery attempt number (max 3 retries)
+          description: Delivery attempt number (max 7 attempts)
         responseTime:
           type: integer
           description: Response time in milliseconds
@@ -1048,6 +1055,102 @@ components:
         timestamp:
           type: string
           format: date-time
+    # ─── Shared sub-schemas for inbox lifecycle webhook payloads ────────────
+    # WebhookPayloadMessageEdited / Deleted / DeliveryStatus reference these
+    # as $refs. They were added as top-level named schemas (rather than nested
+    # refs into WebhookPayloadMessage.properties) because openapi-typescript
+    # and datamodel-code-generator can't resolve nested-property refs — the
+    # SDK regen fails with "Cannot find name 'WebhookPayloadMessage_properties_message'".
+    InboxWebhookMessage:
+      type: object
+      description: The `message` object included in inbox webhook payloads.
+      required: [id, conversationId, platform, platformMessageId, direction, text, attachments, sender, sentAt, isRead]
+      properties:
+        id:
+          type: string
+          description: Internal message ID
+        conversationId:
+          type: string
+          description: Internal conversation ID
+        platform:
+          type: string
+          enum: [instagram, facebook, telegram, whatsapp]
+        platformMessageId:
+          type: string
+          description: Platform's message ID
+        direction:
+          type: string
+          enum: [incoming, outgoing]
+        text:
+          type: string
+          nullable: true
+          description: Message text content (retained on deleted messages for API consumers; Zernio dashboard UI hides this)
+        attachments:
+          type: array
+          items:
+            type: object
+            required: [type, url]
+            properties:
+              type:
+                type: string
+                description: Attachment type (image, video, file, sticker, audio)
+              url:
+                type: string
+                description: Attachment URL (may expire for Meta platforms)
+              payload:
+                type: object
+                description: Additional attachment metadata
+        sender:
+          type: object
+          required: [id]
+          properties:
+            id:
+              type: string
+            name:
+              type: string
+            username:
+              type: string
+            picture:
+              type: string
+            instagramProfile:
+              type: object
+              description: Instagram profile data. Only present for Instagram conversations.
+              properties:
+                isFollower: { type: boolean, nullable: true }
+                isFollowing: { type: boolean, nullable: true }
+                followerCount: { type: integer, nullable: true }
+                isVerified: { type: boolean, nullable: true }
+        sentAt:
+          type: string
+          format: date-time
+        isRead:
+          type: boolean
+    InboxWebhookConversation:
+      type: object
+      description: The `conversation` context included in inbox webhook payloads.
+      required: [id, platformConversationId, status]
+      properties:
+        id: { type: string }
+        platformConversationId: { type: string }
+        participantId: { type: string }
+        participantName: { type: string }
+        participantUsername: { type: string }
+        participantPicture: { type: string }
+        status:
+          type: string
+          enum: [active, archived]
+    InboxWebhookAccount:
+      type: object
+      description: The `account` context included in inbox webhook payloads.
+      required: [id, platform, username]
+      properties:
+        id:
+          type: string
+          description: Social account ID
+        platform: { type: string }
+        username: { type: string }
+        displayName: { type: string }
+    # ────────────────────────────────────────────────────────────────────────
     WebhookPayloadMessage:
       type: object
       description: Webhook payload for message received events
@@ -1287,6 +1390,117 @@ components:
         timestamp:
           type: string
           format: date-time
+    WebhookPayloadMessageEdited:
+      type: object
+      description: |
+        Webhook payload for `message.edited` events. Fires when the sender
+        edits a previously-sent message. Supported platforms: Instagram,
+        Facebook Messenger, Telegram. The `message` object reflects the
+        LATEST state; `editHistory` contains every prior version in order
+        (oldest first), so the last entry is the version immediately before
+        the current content.
+      required: [id, event, message, editHistory, editCount, editedAt, conversation, account, timestamp]
+      properties:
+        id: { type: string }
+        event: { type: string, enum: [message.edited] }
+        message:
+          $ref: '#/components/schemas/InboxWebhookMessage'
+        editHistory:
+          type: array
+          description: Prior versions of the message, oldest first.
+          items:
+            type: object
+            required: [text, attachments, editedAt]
+            properties:
+              text:
+                type: string
+                nullable: true
+              attachments:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    type: { type: string }
+                    url: { type: string }
+                    payload: { type: object }
+              editedAt:
+                type: string
+                format: date-time
+        editCount:
+          type: integer
+          description: Total number of edits applied to this message.
+        editedAt:
+          type: string
+          format: date-time
+          description: When the most recent edit happened.
+        conversation:
+          $ref: '#/components/schemas/InboxWebhookConversation'
+        account:
+          $ref: '#/components/schemas/InboxWebhookAccount'
+        timestamp: { type: string, format: date-time }
+    WebhookPayloadMessageDeleted:
+      type: object
+      description: |
+        Webhook payload for `message.deleted` events. Fires when the sender
+        deletes (unsends) a message. Supported platforms: Instagram (incoming
+        unsend) and WhatsApp (when the business deletes an outgoing message
+        via the Cloud API).
+
+        The `message.text` and `message.attachments` fields retain the content
+        that existed before the delete. The Zernio dashboard UI does not show
+        this content, but authorized API consumers may access it for
+        moderation, compliance, or archival use cases.
+      required: [id, event, message, deletedAt, conversation, account, timestamp]
+      properties:
+        id: { type: string }
+        event: { type: string, enum: [message.deleted] }
+        message:
+          $ref: '#/components/schemas/InboxWebhookMessage'
+        deletedAt:
+          type: string
+          format: date-time
+        conversation:
+          $ref: '#/components/schemas/InboxWebhookConversation'
+        account:
+          $ref: '#/components/schemas/InboxWebhookAccount'
+        timestamp: { type: string, format: date-time }
+    WebhookPayloadMessageDeliveryStatus:
+      type: object
+      description: |
+        Shared payload for `message.delivered`, `message.read`, and
+        `message.failed` events. Fires when the platform reports a new
+        delivery state for an outgoing message.
+
+        Platform support:
+          * `message.delivered` — WhatsApp, Facebook Messenger.
+          * `message.read`      — WhatsApp, Facebook Messenger, Instagram.
+          * `message.failed`    — WhatsApp only (other platforms don't expose
+            per-message failure via webhook).
+      required: [id, event, message, statusAt, conversation, account, timestamp]
+      properties:
+        id: { type: string }
+        event:
+          type: string
+          enum: [message.delivered, message.read, message.failed]
+        message:
+          $ref: '#/components/schemas/InboxWebhookMessage'
+        statusAt:
+          type: string
+          format: date-time
+          description: When the platform reported this status.
+        error:
+          type: object
+          nullable: true
+          description: Populated only on `message.failed`.
+          properties:
+            code: { type: integer }
+            title: { type: string }
+            message: { type: string }
+        conversation:
+          $ref: '#/components/schemas/InboxWebhookConversation'
+        account:
+          $ref: '#/components/schemas/InboxWebhookAccount'
+        timestamp: { type: string, format: date-time }
     WebhookPayloadTest:
       type: object
       description: Webhook payload for test deliveries
@@ -1985,11 +2199,31 @@ components:
 
     TikTokPlatformData:
       type: object
-      description: Photo carousels up to 35 images. Video titles up to 2200 chars, photo titles truncated to 90 chars. privacyLevel must match creator_info options. Both camelCase and snake_case accepted.
+      description: |
+        Photo carousels up to 35 images. Video titles up to 2200 chars, photo titles truncated to 90 chars.
+        privacyLevel must match creator_info options. Both camelCase and snake_case accepted.
+
+        **Creator Inbox (draft mode):** Set `draft: true` to send content to the TikTok Creator Inbox
+        instead of publishing immediately. The creator receives an inbox notification and completes
+        the post using TikTok's editing flow. This maps to TikTok's `post_mode: "MEDIA_UPLOAD"` internally.
+
+        **Important:** The field `publish_type` is NOT supported. Use `draft: true` for Creator Inbox flow.
+
+        **Photo drafts** use the `/v2/post/publish/content/init/` endpoint with `post_mode: "MEDIA_UPLOAD"`.
+        **Video drafts** use the dedicated `/v2/post/publish/inbox/video/init/` endpoint.
+
+        When `draft: true`, the `video.upload` scope is required. When `draft` is false or omitted
+        (direct post), the `video.publish` scope is required. For Creator Inbox, TikTok app version
+        must be 31.8 or higher.
       properties:
         draft:
           type: boolean
-          description: When true, sends the post to the TikTok Creator Inbox as a draft instead of publishing immediately.
+          description: |
+            When true, sends the post to the TikTok Creator Inbox as a draft instead of publishing
+            immediately. The creator receives an inbox notification to complete posting via TikTok's
+            editing flow. Maps to TikTok API `post_mode: "MEDIA_UPLOAD"` (photos) or the dedicated
+            inbox endpoint (videos). When false or omitted, publishes directly via `post_mode: "DIRECT_POST"`.
+            Note: `publish_type` is not a supported field. Use this field instead.
         privacyLevel:
           type: string
           description: One of the values returned by the TikTok creator info API for the account
@@ -2186,7 +2420,9 @@ components:
       type: object
       properties:
         _id: { type: string }
-        platform: { type: string }
+        platform:
+          type: string
+          enum: [tiktok, instagram, facebook, youtube, linkedin, twitter, threads, pinterest, reddit, bluesky, googlebusiness, telegram, snapchat, whatsapp, linkedinads, metaads, pinterestads, tiktokads, xads, googleads]
         profileId:
           oneOf:
             - type: string
@@ -2204,11 +2440,29 @@ components:
           type: string
           format: date-time
           description: Last time follower count was updated (only included if user has analytics add-on)
+        parentAccountId:
+          type: string
+          nullable: true
+          description: |
+            Reference to the parent posting SocialAccount. Set for ads accounts that share
+            or derive from a posting account's OAuth token. null for standalone ads (Google Ads)
+            and all posting accounts.
+        enabled:
+          type: boolean
+          description: |
+            Whether the user explicitly activated this account. false means the account was
+            created as a side effect (e.g., posting account auto-created when user connected
+            ads first). Posting UI and scheduler ignore accounts with enabled: false.
         adsStatus:
           type: string
           enum: [connected, not_connected, not_available]
+          deprecated: true
           description: |
-            Ads connection status for this account.
+            **Deprecated.** With the new ads account model, ads accounts are separate SocialAccount
+            documents. Check for accounts with ads platform values (metaads, linkedinads, pinterestads,
+            tiktokads, xads, googleads) instead.
+
+            Legacy behavior:
             - `connected`: Ads are ready to use (same-token platforms like Meta/LinkedIn, or separate ads token is present).
             - `not_connected`: Platform supports ads but requires a separate ads OAuth. Use `GET /v1/connect/{platform}/ads` to connect.
             - `not_available`: Platform does not support ads (e.g., YouTube, Reddit, Bluesky).
@@ -3026,6 +3280,97 @@ webhooks:
       responses:
         '200':
           description: Webhook received successfully
+  message.edited:
+    post:
+      operationId: onMessageEdited
+      summary: Message edited event
+      description: |
+        Fired when a sender edits a previously-sent message. Supported on
+        Instagram, Facebook Messenger, and Telegram. The payload includes the
+        full `editHistory` so consumers can show prior versions.
+      tags: [Webhook Events]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/WebhookPayloadMessageEdited'
+      responses:
+        '200':
+          description: Webhook received successfully
+  message.deleted:
+    post:
+      operationId: onMessageDeleted
+      summary: Message deleted event
+      description: |
+        Fired when a sender deletes (unsends) a message. Supported on Instagram
+        (incoming unsend) and WhatsApp (when the business deletes an outgoing
+        message via the Cloud API). The payload retains the pre-delete `text`
+        and `attachments` so API consumers can access the original content for
+        moderation or compliance — the Zernio dashboard UI hides it.
+      tags: [Webhook Events]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/WebhookPayloadMessageDeleted'
+      responses:
+        '200':
+          description: Webhook received successfully
+  message.delivered:
+    post:
+      operationId: onMessageDelivered
+      summary: Message delivered event
+      description: |
+        Fired when an outgoing message is delivered to the recipient.
+        Supported on WhatsApp and Facebook Messenger.
+      tags: [Webhook Events]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/WebhookPayloadMessageDeliveryStatus'
+      responses:
+        '200':
+          description: Webhook received successfully
+  message.read:
+    post:
+      operationId: onMessageRead
+      summary: Message read event
+      description: |
+        Fired when an outgoing message is read by the recipient. Supported on
+        WhatsApp, Facebook Messenger, and Instagram.
+      tags: [Webhook Events]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/WebhookPayloadMessageDeliveryStatus'
+      responses:
+        '200':
+          description: Webhook received successfully
+  message.failed:
+    post:
+      operationId: onMessageFailed
+      summary: Message delivery failed event
+      description: |
+        Fired when an outgoing message fails to deliver. Currently only emitted
+        for WhatsApp (other platforms don't expose per-message failure via
+        webhook). The payload `error` object contains `code`, `title`, and
+        `message` from the platform.
+      tags: [Webhook Events]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/WebhookPayloadMessageDeliveryStatus'
+      responses:
+        '200':
+          description: Webhook received successfully
   comment.received:
     post:
       operationId: onCommentReceived
@@ -3325,6 +3670,8 @@ paths:
         Returns analytics for posts. With postId, returns a single post. Without it, returns a paginated list with overview stats.
         Accepts both Zernio Post IDs and External Post IDs (auto-resolved). fromDate defaults to 90 days ago if omitted, max range 366 days.
         Single post lookups may return 202 (sync pending) or 424 (all platforms failed). For follower stats, use /v1/accounts/follower-stats.
+
+        **LinkedIn personal accounts:** Analytics are only available for posts published through Zernio. LinkedIn's API only returns metrics for posts authored by the authenticated user. Organization/company page analytics work for all posts.
       parameters:
         - name: postId
           in: query
@@ -5394,7 +5741,12 @@ paths:
                       - "Don't miss our essential guide!"
                       - "Our most popular guide, updated!"
               tiktokPhotoCarousel:
-                summary: TikTok photo carousel with draft mode
+                summary: TikTok photo carousel (Creator Inbox draft)
+                description: |
+                  Sends photos to TikTok Creator Inbox as a draft. The creator receives an inbox
+                  notification and completes the post via TikTok's editing flow. Uses draft: true
+                  which maps to TikTok API post_mode MEDIA_UPLOAD. Note: publish_type is not a
+                  supported field; use draft instead.
                 value:
                   content: "Check out these photos!"
                   mediaItems:
@@ -5409,6 +5761,30 @@ paths:
                     draft: true
                     privacyLevel: "PUBLIC_TO_EVERYONE"
                     allowComment: true
+                    photoCoverIndex: 0
+                    autoAddMusic: false
+                    contentPreviewConfirmed: true
+                    expressConsentGiven: true
+              tiktokPhotoDirect:
+                summary: TikTok photo carousel (direct publish)
+                description: |
+                  Publishes photos directly to TikTok. With draft omitted or false, the post is
+                  published immediately via TikTok API post_mode DIRECT_POST.
+                value:
+                  content: "Check out these photos!"
+                  mediaItems:
+                    - type: image
+                      url: "https://example.com/photo1.jpg"
+                    - type: image
+                      url: "https://example.com/photo2.jpg"
+                  platforms:
+                    - platform: tiktok
+                      accountId: "64e1f0a9e2b5af0012ab34cd"
+                  tiktokSettings:
+                    privacyLevel: "PUBLIC_TO_EVERYONE"
+                    allowComment: true
+                    photoCoverIndex: 0
+                    autoAddMusic: false
                     contentPreviewConfirmed: true
                     expressConsentGiven: true
               tiktokVideo:
@@ -5427,6 +5803,25 @@ paths:
                     allowDuet: true
                     allowStitch: true
                     commercialContentType: "none"
+                    contentPreviewConfirmed: true
+                    expressConsentGiven: true
+              tiktokVideoDraft:
+                summary: TikTok video post (Creator Inbox draft)
+                description: |
+                  Sends a video to TikTok Creator Inbox as a draft. Video drafts use a dedicated
+                  TikTok endpoint (/v2/post/publish/inbox/video/init/) that only accepts source_info,
+                  so post_info fields (privacyLevel, allowComment, etc.) are set by the creator
+                  during TikTok's editing flow.
+                value:
+                  content: "New video draft!"
+                  mediaItems:
+                    - type: video
+                      url: "https://example.com/video.mp4"
+                  platforms:
+                    - platform: tiktok
+                      accountId: "64e1f0a9e2b5af0012ab34cd"
+                  tiktokSettings:
+                    draft: true
                     contentPreviewConfirmed: true
                     expressConsentGiven: true
               multiPlatform:
@@ -6636,32 +7031,27 @@ paths:
       operationId: disconnectAds
       tags: [Accounts]
       summary: Disconnect ads from an account
+      deprecated: true
       description: |
-        Disconnects ads from a social account without removing the posting connection.
+        **Deprecated.** Ads accounts are now standalone SocialAccount documents. Use `DELETE /v1/accounts/{accountId}` instead, passing the ads account's own ID.
 
-        **Same-token platforms** (metaads, linkedinads, pinterestads): Sets an `adsOptOut` flag. The posting account and OAuth token are preserved. Reconnecting ads clears the flag.
-
-        **Separate-token platforms** (tiktokads, xads): Clears the ads-specific metadata (marketing API tokens). The posting account stays intact.
-
-        **Standalone platforms** (googleads): Do not use this endpoint. Use `DELETE /v1/accounts/{accountId}` instead, since Google Ads accounts are standalone.
+        This endpoint is kept for backward compatibility. It soft-deletes the ads SocialAccount identified by `accountId` (which must be an ads account, not a posting account). The parent posting account is left untouched.
       parameters:
         - name: accountId
           in: path
           required: true
           schema: { type: string }
-          description: The SocialAccount ID (parent posting account for same-token/separate-token platforms)
+          description: The ads SocialAccount ID to disconnect
       requestBody:
-        required: true
         content:
           application/json:
             schema:
               type: object
-              required: [adsPlatform]
               properties:
                 adsPlatform:
                   type: string
                   enum: [metaads, linkedinads, pinterestads, tiktokads, xads]
-                  description: The ads platform to disconnect
+                  description: The ads platform (optional, used for logging only)
             example:
               adsPlatform: "tiktokads"
       security:
@@ -7249,15 +7639,15 @@ paths:
       tags: [Connect]
       summary: Connect ads for a platform
       description: |
-        Unified ads connection endpoint. Handles all platforms through a single route:
+        Unified ads connection endpoint. Creates a dedicated ads SocialAccount for the specified platform.
 
-        **Same-token platforms** (facebook, instagram, linkedin, pinterest): If a posting account already exists, returns `alreadyConnected: true` immediately (no extra OAuth needed). If not, starts the normal OAuth flow, and the resulting account supports both posting and ads.
+        **Same-token platforms** (facebook, instagram, linkedin, pinterest): Creates an ads SocialAccount (`metaads`, `linkedinads`, `pinterestads`) with a copied OAuth token from the parent posting account. If the ads account already exists, returns `alreadyConnected: true`. No extra OAuth needed.
 
-        **Separate-token platforms** (tiktok, twitter): Requires an existing posting account (`accountId` param). If ads are already connected, returns `alreadyConnected: true`. Otherwise, starts the platform-specific marketing API OAuth flow.
+        **Separate-token platforms** (tiktok, twitter): Starts the platform-specific marketing API OAuth flow and creates an ads SocialAccount (`tiktokads`, `xads`) with its own token. Requires an existing posting account (`accountId` param). If the ads account already exists, returns `alreadyConnected: true`.
 
-        **Ads-only platforms** (googleads): If a Google Ads account exists, returns `alreadyConnected: true`. Otherwise, starts the Google Ads OAuth flow.
+        **Standalone platforms** (googleads): Starts the Google Ads OAuth flow and creates a standalone ads SocialAccount (`googleads`) with no parent. If the account already exists, returns `alreadyConnected: true`.
 
-        Use the `adsStatus` field from `GET /v1/accounts` to check which accounts need ads connection.
+        Ads accounts appear as regular SocialAccount documents with ads platform values (e.g., `metaads`, `tiktokads`) in `GET /v1/accounts`.
       parameters:
         - name: platform
           in: path
@@ -7274,7 +7664,7 @@ paths:
         - name: accountId
           in: query
           schema: { type: string }
-          description: Existing SocialAccount ID. Required for separate-token platforms (tiktok, twitter). Ignored for same-token and ads-only platforms.
+          description: Existing SocialAccount ID. Required for separate-token platforms (tiktok, twitter). Ignored for same-token and standalone platforms.
         - name: redirect_url
           in: query
           schema: { type: string, format: uri }
@@ -7395,7 +7785,7 @@ paths:
           application/json:
             schema:
               type: object
-              required: [profileId, pageId, tempToken]
+              required: [profileId, pageId, tempToken, userProfile]
               properties:
                 profileId: 
                   type: string
@@ -7465,7 +7855,7 @@ paths:
                   isActive: true
                   selectedPageName: "My Brand Page"
         '400':
-          description: "Missing required fields (profileId, pageId, or tempToken)"
+          description: "Missing required fields (profileId, pageId, tempToken, or userProfile)"
         '401': { $ref: '#/components/responses/Unauthorized' }
         '403':
           description: User does not have access to the specified profile
@@ -9809,7 +10199,7 @@ paths:
       operationId: getLinkedInAggregateAnalytics
       tags: [Analytics]
       summary: Get LinkedIn aggregate stats
-      description: Returns aggregate analytics across all posts for a LinkedIn personal account. Org accounts should use /v1/analytics instead. Requires r_member_postAnalytics scope.
+      description: Returns aggregate analytics across all posts for a LinkedIn personal account. Only includes posts published through Zernio (LinkedIn API limitation). Org accounts should use /v1/analytics instead. Requires r_member_postAnalytics scope.
       parameters:
         - name: accountId
           in: path
@@ -11567,7 +11957,7 @@ paths:
           description: Filter by event type
           schema:
             type: string
-            enum: [post.scheduled, post.published, post.failed, post.partial, post.cancelled, post.recycled, account.connected, account.disconnected, message.received, message.sent, comment.received, webhook.test]
+            enum: [post.scheduled, post.published, post.failed, post.partial, post.cancelled, post.recycled, account.connected, account.disconnected, message.received, message.sent, message.edited, message.deleted, message.delivered, message.read, message.failed, comment.received, webhook.test]
         - name: webhookId
           in: query
           description: Filter by webhook ID
@@ -12332,6 +12722,72 @@ paths:
                         subject: { type: string, nullable: true, description: Reddit message subject }
                         storyReply: { type: boolean, nullable: true, description: Instagram story reply }
                         isStoryMention: { type: boolean, nullable: true, description: Instagram story mention }
+                        # ─── Lifecycle state (edits, deletes, delivery) ──────────────
+                        # Populated by webhook events from the platforms that support
+                        # them. See the support matrix in the Webhooks description
+                        # above. Deleted messages retain their original `message` and
+                        # `attachments` — the Zernio dashboard hides this content, but
+                        # it is available here for moderation/compliance use cases.
+                        isEdited:
+                          type: boolean
+                          description: True if the sender has edited this message at least once.
+                        editedAt:
+                          type: string
+                          format: date-time
+                          nullable: true
+                          description: When the most recent edit happened.
+                        editCount:
+                          type: integer
+                          description: Total number of edits applied.
+                        editHistory:
+                          type: array
+                          description: Every prior version of the message, oldest first.
+                          items:
+                            type: object
+                            properties:
+                              text: { type: string, nullable: true }
+                              attachments:
+                                type: array
+                                items:
+                                  type: object
+                                  properties:
+                                    type: { type: string }
+                                    url: { type: string }
+                                    payload: { type: object }
+                              editedAt: { type: string, format: date-time }
+                        isDeleted:
+                          type: boolean
+                          description: True if the sender has deleted (unsent) this message. The original `message` and `attachments` fields remain populated.
+                        deletedAt:
+                          type: string
+                          format: date-time
+                          nullable: true
+                        deliveryStatus:
+                          type: string
+                          enum: [sent, delivered, read, failed, deleted]
+                          nullable: true
+                          description: Lifecycle status for outgoing messages. Not all platforms emit every state (see webhook support matrix).
+                        deliveredAt:
+                          type: string
+                          format: date-time
+                          nullable: true
+                        readAt:
+                          type: string
+                          format: date-time
+                          nullable: true
+                        sentAt:
+                          type: string
+                          format: date-time
+                          nullable: true
+                          description: Original send time for outgoing messages (used for Messenger watermark queries).
+                        deliveryError:
+                          type: object
+                          nullable: true
+                          description: Populated when `deliveryStatus === "failed"`.
+                          properties:
+                            code: { type: integer }
+                            title: { type: string }
+                            message: { type: string }
                   lastUpdated: { type: string, format: date-time }
         '401': { $ref: '#/components/responses/Unauthorized' }
         '403':
