@@ -78,7 +78,13 @@ def create_app(mcp_server, debug: bool = False) -> Starlette:
             Route(ENDPOINT_ROOT, endpoint=handle_root, methods=["GET"]),
             Route(ENDPOINT_HEALTH, endpoint=handle_health, methods=["GET"]),
             # Streamable HTTP — single endpoint, modern transport.
-            Mount(ENDPOINT_MCP, app=streamable_handler),
+            # We use Route (not Mount) because Mount on "/mcp" forces a 307
+            # redirect to "/mcp/", and most HTTP clients drop the request
+            # body / downgrade POST to GET on redirect. Route accepts an
+            # ASGI callable as `endpoint`, which is what we want.
+            # POST = client requests, GET = server-initiated streams,
+            # DELETE = explicit session termination (Streamable HTTP spec).
+            Route(ENDPOINT_MCP, endpoint=streamable_handler, methods=["GET", "POST", "DELETE"]),
             # SSE (legacy) — two-endpoint protocol, kept for backwards compat.
             Route(ENDPOINT_SSE, endpoint=sse_handler),
             Mount(ENDPOINT_MESSAGES, app=sse_transport.handle_post_message),

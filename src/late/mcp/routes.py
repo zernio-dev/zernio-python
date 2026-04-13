@@ -129,9 +129,9 @@ async def _send_json_error(scope: Scope, receive: Receive, send: Send, status: i
     await response(scope, receive, send)
 
 
-def create_streamable_http_handler(session_manager: StreamableHTTPSessionManager, debug: bool = False):
+class StreamableHTTPAuthHandler:
     """
-    Create the auth-wrapped ASGI handler for the Streamable HTTP transport.
+    Auth-wrapped ASGI handler for the Streamable HTTP transport.
 
     Streamable HTTP is the modern MCP transport. Unlike SSE, it does not hold
     a long-idle connection open — each request/response is self-contained
@@ -144,17 +144,25 @@ def create_streamable_http_handler(session_manager: StreamableHTTPSessionManager
     stateful mode: the API key set on request N would not be visible to the
     long-running server task started on request 1.
 
-    Args:
-        session_manager: A StreamableHTTPSessionManager bound to the MCP server
-            instance. Its `.run()` lifespan must be entered by the Starlette
-            app — see `http_server.create_app`.
-        debug: Enable debug logging for handler errors.
-
-    Returns:
-        An ASGI callable suitable for mounting at `/mcp`.
+    Implemented as a callable class (not a plain async function) because
+    Starlette's `Route` introspects callable endpoints — a plain function
+    gets wrapped as a `(request)`-style endpoint rather than treated as a
+    raw ASGI app. A class instance bypasses that detection and is invoked
+    directly with `(scope, receive, send)`.
     """
 
-    async def handle_streamable_http(scope: Scope, receive: Receive, send: Send) -> None:
+    def __init__(self, session_manager: StreamableHTTPSessionManager, debug: bool = False) -> None:
+        """
+        Args:
+            session_manager: A StreamableHTTPSessionManager bound to the MCP
+                server instance. Its `.run()` lifespan must be entered by
+                the Starlette app — see `http_server.create_app`.
+            debug: Enable debug logging for handler errors.
+        """
+        self._session_manager = session_manager
+        self._debug = debug
+
+    async def __call__(self, scope: Scope, receive: Receive, send: Send) -> None:
         # Build a Request just to extract headers — we don't consume the body
         # here (the session manager will do that downstream).
         request = Request(scope, receive)
@@ -175,20 +183,23 @@ def create_streamable_http_handler(session_manager: StreamableHTTPSessionManager
             return
 
         # Set the API key in the ContextVar before delegating. In stateless
-        # mode the session manager spawns a fresh per-request server task via
-        # anyio's task group, which propagates the current context — so the
+        # mode the session manager spawns a fresh per-request server task
+        # via anyio's task group, which propagates the current context — so
         # MCP tools will see this key when they call _get_client().
         from late.mcp.server import set_late_api_key
 
         set_late_api_key(api_key)
 
         try:
-            await session_manager.handle_request(scope, receive, send)
+            await self._session_manager.handle_request(scope, receive, send)
         except Exception as e:
-            if debug:
+            if self._debug:
                 print(f"Streamable HTTP request error: {e}", file=sys.stderr)
             # If the session manager already started sending a response we
-            # can't send another — swallow and let it surface in logs.
+            # can't send another — re-raise to let the framework log it.
             raise
 
-    return handle_streamable_http
+
+def create_streamable_http_handler(session_manager: StreamableHTTPSessionManager, debug: bool = False) -> StreamableHTTPAuthHandler:
+    """Backwards-compatible factory wrapping `StreamableHTTPAuthHandler`."""
+    return StreamableHTTPAuthHandler(session_manager, debug)
