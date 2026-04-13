@@ -3046,6 +3046,9 @@ components:
           properties:
             thumbnailUrl: { type: string, description: Primary thumbnail/image URL }
             imageUrl: { type: string, description: Alternative image URL }
+            videoId: { type: string, nullable: true, description: "Meta video ID for VIDEO-type ads. Null for non-video ads. Callers that need an embeddable MP4 can call GET /{videoId}?fields=source with the page access token." }
+            videoUrl: { type: string, nullable: true, description: "Public Facebook watch URL for VIDEO-type ads (https://www.facebook.com/watch/?v={videoId}). Null for non-video ads." }
+            objectType: { type: string, description: "Meta creative object_type (e.g. SHARE, VIDEO, PRIVACY_CHECK_FAIL, POST_DELETED). Use this to render state-aware previews — when Meta moderation strips image/video fields, only thumbnailUrl at 64x64 is available." }
             mediaUrls:
               type: array
               items: { type: string }
