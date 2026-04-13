@@ -973,6 +973,7 @@ def register_generated_tools(mcp, _get_client):
         status: str = "",
         platform: str = "",
         account_id: str = "",
+        ad_account_id: str = "",
         profile_id: str = "",
         campaign_id: str = "",
         from_date: str = "",
@@ -987,6 +988,7 @@ def register_generated_tools(mcp, _get_client):
             status
             platform
             account_id: Social account ID
+            ad_account_id: Platform ad account ID (e.g. act_123 for Meta). Mirrors the same filter on /v1/ads/campaigns and /v1/ads/tree.
             profile_id: Profile ID
             campaign_id: Platform campaign ID (filter ads within a campaign)
             from_date: Start of metrics date range (YYYY-MM-DD). Defaults to 90 days ago.
@@ -1000,6 +1002,7 @@ def register_generated_tools(mcp, _get_client):
                 status=status,
                 platform=platform,
                 account_id=account_id,
+                ad_account_id=ad_account_id,
                 profile_id=profile_id,
                 campaign_id=campaign_id,
                 from_date=from_date,

@@ -18826,6 +18826,7 @@ paths:
         - { name: status, in: query, schema: { type: string, enum: [active, paused, pending_review, rejected, completed, cancelled, error] } }
         - { name: platform, in: query, schema: { type: string, enum: [facebook, instagram, tiktok, linkedin, pinterest, google, twitter] } }
         - { name: accountId, in: query, schema: { type: string }, description: Social account ID }
+        - { name: adAccountId, in: query, schema: { type: string }, description: "Platform ad account ID (e.g. act_123 for Meta). Mirrors the same filter on /v1/ads/campaigns and /v1/ads/tree." }
         - { name: profileId, in: query, schema: { type: string }, description: Profile ID }
         - { name: campaignId, in: query, schema: { type: string }, description: Platform campaign ID (filter ads within a campaign) }
         - { name: fromDate, in: query, schema: { type: string, format: date }, description: "Start of metrics date range (YYYY-MM-DD). Defaults to 90 days ago." }
