@@ -5,6 +5,16 @@ All notable changes to the Late Python SDK will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Added
+- MCP HTTP server now exposes the modern **Streamable HTTP** transport at `POST /mcp` (in addition to the existing SSE transport at `GET /sse`). Streamable HTTP is recommended for new clients (Claude Code, `mcp-remote`, etc.) because it is not affected by the idle-connection drops that affect long-lived SSE connections behind proxies.
+- Streamable HTTP runs in stateless mode — each request is fully independent and authenticated separately via the `Authorization: Bearer` header.
+
+### Changed
+- Bumped minimum `mcp` SDK version to `>=1.8.0` (required for `StreamableHTTPSessionManager`).
+- Server `transport` field in the root info endpoint now reports `"sse+streamable-http"`.
+
 ## [1.2.0] - 2025-01-16
 
 ### Added
