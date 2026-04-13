@@ -88,6 +88,8 @@ Since Claude can't access local files, use the browser upload flow:
 | `posts_retry` | Retry a failed post |
 | `media_generate_upload_link` | Get link to upload media |
 
-## Remote Access (HTTP/SSE)
+## Remote Access (HTTP)
 
-For remote deployment, see the [HTTP Deployment Guide](HTTP_DEPLOYMENT.md).
+The remote MCP server exposes both **Streamable HTTP** (`POST /mcp`, recommended) and **SSE** (`GET /sse`, legacy) transports. Use Streamable HTTP unless your client only supports SSE — it survives idle timeouts on proxies and bridges like `mcp-remote`.
+
+For deployment and client setup, see the [HTTP Deployment Guide](HTTP_DEPLOYMENT.md).
