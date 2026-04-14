@@ -257,25 +257,18 @@ class TestModelsImport:
 class TestModelsValidation:
     """Test model validation."""
 
-    def test_status_enum_values(self):
-        """Test that a Status enum with SUCCESS/FAILED exists in the generated models.
+    def test_ad_status_enum_values(self):
+        """Test AdStatus enum has expected values.
 
-        The codegen numbers Status enums positionally (Status, Status1, Status2, ...),
-        so we search all exported Status variants to find the one with SUCCESS/FAILED.
+        AdStatus is a named schema in the OpenAPI spec, so its class name is stable
+        across regenerations (unlike positional Status/Status1/Status2/... variants).
         """
-        import late.models._generated.models as gen
+        from late.models._generated.models import AdStatus
 
-        status_cls = None
-        for name in dir(gen):
-            if name == "Status" or (name.startswith("Status") and name[6:].isdigit()):
-                cls = getattr(gen, name)
-                if hasattr(cls, "SUCCESS") and hasattr(cls, "FAILED"):
-                    status_cls = cls
-                    break
-
-        assert status_cls is not None, "No Status enum with SUCCESS/FAILED found in generated models"
-        assert status_cls.SUCCESS.value == "success"
-        assert status_cls.FAILED.value == "failed"
+        assert hasattr(AdStatus, "ACTIVE")
+        assert hasattr(AdStatus, "PAUSED")
+        assert AdStatus.ACTIVE.value == "active"
+        assert AdStatus.PAUSED.value == "paused"
 
     def test_type_enum_values(self):
         """Test MediaItem type field accepts media types."""
