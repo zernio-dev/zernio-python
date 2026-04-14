@@ -1543,7 +1543,7 @@ components:
           type: string
         platform:
           type: string
-          enum: [tiktok, instagram, facebook, youtube, linkedin, twitter, threads, pinterest, reddit, bluesky, googlebusiness, telegram, snapchat]
+          enum: [tiktok, instagram, facebook, youtube, linkedin, twitter, threads, pinterest, reddit, bluesky, googlebusiness, telegram, snapchat, discord]
         accountId:
           type: string
         accountUsername:
@@ -1627,7 +1627,7 @@ components:
           description: The social account ID (present on successful connections and disconnects)
         platform:
           type: string
-          enum: [tiktok, instagram, facebook, youtube, linkedin, twitter, threads, pinterest, reddit, bluesky, googlebusiness, telegram, snapchat]
+          enum: [tiktok, instagram, facebook, youtube, linkedin, twitter, threads, pinterest, reddit, bluesky, googlebusiness, telegram, snapchat, discord]
         eventType:
           type: string
           enum: [connect_success, connect_failed, disconnect, reconnect_success, reconnect_failed]
@@ -2423,7 +2423,7 @@ components:
         _id: { type: string }
         platform:
           type: string
-          enum: [tiktok, instagram, facebook, youtube, linkedin, twitter, threads, pinterest, reddit, bluesky, googlebusiness, telegram, snapchat, whatsapp, linkedinads, metaads, pinterestads, tiktokads, xads, googleads]
+          enum: [tiktok, instagram, facebook, youtube, linkedin, twitter, threads, pinterest, reddit, bluesky, googlebusiness, telegram, snapchat, discord, whatsapp, linkedinads, metaads, pinterestads, tiktokads, xads, googleads]
         profileId:
           oneOf:
             - type: string
@@ -3496,7 +3496,7 @@ paths:
                     properties:
                       platform:
                         type: string
-                        enum: [twitter, instagram, tiktok, youtube, facebook, linkedin, bluesky, threads, reddit, pinterest, telegram, snapchat, googlebusiness]
+                        enum: [twitter, instagram, tiktok, youtube, facebook, linkedin, bluesky, threads, reddit, pinterest, telegram, snapchat, googlebusiness, discord]
                       customContent: { type: string }
                       platformSpecificData: { type: object }
                       customMedia:
@@ -7090,7 +7090,7 @@ paths:
           description: Filter by platform
           schema:
             type: string
-            enum: [facebook, instagram, linkedin, twitter, tiktok, youtube, threads, pinterest, reddit, bluesky, googlebusiness, telegram, snapchat]
+            enum: [facebook, instagram, linkedin, twitter, tiktok, youtube, threads, pinterest, reddit, bluesky, googlebusiness, telegram, snapchat, discord]
         - name: status
           in: query
           description: Filter by health status
@@ -7567,7 +7567,7 @@ paths:
           required: true
           schema:
             type: string
-            enum: [facebook, instagram, linkedin, twitter, tiktok, youtube, threads, reddit, pinterest, bluesky, googlebusiness, telegram, snapchat]
+            enum: [facebook, instagram, linkedin, twitter, tiktok, youtube, threads, reddit, pinterest, bluesky, googlebusiness, telegram, snapchat, discord]
           description: Social media platform to connect
         - name: profileId
           in: query
