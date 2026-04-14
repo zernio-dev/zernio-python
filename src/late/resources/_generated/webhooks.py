@@ -110,23 +110,6 @@ class WebhooksResource:
         )
         return self._client._post("/v1/webhooks/test", data=payload)
 
-    def get_webhook_logs(
-        self,
-        *,
-        limit: int | None = 50,
-        status: str | None = None,
-        event: str | None = None,
-        webhook_id: str | None = None,
-    ) -> dict[str, Any]:
-        """Get delivery logs"""
-        params = self._build_params(
-            limit=limit,
-            status=status,
-            event=event,
-            webhook_id=webhook_id,
-        )
-        return self._client._get("/v1/webhooks/logs", params=params)
-
     async def aget_webhook_settings(self) -> dict[str, Any]:
         """List webhooks (async)"""
         return await self._client._aget("/v1/webhooks/settings")
@@ -188,20 +171,3 @@ class WebhooksResource:
             webhook_id=webhook_id,
         )
         return await self._client._apost("/v1/webhooks/test", data=payload)
-
-    async def aget_webhook_logs(
-        self,
-        *,
-        limit: int | None = 50,
-        status: str | None = None,
-        event: str | None = None,
-        webhook_id: str | None = None,
-    ) -> dict[str, Any]:
-        """Get delivery logs (async)"""
-        params = self._build_params(
-            limit=limit,
-            status=status,
-            event=event,
-            webhook_id=webhook_id,
-        )
-        return await self._client._aget("/v1/webhooks/logs", params=params)

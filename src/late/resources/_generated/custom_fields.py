@@ -51,7 +51,7 @@ class CustomFieldsResource:
     def set_contact_field_value(
         self, contact_id: str, slug: str, value: Any
     ) -> dict[str, Any]:
-        """Set a custom field value"""
+        """Set custom field value"""
         payload = self._build_payload(
             value=value,
         )
@@ -60,7 +60,7 @@ class CustomFieldsResource:
         )
 
     def clear_contact_field_value(self, contact_id: str, slug: str) -> dict[str, Any]:
-        """Clear a custom field value"""
+        """Clear custom field value"""
         return self._client._delete(f"/v1/contacts/{contact_id}/fields/{slug}")
 
     def list_custom_fields(self, *, profile_id: str | None = None) -> dict[str, Any]:
@@ -79,7 +79,7 @@ class CustomFieldsResource:
         slug: str | None = None,
         options: list[str] | None = None,
     ) -> dict[str, Any]:
-        """Create a custom field definition"""
+        """Create custom field"""
         payload = self._build_payload(
             profile_id=profile_id,
             name=name,
@@ -96,7 +96,7 @@ class CustomFieldsResource:
         name: str | None = None,
         options: list[str] | None = None,
     ) -> dict[str, Any]:
-        """Update a custom field definition"""
+        """Update custom field"""
         payload = self._build_payload(
             name=name,
             options=options,
@@ -104,13 +104,13 @@ class CustomFieldsResource:
         return self._client._patch(f"/v1/custom-fields/{field_id}", data=payload)
 
     def delete_custom_field(self, field_id: str) -> dict[str, Any]:
-        """Delete a custom field definition"""
+        """Delete custom field"""
         return self._client._delete(f"/v1/custom-fields/{field_id}")
 
     async def aset_contact_field_value(
         self, contact_id: str, slug: str, value: Any
     ) -> dict[str, Any]:
-        """Set a custom field value (async)"""
+        """Set custom field value (async)"""
         payload = self._build_payload(
             value=value,
         )
@@ -121,7 +121,7 @@ class CustomFieldsResource:
     async def aclear_contact_field_value(
         self, contact_id: str, slug: str
     ) -> dict[str, Any]:
-        """Clear a custom field value (async)"""
+        """Clear custom field value (async)"""
         return await self._client._adelete(f"/v1/contacts/{contact_id}/fields/{slug}")
 
     async def alist_custom_fields(
@@ -142,7 +142,7 @@ class CustomFieldsResource:
         slug: str | None = None,
         options: list[str] | None = None,
     ) -> dict[str, Any]:
-        """Create a custom field definition (async)"""
+        """Create custom field (async)"""
         payload = self._build_payload(
             profile_id=profile_id,
             name=name,
@@ -159,7 +159,7 @@ class CustomFieldsResource:
         name: str | None = None,
         options: list[str] | None = None,
     ) -> dict[str, Any]:
-        """Update a custom field definition (async)"""
+        """Update custom field (async)"""
         payload = self._build_payload(
             name=name,
             options=options,
@@ -167,5 +167,5 @@ class CustomFieldsResource:
         return await self._client._apatch(f"/v1/custom-fields/{field_id}", data=payload)
 
     async def adelete_custom_field(self, field_id: str) -> dict[str, Any]:
-        """Delete a custom field definition (async)"""
+        """Delete custom field (async)"""
         return await self._client._adelete(f"/v1/custom-fields/{field_id}")

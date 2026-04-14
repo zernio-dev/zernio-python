@@ -56,7 +56,7 @@ class AdsResource:
         page: int | None = 1,
         limit: int | None = 50,
         source: str | None = "zernio",
-        status: str | None = None,
+        status: Any | None = None,
         platform: str | None = None,
         account_id: str | None = None,
         ad_account_id: str | None = None,
@@ -94,7 +94,7 @@ class AdsResource:
         targeting: dict[str, Any] | None = None,
         name: str | None = None,
     ) -> dict[str, Any]:
-        """Update ad (pause/resume, budget, targeting, name)"""
+        """Update ad"""
         payload = self._build_payload(
             status=status,
             budget=budget,
@@ -115,7 +115,7 @@ class AdsResource:
         to_date: str | None = None,
         breakdowns: str | None = None,
     ) -> dict[str, Any]:
-        """Get ad analytics with daily breakdown"""
+        """Get ad analytics"""
         params = self._build_params(
             from_date=from_date,
             to_date=to_date,
@@ -124,7 +124,7 @@ class AdsResource:
         return self._client._get(f"/v1/ads/{ad_id}/analytics", params=params)
 
     def list_ad_accounts(self, account_id: str) -> dict[str, Any]:
-        """List ad accounts for a social account"""
+        """List ad accounts"""
         params = self._build_params(
             account_id=account_id,
         )
@@ -147,7 +147,7 @@ class AdsResource:
         tracking: dict[str, Any] | None = None,
         special_ad_categories: list[str] | None = None,
     ) -> dict[str, Any]:
-        """Boost an existing post as a paid ad"""
+        """Boost post as ad"""
         payload = self._build_payload(
             post_id=post_id,
             platform_post_id=platform_post_id,
@@ -186,7 +186,7 @@ class AdsResource:
         countries: list[str] | None = None,
         age_min: int | None = None,
         age_max: int | None = None,
-        interests: list[str] | None = None,
+        interests: list[dict[str, Any]] | None = None,
         end_date: datetime | str | None = None,
         audience_id: str | None = None,
         campaign_type: str | None = "display",
@@ -194,7 +194,7 @@ class AdsResource:
         additional_headlines: list[str] | None = None,
         additional_descriptions: list[str] | None = None,
     ) -> dict[str, Any]:
-        """Create a standalone ad with custom creative"""
+        """Create standalone ad"""
         payload = self._build_payload(
             account_id=account_id,
             ad_account_id=ad_account_id,
@@ -238,7 +238,7 @@ class AdsResource:
         page: int | None = 1,
         limit: int | None = 50,
         source: str | None = "zernio",
-        status: str | None = None,
+        status: Any | None = None,
         platform: str | None = None,
         account_id: str | None = None,
         ad_account_id: str | None = None,
@@ -276,7 +276,7 @@ class AdsResource:
         targeting: dict[str, Any] | None = None,
         name: str | None = None,
     ) -> dict[str, Any]:
-        """Update ad (pause/resume, budget, targeting, name) (async)"""
+        """Update ad (async)"""
         payload = self._build_payload(
             status=status,
             budget=budget,
@@ -297,7 +297,7 @@ class AdsResource:
         to_date: str | None = None,
         breakdowns: str | None = None,
     ) -> dict[str, Any]:
-        """Get ad analytics with daily breakdown (async)"""
+        """Get ad analytics (async)"""
         params = self._build_params(
             from_date=from_date,
             to_date=to_date,
@@ -306,7 +306,7 @@ class AdsResource:
         return await self._client._aget(f"/v1/ads/{ad_id}/analytics", params=params)
 
     async def alist_ad_accounts(self, account_id: str) -> dict[str, Any]:
-        """List ad accounts for a social account (async)"""
+        """List ad accounts (async)"""
         params = self._build_params(
             account_id=account_id,
         )
@@ -329,7 +329,7 @@ class AdsResource:
         tracking: dict[str, Any] | None = None,
         special_ad_categories: list[str] | None = None,
     ) -> dict[str, Any]:
-        """Boost an existing post as a paid ad (async)"""
+        """Boost post as ad (async)"""
         payload = self._build_payload(
             post_id=post_id,
             platform_post_id=platform_post_id,
@@ -368,7 +368,7 @@ class AdsResource:
         countries: list[str] | None = None,
         age_min: int | None = None,
         age_max: int | None = None,
-        interests: list[str] | None = None,
+        interests: list[dict[str, Any]] | None = None,
         end_date: datetime | str | None = None,
         audience_id: str | None = None,
         campaign_type: str | None = "display",
@@ -376,7 +376,7 @@ class AdsResource:
         additional_headlines: list[str] | None = None,
         additional_descriptions: list[str] | None = None,
     ) -> dict[str, Any]:
-        """Create a standalone ad with custom creative (async)"""
+        """Create standalone ad (async)"""
         payload = self._build_payload(
             account_id=account_id,
             ad_account_id=ad_account_id,

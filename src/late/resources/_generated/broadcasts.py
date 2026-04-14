@@ -81,7 +81,7 @@ class BroadcastsResource:
         template: dict[str, Any] | None = None,
         segment_filters: dict[str, Any] | None = None,
     ) -> dict[str, Any]:
-        """Create a broadcast draft"""
+        """Create broadcast draft"""
         payload = self._build_payload(
             profile_id=profile_id,
             account_id=account_id,
@@ -99,15 +99,15 @@ class BroadcastsResource:
         return self._client._get(f"/v1/broadcasts/{broadcast_id}")
 
     def update_broadcast(self, broadcast_id: str) -> dict[str, Any]:
-        """Update a broadcast"""
+        """Update broadcast"""
         return self._client._patch(f"/v1/broadcasts/{broadcast_id}")
 
     def delete_broadcast(self, broadcast_id: str) -> dict[str, Any]:
-        """Delete a broadcast (draft only)"""
+        """Delete broadcast"""
         return self._client._delete(f"/v1/broadcasts/{broadcast_id}")
 
     def send_broadcast(self, broadcast_id: str) -> dict[str, Any]:
-        """Trigger immediate send"""
+        """Send broadcast now"""
         return self._client._post(f"/v1/broadcasts/{broadcast_id}/send")
 
     def schedule_broadcast(
@@ -122,7 +122,7 @@ class BroadcastsResource:
         )
 
     def cancel_broadcast(self, broadcast_id: str) -> dict[str, Any]:
-        """Cancel a broadcast"""
+        """Cancel broadcast"""
         return self._client._post(f"/v1/broadcasts/{broadcast_id}/cancel")
 
     def list_broadcast_recipients(
@@ -192,7 +192,7 @@ class BroadcastsResource:
         template: dict[str, Any] | None = None,
         segment_filters: dict[str, Any] | None = None,
     ) -> dict[str, Any]:
-        """Create a broadcast draft (async)"""
+        """Create broadcast draft (async)"""
         payload = self._build_payload(
             profile_id=profile_id,
             account_id=account_id,
@@ -210,15 +210,15 @@ class BroadcastsResource:
         return await self._client._aget(f"/v1/broadcasts/{broadcast_id}")
 
     async def aupdate_broadcast(self, broadcast_id: str) -> dict[str, Any]:
-        """Update a broadcast (async)"""
+        """Update broadcast (async)"""
         return await self._client._apatch(f"/v1/broadcasts/{broadcast_id}")
 
     async def adelete_broadcast(self, broadcast_id: str) -> dict[str, Any]:
-        """Delete a broadcast (draft only) (async)"""
+        """Delete broadcast (async)"""
         return await self._client._adelete(f"/v1/broadcasts/{broadcast_id}")
 
     async def asend_broadcast(self, broadcast_id: str) -> dict[str, Any]:
-        """Trigger immediate send (async)"""
+        """Send broadcast now (async)"""
         return await self._client._apost(f"/v1/broadcasts/{broadcast_id}/send")
 
     async def aschedule_broadcast(
@@ -233,7 +233,7 @@ class BroadcastsResource:
         )
 
     async def acancel_broadcast(self, broadcast_id: str) -> dict[str, Any]:
-        """Cancel a broadcast (async)"""
+        """Cancel broadcast (async)"""
         return await self._client._apost(f"/v1/broadcasts/{broadcast_id}/cancel")
 
     async def alist_broadcast_recipients(

@@ -108,7 +108,7 @@ class AnalyticsResource:
         metric_type: str | None = "total_value",
         breakdown: str | None = None,
     ) -> dict[str, Any]:
-        """Get Instagram account-level insights"""
+        """Get Instagram insights"""
         params = self._build_params(
             account_id=account_id,
             metrics=metrics,
@@ -129,7 +129,7 @@ class AnalyticsResource:
         breakdown: str | None = None,
         timeframe: str | None = "this_month",
     ) -> dict[str, Any]:
-        """Get Instagram audience demographics"""
+        """Get Instagram demographics"""
         params = self._build_params(
             account_id=account_id,
             metric=metric,
@@ -146,7 +146,7 @@ class AnalyticsResource:
         start_date: str | None = None,
         end_date: str | None = None,
     ) -> dict[str, Any]:
-        """Get YouTube audience demographics"""
+        """Get YouTube demographics"""
         params = self._build_params(
             account_id=account_id,
             breakdown=breakdown,
@@ -213,7 +213,7 @@ class AnalyticsResource:
         profile_id: str | None = None,
         source: str | None = "all",
     ) -> dict[str, Any]:
-        """Get posting frequency vs engagement"""
+        """Get frequency vs engagement"""
         params = self._build_params(
             platform=platform,
             profile_id=profile_id,
@@ -244,7 +244,7 @@ class AnalyticsResource:
         start_date: str | None = None,
         end_date: str | None = None,
     ) -> dict[str, Any]:
-        """Get Google Business Profile performance metrics"""
+        """Get GBP performance metrics"""
         params = self._build_params(
             account_id=account_id,
             metrics=metrics,
@@ -262,7 +262,7 @@ class AnalyticsResource:
         start_month: str | None = None,
         end_month: str | None = None,
     ) -> dict[str, Any]:
-        """Get Google Business Profile search keywords"""
+        """Get GBP search keywords"""
         params = self._build_params(
             account_id=account_id,
             start_month=start_month,
@@ -379,7 +379,7 @@ class AnalyticsResource:
         metric_type: str | None = "total_value",
         breakdown: str | None = None,
     ) -> dict[str, Any]:
-        """Get Instagram account-level insights (async)"""
+        """Get Instagram insights (async)"""
         params = self._build_params(
             account_id=account_id,
             metrics=metrics,
@@ -400,7 +400,7 @@ class AnalyticsResource:
         breakdown: str | None = None,
         timeframe: str | None = "this_month",
     ) -> dict[str, Any]:
-        """Get Instagram audience demographics (async)"""
+        """Get Instagram demographics (async)"""
         params = self._build_params(
             account_id=account_id,
             metric=metric,
@@ -419,7 +419,7 @@ class AnalyticsResource:
         start_date: str | None = None,
         end_date: str | None = None,
     ) -> dict[str, Any]:
-        """Get YouTube audience demographics (async)"""
+        """Get YouTube demographics (async)"""
         params = self._build_params(
             account_id=account_id,
             breakdown=breakdown,
@@ -488,7 +488,7 @@ class AnalyticsResource:
         profile_id: str | None = None,
         source: str | None = "all",
     ) -> dict[str, Any]:
-        """Get posting frequency vs engagement (async)"""
+        """Get frequency vs engagement (async)"""
         params = self._build_params(
             platform=platform,
             profile_id=profile_id,
@@ -521,7 +521,7 @@ class AnalyticsResource:
         start_date: str | None = None,
         end_date: str | None = None,
     ) -> dict[str, Any]:
-        """Get Google Business Profile performance metrics (async)"""
+        """Get GBP performance metrics (async)"""
         params = self._build_params(
             account_id=account_id,
             metrics=metrics,
@@ -539,7 +539,7 @@ class AnalyticsResource:
         start_month: str | None = None,
         end_month: str | None = None,
     ) -> dict[str, Any]:
-        """Get Google Business Profile search keywords (async)"""
+        """Get GBP search keywords (async)"""
         params = self._build_params(
             account_id=account_id,
             start_month=start_month,

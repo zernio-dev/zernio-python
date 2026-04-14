@@ -75,7 +75,7 @@ class AdAudiencesResource:
         rule: dict[str, Any] | None = None,
         customer_file_source: str | None = None,
     ) -> dict[str, Any]:
-        """Create a custom audience (Meta only)"""
+        """Create custom audience"""
         payload = self._build_payload(
             account_id=account_id,
             ad_account_id=ad_account_id,
@@ -97,13 +97,13 @@ class AdAudiencesResource:
         return self._client._get(f"/v1/ads/audiences/{audience_id}")
 
     def delete_ad_audience(self, audience_id: str) -> dict[str, Any]:
-        """Delete a custom audience"""
+        """Delete custom audience"""
         return self._client._delete(f"/v1/ads/audiences/{audience_id}")
 
     def add_users_to_ad_audience(
         self, audience_id: str, users: list[dict[str, Any]]
     ) -> dict[str, Any]:
-        """Add users to a customer list audience"""
+        """Add users to audience"""
         payload = self._build_payload(
             users=users,
         )
@@ -138,7 +138,7 @@ class AdAudiencesResource:
         rule: dict[str, Any] | None = None,
         customer_file_source: str | None = None,
     ) -> dict[str, Any]:
-        """Create a custom audience (Meta only) (async)"""
+        """Create custom audience (async)"""
         payload = self._build_payload(
             account_id=account_id,
             ad_account_id=ad_account_id,
@@ -160,13 +160,13 @@ class AdAudiencesResource:
         return await self._client._aget(f"/v1/ads/audiences/{audience_id}")
 
     async def adelete_ad_audience(self, audience_id: str) -> dict[str, Any]:
-        """Delete a custom audience (async)"""
+        """Delete custom audience (async)"""
         return await self._client._adelete(f"/v1/ads/audiences/{audience_id}")
 
     async def aadd_users_to_ad_audience(
         self, audience_id: str, users: list[dict[str, Any]]
     ) -> dict[str, Any]:
-        """Add users to a customer list audience (async)"""
+        """Add users to audience (async)"""
         payload = self._build_payload(
             users=users,
         )

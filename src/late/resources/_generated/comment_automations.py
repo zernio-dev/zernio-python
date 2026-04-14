@@ -71,7 +71,7 @@ class CommentAutomationsResource:
         match_mode: str | None = "contains",
         comment_reply: str | None = None,
     ) -> dict[str, Any]:
-        """Create a comment-to-DM automation"""
+        """Create comment-to-DM automation"""
         payload = self._build_payload(
             profile_id=profile_id,
             account_id=account_id,
@@ -87,7 +87,7 @@ class CommentAutomationsResource:
         return self._client._post("/v1/comment-automations", data=payload)
 
     def get_comment_automation(self, automation_id: str) -> dict[str, Any]:
-        """Get automation details with recent logs"""
+        """Get automation details"""
         return self._client._get(f"/v1/comment-automations/{automation_id}")
 
     def update_comment_automation(
@@ -115,7 +115,7 @@ class CommentAutomationsResource:
         )
 
     def delete_comment_automation(self, automation_id: str) -> dict[str, Any]:
-        """Delete automation and all logs"""
+        """Delete automation"""
         return self._client._delete(f"/v1/comment-automations/{automation_id}")
 
     def list_comment_automation_logs(
@@ -126,7 +126,7 @@ class CommentAutomationsResource:
         limit: int | None = 50,
         skip: int | None = 0,
     ) -> dict[str, Any]:
-        """List trigger logs for an automation"""
+        """List automation logs"""
         params = self._build_params(
             status=status,
             limit=limit,
@@ -159,7 +159,7 @@ class CommentAutomationsResource:
         match_mode: str | None = "contains",
         comment_reply: str | None = None,
     ) -> dict[str, Any]:
-        """Create a comment-to-DM automation (async)"""
+        """Create comment-to-DM automation (async)"""
         payload = self._build_payload(
             profile_id=profile_id,
             account_id=account_id,
@@ -175,7 +175,7 @@ class CommentAutomationsResource:
         return await self._client._apost("/v1/comment-automations", data=payload)
 
     async def aget_comment_automation(self, automation_id: str) -> dict[str, Any]:
-        """Get automation details with recent logs (async)"""
+        """Get automation details (async)"""
         return await self._client._aget(f"/v1/comment-automations/{automation_id}")
 
     async def aupdate_comment_automation(
@@ -203,7 +203,7 @@ class CommentAutomationsResource:
         )
 
     async def adelete_comment_automation(self, automation_id: str) -> dict[str, Any]:
-        """Delete automation and all logs (async)"""
+        """Delete automation (async)"""
         return await self._client._adelete(f"/v1/comment-automations/{automation_id}")
 
     async def alist_comment_automation_logs(
@@ -214,7 +214,7 @@ class CommentAutomationsResource:
         limit: int | None = 50,
         skip: int | None = 0,
     ) -> dict[str, Any]:
-        """List trigger logs for an automation (async)"""
+        """List automation logs (async)"""
         params = self._build_params(
             status=status,
             limit=limit,

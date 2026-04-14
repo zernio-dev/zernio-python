@@ -55,12 +55,12 @@ class AdCampaignsResource:
         limit: int | None = 20,
         source: str | None = "zernio",
         platform: str | None = None,
-        status: str | None = None,
+        status: Any | None = None,
         ad_account_id: str | None = None,
         account_id: str | None = None,
         profile_id: str | None = None,
     ) -> dict[str, Any]:
-        """List campaigns with aggregate metrics"""
+        """List campaigns"""
         params = self._build_params(
             page=page,
             limit=limit,
@@ -92,14 +92,14 @@ class AdCampaignsResource:
         limit: int | None = 20,
         source: str | None = "zernio",
         platform: str | None = None,
-        status: str | None = None,
+        status: Any | None = None,
         ad_account_id: str | None = None,
         account_id: str | None = None,
         profile_id: str | None = None,
         from_date: str | None = None,
         to_date: str | None = None,
     ) -> dict[str, Any]:
-        """Get nested campaign/ad-set/ad tree"""
+        """Get campaign tree"""
         params = self._build_params(
             page=page,
             limit=limit,
@@ -121,12 +121,12 @@ class AdCampaignsResource:
         limit: int | None = 20,
         source: str | None = "zernio",
         platform: str | None = None,
-        status: str | None = None,
+        status: Any | None = None,
         ad_account_id: str | None = None,
         account_id: str | None = None,
         profile_id: str | None = None,
     ) -> dict[str, Any]:
-        """List campaigns with aggregate metrics (async)"""
+        """List campaigns (async)"""
         params = self._build_params(
             page=page,
             limit=limit,
@@ -158,14 +158,14 @@ class AdCampaignsResource:
         limit: int | None = 20,
         source: str | None = "zernio",
         platform: str | None = None,
-        status: str | None = None,
+        status: Any | None = None,
         ad_account_id: str | None = None,
         account_id: str | None = None,
         profile_id: str | None = None,
         from_date: str | None = None,
         to_date: str | None = None,
     ) -> dict[str, Any]:
-        """Get nested campaign/ad-set/ad tree (async)"""
+        """Get campaign tree (async)"""
         params = self._build_params(
             page=page,
             limit=limit,

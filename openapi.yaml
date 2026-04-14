@@ -264,9 +264,7 @@ tags:
       Publishing logs for transparency and debugging. Each log includes the platform API endpoint, HTTP status code, request/response bodies, duration, and retry attempts. Logs are automatically deleted after 7 days.
   - name: WhatsApp
     description: |
-      WhatsApp Business API. Contact, broadcast, and group endpoints are **deprecated** in favor of the
-      cross-platform `/v1/contacts`, `/v1/broadcasts`, and `/v1/sequences` endpoints.
-      Template, business profile, and phone number endpoints remain active (no cross-platform equivalent).
+      WhatsApp Business API. Template, business profile, and phone number endpoints.
       All endpoints require an accountId parameter identifying the WhatsApp-connected social account.
   - name: WhatsApp Flows
     description: |
@@ -823,48 +821,6 @@ components:
           additionalProperties:
             type: string
           description: Custom headers included in webhook requests
-    WebhookLog:
-      type: object
-      description: Webhook delivery log entry
-      properties:
-        _id:
-          type: string
-        webhookId:
-          type: string
-          description: ID of the webhook that was triggered
-        webhookName:
-          type: string
-          description: Name of the webhook that was triggered
-        event:
-          type: string
-          enum: [post.scheduled, post.published, post.failed, post.partial, post.cancelled, post.recycled, account.connected, account.disconnected, message.received, message.sent, message.edited, message.deleted, message.delivered, message.read, message.failed, comment.received, webhook.test]
-        url:
-          type: string
-          format: uri
-        status:
-          type: string
-          enum: [success, failed]
-        statusCode:
-          type: integer
-          description: HTTP status code from webhook endpoint
-        requestPayload:
-          type: object
-          description: Payload sent to webhook endpoint
-        responseBody:
-          type: string
-          description: Response body from webhook endpoint (truncated to 10KB)
-        errorMessage:
-          type: string
-          description: Error message if delivery failed
-        attemptNumber:
-          type: integer
-          description: Delivery attempt number (max 7 attempts)
-        responseTime:
-          type: integer
-          description: Response time in milliseconds
-        createdAt:
-          type: string
-          format: date-time
     WebhookPayloadPost:
       type: object
       description: Webhook payload for post events
@@ -1064,7 +1020,7 @@ components:
     # SDK regen fails with "Cannot find name 'WebhookPayloadMessage_properties_message'".
     InboxWebhookMessage:
       type: object
-      description: The `message` object included in inbox webhook payloads.
+      description: The message object included in inbox webhook payloads.
       required: [id, conversationId, platform, platformMessageId, direction, text, attachments, sender, sentAt, isRead]
       properties:
         id:
@@ -1128,7 +1084,7 @@ components:
           type: boolean
     InboxWebhookConversation:
       type: object
-      description: The `conversation` context included in inbox webhook payloads.
+      description: The conversation context included in inbox webhook payloads.
       required: [id, platformConversationId, status]
       properties:
         id: { type: string }
@@ -1142,7 +1098,7 @@ components:
           enum: [active, archived]
     InboxWebhookAccount:
       type: object
-      description: The `account` context included in inbox webhook payloads.
+      description: The account context included in inbox webhook payloads.
       required: [id, platform, username]
       properties:
         id:
@@ -1394,10 +1350,10 @@ components:
     WebhookPayloadMessageEdited:
       type: object
       description: |
-        Webhook payload for `message.edited` events. Fires when the sender
+        Webhook payload for message.edited events. Fires when the sender
         edits a previously-sent message. Supported platforms: Instagram,
-        Facebook Messenger, Telegram. The `message` object reflects the
-        LATEST state; `editHistory` contains every prior version in order
+        Facebook Messenger, Telegram. The message object reflects the
+        LATEST state; editHistory contains every prior version in order
         (oldest first), so the last entry is the version immediately before
         the current content.
       required: [id, event, message, editHistory, editCount, editedAt, conversation, account, timestamp]
@@ -1442,12 +1398,12 @@ components:
     WebhookPayloadMessageDeleted:
       type: object
       description: |
-        Webhook payload for `message.deleted` events. Fires when the sender
+        Webhook payload for message.deleted events. Fires when the sender
         deletes (unsends) a message. Supported platforms: Instagram (incoming
         unsend) and WhatsApp (when the business deletes an outgoing message
         via the Cloud API).
 
-        The `message.text` and `message.attachments` fields retain the content
+        The message.text and message.attachments fields retain the content
         that existed before the delete. The Zernio dashboard UI does not show
         this content, but authorized API consumers may access it for
         moderation, compliance, or archival use cases.
@@ -1468,14 +1424,14 @@ components:
     WebhookPayloadMessageDeliveryStatus:
       type: object
       description: |
-        Shared payload for `message.delivered`, `message.read`, and
-        `message.failed` events. Fires when the platform reports a new
+        Shared payload for message.delivered, message.read, and
+        message.failed events. Fires when the platform reports a new
         delivery state for an outgoing message.
 
         Platform support:
-          * `message.delivered` — WhatsApp, Facebook Messenger.
-          * `message.read`      — WhatsApp, Facebook Messenger, Instagram.
-          * `message.failed`    — WhatsApp only (other platforms don't expose
+          * message.delivered — WhatsApp, Facebook Messenger.
+          * message.read      — WhatsApp, Facebook Messenger, Instagram.
+          * message.failed    — WhatsApp only (other platforms don't expose
             per-message failure via webhook).
       required: [id, event, message, statusAt, conversation, account, timestamp]
       properties:
@@ -1492,7 +1448,7 @@ components:
         error:
           type: object
           nullable: true
-          description: Populated only on `message.failed`.
+          description: Populated only on message.failed.
           properties:
             code: { type: integer }
             title: { type: string }
@@ -1517,183 +1473,6 @@ components:
           type: string
           description: Human-readable test message
         timestamp:
-          type: string
-          format: date-time
-    PostLog:
-      type: object
-      description: Publishing log entry showing details of a post publishing attempt
-      properties:
-        _id:
-          type: string
-        postId:
-          oneOf:
-            - type: string
-            - type: object
-              description: Populated post reference
-              properties:
-                _id:
-                  type: string
-                content:
-                  type: string
-                status:
-                  type: string
-        userId:
-          type: string
-        profileId:
-          type: string
-        platform:
-          type: string
-          enum: [tiktok, instagram, facebook, youtube, linkedin, twitter, threads, pinterest, reddit, bluesky, googlebusiness, telegram, snapchat, discord]
-        accountId:
-          type: string
-        accountUsername:
-          type: string
-        action:
-          type: string
-          enum: [publish, retry, media_upload, rate_limit_pause, token_refresh, cancelled]
-          description: "Type of action logged: publish (initial attempt), retry (after failure), media_upload, rate_limit_pause, token_refresh, cancelled"
-        status:
-          type: string
-          enum: [success, failed, pending, skipped]
-        statusCode:
-          type: integer
-          description: HTTP status code from platform API
-        endpoint:
-          type: string
-          description: Platform API endpoint called
-        request:
-          type: object
-          properties:
-            contentPreview:
-              type: string
-              description: First 200 chars of caption
-            mediaCount:
-              type: integer
-            mediaTypes:
-              type: array
-              items:
-                type: string
-            mediaUrls:
-              type: array
-              items:
-                type: string
-              description: URLs of media items sent to platform
-            scheduledFor:
-              type: string
-              format: date-time
-            rawBody:
-              type: string
-              description: Full request body JSON (max 5000 chars)
-        response:
-          type: object
-          properties:
-            platformPostId:
-              type: string
-              description: ID returned by platform on success
-            platformPostUrl:
-              type: string
-              description: URL of published post
-            errorMessage:
-              type: string
-              description: Error message on failure
-            errorCode:
-              type: string
-              description: Platform-specific error code
-            rawBody:
-              type: string
-              description: Full response body JSON (max 5000 chars)
-        durationMs:
-          type: integer
-          description: How long the operation took in milliseconds
-        attemptNumber:
-          type: integer
-          description: Attempt number (1 for first try, 2+ for retries)
-        createdAt:
-          type: string
-          format: date-time
-    ConnectionLog:
-      type: object
-      description: Connection event log showing account connection/disconnection history
-      properties:
-        _id:
-          type: string
-        userId:
-          type: string
-          description: User who owns the connection (may be null for early OAuth failures)
-        profileId:
-          type: string
-        accountId:
-          type: string
-          description: The social account ID (present on successful connections and disconnects)
-        platform:
-          type: string
-          enum: [tiktok, instagram, facebook, youtube, linkedin, twitter, threads, pinterest, reddit, bluesky, googlebusiness, telegram, snapchat, discord]
-        eventType:
-          type: string
-          enum: [connect_success, connect_failed, disconnect, reconnect_success, reconnect_failed]
-          description: "Type of connection event: connect_success, connect_failed, disconnect, reconnect_success, reconnect_failed"
-        connectionMethod:
-          type: string
-          enum: [oauth, credentials, invitation]
-          description: How the connection was initiated
-        error:
-          type: object
-          description: Error details (present on failed events)
-          properties:
-            code:
-              type: string
-              description: Error code (e.g., oauth_denied, token_exchange_failed)
-            message:
-              type: string
-              description: Human-readable error message
-            rawResponse:
-              type: string
-              description: Raw error response (truncated to 2000 chars)
-        success:
-          type: object
-          description: Success details (present on successful events)
-          properties:
-            displayName:
-              type: string
-            username:
-              type: string
-            profilePicture:
-              type: string
-            permissions:
-              type: array
-              items:
-                type: string
-              description: OAuth scopes/permissions granted
-            tokenExpiresAt:
-              type: string
-              format: date-time
-            accountType:
-              type: string
-              description: Account type (personal, business, organization)
-        context:
-          type: object
-          description: Additional context about the connection attempt
-          properties:
-            isHeadlessMode:
-              type: boolean
-            hasCustomRedirectUrl:
-              type: boolean
-            isReconnection:
-              type: boolean
-            isBYOK:
-              type: boolean
-              description: Using bring-your-own-keys
-            invitationToken:
-              type: string
-            connectToken:
-              type: string
-        durationMs:
-          type: integer
-          description: How long the operation took in milliseconds
-        metadata:
-          type: object
-          description: Additional metadata
-        createdAt:
           type: string
           format: date-time
     MediaItem:
@@ -2204,17 +1983,17 @@ components:
         Photo carousels up to 35 images. Video titles up to 2200 chars, photo titles truncated to 90 chars.
         privacyLevel must match creator_info options. Both camelCase and snake_case accepted.
 
-        **Creator Inbox (draft mode):** Set `draft: true` to send content to the TikTok Creator Inbox
+        Creator Inbox (draft mode): Set draft: true to send content to the TikTok Creator Inbox
         instead of publishing immediately. The creator receives an inbox notification and completes
-        the post using TikTok's editing flow. This maps to TikTok's `post_mode: "MEDIA_UPLOAD"` internally.
+        the post using TikTok's editing flow. This maps to TikTok's post_mode: "MEDIA_UPLOAD" internally.
 
-        **Important:** The field `publish_type` is NOT supported. Use `draft: true` for Creator Inbox flow.
+        Important: The field publish_type is NOT supported. Use draft: true for Creator Inbox flow.
 
-        **Photo drafts** use the `/v2/post/publish/content/init/` endpoint with `post_mode: "MEDIA_UPLOAD"`.
-        **Video drafts** use the dedicated `/v2/post/publish/inbox/video/init/` endpoint.
+        Photo drafts use the /v2/post/publish/content/init/ endpoint with post_mode: "MEDIA_UPLOAD".
+        Video drafts use the dedicated /v2/post/publish/inbox/video/init/ endpoint.
 
-        When `draft: true`, the `video.upload` scope is required. When `draft` is false or omitted
-        (direct post), the `video.publish` scope is required. For Creator Inbox, TikTok app version
+        When draft: true, the video.upload scope is required. When draft is false or omitted
+        (direct post), the video.publish scope is required. For Creator Inbox, TikTok app version
         must be 31.8 or higher.
       properties:
         draft:
@@ -2222,9 +2001,9 @@ components:
           description: |
             When true, sends the post to the TikTok Creator Inbox as a draft instead of publishing
             immediately. The creator receives an inbox notification to complete posting via TikTok's
-            editing flow. Maps to TikTok API `post_mode: "MEDIA_UPLOAD"` (photos) or the dedicated
-            inbox endpoint (videos). When false or omitted, publishes directly via `post_mode: "DIRECT_POST"`.
-            Note: `publish_type` is not a supported field. Use this field instead.
+            editing flow. Maps to TikTok API post_mode: "MEDIA_UPLOAD" (photos) or the dedicated
+            inbox endpoint (videos). When false or omitted, publishes directly via post_mode: "DIRECT_POST".
+            Note: publish_type is not a supported field. Use this field instead.
         privacyLevel:
           type: string
           description: One of the values returned by the TikTok creator info API for the account
@@ -2430,6 +2209,10 @@ components:
             - $ref: '#/components/schemas/Profile'
         username: { type: string }
         displayName: { type: string }
+        profilePicture:
+          type: string
+          nullable: true
+          description: URL to the account's profile picture on the platform. May be null if the platform does not provide one.
         profileUrl:
           type: string
           description: Full profile URL for the connected account on its platform.
@@ -2454,36 +2237,22 @@ components:
             Whether the user explicitly activated this account. false means the account was
             created as a side effect (e.g., posting account auto-created when user connected
             ads first). Posting UI and scheduler ignore accounts with enabled: false.
-        adsStatus:
-          type: string
-          enum: [connected, not_connected, not_available]
-          deprecated: true
-          description: |
-            **Deprecated.** With the new ads account model, ads accounts are separate SocialAccount
-            documents. Check for accounts with ads platform values (metaads, linkedinads, pinterestads,
-            tiktokads, xads, googleads) instead.
-
-            Legacy behavior:
-            - `connected`: Ads are ready to use (same-token platforms like Meta/LinkedIn, or separate ads token is present).
-            - `not_connected`: Platform supports ads but requires a separate ads OAuth. Use `GET /v1/connect/{platform}/ads` to connect.
-            - `not_available`: Platform does not support ads (e.g., YouTube, Reddit, Bluesky).
         metadata:
           type: object
           description: |
             Platform-specific metadata. Fields vary by platform. For WhatsApp accounts, includes:
-            - `qualityRating`: Phone number quality rating from Meta (`GREEN`, `YELLOW`, `RED`, or `UNKNOWN`)
-            - `nameStatus`: Display name review status (`APPROVED`, `PENDING_REVIEW`, `DECLINED`, or `NONE`). Messages cannot be sent until the display name is approved by Meta.
-            - `messagingLimitTier`: Maximum unique business-initiated conversations per 24h rolling window (`TIER_250`, `TIER_1K`, `TIER_10K`, `TIER_100K`, or `TIER_UNLIMITED`). Scales automatically as quality rating improves.
-            - `verifiedName`: Meta-verified business display name
-            - `displayPhoneNumber`: Formatted phone number (e.g., "+1 555-123-4567")
-            - `wabaId`: WhatsApp Business Account ID
-            - `phoneNumberId`: Meta phone number ID
+            - qualityRating: Phone number quality rating from Meta (GREEN, YELLOW, RED, or UNKNOWN)
+            - nameStatus: Display name review status (APPROVED, PENDING_REVIEW, DECLINED, or NONE). Messages cannot be sent until the display name is approved by Meta.
+            - messagingLimitTier: Maximum unique business-initiated conversations per 24h rolling window (TIER_250, TIER_1K, TIER_10K, TIER_100K, or TIER_UNLIMITED). Scales automatically as quality rating improves.
+            - verifiedName: Meta-verified business display name
+            - displayPhoneNumber: Formatted phone number (e.g., "+1 555-123-4567")
+            - wabaId: WhatsApp Business Account ID
+            - phoneNumberId: Meta phone number ID
     AccountWithFollowerStats:
       allOf:
         - $ref: '#/components/schemas/SocialAccount'
         - type: object
           properties:
-            profilePicture: { type: string }
             currentFollowers: { type: number, description: Current follower count }
             lastUpdated: { type: string, format: date-time }
             growth: { type: number, description: Follower change over period }
@@ -3014,13 +2783,16 @@ components:
         cpm: { type: number, description: Cost per 1000 impressions }
         engagement: { type: integer }
         lastSyncedAt: { type: string, format: date-time, description: "Present on individual ads only, not on campaign aggregations" }
+    AdStatus:
+      type: string
+      enum: [active, paused, pending_review, rejected, completed, cancelled, error]
     Ad:
       type: object
       properties:
         _id: { type: string }
         name: { type: string }
         platform: { type: string, enum: [facebook, instagram, tiktok, linkedin, pinterest, google, twitter] }
-        status: { type: string, enum: [active, paused, pending_review, rejected, completed, cancelled, error] }
+        status: { $ref: '#/components/schemas/AdStatus' }
         adType: { type: string, enum: [boost, standalone] }
         goal: { type: string, enum: [engagement, traffic, awareness, video_views] }
         isExternal: { type: boolean, description: True for ads synced from platform ad managers }
@@ -3040,6 +2812,31 @@ components:
         platformAdSetId: { type: string }
         campaignName: { type: string }
         adSetName: { type: string }
+        platformObjective:
+          type: string
+          nullable: true
+          description: "Raw Meta campaign objective (e.g. OUTCOME_SALES, OUTCOME_LEADS, OUTCOME_TRAFFIC). Only present for Meta ads."
+          example: OUTCOME_SALES
+        optimizationGoal:
+          type: string
+          nullable: true
+          description: "Meta ad set optimization goal (e.g. OFFSITE_CONVERSIONS, VALUE, LEAD_GENERATION, LINK_CLICKS). Only present for Meta ads."
+          example: OFFSITE_CONVERSIONS
+        bidStrategy:
+          type: string
+          nullable: true
+          description: "Bid strategy (e.g. LOWEST_COST_WITHOUT_CAP, COST_CAP, LOWEST_COST_WITH_MIN_ROAS). Ad set level overrides campaign level. Only present for Meta ads."
+          example: LOWEST_COST_WITHOUT_CAP
+        promotedObject:
+          type: object
+          nullable: true
+          description: "Meta promoted object containing conversion event details. Structure varies by objective. Only present for Meta ads."
+          properties:
+            custom_event_type: { type: string, description: "Conversion event type (e.g. PURCHASE, LEAD, COMPLETE_REGISTRATION, ADD_TO_CART)", example: PURCHASE }
+            pixel_id: { type: string, description: Meta pixel ID }
+            page_id: { type: string, description: Facebook page ID }
+            application_id: { type: string, description: Facebook app ID }
+            product_set_id: { type: string, description: Product catalog set ID }
         creative:
           type: object
           nullable: true
@@ -3077,7 +2874,7 @@ components:
       properties:
         platformAdSetId: { type: string }
         adSetName: { type: string }
-        status: { type: string, enum: [active, paused, pending_review, rejected, completed, cancelled, error], description: Derived from child ad statuses }
+        status: { allOf: [{ $ref: '#/components/schemas/AdStatus' }], description: Derived from child ad statuses }
         adCount: { type: integer }
         budget:
           type: object
@@ -3086,6 +2883,16 @@ components:
             amount: { type: number }
             type: { type: string, enum: [daily, lifetime] }
         metrics: { $ref: '#/components/schemas/AdMetrics' }
+        optimizationGoal: { type: string, nullable: true, description: "Meta ad set optimization goal (e.g. OFFSITE_CONVERSIONS, VALUE, LEAD_GENERATION)" }
+        bidStrategy: { type: string, nullable: true, description: "Bid strategy for this ad set (overrides campaign level when set)" }
+        promotedObject:
+          type: object
+          nullable: true
+          description: "Meta promoted object for this ad set (conversion event details)"
+          properties:
+            custom_event_type: { type: string }
+            pixel_id: { type: string }
+            page_id: { type: string }
         ads:
           type: array
           items: { $ref: '#/components/schemas/Ad' }
@@ -3097,7 +2904,7 @@ components:
         platformCampaignId: { type: string }
         platform: { type: string, enum: [facebook, instagram, tiktok, linkedin, pinterest, google, twitter] }
         campaignName: { type: string }
-        status: { type: string, enum: [active, paused, pending_review, rejected, completed, cancelled, error], description: Derived from child ad statuses }
+        status: { allOf: [{ $ref: '#/components/schemas/AdStatus' }], description: Derived from child ad statuses }
         adCount: { type: integer, description: Total ads across all ad sets }
         adSetCount: { type: integer }
         budget:
@@ -3110,6 +2917,20 @@ components:
         platformAdAccountId: { type: string }
         accountId: { type: string }
         profileId: { type: string }
+        platformObjective: { type: string, nullable: true, description: "Raw Meta campaign objective (e.g. OUTCOME_SALES, OUTCOME_LEADS, OUTCOME_TRAFFIC)" }
+        optimizationGoal:
+          type: string
+          nullable: true
+          description: "Meta optimization goal shared across ad sets, or comma-separated values when ad sets differ (e.g. OFFSITE_CONVERSIONS, VALUE, LEAD_GENERATION)"
+        bidStrategy: { type: string, nullable: true, description: "Campaign-level bid strategy (e.g. LOWEST_COST_WITHOUT_CAP, COST_CAP, LOWEST_COST_WITH_MIN_ROAS)" }
+        promotedObject:
+          type: object
+          nullable: true
+          description: "Meta promoted object at campaign level (conversion event details)"
+          properties:
+            custom_event_type: { type: string }
+            pixel_id: { type: string }
+            page_id: { type: string }
         adSets:
           type: array
           items: { $ref: '#/components/schemas/AdTreeAdSet' }
@@ -3119,7 +2940,7 @@ components:
         platformCampaignId: { type: string }
         platform: { type: string, enum: [facebook, instagram, tiktok, linkedin, pinterest, google, twitter] }
         campaignName: { type: string }
-        status: { type: string, enum: [active, paused, pending_review, rejected, completed, cancelled, error], description: Derived from child ad statuses }
+        status: { allOf: [{ $ref: '#/components/schemas/AdStatus' }], description: Derived from child ad statuses }
         adCount: { type: integer }
         budget:
           type: object
@@ -3131,6 +2952,20 @@ components:
         platformAdAccountId: { type: string }
         accountId: { type: string }
         profileId: { type: string }
+        platformObjective: { type: string, nullable: true, description: "Raw Meta campaign objective (e.g. OUTCOME_SALES, OUTCOME_LEADS, OUTCOME_TRAFFIC)" }
+        optimizationGoal:
+          type: string
+          nullable: true
+          description: "Meta optimization goal shared across ad sets, or comma-separated values when ad sets differ (e.g. OFFSITE_CONVERSIONS, VALUE, LEAD_GENERATION)"
+        bidStrategy: { type: string, nullable: true, description: "Campaign-level bid strategy (e.g. LOWEST_COST_WITHOUT_CAP, COST_CAP, LOWEST_COST_WITH_MIN_ROAS)" }
+        promotedObject:
+          type: object
+          nullable: true
+          description: "Meta promoted object at campaign level (conversion event details)"
+          properties:
+            custom_event_type: { type: string }
+            pixel_id: { type: string }
+            page_id: { type: string }
         earliestAd: { type: string, format: date-time }
         latestAd: { type: string, format: date-time }
 webhooks:
@@ -3291,7 +3126,7 @@ webhooks:
       description: |
         Fired when a sender edits a previously-sent message. Supported on
         Instagram, Facebook Messenger, and Telegram. The payload includes the
-        full `editHistory` so consumers can show prior versions.
+        full editHistory so consumers can show prior versions.
       tags: [Webhook Events]
       requestBody:
         required: true
@@ -3309,8 +3144,8 @@ webhooks:
       description: |
         Fired when a sender deletes (unsends) a message. Supported on Instagram
         (incoming unsend) and WhatsApp (when the business deletes an outgoing
-        message via the Cloud API). The payload retains the pre-delete `text`
-        and `attachments` so API consumers can access the original content for
+        message via the Cloud API). The payload retains the pre-delete text
+        and attachments so API consumers can access the original content for
         moderation or compliance — the Zernio dashboard UI hides it.
       tags: [Webhook Events]
       requestBody:
@@ -3363,8 +3198,8 @@ webhooks:
       description: |
         Fired when an outgoing message fails to deliver. Currently only emitted
         for WhatsApp (other platforms don't expose per-message failure via
-        webhook). The payload `error` object contains `code`, `title`, and
-        `message` from the platform.
+        webhook). The payload error object contains code, title, and
+        message from the platform.
       tags: [Webhook Events]
       requestBody:
         required: true
@@ -3417,7 +3252,7 @@ paths:
     post:
       operationId: validatePostLength
       tags: [Validate]
-      summary: Validate post character count
+      summary: Validate character count
       description: |
         Check weighted character count per platform and whether the text is within each platform's limit.
 
@@ -3470,7 +3305,7 @@ paths:
       description: |
         Dry-run the full post validation pipeline without publishing. Catches issues like missing media for Instagram/TikTok/YouTube, hashtag limits, invalid thread formats, Facebook Reel requirements, and character limit violations.
 
-        Accepts the same body as `POST /v1/posts`. Does NOT validate accounts, process media, or track usage. This is content-only validation.
+        Accepts the same body as POST /v1/posts. Does NOT validate accounts, process media, or track usage. This is content-only validation.
 
         Returns errors for failures and warnings for near-limit content (>90% of character limit).
       security:
@@ -3618,7 +3453,7 @@ paths:
       description: |
         Check if a subreddit exists and return basic info (title, subscriber count, NSFW status, post types allowed).
 
-        When accountId is provided, uses authenticated Reddit OAuth API with automatic token refresh (recommended). Falls back to Reddit's public JSON API, which may be unreliable from server IPs. Returns `exists: false` for private, banned, or nonexistent subreddits.
+        When accountId is provided, uses authenticated Reddit OAuth API with automatic token refresh (recommended). Falls back to Reddit's public JSON API, which may be unreliable from server IPs. Returns exists: false for private, banned, or nonexistent subreddits.
       security:
         - bearerAuth: []
       parameters:
@@ -3675,7 +3510,7 @@ paths:
         Accepts both Zernio Post IDs and External Post IDs (auto-resolved). fromDate defaults to 90 days ago if omitted, max range 366 days.
         Single post lookups may return 202 (sync pending) or 424 (all platforms failed). For follower stats, use /v1/accounts/follower-stats.
 
-        **LinkedIn personal accounts:** Analytics are only available for posts published through Zernio. LinkedIn's API only returns metrics for posts authored by the authenticated user. Organization/company page analytics work for all posts.
+        LinkedIn personal accounts: Analytics are only available for posts published through Zernio. LinkedIn's API only returns metrics for posts authored by the authenticated user. Organization/company page analytics work for all posts.
       parameters:
         - name: postId
           in: query
@@ -4027,7 +3862,7 @@ paths:
     get:
       operationId: getInstagramAccountInsights
       tags: [Analytics]
-      summary: Get Instagram account-level insights
+      summary: Get Instagram insights
       description: |
         Returns account-level Instagram insights such as reach, views, accounts engaged, and total interactions.
         These metrics reflect the entire account's performance across all content surfaces (feed, stories, explore, profile),
@@ -4171,7 +4006,7 @@ paths:
     get:
       operationId: getInstagramDemographics
       tags: [Analytics]
-      summary: Get Instagram audience demographics
+      summary: Get Instagram demographics
       description: |
         Returns audience demographic insights for an Instagram account, broken down by age, city, country, and/or gender.
         Requires at least 100 followers. Returns top 45 entries per dimension.
@@ -4291,7 +4126,7 @@ paths:
     get:
       operationId: getYouTubeDemographics
       tags: [Analytics]
-      summary: Get YouTube audience demographics
+      summary: Get YouTube demographics
       description: |
         Returns audience demographic insights for a YouTube channel, broken down by age, gender, and/or country.
         Age and gender values are viewer percentages (0-100). Country values are view counts.
@@ -4682,7 +4517,7 @@ paths:
     get:
       operationId: getPostingFrequency
       tags: [Analytics]
-      summary: Get posting frequency vs engagement
+      summary: Get frequency vs engagement
       description: |
         Returns the correlation between posting frequency (posts per week) and engagement rate, broken down by platform.
         Helps find the optimal posting cadence for each platform. Each row represents a specific (platform, posts_per_week) combination
@@ -4870,7 +4705,7 @@ paths:
     get:
       operationId: getGoogleBusinessPerformance
       tags: [Analytics]
-      summary: Get Google Business Profile performance metrics
+      summary: Get GBP performance metrics
       description: |
         Returns daily performance metrics for a Google Business Profile location.
         Metrics include impressions (Maps/Search, desktop/mobile), website clicks,
@@ -4994,7 +4829,7 @@ paths:
     get:
       operationId: getGoogleBusinessSearchKeywords
       tags: [Analytics]
-      summary: Get Google Business Profile search keywords
+      summary: Get GBP search keywords
       description: |
         Returns search keywords that triggered impressions for a Google Business Profile location.
         Data is aggregated monthly. Keywords below a minimum impression threshold set by Google are excluded.
@@ -5248,7 +5083,7 @@ paths:
     post:
       operationId: getMediaPresignedUrl
       tags: [Media]
-      summary: Get presigned upload URL
+      summary: Get upload URL
       description: Get a presigned URL to upload files directly to cloud storage (up to 5GB). Returns an uploadUrl and publicUrl. PUT your file to the uploadUrl, then use the publicUrl in your posts.
       requestBody:
         required: true
@@ -6373,7 +6208,7 @@ paths:
       description: |
         Edit a published post on a social media platform. Currently only supported for X (Twitter).
 
-        **Requirements:**
+        Requirements:
         - Connected X account must have an active X Premium subscription
         - Must be within 1 hour of original publish time
         - Maximum 5 edits per tweet (enforced by X)
@@ -6437,11 +6272,11 @@ paths:
         Updates metadata of a published video on the specified platform without re-uploading.
         Currently only supported for YouTube. At least one updatable field is required.
 
-        **Two modes:**
+        Two modes:
 
-        1. **Post-based** (video published through Zernio): pass the Zernio postId in the URL and `platform` in the body.
-        2. **Direct video ID** (video uploaded outside Zernio, e.g. directly to YouTube): use `_` as the postId,
-           and pass `videoId` + `accountId` + `platform` in the body. The accountId is the Zernio social account ID
+        1. Post-based (video published through Zernio): pass the Zernio postId in the URL and platform in the body.
+        2. Direct video ID (video uploaded outside Zernio, e.g. directly to YouTube): use _ as the postId,
+           and pass videoId + accountId + platform in the body. The accountId is the Zernio social account ID
            for the connected YouTube channel.
       parameters:
         - name: postId
@@ -7030,50 +6865,6 @@ paths:
                 message: "Account disconnected successfully"
         '401': { $ref: '#/components/responses/Unauthorized' }
         '404': { $ref: '#/components/responses/NotFound' }
-  /v1/accounts/{accountId}/disconnect-ads:
-    post:
-      operationId: disconnectAds
-      tags: [Accounts]
-      summary: Disconnect ads from an account
-      deprecated: true
-      description: |
-        **Deprecated.** Ads accounts are now standalone SocialAccount documents. Use `DELETE /v1/accounts/{accountId}` instead, passing the ads account's own ID.
-
-        This endpoint is kept for backward compatibility. It soft-deletes the ads SocialAccount identified by `accountId` (which must be an ads account, not a posting account). The parent posting account is left untouched.
-      parameters:
-        - name: accountId
-          in: path
-          required: true
-          schema: { type: string }
-          description: The ads SocialAccount ID to disconnect
-      requestBody:
-        content:
-          application/json:
-            schema:
-              type: object
-              properties:
-                adsPlatform:
-                  type: string
-                  enum: [metaads, linkedinads, pinterestads, tiktokads, xads]
-                  description: The ads platform (optional, used for logging only)
-            example:
-              adsPlatform: "tiktokads"
-      security:
-        - bearerAuth: []
-      responses:
-        '200':
-          description: Ads disconnected
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  message: { type: string }
-              example:
-                message: "tiktokads disconnected successfully"
-        '400': { description: Invalid ads platform }
-        '401': { $ref: '#/components/responses/Unauthorized' }
-        '404': { $ref: '#/components/responses/NotFound' }
   /v1/accounts/health:
     get:
       operationId: getAllAccountsHealth
@@ -7645,13 +7436,13 @@ paths:
       description: |
         Unified ads connection endpoint. Creates a dedicated ads SocialAccount for the specified platform.
 
-        **Same-token platforms** (facebook, instagram, linkedin, pinterest): Creates an ads SocialAccount (`metaads`, `linkedinads`, `pinterestads`) with a copied OAuth token from the parent posting account. If the ads account already exists, returns `alreadyConnected: true`. No extra OAuth needed.
+        Same-token platforms (facebook, instagram, linkedin, pinterest): Creates an ads SocialAccount (metaads, linkedinads, pinterestads) with a copied OAuth token from the parent posting account. If the ads account already exists, returns alreadyConnected: true. No extra OAuth needed.
 
-        **Separate-token platforms** (tiktok, twitter): Starts the platform-specific marketing API OAuth flow and creates an ads SocialAccount (`tiktokads`, `xads`) with its own token. Requires an existing posting account (`accountId` param). If the ads account already exists, returns `alreadyConnected: true`.
+        Separate-token platforms (tiktok, twitter): Starts the platform-specific marketing API OAuth flow and creates an ads SocialAccount (tiktokads, xads) with its own token. Requires an existing posting account (accountId param). If the ads account already exists, returns alreadyConnected: true.
 
-        **Standalone platforms** (googleads): Starts the Google Ads OAuth flow and creates a standalone ads SocialAccount (`googleads`) with no parent. If the account already exists, returns `alreadyConnected: true`.
+        Standalone platforms (googleads): Starts the Google Ads OAuth flow and creates a standalone ads SocialAccount (googleads) with no parent. If the account already exists, returns alreadyConnected: true.
 
-        Ads accounts appear as regular SocialAccount documents with ads platform values (e.g., `metaads`, `tiktokads`) in `GET /v1/accounts`.
+        Ads accounts appear as regular SocialAccount documents with ads platform values (e.g., metaads, tiktokads) in GET /v1/accounts.
       parameters:
         - name: platform
           in: path
@@ -9814,7 +9605,7 @@ paths:
         1. Go to Meta Business Suite (business.facebook.com)
         2. Create or select a WhatsApp Business Account
         3. In Business Settings > System Users, create a System User
-        4. Assign it the `whatsapp_business_management` and `whatsapp_business_messaging` permissions
+        4. Assign it the whatsapp_business_management and whatsapp_business_messaging permissions
         5. Generate a permanent access token
         6. Get the WABA ID from WhatsApp Manager > Account Tools > Phone Numbers
         7. Get the Phone Number ID from the same page (click on the number)
@@ -9876,7 +9667,7 @@ paths:
           description: |
             Invalid request. Either missing fields or the phoneNumberId was not found
             in the specified WABA. If the phone was not found, the response includes
-            `availablePhoneNumbers` to help identify the correct ID.
+            availablePhoneNumbers to help identify the correct ID.
         '401':
           description: Invalid or expired access token
         '403':
@@ -10514,7 +10305,7 @@ paths:
       description: |
         Returns individual reactions for a specific LinkedIn post, including reactor profiles
         (name, headline/job title, profile picture, profile URL, reaction type).
-        Only works for **organization/company page** accounts. LinkedIn restricts reaction
+        Only works for organization/company page accounts. LinkedIn restricts reaction
         data for personal profiles (r_member_social_feed is a closed permission).
       parameters:
         - name: accountId
@@ -10673,22 +10464,22 @@ paths:
       description: |
         Converts a LinkedIn profile or company URL to a URN for @mentions in posts.
 
-        **How to use LinkedIn @mentions (2-step workflow):**
+        How to use LinkedIn @mentions (2-step workflow):
 
         1. Call this endpoint with the LinkedIn profile/company URL to get the mention URN and format.
-        2. Embed the returned `mentionFormat` (e.g. `@[Vincent Jong](urn:li:person:xxx)`) directly in your post's `content` field.
+        2. Embed the returned mentionFormat (e.g. @[Vincent Jong](urn:li:person:xxx)) directly in your post's content field.
 
-        **Example:**
-        - Resolve: `GET /v1/accounts/{id}/linkedin-mentions?url=linkedin.com/in/vincentjong&displayName=Vincent Jong`
-        - Returns: `mentionFormat: "@[Vincent Jong](urn:li:person:xxx)"`
-        - Use in post content: `"Great talk with @[Vincent Jong](urn:li:person:xxx) today!"`
+        Example:
+        - Resolve: GET /v1/accounts/{id}/linkedin-mentions?url=linkedin.com/in/vincentjong&displayName=Vincent Jong
+        - Returns: mentionFormat: "@[Vincent Jong](urn:li:person:xxx)"
+        - Use in post content: "Great talk with @[Vincent Jong](urn:li:person:xxx) today!"
 
-        **Important:** The `mentions` array field in POST /v1/posts is stored for reference only and does NOT trigger @mentions on LinkedIn. You must embed the mention format directly in the content text.
+        Important: The mentions array field in POST /v1/posts is stored for reference only and does NOT trigger @mentions on LinkedIn. You must embed the mention format directly in the content text.
 
-        **Requirements:**
-        - **Person mentions** require the LinkedIn account to be admin of at least one organization. This is a LinkedIn API limitation: the only endpoints that resolve profile URLs to member URNs (`vanityUrl`, `peopleTypeahead`) are scoped to organization followers. There is no public LinkedIn API to resolve a vanity URL without organization context.
-        - **Organization mentions** (e.g. @Microsoft) work without this requirement.
-        - For person mentions to be clickable, the `displayName` parameter must exactly match the name shown on their LinkedIn profile.
+        Requirements:
+        - Person mentions require the LinkedIn account to be admin of at least one organization. This is a LinkedIn API limitation: the only endpoints that resolve profile URLs to member URNs (vanityUrl, peopleTypeahead) are scoped to organization followers. There is no public LinkedIn API to resolve a vanity URL without organization context.
+        - Organization mentions (e.g. @Microsoft) work without this requirement.
+        - For person mentions to be clickable, the displayName parameter must exactly match the name shown on their LinkedIn profile.
         - Person mentions DO work when published from personal profiles (the URN just needs to be valid). The limitation is only in the resolution step (URL to URN), not in publishing.
       parameters:
         - name: accountId
@@ -10902,7 +10693,7 @@ paths:
       operationId: getYoutubePlaylists
       tags: [Connect]
       summary: List YouTube playlists
-      description: Returns the playlists available for a connected YouTube account. Use this to get a playlist ID when creating a YouTube post with the `playlistId` field.
+      description: Returns the playlists available for a connected YouTube account. Use this to get a playlist ID when creating a YouTube post with the playlistId field.
       parameters:
         - name: accountId
           in: path
@@ -10952,7 +10743,7 @@ paths:
       operationId: updateYoutubeDefaultPlaylist
       tags: [Connect]
       summary: Set default YouTube playlist
-      description: Sets the default playlist used when publishing videos for this account. When a post does not specify a `playlistId`, the default playlist is not automatically used (it is stored for client-side convenience).
+      description: Sets the default playlist used when publishing videos for this account. When a post does not specify a playlistId, the default playlist is not automatically used (it is stored for client-side convenience).
       parameters:
         - name: accountId
           in: path
@@ -11929,372 +11720,6 @@ paths:
                       hasMore:
                         type: boolean
         '401': { $ref: '#/components/responses/Unauthorized' }
-
-  /v1/webhooks/logs:
-    get:
-      operationId: getWebhookLogs
-      tags: [Webhooks]
-      summary: Get delivery logs
-      deprecated: true
-      description: |
-        **Deprecated.** Use `GET /v1/logs?type=webhooks` instead.
-        Retrieve webhook delivery history. Logs are retained for 90 days.
-      security:
-        - bearerAuth: []
-      parameters:
-        - name: limit
-          in: query
-          description: Maximum number of logs to return (max 100)
-          schema:
-            type: integer
-            minimum: 1
-            maximum: 100
-            default: 50
-        - name: status
-          in: query
-          description: Filter by delivery status
-          schema:
-            type: string
-            enum: [success, failed]
-        - name: event
-          in: query
-          description: Filter by event type
-          schema:
-            type: string
-            enum: [post.scheduled, post.published, post.failed, post.partial, post.cancelled, post.recycled, account.connected, account.disconnected, message.received, message.sent, message.edited, message.deleted, message.delivered, message.read, message.failed, comment.received, webhook.test]
-        - name: webhookId
-          in: query
-          description: Filter by webhook ID
-          schema:
-            type: string
-      responses:
-        '200':
-          description: Webhook logs retrieved successfully
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  logs:
-                    type: array
-                    items:
-                      $ref: '#/components/schemas/WebhookLog'
-        '401': { $ref: '#/components/responses/Unauthorized' }
-
-  /v1/posts/logs:
-    get:
-      operationId: listPostsLogs
-      tags: [Logs]
-      summary: List publishing logs
-      deprecated: true
-      description: |
-        **Deprecated.** Use `GET /v1/logs?type=publishing` instead.
-        Retrieve publishing logs for all posts. Logs are retained for 90 days.
-      security:
-        - bearerAuth: []
-      parameters:
-        - name: status
-          in: query
-          description: Filter by log status
-          schema:
-            type: string
-            enum: [success, failed, pending, skipped, all]
-        - name: platform
-          in: query
-          description: Filter by platform
-          schema:
-            type: string
-            enum: [tiktok, instagram, facebook, youtube, linkedin, twitter, threads, pinterest, reddit, bluesky, googlebusiness, telegram, snapchat, all]
-        - name: action
-          in: query
-          description: Filter by action type
-          schema:
-            type: string
-            enum: [publish, retry, media_upload, rate_limit_pause, token_refresh, cancelled, all]
-        - name: days
-          in: query
-          description: Number of days to look back (max 7)
-          schema:
-            type: integer
-            minimum: 1
-            maximum: 7
-            default: 7
-        - name: limit
-          in: query
-          description: Maximum number of logs to return (max 100)
-          schema:
-            type: integer
-            minimum: 1
-            maximum: 100
-            default: 50
-        - name: skip
-          in: query
-          description: Number of logs to skip (for pagination)
-          schema:
-            type: integer
-            minimum: 0
-            default: 0
-        - name: search
-          in: query
-          description: Search through log entries by text content.
-          schema:
-            type: string
-      responses:
-        '200':
-          description: Publishing logs retrieved successfully
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  logs:
-                    type: array
-                    items:
-                      $ref: '#/components/schemas/PostLog'
-                  pagination:
-                    type: object
-                    properties:
-                      total:
-                        type: integer
-                        description: Total number of logs matching the query
-                      limit:
-                        type: integer
-                      skip:
-                        type: integer
-                      pages:
-                        type: integer
-                        description: Total number of pages
-                      hasMore:
-                        type: boolean
-              example:
-                logs:
-                  - _id: "675f1c0a9e2b5af0012ab34cd"
-                    postId:
-                      _id: "65f1c0a9e2b5af0012ab34cd"
-                      content: "Check out our new feature!"
-                      status: "published"
-                    userId: "64e1f0a9e2b5af0012ab34de"
-                    platform: "instagram"
-                    accountId: "64e1f0a9e2b5af0012ab34ef"
-                    accountUsername: "@acmecorp"
-                    action: "publish"
-                    status: "success"
-                    statusCode: 200
-                    endpoint: "graph.facebook.com/me/media_publish"
-                    request:
-                      contentPreview: "Check out our new feature!"
-                      mediaCount: 1
-                      mediaTypes: ["image"]
-                      mediaUrls: ["https://storage.zernio.com/abc123.jpg"]
-                    response:
-                      platformPostId: "17895695668004550"
-                      platformPostUrl: "https://www.instagram.com/p/ABC123/"
-                    durationMs: 2340
-                    attemptNumber: 1
-                    createdAt: "2024-11-01T10:00:05Z"
-                pagination:
-                  total: 150
-                  limit: 50
-                  skip: 0
-                  pages: 3
-                  hasMore: true
-        '401': { $ref: '#/components/responses/Unauthorized' }
-
-  /v1/connections/logs:
-    get:
-      operationId: listConnectionLogs
-      tags: [Logs]
-      summary: List connection logs
-      deprecated: true
-      description: |
-        **Deprecated.** Use `GET /v1/logs?type=connections` instead.
-        Retrieve connection event logs. Logs are retained for 90 days.
-      security:
-        - bearerAuth: []
-      parameters:
-        - name: platform
-          in: query
-          description: Filter by platform
-          schema:
-            type: string
-            enum: [tiktok, instagram, facebook, youtube, linkedin, twitter, threads, pinterest, reddit, bluesky, googlebusiness, telegram, snapchat, all]
-        - name: eventType
-          in: query
-          description: Filter by event type
-          schema:
-            type: string
-            enum: [connect_success, connect_failed, disconnect, reconnect_success, reconnect_failed, all]
-        - name: status
-          in: query
-          description: Filter by status (shorthand for event types)
-          schema:
-            type: string
-            enum: [success, failed, all]
-            description: success = connect_success + reconnect_success, failed = connect_failed + reconnect_failed
-        - name: days
-          in: query
-          description: Number of days to look back (max 7)
-          schema:
-            type: integer
-            minimum: 1
-            maximum: 7
-            default: 7
-        - name: limit
-          in: query
-          description: Maximum number of logs to return (max 100)
-          schema:
-            type: integer
-            minimum: 1
-            maximum: 100
-            default: 50
-        - name: skip
-          in: query
-          description: Number of logs to skip (for pagination)
-          schema:
-            type: integer
-            minimum: 0
-            default: 0
-      responses:
-        '200':
-          description: Connection logs retrieved successfully
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  logs:
-                    type: array
-                    items:
-                      $ref: '#/components/schemas/ConnectionLog'
-                  pagination:
-                    type: object
-                    properties:
-                      total:
-                        type: integer
-                        description: Total number of logs matching the query
-                      limit:
-                        type: integer
-                      skip:
-                        type: integer
-                      pages:
-                        type: integer
-                        description: Total number of pages
-                      hasMore:
-                        type: boolean
-              example:
-                logs:
-                  - _id: "675f1c0a9e2b5af0012ab34cd"
-                    userId: "64e1f0a9e2b5af0012ab34de"
-                    profileId: "64e1f0a9e2b5af0012ab34ef"
-                    accountId: "64e1f0a9e2b5af0012ab3500"
-                    platform: "instagram"
-                    eventType: "connect_success"
-                    connectionMethod: "oauth"
-                    success:
-                      displayName: "Acme Corp"
-                      username: "acmecorp"
-                      profilePicture: "https://..."
-                      permissions: ["instagram_basic", "instagram_content_publish"]
-                      tokenExpiresAt: "2024-12-01T10:00:00Z"
-                      accountType: "business"
-                    context:
-                      hasCustomRedirectUrl: false
-                    createdAt: "2024-11-01T10:00:00Z"
-                  - _id: "675f1c0a9e2b5af0012ab34ce"
-                    userId: "64e1f0a9e2b5af0012ab34de"
-                    profileId: "64e1f0a9e2b5af0012ab34ef"
-                    platform: "twitter"
-                    eventType: "connect_failed"
-                    connectionMethod: "oauth"
-                    error:
-                      code: "oauth_denied"
-                      message: "OAuth error: access_denied"
-                    context:
-                      hasCustomRedirectUrl: true
-                    createdAt: "2024-11-01T09:00:00Z"
-                pagination:
-                  total: 25
-                  limit: 50
-                  skip: 0
-                  pages: 1
-                  hasMore: false
-        '401': { $ref: '#/components/responses/Unauthorized' }
-
-  /v1/posts/{postId}/logs:
-    get:
-      operationId: getPostLogs
-      tags: [Logs]
-      summary: Get post logs
-      description: |
-        Retrieve all publishing logs for a specific post. Shows the complete history
-        of publishing attempts for that post across all platforms.
-      security:
-        - bearerAuth: []
-      parameters:
-        - name: postId
-          in: path
-          required: true
-          description: The post ID
-          schema:
-            type: string
-        - name: limit
-          in: query
-          description: Maximum number of logs to return (max 100)
-          schema:
-            type: integer
-            minimum: 1
-            maximum: 100
-            default: 50
-      responses:
-        '200':
-          description: Post logs retrieved successfully
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  logs:
-                    type: array
-                    items:
-                      $ref: '#/components/schemas/PostLog'
-                  count:
-                    type: integer
-                    description: Number of logs returned
-                  postId:
-                    type: string
-              example:
-                logs:
-                  - _id: "675f1c0a9e2b5af0012ab34cd"
-                    postId: "65f1c0a9e2b5af0012ab34cd"
-                    userId: "64e1f0a9e2b5af0012ab34de"
-                    platform: "instagram"
-                    accountUsername: "@acmecorp"
-                    action: "publish"
-                    status: "success"
-                    statusCode: 200
-                    durationMs: 2340
-                    createdAt: "2024-11-01T10:00:05Z"
-                  - _id: "675f1c0a9e2b5af0012ab34ce"
-                    postId: "65f1c0a9e2b5af0012ab34cd"
-                    userId: "64e1f0a9e2b5af0012ab34de"
-                    platform: "twitter"
-                    accountUsername: "@acme"
-                    action: "publish"
-                    status: "failed"
-                    statusCode: 429
-                    response:
-                      errorMessage: "Rate limit exceeded"
-                      errorCode: "RATE_LIMITED"
-                    durationMs: 150
-                    attemptNumber: 1
-                    createdAt: "2024-11-01T10:00:03Z"
-                count: 2
-                postId: "65f1c0a9e2b5af0012ab34cd"
-        '401': { $ref: '#/components/responses/Unauthorized' }
-        '403':
-          description: Forbidden - not authorized to view this post
-        '404': { $ref: '#/components/responses/NotFound' }
-
   # Unified Inbox Endpoints
   /v1/inbox/conversations:
     get:
@@ -12304,7 +11729,7 @@ paths:
         Fetch conversations (DMs) from all connected messaging accounts in a single API call. Supports filtering by profile and platform. Results are aggregated and deduplicated.
         Supported platforms: Facebook, Instagram, Twitter/X, Bluesky, Reddit, Telegram.
 
-        **Twitter/X limitation:** X has replaced traditional DMs with encrypted "X Chat" for many accounts. Messages sent or received through encrypted X Chat are not accessible via X's API (the `/2/dm_events` endpoint only returns legacy unencrypted DMs). This means some Twitter/X conversations may show only outgoing messages or appear empty. This is an X platform limitation that affects all third-party applications. See [X's docs on encrypted messaging](https://help.x.com/en/using-x/about-chat) for more details.
+        Twitter/X limitation: X has replaced traditional DMs with encrypted "X Chat" for many accounts. Messages sent or received through encrypted X Chat are not accessible via X's API (the /2/dm_events endpoint only returns legacy unencrypted DMs). This means some Twitter/X conversations may show only outgoing messages or appear empty. This is an X platform limitation that affects all third-party applications. See X's docs on encrypted messaging for more details.
       tags: [Messages]
       security: [{ bearerAuth: [] }]
       parameters:
@@ -12426,13 +11851,13 @@ paths:
       description: |
         Initiate a new direct message conversation with a specified user. If a conversation already exists with the recipient, the message is added to the existing thread.
 
-        **Currently supported platforms:** Twitter/X only. Other platforms will return `PLATFORM_NOT_SUPPORTED`.
+        Currently supported platforms: Twitter/X only. Other platforms will return PLATFORM_NOT_SUPPORTED.
 
-        **DM eligibility:** Before sending, the endpoint checks if the recipient accepts DMs from your account (via the `receives_your_dm` field). If not, a 422 error with code `DM_NOT_ALLOWED` is returned. You can skip this check with `skipDmCheck: true` if you have already verified eligibility.
+        DM eligibility: Before sending, the endpoint checks if the recipient accepts DMs from your account (via the receives_your_dm field). If not, a 422 error with code DM_NOT_ALLOWED is returned. You can skip this check with skipDmCheck: true if you have already verified eligibility.
 
-        **X API tier requirement:** DM write endpoints require X API Pro tier ($5,000/month) or Enterprise access. This applies to BYOK (Bring Your Own Key) users who provide their own X API credentials.
+        X API tier requirement: DM write endpoints require X API Pro tier ($5,000/month) or Enterprise access. This applies to BYOK (Bring Your Own Key) users who provide their own X API credentials.
 
-        **Rate limits:** 200 requests per 15 minutes, 1,000 per 24 hours per user, 15,000 per 24 hours per app (shared across all DM endpoints).
+        Rate limits: 200 requests per 15 minutes, 1,000 per 24 hours per user, 15,000 per 24 hours per app (shared across all DM endpoints).
       tags: [Messages]
       security: [{ bearerAuth: [] }]
       requestBody:
@@ -12448,17 +11873,17 @@ paths:
                   description: The social account ID to send from
                 participantId:
                   type: string
-                  description: Twitter numeric user ID of the recipient. Provide either this or `participantUsername`.
+                  description: Twitter numeric user ID of the recipient. Provide either this or participantUsername.
                 participantUsername:
                   type: string
-                  description: Twitter username (with or without @) of the recipient. Resolved to a user ID via lookup. Provide either this or `participantId`.
+                  description: Twitter username (with or without @) of the recipient. Resolved to a user ID via lookup. Provide either this or participantId.
                 message:
                   type: string
-                  description: Text content of the message. At least one of `message` or attachment is required.
+                  description: Text content of the message. At least one of message or attachment is required.
                 skipDmCheck:
                   type: boolean
                   default: false
-                  description: Skip the `receives_your_dm` eligibility check before sending. Use if you have already verified the recipient accepts DMs.
+                  description: Skip the receives_your_dm eligibility check before sending. Use if you have already verified the recipient accepts DMs.
           multipart/form-data:
             schema:
               type: object
@@ -12671,7 +12096,7 @@ paths:
       description: |
         Fetch messages for a specific conversation. Requires accountId query parameter.
 
-        **Twitter/X limitation:** X's encrypted "X Chat" messages are not accessible via the API. Conversations where the other participant uses encrypted X Chat may only show your outgoing messages. See the [list conversations endpoint](#/Messages/listInboxConversations) for more details.
+        Twitter/X limitation: X's encrypted "X Chat" messages are not accessible via the API. Conversations where the other participant uses encrypted X Chat may only show your outgoing messages. See the list conversations endpoint for more details.
       tags: [Messages]
       security: [{ bearerAuth: [] }]
       parameters:
@@ -12729,8 +12154,8 @@ paths:
                         # ─── Lifecycle state (edits, deletes, delivery) ──────────────
                         # Populated by webhook events from the platforms that support
                         # them. See the support matrix in the Webhooks description
-                        # above. Deleted messages retain their original `message` and
-                        # `attachments` — the Zernio dashboard hides this content, but
+                        # above. Deleted messages retain their original message and
+                        # attachments — the Zernio dashboard hides this content, but
                         # it is available here for moderation/compliance use cases.
                         isEdited:
                           type: boolean
@@ -12761,7 +12186,7 @@ paths:
                               editedAt: { type: string, format: date-time }
                         isDeleted:
                           type: boolean
-                          description: True if the sender has deleted (unsent) this message. The original `message` and `attachments` fields remain populated.
+                          description: True if the sender has deleted (unsent) this message. The original message and attachments fields remain populated.
                         deletedAt:
                           type: string
                           format: date-time
@@ -12787,7 +12212,7 @@ paths:
                         deliveryError:
                           type: object
                           nullable: true
-                          description: Populated when `deliveryStatus === "failed"`.
+                          description: Populated when deliveryStatus === "failed".
                           properties:
                             code: { type: integer }
                             title: { type: string }
@@ -13031,11 +12456,11 @@ paths:
       summary: Delete message
       description: |
         Delete a message from a conversation. Platform support varies:
-        - **Telegram**: Full delete (bot's own messages anytime, others if admin)
-        - **X/Twitter**: Full delete (own DM events only)
-        - **Bluesky**: Delete for self only (recipient still sees it)
-        - **Reddit**: Delete from sender's view only
-        - **Facebook, Instagram, WhatsApp**: Not supported (returns 400)
+        - Telegram: Full delete (bot's own messages anytime, others if admin)
+        - X/Twitter: Full delete (own DM events only)
+        - Bluesky: Delete for self only (recipient still sees it)
+        - Reddit: Delete from sender's view only
+        - Facebook, Instagram, WhatsApp: Not supported (returns 400)
       tags: [Messages]
       security: [{ bearerAuth: [] }]
       parameters:
@@ -13077,9 +12502,9 @@ paths:
       summary: Send typing indicator
       description: |
         Show a typing indicator in a conversation. Platform support:
-        - **Facebook Messenger**: Shows "Page is typing..." for 20 seconds
-        - **Telegram**: Shows "Bot is typing..." for 5 seconds
-        - **All others**: Returns 200 but no-op (platform doesn't support it)
+        - Facebook Messenger: Shows "Page is typing..." for 20 seconds
+        - Telegram: Shows "Bot is typing..." for 5 seconds
+        - All others: Returns 200 but no-op (platform doesn't support it)
 
         Typing indicators are best-effort. The endpoint always returns 200 even if the platform call fails.
       tags: [Messages]
@@ -13120,9 +12545,9 @@ paths:
       summary: Add reaction
       description: |
         Add an emoji reaction to a message. Platform support:
-        - **Telegram**: Supports a subset of Unicode emoji reactions
-        - **WhatsApp**: Supports any standard emoji (one reaction per message per sender)
-        - **All others**: Returns 400 (not supported)
+        - Telegram: Supports a subset of Unicode emoji reactions
+        - WhatsApp: Supports any standard emoji (one reaction per message per sender)
+        - All others: Returns 400 (not supported)
       tags: [Messages]
       security: [{ bearerAuth: [] }]
       parameters:
@@ -13167,9 +12592,9 @@ paths:
       summary: Remove reaction
       description: |
         Remove a reaction from a message. Platform support:
-        - **Telegram**: Send empty reaction array to clear
-        - **WhatsApp**: Send empty emoji to remove
-        - **All others**: Returns 400 (not supported)
+        - Telegram: Send empty reaction array to clear
+        - WhatsApp: Send empty emoji to remove
+        - All others: Returns 400 (not supported)
       tags: [Messages]
       security: [{ bearerAuth: [] }]
       parameters:
@@ -13211,12 +12636,12 @@ paths:
       summary: Upload media file
       description: |
         Upload a media file using API key authentication and get back a publicly accessible URL.
-        The URL can be used as `attachmentUrl` when sending inbox messages.
+        The URL can be used as attachmentUrl when sending inbox messages.
 
         Files are stored in temporary storage and auto-delete after 7 days.
         Maximum file size is 25MB.
 
-        Unlike `/v1/media/upload` (which uses upload tokens for end-user flows),
+        Unlike /v1/media/upload (which uses upload tokens for end-user flows),
         this endpoint uses standard Bearer token authentication for programmatic use.
       tags: [Messages]
       security: [{ bearerAuth: [] }]
@@ -14412,850 +13837,8 @@ paths:
           description: Inbox addon required
   # ──────────────────────────────────────────────────────────────────────────
   # WHATSAPP-SPECIFIC ENDPOINTS
-  # Contacts, broadcasts, groups: DEPRECATED (use cross-platform endpoints)
-  # Templates, business profile, phone numbers: ACTIVE (no equivalent)
+  # Templates, business profile, phone numbers: ACTIVE (no cross-platform equivalent)
   # ──────────────────────────────────────────────────────────────────────────
-
-  # ── BULK SEND ──────────────────────────────────────────────────────────
-
-  /v1/whatsapp/bulk:
-    post:
-      operationId: sendWhatsAppBulk
-      deprecated: true
-      tags: [WhatsApp]
-      summary: Bulk send template messages
-      description: |
-        **Deprecated.** Use `POST /v1/broadcasts` to create a broadcast, `POST /v1/broadcasts/{id}/recipients` to add recipients, then `POST /v1/broadcasts/{id}/send` to send.
-        Send a template message to multiple recipients in a single request. Maximum 100 recipients per request.
-        Only template messages are supported for bulk sending (not free-form text).
-
-        Each recipient can have optional per-recipient template variables for personalization.
-        Returns detailed results for each recipient.
-      security:
-        - bearerAuth: []
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              required:
-                - accountId
-                - recipients
-                - template
-              properties:
-                accountId:
-                  type: string
-                  description: WhatsApp social account ID
-                recipients:
-                  type: array
-                  maxItems: 100
-                  description: List of recipients (max 100)
-                  items:
-                    type: object
-                    required:
-                      - phone
-                    properties:
-                      phone:
-                        type: string
-                        description: Recipient phone number in E.164 format
-                      variables:
-                        type: object
-                        additionalProperties: { type: string }
-                        description: Per-recipient template variables keyed by index (e.g., "1", "2")
-                template:
-                  type: object
-                  required:
-                    - name
-                    - language
-                  properties:
-                    name:
-                      type: string
-                      description: Template name
-                    language:
-                      type: string
-                      description: Template language code
-                    components:
-                      type: array
-                      description: Base template components
-                      items:
-                        type: object
-            example:
-              accountId: "507f1f77bcf86cd799439011"
-              recipients:
-                - phone: "+1234567890"
-                  variables: { "1": "John" }
-                - phone: "+0987654321"
-                  variables: { "1": "Jane" }
-              template:
-                name: "welcome_message"
-                language: "en_US"
-      responses:
-        '200':
-          description: Bulk send completed
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  success: { type: boolean }
-                  summary:
-                    type: object
-                    properties:
-                      total: { type: integer }
-                      sent: { type: integer }
-                      failed: { type: integer }
-                  results:
-                    type: array
-                    items:
-                      type: object
-                      properties:
-                        phone: { type: string }
-                        success: { type: boolean }
-                        messageId: { type: string }
-                        error: { type: string }
-        '400': { description: Validation error (missing fields, too many recipients, etc.) }
-        '401': { $ref: '#/components/responses/Unauthorized' }
-        '404': { description: WhatsApp account not found }
-
-  # ──────────────────────────────────────────────────────────────────────────
-  # CONTACTS
-  # ──────────────────────────────────────────────────────────────────────────
-
-  /v1/whatsapp/contacts:
-    get:
-      operationId: getWhatsAppContacts
-      deprecated: true
-      tags: [WhatsApp]
-      summary: List contacts
-      description: |
-        **Deprecated.** Use `GET /v1/contacts?profileId={profileId}` instead.
-        List WhatsApp contacts for an account. Supports filtering by tags, groups, opt-in status,
-        and text search. Returns contacts sorted by name with available filter options.
-      security:
-        - bearerAuth: []
-      parameters:
-        - name: accountId
-          in: query
-          required: true
-          description: WhatsApp social account ID
-          schema:
-            type: string
-        - name: search
-          in: query
-          required: false
-          description: Search contacts by name, phone, email, or company
-          schema:
-            type: string
-        - name: tag
-          in: query
-          required: false
-          description: Filter by tag
-          schema:
-            type: string
-        - name: group
-          in: query
-          required: false
-          description: Filter by group
-          schema:
-            type: string
-        - name: optedIn
-          in: query
-          required: false
-          description: Filter by opt-in status
-          schema:
-            type: string
-            enum: ["true", "false"]
-        - name: limit
-          in: query
-          required: false
-          description: Maximum results (default 50)
-          schema:
-            type: integer
-            default: 50
-        - name: skip
-          in: query
-          required: false
-          description: Offset for pagination
-          schema:
-            type: integer
-            default: 0
-      responses:
-        '200':
-          description: Contacts retrieved successfully
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  success: { type: boolean }
-                  contacts:
-                    type: array
-                    items:
-                      type: object
-                      properties:
-                        id: { type: string }
-                        phone: { type: string }
-                        waId: { type: string }
-                        name: { type: string }
-                        email: { type: string }
-                        company: { type: string }
-                        tags:
-                          type: array
-                          items: { type: string }
-                        groups:
-                          type: array
-                          items: { type: string }
-                        isOptedIn: { type: boolean }
-                        lastMessageSentAt: { type: string, format: date-time }
-                        lastMessageReceivedAt: { type: string, format: date-time }
-                        messagesSentCount: { type: integer }
-                        messagesReceivedCount: { type: integer }
-                        customFields: { type: object }
-                        notes: { type: string }
-                        createdAt: { type: string, format: date-time }
-                  filters:
-                    type: object
-                    properties:
-                      tags:
-                        type: array
-                        items: { type: string }
-                      groups:
-                        type: array
-                        items: { type: string }
-                  pagination:
-                    type: object
-                    properties:
-                      total: { type: integer }
-                      limit: { type: integer }
-                      skip: { type: integer }
-                      hasMore: { type: boolean }
-        '400': { description: accountId is required }
-        '401': { $ref: '#/components/responses/Unauthorized' }
-        '404': { description: WhatsApp account not found }
-    post:
-      operationId: createWhatsAppContact
-      deprecated: true
-      tags: [WhatsApp]
-      summary: Create contact
-      description: |
-        **Deprecated.** Use `POST /v1/contacts` instead.
-        Create a new WhatsApp contact. Phone number must be unique per account
-        and in E.164 format (e.g., +1234567890).
-      security:
-        - bearerAuth: []
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              required:
-                - accountId
-                - phone
-                - name
-              properties:
-                accountId:
-                  type: string
-                  description: WhatsApp social account ID
-                phone:
-                  type: string
-                  description: Phone number in E.164 format
-                name:
-                  type: string
-                  description: Contact name
-                email:
-                  type: string
-                  description: Contact email
-                company:
-                  type: string
-                  description: Company name
-                tags:
-                  type: array
-                  items: { type: string }
-                  description: Tags for categorization
-                groups:
-                  type: array
-                  items: { type: string }
-                  description: Groups the contact belongs to
-                isOptedIn:
-                  type: boolean
-                  default: true
-                  description: Whether the contact has opted in to receive messages
-                customFields:
-                  type: object
-                  additionalProperties: { type: string }
-                  description: Custom key-value fields
-                notes:
-                  type: string
-                  description: Notes about the contact
-            example:
-              accountId: "507f1f77bcf86cd799439011"
-              phone: "+1234567890"
-              name: "John Doe"
-              email: "john@example.com"
-              tags: ["vip", "newsletter"]
-              groups: ["customers"]
-      responses:
-        '200':
-          description: Contact created successfully
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  success: { type: boolean }
-                  contact:
-                    type: object
-                    properties:
-                      id: { type: string }
-                      phone: { type: string }
-                      name: { type: string }
-                      email: { type: string }
-                      company: { type: string }
-                      tags:
-                        type: array
-                        items: { type: string }
-                      groups:
-                        type: array
-                        items: { type: string }
-                      isOptedIn: { type: boolean }
-                      createdAt: { type: string, format: date-time }
-        '400': { description: Validation error (missing fields, invalid phone number) }
-        '401': { $ref: '#/components/responses/Unauthorized' }
-        '404': { description: WhatsApp account not found }
-        '409': { description: Contact with this phone number already exists }
-
-  /v1/whatsapp/contacts/{contactId}:
-    get:
-      operationId: getWhatsAppContact
-      deprecated: true
-      tags: [WhatsApp]
-      summary: Get contact
-      description: |
-        **Deprecated.** Use `GET /v1/contacts/{id}` instead.
-        Retrieve a single WhatsApp contact by ID with full details.
-      security:
-        - bearerAuth: []
-      parameters:
-        - name: contactId
-          in: path
-          required: true
-          description: Contact ID
-          schema:
-            type: string
-      responses:
-        '200':
-          description: Contact retrieved successfully
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  success: { type: boolean }
-                  contact:
-                    type: object
-                    properties:
-                      id: { type: string }
-                      phone: { type: string }
-                      waId: { type: string }
-                      name: { type: string }
-                      email: { type: string }
-                      company: { type: string }
-                      tags:
-                        type: array
-                        items: { type: string }
-                      groups:
-                        type: array
-                        items: { type: string }
-                      isOptedIn: { type: boolean }
-                      optInDate: { type: string, format: date-time }
-                      optOutDate: { type: string, format: date-time }
-                      isBlocked: { type: boolean }
-                      lastMessageSentAt: { type: string, format: date-time }
-                      lastMessageReceivedAt: { type: string, format: date-time }
-                      messagesSentCount: { type: integer }
-                      messagesReceivedCount: { type: integer }
-                      customFields: { type: object }
-                      notes: { type: string }
-                      createdAt: { type: string, format: date-time }
-                      updatedAt: { type: string, format: date-time }
-        '401': { $ref: '#/components/responses/Unauthorized' }
-        '404': { $ref: '#/components/responses/NotFound' }
-    put:
-      operationId: updateWhatsAppContact
-      deprecated: true
-      tags: [WhatsApp]
-      summary: Update contact
-      description: |
-        **Deprecated.** Use `PATCH /v1/contacts/{id}` instead.
-        Update an existing WhatsApp contact. All fields are optional; only provided fields will be updated.
-        Custom fields are merged with existing values. Set a custom field to null to remove it.
-      security:
-        - bearerAuth: []
-      parameters:
-        - name: contactId
-          in: path
-          required: true
-          description: Contact ID
-          schema:
-            type: string
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              properties:
-                name:
-                  type: string
-                  description: Contact name
-                email:
-                  type: string
-                  description: Contact email
-                company:
-                  type: string
-                  description: Company name
-                tags:
-                  type: array
-                  items: { type: string }
-                  description: Tags (replaces existing)
-                groups:
-                  type: array
-                  items: { type: string }
-                  description: Groups (replaces existing)
-                isOptedIn:
-                  type: boolean
-                  description: Opt-in status (changes are timestamped)
-                isBlocked:
-                  type: boolean
-                  description: Block status
-                customFields:
-                  type: object
-                  additionalProperties: { type: string, nullable: true }
-                  description: Custom fields to merge (set value to null to remove a field)
-                notes:
-                  type: string
-                  description: Notes about the contact
-            example:
-              name: "John Doe Updated"
-              tags: ["vip", "premium"]
-              customFields: { "plan": "enterprise", "remove_me": null }
-      responses:
-        '200':
-          description: Contact updated successfully
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  success: { type: boolean }
-                  contact:
-                    type: object
-                    properties:
-                      id: { type: string }
-                      phone: { type: string }
-                      name: { type: string }
-                      email: { type: string }
-                      company: { type: string }
-                      tags:
-                        type: array
-                        items: { type: string }
-                      groups:
-                        type: array
-                        items: { type: string }
-                      isOptedIn: { type: boolean }
-                      isBlocked: { type: boolean }
-                      customFields: { type: object }
-                      notes: { type: string }
-                      updatedAt: { type: string, format: date-time }
-        '401': { $ref: '#/components/responses/Unauthorized' }
-        '404': { $ref: '#/components/responses/NotFound' }
-    delete:
-      operationId: deleteWhatsAppContact
-      deprecated: true
-      tags: [WhatsApp]
-      summary: Delete contact
-      description: |
-        **Deprecated.** Use `DELETE /v1/contacts/{id}` instead.
-        Permanently delete a WhatsApp contact.
-      security:
-        - bearerAuth: []
-      parameters:
-        - name: contactId
-          in: path
-          required: true
-          description: Contact ID
-          schema:
-            type: string
-      responses:
-        '200':
-          description: Contact deleted successfully
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  success: { type: boolean }
-                  message: { type: string }
-              example:
-                success: true
-                message: "Contact deleted successfully"
-        '401': { $ref: '#/components/responses/Unauthorized' }
-        '404': { $ref: '#/components/responses/NotFound' }
-
-  /v1/whatsapp/contacts/import:
-    post:
-      operationId: importWhatsAppContacts
-      deprecated: true
-      tags: [WhatsApp]
-      summary: Bulk import contacts
-      description: |
-        **Deprecated.** Use `POST /v1/contacts/bulk` instead.
-        Import up to 1000 contacts at once. Each contact requires a phone number and name.
-        Duplicates are skipped by default. Supports default tags and groups applied to all imported contacts.
-      security:
-        - bearerAuth: []
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              required:
-                - accountId
-                - contacts
-              properties:
-                accountId:
-                  type: string
-                  description: WhatsApp social account ID
-                contacts:
-                  type: array
-                  maxItems: 1000
-                  description: Contacts to import (max 1000)
-                  items:
-                    type: object
-                    required:
-                      - phone
-                      - name
-                    properties:
-                      phone:
-                        type: string
-                        description: Phone number in E.164 format
-                      name:
-                        type: string
-                        description: Contact name
-                      email:
-                        type: string
-                      company:
-                        type: string
-                      tags:
-                        type: array
-                        items: { type: string }
-                      groups:
-                        type: array
-                        items: { type: string }
-                      customFields:
-                        type: object
-                        additionalProperties: { type: string }
-                      notes:
-                        type: string
-                defaultTags:
-                  type: array
-                  items: { type: string }
-                  description: Tags applied to all imported contacts
-                defaultGroups:
-                  type: array
-                  items: { type: string }
-                  description: Groups applied to all imported contacts
-                skipDuplicates:
-                  type: boolean
-                  default: true
-                  description: Skip contacts with existing phone numbers
-            example:
-              accountId: "507f1f77bcf86cd799439011"
-              contacts:
-                - phone: "+1234567890"
-                  name: "John Doe"
-                  email: "john@example.com"
-                - phone: "+0987654321"
-                  name: "Jane Smith"
-              defaultTags: ["imported"]
-              defaultGroups: ["new-leads"]
-      responses:
-        '200':
-          description: Import completed
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  success: { type: boolean }
-                  summary:
-                    type: object
-                    properties:
-                      total: { type: integer }
-                      created: { type: integer }
-                      skipped: { type: integer }
-                      failed: { type: integer }
-                  results:
-                    type: array
-                    items:
-                      type: object
-                      properties:
-                        phone: { type: string }
-                        name: { type: string }
-                        success: { type: boolean }
-                        contactId: { type: string }
-                        error: { type: string }
-        '400': { description: Validation error (missing fields, too many contacts) }
-        '401': { $ref: '#/components/responses/Unauthorized' }
-        '404': { description: WhatsApp account not found }
-
-  /v1/whatsapp/contacts/bulk:
-    post:
-      operationId: bulkUpdateWhatsAppContacts
-      deprecated: true
-      tags: [WhatsApp]
-      summary: Bulk update contacts
-      description: |
-        **Deprecated.** Use `PATCH /v1/contacts/{id}` for individual updates instead.
-        Perform bulk operations on multiple contacts (max 500 per request). Supported actions:
-        addTags, removeTags, addGroups, removeGroups, optIn, optOut, block, unblock.
-      security:
-        - bearerAuth: []
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              required:
-                - action
-                - contactIds
-              properties:
-                action:
-                  type: string
-                  enum: [addTags, removeTags, addGroups, removeGroups, optIn, optOut, block, unblock]
-                  description: Bulk action to perform
-                contactIds:
-                  type: array
-                  maxItems: 500
-                  items: { type: string }
-                  description: Contact IDs to update (max 500)
-                tags:
-                  type: array
-                  items: { type: string }
-                  description: Tags to add or remove (required for addTags/removeTags)
-                groups:
-                  type: array
-                  items: { type: string }
-                  description: Groups to add or remove (required for addGroups/removeGroups)
-            examples:
-              addTags:
-                summary: Add tags to contacts
-                value:
-                  action: "addTags"
-                  contactIds: ["507f1f77bcf86cd799439011", "507f1f77bcf86cd799439012"]
-                  tags: ["vip", "priority"]
-              optOut:
-                summary: Opt out contacts
-                value:
-                  action: "optOut"
-                  contactIds: ["507f1f77bcf86cd799439011"]
-      responses:
-        '200':
-          description: Bulk update completed
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  success: { type: boolean }
-                  action: { type: string }
-                  modified: { type: integer, description: Number of contacts modified }
-                  matched: { type: integer, description: Number of contacts matched }
-        '400': { description: Validation error (invalid action, missing required fields) }
-        '401': { $ref: '#/components/responses/Unauthorized' }
-    delete:
-      operationId: bulkDeleteWhatsAppContacts
-      deprecated: true
-      tags: [WhatsApp]
-      summary: Bulk delete contacts
-      description: |
-        **Deprecated.** Use `DELETE /v1/contacts/{id}` for individual deletes instead.
-        Permanently delete multiple contacts at once (max 500 per request).
-      security:
-        - bearerAuth: []
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              required:
-                - contactIds
-              properties:
-                contactIds:
-                  type: array
-                  maxItems: 500
-                  items: { type: string }
-                  description: Contact IDs to delete (max 500)
-            example:
-              contactIds: ["507f1f77bcf86cd799439011", "507f1f77bcf86cd799439012"]
-      responses:
-        '200':
-          description: Bulk delete completed
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  success: { type: boolean }
-                  deleted: { type: integer, description: Number of contacts deleted }
-        '400': { description: contactIds array is required }
-        '401': { $ref: '#/components/responses/Unauthorized' }
-
-  # ──────────────────────────────────────────────────────────────────────────
-  # GROUPS
-  # ──────────────────────────────────────────────────────────────────────────
-
-  /v1/whatsapp/groups:
-    get:
-      operationId: getWhatsAppGroups
-      deprecated: true
-      tags: [WhatsApp]
-      summary: List contact groups
-      description: |
-        **Deprecated.** Use contact tags via `GET /v1/contacts` for grouping instead. WhatsApp groups have no cross-platform equivalent.
-        List all contact groups for a WhatsApp account with contact counts.
-        Groups are derived from the groups field on contacts, not stored as separate documents.
-      security:
-        - bearerAuth: []
-      parameters:
-        - name: accountId
-          in: query
-          required: true
-          description: WhatsApp social account ID
-          schema:
-            type: string
-      responses:
-        '200':
-          description: Groups retrieved successfully
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  success: { type: boolean }
-                  groups:
-                    type: array
-                    items:
-                      type: object
-                      properties:
-                        name: { type: string }
-                        totalCount: { type: integer, description: Total contacts in this group }
-                        optedInCount: { type: integer, description: Opted-in contacts in this group }
-                  summary:
-                    type: object
-                    properties:
-                      totalContacts: { type: integer }
-                      optedInContacts: { type: integer }
-                      groupCount: { type: integer }
-        '400': { description: accountId is required }
-        '401': { $ref: '#/components/responses/Unauthorized' }
-        '404': { description: WhatsApp account not found }
-    post:
-      operationId: renameWhatsAppGroup
-      deprecated: true
-      tags: [WhatsApp]
-      summary: Rename group
-      description: |
-        **Deprecated.** Use contact tags via `PATCH /v1/contacts/{id}` instead.
-        Rename a contact group. This updates the group name on all contacts that belong to the group.
-      security:
-        - bearerAuth: []
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              required:
-                - accountId
-                - oldName
-                - newName
-              properties:
-                accountId:
-                  type: string
-                  description: WhatsApp social account ID
-                oldName:
-                  type: string
-                  description: Current group name
-                newName:
-                  type: string
-                  description: New group name
-            example:
-              accountId: "507f1f77bcf86cd799439011"
-              oldName: "customers"
-              newName: "active-customers"
-      responses:
-        '200':
-          description: Group renamed successfully
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  success: { type: boolean }
-                  message: { type: string }
-                  modified: { type: integer, description: Number of contacts updated }
-        '400': { description: Validation error (missing fields, same name) }
-        '401': { $ref: '#/components/responses/Unauthorized' }
-        '404': { description: WhatsApp account not found }
-    delete:
-      operationId: deleteWhatsAppGroup
-      deprecated: true
-      tags: [WhatsApp]
-      summary: Delete group
-      description: |
-        **Deprecated.** Use contact tags via `PATCH /v1/contacts/{id}` instead.
-        Delete a contact group. This removes the group from all contacts but does not delete the contacts themselves.
-      security:
-        - bearerAuth: []
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              required:
-                - accountId
-                - groupName
-              properties:
-                accountId:
-                  type: string
-                  description: WhatsApp social account ID
-                groupName:
-                  type: string
-                  description: Group name to delete
-            example:
-              accountId: "507f1f77bcf86cd799439011"
-              groupName: "old-leads"
-      responses:
-        '200':
-          description: Group deleted successfully
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  success: { type: boolean }
-                  message: { type: string }
-                  modified: { type: integer, description: Number of contacts updated }
-        '400': { description: Validation error (missing fields) }
-        '401': { $ref: '#/components/responses/Unauthorized' }
-        '404': { description: WhatsApp account not found }
 
   # ──────────────────────────────────────────────────────────────────────────
   # TEMPLATES
@@ -15311,11 +13894,11 @@ paths:
       description: |
         Create a new message template. Supports two modes:
 
-        **Custom template:** Provide `components` with your own content. Submitted to Meta for review (can take up to 24h).
+        Custom template: Provide components with your own content. Submitted to Meta for review (can take up to 24h).
 
-        **Library template:** Provide `library_template_name` instead of `components` to use a pre-built template
-        from Meta's template library. Library templates are **pre-approved** (no review wait). You can optionally
-        customize parameters and buttons via `library_template_body_inputs` and `library_template_button_inputs`.
+        Library template: Provide library_template_name instead of components to use a pre-built template
+        from Meta's template library. Library templates are pre-approved (no review wait). You can optionally
+        customize parameters and buttons via library_template_body_inputs and library_template_button_inputs.
 
         Browse available library templates at: https://business.facebook.com/wa/manage/message-templates/
       security:
@@ -15357,7 +13940,7 @@ paths:
                   description: |
                     Name of a pre-built template from Meta's template library (e.g., "appointment_reminder",
                     "auto_pay_reminder_1", "address_update"). When provided, the template is pre-approved
-                    by Meta with no review wait. Omit `components` when using this field.
+                    by Meta with no review wait. Omit components when using this field.
                 library_template_body_inputs:
                   type: object
                   description: |
@@ -15586,604 +14169,6 @@ paths:
         '404': { $ref: '#/components/responses/NotFound' }
 
   # ──────────────────────────────────────────────────────────────────────────
-  # BROADCASTS
-  # ──────────────────────────────────────────────────────────────────────────
-
-  /v1/whatsapp/broadcasts:
-    get:
-      operationId: getWhatsAppBroadcasts
-      deprecated: true
-      tags: [WhatsApp]
-      summary: List broadcasts
-      description: |
-        **Deprecated.** Use `GET /v1/broadcasts?profileId={profileId}` instead.
-        List all WhatsApp broadcasts for an account. Returns broadcasts sorted by creation date
-        (newest first) without the full recipients list for performance.
-      security:
-        - bearerAuth: []
-      parameters:
-        - name: accountId
-          in: query
-          required: true
-          description: WhatsApp social account ID
-          schema:
-            type: string
-        - name: status
-          in: query
-          required: false
-          description: Filter by broadcast status
-          schema:
-            type: string
-            enum: [draft, scheduled, sending, completed, failed, cancelled]
-        - name: limit
-          in: query
-          required: false
-          description: Maximum results (default 50)
-          schema:
-            type: integer
-            default: 50
-        - name: skip
-          in: query
-          required: false
-          description: Offset for pagination
-          schema:
-            type: integer
-            default: 0
-      responses:
-        '200':
-          description: Broadcasts retrieved successfully
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  success: { type: boolean }
-                  broadcasts:
-                    type: array
-                    items:
-                      type: object
-                      properties:
-                        id: { type: string }
-                        name: { type: string }
-                        description: { type: string }
-                        template:
-                          type: object
-                          properties:
-                            name: { type: string }
-                            language: { type: string }
-                        status: { type: string, enum: [draft, scheduled, sending, completed, failed, cancelled] }
-                        messagePreview: { type: string, description: Template name or message text snippet }
-                        recipientCount: { type: integer }
-                        scheduledAt: { type: string, format: date-time }
-                        startedAt: { type: string, format: date-time }
-                        completedAt: { type: string, format: date-time }
-                        sentCount: { type: integer }
-                        deliveredCount: { type: integer }
-                        readCount: { type: integer }
-                        failedCount: { type: integer }
-                        createdAt: { type: string, format: date-time }
-                  pagination:
-                    type: object
-                    properties:
-                      total: { type: integer }
-                      limit: { type: integer }
-                      skip: { type: integer }
-                      hasMore: { type: boolean }
-        '400': { description: accountId is required }
-        '401': { $ref: '#/components/responses/Unauthorized' }
-        '404': { description: WhatsApp account not found }
-    post:
-      operationId: createWhatsAppBroadcast
-      deprecated: true
-      tags: [WhatsApp]
-      summary: Create broadcast
-      description: |
-        **Deprecated.** Use `POST /v1/broadcasts` instead.
-        Create a new draft broadcast. Optionally include initial recipients.
-        After creation, add recipients and then send or schedule the broadcast.
-      security:
-        - bearerAuth: []
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              required:
-                - accountId
-                - name
-                - template
-              properties:
-                accountId:
-                  type: string
-                  description: WhatsApp social account ID
-                name:
-                  type: string
-                  description: Broadcast name
-                description:
-                  type: string
-                  description: Broadcast description
-                template:
-                  type: object
-                  required:
-                    - name
-                    - language
-                  properties:
-                    name:
-                      type: string
-                      description: Template name
-                    language:
-                      type: string
-                      description: Template language code
-                    components:
-                      type: array
-                      description: Base template components
-                      items:
-                        type: object
-                recipients:
-                  type: array
-                  description: Initial recipients (optional)
-                  items:
-                    type: object
-                    required:
-                      - phone
-                    properties:
-                      phone:
-                        type: string
-                        description: Phone number in E.164 format
-                      name:
-                        type: string
-                      variables:
-                        type: object
-                        additionalProperties: { type: string }
-                        description: Per-recipient template variables
-            example:
-              accountId: "507f1f77bcf86cd799439011"
-              name: "Weekly Newsletter"
-              description: "Weekly product updates"
-              template:
-                name: "weekly_update"
-                language: "en_US"
-              recipients:
-                - phone: "+1234567890"
-                  name: "John"
-                  variables: { "1": "John" }
-      responses:
-        '200':
-          description: Broadcast created as draft
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  success: { type: boolean }
-                  broadcast:
-                    type: object
-                    properties:
-                      id: { type: string }
-                      name: { type: string }
-                      description: { type: string }
-                      template: { type: object }
-                      status: { type: string, description: Always "draft" for new broadcasts }
-                      recipientCount: { type: integer }
-                      createdAt: { type: string, format: date-time }
-        '400': { description: Validation error (missing name, template, etc.) }
-        '401': { $ref: '#/components/responses/Unauthorized' }
-        '404': { description: WhatsApp account not found }
-
-  /v1/whatsapp/broadcasts/{broadcastId}:
-    get:
-      operationId: getWhatsAppBroadcast
-      deprecated: true
-      tags: [WhatsApp]
-      summary: Get broadcast
-      description: |
-        **Deprecated.** Use `GET /v1/broadcasts/{id}` instead.
-        Retrieve detailed information about a single broadcast including delivery statistics.
-      security:
-        - bearerAuth: []
-      parameters:
-        - name: broadcastId
-          in: path
-          required: true
-          description: Broadcast ID
-          schema:
-            type: string
-      responses:
-        '200':
-          description: Broadcast retrieved successfully
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  success: { type: boolean }
-                  broadcast:
-                    type: object
-                    properties:
-                      id: { type: string }
-                      name: { type: string }
-                      description: { type: string }
-                      template: { type: object }
-                      status: { type: string, enum: [draft, scheduled, sending, completed, failed, cancelled] }
-                      recipientCount: { type: integer }
-                      scheduledAt: { type: string, format: date-time }
-                      startedAt: { type: string, format: date-time }
-                      completedAt: { type: string, format: date-time }
-                      sentCount: { type: integer }
-                      deliveredCount: { type: integer }
-                      readCount: { type: integer }
-                      failedCount: { type: integer }
-                      createdAt: { type: string, format: date-time }
-                      updatedAt: { type: string, format: date-time }
-        '401': { $ref: '#/components/responses/Unauthorized' }
-        '404': { $ref: '#/components/responses/NotFound' }
-    delete:
-      operationId: deleteWhatsAppBroadcast
-      deprecated: true
-      tags: [WhatsApp]
-      summary: Delete broadcast
-      description: |
-        **Deprecated.** Use `DELETE /v1/broadcasts/{id}` instead.
-        Delete a broadcast. Only draft or cancelled broadcasts can be deleted.
-      security:
-        - bearerAuth: []
-      parameters:
-        - name: broadcastId
-          in: path
-          required: true
-          description: Broadcast ID
-          schema:
-            type: string
-      responses:
-        '200':
-          description: Broadcast deleted successfully
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  success: { type: boolean }
-                  message: { type: string }
-              example:
-                success: true
-                message: "Broadcast deleted successfully"
-        '400': { description: Can only delete draft or cancelled broadcasts }
-        '401': { $ref: '#/components/responses/Unauthorized' }
-        '404': { $ref: '#/components/responses/NotFound' }
-
-  /v1/whatsapp/broadcasts/{broadcastId}/send:
-    post:
-      operationId: sendWhatsAppBroadcast
-      deprecated: true
-      tags: [WhatsApp]
-      summary: Send broadcast
-      description: |
-        **Deprecated.** Use `POST /v1/broadcasts/{id}/send` instead.
-        Start sending a broadcast immediately. The broadcast must be in draft or scheduled status
-        and have at least one recipient. Messages are sent sequentially with rate limiting.
-      security:
-        - bearerAuth: []
-      parameters:
-        - name: broadcastId
-          in: path
-          required: true
-          description: Broadcast ID
-          schema:
-            type: string
-      responses:
-        '200':
-          description: Broadcast send completed
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  success: { type: boolean }
-                  status: { type: string, enum: [completed, failed], description: Final broadcast status }
-                  sent: { type: integer, description: Number of messages sent successfully }
-                  failed: { type: integer, description: Number of messages that failed }
-                  total: { type: integer, description: Total recipient count }
-              example:
-                success: true
-                status: "completed"
-                sent: 95
-                failed: 5
-                total: 100
-        '400': { description: Invalid broadcast status or no recipients }
-        '401': { $ref: '#/components/responses/Unauthorized' }
-        '404': { $ref: '#/components/responses/NotFound' }
-
-  /v1/whatsapp/broadcasts/{broadcastId}/schedule:
-    post:
-      operationId: scheduleWhatsAppBroadcast
-      deprecated: true
-      tags: [WhatsApp]
-      summary: Schedule broadcast
-      description: |
-        **Deprecated.** Use `POST /v1/broadcasts/{id}/schedule` instead.
-        Schedule a draft broadcast for future sending. The scheduled time must be in the future
-        and no more than 30 days in advance. The broadcast must be in draft status and have recipients.
-      security:
-        - bearerAuth: []
-      parameters:
-        - name: broadcastId
-          in: path
-          required: true
-          description: Broadcast ID
-          schema:
-            type: string
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              required:
-                - scheduledAt
-              properties:
-                scheduledAt:
-                  type: string
-                  format: date-time
-                  description: ISO 8601 date-time for sending (must be in the future, max 30 days)
-            example:
-              scheduledAt: "2026-03-15T10:00:00Z"
-      responses:
-        '200':
-          description: Broadcast scheduled successfully
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  success: { type: boolean }
-                  broadcast:
-                    type: object
-                    properties:
-                      id: { type: string }
-                      status: { type: string, description: "\"scheduled\"" }
-                      scheduledAt: { type: string, format: date-time }
-        '400': { description: Invalid schedule time or broadcast not in draft status }
-        '401': { $ref: '#/components/responses/Unauthorized' }
-        '404': { $ref: '#/components/responses/NotFound' }
-    delete:
-      operationId: cancelWhatsAppBroadcastSchedule
-      deprecated: true
-      tags: [WhatsApp]
-      summary: Cancel scheduled broadcast
-      description: |
-        **Deprecated.** Use `POST /v1/broadcasts/{id}/cancel` instead.
-        Cancel a scheduled broadcast and return it to draft status. Only broadcasts in
-        scheduled status can be cancelled.
-      security:
-        - bearerAuth: []
-      parameters:
-        - name: broadcastId
-          in: path
-          required: true
-          description: Broadcast ID
-          schema:
-            type: string
-      responses:
-        '200':
-          description: Schedule cancelled, broadcast returned to draft
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  success: { type: boolean }
-                  broadcast:
-                    type: object
-                    properties:
-                      id: { type: string }
-                      status: { type: string, description: "\"draft\"" }
-                  message: { type: string }
-              example:
-                success: true
-                broadcast:
-                  id: "507f1f77bcf86cd799439011"
-                  status: "draft"
-                message: "Broadcast returned to draft status"
-        '400': { description: Broadcast is not scheduled }
-        '401': { $ref: '#/components/responses/Unauthorized' }
-        '404': { $ref: '#/components/responses/NotFound' }
-
-  /v1/whatsapp/broadcasts/{broadcastId}/recipients:
-    get:
-      operationId: getWhatsAppBroadcastRecipients
-      deprecated: true
-      tags: [WhatsApp]
-      summary: List recipients
-      description: |
-        **Deprecated.** Use `GET /v1/broadcasts/{id}/recipients` instead.
-        List recipients of a broadcast with their delivery status. Supports filtering
-        by delivery status and pagination.
-      security:
-        - bearerAuth: []
-      parameters:
-        - name: broadcastId
-          in: path
-          required: true
-          description: Broadcast ID
-          schema:
-            type: string
-        - name: status
-          in: query
-          required: false
-          description: Filter by recipient delivery status
-          schema:
-            type: string
-            enum: [pending, sent, delivered, read, failed]
-        - name: limit
-          in: query
-          required: false
-          description: Maximum results (default 100)
-          schema:
-            type: integer
-            default: 100
-        - name: skip
-          in: query
-          required: false
-          description: Offset for pagination
-          schema:
-            type: integer
-            default: 0
-      responses:
-        '200':
-          description: Recipients retrieved successfully
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  success: { type: boolean }
-                  recipients:
-                    type: array
-                    items:
-                      type: object
-                      properties:
-                        phone: { type: string }
-                        name: { type: string }
-                        variables: { type: object }
-                        status: { type: string, enum: [pending, sent, delivered, read, failed] }
-                        messageId: { type: string }
-                        error: { type: string }
-                        sentAt: { type: string, format: date-time }
-                        deliveredAt: { type: string, format: date-time }
-                        readAt: { type: string, format: date-time }
-                  pagination:
-                    type: object
-                    properties:
-                      total: { type: integer }
-                      limit: { type: integer }
-                      skip: { type: integer }
-                      hasMore: { type: boolean }
-                  summary:
-                    type: object
-                    properties:
-                      total: { type: integer }
-                      pending: { type: integer }
-                      sent: { type: integer }
-                      delivered: { type: integer }
-                      read: { type: integer }
-                      failed: { type: integer }
-        '401': { $ref: '#/components/responses/Unauthorized' }
-        '404': { $ref: '#/components/responses/NotFound' }
-    patch:
-      operationId: addWhatsAppBroadcastRecipients
-      deprecated: true
-      tags: [WhatsApp]
-      summary: Add recipients
-      description: |
-        **Deprecated.** Use `POST /v1/broadcasts/{id}/recipients` instead.
-        Add recipients to a draft broadcast. Maximum 1000 recipients per request.
-        Duplicate phone numbers are automatically skipped.
-      security:
-        - bearerAuth: []
-      parameters:
-        - name: broadcastId
-          in: path
-          required: true
-          description: Broadcast ID
-          schema:
-            type: string
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              required:
-                - recipients
-              properties:
-                recipients:
-                  type: array
-                  maxItems: 1000
-                  description: Recipients to add (max 1000)
-                  items:
-                    type: object
-                    required:
-                      - phone
-                    properties:
-                      phone:
-                        type: string
-                        description: Phone number in E.164 format
-                      name:
-                        type: string
-                      variables:
-                        type: object
-                        additionalProperties: { type: string }
-            example:
-              recipients:
-                - phone: "+1234567890"
-                  name: "John"
-                  variables: { "1": "John" }
-                - phone: "+0987654321"
-                  name: "Jane"
-      responses:
-        '200':
-          description: Recipients added successfully
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  success: { type: boolean }
-                  added: { type: integer, description: Number of new recipients added }
-                  duplicates: { type: integer, description: Number of duplicate phone numbers skipped }
-                  totalRecipients: { type: integer, description: Total recipient count after addition }
-        '400': { description: Validation error or broadcast not in draft status }
-        '401': { $ref: '#/components/responses/Unauthorized' }
-        '404': { $ref: '#/components/responses/NotFound' }
-    delete:
-      operationId: removeWhatsAppBroadcastRecipients
-      deprecated: true
-      tags: [WhatsApp]
-      summary: Remove recipients
-      description: |
-        **Deprecated.** Use `POST /v1/broadcasts/{id}/recipients` with removal flag instead.
-        Remove recipients from a draft broadcast by phone number.
-      security:
-        - bearerAuth: []
-      parameters:
-        - name: broadcastId
-          in: path
-          required: true
-          description: Broadcast ID
-          schema:
-            type: string
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              required:
-                - phones
-              properties:
-                phones:
-                  type: array
-                  items: { type: string }
-                  description: Phone numbers to remove
-            example:
-              phones: ["+1234567890", "+0987654321"]
-      responses:
-        '200':
-          description: Recipients removed successfully
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  success: { type: boolean }
-                  removed: { type: integer, description: Number of recipients removed }
-                  totalRecipients: { type: integer, description: Remaining recipient count }
-        '400': { description: Validation error or broadcast not in draft status }
-        '401': { $ref: '#/components/responses/Unauthorized' }
-        '404': { $ref: '#/components/responses/NotFound' }
-
-  # ──────────────────────────────────────────────────────────────────────────
   # BUSINESS PROFILE
   # ──────────────────────────────────────────────────────────────────────────
 
@@ -16342,7 +14327,7 @@ paths:
     get:
       operationId: getWhatsAppDisplayName
       tags: [WhatsApp]
-      summary: Get display name and review status
+      summary: Get display name status
       description: |
         Fetch the current display name and its Meta review status for a WhatsApp Business account.
         Display name changes require Meta approval and can take 1-3 business days.
@@ -17302,9 +15287,9 @@ paths:
       tags: [WhatsApp Flows]
       summary: Publish flow
       description: |
-        Publish a DRAFT flow. **This is irreversible.** Once published, the flow and its JSON
+        Publish a DRAFT flow. This is irreversible. Once published, the flow and its JSON
         become immutable and the flow can be sent to users. To update a published flow,
-        create a new flow (optionally cloning this one via `cloneFlowId`).
+        create a new flow (optionally cloning this one via cloneFlowId).
       security:
         - bearerAuth: []
       parameters:
@@ -17337,7 +15322,7 @@ paths:
       tags: [WhatsApp Flows]
       summary: Deprecate flow
       description: |
-        Deprecate a PUBLISHED flow. **This is irreversible.** Deprecated flows cannot be sent
+        Deprecate a PUBLISHED flow. This is irreversible. Deprecated flows cannot be sent
         or opened, but existing active sessions may continue until they complete.
       security:
         - bearerAuth: []
@@ -17497,7 +15482,7 @@ paths:
         '401': { $ref: '#/components/responses/Unauthorized' }
     post:
       operationId: createContact
-      summary: Create a contact
+      summary: Create contact
       description: Create a new contact. Optionally create a platform channel in the same request by providing accountId, platform, and platformIdentifier.
       tags: [Contacts]
       requestBody:
@@ -17556,7 +15541,8 @@ paths:
   /v1/contacts/{contactId}:
     get:
       operationId: getContact
-      summary: Get contact with channels
+      summary: Get contact
+      description: Returns a contact with all associated messaging channels.
       tags: [Contacts]
       parameters:
         - { name: contactId, in: path, required: true, schema: { type: string } }
@@ -17602,7 +15588,8 @@ paths:
         '404': { $ref: '#/components/responses/NotFound' }
     patch:
       operationId: updateContact
-      summary: Update a contact
+      summary: Update contact
+      description: Update one or more fields on a contact. Only provided fields are changed.
       tags: [Contacts]
       parameters:
         - { name: contactId, in: path, required: true, schema: { type: string } }
@@ -17646,7 +15633,8 @@ paths:
         '404': { $ref: '#/components/responses/NotFound' }
     delete:
       operationId: deleteContact
-      summary: Delete a contact
+      summary: Delete contact
+      description: Permanently deletes a contact and all associated channels.
       tags: [Contacts]
       parameters:
         - { name: contactId, in: path, required: true, schema: { type: string } }
@@ -17659,6 +15647,7 @@ paths:
     get:
       operationId: getContactChannels
       summary: List channels for a contact
+      description: Returns all messaging channels linked to a contact (e.g. Instagram DM, Telegram, WhatsApp).
       tags: [Contacts]
       parameters:
         - { name: contactId, in: path, required: true, schema: { type: string } }
@@ -17736,7 +15725,8 @@ paths:
   /v1/contacts/{contactId}/fields/{slug}:
     put:
       operationId: setContactFieldValue
-      summary: Set a custom field value
+      summary: Set custom field value
+      description: Set or overwrite a custom field value on a contact. The value type must match the field definition.
       tags: [Custom Fields]
       parameters:
         - { name: contactId, in: path, required: true, schema: { type: string } }
@@ -17756,7 +15746,8 @@ paths:
         '404': { $ref: '#/components/responses/NotFound' }
     delete:
       operationId: clearContactFieldValue
-      summary: Clear a custom field value
+      summary: Clear custom field value
+      description: Remove a custom field value from a contact. The field definition is not affected.
       tags: [Custom Fields]
       parameters:
         - { name: contactId, in: path, required: true, schema: { type: string } }
@@ -17772,6 +15763,7 @@ paths:
     get:
       operationId: listCustomFields
       summary: List custom field definitions
+      description: Returns all custom field definitions. Optionally filter by profile.
       tags: [Custom Fields]
       parameters:
         - { name: profileId, in: query, schema: { type: string }, description: Filter by profile. Omit to list across all profiles }
@@ -17798,7 +15790,8 @@ paths:
         '401': { $ref: '#/components/responses/Unauthorized' }
     post:
       operationId: createCustomField
-      summary: Create a custom field definition
+      summary: Create custom field
+      description: Create a new custom field definition. Supported types are text, number, date, boolean, and select.
       tags: [Custom Fields]
       requestBody:
         required: true
@@ -17837,7 +15830,8 @@ paths:
   /v1/custom-fields/{fieldId}:
     patch:
       operationId: updateCustomField
-      summary: Update a custom field definition
+      summary: Update custom field
+      description: Update a custom field definition. The field type cannot be changed after creation.
       tags: [Custom Fields]
       parameters:
         - { name: fieldId, in: path, required: true, schema: { type: string } }
@@ -17870,7 +15864,8 @@ paths:
         '404': { $ref: '#/components/responses/NotFound' }
     delete:
       operationId: deleteCustomField
-      summary: Delete a custom field definition
+      summary: Delete custom field
+      description: Delete a custom field definition and remove its values from all contacts.
       tags: [Custom Fields]
       parameters:
         - { name: fieldId, in: path, required: true, schema: { type: string } }
@@ -17885,6 +15880,7 @@ paths:
     get:
       operationId: listBroadcasts
       summary: List broadcasts
+      description: Returns broadcasts with delivery stats. Filter by status, platform, or profile.
       tags: [Broadcasts]
       parameters:
         - { name: profileId, in: query, schema: { type: string }, description: Filter by profile. Omit to list across all profiles }
@@ -17933,7 +15929,8 @@ paths:
         '401': { $ref: '#/components/responses/Unauthorized' }
     post:
       operationId: createBroadcast
-      summary: Create a broadcast draft
+      summary: Create broadcast draft
+      description: Create a broadcast in draft status. Add recipients and then send or schedule it.
       tags: [Broadcasts]
       requestBody:
         required: true
@@ -17990,6 +15987,7 @@ paths:
     get:
       operationId: getBroadcast
       summary: Get broadcast details
+      description: Returns a broadcast with its full configuration and delivery stats.
       tags: [Broadcasts]
       parameters:
         - { name: broadcastId, in: path, required: true, schema: { type: string } }
@@ -18028,7 +16026,8 @@ paths:
         '404': { $ref: '#/components/responses/NotFound' }
     patch:
       operationId: updateBroadcast
-      summary: Update a broadcast
+      summary: Update broadcast
+      description: Update a broadcast's name, message, template, or segment filters. Only draft broadcasts can be updated.
       tags: [Broadcasts]
       parameters:
         - { name: broadcastId, in: path, required: true, schema: { type: string } }
@@ -18053,7 +16052,8 @@ paths:
         '404': { $ref: '#/components/responses/NotFound' }
     delete:
       operationId: deleteBroadcast
-      summary: Delete a broadcast (draft only)
+      summary: Delete broadcast
+      description: Permanently delete a broadcast. Only drafts can be deleted.
       tags: [Broadcasts]
       parameters:
         - { name: broadcastId, in: path, required: true, schema: { type: string } }
@@ -18065,7 +16065,8 @@ paths:
   /v1/broadcasts/{broadcastId}/send:
     post:
       operationId: sendBroadcast
-      summary: Trigger immediate send
+      summary: Send broadcast now
+      description: Immediately start sending a draft broadcast to its recipients.
       tags: [Broadcasts]
       parameters:
         - { name: broadcastId, in: path, required: true, schema: { type: string } }
@@ -18090,6 +16091,7 @@ paths:
     post:
       operationId: scheduleBroadcast
       summary: Schedule broadcast for later
+      description: Schedule a draft broadcast to be sent at a future date and time.
       tags: [Broadcasts]
       parameters:
         - { name: broadcastId, in: path, required: true, schema: { type: string } }
@@ -18124,7 +16126,8 @@ paths:
   /v1/broadcasts/{broadcastId}/cancel:
     post:
       operationId: cancelBroadcast
-      summary: Cancel a broadcast
+      summary: Cancel broadcast
+      description: Cancel a scheduled or in-progress broadcast. Already-sent messages are not affected.
       tags: [Broadcasts]
       parameters:
         - { name: broadcastId, in: path, required: true, schema: { type: string } }
@@ -18150,6 +16153,7 @@ paths:
     get:
       operationId: listBroadcastRecipients
       summary: List broadcast recipients
+      description: Returns recipients for a broadcast with individual delivery status. Filter by status.
       tags: [Broadcasts]
       parameters:
         - { name: broadcastId, in: path, required: true, schema: { type: string } }
@@ -18193,6 +16197,7 @@ paths:
     post:
       operationId: addBroadcastRecipients
       summary: Add recipients to a broadcast
+      description: Add recipients by contact IDs, raw phone numbers, or from the broadcast's segment filters.
       tags: [Broadcasts]
       parameters:
         - { name: broadcastId, in: path, required: true, schema: { type: string } }
@@ -18226,6 +16231,7 @@ paths:
     get:
       operationId: listSequences
       summary: List sequences
+      description: Returns sequences with enrollment stats. Filter by status, platform, or profile.
       tags: [Sequences]
       parameters:
         - { name: profileId, in: query, schema: { type: string }, description: Filter by profile. Omit to list across all profiles }
@@ -18271,7 +16277,8 @@ paths:
         '401': { $ref: '#/components/responses/Unauthorized' }
     post:
       operationId: createSequence
-      summary: Create a sequence
+      summary: Create sequence
+      description: Create a multi-step messaging sequence. Each step has a delay and a message or WhatsApp template.
       tags: [Sequences]
       requestBody:
         required: true
@@ -18335,6 +16342,7 @@ paths:
     get:
       operationId: getSequence
       summary: Get sequence with steps
+      description: Returns a sequence with all its steps and enrollment stats.
       tags: [Sequences]
       parameters:
         - { name: sequenceId, in: path, required: true, schema: { type: string } }
@@ -18376,7 +16384,8 @@ paths:
         '404': { $ref: '#/components/responses/NotFound' }
     patch:
       operationId: updateSequence
-      summary: Update a sequence
+      summary: Update sequence
+      description: Update a sequence's name, steps, or exit conditions. Active sequences can be updated without pausing.
       tags: [Sequences]
       parameters:
         - { name: sequenceId, in: path, required: true, schema: { type: string } }
@@ -18404,7 +16413,8 @@ paths:
         '404': { $ref: '#/components/responses/NotFound' }
     delete:
       operationId: deleteSequence
-      summary: Delete a sequence
+      summary: Delete sequence
+      description: Permanently delete a sequence. Active enrollments are stopped.
       tags: [Sequences]
       parameters:
         - { name: sequenceId, in: path, required: true, schema: { type: string } }
@@ -18416,7 +16426,8 @@ paths:
   /v1/sequences/{sequenceId}/activate:
     post:
       operationId: activateSequence
-      summary: Activate a sequence
+      summary: Activate sequence
+      description: Start a draft or paused sequence. The sequence must have at least one step.
       tags: [Sequences]
       parameters:
         - { name: sequenceId, in: path, required: true, schema: { type: string } }
@@ -18441,7 +16452,8 @@ paths:
   /v1/sequences/{sequenceId}/pause:
     post:
       operationId: pauseSequence
-      summary: Pause a sequence
+      summary: Pause sequence
+      description: Pause an active sequence. Enrolled contacts stop receiving messages until the sequence is reactivated.
       tags: [Sequences]
       parameters:
         - { name: sequenceId, in: path, required: true, schema: { type: string } }
@@ -18467,6 +16479,7 @@ paths:
     post:
       operationId: enrollContacts
       summary: Enroll contacts in a sequence
+      description: Enroll one or more contacts into a sequence. Contacts already enrolled are skipped.
       tags: [Sequences]
       parameters:
         - { name: sequenceId, in: path, required: true, schema: { type: string } }
@@ -18497,7 +16510,8 @@ paths:
   /v1/sequences/{sequenceId}/enroll/{contactId}:
     delete:
       operationId: unenrollContact
-      summary: Unenroll a contact from a sequence
+      summary: Unenroll contact
+      description: Remove a contact from a sequence. No further messages will be sent to this contact.
       tags: [Sequences]
       parameters:
         - { name: sequenceId, in: path, required: true, schema: { type: string } }
@@ -18511,6 +16525,7 @@ paths:
     get:
       operationId: listSequenceEnrollments
       summary: List enrollments for a sequence
+      description: Returns enrolled contacts with their progress, status, and next scheduled step.
       tags: [Sequences]
       parameters:
         - { name: sequenceId, in: path, required: true, schema: { type: string } }
@@ -18604,7 +16619,7 @@ paths:
     post:
       operationId: createCommentAutomation
       tags: [Comment Automations]
-      summary: Create a comment-to-DM automation
+      summary: Create comment-to-DM automation
       description: |
         Create a keyword-triggered DM automation on an Instagram or Facebook post.
         When someone comments a matching keyword, they automatically receive a DM.
@@ -18663,7 +16678,8 @@ paths:
     get:
       operationId: getCommentAutomation
       tags: [Comment Automations]
-      summary: Get automation details with recent logs
+      summary: Get automation details
+      description: Returns an automation with its configuration, stats, and recent trigger logs.
       security:
         - bearerAuth: []
       parameters:
@@ -18714,6 +16730,7 @@ paths:
       operationId: updateCommentAutomation
       tags: [Comment Automations]
       summary: Update automation settings
+      description: Update an automation's keywords, DM message, comment reply, or active status.
       security:
         - bearerAuth: []
       parameters:
@@ -18755,7 +16772,8 @@ paths:
     delete:
       operationId: deleteCommentAutomation
       tags: [Comment Automations]
-      summary: Delete automation and all logs
+      summary: Delete automation
+      description: Permanently delete an automation and all its trigger logs.
       security:
         - bearerAuth: []
       parameters:
@@ -18769,7 +16787,7 @@ paths:
     get:
       operationId: listCommentAutomationLogs
       tags: [Comment Automations]
-      summary: List trigger logs for an automation
+      summary: List automation logs
       description: Paginated list of every comment that triggered this automation, with send status and commenter info.
       security:
         - bearerAuth: []
@@ -18819,7 +16837,7 @@ paths:
       summary: List ads
       description: |
         Returns a paginated list of ads with metrics computed over an optional date range.
-        Use `source=all` to include externally-synced ads from platform ad managers.
+        Use source=all to include externally-synced ads from platform ad managers.
         If no date range is provided, defaults to the last 90 days. Date range is capped at 90 days max.
       security:
         - bearerAuth: []
@@ -18827,7 +16845,7 @@ paths:
         - $ref: '#/components/parameters/PageParam'
         - { name: limit, in: query, schema: { type: integer, minimum: 1, maximum: 500, default: 50 } }
         - { name: source, in: query, schema: { type: string, enum: [zernio, all], default: zernio }, description: "zernio = Zernio-created only, all = include external ads" }
-        - { name: status, in: query, schema: { type: string, enum: [active, paused, pending_review, rejected, completed, cancelled, error] } }
+        - { name: status, in: query, schema: { $ref: '#/components/schemas/AdStatus' } }
         - { name: platform, in: query, schema: { type: string, enum: [facebook, instagram, tiktok, linkedin, pinterest, google, twitter] } }
         - { name: accountId, in: query, schema: { type: string }, description: Social account ID }
         - { name: adAccountId, in: query, schema: { type: string }, description: "Platform ad account ID (e.g. act_123 for Meta). Mirrors the same filter on /v1/ads/campaigns and /v1/ads/tree." }
@@ -18855,7 +16873,7 @@ paths:
     get:
       operationId: listAdCampaigns
       tags: [Ad Campaigns]
-      summary: List campaigns with aggregate metrics
+      summary: List campaigns
       description: |
         Returns campaigns as virtual aggregations over ad documents grouped by platform campaign ID.
         Metrics (spend, impressions, clicks, etc.) are summed across all ads in each campaign.
@@ -18867,7 +16885,7 @@ paths:
         - { name: limit, in: query, schema: { type: integer, minimum: 1, maximum: 100, default: 20 } }
         - { name: source, in: query, schema: { type: string, enum: [zernio, all], default: zernio } }
         - { name: platform, in: query, schema: { type: string, enum: [facebook, instagram, tiktok, linkedin, pinterest, google, twitter] } }
-        - { name: status, in: query, schema: { type: string, enum: [active, paused, pending_review, rejected, completed, cancelled, error] }, description: Filter by derived campaign status (post-aggregation) }
+        - { name: status, in: query, schema: { $ref: '#/components/schemas/AdStatus' }, description: Filter by derived campaign status (post-aggregation) }
         - { name: adAccountId, in: query, schema: { type: string }, description: Platform ad account ID (e.g. act_123 for Meta) }
         - { name: accountId, in: query, schema: { type: string }, description: Social account ID }
         - { name: profileId, in: query, schema: { type: string }, description: Profile ID }
@@ -18931,7 +16949,7 @@ paths:
     get:
       operationId: getAdTree
       tags: [Ad Campaigns]
-      summary: Get nested campaign/ad-set/ad tree
+      summary: Get campaign tree
       description: |
         Returns a nested Campaign > Ad Set > Ad hierarchy with rolled-up metrics at each level.
         Uses a two-stage aggregation: ads are grouped into ad sets, then ad sets into campaigns.
@@ -18946,7 +16964,7 @@ paths:
         - { name: limit, in: query, schema: { type: integer, minimum: 1, maximum: 100, default: 20 }, description: Campaigns per page }
         - { name: source, in: query, schema: { type: string, enum: [zernio, all], default: zernio } }
         - { name: platform, in: query, schema: { type: string, enum: [facebook, instagram, tiktok, linkedin, pinterest, google, twitter] } }
-        - { name: status, in: query, schema: { type: string, enum: [active, paused, pending_review, rejected, completed, cancelled, error] }, description: Filter by derived campaign status (post-aggregation) }
+        - { name: status, in: query, schema: { $ref: '#/components/schemas/AdStatus' }, description: Filter by derived campaign status (post-aggregation) }
         - { name: adAccountId, in: query, schema: { type: string }, description: Platform ad account ID }
         - { name: accountId, in: query, schema: { type: string }, description: Social account ID }
         - { name: profileId, in: query, schema: { type: string }, description: Profile ID }
@@ -18973,6 +16991,7 @@ paths:
       operationId: getAd
       tags: [Ads]
       summary: Get ad details
+      description: Returns an ad with its creative, targeting, status, and performance metrics.
       security:
         - bearerAuth: []
       parameters:
@@ -18991,7 +17010,7 @@ paths:
     put:
       operationId: updateAd
       tags: [Ads]
-      summary: Update ad (pause/resume, budget, targeting, name)
+      summary: Update ad
       description: Update one or more fields on an ad. Status changes and budget updates are propagated to the platform. Targeting updates are Meta-only.
       security:
         - bearerAuth: []
@@ -19017,7 +17036,15 @@ paths:
                     ageMin: { type: integer, minimum: 13, maximum: 65 }
                     ageMax: { type: integer, minimum: 13, maximum: 65 }
                     countries: { type: array, items: { type: string } }
-                    interests: { type: array, items: { type: string } }
+                    interests:
+                      type: array
+                      description: "Interest objects from /v1/ads/interests. Each must include id and name."
+                      items:
+                        type: object
+                        required: [id, name]
+                        properties:
+                          id: { type: string }
+                          name: { type: string }
                 name: { type: string }
       responses:
         '200':
@@ -19058,7 +17085,7 @@ paths:
     get:
       operationId: getAdAnalytics
       tags: [Ads]
-      summary: Get ad analytics with daily breakdown
+      summary: Get ad analytics
       description: |
         Returns detailed performance analytics for an ad. Includes summary metrics, a daily timeline
         over the requested date range, and optional demographic breakdowns (Meta and TikTok only).
@@ -19114,7 +17141,7 @@ paths:
     get:
       operationId: listAdAccounts
       tags: [Ads]
-      summary: List ad accounts for a social account
+      summary: List ad accounts
       description: Returns the platform ad accounts available for the given social account (e.g. Meta ad accounts, TikTok advertiser IDs, Google Ads customer IDs).
       security:
         - bearerAuth: []
@@ -19145,7 +17172,7 @@ paths:
     post:
       operationId: boostPost
       tags: [Ads]
-      summary: Boost an existing post as a paid ad
+      summary: Boost post as ad
       description: Creates a paid ad campaign from an existing published post. Creates the full platform campaign hierarchy (campaign, ad set, ad).
       security:
         - bearerAuth: []
@@ -19181,7 +17208,15 @@ paths:
                     ageMin: { type: integer, minimum: 13, maximum: 65 }
                     ageMax: { type: integer, minimum: 13, maximum: 65 }
                     countries: { type: array, items: { type: string } }
-                    interests: { type: array, items: { type: string } }
+                    interests:
+                      type: array
+                      description: "Interest objects from /v1/ads/interests. Each must include id and name."
+                      items:
+                        type: object
+                        required: [id, name]
+                        properties:
+                          id: { type: string }
+                          name: { type: string }
                 bidAmount: { type: number, description: "Max bid cap (Meta only)" }
                 tracking:
                   type: object
@@ -19215,7 +17250,7 @@ paths:
     post:
       operationId: createStandaloneAd
       tags: [Ads]
-      summary: Create a standalone ad with custom creative
+      summary: Create standalone ad
       description: Creates a paid ad with custom creative (headline, body, image/video, link). Creates the full platform campaign hierarchy.
       security:
         - bearerAuth: []
@@ -19245,7 +17280,15 @@ paths:
                 countries: { type: array, items: { type: string } }
                 ageMin: { type: integer, minimum: 13, maximum: 65 }
                 ageMax: { type: integer, minimum: 13, maximum: 65 }
-                interests: { type: array, items: { type: string } }
+                interests:
+                  type: array
+                  description: "Interest objects from /v1/ads/interests. Each must include id and name."
+                  items:
+                    type: object
+                    required: [id, name]
+                    properties:
+                      id: { type: string }
+                      name: { type: string }
                 endDate: { type: string, format: date-time, description: Required for lifetime budgets }
                 audienceId: { type: string, description: Custom audience ID for targeting }
                 campaignType: { type: string, enum: [display, search], default: display, description: Google only }
@@ -19340,7 +17383,7 @@ paths:
     post:
       operationId: createAdAudience
       tags: [Ad Audiences]
-      summary: Create a custom audience (Meta only)
+      summary: Create custom audience
       description: Create a customer list, website retargeting, or lookalike audience on Meta (Facebook/Instagram).
       security:
         - bearerAuth: []
@@ -19407,7 +17450,7 @@ paths:
     delete:
       operationId: deleteAdAudience
       tags: [Ad Audiences]
-      summary: Delete a custom audience
+      summary: Delete custom audience
       description: Deletes the audience from both Meta and the local database.
       security:
         - bearerAuth: []
@@ -19431,7 +17474,7 @@ paths:
     post:
       operationId: addUsersToAdAudience
       tags: [Ad Audiences]
-      summary: Add users to a customer list audience
+      summary: Add users to audience
       description: Upload user data (emails and/or phone numbers) to a customer_list audience. Data is SHA256-hashed server-side before sending to Meta. Max 10,000 users per request.
       security:
         - bearerAuth: []

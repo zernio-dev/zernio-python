@@ -49,7 +49,7 @@ class ValidateResource:
         return result
 
     def validate_post_length(self, text: str) -> dict[str, Any]:
-        """Validate post character count"""
+        """Validate character count"""
         payload = self._build_payload(
             text=text,
         )
@@ -88,7 +88,7 @@ class ValidateResource:
         return self._client._get("/v1/tools/validate/subreddit", params=params)
 
     async def avalidate_post_length(self, text: str) -> dict[str, Any]:
-        """Validate post character count (async)"""
+        """Validate character count (async)"""
         payload = self._build_payload(
             text=text,
         )
