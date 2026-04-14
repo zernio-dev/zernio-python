@@ -258,17 +258,24 @@ class TestModelsValidation:
     """Test model validation."""
 
     def test_status_enum_values(self):
-        """Test Status enum has expected values.
+        """Test that a Status enum with SUCCESS/FAILED exists in the generated models.
 
-        Note: The generated Status enum is for webhook log status (success/failed).
-        Post status values (draft/scheduled/published/failed) are in Status3.
+        The codegen numbers Status enums positionally (Status, Status1, Status2, ...),
+        so we search all exported Status variants to find the one with SUCCESS/FAILED.
         """
-        from late.models import Status
+        import late.models._generated.models as gen
 
-        assert hasattr(Status, "SUCCESS")
-        assert hasattr(Status, "FAILED")
-        assert Status.SUCCESS.value == "success"
-        assert Status.FAILED.value == "failed"
+        status_cls = None
+        for name in dir(gen):
+            if name == "Status" or (name.startswith("Status") and name[6:].isdigit()):
+                cls = getattr(gen, name)
+                if hasattr(cls, "SUCCESS") and hasattr(cls, "FAILED"):
+                    status_cls = cls
+                    break
+
+        assert status_cls is not None, "No Status enum with SUCCESS/FAILED found in generated models"
+        assert status_cls.SUCCESS.value == "success"
+        assert status_cls.FAILED.value == "failed"
 
     def test_type_enum_values(self):
         """Test MediaItem type field accepts media types."""
