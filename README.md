@@ -370,6 +370,7 @@ Both `from zernio import ...` and `from late import ...` work identically. The `
 |--------|-------------|
 | `ads.list_ad_accounts()` | List ad accounts |
 | `ads.list_ads()` | List ads |
+| `ads.list_conversion_destinations()` | List destinations for the Conversions API |
 | `ads.create_standalone_ad()` | Create standalone ad |
 | `ads.get_ad()` | Get ad details |
 | `ads.get_ad_analytics()` | Get ad analytics |
@@ -377,6 +378,7 @@ Both `from zernio import ...` and `from late import ...` work identically. The `
 | `ads.delete_ad()` | Cancel an ad |
 | `ads.boost_post()` | Boost post as ad |
 | `ads.search_ad_interests()` | Search targeting interests |
+| `ads.send_conversions()` | Send conversion events to an ad platform |
 
 ### Broadcasts
 | Method | Description |

@@ -2968,6 +2968,86 @@ components:
             page_id: { type: string }
         earliestAd: { type: string, format: date-time }
         latestAd: { type: string, format: date-time }
+    ConversionEvent:
+      type: object
+      description: |
+        A single conversion event to relay to the ad platform. All PII fields
+        (email, phone, names) are hashed with SHA-256 server-side using each
+        platform's normalization rules before they leave Zernio. Callers send
+        plaintext.
+      required: [eventName, eventTime, eventId, user]
+      properties:
+        eventName:
+          type: string
+          description: |
+            Standard event name (Purchase, Lead, CompleteRegistration, AddToCart,
+            InitiateCheckout, AddPaymentInfo, Subscribe, StartTrial, ViewContent,
+            Search, Contact, SubmitApplication, Schedule) or a custom string
+            (only supported on platforms that accept custom events).
+          example: Purchase
+        eventTime:
+          type: integer
+          description: When the conversion happened, in unix seconds.
+          example: 1744732800
+        eventId:
+          type: string
+          description: |
+            Unique dedup key. The same eventId must be used on pixel + CAPI
+            to prevent double-counting. Mapped to event_id on Meta and
+            transactionId on Google.
+          example: order_abc_123
+        value:
+          type: number
+          description: Conversion value in the specified currency.
+          example: 99.5
+        currency:
+          type: string
+          description: ISO 4217 currency code.
+          example: USD
+        user:
+          type: object
+          description: User identity fields. More signals mean higher match rates.
+          properties:
+            email: { type: string, description: Plaintext email. Hashed server-side. }
+            phone: { type: string, description: "Phone number, ideally E.164. Hashed server-side." }
+            firstName: { type: string, description: Plaintext first name. Hashed server-side. }
+            lastName: { type: string, description: Plaintext last name. Hashed server-side. }
+            externalId: { type: string, description: "Stable customer identifier (e.g. CRM user ID). Hashed server-side." }
+            ipAddress: { type: string, description: Client IP address. Sent plaintext. }
+            userAgent: { type: string, description: Client user-agent string. Sent plaintext. }
+            country: { type: string, description: "ISO 3166-1 alpha-2 country code, e.g. 'us'." }
+            clickIds:
+              type: object
+              description: Platform click identifiers captured from the originating ad click.
+              properties:
+                fbc: { type: string, description: Meta click ID (from fbclid URL param). }
+                fbp: { type: string, description: Meta browser ID (_fbp cookie). }
+                gclid: { type: string, description: Google click ID (from gclid URL param). }
+                gbraid: { type: string, description: Google iOS 14.5+ app attribution ID. }
+                wbraid: { type: string, description: Google iOS 14.5+ web-to-app attribution ID. }
+        items:
+          type: array
+          description: Item-level detail for ecommerce events.
+          items:
+            type: object
+            properties:
+              id: { type: string }
+              name: { type: string }
+              price: { type: number }
+              quantity: { type: integer }
+              category: { type: string }
+        sourceUrl:
+          type: string
+          format: uri
+          description: URL where the conversion originated (used by Meta).
+        actionSource:
+          type: string
+          enum: [web, app, offline, crm, phone_call, system_generated]
+          description: Where the conversion happened. Used by Meta; Google ignores.
+        platformData:
+          type: object
+          additionalProperties: true
+          description: Escape hatch for platform-specific fields we haven't normalized. Forwarded as-is.
 webhooks:
   post.scheduled:
     post:
@@ -17516,3 +17596,159 @@ paths:
         '404': { $ref: '#/components/responses/NotFound' }
         '422':
           description: Audience is not a customer_list type or has no platform ID yet
+
+  /v1/ads/conversions:
+    post:
+      operationId: sendConversions
+      tags: [Ads]
+      summary: Send conversion events to an ad platform
+      description: |
+        Relay one or more conversion events to the target ad platform's native
+        Conversions API. Supported platforms: Meta (metaads) via Graph API,
+        Google Ads (googleads) via Data Manager API `ingestEvents`.
+
+        Platform is inferred from the provided `accountId`. `destinationId`
+        semantics differ per platform:
+        - Meta: pixel (dataset) ID, e.g. "123456789012345"
+        - Google: conversion action resource name, e.g.
+          "customers/1234567890/conversionActions/987654321"
+
+        Callers can list valid destinations via
+        `GET /v1/accounts/{accountId}/conversion-destinations`.
+
+        All PII (email, phone, names, external IDs) is hashed with SHA-256
+        server-side per each platform's normalization spec (including Google's
+        Gmail-specific dot/plus-suffix stripping). Send plaintext.
+
+        Requires the Ads add-on.
+
+        Batching: Meta caps at 1000 events per request and rejects the entire
+        batch if any event is malformed. Google caps at 2000. Both are handled
+        automatically by chunking.
+
+        Dedup: pass a stable `eventId` on every event. Meta uses it to dedupe
+        against pixel events; Google maps it to transactionId.
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [accountId, destinationId, events]
+              properties:
+                accountId:
+                  type: string
+                  description: SocialAccount ID (metaads or googleads).
+                destinationId:
+                  type: string
+                  description: |
+                    Platform destination identifier. For Meta, the pixel/dataset
+                    ID. For Google, the conversion action resource name.
+                events:
+                  type: array
+                  minItems: 1
+                  items: { $ref: '#/components/schemas/ConversionEvent' }
+                testCode:
+                  type: string
+                  description: Meta `test_event_code` passthrough. Ignored by Google.
+                consent:
+                  type: object
+                  description: |
+                    Batch-level user consent. Required by Google for EEA/UK
+                    events under the Feb 2026 restrictions. Ignored by Meta.
+                  properties:
+                    adUserData: { type: string, enum: [GRANTED, DENIED] }
+                    adPersonalization: { type: string, enum: [GRANTED, DENIED] }
+      responses:
+        '200':
+          description: |
+            Events processed. Inspect `eventsFailed` and `failures[]` to detect
+            partial failure. For Meta, a batch is all-or-nothing (either every
+            event in a chunk succeeds, or every event in the chunk is listed
+            in failures). For Google, the API returns success/failure at the
+            request level only.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  platform: { type: string, enum: [metaads, googleads] }
+                  eventsReceived: { type: integer, description: Events accepted by the platform. }
+                  eventsFailed: { type: integer, description: Events rejected (see failures). }
+                  failures:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        eventIndex: { type: integer, description: Index into the submitted events array. }
+                        eventId: { type: string, description: Echoes back the eventId of the failed event. }
+                        message: { type: string }
+                        code: { oneOf: [{ type: string }, { type: integer }] }
+                  traceId:
+                    type: string
+                    description: Platform trace ID (fbtrace_id for Meta, requestId for Google) for debugging.
+        '400':
+          description: Invalid body (missing accountId/destinationId/events, malformed event shape).
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403':
+          description: Ads add-on required.
+        '404':
+          description: Account not found or not accessible.
+
+  /v1/accounts/{accountId}/conversion-destinations:
+    get:
+      operationId: listConversionDestinations
+      tags: [Ads]
+      summary: List destinations for the Conversions API
+      description: |
+        Returns the list of pixels (Meta) or conversion actions (Google)
+        accessible to the connected ads account. Use the returned `id` as
+        `destinationId` when posting to `POST /v1/ads/conversions`.
+
+        For Google, each destination's `type` reflects the conversion action's
+        category (PURCHASE, LEAD, SIGN_UP, etc.) — the event type is locked to
+        the destination. For Meta, `type` is absent: pixels accept any event
+        name per request.
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: accountId
+          in: path
+          required: true
+          schema: { type: string }
+          description: SocialAccount ID (metaads or googleads).
+      responses:
+        '200':
+          description: Destinations listed
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  platform: { type: string, enum: [metaads, googleads] }
+                  destinations:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id:
+                          type: string
+                          description: |
+                            Destination identifier. Meta: pixel ID. Google:
+                            conversion action resource name.
+                        name: { type: string }
+                        type:
+                          type: string
+                          description: |
+                            Present when the platform locks event type to the
+                            destination (Google conversion actions).
+                        status: { type: string, enum: [active, inactive] }
+        '400':
+          description: Account's platform is not supported by the Conversions API.
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403':
+          description: Ads add-on required.
+        '404':
+          description: Account not found or not accessible.

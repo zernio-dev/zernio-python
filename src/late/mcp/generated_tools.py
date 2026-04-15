@@ -1240,6 +1240,51 @@ def register_generated_tools(mcp, _get_client):
         except Exception as e:
             return f"Error: {e}"
 
+    @mcp.tool()
+    def ads_send_conversions(
+        account_id: str,
+        destination_id: str,
+        events: str,
+        test_code: str = "",
+        consent: str = "",
+    ) -> str:
+        """Send conversion events to an ad platform
+
+            Args:
+                account_id: SocialAccount ID (metaads or googleads). (required)
+                destination_id: Platform destination identifier. For Meta, the pixel/dataset
+        ID. For Google, the conversion action resource name.
+         (required)
+                events: (required)
+                test_code: Meta `test_event_code` passthrough. Ignored by Google.
+                consent: Batch-level user consent. Required by Google for EEA/UK
+        events under the Feb 2026 restrictions. Ignored by Meta."""
+        client = _get_client()
+        try:
+            response = client.ads.send_conversions(
+                account_id=account_id,
+                destination_id=destination_id,
+                events=events,
+                test_code=test_code,
+                consent=consent,
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool()
+    def ads_list_conversion_destinations(account_id: str) -> str:
+        """List destinations for the Conversions API
+
+        Args:
+            account_id: SocialAccount ID (metaads or googleads). (required)"""
+        client = _get_client()
+        try:
+            response = client.ads.list_conversion_destinations(account_id=account_id)
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
     # ANALYTICS
 
     @mcp.tool()

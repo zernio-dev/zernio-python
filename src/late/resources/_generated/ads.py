@@ -232,6 +232,29 @@ class AdsResource:
         )
         return self._client._get("/v1/ads/interests", params=params)
 
+    def send_conversions(
+        self,
+        account_id: str,
+        destination_id: str,
+        events: list[Any],
+        *,
+        test_code: str | None = None,
+        consent: dict[str, Any] | None = None,
+    ) -> dict[str, Any]:
+        """Send conversion events to an ad platform"""
+        payload = self._build_payload(
+            account_id=account_id,
+            destination_id=destination_id,
+            events=events,
+            test_code=test_code,
+            consent=consent,
+        )
+        return self._client._post("/v1/ads/conversions", data=payload)
+
+    def list_conversion_destinations(self, account_id: str) -> dict[str, Any]:
+        """List destinations for the Conversions API"""
+        return self._client._get(f"/v1/accounts/{account_id}/conversion-destinations")
+
     async def alist_ads(
         self,
         *,
@@ -413,3 +436,28 @@ class AdsResource:
             account_id=account_id,
         )
         return await self._client._aget("/v1/ads/interests", params=params)
+
+    async def asend_conversions(
+        self,
+        account_id: str,
+        destination_id: str,
+        events: list[Any],
+        *,
+        test_code: str | None = None,
+        consent: dict[str, Any] | None = None,
+    ) -> dict[str, Any]:
+        """Send conversion events to an ad platform (async)"""
+        payload = self._build_payload(
+            account_id=account_id,
+            destination_id=destination_id,
+            events=events,
+            test_code=test_code,
+            consent=consent,
+        )
+        return await self._client._apost("/v1/ads/conversions", data=payload)
+
+    async def alist_conversion_destinations(self, account_id: str) -> dict[str, Any]:
+        """List destinations for the Conversions API (async)"""
+        return await self._client._aget(
+            f"/v1/accounts/{account_id}/conversion-destinations"
+        )
