@@ -1,8 +1,17 @@
-# HTTP/SSE Deployment Guide
+# HTTP Deployment Guide
 
 ## Overview
 
-The Late MCP server can be deployed via HTTP/SSE, allowing remote access from any MCP client. Each user provides their own Late API key when connecting.
+The Zernio MCP server can be deployed over HTTP, allowing remote access from any MCP client. Each user provides their own Zernio API key when connecting.
+
+The server exposes **two transports simultaneously**:
+
+| Transport | Endpoint | When to use |
+| --- | --- | --- |
+| **Streamable HTTP** (recommended) | `POST /mcp` | Modern MCP transport. Survives proxies/bridges that drop idle connections. Use this for Claude Code, `mcp-remote`, and any new client. |
+| **SSE** (legacy) | `GET /sse` + `POST /messages/` | Older two-endpoint transport. Kept for backwards compatibility. The long-idle `GET /sse` connection can be killed by load balancers or bridges after a few minutes idle. |
+
+Pick Streamable HTTP unless you have a specific client that only speaks SSE.
 
 ## Quick Start
 
@@ -15,7 +24,7 @@ uv sync --extra mcp
 
 2. Run HTTP server:
 ```bash
-uv run late-mcp-http
+uv run zernio-mcp-http
 ```
 
 3. Test the server:
@@ -23,11 +32,17 @@ uv run late-mcp-http
 # Health check (no auth needed)
 curl http://localhost:8080/health
 
-# Server info (no auth needed)
+# Server info (lists both transports, no auth needed)
 curl http://localhost:8080/
 
-# SSE endpoint (requires your Late API key)
-curl -H "Authorization: Bearer your_late_api_key" http://localhost:8080/sse
+# Streamable HTTP endpoint (requires your Zernio API key)
+curl -H "Authorization: Bearer your_zernio_api_key" \
+     -H "Accept: application/json, text/event-stream" \
+     -X POST http://localhost:8080/mcp \
+     -d '{"jsonrpc":"2.0","id":1,"method":"initialize","params":{"protocolVersion":"2025-03-26","capabilities":{},"clientInfo":{"name":"curl","version":"0"}}}'
+
+# SSE endpoint (legacy)
+curl -H "Authorization: Bearer your_zernio_api_key" http://localhost:8080/sse
 ```
 
 ## Railway Deployment
@@ -41,7 +56,7 @@ curl -H "Authorization: Bearer your_late_api_key" http://localhost:8080/sse
 
 ### Environment Variables
 
-The server doesn't require any environment variables. Users authenticate by providing their Late API key when connecting.
+The server doesn't require any environment variables. Users authenticate by providing their Zernio API key when connecting.
 
 Optional variables:
 - `HOST` (default: 0.0.0.0)
@@ -49,36 +64,61 @@ Optional variables:
 
 ## Connecting Clients
 
-### Claude Code CLI
+### Claude Code CLI (recommended: Streamable HTTP)
 
 ```bash
-# Add the MCP server
-claude mcp add --transport http late https://your-app.railway.app/sse
-
-# When connecting, provide your Late API key via header
-# The Claude CLI will prompt for authentication details
+# Add the MCP server using the modern Streamable HTTP transport
+claude mcp add --transport http zernio https://your-app.railway.app/mcp \
+  --header "Authorization: Bearer your_zernio_api_key_here"
 ```
 
 Configuration in MCP settings:
 ```json
 {
-  "late": {
-    "url": "https://your-app.railway.app/sse",
+  "zernio": {
+    "url": "https://your-app.railway.app/mcp",
     "headers": {
-      "Authorization": "Bearer your_late_api_key_here"
+      "Authorization": "Bearer your_zernio_api_key_here"
     }
   }
 }
 ```
 
-### Python Client
+### Claude Code CLI (legacy: SSE)
+
+If you need SSE for an older client, the endpoint is `/sse` instead of `/mcp`:
+
+```bash
+claude mcp add --transport sse zernio https://your-app.railway.app/sse \
+  --header "Authorization: Bearer your_zernio_api_key_here"
+```
+
+Note: SSE connections can be dropped by proxies after a few minutes idle. Prefer Streamable HTTP if your client supports it.
+
+### Python Client (Streamable HTTP)
+
+```python
+from mcp.client.streamable_http import streamablehttp_client
+
+headers = {
+    "Authorization": "Bearer your_zernio_api_key_here"
+}
+
+async with streamablehttp_client(
+    "https://your-app.railway.app/mcp",
+    headers=headers,
+) as (read, write, _):
+    # Use MCP client
+    pass
+```
+
+### Python Client (SSE, legacy)
 
 ```python
 from mcp.client.sse import sse_client
 
-# Provide your Late API key as Bearer token
 headers = {
-    "Authorization": "Bearer your_late_api_key_here"
+    "Authorization": "Bearer your_zernio_api_key_here"
 }
 
 async with sse_client(
@@ -91,28 +131,30 @@ async with sse_client(
 
 ## Authentication
 
-Each user must provide their own Late API key when connecting using the standard HTTP Authorization header:
+Each user must provide their own Zernio API key when connecting using the standard HTTP Authorization header:
 
 ```
-Authorization: Bearer YOUR_LATE_API_KEY
+Authorization: Bearer YOUR_ZERNIO_API_KEY
 ```
 
-Example:
+Example (Streamable HTTP):
 ```bash
 curl -H "Authorization: Bearer sk_your_api_key_here" \
-     https://your-app.railway.app/sse
+     -H "Accept: application/json, text/event-stream" \
+     -X POST https://your-app.railway.app/mcp \
+     -d '{"jsonrpc":"2.0","id":1,"method":"tools/list"}'
 ```
 
-The server validates the API key by making a test request to the Late API. If valid, the connection is established and the API key is used for all subsequent operations.
+The server validates the API key by making a test request to the Zernio API. If valid, the request is processed and the API key is used for all operations within that request.
 
 ## Security
 
-- Each user's API key is validated against the Late API
-- API keys are stored per-connection using Python's contextvars
+- Each user's API key is validated against the Zernio API
+- API keys are stored per-request using Python's `contextvars` (Streamable HTTP runs in stateless mode, so keys never leak across requests)
 - No shared credentials or server-wide API keys
 - Health check endpoint is public (no auth required)
 - All other endpoints require authentication
 
-## Get Your Late API Key
+## Get Your Zernio API Key
 
 Visit https://zernio.com to sign up and get your API key.

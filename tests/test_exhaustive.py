@@ -257,18 +257,18 @@ class TestModelsImport:
 class TestModelsValidation:
     """Test model validation."""
 
-    def test_status_enum_values(self):
-        """Test Status enum has expected values.
+    def test_ad_status_enum_values(self):
+        """Test AdStatus enum has expected values.
 
-        Note: The generated Status enum is for webhook log status (success/failed).
-        Post status values (draft/scheduled/published/failed) are in Status3.
+        AdStatus is a named schema in the OpenAPI spec, so its class name is stable
+        across regenerations (unlike positional Status/Status1/Status2/... variants).
         """
-        from late.models import Status
+        from late.models._generated.models import AdStatus
 
-        assert hasattr(Status, "SUCCESS")
-        assert hasattr(Status, "FAILED")
-        assert Status.SUCCESS.value == "success"
-        assert Status.FAILED.value == "failed"
+        assert hasattr(AdStatus, "ACTIVE")
+        assert hasattr(AdStatus, "PAUSED")
+        assert AdStatus.ACTIVE.value == "active"
+        assert AdStatus.PAUSED.value == "paused"
 
     def test_type_enum_values(self):
         """Test MediaItem type field accepts media types."""

@@ -189,6 +189,7 @@ Both `from zernio import ...` and `from late import ...` work identically. The `
 | `posts.update_post()` | Update post |
 | `posts.update_post_metadata()` | Update post metadata |
 | `posts.delete_post()` | Delete post |
+| `posts.edit_post()` | Edit published post |
 | `posts.retry_post()` | Retry failed post |
 | `posts.unpublish_post()` | Unpublish post |
 
@@ -221,14 +222,17 @@ Both `from zernio import ...` and `from late import ...` work identically. The `
 | `analytics.get_best_time_to_post()` | Get best times to post |
 | `analytics.get_content_decay()` | Get content performance decay |
 | `analytics.get_daily_metrics()` | Get daily aggregated metrics |
-| `analytics.get_instagram_account_insights()` | Get Instagram account-level insights |
-| `analytics.get_instagram_demographics()` | Get Instagram audience demographics |
+| `analytics.get_google_business_performance()` | Get GBP performance metrics |
+| `analytics.get_google_business_search_keywords()` | Get GBP search keywords |
+| `analytics.get_instagram_account_insights()` | Get Instagram insights |
+| `analytics.get_instagram_demographics()` | Get Instagram demographics |
 | `analytics.get_linked_in_aggregate_analytics()` | Get LinkedIn aggregate stats |
 | `analytics.get_linked_in_post_analytics()` | Get LinkedIn post stats |
 | `analytics.get_linked_in_post_reactions()` | Get LinkedIn post reactions |
 | `analytics.get_post_timeline()` | Get post analytics timeline |
-| `analytics.get_posting_frequency()` | Get posting frequency vs engagement |
+| `analytics.get_posting_frequency()` | Get frequency vs engagement |
 | `analytics.get_you_tube_daily_views()` | Get YouTube daily views |
+| `analytics.get_you_tube_demographics()` | Get YouTube demographics |
 
 ### Account Groups
 | Method | Description |
@@ -252,7 +256,6 @@ Both `from zernio import ...` and `from late import ...` work identically. The `
 | Method | Description |
 |--------|-------------|
 | `webhooks.create_webhook_settings()` | Create webhook |
-| `webhooks.get_webhook_logs()` | Get delivery logs |
 | `webhooks.get_webhook_settings()` | List webhooks |
 | `webhooks.update_webhook_settings()` | Update webhook |
 | `webhooks.delete_webhook_settings()` | Delete webhook |
@@ -268,7 +271,7 @@ Both `from zernio import ...` and `from late import ...` work identically. The `
 ### Media
 | Method | Description |
 |--------|-------------|
-| `media.get_media_presigned_url()` | Get presigned upload URL |
+| `media.get_media_presigned_url()` | Get upload URL |
 | `media.upload()` | Upload a file from path |
 | `media.upload_bytes()` | Upload file from bytes |
 | `media.upload_large()` | Upload large file with multipart |
@@ -289,9 +292,7 @@ Both `from zernio import ...` and `from late import ...` work identically. The `
 ### Logs
 | Method | Description |
 |--------|-------------|
-| `logs.list_connection_logs()` | List connection logs |
-| `logs.list_posts_logs()` | List publishing logs |
-| `logs.get_post_logs()` | Get post logs |
+| `logs.list_logs()` | List activity logs |
 
 ### Connect (OAuth)
 | Method | Description |
@@ -318,6 +319,7 @@ Both `from zernio import ...` and `from late import ...` work identically. The `
 | `connect.update_reddit_subreddits()` | Set default subreddit |
 | `connect.update_youtube_default_playlist()` | Set default YouTube playlist |
 | `connect.complete_telegram_connect()` | Check Telegram status |
+| `connect.connect_ads()` | Connect ads for a platform |
 | `connect.connect_bluesky_credentials()` | Connect Bluesky account |
 | `connect.connect_whats_app_credentials()` | Connect WhatsApp via credentials |
 | `connect.handle_o_auth_callback()` | Complete OAuth callback |
@@ -351,55 +353,56 @@ Both `from zernio import ...` and `from late import ...` work identically. The `
 | Method | Description |
 |--------|-------------|
 | `ad_audiences.list_ad_audiences()` | List custom audiences |
-| `ad_audiences.create_ad_audience()` | Create a custom audience (Meta only) |
+| `ad_audiences.create_ad_audience()` | Create custom audience |
 | `ad_audiences.get_ad_audience()` | Get audience details |
-| `ad_audiences.delete_ad_audience()` | Delete a custom audience |
-| `ad_audiences.add_users_to_ad_audience()` | Add users to a customer list audience |
+| `ad_audiences.delete_ad_audience()` | Delete custom audience |
+| `ad_audiences.add_users_to_ad_audience()` | Add users to audience |
 
 ### Ad Campaigns
 | Method | Description |
 |--------|-------------|
-| `ad_campaigns.list_ad_campaigns()` | List campaigns with aggregate metrics |
-| `ad_campaigns.get_ad_tree()` | Get nested campaign/ad-set/ad tree |
+| `ad_campaigns.list_ad_campaigns()` | List campaigns |
+| `ad_campaigns.get_ad_tree()` | Get campaign tree |
 | `ad_campaigns.update_ad_campaign_status()` | Pause or resume a campaign |
 
 ### Ads
 | Method | Description |
 |--------|-------------|
-| `ads.list_ad_accounts()` | List ad accounts for a social account |
+| `ads.list_ad_accounts()` | List ad accounts |
 | `ads.list_ads()` | List ads |
-| `ads.create_standalone_ad()` | Create a standalone ad with custom creative |
+| `ads.list_conversion_destinations()` | List destinations for the Conversions API |
+| `ads.create_standalone_ad()` | Create standalone ad |
 | `ads.get_ad()` | Get ad details |
-| `ads.get_ad_analytics()` | Get ad analytics with daily breakdown |
-| `ads.update_ad()` | Update ad (pause/resume, budget, targeting, name) |
+| `ads.get_ad_analytics()` | Get ad analytics |
+| `ads.update_ad()` | Update ad |
 | `ads.delete_ad()` | Cancel an ad |
-| `ads.boost_post()` | Boost an existing post as a paid ad |
+| `ads.boost_post()` | Boost post as ad |
 | `ads.search_ad_interests()` | Search targeting interests |
-| `ads.sync_external_ads()` | Sync external ads from platform ad managers |
+| `ads.send_conversions()` | Send conversion events to an ad platform |
 
 ### Broadcasts
 | Method | Description |
 |--------|-------------|
 | `broadcasts.list_broadcast_recipients()` | List broadcast recipients |
 | `broadcasts.list_broadcasts()` | List broadcasts |
-| `broadcasts.create_broadcast()` | Create a broadcast draft |
+| `broadcasts.create_broadcast()` | Create broadcast draft |
 | `broadcasts.get_broadcast()` | Get broadcast details |
-| `broadcasts.update_broadcast()` | Update a broadcast |
-| `broadcasts.delete_broadcast()` | Delete a broadcast (draft only) |
+| `broadcasts.update_broadcast()` | Update broadcast |
+| `broadcasts.delete_broadcast()` | Delete broadcast |
 | `broadcasts.add_broadcast_recipients()` | Add recipients to a broadcast |
-| `broadcasts.cancel_broadcast()` | Cancel a broadcast |
+| `broadcasts.cancel_broadcast()` | Cancel broadcast |
 | `broadcasts.schedule_broadcast()` | Schedule broadcast for later |
-| `broadcasts.send_broadcast()` | Trigger immediate send |
+| `broadcasts.send_broadcast()` | Send broadcast now |
 
 ### Comment Automations
 | Method | Description |
 |--------|-------------|
-| `comment_automations.list_comment_automation_logs()` | List trigger logs for an automation |
+| `comment_automations.list_comment_automation_logs()` | List automation logs |
 | `comment_automations.list_comment_automations()` | List comment-to-DM automations |
-| `comment_automations.create_comment_automation()` | Create a comment-to-DM automation |
-| `comment_automations.get_comment_automation()` | Get automation details with recent logs |
+| `comment_automations.create_comment_automation()` | Create comment-to-DM automation |
+| `comment_automations.get_comment_automation()` | Get automation details |
 | `comment_automations.update_comment_automation()` | Update automation settings |
-| `comment_automations.delete_comment_automation()` | Delete automation and all logs |
+| `comment_automations.delete_comment_automation()` | Delete automation |
 
 ### Comments (Inbox)
 | Method | Description |
@@ -419,21 +422,21 @@ Both `from zernio import ...` and `from late import ...` work identically. The `
 |--------|-------------|
 | `contacts.list_contacts()` | List contacts |
 | `contacts.bulk_create_contacts()` | Bulk create contacts |
-| `contacts.create_contact()` | Create a contact |
-| `contacts.get_contact()` | Get contact with channels |
+| `contacts.create_contact()` | Create contact |
+| `contacts.get_contact()` | Get contact |
 | `contacts.get_contact_channels()` | List channels for a contact |
-| `contacts.update_contact()` | Update a contact |
-| `contacts.delete_contact()` | Delete a contact |
+| `contacts.update_contact()` | Update contact |
+| `contacts.delete_contact()` | Delete contact |
 
 ### Custom Fields
 | Method | Description |
 |--------|-------------|
 | `custom_fields.list_custom_fields()` | List custom field definitions |
-| `custom_fields.create_custom_field()` | Create a custom field definition |
-| `custom_fields.update_custom_field()` | Update a custom field definition |
-| `custom_fields.delete_custom_field()` | Delete a custom field definition |
-| `custom_fields.clear_contact_field_value()` | Clear a custom field value |
-| `custom_fields.set_contact_field_value()` | Set a custom field value |
+| `custom_fields.create_custom_field()` | Create custom field |
+| `custom_fields.update_custom_field()` | Update custom field |
+| `custom_fields.delete_custom_field()` | Delete custom field |
+| `custom_fields.clear_contact_field_value()` | Clear custom field value |
+| `custom_fields.set_contact_field_value()` | Set custom field value |
 
 ### GMB Attributes
 | Method | Description |
@@ -471,6 +474,7 @@ Both `from zernio import ...` and `from late import ...` work identically. The `
 | Method | Description |
 |--------|-------------|
 | `messages.list_inbox_conversations()` | List conversations |
+| `messages.create_inbox_conversation()` | Create conversation |
 | `messages.get_inbox_conversation()` | Get conversation |
 | `messages.get_inbox_conversation_messages()` | List messages |
 | `messages.update_inbox_conversation()` | Update conversation status |
@@ -494,14 +498,14 @@ Both `from zernio import ...` and `from late import ...` work identically. The `
 |--------|-------------|
 | `sequences.list_sequence_enrollments()` | List enrollments for a sequence |
 | `sequences.list_sequences()` | List sequences |
-| `sequences.create_sequence()` | Create a sequence |
+| `sequences.create_sequence()` | Create sequence |
 | `sequences.get_sequence()` | Get sequence with steps |
-| `sequences.update_sequence()` | Update a sequence |
-| `sequences.delete_sequence()` | Delete a sequence |
-| `sequences.activate_sequence()` | Activate a sequence |
+| `sequences.update_sequence()` | Update sequence |
+| `sequences.delete_sequence()` | Delete sequence |
+| `sequences.activate_sequence()` | Activate sequence |
 | `sequences.enroll_contacts()` | Enroll contacts in a sequence |
-| `sequences.pause_sequence()` | Pause a sequence |
-| `sequences.unenroll_contact()` | Unenroll a contact from a sequence |
+| `sequences.pause_sequence()` | Pause sequence |
+| `sequences.unenroll_contact()` | Unenroll contact |
 
 ### Twitter Engagement
 | Method | Description |
@@ -518,7 +522,7 @@ Both `from zernio import ...` and `from late import ...` work identically. The `
 |--------|-------------|
 | `validate.validate_media()` | Validate media URL |
 | `validate.validate_post()` | Validate post content |
-| `validate.validate_post_length()` | Validate post character count |
+| `validate.validate_post_length()` | Validate character count |
 | `validate.validate_subreddit()` | Check subreddit existence |
 
 ### WhatsApp
@@ -526,47 +530,39 @@ Both `from zernio import ...` and `from late import ...` work identically. The `
 |--------|-------------|
 | `whatsapp.list_whats_app_group_chats()` | List active groups |
 | `whatsapp.list_whats_app_group_join_requests()` | List join requests |
-| `whatsapp.bulk_delete_whats_app_contacts()` | Bulk delete contacts |
-| `whatsapp.bulk_update_whats_app_contacts()` | Bulk update contacts |
-| `whatsapp.create_whats_app_broadcast()` | Create broadcast |
-| `whatsapp.create_whats_app_contact()` | Create contact |
 | `whatsapp.create_whats_app_group_chat()` | Create group |
 | `whatsapp.create_whats_app_group_invite_link()` | Create invite link |
 | `whatsapp.create_whats_app_template()` | Create template |
-| `whatsapp.get_whats_app_broadcast()` | Get broadcast |
-| `whatsapp.get_whats_app_broadcast_recipients()` | List recipients |
-| `whatsapp.get_whats_app_broadcasts()` | List broadcasts |
 | `whatsapp.get_whats_app_business_profile()` | Get business profile |
-| `whatsapp.get_whats_app_contact()` | Get contact |
-| `whatsapp.get_whats_app_contacts()` | List contacts |
-| `whatsapp.get_whats_app_display_name()` | Get display name and review status |
+| `whatsapp.get_whats_app_display_name()` | Get display name status |
 | `whatsapp.get_whats_app_group_chat()` | Get group info |
-| `whatsapp.get_whats_app_groups()` | List contact groups |
 | `whatsapp.get_whats_app_template()` | Get template |
 | `whatsapp.get_whats_app_templates()` | List templates |
 | `whatsapp.update_whats_app_business_profile()` | Update business profile |
-| `whatsapp.update_whats_app_contact()` | Update contact |
 | `whatsapp.update_whats_app_display_name()` | Request display name change |
 | `whatsapp.update_whats_app_group_chat()` | Update group settings |
 | `whatsapp.update_whats_app_template()` | Update template |
-| `whatsapp.delete_whats_app_broadcast()` | Delete broadcast |
-| `whatsapp.delete_whats_app_contact()` | Delete contact |
-| `whatsapp.delete_whats_app_group()` | Delete group |
 | `whatsapp.delete_whats_app_group_chat()` | Delete group |
 | `whatsapp.delete_whats_app_template()` | Delete template |
-| `whatsapp.add_whats_app_broadcast_recipients()` | Add recipients |
 | `whatsapp.add_whats_app_group_participants()` | Add participants |
 | `whatsapp.approve_whats_app_group_join_requests()` | Approve join requests |
-| `whatsapp.cancel_whats_app_broadcast_schedule()` | Cancel scheduled broadcast |
-| `whatsapp.import_whats_app_contacts()` | Bulk import contacts |
 | `whatsapp.reject_whats_app_group_join_requests()` | Reject join requests |
-| `whatsapp.remove_whats_app_broadcast_recipients()` | Remove recipients |
 | `whatsapp.remove_whats_app_group_participants()` | Remove participants |
-| `whatsapp.rename_whats_app_group()` | Rename group |
-| `whatsapp.schedule_whats_app_broadcast()` | Schedule broadcast |
-| `whatsapp.send_whats_app_broadcast()` | Send broadcast |
-| `whatsapp.send_whats_app_bulk()` | Bulk send template messages |
 | `whatsapp.upload_whats_app_profile_photo()` | Upload profile picture |
+
+### WhatsApp Flows
+| Method | Description |
+|--------|-------------|
+| `whatsapp_flows.list_whats_app_flows()` | List flows |
+| `whatsapp_flows.create_whats_app_flow()` | Create flow |
+| `whatsapp_flows.get_whats_app_flow()` | Get flow |
+| `whatsapp_flows.get_whats_app_flow_json()` | Get flow JSON asset |
+| `whatsapp_flows.update_whats_app_flow()` | Update flow |
+| `whatsapp_flows.delete_whats_app_flow()` | Delete flow |
+| `whatsapp_flows.deprecate_whats_app_flow()` | Deprecate flow |
+| `whatsapp_flows.publish_whats_app_flow()` | Publish flow |
+| `whatsapp_flows.send_whats_app_flow_message()` | Send flow message |
+| `whatsapp_flows.upload_whats_app_flow_json()` | Upload flow JSON |
 
 ### WhatsApp Phone Numbers
 | Method | Description |

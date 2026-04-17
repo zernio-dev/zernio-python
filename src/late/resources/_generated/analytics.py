@@ -73,8 +73,17 @@ class AnalyticsResource:
         )
         return self._client._get("/v1/analytics/youtube/daily-views", params=params)
 
-    def get_instagram_account_insights(self, account_id: str, *, metrics: str | None = None, since: str | None = None, until: str | None = None, metric_type: str | None = "total_value", breakdown: str | None = None) -> dict[str, Any]:
-        """Get Instagram account-level insights"""
+    def get_instagram_account_insights(
+        self,
+        account_id: str,
+        *,
+        metrics: str | None = None,
+        since: str | None = None,
+        until: str | None = None,
+        metric_type: str | None = "total_value",
+        breakdown: str | None = None,
+    ) -> dict[str, Any]:
+        """Get Instagram insights"""
         params = self._build_params(
             account_id=account_id,
             metrics=metrics,
@@ -85,8 +94,15 @@ class AnalyticsResource:
         )
         return self._client._get("/v1/analytics/instagram/account-insights", params=params)
 
-    def get_instagram_demographics(self, account_id: str, *, metric: str | None = "follower_demographics", breakdown: str | None = None, timeframe: str | None = "this_month") -> dict[str, Any]:
-        """Get Instagram audience demographics"""
+    def get_instagram_demographics(
+        self,
+        account_id: str,
+        *,
+        metric: str | None = "follower_demographics",
+        breakdown: str | None = None,
+        timeframe: str | None = "this_month",
+    ) -> dict[str, Any]:
+        """Get Instagram demographics"""
         params = self._build_params(
             account_id=account_id,
             metric=metric,
@@ -95,7 +111,33 @@ class AnalyticsResource:
         )
         return self._client._get("/v1/analytics/instagram/demographics", params=params)
 
-    def get_daily_metrics(self, *, platform: str | None = None, profile_id: str | None = None, account_id: str | None = None, from_date: datetime | str | None = None, to_date: datetime | str | None = None, source: str | None = "all") -> dict[str, Any]:
+    def get_you_tube_demographics(
+        self,
+        account_id: str,
+        *,
+        breakdown: str | None = None,
+        start_date: str | None = None,
+        end_date: str | None = None,
+    ) -> dict[str, Any]:
+        """Get YouTube demographics"""
+        params = self._build_params(
+            account_id=account_id,
+            breakdown=breakdown,
+            start_date=start_date,
+            end_date=end_date,
+        )
+        return self._client._get("/v1/analytics/youtube/demographics", params=params)
+
+    def get_daily_metrics(
+        self,
+        *,
+        platform: str | None = None,
+        profile_id: str | None = None,
+        account_id: str | None = None,
+        from_date: datetime | str | None = None,
+        to_date: datetime | str | None = None,
+        source: str | None = "all",
+    ) -> dict[str, Any]:
         """Get daily aggregated metrics"""
         params = self._build_params(
             platform=platform,
@@ -125,8 +167,14 @@ class AnalyticsResource:
         )
         return self._client._get("/v1/analytics/content-decay", params=params)
 
-    def get_posting_frequency(self, *, platform: str | None = None, profile_id: str | None = None, source: str | None = "all") -> dict[str, Any]:
-        """Get posting frequency vs engagement"""
+    def get_posting_frequency(
+        self,
+        *,
+        platform: str | None = None,
+        profile_id: str | None = None,
+        source: str | None = "all",
+    ) -> dict[str, Any]:
+        """Get frequency vs engagement"""
         params = self._build_params(
             platform=platform,
             profile_id=profile_id,
@@ -143,7 +191,51 @@ class AnalyticsResource:
         )
         return self._client._get("/v1/analytics/post-timeline", params=params)
 
-    def get_linked_in_aggregate_analytics(self, account_id: str, *, aggregation: str | None = "TOTAL", start_date: str | None = None, end_date: str | None = None, metrics: str | None = None) -> dict[str, Any]:
+    def get_google_business_performance(
+        self,
+        account_id: str,
+        *,
+        metrics: str | None = None,
+        start_date: str | None = None,
+        end_date: str | None = None,
+    ) -> dict[str, Any]:
+        """Get GBP performance metrics"""
+        params = self._build_params(
+            account_id=account_id,
+            metrics=metrics,
+            start_date=start_date,
+            end_date=end_date,
+        )
+        return self._client._get(
+            "/v1/analytics/googlebusiness/performance", params=params
+        )
+
+    def get_google_business_search_keywords(
+        self,
+        account_id: str,
+        *,
+        start_month: str | None = None,
+        end_month: str | None = None,
+    ) -> dict[str, Any]:
+        """Get GBP search keywords"""
+        params = self._build_params(
+            account_id=account_id,
+            start_month=start_month,
+            end_month=end_month,
+        )
+        return self._client._get(
+            "/v1/analytics/googlebusiness/search-keywords", params=params
+        )
+
+    def get_linked_in_aggregate_analytics(
+        self,
+        account_id: str,
+        *,
+        aggregation: str | None = "TOTAL",
+        start_date: str | None = None,
+        end_date: str | None = None,
+        metrics: str | None = None,
+    ) -> dict[str, Any]:
         """Get LinkedIn aggregate stats"""
         params = self._build_params(
             aggregation=aggregation,
@@ -196,8 +288,17 @@ class AnalyticsResource:
         )
         return await self._client._aget("/v1/analytics/youtube/daily-views", params=params)
 
-    async def aget_instagram_account_insights(self, account_id: str, *, metrics: str | None = None, since: str | None = None, until: str | None = None, metric_type: str | None = "total_value", breakdown: str | None = None) -> dict[str, Any]:
-        """Get Instagram account-level insights (async)"""
+    async def aget_instagram_account_insights(
+        self,
+        account_id: str,
+        *,
+        metrics: str | None = None,
+        since: str | None = None,
+        until: str | None = None,
+        metric_type: str | None = "total_value",
+        breakdown: str | None = None,
+    ) -> dict[str, Any]:
+        """Get Instagram insights (async)"""
         params = self._build_params(
             account_id=account_id,
             metrics=metrics,
@@ -208,8 +309,15 @@ class AnalyticsResource:
         )
         return await self._client._aget("/v1/analytics/instagram/account-insights", params=params)
 
-    async def aget_instagram_demographics(self, account_id: str, *, metric: str | None = "follower_demographics", breakdown: str | None = None, timeframe: str | None = "this_month") -> dict[str, Any]:
-        """Get Instagram audience demographics (async)"""
+    async def aget_instagram_demographics(
+        self,
+        account_id: str,
+        *,
+        metric: str | None = "follower_demographics",
+        breakdown: str | None = None,
+        timeframe: str | None = "this_month",
+    ) -> dict[str, Any]:
+        """Get Instagram demographics (async)"""
         params = self._build_params(
             account_id=account_id,
             metric=metric,
@@ -218,7 +326,35 @@ class AnalyticsResource:
         )
         return await self._client._aget("/v1/analytics/instagram/demographics", params=params)
 
-    async def aget_daily_metrics(self, *, platform: str | None = None, profile_id: str | None = None, account_id: str | None = None, from_date: datetime | str | None = None, to_date: datetime | str | None = None, source: str | None = "all") -> dict[str, Any]:
+    async def aget_you_tube_demographics(
+        self,
+        account_id: str,
+        *,
+        breakdown: str | None = None,
+        start_date: str | None = None,
+        end_date: str | None = None,
+    ) -> dict[str, Any]:
+        """Get YouTube demographics (async)"""
+        params = self._build_params(
+            account_id=account_id,
+            breakdown=breakdown,
+            start_date=start_date,
+            end_date=end_date,
+        )
+        return await self._client._aget(
+            "/v1/analytics/youtube/demographics", params=params
+        )
+
+    async def aget_daily_metrics(
+        self,
+        *,
+        platform: str | None = None,
+        profile_id: str | None = None,
+        account_id: str | None = None,
+        from_date: datetime | str | None = None,
+        to_date: datetime | str | None = None,
+        source: str | None = "all",
+    ) -> dict[str, Any]:
         """Get daily aggregated metrics (async)"""
         params = self._build_params(
             platform=platform,
@@ -248,8 +384,14 @@ class AnalyticsResource:
         )
         return await self._client._aget("/v1/analytics/content-decay", params=params)
 
-    async def aget_posting_frequency(self, *, platform: str | None = None, profile_id: str | None = None, source: str | None = "all") -> dict[str, Any]:
-        """Get posting frequency vs engagement (async)"""
+    async def aget_posting_frequency(
+        self,
+        *,
+        platform: str | None = None,
+        profile_id: str | None = None,
+        source: str | None = "all",
+    ) -> dict[str, Any]:
+        """Get frequency vs engagement (async)"""
         params = self._build_params(
             platform=platform,
             profile_id=profile_id,
@@ -266,7 +408,51 @@ class AnalyticsResource:
         )
         return await self._client._aget("/v1/analytics/post-timeline", params=params)
 
-    async def aget_linked_in_aggregate_analytics(self, account_id: str, *, aggregation: str | None = "TOTAL", start_date: str | None = None, end_date: str | None = None, metrics: str | None = None) -> dict[str, Any]:
+    async def aget_google_business_performance(
+        self,
+        account_id: str,
+        *,
+        metrics: str | None = None,
+        start_date: str | None = None,
+        end_date: str | None = None,
+    ) -> dict[str, Any]:
+        """Get GBP performance metrics (async)"""
+        params = self._build_params(
+            account_id=account_id,
+            metrics=metrics,
+            start_date=start_date,
+            end_date=end_date,
+        )
+        return await self._client._aget(
+            "/v1/analytics/googlebusiness/performance", params=params
+        )
+
+    async def aget_google_business_search_keywords(
+        self,
+        account_id: str,
+        *,
+        start_month: str | None = None,
+        end_month: str | None = None,
+    ) -> dict[str, Any]:
+        """Get GBP search keywords (async)"""
+        params = self._build_params(
+            account_id=account_id,
+            start_month=start_month,
+            end_month=end_month,
+        )
+        return await self._client._aget(
+            "/v1/analytics/googlebusiness/search-keywords", params=params
+        )
+
+    async def aget_linked_in_aggregate_analytics(
+        self,
+        account_id: str,
+        *,
+        aggregation: str | None = "TOTAL",
+        start_date: str | None = None,
+        end_date: str | None = None,
+        metrics: str | None = None,
+    ) -> dict[str, Any]:
         """Get LinkedIn aggregate stats (async)"""
         params = self._build_params(
             aggregation=aggregation,

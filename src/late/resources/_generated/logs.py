@@ -44,66 +44,52 @@ class LogsResource:
                 result[to_camel(k)] = v
         return result
 
-    def list_posts_logs(self, *, status: str | None = None, platform: str | None = None, action: str | None = None, days: int | None = 7, limit: int | None = 50, skip: int | None = 0, search: str | None = None) -> dict[str, Any]:
-        """List publishing logs"""
+    def list_logs(
+        self,
+        *,
+        type: str | None = "publishing",
+        status: str | None = None,
+        platform: str | None = None,
+        action: str | None = None,
+        search: str | None = None,
+        days: int | None = 90,
+        limit: int | None = 50,
+        skip: int | None = 0,
+    ) -> dict[str, Any]:
+        """List activity logs"""
         params = self._build_params(
+            type=type,
             status=status,
             platform=platform,
             action=action,
-            days=days,
-            limit=limit,
-            skip=skip,
             search=search,
-        )
-        return self._client._get("/v1/posts/logs", params=params)
-
-    def list_connection_logs(self, *, platform: str | None = None, event_type: str | None = None, status: str | None = None, days: int | None = 7, limit: int | None = 50, skip: int | None = 0) -> dict[str, Any]:
-        """List connection logs"""
-        params = self._build_params(
-            platform=platform,
-            event_type=event_type,
-            status=status,
             days=days,
             limit=limit,
             skip=skip,
         )
-        return self._client._get("/v1/connections/logs", params=params)
+        return self._client._get("/v1/logs", params=params)
 
-    def get_post_logs(self, post_id: str, *, limit: int | None = 50) -> dict[str, Any]:
-        """Get post logs"""
+    async def alist_logs(
+        self,
+        *,
+        type: str | None = "publishing",
+        status: str | None = None,
+        platform: str | None = None,
+        action: str | None = None,
+        search: str | None = None,
+        days: int | None = 90,
+        limit: int | None = 50,
+        skip: int | None = 0,
+    ) -> dict[str, Any]:
+        """List activity logs (async)"""
         params = self._build_params(
-            limit=limit,
-        )
-        return self._client._get(f"/v1/posts/{post_id}/logs", params=params)
-
-    async def alist_posts_logs(self, *, status: str | None = None, platform: str | None = None, action: str | None = None, days: int | None = 7, limit: int | None = 50, skip: int | None = 0, search: str | None = None) -> dict[str, Any]:
-        """List publishing logs (async)"""
-        params = self._build_params(
+            type=type,
             status=status,
             platform=platform,
             action=action,
-            days=days,
-            limit=limit,
-            skip=skip,
             search=search,
-        )
-        return await self._client._aget("/v1/posts/logs", params=params)
-
-    async def alist_connection_logs(self, *, platform: str | None = None, event_type: str | None = None, status: str | None = None, days: int | None = 7, limit: int | None = 50, skip: int | None = 0) -> dict[str, Any]:
-        """List connection logs (async)"""
-        params = self._build_params(
-            platform=platform,
-            event_type=event_type,
-            status=status,
             days=days,
             limit=limit,
             skip=skip,
         )
-        return await self._client._aget("/v1/connections/logs", params=params)
-
-    async def aget_post_logs(self, post_id: str, *, limit: int | None = 50) -> dict[str, Any]:
-        """Get post logs (async)"""
-        params = self._build_params(
-            limit=limit,
-        )
-        return await self._client._aget(f"/v1/posts/{post_id}/logs", params=params)
+        return await self._client._aget("/v1/logs", params=params)

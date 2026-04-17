@@ -9,6 +9,22 @@ from __future__ import annotations
 from typing import Any
 
 
+def _enum_str(value: Any) -> str:
+    """Extract string value from an enum or return as-is if already a string.
+
+    The auto-generated models use plain Enum classes (Platform5, etc.) whose
+    str() returns 'Platform5.TWITTER' instead of 'twitter'. This helper
+    normalises any enum value to its underlying string.
+    """
+    if value is None:
+        return ""
+    if isinstance(value, str):
+        return value
+    if hasattr(value, 'value'):
+        return str(value.value)
+    return str(value)
+
+
 def _format_response(response: Any) -> str:
     """Format SDK response for MCP output."""
     if response is None:
@@ -19,18 +35,16 @@ def _format_response(response: Any) -> str:
             posts = response.posts
             lines = [f"Found {len(posts)} post(s):"]
             for p in posts[:10]:
-                content = str(getattr(p, "content", ""))[:50]
-                status = getattr(p, "status", "unknown")
+                content = str(getattr(p, 'content', ''))[:50]
+                status = _enum_str(getattr(p, 'status', 'unknown'))
                 lines.append(f"- [{status}] {content}...")
             return "\n".join(lines)
         if hasattr(response, "accounts") and response.accounts:
             accs = response.accounts
             lines = [f"Found {len(accs)} account(s):"]
             for a in accs[:10]:
-                platform = getattr(a, "platform", "?")
-                username = getattr(a, "username", None) or getattr(
-                    a, "displayName", "?"
-                )
+                platform = _enum_str(getattr(a, 'platform', '?'))
+                username = getattr(a, 'username', None) or getattr(a, 'displayName', '?')
                 lines.append(f"- {platform}: {username}")
             return "\n".join(lines)
         if hasattr(response, "profiles") and response.profiles:
@@ -42,8 +56,8 @@ def _format_response(response: Any) -> str:
             return "\n".join(lines)
         if hasattr(response, "post") and response.post:
             p = response.post
-            return f"Post ID: {getattr(p, 'field_id', 'N/A')}\nStatus: {getattr(p, 'status', 'N/A')}"
-        if hasattr(response, "profile") and response.profile:
+            return f"Post ID: {getattr(p, 'field_id', 'N/A')}\nStatus: {_enum_str(getattr(p, 'status', 'N/A'))}"
+        if hasattr(response, 'profile') and response.profile:
             p = response.profile
             return f"Profile: {getattr(p, 'name', 'N/A')} (ID: {getattr(p, 'field_id', 'N/A')})"
     return str(response)
@@ -257,13 +271,7 @@ def register_generated_tools(mcp, _get_client):
     # ACCOUNTS
 
     @mcp.tool()
-    def accounts_list_accounts(
-        profile_id: str = "",
-        platform: str = "",
-        include_over_limit: bool = False,
-        page: int = 0,
-        limit: int = 0,
-    ) -> str:
+    def accounts_list_accounts(profile_id: str = "", platform: str = "", include_over_limit: bool = False, page: int = 0, limit: int = 0) -> str:
         """List accounts
 
         Args:
@@ -274,13 +282,7 @@ def register_generated_tools(mcp, _get_client):
             limit: Page size. Required alongside page for pagination."""
         client = _get_client()
         try:
-            response = client.accounts.list_accounts(
-                profile_id=profile_id,
-                platform=platform,
-                include_over_limit=include_over_limit,
-                page=page,
-                limit=limit,
-            )
+            response = client.accounts.list_accounts(profile_id=profile_id, platform=platform, include_over_limit=include_over_limit, page=page, limit=limit)
             return _format_response(response)
         except Exception as e:
             return f"Error: {e}"
@@ -1229,6 +1231,371 @@ def register_generated_tools(mcp, _get_client):
         except Exception as e:
             return f"Error: {e}"
 
+    # AD_AUDIENCES
+
+
+    @mcp.tool()
+    def ad_audiences_list_ad_audiences(account_id: str, ad_account_id: str, platform: str = "") -> str:
+        """List custom audiences
+
+        Args:
+            account_id: Social account ID (required)
+            ad_account_id: Platform ad account ID (required)
+            platform"""
+        client = _get_client()
+        try:
+            response = client.ad_audiences.list_ad_audiences(account_id=account_id, ad_account_id=ad_account_id, platform=platform)
+            return _format_response(response)
+        except Exception as e:
+            return f'Error: {e}'
+
+
+    @mcp.tool()
+    def ad_audiences_create_ad_audience(account_id: str, ad_account_id: str, name: str, type: str, description: str = "", pixel_id: str = "", retention_days: int = 0, source_audience_id: str = "", country: str = "", ratio: float = 0.0, rule: str = "", customer_file_source: str = "") -> str:
+        """Create custom audience
+
+        Args:
+            account_id: (required)
+            ad_account_id: Must start with act_ (required)
+            name: (required)
+            description
+            type: (required)
+            pixel_id: Required for website audiences
+            retention_days: Required for website audiences
+            source_audience_id: Required for lookalike audiences
+            country: 2-letter code, required for lookalike audiences
+            ratio: Required for lookalike audiences
+            rule: Pixel event rule for website audiences (optional)
+            customer_file_source: Data source declaration for GDPR compliance (customer_list only)"""
+        client = _get_client()
+        try:
+            response = client.ad_audiences.create_ad_audience(account_id=account_id, ad_account_id=ad_account_id, name=name, description=description, type=type, pixel_id=pixel_id, retention_days=retention_days, source_audience_id=source_audience_id, country=country, ratio=ratio, rule=rule, customer_file_source=customer_file_source)
+            return _format_response(response)
+        except Exception as e:
+            return f'Error: {e}'
+
+
+    @mcp.tool()
+    def ad_audiences_get_ad_audience(audience_id: str) -> str:
+        """Get audience details
+
+        Args:
+            audience_id: (required)"""
+        client = _get_client()
+        try:
+            response = client.ad_audiences.get_ad_audience(audience_id=audience_id)
+            return _format_response(response)
+        except Exception as e:
+            return f'Error: {e}'
+
+
+    @mcp.tool()
+    def ad_audiences_delete_ad_audience(audience_id: str) -> str:
+        """Delete custom audience
+
+        Args:
+            audience_id: (required)"""
+        client = _get_client()
+        try:
+            response = client.ad_audiences.delete_ad_audience(audience_id=audience_id)
+            return _format_response(response)
+        except Exception as e:
+            return f'Error: {e}'
+
+
+    @mcp.tool()
+    def ad_audiences_add_users_to_ad_audience(audience_id: str, users: str) -> str:
+        """Add users to audience
+
+        Args:
+            audience_id: (required)
+            users: (required)"""
+        client = _get_client()
+        try:
+            response = client.ad_audiences.add_users_to_ad_audience(audience_id=audience_id, users=users)
+            return _format_response(response)
+        except Exception as e:
+            return f'Error: {e}'
+
+    # AD_CAMPAIGNS
+
+
+    @mcp.tool()
+    def ad_campaigns_list_ad_campaigns(page: int = 1, limit: int = 20, source: str = "zernio", platform: str = "", status: str = "", ad_account_id: str = "", account_id: str = "", profile_id: str = "") -> str:
+        """List campaigns
+
+        Args:
+            page: Page number
+            limit
+            source
+            platform
+            status: Filter by derived campaign status (post-aggregation)
+            ad_account_id: Platform ad account ID (e.g. act_123 for Meta)
+            account_id: Social account ID
+            profile_id: Profile ID"""
+        client = _get_client()
+        try:
+            response = client.ad_campaigns.list_ad_campaigns(page=page, limit=limit, source=source, platform=platform, status=status, ad_account_id=ad_account_id, account_id=account_id, profile_id=profile_id)
+            return _format_response(response)
+        except Exception as e:
+            return f'Error: {e}'
+
+
+    @mcp.tool()
+    def ad_campaigns_update_ad_campaign_status(campaign_id: str, status: str, platform: str) -> str:
+        """Pause or resume a campaign
+
+        Args:
+            campaign_id: Platform campaign ID (required)
+            status: (required)
+            platform: (required)"""
+        client = _get_client()
+        try:
+            response = client.ad_campaigns.update_ad_campaign_status(campaign_id=campaign_id, status=status, platform=platform)
+            return _format_response(response)
+        except Exception as e:
+            return f'Error: {e}'
+
+
+    @mcp.tool()
+    def ad_campaigns_get_ad_tree(page: int = 1, limit: int = 20, source: str = "zernio", platform: str = "", status: str = "", ad_account_id: str = "", account_id: str = "", profile_id: str = "", from_date: str = "", to_date: str = "") -> str:
+        """Get campaign tree
+
+        Args:
+            page: Page number
+            limit: Campaigns per page
+            source
+            platform
+            status: Filter by derived campaign status (post-aggregation)
+            ad_account_id: Platform ad account ID
+            account_id: Social account ID
+            profile_id: Profile ID
+            from_date: Start of metrics date range (YYYY-MM-DD). Defaults to 90 days ago.
+            to_date: End of metrics date range (YYYY-MM-DD). Defaults to today. Max 90-day range."""
+        client = _get_client()
+        try:
+            response = client.ad_campaigns.get_ad_tree(page=page, limit=limit, source=source, platform=platform, status=status, ad_account_id=ad_account_id, account_id=account_id, profile_id=profile_id, from_date=from_date, to_date=to_date)
+            return _format_response(response)
+        except Exception as e:
+            return f'Error: {e}'
+
+    # ADS
+
+
+    @mcp.tool()
+    def ads_list_ads(page: int = 1, limit: int = 50, source: str = "zernio", status: str = "", platform: str = "", account_id: str = "", ad_account_id: str = "", profile_id: str = "", campaign_id: str = "", from_date: str = "", to_date: str = "") -> str:
+        """List ads
+
+        Args:
+            page: Page number
+            limit
+            source: zernio = Zernio-created only, all = include external ads
+            status
+            platform
+            account_id: Social account ID
+            ad_account_id: Platform ad account ID (e.g. act_123 for Meta). Mirrors the same filter on /v1/ads/campaigns and /v1/ads/tree.
+            profile_id: Profile ID
+            campaign_id: Platform campaign ID (filter ads within a campaign)
+            from_date: Start of metrics date range (YYYY-MM-DD). Defaults to 90 days ago.
+            to_date: End of metrics date range (YYYY-MM-DD). Defaults to today. Max 90-day range."""
+        client = _get_client()
+        try:
+            response = client.ads.list_ads(page=page, limit=limit, source=source, status=status, platform=platform, account_id=account_id, ad_account_id=ad_account_id, profile_id=profile_id, campaign_id=campaign_id, from_date=from_date, to_date=to_date)
+            return _format_response(response)
+        except Exception as e:
+            return f'Error: {e}'
+
+
+    @mcp.tool()
+    def ads_get_ad(ad_id: str) -> str:
+        """Get ad details
+
+        Args:
+            ad_id: (required)"""
+        client = _get_client()
+        try:
+            response = client.ads.get_ad(ad_id=ad_id)
+            return _format_response(response)
+        except Exception as e:
+            return f'Error: {e}'
+
+
+    @mcp.tool()
+    def ads_update_ad(ad_id: str, status: str = "", budget: str = "", targeting: str = "", name: str = "") -> str:
+        """Update ad
+
+        Args:
+            ad_id: (required)
+            status
+            budget
+            targeting: Meta-only. Targeting updates for other platforms are not supported after creation.
+            name"""
+        client = _get_client()
+        try:
+            response = client.ads.update_ad(ad_id=ad_id, status=status, budget=budget, targeting=targeting, name=name)
+            return _format_response(response)
+        except Exception as e:
+            return f'Error: {e}'
+
+
+    @mcp.tool()
+    def ads_delete_ad(ad_id: str) -> str:
+        """Cancel an ad
+
+        Args:
+            ad_id: (required)"""
+        client = _get_client()
+        try:
+            response = client.ads.delete_ad(ad_id=ad_id)
+            return _format_response(response)
+        except Exception as e:
+            return f'Error: {e}'
+
+
+    @mcp.tool()
+    def ads_get_ad_analytics(ad_id: str, from_date: str = "", to_date: str = "", breakdowns: str = "") -> str:
+        """Get ad analytics
+
+        Args:
+            ad_id: (required)
+            from_date: Start of date range (YYYY-MM-DD). Defaults to 90 days ago.
+            to_date: End of date range (YYYY-MM-DD). Defaults to today. Max 90-day range.
+            breakdowns: Comma-separated breakdown dimensions. Meta: age, gender, country, publisher_platform, device_platform, region. TikTok: gender, age, country_code, platform, ac, language."""
+        client = _get_client()
+        try:
+            response = client.ads.get_ad_analytics(ad_id=ad_id, from_date=from_date, to_date=to_date, breakdowns=breakdowns)
+            return _format_response(response)
+        except Exception as e:
+            return f'Error: {e}'
+
+
+    @mcp.tool()
+    def ads_list_ad_accounts(account_id: str) -> str:
+        """List ad accounts
+
+        Args:
+            account_id: Social account ID (required)"""
+        client = _get_client()
+        try:
+            response = client.ads.list_ad_accounts(account_id=account_id)
+            return _format_response(response)
+        except Exception as e:
+            return f'Error: {e}'
+
+
+    @mcp.tool()
+    def ads_boost_post(account_id: str, ad_account_id: str, name: str, goal: str, budget: str, post_id: str = "", platform_post_id: str = "", currency: str = "", schedule: str = "", targeting: str = "", bid_amount: float = 0.0, tracking: str = "", special_ad_categories: str = "") -> str:
+        """Boost post as ad
+
+        Args:
+            post_id: Zernio post ID (provide this or platformPostId)
+            platform_post_id: Platform post ID (alternative to postId)
+            account_id: Social account ID (required)
+            ad_account_id: Platform ad account ID (required)
+            name: (required)
+            goal: (required)
+            budget: (required)
+            currency
+            schedule
+            targeting
+            bid_amount: Max bid cap (Meta only)
+            tracking: Meta only. Tracking specs (pixel, URL tags).
+            special_ad_categories: Meta only. Required for housing, employment, credit, or political ads."""
+        client = _get_client()
+        try:
+            response = client.ads.boost_post(post_id=post_id, platform_post_id=platform_post_id, account_id=account_id, ad_account_id=ad_account_id, name=name, goal=goal, budget=budget, currency=currency, schedule=schedule, targeting=targeting, bid_amount=bid_amount, tracking=tracking, special_ad_categories=special_ad_categories)
+            return _format_response(response)
+        except Exception as e:
+            return f'Error: {e}'
+
+
+    @mcp.tool()
+    def ads_create_standalone_ad(account_id: str, ad_account_id: str, name: str, goal: str, budget_amount: float, budget_type: str, body: str, currency: str = "", headline: str = "", long_headline: str = "", call_to_action: str = "", link_url: str = "", image_url: str = "", business_name: str = "", board_id: str = "", countries: str = "", age_min: int = 0, age_max: int = 0, interests: str = "", end_date: str = "", audience_id: str = "", campaign_type: str = "display", keywords: str = "", additional_headlines: str = "", additional_descriptions: str = "") -> str:
+        """Create standalone ad
+
+        Args:
+            account_id: (required)
+            ad_account_id: (required)
+            name: (required)
+            goal: (required)
+            budget_amount: (required)
+            budget_type: (required)
+            currency
+            headline: Required for most platforms. Max: Meta=255, Google=30, Pinterest=100
+            long_headline: Google Display only
+            body: Max: Google=90, Pinterest=500 (required)
+            call_to_action: Meta only
+            link_url
+            image_url: Image URL (or video URL for TikTok). Not required for Google Search campaigns.
+            business_name: Google Display only
+            board_id: Pinterest only. Board ID (auto-creates if not provided).
+            countries
+            age_min
+            age_max
+            interests: Interest objects from /v1/ads/interests. Each must include id and name.
+            end_date: Required for lifetime budgets
+            audience_id: Custom audience ID for targeting
+            campaign_type: Google only
+            keywords: Google Search only
+            additional_headlines: Google Search RSA only. Extra headlines.
+            additional_descriptions: Google Search RSA only. Extra descriptions."""
+        client = _get_client()
+        try:
+            response = client.ads.create_standalone_ad(account_id=account_id, ad_account_id=ad_account_id, name=name, goal=goal, budget_amount=budget_amount, budget_type=budget_type, currency=currency, headline=headline, long_headline=long_headline, body=body, call_to_action=call_to_action, link_url=link_url, image_url=image_url, business_name=business_name, board_id=board_id, countries=countries, age_min=age_min, age_max=age_max, interests=interests, end_date=end_date, audience_id=audience_id, campaign_type=campaign_type, keywords=keywords, additional_headlines=additional_headlines, additional_descriptions=additional_descriptions)
+            return _format_response(response)
+        except Exception as e:
+            return f'Error: {e}'
+
+
+    @mcp.tool()
+    def ads_search_ad_interests(q: str, account_id: str) -> str:
+        """Search targeting interests
+
+        Args:
+            q: Search query (required)
+            account_id: Social account ID (required)"""
+        client = _get_client()
+        try:
+            response = client.ads.search_ad_interests(q=q, account_id=account_id)
+            return _format_response(response)
+        except Exception as e:
+            return f'Error: {e}'
+
+
+    @mcp.tool()
+    def ads_send_conversions(account_id: str, destination_id: str, events: str, test_code: str = "", consent: str = "") -> str:
+        """Send conversion events to an ad platform
+
+        Args:
+            account_id: SocialAccount ID (metaads or googleads). (required)
+            destination_id: Platform destination identifier. For Meta, the pixel/dataset
+    ID. For Google, the conversion action resource name.
+     (required)
+            events: (required)
+            test_code: Meta `test_event_code` passthrough. Ignored by Google.
+            consent: Batch-level user consent. Required by Google for EEA/UK
+    events under the Feb 2026 restrictions. Ignored by Meta."""
+        client = _get_client()
+        try:
+            response = client.ads.send_conversions(account_id=account_id, destination_id=destination_id, events=events, test_code=test_code, consent=consent)
+            return _format_response(response)
+        except Exception as e:
+            return f'Error: {e}'
+
+
+    @mcp.tool()
+    def ads_list_conversion_destinations(account_id: str) -> str:
+        """List destinations for the Conversions API
+
+        Args:
+            account_id: SocialAccount ID (metaads or googleads). (required)"""
+        client = _get_client()
+        try:
+            response = client.ads.list_conversion_destinations(account_id=account_id)
+            return _format_response(response)
+        except Exception as e:
+            return f'Error: {e}'
+
     # ANALYTICS
 
     @mcp.tool()
@@ -1302,15 +1669,8 @@ def register_generated_tools(mcp, _get_client):
             return f"Error: {e}"
 
     @mcp.tool()
-    def analytics_get_instagram_account_insights(
-        account_id: str,
-        metrics: str = "",
-        since: str = "",
-        until: str = "",
-        metric_type: str = "total_value",
-        breakdown: str = "",
-    ) -> str:
-        """Get Instagram account-level insights
+    def analytics_get_instagram_account_insights(account_id: str, metrics: str = "", since: str = "", until: str = "", metric_type: str = "total_value", breakdown: str = "") -> str:
+        """Get Instagram insights
 
             Args:
                 account_id: The Zernio SocialAccount ID for the Instagram account (required)
@@ -1339,13 +1699,8 @@ def register_generated_tools(mcp, _get_client):
             return f"Error: {e}"
 
     @mcp.tool()
-    def analytics_get_instagram_demographics(
-        account_id: str,
-        metric: str = "follower_demographics",
-        breakdown: str = "",
-        timeframe: str = "this_month",
-    ) -> str:
-        """Get Instagram audience demographics
+    def analytics_get_instagram_demographics(account_id: str, metric: str = "follower_demographics", breakdown: str = "", timeframe: str = "this_month") -> str:
+        """Get Instagram demographics
 
             Args:
                 account_id: The Zernio SocialAccount ID for the Instagram account (required)
@@ -1366,14 +1721,25 @@ def register_generated_tools(mcp, _get_client):
             return f"Error: {e}"
 
     @mcp.tool()
-    def analytics_get_daily_metrics(
-        platform: str = "",
-        profile_id: str = "",
-        account_id: str = "",
-        from_date: str = "",
-        to_date: str = "",
-        source: str = "all",
-    ) -> str:
+    def analytics_get_you_tube_demographics(account_id: str, breakdown: str = "", start_date: str = "", end_date: str = "") -> str:
+        """Get YouTube demographics
+
+        Args:
+            account_id: The Zernio SocialAccount ID for the YouTube account (required)
+            breakdown: Comma-separated list of demographic dimensions: age, gender, country.
+    Defaults to all three if omitted.
+            start_date: Start date in YYYY-MM-DD format. Defaults to 90 days ago.
+            end_date: End date in YYYY-MM-DD format. Defaults to 3 days ago (YouTube data latency)."""
+        client = _get_client()
+        try:
+            response = client.analytics.get_you_tube_demographics(account_id=account_id, breakdown=breakdown, start_date=start_date, end_date=end_date)
+            return _format_response(response)
+        except Exception as e:
+            return f'Error: {e}'
+
+
+    @mcp.tool()
+    def analytics_get_daily_metrics(platform: str = "", profile_id: str = "", account_id: str = "", from_date: str = "", to_date: str = "", source: str = "all") -> str:
         """Get daily aggregated metrics
 
         Args:
@@ -1436,10 +1802,8 @@ def register_generated_tools(mcp, _get_client):
             return f"Error: {e}"
 
     @mcp.tool()
-    def analytics_get_posting_frequency(
-        platform: str = "", profile_id: str = "", source: str = "all"
-    ) -> str:
-        """Get posting frequency vs engagement
+    def analytics_get_posting_frequency(platform: str = "", profile_id: str = "", source: str = "all") -> str:
+        """Get frequency vs engagement
 
         Args:
             platform: Filter by platform (e.g. "instagram", "tiktok"). Omit for all platforms.
@@ -1475,13 +1839,44 @@ def register_generated_tools(mcp, _get_client):
             return f"Error: {e}"
 
     @mcp.tool()
-    def analytics_get_linked_in_aggregate_analytics(
-        account_id: str,
-        aggregation: str = "TOTAL",
-        start_date: str = "",
-        end_date: str = "",
-        metrics: str = "",
-    ) -> str:
+    def analytics_get_google_business_performance(account_id: str, metrics: str = "", start_date: str = "", end_date: str = "") -> str:
+        """Get GBP performance metrics
+
+        Args:
+            account_id: The Zernio SocialAccount ID for the Google Business Profile account. (required)
+            metrics: Comma-separated metric names. Defaults to all available metrics.
+    Valid values: BUSINESS_IMPRESSIONS_DESKTOP_MAPS, BUSINESS_IMPRESSIONS_DESKTOP_SEARCH,
+    BUSINESS_IMPRESSIONS_MOBILE_MAPS, BUSINESS_IMPRESSIONS_MOBILE_SEARCH,
+    BUSINESS_CONVERSATIONS, BUSINESS_DIRECTION_REQUESTS, CALL_CLICKS, WEBSITE_CLICKS,
+    BUSINESS_BOOKINGS, BUSINESS_FOOD_ORDERS, BUSINESS_FOOD_MENU_CLICKS
+            start_date: Start date (YYYY-MM-DD). Defaults to 30 days ago. Max 18 months back.
+            end_date: End date (YYYY-MM-DD). Defaults to today."""
+        client = _get_client()
+        try:
+            response = client.analytics.get_google_business_performance(account_id=account_id, metrics=metrics, start_date=start_date, end_date=end_date)
+            return _format_response(response)
+        except Exception as e:
+            return f'Error: {e}'
+
+
+    @mcp.tool()
+    def analytics_get_google_business_search_keywords(account_id: str, start_month: str = "", end_month: str = "") -> str:
+        """Get GBP search keywords
+
+        Args:
+            account_id: The Zernio SocialAccount ID for the Google Business Profile account. (required)
+            start_month: Start month (YYYY-MM). Defaults to 3 months ago.
+            end_month: End month (YYYY-MM). Defaults to current month."""
+        client = _get_client()
+        try:
+            response = client.analytics.get_google_business_search_keywords(account_id=account_id, start_month=start_month, end_month=end_month)
+            return _format_response(response)
+        except Exception as e:
+            return f'Error: {e}'
+
+
+    @mcp.tool()
+    def analytics_get_linked_in_aggregate_analytics(account_id: str, aggregation: str = "TOTAL", start_date: str = "", end_date: str = "", metrics: str = "") -> str:
         """Get LinkedIn aggregate stats
 
         Args:
@@ -1625,17 +2020,8 @@ def register_generated_tools(mcp, _get_client):
             return f"Error: {e}"
 
     @mcp.tool()
-    def broadcasts_create_broadcast(
-        profile_id: str,
-        account_id: str,
-        platform: str,
-        name: str,
-        description: str = "",
-        message: str = "",
-        template: str = "",
-        segment_filters: str = "",
-    ) -> str:
-        """Create a broadcast draft
+    def broadcasts_create_broadcast(profile_id: str, account_id: str, platform: str, name: str, description: str = "", message: str = "", template: str = "", segment_filters: str = "") -> str:
+        """Create broadcast draft
 
         Args:
             profile_id: (required)
@@ -1677,7 +2063,7 @@ def register_generated_tools(mcp, _get_client):
 
     @mcp.tool()
     def broadcasts_update_broadcast(broadcast_id: str) -> str:
-        """Update a broadcast
+        """Update broadcast
 
         Args:
             broadcast_id: (required)"""
@@ -1690,7 +2076,7 @@ def register_generated_tools(mcp, _get_client):
 
     @mcp.tool()
     def broadcasts_delete_broadcast(broadcast_id: str) -> str:
-        """Delete a broadcast (draft only)
+        """Delete broadcast
 
         Args:
             broadcast_id: (required)"""
@@ -1703,7 +2089,7 @@ def register_generated_tools(mcp, _get_client):
 
     @mcp.tool()
     def broadcasts_send_broadcast(broadcast_id: str) -> str:
-        """Trigger immediate send
+        """Send broadcast now
 
         Args:
             broadcast_id: (required)"""
@@ -1732,7 +2118,7 @@ def register_generated_tools(mcp, _get_client):
 
     @mcp.tool()
     def broadcasts_cancel_broadcast(broadcast_id: str) -> str:
-        """Cancel a broadcast
+        """Cancel broadcast
 
         Args:
             broadcast_id: (required)"""
@@ -1807,19 +2193,8 @@ def register_generated_tools(mcp, _get_client):
             return f"Error: {e}"
 
     @mcp.tool()
-    def comment_automations_create_comment_automation(
-        profile_id: str,
-        account_id: str,
-        platform_post_id: str,
-        name: str,
-        dm_message: str,
-        post_id: str = "",
-        post_title: str = "",
-        keywords: str = "",
-        match_mode: str = "contains",
-        comment_reply: str = "",
-    ) -> str:
-        """Create a comment-to-DM automation
+    def comment_automations_create_comment_automation(profile_id: str, account_id: str, platform_post_id: str, name: str, dm_message: str, post_id: str = "", post_title: str = "", keywords: str = "", match_mode: str = "contains", comment_reply: str = "") -> str:
+        """Create comment-to-DM automation
 
         Args:
             profile_id: (required)
@@ -1852,7 +2227,7 @@ def register_generated_tools(mcp, _get_client):
 
     @mcp.tool()
     def comment_automations_get_comment_automation(automation_id: str) -> str:
-        """Get automation details with recent logs
+        """Get automation details
 
         Args:
             automation_id: (required)"""
@@ -1902,7 +2277,7 @@ def register_generated_tools(mcp, _get_client):
 
     @mcp.tool()
     def comment_automations_delete_comment_automation(automation_id: str) -> str:
-        """Delete automation and all logs
+        """Delete automation
 
         Args:
             automation_id: (required)"""
@@ -1916,10 +2291,8 @@ def register_generated_tools(mcp, _get_client):
             return f"Error: {e}"
 
     @mcp.tool()
-    def comment_automations_list_comment_automation_logs(
-        automation_id: str, status: str = "", limit: int = 50, skip: int = 0
-    ) -> str:
-        """List trigger logs for an automation
+    def comment_automations_list_comment_automation_logs(automation_id: str, status: str = "", limit: int = 50, skip: int = 0) -> str:
+        """List automation logs
 
         Args:
             automation_id: (required)
@@ -2214,6 +2587,24 @@ def register_generated_tools(mcp, _get_client):
             return f"Error: {e}"
 
     @mcp.tool()
+    def connect_ads(platform: str, profile_id: str, account_id: str = "", redirect_url: str = "", headless: bool = False) -> str:
+        """Connect ads for a platform
+
+        Args:
+            platform: Platform to connect ads for. Only platforms with ads support are accepted. (required)
+            profile_id: Your Zernio profile ID (required)
+            account_id: Existing SocialAccount ID. Required for separate-token platforms (tiktok, twitter). Ignored for same-token and standalone platforms.
+            redirect_url: Custom redirect URL after OAuth completes (same-token platforms only)
+            headless: Enable headless mode (same-token platforms only)"""
+        client = _get_client()
+        try:
+            response = client.connect.connect_ads(platform=platform, profile_id=profile_id, account_id=account_id, redirect_url=redirect_url, headless=headless)
+            return _format_response(response)
+        except Exception as e:
+            return f'Error: {e}'
+
+
+    @mcp.tool()
     def connect_list_facebook_pages(profile_id: str, temp_token: str) -> str:
         """List Facebook pages
 
@@ -2230,20 +2621,14 @@ def register_generated_tools(mcp, _get_client):
             return f"Error: {e}"
 
     @mcp.tool()
-    def connect_select_facebook_page(
-        profile_id: str,
-        page_id: str,
-        temp_token: str,
-        user_profile: str = "",
-        redirect_url: str = "",
-    ) -> str:
+    def connect_select_facebook_page(profile_id: str, page_id: str, temp_token: str, user_profile: str, redirect_url: str = "") -> str:
         """Select Facebook page
 
         Args:
             profile_id: Profile ID from your connection flow (required)
             page_id: The Facebook Page ID selected by the user (required)
             temp_token: Temporary Facebook access token from OAuth (required)
-            user_profile: Decoded user profile object from the OAuth callback
+            user_profile: Decoded user profile object from the OAuth callback (required)
             redirect_url: Optional custom redirect URL to return to after selection"""
         client = _get_client()
         try:
@@ -2259,46 +2644,32 @@ def register_generated_tools(mcp, _get_client):
             return f"Error: {e}"
 
     @mcp.tool()
-    def connect_list_google_business_locations(profile_id: str, temp_token: str) -> str:
+    def connect_list_google_business_locations(profile_id: str = "", pending_data_token: str = "", temp_token: str = "") -> str:
         """List GBP locations
 
         Args:
-            profile_id: Profile ID from your connection flow (required)
-            temp_token: Temporary Google access token from the OAuth callback redirect (required)"""
+            profile_id: Profile ID from your connection flow. Required for auth validation when provided.
+            pending_data_token: Token from the OAuth callback redirect. Preferred over tempToken because it preserves server-side token storage. One of pendingDataToken or tempToken is required.
+            temp_token: Legacy. Direct Google access token. Use pendingDataToken instead when available."""
         client = _get_client()
         try:
-            response = client.connect.list_google_business_locations(
-                profile_id=profile_id, temp_token=temp_token
-            )
+            response = client.connect.list_google_business_locations(profile_id=profile_id, pending_data_token=pending_data_token, temp_token=temp_token)
             return _format_response(response)
         except Exception as e:
             return f"Error: {e}"
 
     @mcp.tool()
-    def connect_select_google_business_location(
-        profile_id: str,
-        location_id: str,
-        temp_token: str,
-        user_profile: str = "",
-        redirect_url: str = "",
-    ) -> str:
+    def connect_select_google_business_location(profile_id: str, location_id: str, pending_data_token: str, redirect_url: str = "") -> str:
         """Select GBP location
 
         Args:
             profile_id: Profile ID from your connection flow (required)
             location_id: The Google Business location ID selected by the user (required)
-            temp_token: Temporary Google access token from OAuth (required)
-            user_profile: Decoded user profile from the OAuth callback. Contains the refresh token. Always include this field.
+            pending_data_token: Token from the OAuth callback redirect (pendingDataToken query param). Tokens and profile data are retrieved server-side from this token. (required)
             redirect_url: Optional custom redirect URL to return to after selection"""
         client = _get_client()
         try:
-            response = client.connect.select_google_business_location(
-                profile_id=profile_id,
-                location_id=location_id,
-                temp_token=temp_token,
-                user_profile=user_profile,
-                redirect_url=redirect_url,
-            )
+            response = client.connect.select_google_business_location(profile_id=profile_id, location_id=location_id, pending_data_token=pending_data_token, redirect_url=redirect_url)
             return _format_response(response)
         except Exception as e:
             return f"Error: {e}"
@@ -2691,6 +3062,36 @@ def register_generated_tools(mcp, _get_client):
             return f"Error: {e}"
 
     @mcp.tool()
+    def connect_get_youtube_playlists(account_id: str) -> str:
+        """List YouTube playlists
+
+        Args:
+            account_id: (required)"""
+        client = _get_client()
+        try:
+            response = client.connect.get_youtube_playlists(account_id=account_id)
+            return _format_response(response)
+        except Exception as e:
+            return f'Error: {e}'
+
+
+    @mcp.tool()
+    def connect_update_youtube_default_playlist(account_id: str, default_playlist_id: str, default_playlist_name: str = "") -> str:
+        """Set default YouTube playlist
+
+        Args:
+            account_id: (required)
+            default_playlist_id: (required)
+            default_playlist_name"""
+        client = _get_client()
+        try:
+            response = client.connect.update_youtube_default_playlist(account_id=account_id, default_playlist_id=default_playlist_id, default_playlist_name=default_playlist_name)
+            return _format_response(response)
+        except Exception as e:
+            return f'Error: {e}'
+
+
+    @mcp.tool()
     def connect_get_gmb_locations(account_id: str) -> str:
         """List GBP locations
 
@@ -2804,20 +3205,8 @@ def register_generated_tools(mcp, _get_client):
             return f"Error: {e}"
 
     @mcp.tool()
-    def contacts_create_contact(
-        profile_id: str,
-        name: str,
-        email: str = "",
-        company: str = "",
-        tags: str = "",
-        is_subscribed: bool = True,
-        notes: str = "",
-        account_id: str = "",
-        platform: str = "",
-        platform_identifier: str = "",
-        display_identifier: str = "",
-    ) -> str:
-        """Create a contact
+    def contacts_create_contact(profile_id: str, name: str, email: str = "", company: str = "", tags: str = "", is_subscribed: bool = True, notes: str = "", account_id: str = "", platform: str = "", platform_identifier: str = "", display_identifier: str = "") -> str:
+        """Create contact
 
         Args:
             profile_id: (required)
@@ -2852,7 +3241,7 @@ def register_generated_tools(mcp, _get_client):
 
     @mcp.tool()
     def contacts_get_contact(contact_id: str) -> str:
-        """Get contact with channels
+        """Get contact
 
         Args:
             contact_id: (required)"""
@@ -2864,18 +3253,8 @@ def register_generated_tools(mcp, _get_client):
             return f"Error: {e}"
 
     @mcp.tool()
-    def contacts_update_contact(
-        contact_id: str,
-        name: str = "",
-        email: str = "",
-        company: str = "",
-        avatar_url: str = "",
-        tags: str = "",
-        is_subscribed: bool = False,
-        is_blocked: bool = False,
-        notes: str = "",
-    ) -> str:
-        """Update a contact
+    def contacts_update_contact(contact_id: str, name: str = "", email: str = "", company: str = "", avatar_url: str = "", tags: str = "", is_subscribed: bool = False, is_blocked: bool = False, notes: str = "") -> str:
+        """Update contact
 
         Args:
             contact_id: (required)
@@ -2906,7 +3285,7 @@ def register_generated_tools(mcp, _get_client):
 
     @mcp.tool()
     def contacts_delete_contact(contact_id: str) -> str:
-        """Delete a contact
+        """Delete contact
 
         Args:
             contact_id: (required)"""
@@ -2956,10 +3335,8 @@ def register_generated_tools(mcp, _get_client):
     # CUSTOM_FIELDS
 
     @mcp.tool()
-    def custom_fields_set_contact_field_value(
-        contact_id: str, slug: str, value: str
-    ) -> str:
-        """Set a custom field value
+    def custom_fields_set_contact_field_value(contact_id: str, slug: str, value: str) -> str:
+        """Set custom field value
 
         Args:
             contact_id: (required)
@@ -2976,7 +3353,7 @@ def register_generated_tools(mcp, _get_client):
 
     @mcp.tool()
     def custom_fields_clear_contact_field_value(contact_id: str, slug: str) -> str:
-        """Clear a custom field value
+        """Clear custom field value
 
         Args:
             contact_id: (required)
@@ -3004,10 +3381,8 @@ def register_generated_tools(mcp, _get_client):
             return f"Error: {e}"
 
     @mcp.tool()
-    def custom_fields_create_custom_field(
-        profile_id: str, name: str, type: str, slug: str = "", options: str = ""
-    ) -> str:
-        """Create a custom field definition
+    def custom_fields_create_custom_field(profile_id: str, name: str, type: str, slug: str = "", options: str = "") -> str:
+        """Create custom field
 
         Args:
             profile_id: (required)
@@ -3025,10 +3400,8 @@ def register_generated_tools(mcp, _get_client):
             return f"Error: {e}"
 
     @mcp.tool()
-    def custom_fields_update_custom_field(
-        field_id: str, name: str = "", options: str = ""
-    ) -> str:
-        """Update a custom field definition
+    def custom_fields_update_custom_field(field_id: str, name: str = "", options: str = "") -> str:
+        """Update custom field
 
         Args:
             field_id: (required)
@@ -3045,7 +3418,7 @@ def register_generated_tools(mcp, _get_client):
 
     @mcp.tool()
     def custom_fields_delete_custom_field(field_id: str) -> str:
-        """Delete a custom field definition
+        """Delete custom field
 
         Args:
             field_id: (required)"""
@@ -3077,82 +3450,21 @@ def register_generated_tools(mcp, _get_client):
     # LOGS
 
     @mcp.tool()
-    def logs_list_posts_logs(
-        status: str = "",
-        platform: str = "",
-        action: str = "",
-        days: int = 7,
-        limit: int = 50,
-        skip: int = 0,
-        search: str = "",
-    ) -> str:
-        """List publishing logs
+    def logs_list_logs(type: str = "publishing", status: str = "", platform: str = "", action: str = "", search: str = "", days: int = 90, limit: int = 50, skip: int = 0) -> str:
+        """List activity logs
 
         Args:
-            status: Filter by log status
+            type: Log category to query
+            status: Filter by status
             platform: Filter by platform
-            action: Filter by action type
-            days: Number of days to look back (max 7)
-            limit: Maximum number of logs to return (max 100)
-            skip: Number of logs to skip (for pagination)
-            search: Search through log entries by text content."""
-        client = _get_client()
-        try:
-            response = client.logs.list_posts_logs(
-                status=status,
-                platform=platform,
-                action=action,
-                days=days,
-                limit=limit,
-                skip=skip,
-                search=search,
-            )
-            return _format_response(response)
-        except Exception as e:
-            return f"Error: {e}"
-
-    @mcp.tool()
-    def logs_list_connection_logs(
-        platform: str = "",
-        event_type: str = "",
-        status: str = "",
-        days: int = 7,
-        limit: int = 50,
-        skip: int = 0,
-    ) -> str:
-        """List connection logs
-
-        Args:
-            platform: Filter by platform
-            event_type: Filter by event type
-            status: Filter by status (shorthand for event types)
-            days: Number of days to look back (max 7)
+            action: Filter by action (e.g., post.published, message.sent, account.connected, webhook.delivered)
+            search: Free-text search across log fields
+            days: Number of days to look back (max 90)
             limit: Maximum number of logs to return (max 100)
             skip: Number of logs to skip (for pagination)"""
         client = _get_client()
         try:
-            response = client.logs.list_connection_logs(
-                platform=platform,
-                event_type=event_type,
-                status=status,
-                days=days,
-                limit=limit,
-                skip=skip,
-            )
-            return _format_response(response)
-        except Exception as e:
-            return f"Error: {e}"
-
-    @mcp.tool()
-    def logs_get_post_logs(post_id: str, limit: int = 50) -> str:
-        """Get post logs
-
-        Args:
-            post_id: The post ID (required)
-            limit: Maximum number of logs to return (max 100)"""
-        client = _get_client()
-        try:
-            response = client.logs.get_post_logs(post_id=post_id, limit=limit)
+            response = client.logs.list_logs(type=type, status=status, platform=platform, action=action, search=search, days=days, limit=limit, skip=skip)
             return _format_response(response)
         except Exception as e:
             return f"Error: {e}"
@@ -3160,10 +3472,8 @@ def register_generated_tools(mcp, _get_client):
     # MEDIA
 
     @mcp.tool()
-    def media_get_media_presigned_url(
-        filename: str, content_type: str, size: int = 0
-    ) -> str:
-        """Get presigned upload URL
+    def media_get_media_presigned_url(filename: str, content_type: str, size: int = 0) -> str:
+        """Get upload URL
 
         Args:
             filename: Name of the file to upload (required)
@@ -3214,6 +3524,24 @@ def register_generated_tools(mcp, _get_client):
             return _format_response(response)
         except Exception as e:
             return f"Error: {e}"
+
+    @mcp.tool()
+    def messages_create_inbox_conversation(account_id: str, participant_id: str = "", participant_username: str = "", message: str = "", skip_dm_check: bool = False) -> str:
+        """Create conversation
+
+        Args:
+            account_id: The social account ID to send from (required)
+            participant_id: Twitter numeric user ID of the recipient. Provide either this or participantUsername.
+            participant_username: Twitter username (with or without @) of the recipient. Resolved to a user ID via lookup. Provide either this or participantId.
+            message: Text content of the message. At least one of message or attachment is required.
+            skip_dm_check: Skip the receives_your_dm eligibility check before sending. Use if you have already verified the recipient accepts DMs."""
+        client = _get_client()
+        try:
+            response = client.messages.create_inbox_conversation(account_id=account_id, participant_id=participant_id, participant_username=participant_username, message=message, skip_dm_check=skip_dm_check)
+            return _format_response(response)
+        except Exception as e:
+            return f'Error: {e}'
+
 
     @mcp.tool()
     def messages_get_inbox_conversation(conversation_id: str, account_id: str) -> str:
@@ -3438,6 +3766,81 @@ def register_generated_tools(mcp, _get_client):
         except Exception as e:
             return f"Error: {e}"
 
+
+    @mcp.tool()
+    def messages_delete_inbox_message(conversation_id: str, message_id: str, account_id: str) -> str:
+        """Delete message
+
+        Args:
+            conversation_id: The conversation ID (required)
+            message_id: The platform message ID to delete (required)
+            account_id: Social account ID (required)"""
+        client = _get_client()
+        try:
+            response = client.messages.delete_inbox_message(conversation_id=conversation_id, message_id=message_id, account_id=account_id)
+            return _format_response(response)
+        except Exception as e:
+            return f'Error: {e}'
+
+
+    @mcp.tool()
+    def messages_send_typing_indicator(conversation_id: str, account_id: str) -> str:
+        """Send typing indicator
+
+        Args:
+            conversation_id: The conversation ID (required)
+            account_id: Social account ID (required)"""
+        client = _get_client()
+        try:
+            response = client.messages.send_typing_indicator(conversation_id=conversation_id, account_id=account_id)
+            return _format_response(response)
+        except Exception as e:
+            return f'Error: {e}'
+
+
+    @mcp.tool()
+    def messages_add_message_reaction(conversation_id: str, message_id: str, account_id: str, emoji: str) -> str:
+        """Add reaction
+
+        Args:
+            conversation_id: The conversation ID (required)
+            message_id: The platform message ID to react to (required)
+            account_id: Social account ID (required)
+            emoji: Emoji character (e.g. "👍", "❤️") (required)"""
+        client = _get_client()
+        try:
+            response = client.messages.add_message_reaction(conversation_id=conversation_id, message_id=message_id, account_id=account_id, emoji=emoji)
+            return _format_response(response)
+        except Exception as e:
+            return f'Error: {e}'
+
+
+    @mcp.tool()
+    def messages_remove_message_reaction(conversation_id: str, message_id: str, account_id: str) -> str:
+        """Remove reaction
+
+        Args:
+            conversation_id: The conversation ID (required)
+            message_id: The platform message ID (required)
+            account_id: Social account ID (required)"""
+        client = _get_client()
+        try:
+            response = client.messages.remove_message_reaction(conversation_id=conversation_id, message_id=message_id, account_id=account_id)
+            return _format_response(response)
+        except Exception as e:
+            return f'Error: {e}'
+
+
+    @mcp.tool()
+    def messages_upload_media_direct() -> str:
+        """Upload media file"""
+        client = _get_client()
+        try:
+            response = client.messages.upload_media_direct()
+            return _format_response(response)
+        except Exception as e:
+            return f'Error: {e}'
+
     # POSTS
 
     @mcp.tool()
@@ -3501,13 +3904,7 @@ def register_generated_tools(mcp, _get_client):
             return f"Error: {e}"
 
     @mcp.tool()
-    def posts_update_post(
-        post_id: str,
-        content: str = "",
-        scheduled_for: str = "",
-        tiktok_settings: str = "",
-        recycling: str = "",
-    ) -> str:
+    def posts_update_post(post_id: str, content: str = "", scheduled_for: str = "", tiktok_settings: str = "", facebook_settings: str = "", recycling: str = "") -> str:
         """Update post
 
         Args:
@@ -3515,16 +3912,11 @@ def register_generated_tools(mcp, _get_client):
             content
             scheduled_for
             tiktok_settings: Root-level TikTok settings applied to all TikTok platforms. Merged into each platform's platformSpecificData, with platform-specific settings taking precedence.
+            facebook_settings: Root-level Facebook settings applied to all Facebook platforms. Merged into each platform's platformSpecificData, with platform-specific settings taking precedence.
             recycling"""
         client = _get_client()
         try:
-            response = client.posts.update_post(
-                post_id=post_id,
-                content=content,
-                scheduled_for=scheduled_for,
-                tiktok_settings=tiktok_settings,
-                recycling=recycling,
-            )
+            response = client.posts.update_post(post_id=post_id, content=content, scheduled_for=scheduled_for, tiktok_settings=tiktok_settings, facebook_settings=facebook_settings, recycling=recycling)
             return _format_response(response)
         except Exception as e:
             return f"Error: {e}"
@@ -3570,21 +3962,23 @@ def register_generated_tools(mcp, _get_client):
             return f"Error: {e}"
 
     @mcp.tool()
-    def posts_update_post_metadata(
-        post_id: str,
-        platform: str,
-        video_id: str = "",
-        account_id: str = "",
-        title: str = "",
-        description: str = "",
-        tags: str = "",
-        category_id: str = "",
-        privacy_status: str = "",
-        thumbnail_url: str = "",
-        made_for_kids: bool = False,
-        contains_synthetic_media: bool = False,
-        playlist_id: str = "",
-    ) -> str:
+    def posts_edit_post(post_id: str, platform: str, content: str) -> str:
+        """Edit published post
+
+        Args:
+            post_id: (required)
+            platform: The platform to edit the post on. Currently only twitter is supported. (required)
+            content: The new tweet text content (required)"""
+        client = _get_client()
+        try:
+            response = client.posts.edit_post(post_id=post_id, platform=platform, content=content)
+            return _format_response(response)
+        except Exception as e:
+            return f'Error: {e}'
+
+
+    @mcp.tool()
+    def posts_update_post_metadata(post_id: str, platform: str, video_id: str = "", account_id: str = "", title: str = "", description: str = "", tags: str = "", category_id: str = "", privacy_status: str = "", thumbnail_url: str = "", made_for_kids: bool = False, contains_synthetic_media: bool = False, playlist_id: str = "") -> str:
         """Update post metadata
 
         Args:
@@ -3603,21 +3997,7 @@ def register_generated_tools(mcp, _get_client):
             playlist_id: YouTube playlist ID to add the video to (e.g. 'PLxxxxxxxxxxxxx'). Use GET /v1/accounts/{id}/youtube-playlists to list available playlists. Only playlists owned by the channel are supported."""
         client = _get_client()
         try:
-            response = client.posts.update_post_metadata(
-                post_id=post_id,
-                platform=platform,
-                video_id=video_id,
-                account_id=account_id,
-                title=title,
-                description=description,
-                tags=tags,
-                category_id=category_id,
-                privacy_status=privacy_status,
-                thumbnail_url=thumbnail_url,
-                made_for_kids=made_for_kids,
-                contains_synthetic_media=contains_synthetic_media,
-                playlist_id=playlist_id,
-            )
+            response = client.posts.update_post_metadata(post_id=post_id, platform=platform, video_id=video_id, account_id=account_id, title=title, description=description, tags=tags, category_id=category_id, privacy_status=privacy_status, thumbnail_url=thumbnail_url, made_for_kids=made_for_kids, contains_synthetic_media=contains_synthetic_media, playlist_id=playlist_id)
             return _format_response(response)
         except Exception as e:
             return f"Error: {e}"
@@ -4021,17 +4401,8 @@ def register_generated_tools(mcp, _get_client):
             return f"Error: {e}"
 
     @mcp.tool()
-    def sequences_create_sequence(
-        profile_id: str,
-        account_id: str,
-        platform: str,
-        name: str,
-        description: str = "",
-        steps: str = "",
-        exit_on_reply: bool = True,
-        exit_on_unsubscribe: bool = True,
-    ) -> str:
-        """Create a sequence
+    def sequences_create_sequence(profile_id: str, account_id: str, platform: str, name: str, description: str = "", steps: str = "", exit_on_reply: bool = True, exit_on_unsubscribe: bool = True) -> str:
+        """Create sequence
 
         Args:
             profile_id: (required)
@@ -4073,7 +4444,7 @@ def register_generated_tools(mcp, _get_client):
 
     @mcp.tool()
     def sequences_update_sequence(sequence_id: str) -> str:
-        """Update a sequence
+        """Update sequence
 
         Args:
             sequence_id: (required)"""
@@ -4086,7 +4457,7 @@ def register_generated_tools(mcp, _get_client):
 
     @mcp.tool()
     def sequences_delete_sequence(sequence_id: str) -> str:
-        """Delete a sequence
+        """Delete sequence
 
         Args:
             sequence_id: (required)"""
@@ -4099,7 +4470,7 @@ def register_generated_tools(mcp, _get_client):
 
     @mcp.tool()
     def sequences_activate_sequence(sequence_id: str) -> str:
-        """Activate a sequence
+        """Activate sequence
 
         Args:
             sequence_id: (required)"""
@@ -4112,7 +4483,7 @@ def register_generated_tools(mcp, _get_client):
 
     @mcp.tool()
     def sequences_pause_sequence(sequence_id: str) -> str:
-        """Pause a sequence
+        """Pause sequence
 
         Args:
             sequence_id: (required)"""
@@ -4146,7 +4517,7 @@ def register_generated_tools(mcp, _get_client):
 
     @mcp.tool()
     def sequences_unenroll_contact(sequence_id: str, contact_id: str) -> str:
-        """Unenroll a contact from a sequence
+        """Unenroll contact
 
         Args:
             sequence_id: (required)
@@ -4178,7 +4549,7 @@ def register_generated_tools(mcp, _get_client):
             )
             return _format_response(response)
         except Exception as e:
-            return f"Error: {e}"
+            return f'Error: {e}'
 
     # TWITTER_ENGAGEMENT
 
@@ -4319,7 +4690,7 @@ def register_generated_tools(mcp, _get_client):
 
     @mcp.tool()
     def validate_post_length(text: str) -> str:
-        """Validate post character count
+        """Validate character count
 
         Args:
             text: The post text to check (required)"""
@@ -4361,14 +4732,15 @@ def register_generated_tools(mcp, _get_client):
             return f"Error: {e}"
 
     @mcp.tool()
-    def validate_subreddit(name: str) -> str:
+    def validate_subreddit(name: str, account_id: str = "") -> str:
         """Check subreddit existence
 
         Args:
-            name: Subreddit name (with or without "r/" prefix) (required)"""
+            name: Subreddit name (with or without "r/" prefix) (required)
+            account_id: Reddit social account ID for authenticated lookup (recommended for reliable results)"""
         client = _get_client()
         try:
-            response = client.validate.validate_subreddit(name=name)
+            response = client.validate.validate_subreddit(name=name, account_id=account_id)
             return _format_response(response)
         except Exception as e:
             return f"Error: {e}"
@@ -4476,309 +4848,9 @@ def register_generated_tools(mcp, _get_client):
             response = client.webhooks.test_webhook(webhook_id=webhook_id)
             return _format_response(response)
         except Exception as e:
-            return f"Error: {e}"
-
-    @mcp.tool()
-    def webhooks_get_webhook_logs(
-        limit: int = 50, status: str = "", event: str = "", webhook_id: str = ""
-    ) -> str:
-        """Get delivery logs
-
-        Args:
-            limit: Maximum number of logs to return (max 100)
-            status: Filter by delivery status
-            event: Filter by event type
-            webhook_id: Filter by webhook ID"""
-        client = _get_client()
-        try:
-            response = client.webhooks.get_webhook_logs(
-                limit=limit, status=status, event=event, webhook_id=webhook_id
-            )
-            return _format_response(response)
-        except Exception as e:
-            return f"Error: {e}"
+            return f'Error: {e}'
 
     # WHATSAPP
-
-    @mcp.tool()
-    def whatsapp_send_whats_app_bulk(
-        account_id: str, recipients: str, template: str
-    ) -> str:
-        """Bulk send template messages
-
-        Args:
-            account_id: WhatsApp social account ID (required)
-            recipients: List of recipients (max 100) (required)
-            template: (required)"""
-        client = _get_client()
-        try:
-            response = client.whatsapp.send_whats_app_bulk(
-                account_id=account_id, recipients=recipients, template=template
-            )
-            return _format_response(response)
-        except Exception as e:
-            return f"Error: {e}"
-
-    @mcp.tool()
-    def whatsapp_get_whats_app_contacts(
-        account_id: str,
-        search: str = "",
-        tag: str = "",
-        group: str = "",
-        opted_in: str = "",
-        limit: int = 50,
-        skip: int = 0,
-    ) -> str:
-        """List contacts
-
-        Args:
-            account_id: WhatsApp social account ID (required)
-            search: Search contacts by name, phone, email, or company
-            tag: Filter by tag
-            group: Filter by group
-            opted_in: Filter by opt-in status
-            limit: Maximum results (default 50)
-            skip: Offset for pagination"""
-        client = _get_client()
-        try:
-            response = client.whatsapp.get_whats_app_contacts(
-                account_id=account_id,
-                search=search,
-                tag=tag,
-                group=group,
-                opted_in=opted_in,
-                limit=limit,
-                skip=skip,
-            )
-            return _format_response(response)
-        except Exception as e:
-            return f"Error: {e}"
-
-    @mcp.tool()
-    def whatsapp_create_whats_app_contact(
-        account_id: str,
-        phone: str,
-        name: str,
-        email: str = "",
-        company: str = "",
-        tags: str = "",
-        groups: str = "",
-        is_opted_in: bool = True,
-        custom_fields: str = "",
-        notes: str = "",
-    ) -> str:
-        """Create contact
-
-        Args:
-            account_id: WhatsApp social account ID (required)
-            phone: Phone number in E.164 format (required)
-            name: Contact name (required)
-            email: Contact email
-            company: Company name
-            tags: Tags for categorization
-            groups: Groups the contact belongs to
-            is_opted_in: Whether the contact has opted in to receive messages
-            custom_fields: Custom key-value fields
-            notes: Notes about the contact"""
-        client = _get_client()
-        try:
-            response = client.whatsapp.create_whats_app_contact(
-                account_id=account_id,
-                phone=phone,
-                name=name,
-                email=email,
-                company=company,
-                tags=tags,
-                groups=groups,
-                is_opted_in=is_opted_in,
-                custom_fields=custom_fields,
-                notes=notes,
-            )
-            return _format_response(response)
-        except Exception as e:
-            return f"Error: {e}"
-
-    @mcp.tool()
-    def whatsapp_get_whats_app_contact(contact_id: str) -> str:
-        """Get contact
-
-        Args:
-            contact_id: Contact ID (required)"""
-        client = _get_client()
-        try:
-            response = client.whatsapp.get_whats_app_contact(contact_id=contact_id)
-            return _format_response(response)
-        except Exception as e:
-            return f"Error: {e}"
-
-    @mcp.tool()
-    def whatsapp_update_whats_app_contact(
-        contact_id: str,
-        name: str = "",
-        email: str = "",
-        company: str = "",
-        tags: str = "",
-        groups: str = "",
-        is_opted_in: bool = False,
-        is_blocked: bool = False,
-        custom_fields: str = "",
-        notes: str = "",
-    ) -> str:
-        """Update contact
-
-        Args:
-            contact_id: Contact ID (required)
-            name: Contact name
-            email: Contact email
-            company: Company name
-            tags: Tags (replaces existing)
-            groups: Groups (replaces existing)
-            is_opted_in: Opt-in status (changes are timestamped)
-            is_blocked: Block status
-            custom_fields: Custom fields to merge (set value to null to remove a field)
-            notes: Notes about the contact"""
-        client = _get_client()
-        try:
-            response = client.whatsapp.update_whats_app_contact(
-                contact_id=contact_id,
-                name=name,
-                email=email,
-                company=company,
-                tags=tags,
-                groups=groups,
-                is_opted_in=is_opted_in,
-                is_blocked=is_blocked,
-                custom_fields=custom_fields,
-                notes=notes,
-            )
-            return _format_response(response)
-        except Exception as e:
-            return f"Error: {e}"
-
-    @mcp.tool()
-    def whatsapp_delete_whats_app_contact(contact_id: str) -> str:
-        """Delete contact
-
-        Args:
-            contact_id: Contact ID (required)"""
-        client = _get_client()
-        try:
-            response = client.whatsapp.delete_whats_app_contact(contact_id=contact_id)
-            return _format_response(response)
-        except Exception as e:
-            return f"Error: {e}"
-
-    @mcp.tool()
-    def whatsapp_import_whats_app_contacts(
-        account_id: str,
-        contacts: str,
-        default_tags: str = "",
-        default_groups: str = "",
-        skip_duplicates: bool = True,
-    ) -> str:
-        """Bulk import contacts
-
-        Args:
-            account_id: WhatsApp social account ID (required)
-            contacts: Contacts to import (max 1000) (required)
-            default_tags: Tags applied to all imported contacts
-            default_groups: Groups applied to all imported contacts
-            skip_duplicates: Skip contacts with existing phone numbers"""
-        client = _get_client()
-        try:
-            response = client.whatsapp.import_whats_app_contacts(
-                account_id=account_id,
-                contacts=contacts,
-                default_tags=default_tags,
-                default_groups=default_groups,
-                skip_duplicates=skip_duplicates,
-            )
-            return _format_response(response)
-        except Exception as e:
-            return f"Error: {e}"
-
-    @mcp.tool()
-    def whatsapp_bulk_update_whats_app_contacts(
-        action: str, contact_ids: str, tags: str = "", groups: str = ""
-    ) -> str:
-        """Bulk update contacts
-
-        Args:
-            action: Bulk action to perform (required)
-            contact_ids: Contact IDs to update (max 500) (required)
-            tags: Tags to add or remove (required for addTags/removeTags)
-            groups: Groups to add or remove (required for addGroups/removeGroups)"""
-        client = _get_client()
-        try:
-            response = client.whatsapp.bulk_update_whats_app_contacts(
-                action=action, contact_ids=contact_ids, tags=tags, groups=groups
-            )
-            return _format_response(response)
-        except Exception as e:
-            return f"Error: {e}"
-
-    @mcp.tool()
-    def whatsapp_bulk_delete_whats_app_contacts(contact_ids: str) -> str:
-        """Bulk delete contacts
-
-        Args:
-            contact_ids: Contact IDs to delete (max 500) (required)"""
-        client = _get_client()
-        try:
-            response = client.whatsapp.bulk_delete_whats_app_contacts(
-                contact_ids=contact_ids
-            )
-            return _format_response(response)
-        except Exception as e:
-            return f"Error: {e}"
-
-    @mcp.tool()
-    def whatsapp_get_whats_app_groups(account_id: str) -> str:
-        """List contact groups
-
-        Args:
-            account_id: WhatsApp social account ID (required)"""
-        client = _get_client()
-        try:
-            response = client.whatsapp.get_whats_app_groups(account_id=account_id)
-            return _format_response(response)
-        except Exception as e:
-            return f"Error: {e}"
-
-    @mcp.tool()
-    def whatsapp_rename_whats_app_group(
-        account_id: str, old_name: str, new_name: str
-    ) -> str:
-        """Rename group
-
-        Args:
-            account_id: WhatsApp social account ID (required)
-            old_name: Current group name (required)
-            new_name: New group name (required)"""
-        client = _get_client()
-        try:
-            response = client.whatsapp.rename_whats_app_group(
-                account_id=account_id, old_name=old_name, new_name=new_name
-            )
-            return _format_response(response)
-        except Exception as e:
-            return f"Error: {e}"
-
-    @mcp.tool()
-    def whatsapp_delete_whats_app_group(account_id: str, group_name: str) -> str:
-        """Delete group
-
-        Args:
-            account_id: WhatsApp social account ID (required)
-            group_name: Group name to delete (required)"""
-        client = _get_client()
-        try:
-            response = client.whatsapp.delete_whats_app_group(
-                account_id=account_id, group_name=group_name
-            )
-            return _format_response(response)
-        except Exception as e:
-            return f"Error: {e}"
 
     @mcp.tool()
     def whatsapp_get_whats_app_templates(account_id: str) -> str:
@@ -4806,20 +4878,20 @@ def register_generated_tools(mcp, _get_client):
     ) -> str:
         """Create template
 
-            Args:
-                account_id: WhatsApp social account ID (required)
-                name: Template name (lowercase, letters/numbers/underscores, must start with a letter) (required)
-                category: Template category (required)
-                language: Template language code (e.g., en_US) (required)
-                components: Template components (header, body, footer, buttons). Required for custom templates, omit when using library_template_name.
-                library_template_name: Name of a pre-built template from Meta's template library (e.g., "appointment_reminder",
-        "auto_pay_reminder_1", "address_update"). When provided, the template is pre-approved
-        by Meta with no review wait. Omit `components` when using this field.
-                library_template_body_inputs: Optional body customizations for library templates. Available options depend on the
-        template (e.g., add_contact_number, add_learn_more_link, add_security_recommendation,
-        add_track_package_link, code_expiration_minutes).
-                library_template_button_inputs: Optional button customizations for library templates. Each item specifies button type
-        and configuration (e.g., URL, phone number, quick reply)."""
+        Args:
+            account_id: WhatsApp social account ID (required)
+            name: Template name (lowercase, letters/numbers/underscores, must start with a letter) (required)
+            category: Template category (required)
+            language: Template language code (e.g., en_US) (required)
+            components: Template components (header, body, footer, buttons). Required for custom templates, omit when using library_template_name.
+            library_template_name: Name of a pre-built template from Meta's template library (e.g., "appointment_reminder",
+    "auto_pay_reminder_1", "address_update"). When provided, the template is pre-approved
+    by Meta with no review wait. Omit components when using this field.
+            library_template_body_inputs: Optional body customizations for library templates. Available options depend on the
+    template (e.g., add_contact_number, add_learn_more_link, add_security_recommendation,
+    add_track_package_link, code_expiration_minutes).
+            library_template_button_inputs: Optional button customizations for library templates. Each item specifies button type
+    and configuration (e.g., URL, phone number, quick reply)."""
         client = _get_client()
         try:
             response = client.whatsapp.create_whats_app_template(
@@ -4890,189 +4962,6 @@ def register_generated_tools(mcp, _get_client):
             return f"Error: {e}"
 
     @mcp.tool()
-    def whatsapp_get_whats_app_broadcasts(
-        account_id: str, status: str = "", limit: int = 50, skip: int = 0
-    ) -> str:
-        """List broadcasts
-
-        Args:
-            account_id: WhatsApp social account ID (required)
-            status: Filter by broadcast status
-            limit: Maximum results (default 50)
-            skip: Offset for pagination"""
-        client = _get_client()
-        try:
-            response = client.whatsapp.get_whats_app_broadcasts(
-                account_id=account_id, status=status, limit=limit, skip=skip
-            )
-            return _format_response(response)
-        except Exception as e:
-            return f"Error: {e}"
-
-    @mcp.tool()
-    def whatsapp_create_whats_app_broadcast(
-        account_id: str,
-        name: str,
-        template: str,
-        description: str = "",
-        recipients: str = "",
-    ) -> str:
-        """Create broadcast
-
-        Args:
-            account_id: WhatsApp social account ID (required)
-            name: Broadcast name (required)
-            description: Broadcast description
-            template: (required)
-            recipients: Initial recipients (optional)"""
-        client = _get_client()
-        try:
-            response = client.whatsapp.create_whats_app_broadcast(
-                account_id=account_id,
-                name=name,
-                description=description,
-                template=template,
-                recipients=recipients,
-            )
-            return _format_response(response)
-        except Exception as e:
-            return f"Error: {e}"
-
-    @mcp.tool()
-    def whatsapp_get_whats_app_broadcast(broadcast_id: str) -> str:
-        """Get broadcast
-
-        Args:
-            broadcast_id: Broadcast ID (required)"""
-        client = _get_client()
-        try:
-            response = client.whatsapp.get_whats_app_broadcast(
-                broadcast_id=broadcast_id
-            )
-            return _format_response(response)
-        except Exception as e:
-            return f"Error: {e}"
-
-    @mcp.tool()
-    def whatsapp_delete_whats_app_broadcast(broadcast_id: str) -> str:
-        """Delete broadcast
-
-        Args:
-            broadcast_id: Broadcast ID (required)"""
-        client = _get_client()
-        try:
-            response = client.whatsapp.delete_whats_app_broadcast(
-                broadcast_id=broadcast_id
-            )
-            return _format_response(response)
-        except Exception as e:
-            return f"Error: {e}"
-
-    @mcp.tool()
-    def whatsapp_send_whats_app_broadcast(broadcast_id: str) -> str:
-        """Send broadcast
-
-        Args:
-            broadcast_id: Broadcast ID (required)"""
-        client = _get_client()
-        try:
-            response = client.whatsapp.send_whats_app_broadcast(
-                broadcast_id=broadcast_id
-            )
-            return _format_response(response)
-        except Exception as e:
-            return f"Error: {e}"
-
-    @mcp.tool()
-    def whatsapp_schedule_whats_app_broadcast(
-        broadcast_id: str, scheduled_at: str
-    ) -> str:
-        """Schedule broadcast
-
-        Args:
-            broadcast_id: Broadcast ID (required)
-            scheduled_at: ISO 8601 date-time for sending (must be in the future, max 30 days) (required)"""
-        client = _get_client()
-        try:
-            response = client.whatsapp.schedule_whats_app_broadcast(
-                broadcast_id=broadcast_id, scheduled_at=scheduled_at
-            )
-            return _format_response(response)
-        except Exception as e:
-            return f"Error: {e}"
-
-    @mcp.tool()
-    def whatsapp_cancel_whats_app_broadcast_schedule(broadcast_id: str) -> str:
-        """Cancel scheduled broadcast
-
-        Args:
-            broadcast_id: Broadcast ID (required)"""
-        client = _get_client()
-        try:
-            response = client.whatsapp.cancel_whats_app_broadcast_schedule(
-                broadcast_id=broadcast_id
-            )
-            return _format_response(response)
-        except Exception as e:
-            return f"Error: {e}"
-
-    @mcp.tool()
-    def whatsapp_get_whats_app_broadcast_recipients(
-        broadcast_id: str, status: str = "", limit: int = 100, skip: int = 0
-    ) -> str:
-        """List recipients
-
-        Args:
-            broadcast_id: Broadcast ID (required)
-            status: Filter by recipient delivery status
-            limit: Maximum results (default 100)
-            skip: Offset for pagination"""
-        client = _get_client()
-        try:
-            response = client.whatsapp.get_whats_app_broadcast_recipients(
-                broadcast_id=broadcast_id, status=status, limit=limit, skip=skip
-            )
-            return _format_response(response)
-        except Exception as e:
-            return f"Error: {e}"
-
-    @mcp.tool()
-    def whatsapp_add_whats_app_broadcast_recipients(
-        broadcast_id: str, recipients: str
-    ) -> str:
-        """Add recipients
-
-        Args:
-            broadcast_id: Broadcast ID (required)
-            recipients: Recipients to add (max 1000) (required)"""
-        client = _get_client()
-        try:
-            response = client.whatsapp.add_whats_app_broadcast_recipients(
-                broadcast_id=broadcast_id, recipients=recipients
-            )
-            return _format_response(response)
-        except Exception as e:
-            return f"Error: {e}"
-
-    @mcp.tool()
-    def whatsapp_remove_whats_app_broadcast_recipients(
-        broadcast_id: str, phones: str
-    ) -> str:
-        """Remove recipients
-
-        Args:
-            broadcast_id: Broadcast ID (required)
-            phones: Phone numbers to remove (required)"""
-        client = _get_client()
-        try:
-            response = client.whatsapp.remove_whats_app_broadcast_recipients(
-                broadcast_id=broadcast_id, phones=phones
-            )
-            return _format_response(response)
-        except Exception as e:
-            return f"Error: {e}"
-
-    @mcp.tool()
     def whatsapp_get_whats_app_business_profile(account_id: str) -> str:
         """Get business profile
 
@@ -5137,7 +5026,7 @@ def register_generated_tools(mcp, _get_client):
 
     @mcp.tool()
     def whatsapp_get_whats_app_display_name(account_id: str) -> str:
-        """Get display name and review status
+        """Get display name status
 
         Args:
             account_id: WhatsApp social account ID (required)"""
@@ -5383,6 +5272,172 @@ def register_generated_tools(mcp, _get_client):
             return _format_response(response)
         except Exception as e:
             return f"Error: {e}"
+
+    # WHATSAPP_FLOWS
+
+
+    @mcp.tool()
+    def whatsapp_flows_list_whats_app_flows(account_id: str) -> str:
+        """List flows
+
+        Args:
+            account_id: WhatsApp social account ID (required)"""
+        client = _get_client()
+        try:
+            response = client.whatsapp_flows.list_whats_app_flows(account_id=account_id)
+            return _format_response(response)
+        except Exception as e:
+            return f'Error: {e}'
+
+
+    @mcp.tool()
+    def whatsapp_flows_create_whats_app_flow(account_id: str, name: str, categories: str, clone_flow_id: str = "") -> str:
+        """Create flow
+
+        Args:
+            account_id: WhatsApp social account ID (required)
+            name: Flow display name (required)
+            categories: Flow categories (required)
+            clone_flow_id: Optional: ID of an existing flow to clone"""
+        client = _get_client()
+        try:
+            response = client.whatsapp_flows.create_whats_app_flow(account_id=account_id, name=name, categories=categories, clone_flow_id=clone_flow_id)
+            return _format_response(response)
+        except Exception as e:
+            return f'Error: {e}'
+
+
+    @mcp.tool()
+    def whatsapp_flows_get_whats_app_flow(flow_id: str, account_id: str, fields: str = "") -> str:
+        """Get flow
+
+        Args:
+            flow_id: Flow ID (required)
+            account_id: WhatsApp social account ID (required)
+            fields: Comma-separated fields to return (default: id,name,status,categories,validation_errors,json_version,preview,data_api_version,endpoint_uri)"""
+        client = _get_client()
+        try:
+            response = client.whatsapp_flows.get_whats_app_flow(flow_id=flow_id, account_id=account_id, fields=fields)
+            return _format_response(response)
+        except Exception as e:
+            return f'Error: {e}'
+
+
+    @mcp.tool()
+    def whatsapp_flows_update_whats_app_flow(flow_id: str, account_id: str, name: str = "", categories: str = "") -> str:
+        """Update flow
+
+        Args:
+            flow_id: Flow ID (required)
+            account_id: WhatsApp social account ID (required)
+            name: New flow name
+            categories"""
+        client = _get_client()
+        try:
+            response = client.whatsapp_flows.update_whats_app_flow(flow_id=flow_id, account_id=account_id, name=name, categories=categories)
+            return _format_response(response)
+        except Exception as e:
+            return f'Error: {e}'
+
+
+    @mcp.tool()
+    def whatsapp_flows_delete_whats_app_flow(flow_id: str, account_id: str) -> str:
+        """Delete flow
+
+        Args:
+            flow_id: Flow ID (required)
+            account_id: WhatsApp social account ID (required)"""
+        client = _get_client()
+        try:
+            response = client.whatsapp_flows.delete_whats_app_flow(flow_id=flow_id, account_id=account_id)
+            return _format_response(response)
+        except Exception as e:
+            return f'Error: {e}'
+
+
+    @mcp.tool()
+    def whatsapp_flows_get_whats_app_flow_json(flow_id: str, account_id: str) -> str:
+        """Get flow JSON asset
+
+        Args:
+            flow_id: Flow ID (required)
+            account_id: WhatsApp social account ID (required)"""
+        client = _get_client()
+        try:
+            response = client.whatsapp_flows.get_whats_app_flow_json(flow_id=flow_id, account_id=account_id)
+            return _format_response(response)
+        except Exception as e:
+            return f'Error: {e}'
+
+
+    @mcp.tool()
+    def whatsapp_flows_upload_whats_app_flow_json(flow_id: str, account_id: str, flow_json: str) -> str:
+        """Upload flow JSON
+
+        Args:
+            flow_id: Flow ID (required)
+            account_id: WhatsApp social account ID (required)
+            flow_json: The Flow JSON content. Pass as a JSON object or a JSON string. (required)"""
+        client = _get_client()
+        try:
+            response = client.whatsapp_flows.upload_whats_app_flow_json(flow_id=flow_id, account_id=account_id, flow_json=flow_json)
+            return _format_response(response)
+        except Exception as e:
+            return f'Error: {e}'
+
+
+    @mcp.tool()
+    def whatsapp_flows_publish_whats_app_flow(flow_id: str, account_id: str) -> str:
+        """Publish flow
+
+        Args:
+            flow_id: Flow ID (required)
+            account_id: WhatsApp social account ID (required)"""
+        client = _get_client()
+        try:
+            response = client.whatsapp_flows.publish_whats_app_flow(flow_id=flow_id, account_id=account_id)
+            return _format_response(response)
+        except Exception as e:
+            return f'Error: {e}'
+
+
+    @mcp.tool()
+    def whatsapp_flows_deprecate_whats_app_flow(flow_id: str, account_id: str) -> str:
+        """Deprecate flow
+
+        Args:
+            flow_id: Flow ID (required)
+            account_id: WhatsApp social account ID (required)"""
+        client = _get_client()
+        try:
+            response = client.whatsapp_flows.deprecate_whats_app_flow(flow_id=flow_id, account_id=account_id)
+            return _format_response(response)
+        except Exception as e:
+            return f'Error: {e}'
+
+
+    @mcp.tool()
+    def whatsapp_flows_send_whats_app_flow_message(account_id: str, to: str, flow_id: str, flow_cta: str, body: str, flow_action: str = "navigate", flow_token: str = "", flow_action_payload: str = "", header: str = "", footer: str = "", draft: bool = False) -> str:
+        """Send flow message
+
+        Args:
+            account_id: WhatsApp social account ID (required)
+            to: Recipient phone number (E.164 format, e.g. +1234567890) (required)
+            flow_id: Published flow ID (required)
+            flow_cta: CTA button text (e.g. 'Book Now', 'Sign Up') (required)
+            flow_action: Action type: navigate opens a screen directly, data_exchange hits your endpoint first
+            flow_token: Unique token to correlate responses. Auto-generated UUID if omitted.
+            flow_action_payload
+            body: Message body text (required)
+            header
+            footer: Optional footer text
+            draft: Set true to test an unpublished (DRAFT) flow"""
+        client = _get_client()
+        try:
+            response = client.whatsapp_flows.send_whats_app_flow_message(account_id=account_id, to=to, flow_id=flow_id, flow_cta=flow_cta, flow_action=flow_action, flow_token=flow_token, flow_action_payload=flow_action_payload, body=body, header=header, footer=footer, draft=draft)
+            return _format_response(response)
+        except Exception as e:
+            return f'Error: {e}'
 
     # WHATSAPP_PHONE_NUMBERS
 

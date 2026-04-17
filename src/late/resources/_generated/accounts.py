@@ -44,7 +44,15 @@ class AccountsResource:
                 result[to_camel(k)] = v
         return result
 
-    def list_accounts(self, *, profile_id: str | None = None, platform: str | None = None, include_over_limit: bool | None = False, page: int | None = None, limit: int | None = None) -> dict[str, Any]:
+    def list_accounts(
+        self,
+        *,
+        profile_id: str | None = None,
+        platform: str | None = None,
+        include_over_limit: bool | None = False,
+        page: int | None = None,
+        limit: int | None = None,
+    ) -> dict[str, Any]:
         """List accounts"""
         params = self._build_params(
             profile_id=profile_id,
@@ -219,7 +227,15 @@ class AccountsResource:
         )
         return self._client._get(f"/v1/accounts/{account_id}/linkedin-mentions", params=params)
 
-    async def alist_accounts(self, *, profile_id: str | None = None, platform: str | None = None, include_over_limit: bool | None = False, page: int | None = None, limit: int | None = None) -> dict[str, Any]:
+    async def alist_accounts(
+        self,
+        *,
+        profile_id: str | None = None,
+        platform: str | None = None,
+        include_over_limit: bool | None = False,
+        page: int | None = None,
+        limit: int | None = None,
+    ) -> dict[str, Any]:
         """List accounts (async)"""
         params = self._build_params(
             profile_id=profile_id,

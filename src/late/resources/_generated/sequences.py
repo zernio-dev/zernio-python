@@ -54,8 +54,19 @@ class SequencesResource:
         )
         return self._client._get("/v1/sequences", params=params)
 
-    def create_sequence(self, profile_id: str, account_id: str, platform: str, name: str, *, description: str | None = None, steps: list[dict[str, Any]] | None = None, exit_on_reply: bool | None = True, exit_on_unsubscribe: bool | None = True) -> dict[str, Any]:
-        """Create a sequence"""
+    def create_sequence(
+        self,
+        profile_id: str,
+        account_id: str,
+        platform: str,
+        name: str,
+        *,
+        description: str | None = None,
+        steps: list[dict[str, Any]] | None = None,
+        exit_on_reply: bool | None = True,
+        exit_on_unsubscribe: bool | None = True,
+    ) -> dict[str, Any]:
+        """Create sequence"""
         payload = self._build_payload(
             profile_id=profile_id,
             account_id=account_id,
@@ -73,19 +84,19 @@ class SequencesResource:
         return self._client._get(f"/v1/sequences/{sequence_id}")
 
     def update_sequence(self, sequence_id: str) -> dict[str, Any]:
-        """Update a sequence"""
+        """Update sequence"""
         return self._client._patch(f"/v1/sequences/{sequence_id}")
 
     def delete_sequence(self, sequence_id: str) -> dict[str, Any]:
-        """Delete a sequence"""
+        """Delete sequence"""
         return self._client._delete(f"/v1/sequences/{sequence_id}")
 
     def activate_sequence(self, sequence_id: str) -> dict[str, Any]:
-        """Activate a sequence"""
+        """Activate sequence"""
         return self._client._post(f"/v1/sequences/{sequence_id}/activate")
 
     def pause_sequence(self, sequence_id: str) -> dict[str, Any]:
-        """Pause a sequence"""
+        """Pause sequence"""
         return self._client._post(f"/v1/sequences/{sequence_id}/pause")
 
     def enroll_contacts(self, sequence_id: str, contact_ids: list[str], *, channel_ids: list[str] | None = None) -> dict[str, Any]:
@@ -97,7 +108,7 @@ class SequencesResource:
         return self._client._post(f"/v1/sequences/{sequence_id}/enroll", data=payload)
 
     def unenroll_contact(self, sequence_id: str, contact_id: str) -> dict[str, Any]:
-        """Unenroll a contact from a sequence"""
+        """Unenroll contact"""
         return self._client._delete(f"/v1/sequences/{sequence_id}/enroll/{contact_id}")
 
     def list_sequence_enrollments(self, sequence_id: str, *, status: str | None = None, limit: int | None = 50, skip: int | None = 0) -> dict[str, Any]:
@@ -119,8 +130,19 @@ class SequencesResource:
         )
         return await self._client._aget("/v1/sequences", params=params)
 
-    async def acreate_sequence(self, profile_id: str, account_id: str, platform: str, name: str, *, description: str | None = None, steps: list[dict[str, Any]] | None = None, exit_on_reply: bool | None = True, exit_on_unsubscribe: bool | None = True) -> dict[str, Any]:
-        """Create a sequence (async)"""
+    async def acreate_sequence(
+        self,
+        profile_id: str,
+        account_id: str,
+        platform: str,
+        name: str,
+        *,
+        description: str | None = None,
+        steps: list[dict[str, Any]] | None = None,
+        exit_on_reply: bool | None = True,
+        exit_on_unsubscribe: bool | None = True,
+    ) -> dict[str, Any]:
+        """Create sequence (async)"""
         payload = self._build_payload(
             profile_id=profile_id,
             account_id=account_id,
@@ -138,19 +160,19 @@ class SequencesResource:
         return await self._client._aget(f"/v1/sequences/{sequence_id}")
 
     async def aupdate_sequence(self, sequence_id: str) -> dict[str, Any]:
-        """Update a sequence (async)"""
+        """Update sequence (async)"""
         return await self._client._apatch(f"/v1/sequences/{sequence_id}")
 
     async def adelete_sequence(self, sequence_id: str) -> dict[str, Any]:
-        """Delete a sequence (async)"""
+        """Delete sequence (async)"""
         return await self._client._adelete(f"/v1/sequences/{sequence_id}")
 
     async def aactivate_sequence(self, sequence_id: str) -> dict[str, Any]:
-        """Activate a sequence (async)"""
+        """Activate sequence (async)"""
         return await self._client._apost(f"/v1/sequences/{sequence_id}/activate")
 
     async def apause_sequence(self, sequence_id: str) -> dict[str, Any]:
-        """Pause a sequence (async)"""
+        """Pause sequence (async)"""
         return await self._client._apost(f"/v1/sequences/{sequence_id}/pause")
 
     async def aenroll_contacts(self, sequence_id: str, contact_ids: list[str], *, channel_ids: list[str] | None = None) -> dict[str, Any]:
@@ -161,9 +183,13 @@ class SequencesResource:
         )
         return await self._client._apost(f"/v1/sequences/{sequence_id}/enroll", data=payload)
 
-    async def aunenroll_contact(self, sequence_id: str, contact_id: str) -> dict[str, Any]:
-        """Unenroll a contact from a sequence (async)"""
-        return await self._client._adelete(f"/v1/sequences/{sequence_id}/enroll/{contact_id}")
+    async def aunenroll_contact(
+        self, sequence_id: str, contact_id: str
+    ) -> dict[str, Any]:
+        """Unenroll contact (async)"""
+        return await self._client._adelete(
+            f"/v1/sequences/{sequence_id}/enroll/{contact_id}"
+        )
 
     async def alist_sequence_enrollments(self, sequence_id: str, *, status: str | None = None, limit: int | None = 50, skip: int | None = 0) -> dict[str, Any]:
         """List enrollments for a sequence (async)"""

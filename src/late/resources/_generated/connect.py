@@ -62,6 +62,24 @@ class ConnectResource:
         )
         return self._client._post(f"/v1/connect/{platform}", data=payload)
 
+    def connect_ads(
+        self,
+        platform: str,
+        profile_id: str,
+        *,
+        account_id: str | None = None,
+        redirect_url: str | None = None,
+        headless: bool | None = False,
+    ) -> dict[str, Any]:
+        """Connect ads for a platform"""
+        params = self._build_params(
+            profile_id=profile_id,
+            account_id=account_id,
+            redirect_url=redirect_url,
+            headless=headless,
+        )
+        return self._client._get(f"/v1/connect/{platform}/ads", params=params)
+
     def list_facebook_pages(self, profile_id: str, temp_token: str) -> dict[str, Any]:
         """List Facebook pages"""
         params = self._build_params(
@@ -70,7 +88,15 @@ class ConnectResource:
         )
         return self._client._get("/v1/connect/facebook/select-page", params=params)
 
-    def select_facebook_page(self, profile_id: str, page_id: str, temp_token: str, *, user_profile: dict[str, Any] | None = None, redirect_url: str | None = None) -> dict[str, Any]:
+    def select_facebook_page(
+        self,
+        profile_id: str,
+        page_id: str,
+        temp_token: str,
+        user_profile: dict[str, Any],
+        *,
+        redirect_url: str | None = None,
+    ) -> dict[str, Any]:
         """Select Facebook page"""
         payload = self._build_payload(
             profile_id=profile_id,
@@ -81,21 +107,34 @@ class ConnectResource:
         )
         return self._client._post("/v1/connect/facebook/select-page", data=payload)
 
-    def list_google_business_locations(self, profile_id: str, temp_token: str) -> dict[str, Any]:
+    def list_google_business_locations(
+        self,
+        *,
+        profile_id: str | None = None,
+        pending_data_token: str | None = None,
+        temp_token: str | None = None,
+    ) -> dict[str, Any]:
         """List GBP locations"""
         params = self._build_params(
             profile_id=profile_id,
+            pending_data_token=pending_data_token,
             temp_token=temp_token,
         )
         return self._client._get("/v1/connect/googlebusiness/locations", params=params)
 
-    def select_google_business_location(self, profile_id: str, location_id: str, temp_token: str, *, user_profile: dict[str, Any] | None = None, redirect_url: str | None = None) -> dict[str, Any]:
+    def select_google_business_location(
+        self,
+        profile_id: str,
+        location_id: str,
+        pending_data_token: str,
+        *,
+        redirect_url: str | None = None,
+    ) -> dict[str, Any]:
         """Select GBP location"""
         payload = self._build_payload(
             profile_id=profile_id,
             location_id=location_id,
-            temp_token=temp_token,
-            user_profile=user_profile,
+            pending_data_token=pending_data_token,
             redirect_url=redirect_url,
         )
         return self._client._post("/v1/connect/googlebusiness/select-location", data=payload)
@@ -259,6 +298,26 @@ class ConnectResource:
         )
         return self._client._put(f"/v1/accounts/{account_id}/youtube-playlists", data=payload)
 
+    def get_youtube_playlists(self, account_id: str) -> dict[str, Any]:
+        """List YouTube playlists"""
+        return self._client._get(f"/v1/accounts/{account_id}/youtube-playlists")
+
+    def update_youtube_default_playlist(
+        self,
+        account_id: str,
+        default_playlist_id: str,
+        *,
+        default_playlist_name: str | None = None,
+    ) -> dict[str, Any]:
+        """Set default YouTube playlist"""
+        payload = self._build_payload(
+            default_playlist_id=default_playlist_id,
+            default_playlist_name=default_playlist_name,
+        )
+        return self._client._put(
+            f"/v1/accounts/{account_id}/youtube-playlists", data=payload
+        )
+
     def get_gmb_locations(self, account_id: str) -> dict[str, Any]:
         """List GBP locations"""
         return self._client._get(f"/v1/accounts/{account_id}/gmb-locations")
@@ -306,7 +365,27 @@ class ConnectResource:
         )
         return await self._client._apost(f"/v1/connect/{platform}", data=payload)
 
-    async def alist_facebook_pages(self, profile_id: str, temp_token: str) -> dict[str, Any]:
+    async def aconnect_ads(
+        self,
+        platform: str,
+        profile_id: str,
+        *,
+        account_id: str | None = None,
+        redirect_url: str | None = None,
+        headless: bool | None = False,
+    ) -> dict[str, Any]:
+        """Connect ads for a platform (async)"""
+        params = self._build_params(
+            profile_id=profile_id,
+            account_id=account_id,
+            redirect_url=redirect_url,
+            headless=headless,
+        )
+        return await self._client._aget(f"/v1/connect/{platform}/ads", params=params)
+
+    async def alist_facebook_pages(
+        self, profile_id: str, temp_token: str
+    ) -> dict[str, Any]:
         """List Facebook pages (async)"""
         params = self._build_params(
             profile_id=profile_id,
@@ -314,7 +393,15 @@ class ConnectResource:
         )
         return await self._client._aget("/v1/connect/facebook/select-page", params=params)
 
-    async def aselect_facebook_page(self, profile_id: str, page_id: str, temp_token: str, *, user_profile: dict[str, Any] | None = None, redirect_url: str | None = None) -> dict[str, Any]:
+    async def aselect_facebook_page(
+        self,
+        profile_id: str,
+        page_id: str,
+        temp_token: str,
+        user_profile: dict[str, Any],
+        *,
+        redirect_url: str | None = None,
+    ) -> dict[str, Any]:
         """Select Facebook page (async)"""
         payload = self._build_payload(
             profile_id=profile_id,
@@ -325,21 +412,34 @@ class ConnectResource:
         )
         return await self._client._apost("/v1/connect/facebook/select-page", data=payload)
 
-    async def alist_google_business_locations(self, profile_id: str, temp_token: str) -> dict[str, Any]:
+    async def alist_google_business_locations(
+        self,
+        *,
+        profile_id: str | None = None,
+        pending_data_token: str | None = None,
+        temp_token: str | None = None,
+    ) -> dict[str, Any]:
         """List GBP locations (async)"""
         params = self._build_params(
             profile_id=profile_id,
+            pending_data_token=pending_data_token,
             temp_token=temp_token,
         )
         return await self._client._aget("/v1/connect/googlebusiness/locations", params=params)
 
-    async def aselect_google_business_location(self, profile_id: str, location_id: str, temp_token: str, *, user_profile: dict[str, Any] | None = None, redirect_url: str | None = None) -> dict[str, Any]:
+    async def aselect_google_business_location(
+        self,
+        profile_id: str,
+        location_id: str,
+        pending_data_token: str,
+        *,
+        redirect_url: str | None = None,
+    ) -> dict[str, Any]:
         """Select GBP location (async)"""
         payload = self._build_payload(
             profile_id=profile_id,
             location_id=location_id,
-            temp_token=temp_token,
-            user_profile=user_profile,
+            pending_data_token=pending_data_token,
             redirect_url=redirect_url,
         )
         return await self._client._apost("/v1/connect/googlebusiness/select-location", data=payload)
@@ -502,6 +602,26 @@ class ConnectResource:
             default_playlist_name=default_playlist_name,
         )
         return await self._client._aput(f"/v1/accounts/{account_id}/youtube-playlists", data=payload)
+
+    async def aget_youtube_playlists(self, account_id: str) -> dict[str, Any]:
+        """List YouTube playlists (async)"""
+        return await self._client._aget(f"/v1/accounts/{account_id}/youtube-playlists")
+
+    async def aupdate_youtube_default_playlist(
+        self,
+        account_id: str,
+        default_playlist_id: str,
+        *,
+        default_playlist_name: str | None = None,
+    ) -> dict[str, Any]:
+        """Set default YouTube playlist (async)"""
+        payload = self._build_payload(
+            default_playlist_id=default_playlist_id,
+            default_playlist_name=default_playlist_name,
+        )
+        return await self._client._aput(
+            f"/v1/accounts/{account_id}/youtube-playlists", data=payload
+        )
 
     async def aget_gmb_locations(self, account_id: str) -> dict[str, Any]:
         """List GBP locations (async)"""

@@ -57,8 +57,22 @@ class ContactsResource:
         )
         return self._client._get("/v1/contacts", params=params)
 
-    def create_contact(self, profile_id: str, name: str, *, email: str | None = None, company: str | None = None, tags: list[str] | None = None, is_subscribed: bool | None = True, notes: str | None = None, account_id: str | None = None, platform: str | None = None, platform_identifier: str | None = None, display_identifier: str | None = None) -> dict[str, Any]:
-        """Create a contact"""
+    def create_contact(
+        self,
+        profile_id: str,
+        name: str,
+        *,
+        email: str | None = None,
+        company: str | None = None,
+        tags: list[str] | None = None,
+        is_subscribed: bool | None = True,
+        notes: str | None = None,
+        account_id: str | None = None,
+        platform: str | None = None,
+        platform_identifier: str | None = None,
+        display_identifier: str | None = None,
+    ) -> dict[str, Any]:
+        """Create contact"""
         payload = self._build_payload(
             profile_id=profile_id,
             name=name,
@@ -75,11 +89,23 @@ class ContactsResource:
         return self._client._post("/v1/contacts", data=payload)
 
     def get_contact(self, contact_id: str) -> dict[str, Any]:
-        """Get contact with channels"""
+        """Get contact"""
         return self._client._get(f"/v1/contacts/{contact_id}")
 
-    def update_contact(self, contact_id: str, *, name: str | None = None, email: str | None = None, company: str | None = None, avatar_url: str | None = None, tags: list[str] | None = None, is_subscribed: bool | None = None, is_blocked: bool | None = None, notes: str | None = None) -> dict[str, Any]:
-        """Update a contact"""
+    def update_contact(
+        self,
+        contact_id: str,
+        *,
+        name: str | None = None,
+        email: str | None = None,
+        company: str | None = None,
+        avatar_url: str | None = None,
+        tags: list[str] | None = None,
+        is_subscribed: bool | None = None,
+        is_blocked: bool | None = None,
+        notes: str | None = None,
+    ) -> dict[str, Any]:
+        """Update contact"""
         payload = self._build_payload(
             name=name,
             email=email,
@@ -93,7 +119,7 @@ class ContactsResource:
         return self._client._patch(f"/v1/contacts/{contact_id}", data=payload)
 
     def delete_contact(self, contact_id: str) -> dict[str, Any]:
-        """Delete a contact"""
+        """Delete contact"""
         return self._client._delete(f"/v1/contacts/{contact_id}")
 
     def get_contact_channels(self, contact_id: str) -> dict[str, Any]:
@@ -123,8 +149,22 @@ class ContactsResource:
         )
         return await self._client._aget("/v1/contacts", params=params)
 
-    async def acreate_contact(self, profile_id: str, name: str, *, email: str | None = None, company: str | None = None, tags: list[str] | None = None, is_subscribed: bool | None = True, notes: str | None = None, account_id: str | None = None, platform: str | None = None, platform_identifier: str | None = None, display_identifier: str | None = None) -> dict[str, Any]:
-        """Create a contact (async)"""
+    async def acreate_contact(
+        self,
+        profile_id: str,
+        name: str,
+        *,
+        email: str | None = None,
+        company: str | None = None,
+        tags: list[str] | None = None,
+        is_subscribed: bool | None = True,
+        notes: str | None = None,
+        account_id: str | None = None,
+        platform: str | None = None,
+        platform_identifier: str | None = None,
+        display_identifier: str | None = None,
+    ) -> dict[str, Any]:
+        """Create contact (async)"""
         payload = self._build_payload(
             profile_id=profile_id,
             name=name,
@@ -141,11 +181,23 @@ class ContactsResource:
         return await self._client._apost("/v1/contacts", data=payload)
 
     async def aget_contact(self, contact_id: str) -> dict[str, Any]:
-        """Get contact with channels (async)"""
+        """Get contact (async)"""
         return await self._client._aget(f"/v1/contacts/{contact_id}")
 
-    async def aupdate_contact(self, contact_id: str, *, name: str | None = None, email: str | None = None, company: str | None = None, avatar_url: str | None = None, tags: list[str] | None = None, is_subscribed: bool | None = None, is_blocked: bool | None = None, notes: str | None = None) -> dict[str, Any]:
-        """Update a contact (async)"""
+    async def aupdate_contact(
+        self,
+        contact_id: str,
+        *,
+        name: str | None = None,
+        email: str | None = None,
+        company: str | None = None,
+        avatar_url: str | None = None,
+        tags: list[str] | None = None,
+        is_subscribed: bool | None = None,
+        is_blocked: bool | None = None,
+        notes: str | None = None,
+    ) -> dict[str, Any]:
+        """Update contact (async)"""
         payload = self._build_payload(
             name=name,
             email=email,
@@ -159,7 +211,7 @@ class ContactsResource:
         return await self._client._apatch(f"/v1/contacts/{contact_id}", data=payload)
 
     async def adelete_contact(self, contact_id: str) -> dict[str, Any]:
-        """Delete a contact (async)"""
+        """Delete contact (async)"""
         return await self._client._adelete(f"/v1/contacts/{contact_id}")
 
     async def aget_contact_channels(self, contact_id: str) -> dict[str, Any]:

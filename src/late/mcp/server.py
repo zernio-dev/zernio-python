@@ -105,6 +105,31 @@ def _get_client() -> Late:
 
 
 # ============================================================================
+# HELPERS
+# ============================================================================
+
+
+def _platform_str(value: Any) -> str:
+    """Extract string value from a platform enum or return as-is if already a string.
+
+    The auto-generated models use plain Enum classes (Platform5, Platform6, etc.)
+    whose instances don't have .lower() and whose str() returns 'Platform5.TWITTER'
+    instead of 'twitter'. This helper normalises any platform value to a clean
+    lowercase string regardless of the underlying type.
+    """
+    if value is None:
+        return ""
+    # Platform(str, Enum) from enums.py is already a str, so this branch
+    # handles both plain strings and StrEnum instances.
+    if isinstance(value, str):
+        return value.lower()
+    # Plain Enum from generated models: extract .value
+    if hasattr(value, "value"):
+        return str(value.value).lower()
+    return str(value).lower()
+
+
+# ============================================================================
 # ACCOUNTS
 # ============================================================================
 
@@ -122,7 +147,7 @@ def accounts_list() -> str:
     lines = [f"Found {len(accounts)} connected account(s):\n"]
     for acc in accounts:
         username = acc.username or acc.displayName or acc.field_id
-        lines.append(f"- {acc.platform}: {username} (ID: {acc.field_id})")
+        lines.append(f"- {_platform_str(acc.platform)}: {username} (ID: {acc.field_id})")
 
     return "\n".join(lines)
 
@@ -134,14 +159,14 @@ def accounts_get(platform: str) -> str:
     response = client.accounts.list()
     accounts = response.accounts or []
 
-    matching = [a for a in accounts if a.platform and a.platform.lower() == platform.lower()]
+    matching = [a for a in accounts if a.platform and _platform_str(a.platform) == platform.lower()]
 
     if not matching:
-        available = list({a.platform for a in accounts if a.platform})
+        available = list({_platform_str(a.platform) for a in accounts if a.platform})
         return f"No {platform} account found. Available: {', '.join(available)}"
 
     acc = matching[0]
-    return f"Platform: {acc.platform}\nUsername: {acc.username or 'N/A'}\nID: {acc.field_id}"
+    return f"Platform: {_platform_str(acc.platform)}\nUsername: {acc.username or 'N/A'}\nID: {acc.field_id}"
 
 
 # ============================================================================
@@ -329,10 +354,10 @@ def posts_create(
     # Find account for platform
     accounts_response = client.accounts.list()
     accounts = accounts_response.accounts or []
-    matching = [a for a in accounts if a.platform and a.platform.lower() == platform.lower()]
+    matching = [a for a in accounts if a.platform and _platform_str(a.platform) == platform.lower()]
 
     if not matching:
-        available = list({a.platform for a in accounts if a.platform})
+        available = list({_platform_str(a.platform) for a in accounts if a.platform})
         return f"No {platform} account connected. Available platforms: {', '.join(available)}"
 
     account = matching[0]
@@ -342,7 +367,7 @@ def posts_create(
         "content": content,
         "platforms": [
             {
-                "platform": account.platform,
+                "platform": _platform_str(account.platform),
                 "accountId": account.field_id,
             }
         ],
@@ -421,11 +446,11 @@ def posts_cross_post(
     not_found = []
 
     for platform in target_platforms:
-        matching = [a for a in accounts if a.platform and a.platform.lower() == platform]
+        matching = [a for a in accounts if a.platform and _platform_str(a.platform) == platform]
         if matching:
             platform_targets.append(
                 {
-                    "platform": matching[0].platform,
+                    "platform": _platform_str(matching[0].platform),
                     "accountId": matching[0].field_id,
                 }
             )
@@ -433,7 +458,7 @@ def posts_cross_post(
             not_found.append(platform)
 
     if not platform_targets:
-        available = list({a.platform for a in accounts if a.platform})
+        available = list({_platform_str(a.platform) for a in accounts if a.platform})
         return f"No matching accounts found. Available: {', '.join(available)}"
 
     params: dict[str, Any] = {

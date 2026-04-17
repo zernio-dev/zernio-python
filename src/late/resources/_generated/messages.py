@@ -57,7 +57,28 @@ class MessagesResource:
         )
         return self._client._get("/v1/inbox/conversations", params=params)
 
-    def get_inbox_conversation(self, conversation_id: str, account_id: str) -> dict[str, Any]:
+    def create_inbox_conversation(
+        self,
+        account_id: str,
+        *,
+        participant_id: str | None = None,
+        participant_username: str | None = None,
+        message: str | None = None,
+        skip_dm_check: bool | None = False,
+    ) -> dict[str, Any]:
+        """Create conversation"""
+        payload = self._build_payload(
+            account_id=account_id,
+            participant_id=participant_id,
+            participant_username=participant_username,
+            message=message,
+            skip_dm_check=skip_dm_check,
+        )
+        return self._client._post("/v1/inbox/conversations", data=payload)
+
+    def get_inbox_conversation(
+        self, conversation_id: str, account_id: str
+    ) -> dict[str, Any]:
         """Get conversation"""
         params = self._build_params(
             account_id=account_id,
@@ -105,40 +126,69 @@ class MessagesResource:
         )
         return self._client._patch(f"/v1/inbox/conversations/{conversation_id}/messages/{message_id}", data=payload)
 
-    def delete_inbox_message(self, conversation_id: str, message_id: str, account_id: str) -> dict[str, Any]:
+    def delete_inbox_message(
+        self, conversation_id: str, message_id: str, account_id: str
+    ) -> dict[str, Any]:
         """Delete message"""
         params = self._build_params(
             account_id=account_id,
         )
-        return self._client._delete(f"/v1/inbox/conversations/{conversation_id}/messages/{message_id}", params=params)
+        return self._client._delete(
+            f"/v1/inbox/conversations/{conversation_id}/messages/{message_id}",
+            params=params,
+        )
 
-    def send_typing_indicator(self, conversation_id: str, account_id: str) -> dict[str, Any]:
+    def send_typing_indicator(
+        self, conversation_id: str, account_id: str
+    ) -> dict[str, Any]:
         """Send typing indicator"""
         payload = self._build_payload(
             account_id=account_id,
         )
-        return self._client._post(f"/v1/inbox/conversations/{conversation_id}/typing", data=payload)
+        return self._client._post(
+            f"/v1/inbox/conversations/{conversation_id}/typing", data=payload
+        )
 
-    def add_message_reaction(self, conversation_id: str, message_id: str, account_id: str, emoji: str) -> dict[str, Any]:
+    def add_message_reaction(
+        self, conversation_id: str, message_id: str, account_id: str, emoji: str
+    ) -> dict[str, Any]:
         """Add reaction"""
         payload = self._build_payload(
             account_id=account_id,
             emoji=emoji,
         )
-        return self._client._post(f"/v1/inbox/conversations/{conversation_id}/messages/{message_id}/reactions", data=payload)
+        return self._client._post(
+            f"/v1/inbox/conversations/{conversation_id}/messages/{message_id}/reactions",
+            data=payload,
+        )
 
-    def remove_message_reaction(self, conversation_id: str, message_id: str, account_id: str) -> dict[str, Any]:
+    def remove_message_reaction(
+        self, conversation_id: str, message_id: str, account_id: str
+    ) -> dict[str, Any]:
         """Remove reaction"""
         params = self._build_params(
             account_id=account_id,
         )
-        return self._client._delete(f"/v1/inbox/conversations/{conversation_id}/messages/{message_id}/reactions", params=params)
+        return self._client._delete(
+            f"/v1/inbox/conversations/{conversation_id}/messages/{message_id}/reactions",
+            params=params,
+        )
 
     def upload_media_direct(self) -> dict[str, Any]:
         """Upload media file"""
         return self._client._post("/v1/media/upload-direct")
 
-    async def alist_inbox_conversations(self, *, profile_id: str | None = None, platform: str | None = None, status: str | None = None, sort_order: str | None = "desc", limit: int | None = 50, cursor: str | None = None, account_id: str | None = None) -> dict[str, Any]:
+    async def alist_inbox_conversations(
+        self,
+        *,
+        profile_id: str | None = None,
+        platform: str | None = None,
+        status: str | None = None,
+        sort_order: str | None = "desc",
+        limit: int | None = 50,
+        cursor: str | None = None,
+        account_id: str | None = None,
+    ) -> dict[str, Any]:
         """List conversations (async)"""
         params = self._build_params(
             profile_id=profile_id,
@@ -151,7 +201,28 @@ class MessagesResource:
         )
         return await self._client._aget("/v1/inbox/conversations", params=params)
 
-    async def aget_inbox_conversation(self, conversation_id: str, account_id: str) -> dict[str, Any]:
+    async def acreate_inbox_conversation(
+        self,
+        account_id: str,
+        *,
+        participant_id: str | None = None,
+        participant_username: str | None = None,
+        message: str | None = None,
+        skip_dm_check: bool | None = False,
+    ) -> dict[str, Any]:
+        """Create conversation (async)"""
+        payload = self._build_payload(
+            account_id=account_id,
+            participant_id=participant_id,
+            participant_username=participant_username,
+            message=message,
+            skip_dm_check=skip_dm_check,
+        )
+        return await self._client._apost("/v1/inbox/conversations", data=payload)
+
+    async def aget_inbox_conversation(
+        self, conversation_id: str, account_id: str
+    ) -> dict[str, Any]:
         """Get conversation (async)"""
         params = self._build_params(
             account_id=account_id,
@@ -204,29 +275,54 @@ class MessagesResource:
         params = self._build_params(
             account_id=account_id,
         )
-        return await self._client._adelete(f"/v1/inbox/conversations/{conversation_id}/messages/{message_id}", params=params)
 
-    async def asend_typing_indicator(self, conversation_id: str, account_id: str) -> dict[str, Any]:
+    async def adelete_inbox_message(
+        self, conversation_id: str, message_id: str, account_id: str
+    ) -> dict[str, Any]:
+        """Delete message (async)"""
+        params = self._build_params(
+            account_id=account_id,
+        )
+        return await self._client._adelete(
+            f"/v1/inbox/conversations/{conversation_id}/messages/{message_id}",
+            params=params,
+        )
+
+    async def asend_typing_indicator(
+        self, conversation_id: str, account_id: str
+    ) -> dict[str, Any]:
         """Send typing indicator (async)"""
         payload = self._build_payload(
             account_id=account_id,
         )
-        return await self._client._apost(f"/v1/inbox/conversations/{conversation_id}/typing", data=payload)
+        return await self._client._apost(
+            f"/v1/inbox/conversations/{conversation_id}/typing", data=payload
+        )
 
-    async def aadd_message_reaction(self, conversation_id: str, message_id: str, account_id: str, emoji: str) -> dict[str, Any]:
+    async def aadd_message_reaction(
+        self, conversation_id: str, message_id: str, account_id: str, emoji: str
+    ) -> dict[str, Any]:
         """Add reaction (async)"""
         payload = self._build_payload(
             account_id=account_id,
             emoji=emoji,
         )
-        return await self._client._apost(f"/v1/inbox/conversations/{conversation_id}/messages/{message_id}/reactions", data=payload)
+        return await self._client._apost(
+            f"/v1/inbox/conversations/{conversation_id}/messages/{message_id}/reactions",
+            data=payload,
+        )
 
-    async def aremove_message_reaction(self, conversation_id: str, message_id: str, account_id: str) -> dict[str, Any]:
+    async def aremove_message_reaction(
+        self, conversation_id: str, message_id: str, account_id: str
+    ) -> dict[str, Any]:
         """Remove reaction (async)"""
         params = self._build_params(
             account_id=account_id,
         )
-        return await self._client._adelete(f"/v1/inbox/conversations/{conversation_id}/messages/{message_id}/reactions", params=params)
+        return await self._client._adelete(
+            f"/v1/inbox/conversations/{conversation_id}/messages/{message_id}/reactions",
+            params=params,
+        )
 
     async def aupload_media_direct(self) -> dict[str, Any]:
         """Upload media file (async)"""

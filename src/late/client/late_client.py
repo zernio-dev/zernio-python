@@ -39,6 +39,7 @@ from ..resources import (
     UsersResource,
     ValidateResource,
     WebhooksResource,
+    WhatsappFlowsResource,
     WhatsappPhoneNumbersResource,
     WhatsappResource,
 )
@@ -144,15 +145,9 @@ class Zernio(BaseClient):
         self.validate = ValidateResource(self)
         self.webhooks = WebhooksResource(self)
         self.whatsapp = WhatsappResource(self)
+        self.whatsapp_flows = WhatsappFlowsResource(self)
         self.whatsapp_phone_numbers = WhatsappPhoneNumbersResource(self)
         # --- end auto-registered resources ---
-
-        # Backwards-compatible alias: client.inbox combines conversations,
-        # comments, and reviews in one resource (split into Messages/Comments/
-        # Reviews in the OpenAPI spec, but users may rely on client.inbox)
-        from ..resources._generated.inbox import InboxResource
-
-        self.inbox = InboxResource(self)
 
     async def __aenter__(self) -> Zernio:
         """Async context manager entry."""

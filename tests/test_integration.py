@@ -422,7 +422,12 @@ class TestAccountsResource:
 
         assert route.called
         assert len(result.accounts) == 1
-        assert result.accounts[0].platform == "twitter"
+        # The generated `SocialAccount.platform` field is typed as an Enum
+        # class (currently PlatformN where N shifts with codegen). Plain
+        # `Enum` members don't `==` their underlying string in Python, so
+        # compare via `.value` if present, else direct equality.
+        platform = result.accounts[0].platform
+        assert getattr(platform, "value", platform) == "twitter"
 
     @respx.mock
     def test_list_accounts_by_profile(self, client: Late, mock_account: dict) -> None:
