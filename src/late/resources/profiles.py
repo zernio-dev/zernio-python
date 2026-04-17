@@ -12,10 +12,12 @@ from late.models import (
     ProfileUpdateResponse,
 )
 
+from ._generated.profiles import ProfilesResource as _GeneratedProfilesResource
 from .base import BaseResource
 
 
-class ProfilesResource(BaseResource[ProfilesListResponse]):
+# See accounts.py for the inheritance rationale.
+class ProfilesResource(_GeneratedProfilesResource, BaseResource[ProfilesListResponse]):
     """
     Resource for managing profiles.
 

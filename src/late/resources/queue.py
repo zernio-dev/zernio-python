@@ -14,10 +14,12 @@ from late.models import (
     QueueUpdateResponse,
 )
 
+from ._generated.queue import QueueResource as _GeneratedQueueResource
 from .base import BaseResource
 
 
-class QueueResource(BaseResource[QueueSlotsResponse]):
+# See accounts.py for the inheritance rationale.
+class QueueResource(_GeneratedQueueResource, BaseResource[QueueSlotsResponse]):
     """
     Resource for managing the posting queue.
 

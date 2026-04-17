@@ -6,12 +6,15 @@ from __future__ import annotations
 
 from typing import Any, Literal
 
+from ._generated.analytics import AnalyticsResource as _GeneratedAnalyticsResource
 from .base import BaseResource
 
 Period = Literal["7d", "30d", "90d", "all"]
 
 
-class AnalyticsResource(BaseResource[Any]):
+# See accounts.py for the rationale on inheriting from the generated resource —
+# keeps all OpenAPI-derived methods callable so MCP generated tools work.
+class AnalyticsResource(_GeneratedAnalyticsResource, BaseResource[Any]):
     """
     Resource for analytics and usage statistics.
 

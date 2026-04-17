@@ -6,10 +6,12 @@ from __future__ import annotations
 
 from late.models import UserGetResponse, UsersListResponse
 
+from ._generated.users import UsersResource as _GeneratedUsersResource
 from .base import BaseResource
 
 
-class UsersResource(BaseResource[UsersListResponse]):
+# See accounts.py for the inheritance rationale.
+class UsersResource(_GeneratedUsersResource, BaseResource[UsersListResponse]):
     """
     Resource for managing team users.
 

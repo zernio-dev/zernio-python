@@ -10,10 +10,19 @@ from late.models import (
     FollowerStatsResponse,
 )
 
+from ._generated.accounts import AccountsResource as _GeneratedAccountsResource
 from .base import BaseResource
 
 
-class AccountsResource(BaseResource[AccountsListResponse]):
+# Inherit from the auto-generated resource first so all OpenAPI-derived
+# methods (list_accounts, get_account_health, update_account, the
+# google_business_* suite, etc.) remain callable on client.accounts. The
+# hand-written methods below override the generated list/get/get_follower_stats
+# with pydantic-typed return values; everything else falls through to the
+# generated implementation. Without this, MCP tools generated from the
+# OpenAPI spec (e.g. accounts_list_accounts) crash with AttributeError
+# because the hand-written class used to hide the generated methods.
+class AccountsResource(_GeneratedAccountsResource, BaseResource[AccountsListResponse]):
     """
     Resource for managing connected social media accounts.
 

@@ -19,6 +19,7 @@ from late.models import (
     UploadTokenStatusResponse,
 )
 
+from ._generated.media import MediaResource as _GeneratedMediaResource
 from .base import BaseResource
 
 if TYPE_CHECKING:
@@ -31,7 +32,8 @@ if TYPE_CHECKING:
 DIRECT_UPLOAD_MAX_SIZE = 4 * 1024 * 1024
 
 
-class MediaResource(BaseResource[MediaUploadResponse]):
+# See accounts.py for the inheritance rationale.
+class MediaResource(_GeneratedMediaResource, BaseResource[MediaUploadResponse]):
     """
     Resource for uploading media files.
 
