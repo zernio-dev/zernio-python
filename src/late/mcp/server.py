@@ -411,7 +411,7 @@ def posts_create(
 
     post_id = post.field_id if post else "N/A"
     if is_draft:
-        return f"\ud83d\udcdd Draft saved for {platform} (@{username}){media_info}\nPost ID: {post_id}\nStatus: draft"
+        return f"📝 Draft saved for {platform} (@{username}){media_info}\nPost ID: {post_id}\nStatus: draft"
     elif publish_now:
         return f"\u2705 Published to {platform} (@{username}){media_info}\nPost ID: {post_id}"
     else:
@@ -499,7 +499,7 @@ def posts_cross_post(
 
     post_id = post.field_id if post else "N/A"
     if is_draft:
-        result = f"\ud83d\udcdd Draft saved for: {', '.join(posted_to)}{media_info}\nPost ID: {post_id}\nStatus: draft"
+        result = f"📝 Draft saved for: {', '.join(posted_to)}{media_info}\nPost ID: {post_id}\nStatus: draft"
     else:
         result = f"\u2705 {'Published' if publish_now else 'Scheduled'} to: {', '.join(posted_to)}{media_info}\nPost ID: {post_id}"
 
@@ -639,7 +639,7 @@ def media_generate_upload_link() -> str:
         token = response.token or ""
         expires_at = str(response.expiresAt) if response.expiresAt else ""
 
-        return f"""\ud83d\udce4 Upload link generated!
+        return f"""📤 Upload link generated!
 
 **Open this link in your browser to upload files:**
 {upload_url}
@@ -693,7 +693,7 @@ The upload link has expired. Use media_generate_upload_link to create a new one.
                 lines.append("")
 
             lines.append(
-                "\n\ud83d\udcdd You can now create a post with these media URLs using posts_create with the media_urls parameter."
+                "\n📝 You can now create a post with these media URLs using posts_create with the media_urls parameter."
             )
             lines.append(f"\nMedia URLs: {','.join(media_urls)}")
 
