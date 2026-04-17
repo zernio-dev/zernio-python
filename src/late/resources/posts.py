@@ -16,6 +16,7 @@ from late.models import (
     PostUpdateResponse,
 )
 
+from ._generated.posts import PostsResource as _GeneratedPostsResource
 from .base import BaseResource
 
 if TYPE_CHECKING:
@@ -24,7 +25,8 @@ if TYPE_CHECKING:
     from late.enums import Platform, PostStatus
 
 
-class PostsResource(BaseResource[PostsListResponse]):
+# See accounts.py for the inheritance rationale.
+class PostsResource(_GeneratedPostsResource, BaseResource[PostsListResponse]):
     """
     Resource for managing posts.
 
