@@ -22,11 +22,17 @@ class LogsResource:
         self._client = client
 
     def _build_params(self, **kwargs: Any) -> dict[str, Any]:
-        """Build query parameters, filtering None values."""
+        """Build query parameters, filtering None and empty-string values.
+
+        Empty strings are filtered because MCP tool wrappers pass ``""`` as the
+        default for optional string args, and the API rejects empty query
+        values (e.g. ``platform=``) with a 400. Filtering here keeps both direct
+        SDK callers and MCP tool callers safe.
+        """
         def to_camel(s: str) -> str:
             parts = s.split("_")
             return parts[0] + "".join(p.title() for p in parts[1:])
-        return {to_camel(k): v for k, v in kwargs.items() if v is not None}
+        return {to_camel(k): v for k, v in kwargs.items() if v is not None and v != ""}
 
     def _build_payload(self, **kwargs: Any) -> dict[str, Any]:
         """Build request payload, filtering None values."""
@@ -44,18 +50,7 @@ class LogsResource:
                 result[to_camel(k)] = v
         return result
 
-    def list_logs(
-        self,
-        *,
-        type: str | None = "publishing",
-        status: str | None = None,
-        platform: str | None = None,
-        action: str | None = None,
-        search: str | None = None,
-        days: int | None = 90,
-        limit: int | None = 50,
-        skip: int | None = 0,
-    ) -> dict[str, Any]:
+    def list_logs(self, *, type: str | None = "publishing", status: str | None = None, platform: str | None = None, action: str | None = None, search: str | None = None, days: int | None = 90, limit: int | None = 50, skip: int | None = 0) -> dict[str, Any]:
         """List activity logs"""
         params = self._build_params(
             type=type,
@@ -69,18 +64,7 @@ class LogsResource:
         )
         return self._client._get("/v1/logs", params=params)
 
-    async def alist_logs(
-        self,
-        *,
-        type: str | None = "publishing",
-        status: str | None = None,
-        platform: str | None = None,
-        action: str | None = None,
-        search: str | None = None,
-        days: int | None = 90,
-        limit: int | None = 50,
-        skip: int | None = 0,
-    ) -> dict[str, Any]:
+    async def alist_logs(self, *, type: str | None = "publishing", status: str | None = None, platform: str | None = None, action: str | None = None, search: str | None = None, days: int | None = 90, limit: int | None = 50, skip: int | None = 0) -> dict[str, Any]:
         """List activity logs (async)"""
         params = self._build_params(
             type=type,

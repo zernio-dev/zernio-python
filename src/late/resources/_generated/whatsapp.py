@@ -22,11 +22,17 @@ class WhatsappResource:
         self._client = client
 
     def _build_params(self, **kwargs: Any) -> dict[str, Any]:
-        """Build query parameters, filtering None values."""
+        """Build query parameters, filtering None and empty-string values.
+
+        Empty strings are filtered because MCP tool wrappers pass ``""`` as the
+        default for optional string args, and the API rejects empty query
+        values (e.g. ``platform=``) with a 400. Filtering here keeps both direct
+        SDK callers and MCP tool callers safe.
+        """
         def to_camel(s: str) -> str:
             parts = s.split("_")
             return parts[0] + "".join(p.title() for p in parts[1:])
-        return {to_camel(k): v for k, v in kwargs.items() if v is not None}
+        return {to_camel(k): v for k, v in kwargs.items() if v is not None and v != ""}
 
     def _build_payload(self, **kwargs: Any) -> dict[str, Any]:
         """Build request payload, filtering None values."""
@@ -51,18 +57,7 @@ class WhatsappResource:
         )
         return self._client._get("/v1/whatsapp/templates", params=params)
 
-    def create_whats_app_template(
-        self,
-        account_id: str,
-        name: str,
-        category: str,
-        language: str,
-        *,
-        components: list[Any] | None = None,
-        library_template_name: str | None = None,
-        library_template_body_inputs: dict[str, Any] | None = None,
-        library_template_button_inputs: list[dict[str, Any]] | None = None,
-    ) -> dict[str, Any]:
+    def create_whats_app_template(self, account_id: str, name: str, category: str, language: str, *, components: list[Any] | None = None, library_template_name: str | None = None, library_template_body_inputs: dict[str, Any] | None = None, library_template_button_inputs: list[dict[str, Any]] | None = None) -> dict[str, Any]:
         """Create template"""
         payload = self._build_payload(
             account_id=account_id,
@@ -83,9 +78,7 @@ class WhatsappResource:
         )
         return self._client._get(f"/v1/whatsapp/templates/{template_name}", params=params)
 
-    def update_whats_app_template(
-        self, template_name: str, account_id: str, components: list[Any]
-    ) -> dict[str, Any]:
+    def update_whats_app_template(self, template_name: str, account_id: str, components: list[Any]) -> dict[str, Any]:
         """Update template"""
         payload = self._build_payload(
             account_id=account_id,
@@ -231,18 +224,7 @@ class WhatsappResource:
         )
         return await self._client._aget("/v1/whatsapp/templates", params=params)
 
-    async def acreate_whats_app_template(
-        self,
-        account_id: str,
-        name: str,
-        category: str,
-        language: str,
-        *,
-        components: list[Any] | None = None,
-        library_template_name: str | None = None,
-        library_template_body_inputs: dict[str, Any] | None = None,
-        library_template_button_inputs: list[dict[str, Any]] | None = None,
-    ) -> dict[str, Any]:
+    async def acreate_whats_app_template(self, account_id: str, name: str, category: str, language: str, *, components: list[Any] | None = None, library_template_name: str | None = None, library_template_body_inputs: dict[str, Any] | None = None, library_template_button_inputs: list[dict[str, Any]] | None = None) -> dict[str, Any]:
         """Create template (async)"""
         payload = self._build_payload(
             account_id=account_id,
@@ -263,9 +245,7 @@ class WhatsappResource:
         )
         return await self._client._aget(f"/v1/whatsapp/templates/{template_name}", params=params)
 
-    async def aupdate_whats_app_template(
-        self, template_name: str, account_id: str, components: list[Any]
-    ) -> dict[str, Any]:
+    async def aupdate_whats_app_template(self, template_name: str, account_id: str, components: list[Any]) -> dict[str, Any]:
         """Update template (async)"""
         payload = self._build_payload(
             account_id=account_id,

@@ -22,22 +22,24 @@ class AdCampaignsResource:
         self._client = client
 
     def _build_params(self, **kwargs: Any) -> dict[str, Any]:
-        """Build query parameters, filtering None values."""
+        """Build query parameters, filtering None and empty-string values.
 
+        Empty strings are filtered because MCP tool wrappers pass ``""`` as the
+        default for optional string args, and the API rejects empty query
+        values (e.g. ``platform=``) with a 400. Filtering here keeps both direct
+        SDK callers and MCP tool callers safe.
+        """
         def to_camel(s: str) -> str:
             parts = s.split("_")
             return parts[0] + "".join(p.title() for p in parts[1:])
-
-        return {to_camel(k): v for k, v in kwargs.items() if v is not None}
+        return {to_camel(k): v for k, v in kwargs.items() if v is not None and v != ""}
 
     def _build_payload(self, **kwargs: Any) -> dict[str, Any]:
         """Build request payload, filtering None values."""
         from datetime import datetime
-
         def to_camel(s: str) -> str:
             parts = s.split("_")
             return parts[0] + "".join(p.title() for p in parts[1:])
-
         result: dict[str, Any] = {}
         for k, v in kwargs.items():
             if v is None:
@@ -48,18 +50,7 @@ class AdCampaignsResource:
                 result[to_camel(k)] = v
         return result
 
-    def list_ad_campaigns(
-        self,
-        *,
-        page: int | None = 1,
-        limit: int | None = 20,
-        source: str | None = "zernio",
-        platform: str | None = None,
-        status: Any | None = None,
-        ad_account_id: str | None = None,
-        account_id: str | None = None,
-        profile_id: str | None = None,
-    ) -> dict[str, Any]:
+    def list_ad_campaigns(self, *, page: int | None = 1, limit: int | None = 20, source: str | None = "zernio", platform: str | None = None, status: Any | None = None, ad_account_id: str | None = None, account_id: str | None = None, profile_id: str | None = None) -> dict[str, Any]:
         """List campaigns"""
         params = self._build_params(
             page=page,
@@ -73,32 +64,15 @@ class AdCampaignsResource:
         )
         return self._client._get("/v1/ads/campaigns", params=params)
 
-    def update_ad_campaign_status(
-        self, campaign_id: str, status: str, platform: str
-    ) -> dict[str, Any]:
+    def update_ad_campaign_status(self, campaign_id: str, status: str, platform: str) -> dict[str, Any]:
         """Pause or resume a campaign"""
         payload = self._build_payload(
             status=status,
             platform=platform,
         )
-        return self._client._put(
-            f"/v1/ads/campaigns/{campaign_id}/status", data=payload
-        )
+        return self._client._put(f"/v1/ads/campaigns/{campaign_id}/status", data=payload)
 
-    def get_ad_tree(
-        self,
-        *,
-        page: int | None = 1,
-        limit: int | None = 20,
-        source: str | None = "zernio",
-        platform: str | None = None,
-        status: Any | None = None,
-        ad_account_id: str | None = None,
-        account_id: str | None = None,
-        profile_id: str | None = None,
-        from_date: str | None = None,
-        to_date: str | None = None,
-    ) -> dict[str, Any]:
+    def get_ad_tree(self, *, page: int | None = 1, limit: int | None = 20, source: str | None = "zernio", platform: str | None = None, status: Any | None = None, ad_account_id: str | None = None, account_id: str | None = None, profile_id: str | None = None, from_date: str | None = None, to_date: str | None = None) -> dict[str, Any]:
         """Get campaign tree"""
         params = self._build_params(
             page=page,
@@ -114,18 +88,7 @@ class AdCampaignsResource:
         )
         return self._client._get("/v1/ads/tree", params=params)
 
-    async def alist_ad_campaigns(
-        self,
-        *,
-        page: int | None = 1,
-        limit: int | None = 20,
-        source: str | None = "zernio",
-        platform: str | None = None,
-        status: Any | None = None,
-        ad_account_id: str | None = None,
-        account_id: str | None = None,
-        profile_id: str | None = None,
-    ) -> dict[str, Any]:
+    async def alist_ad_campaigns(self, *, page: int | None = 1, limit: int | None = 20, source: str | None = "zernio", platform: str | None = None, status: Any | None = None, ad_account_id: str | None = None, account_id: str | None = None, profile_id: str | None = None) -> dict[str, Any]:
         """List campaigns (async)"""
         params = self._build_params(
             page=page,
@@ -139,32 +102,15 @@ class AdCampaignsResource:
         )
         return await self._client._aget("/v1/ads/campaigns", params=params)
 
-    async def aupdate_ad_campaign_status(
-        self, campaign_id: str, status: str, platform: str
-    ) -> dict[str, Any]:
+    async def aupdate_ad_campaign_status(self, campaign_id: str, status: str, platform: str) -> dict[str, Any]:
         """Pause or resume a campaign (async)"""
         payload = self._build_payload(
             status=status,
             platform=platform,
         )
-        return await self._client._aput(
-            f"/v1/ads/campaigns/{campaign_id}/status", data=payload
-        )
+        return await self._client._aput(f"/v1/ads/campaigns/{campaign_id}/status", data=payload)
 
-    async def aget_ad_tree(
-        self,
-        *,
-        page: int | None = 1,
-        limit: int | None = 20,
-        source: str | None = "zernio",
-        platform: str | None = None,
-        status: Any | None = None,
-        ad_account_id: str | None = None,
-        account_id: str | None = None,
-        profile_id: str | None = None,
-        from_date: str | None = None,
-        to_date: str | None = None,
-    ) -> dict[str, Any]:
+    async def aget_ad_tree(self, *, page: int | None = 1, limit: int | None = 20, source: str | None = "zernio", platform: str | None = None, status: Any | None = None, ad_account_id: str | None = None, account_id: str | None = None, profile_id: str | None = None, from_date: str | None = None, to_date: str | None = None) -> dict[str, Any]:
         """Get campaign tree (async)"""
         params = self._build_params(
             page=page,
