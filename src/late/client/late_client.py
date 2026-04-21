@@ -23,6 +23,8 @@ from ..resources import (
     ConnectResource,
     ContactsResource,
     CustomFieldsResource,
+    DiscordResource,
+    GmbServicesResource,
     InvitesResource,
     LogsResource,
     MediaResource,
@@ -128,6 +130,8 @@ class Zernio(BaseClient):
         self.connect = ConnectResource(self)
         self.contacts = ContactsResource(self)
         self.custom_fields = CustomFieldsResource(self)
+        self.discord = DiscordResource(self)
+        self.gmb_services = GmbServicesResource(self)
         self.invites = InvitesResource(self)
         self.logs = LogsResource(self)
         self.media = MediaResource(self)

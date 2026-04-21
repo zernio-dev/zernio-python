@@ -145,6 +145,8 @@ x-documentation:
     - `message.read` - An outgoing message was read by the recipient (WhatsApp, Messenger, Instagram)
     - `message.failed` - An outgoing message failed delivery (WhatsApp)
     - `comment.received` - New comment received on a post
+    - `review.new` - New review posted on a connected account (Google Business Profile)
+    - `review.updated` - Review updated or reply added (Google Business Profile, or via reply API)
     - `webhook.test` - Test event sent when verifying a webhook endpoint
 
     Webhook payloads are signed with HMAC-SHA256 via the `X-Zernio-Signature` header.
@@ -181,6 +183,9 @@ tags:
   - name: GMB Media
   - name: GMB Attributes
   - name: GMB Place Actions
+  - name: Discord
+    description: |
+      Discord-specific endpoints for managing webhook identity (display name and avatar), switching channels, and listing guild channels.
   - name: LinkedIn Mentions
   - name: Pinterest
   - name: TikTok
@@ -254,7 +259,7 @@ tags:
       Requires the Ads add-on.
   - name: Webhooks
     description: |
-      Configure webhooks for real-time notifications. Events: post.scheduled, post.published, post.failed, post.partial, post.cancelled, post.recycled, account.connected, account.disconnected, message.received, message.sent, comment.received, webhook.test.
+      Configure webhooks for real-time notifications. Events: post.scheduled, post.published, post.failed, post.partial, post.cancelled, post.recycled, account.connected, account.disconnected, message.received, message.sent, comment.received, review.new, review.updated, webhook.test.
       Security: optional HMAC-SHA256 signature in X-Zernio-Signature header. Configure a secret key to enable verification. Custom headers supported.
   - name: Webhook Events
     description: |
@@ -804,7 +809,7 @@ components:
           type: array
           items:
             type: string
-            enum: [post.scheduled, post.published, post.failed, post.partial, post.cancelled, post.recycled, account.connected, account.disconnected, message.received, message.sent, message.edited, message.deleted, message.delivered, message.read, message.failed, comment.received]
+            enum: [post.scheduled, post.published, post.failed, post.partial, post.cancelled, post.recycled, account.connected, account.disconnected, message.received, message.sent, message.edited, message.deleted, message.delivered, message.read, message.failed, comment.received, review.new, review.updated]
           description: Events subscribed to
         isActive:
           type: boolean
@@ -954,7 +959,8 @@ components:
               description: Platform comment ID
             postId:
               type: string
-              description: Internal post ID
+              nullable: true
+              description: Internal post ID (null for posts not published through Zernio)
             platformPostId:
               type: string
               description: Platform's post ID
@@ -994,7 +1000,8 @@ components:
           properties:
             id:
               type: string
-              description: Internal post ID
+              nullable: true
+              description: Internal post ID (null for posts not published through Zernio)
             platformPostId:
               type: string
               description: Platform's post ID
@@ -1063,12 +1070,45 @@ components:
           properties:
             id:
               type: string
+              description: |
+                Sender's platform identifier. For WhatsApp this is the phone number
+                (without leading `+`) when available, otherwise the `businessScopedUserId`.
+                For other platforms, the platform's own user ID.
             name:
               type: string
             username:
               type: string
             picture:
               type: string
+            phoneNumber:
+              type: string
+              nullable: true
+              description: |
+                WhatsApp only. Sender's phone number in E.164 format (with leading `+`).
+
+                **Nullable during the BSUID rollout (April 2026+).** WhatsApp users
+                who adopt a username can message businesses without exposing a phone
+                number — this field is omitted for them. Match by `businessScopedUserId`
+                instead. See `docs/whatsapp-bsuid-migration.md`.
+            businessScopedUserId:
+              type: string
+              description: |
+                WhatsApp only. Business-scoped user ID (BSUID) — Meta's canonical
+                identifier for a WhatsApp user within your business. Present when
+                Meta includes it in the inbound payload (rollout in progress since
+                early April 2026). **Recommended primary identity anchor** going
+                forward; fall back to `phoneNumber` only when this field is absent.
+            parentBusinessScopedUserId:
+              type: string
+              description: |
+                WhatsApp only. Parent BSUID for businesses with linked business
+                portfolios. Omitted for standalone portfolios.
+            whatsappUsername:
+              type: string
+              description: |
+                WhatsApp only. User's WhatsApp username (e.g. `@jane`). Not a
+                stable identifier — users can change it. Useful for display, not
+                recommended as an identity anchor.
             instagramProfile:
               type: object
               description: Instagram profile data. Only present for Instagram conversations.
@@ -1163,12 +1203,47 @@ components:
               properties:
                 id:
                   type: string
+                  description: |
+                    Sender's platform identifier. For WhatsApp this is the phone
+                    number (without leading `+`) when available, otherwise the
+                    `businessScopedUserId`.
                 name:
                   type: string
                 username:
                   type: string
                 picture:
                   type: string
+                phoneNumber:
+                  type: string
+                  nullable: true
+                  description: |
+                    WhatsApp only. Sender's phone number in E.164 format (with leading `+`).
+
+                    **Nullable during the BSUID rollout (April 2026+).** WhatsApp
+                    users who adopt a username can message businesses without
+                    exposing a phone number — this field is omitted for them.
+                    Match by `businessScopedUserId` instead. See
+                    `docs/whatsapp-bsuid-migration.md`.
+                businessScopedUserId:
+                  type: string
+                  description: |
+                    WhatsApp only. Business-scoped user ID (BSUID) — Meta's canonical
+                    identifier for a WhatsApp user within your business. Present
+                    when Meta includes it in the inbound payload (rollout in
+                    progress since early April 2026). **Recommended primary identity
+                    anchor** going forward; fall back to `phoneNumber` only when
+                    this field is absent.
+                parentBusinessScopedUserId:
+                  type: string
+                  description: |
+                    WhatsApp only. Parent BSUID for businesses with linked business
+                    portfolios. Omitted for standalone portfolios.
+                whatsappUsername:
+                  type: string
+                  description: |
+                    WhatsApp only. User's WhatsApp username (e.g. `@jane`). Not a
+                    stable identifier — users can change it. Useful for display,
+                    not recommended as an identity anchor.
                 instagramProfile:
                   type: object
                   description: Instagram profile data for the sender. Only present for Instagram conversations.
@@ -1233,16 +1308,47 @@ components:
           properties:
             quickReplyPayload:
               type: string
-              description: Payload from a quick reply tap (Meta platforms)
+              description: Payload from a quick reply tap (Facebook/Instagram Messenger).
             postbackPayload:
               type: string
-              description: Payload from a postback button tap (Meta platforms)
+              description: Payload from a postback button tap (Facebook/Instagram Messenger).
             postbackTitle:
               type: string
-              description: Title of the tapped postback button (Meta platforms)
+              description: Title of the tapped postback button (Facebook/Instagram Messenger).
             callbackData:
               type: string
-              description: Callback data from an inline keyboard button tap (Telegram)
+              description: Callback data from an inline keyboard button tap (Telegram).
+            interactiveType:
+              type: string
+              enum: [button_reply, list_reply, nfm_reply]
+              description: |
+                WhatsApp only. Which kind of interactive reply the user sent:
+                `button_reply` (tap on an interactive button), `list_reply` (tap on a
+                list row), or `nfm_reply` (a WhatsApp Flow submission).
+            interactiveId:
+              type: string
+              description: |
+                WhatsApp only. The `id` of the tapped button or list row, matching the
+                `id` you supplied when the message was sent. Not set for Flow responses.
+            buttonPayload:
+              type: string
+              description: |
+                WhatsApp only. Payload attached to a tapped template button. Template
+                buttons emit a plain `button` webhook (not an interactive reply), so
+                `interactiveType` is empty while this field is populated.
+            flowResponseJson:
+              type: string
+              description: |
+                WhatsApp only. Raw `nfm_reply.response_json` string returned by a
+                Flow submission. Useful if you need the exact wire payload; for
+                typed access use `flowResponseData` instead.
+            flowResponseData:
+              type: object
+              additionalProperties: true
+              description: |
+                WhatsApp only. Parsed Flow response JSON. Populated when
+                `flowResponseJson` is valid JSON; otherwise omitted. Keys and
+                value types depend on the specific Flow that was submitted.
         timestamp:
           type: string
           format: date-time
@@ -1475,6 +1581,29 @@ components:
         timestamp:
           type: string
           format: date-time
+    GeoRestriction:
+      type: object
+      description: >
+        Country-level geo-restriction (allowlist). When set, the post is only visible to users in the
+        specified countries. Supported on Facebook (feed posts, videos, reels), X/Twitter (media-level
+        restriction), and LinkedIn (organization pages only, min 300 targeted followers). Ignored on
+        unsupported platforms. Stories (Facebook, Instagram) do not support geo-restriction.
+      properties:
+        countries:
+          type: array
+          minItems: 1
+          maxItems: 25
+          items:
+            type: string
+            pattern: '^[A-Z]{2}$'
+            example: US
+          description: >
+            ISO 3166-1 alpha-2 country codes (uppercase). Only users in these countries can see the post.
+            Maximum 25 countries per post. Example: ["US", "CA", "GB", "ES"].
+          example: ["US", "CA", "GB"]
+      required:
+        - countries
+
     MediaItem:
       type: object
       description: Media referenced in posts. URLs must be publicly reachable over HTTPS. Use POST /v1/media/presign for uploads up to 5GB. Zernio auto-compresses images and videos that exceed platform limits (videos over 200 MB may not be compressed).
@@ -1545,6 +1674,7 @@ components:
             - $ref: '#/components/schemas/SnapchatPlatformData'
             - $ref: '#/components/schemas/RedditPlatformData'
             - $ref: '#/components/schemas/BlueskyPlatformData'
+            - $ref: '#/components/schemas/DiscordPlatformData'
           additionalProperties: true
         status:
           type: string
@@ -1760,6 +1890,12 @@ components:
           type: boolean
           default: false
           description: Enable long video uploads (over 140 seconds) using amplify_video media category. Requires the connected X account to have an active X Premium subscription. When true, videos are uploaded with the amplify_video category which supports longer durations (up to 10 minutes via API). When false or omitted, the standard tweet_video category is used (140 second limit). Note that not all Premium accounts have API long-video access, as X may require separate allowlisting.
+        geoRestriction:
+          $ref: '#/components/schemas/GeoRestriction'
+      description: >
+        X (Twitter) geo-restriction applies at the media level. Media in geo-restricted tweets will be
+        hidden for users outside the specified countries; the tweet text itself remains visible globally.
+        Requires media to be attached (ignored for text-only tweets).
 
     ThreadsPlatformData:
       type: object
@@ -1805,7 +1941,12 @@ components:
         pageId:
           type: string
           description: Target Facebook Page ID for multi-page posting. If omitted, uses the default page. Use GET /v1/accounts/{id}/facebook-page to list pages.
-      description: Feed posts support up to 10 images (no mixed video+image). Stories require single media (24h, no captions). Reels require single vertical video (9:16, 3-60s).
+        geoRestriction:
+          $ref: '#/components/schemas/GeoRestriction'
+      description: >
+        Feed posts support up to 10 images (no mixed video+image). Stories require single media (24h, no captions).
+        Reels require single vertical video (9:16, 3-60s). Geo-restriction is a hard visibility restriction:
+        users outside the specified countries cannot see the post. Not supported for stories.
 
     InstagramPlatformData:
       type: object
@@ -1895,7 +2036,12 @@ components:
         disableLinkPreview:
           type: boolean
           description: Set to true to disable automatic link previews for URLs in the post content (default is false)
-      description: Up to 20 images, no multi-video. Single PDF supported (max 100MB). Link previews auto-generated when no media attached. Use organizationUrn for multi-org posting.
+        geoRestriction:
+          $ref: '#/components/schemas/GeoRestriction'
+      description: >
+        Up to 20 images, no multi-video. Single PDF supported (max 100MB). Link previews auto-generated
+        when no media attached. Use organizationUrn for multi-org posting. Geo-restriction only works for
+        organization pages (not personal profiles) and requires the targeted audience to exceed 300 followers.
 
     PinterestPlatformData:
       type: object
@@ -1962,6 +2108,11 @@ components:
           type: string
           description: BCP 47 language code (e.g. "en", "de", "es"). Auto-detected if omitted. Set explicitly for short or mixed-language posts.
           example: "de"
+        topicType:
+          type: string
+          enum: [STANDARD, EVENT, OFFER]
+          default: STANDARD
+          description: "Post type. STANDARD is a regular update. EVENT requires the event object. OFFER requires the offer object. Defaults to STANDARD if omitted."
         callToAction:
           type: object
           description: Optional call-to-action button displayed on the post
@@ -1975,7 +2126,104 @@ components:
               format: uri
               description: Destination URL for the CTA button (required when callToAction is provided)
           required: [type, url]
-      description: Text and single image only (no videos). Optional call-to-action button. Posts appear on GBP, Google Search, and Maps. Use locationId for multi-location posting.
+        event:
+          type: object
+          description: "Event details. Required when topicType is EVENT. Google returns 400 if omitted for EVENT posts."
+          properties:
+            title:
+              type: string
+              description: Event name (displayed as the event heading on Google Search and Maps)
+              example: "Grand Opening Weekend"
+            schedule:
+              type: object
+              description: "Event date/time range. Uses Google's date format (NOT ISO 8601)."
+              properties:
+                startDate:
+                  type: object
+                  description: "Event start date as { year, month, day }"
+                  properties:
+                    year:
+                      type: integer
+                      example: 2026
+                    month:
+                      type: integer
+                      minimum: 1
+                      maximum: 12
+                      example: 5
+                    day:
+                      type: integer
+                      minimum: 1
+                      maximum: 31
+                      example: 15
+                  required: [year, month, day]
+                startTime:
+                  type: object
+                  description: "Optional start time as { hours, minutes } in 24h format"
+                  properties:
+                    hours:
+                      type: integer
+                      minimum: 0
+                      maximum: 23
+                      example: 9
+                    minutes:
+                      type: integer
+                      minimum: 0
+                      maximum: 59
+                      example: 0
+                endDate:
+                  type: object
+                  description: "Event end date as { year, month, day }"
+                  properties:
+                    year:
+                      type: integer
+                      example: 2026
+                    month:
+                      type: integer
+                      minimum: 1
+                      maximum: 12
+                      example: 5
+                    day:
+                      type: integer
+                      minimum: 1
+                      maximum: 31
+                      example: 16
+                  required: [year, month, day]
+                endTime:
+                  type: object
+                  description: "Optional end time as { hours, minutes } in 24h format"
+                  properties:
+                    hours:
+                      type: integer
+                      minimum: 0
+                      maximum: 23
+                      example: 17
+                    minutes:
+                      type: integer
+                      minimum: 0
+                      maximum: 59
+                      example: 0
+              required: [startDate, endDate]
+          required: [title, schedule]
+        offer:
+          type: object
+          description: "Offer details. Required when topicType is OFFER. All fields are optional per Google's API, but at least one is recommended."
+          properties:
+            offerType:
+              type: string
+              enum: [OFFER, BUY_ONE_GET_ONE]
+              description: Type of offer
+            redeemOnlineUrl:
+              type: string
+              format: uri
+              description: URL where the offer can be redeemed online
+            termsConditions:
+              type: string
+              description: Terms and conditions for the offer
+            couponCode:
+              type: string
+              description: Coupon code for the offer
+              example: "SAVE20"
+      description: "Text and single image only (no videos). Supports STANDARD, EVENT, OFFER, and ALERT post types. Posts appear on GBP, Google Search, and Maps. Use locationId for multi-location posting. Schedule dates accept both ISO 8601 strings (e.g. '2026-04-15T09:00:00Z') and Google's native {year, month, day} objects."
 
     TikTokPlatformData:
       type: object
@@ -2109,7 +2357,23 @@ components:
           type: string
           description: Flair ID for the post. Required by some subreddits. Use GET /v1/accounts/{id}/reddit-flairs?subreddit=name to list flairs.
           example: "a1b2c3d4-e5f6-7890-abcd-ef1234567890"
-      description: Posts are either link (with URL/media) or self (text-only). Use forceSelf to override. Subreddit defaults to the account's configured one. Some subreddits require a flair.
+        nativeVideo:
+          type: boolean
+          description: >
+            Controls Reddit's native video upload flow. When true (default for video mediaItems),
+            the video is uploaded to Reddit's CDN and submitted with kind=video so it renders as
+            an embedded Reddit video player. Reddit transcodes server-side (1080p/30fps cap). Set
+            to false to fall back to a legacy link post. If the subreddit blocks video posts, the
+            upload falls back to a link post automatically.
+          default: true
+        videogif:
+          type: boolean
+          description: When true (and nativeVideo is active), submits the video as a silent videogif (kind=videogif). Use for short looping clips without audio.
+        videoPosterUrl:
+          type: string
+          format: uri
+          description: Optional poster/thumbnail image URL for native video posts. If omitted, the first frame of the video is extracted and used automatically.
+      description: Posts are either link (with URL/media), native video (via nativeVideo), or self (text-only). Use forceSelf to override. Subreddit defaults to the account's configured one. Some subreddits require a flair.
 
     BlueskyPlatformData:
       type: object
@@ -2132,6 +2396,131 @@ components:
                   $ref: '#/components/schemas/MediaItem'
       description: |
         Bluesky post settings. Supports text posts with up to 4 images or a single video. threadItems creates a reply chain (Bluesky thread). Images exceeding 1MB are automatically compressed. Alt text supported via mediaItem properties.
+
+    DiscordPlatformData:
+      type: object
+      required: [channelId]
+      properties:
+        channelId:
+          type: string
+          description: Target channel snowflake ID. Determines which channel in the connected server receives the message.
+          example: "1234567890123456789"
+        embeds:
+          type: array
+          description: Up to 10 Discord embed objects (combined max 6,000 characters across all embeds). Sent alongside or instead of plain-text content.
+          maxItems: 10
+          items:
+            type: object
+            properties:
+              title:
+                type: string
+                description: Embed title (max 256 chars)
+              description:
+                type: string
+                description: Embed body text (max 4,096 chars)
+              url:
+                type: string
+                description: URL the title links to
+              color:
+                type: integer
+                description: Embed accent color as decimal integer (e.g. 5814783 for blue). Convert hex to decimal.
+              image:
+                type: object
+                properties:
+                  url: { type: string }
+              thumbnail:
+                type: object
+                properties:
+                  url: { type: string }
+              footer:
+                type: object
+                properties:
+                  text: { type: string, description: Footer text (max 2,048 chars) }
+                  icon_url: { type: string }
+              author:
+                type: object
+                properties:
+                  name: { type: string, description: Author name (max 256 chars) }
+                  url: { type: string }
+                  icon_url: { type: string }
+              fields:
+                type: array
+                description: Up to 25 fields per embed
+                maxItems: 25
+                items:
+                  type: object
+                  required: [name, value]
+                  properties:
+                    name: { type: string, description: Field name (max 256 chars) }
+                    value: { type: string, description: Field value (max 1,024 chars) }
+                    inline: { type: boolean, description: Display fields side-by-side }
+        poll:
+          type: object
+          description: Native Discord poll. Cannot be combined with media attachments in the same message.
+          properties:
+            question:
+              type: object
+              required: [text]
+              properties:
+                text: { type: string, description: Poll question (max 300 chars) }
+            answers:
+              type: array
+              description: 1-10 answer options
+              maxItems: 10
+              items:
+                type: object
+                properties:
+                  poll_media:
+                    type: object
+                    properties:
+                      text: { type: string, description: Answer text }
+            duration:
+              type: integer
+              description: Poll duration in hours (1-768). Default 24.
+              minimum: 1
+              maximum: 768
+            allow_multiselect:
+              type: boolean
+              description: Allow users to select multiple answers. Default false.
+        crosspost:
+          type: boolean
+          description: Auto-crosspost to every server following this announcement channel (type 5). No-op for regular text channels.
+        forumThreadName:
+          type: string
+          description: Thread title for forum channel posts (type 15). Required when posting to a forum channel.
+        forumAppliedTags:
+          type: array
+          description: Tag snowflake IDs to apply to forum posts. Max 5 tags.
+          maxItems: 5
+          items:
+            type: string
+        threadFromMessage:
+          type: object
+          description: Create a follow-up thread under the published message.
+          properties:
+            name:
+              type: string
+              description: Thread name (1-100 chars)
+            autoArchiveDuration:
+              type: integer
+              description: Auto-archive after inactivity (minutes)
+              enum: [60, 1440, 4320, 10080]
+            rateLimitPerUser:
+              type: integer
+              description: Slow-mode duration in seconds (0-21600)
+              minimum: 0
+              maximum: 21600
+        tts:
+          type: boolean
+          description: Send as text-to-speech message. Discord reads the message aloud in the channel.
+        webhookUsername:
+          type: string
+          description: Override the webhook display name for this post only (1-80 chars). Falls back to the account-level default set via PATCH /v1/connect/discord.
+        webhookAvatarUrl:
+          type: string
+          description: Override the webhook avatar URL for this post only. Falls back to the account-level default.
+      description: |
+        Discord message settings. Supports plain text (2,000 chars), rich embeds (up to 10), native polls, forum posts, threads, and announcement crossposts. Media attachments support images (JPEG, PNG, GIF, WebP), videos (MP4), and documents (up to 10 files, 25 MB each). Webhook identity (username + avatar) can be customized per-account via PATCH /v1/connect/discord or per-post via webhookUsername/webhookAvatarUrl.
 
     QueueSlot:
       type: object
@@ -2341,6 +2730,7 @@ components:
       properties:
         platform: { type: string }
         status: { type: string, enum: [published, failed] }
+        platformPostId: { type: string, nullable: true, description: 'The native post ID on the platform (e.g. Instagram media ID, tweet ID)' }
         accountId: { type: string }
         accountUsername: { type: string, nullable: true }
         analytics:
@@ -2782,10 +3172,32 @@ components:
         cpc: { type: number, description: Cost per click }
         cpm: { type: number, description: Cost per 1000 impressions }
         engagement: { type: integer }
+        conversions:
+          type: integer
+          description: "Count of conversion events matching the campaign's promoted_object.custom_event_type (PURCHASE, LEAD, etc.) over the requested date range. 0 for non-conversion campaigns or when no events have fired. Meta-only at time of writing; other platforms return 0."
+        costPerConversion:
+          type: number
+          description: "Derived spend / conversions in the same currency as spend. 0 when conversions is 0."
+        actions:
+          type: object
+          additionalProperties:
+            type: integer
+          description: "Raw per-action-type counts from Meta's Insights actions[] array, summed over the date range. Keys are Meta action_type strings (e.g. link_click, offsite_conversion.fb_pixel_purchase, onsite_conversion.lead_grouped). Use this to extract any conversion event (purchases, leads, add_to_cart, etc.) without relying on the derived conversions field. Empty object when no actions are reported."
+          example:
+            link_click: 160
+            post_engagement: 300
+            offsite_conversion.fb_pixel_purchase: 42
         lastSyncedAt: { type: string, format: date-time, description: "Present on individual ads only, not on campaign aggregations" }
     AdStatus:
       type: string
       enum: [active, paused, pending_review, rejected, completed, cancelled, error]
+    AdBudget:
+      type: object
+      description: Budget amount in the ad account's native currency (see the campaign's `currency` field for the code).
+      required: [amount, type]
+      properties:
+        amount: { type: number }
+        type: { type: string, enum: [daily, lifetime] }
     Ad:
       type: object
       properties:
@@ -2794,7 +3206,7 @@ components:
         platform: { type: string, enum: [facebook, instagram, tiktok, linkedin, pinterest, google, twitter] }
         status: { $ref: '#/components/schemas/AdStatus' }
         adType: { type: string, enum: [boost, standalone] }
-        goal: { type: string, enum: [engagement, traffic, awareness, video_views] }
+        goal: { type: string, enum: [engagement, traffic, awareness, video_views, lead_generation, conversions, app_promotion], description: "Available goals vary by platform. Meta (Facebook/Instagram) and TikTok support all 7. LinkedIn supports all except app_promotion. Twitter/X supports engagement, traffic, awareness, video_views, app_promotion. Pinterest and Google Ads support only engagement, traffic, awareness, video_views." }
         isExternal: { type: boolean, description: True for ads synced from platform ad managers }
         budget:
           type: object
@@ -2879,6 +3291,14 @@ components:
         budget:
           type: object
           nullable: true
+          description: Effective budget at this level (back-compat). For CBO campaigns this mirrors the parent campaign's budget; for ABO this is the ad-set-specific budget. Use `adSetBudget` / parent `campaignBudget` + `budgetLevel` to disambiguate.
+          properties:
+            amount: { type: number }
+            type: { type: string, enum: [daily, lifetime] }
+        adSetBudget:
+          type: object
+          nullable: true
+          description: Ad-set-level budget (ABO). Null for CBO campaigns where the budget is set on the campaign.
           properties:
             amount: { type: number }
             type: { type: string, enum: [daily, lifetime] }
@@ -2904,15 +3324,57 @@ components:
         platformCampaignId: { type: string }
         platform: { type: string, enum: [facebook, instagram, tiktok, linkedin, pinterest, google, twitter] }
         campaignName: { type: string }
-        status: { allOf: [{ $ref: '#/components/schemas/AdStatus' }], description: Derived from child ad statuses }
+        status: { allOf: [{ $ref: '#/components/schemas/AdStatus' }], description: "Delivery status derived from child ad statuses. Distinct from `reviewStatus`, which reflects the platform-side review state." }
+        reviewStatus:
+          type: string
+          nullable: true
+          enum: [in_review, approved, rejected, with_issues]
+          description: |
+            Platform-side review state of the campaign. Independent of the
+            children-derived delivery `status`: a campaign can have ads
+            already active (status=active) while the campaign itself is
+            still being reviewed by the platform (reviewStatus=in_review).
+            For Meta, derived from `effective_status` + `issues_info` on
+            the Campaign, plus ad-level PENDING_REVIEW rollup.
+        platformCampaignStatus:
+          type: string
+          nullable: true
+          description: "Raw platform-level campaign status (Meta `effective_status`: ACTIVE, PAUSED, DELETED, ARCHIVED, IN_PROCESS, WITH_ISSUES). Distinct from per-ad `platformStatus`."
+        campaignIssuesInfo:
+          type: array
+          nullable: true
+          description: "Platform-reported campaign issues (Meta `issues_info[]`). Populated only when the platform has delivery issues to report; contains the specific error codes and messages."
+          items:
+            type: object
         adCount: { type: integer, description: Total ads across all ad sets }
         adSetCount: { type: integer }
         budget:
           type: object
           nullable: true
+          description: Effective budget (back-compat). For CBO this mirrors `campaignBudget`, for ABO this mirrors the child ad-set budget. Use `budgetLevel` to disambiguate.
           properties:
             amount: { type: number }
             type: { type: string, enum: [daily, lifetime] }
+        campaignBudget:
+          type: object
+          nullable: true
+          description: Campaign-level budget (Campaign Budget Optimization / CBO). Populated only when the platform set the budget at the campaign level. For ABO campaigns this is null and the budget lives on the child ad set.
+          properties:
+            amount: { type: number }
+            type: { type: string, enum: [daily, lifetime] }
+        budgetLevel:
+          type: string
+          nullable: true
+          enum: [campaign, adset]
+          description: "Canonical CBO/ABO indicator. `campaign` = CBO (Advantage Campaign Budget, budget lives on the campaign). `adset` = ABO (budget lives on each ad set). Route budget updates to the matching Meta entity."
+        isBudgetScheduleEnabled:
+          type: boolean
+          default: false
+          description: "Meta-only. Mirrors Campaign.is_budget_schedule_enabled — true when the campaign uses budget scheduling (time-based budget changes). Independent of CBO/ABO."
+        currency:
+          type: string
+          nullable: true
+          description: "ISO 4217 currency code (e.g. USD, EUR, CLP, JPY) for all budget amounts in this campaign node. Budgets are NOT normalized to USD."
         metrics: { $ref: '#/components/schemas/AdMetrics' }
         platformAdAccountId: { type: string }
         accountId: { type: string }
@@ -2940,14 +3402,50 @@ components:
         platformCampaignId: { type: string }
         platform: { type: string, enum: [facebook, instagram, tiktok, linkedin, pinterest, google, twitter] }
         campaignName: { type: string }
-        status: { allOf: [{ $ref: '#/components/schemas/AdStatus' }], description: Derived from child ad statuses }
+        status: { allOf: [{ $ref: '#/components/schemas/AdStatus' }], description: "Delivery status derived from child ad statuses. Distinct from `reviewStatus`." }
+        reviewStatus:
+          type: string
+          nullable: true
+          enum: [in_review, approved, rejected, with_issues]
+          description: "Platform-side review state of the campaign. See AdTreeCampaign.reviewStatus for the full description."
+        platformCampaignStatus:
+          type: string
+          nullable: true
+          description: "Raw platform-level campaign status (Meta `effective_status`)."
+        campaignIssuesInfo:
+          type: array
+          nullable: true
+          description: "Platform-reported campaign issues (Meta `issues_info[]`)."
+          items:
+            type: object
         adCount: { type: integer }
         budget:
           type: object
           nullable: true
+          description: Effective budget (back-compat). Use `budgetLevel` to disambiguate CBO vs ABO.
           properties:
             amount: { type: number }
             type: { type: string, enum: [daily, lifetime] }
+        campaignBudget:
+          type: object
+          nullable: true
+          description: Campaign-level budget (CBO). Null for ABO campaigns.
+          properties:
+            amount: { type: number }
+            type: { type: string, enum: [daily, lifetime] }
+        budgetLevel:
+          type: string
+          nullable: true
+          enum: [campaign, adset]
+          description: "Canonical CBO/ABO indicator. See AdTreeCampaign.budgetLevel."
+        isBudgetScheduleEnabled:
+          type: boolean
+          default: false
+          description: "Meta-only. Mirrors Campaign.is_budget_schedule_enabled."
+        currency:
+          type: string
+          nullable: true
+          description: "ISO 4217 currency code for all budget amounts. Budgets are NOT normalized to USD."
         metrics: { $ref: '#/components/schemas/AdMetrics' }
         platformAdAccountId: { type: string }
         accountId: { type: string }
@@ -3669,6 +4167,7 @@ paths:
                     platformAnalytics:
                       - platform: "twitter"
                         status: "published"
+                        platformPostId: "123456789"
                         accountId: "64e1f0a9e2b5af0012ab34cd"
                         accountUsername: "@acmecorp"
                         analytics:
@@ -3732,6 +4231,7 @@ paths:
                         platforms:
                           - platform: "instagram"
                             status: "published"
+                            platformPostId: "17902345678901234"
                             accountId: "64e1f0a9e2b5af0012ab34cd"
                             accountUsername: "@acmecorp"
                             analytics:
@@ -5595,6 +6095,7 @@ paths:
                           - $ref: '#/components/schemas/SnapchatPlatformData'
                           - $ref: '#/components/schemas/RedditPlatformData'
                           - $ref: '#/components/schemas/BlueskyPlatformData'
+                          - $ref: '#/components/schemas/DiscordPlatformData'
                 scheduledFor: { type: string, format: date-time }
                 publishNow: { type: boolean, default: false }
                 isDraft:
@@ -9015,6 +9516,276 @@ paths:
           content:
             application/json:
               schema: { $ref: '#/components/schemas/ErrorResponse' }
+    patch:
+      operationId: updateGoogleBusinessPlaceAction
+      tags: [GMB Place Actions]
+      summary: Update action link
+      description: |
+        Updates a place action link (change URL or action type).
+        Only the fields included in the request body will be updated.
+      parameters:
+        - name: accountId
+          in: path
+          required: true
+          schema: { type: string }
+        - name: locationId
+          in: query
+          schema: { type: string }
+          description: Override which location to target. If omitted, uses the account's selected location.
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [name]
+              properties:
+                name:
+                  type: string
+                  description: "Resource name of the place action link (e.g. locations/123/placeActionLinks/456)"
+                uri:
+                  type: string
+                  description: New action URL
+                placeActionType:
+                  type: string
+                  enum: [APPOINTMENT, ONLINE_APPOINTMENT, DINING_RESERVATION, FOOD_ORDERING, FOOD_DELIVERY, FOOD_TAKEOUT, SHOP_ONLINE]
+                  description: New action type
+            example:
+              name: "locations/123/placeActionLinks/456"
+              uri: "https://order.doordash.com/joespizza"
+      responses:
+        '200':
+          description: Place action updated successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success: { type: boolean }
+                  name: { type: string }
+                  uri: { type: string }
+                  placeActionType: { type: string }
+        '400':
+          description: Invalid request
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ErrorResponse' }
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ErrorResponse' }
+
+  /v1/accounts/{accountId}/gmb-services:
+    get:
+      operationId: getGoogleBusinessServices
+      tags: [GMB Services]
+      summary: Get services
+      description: |
+        Gets the services offered by a Google Business Profile location.
+        Returns an array of service items (structured or free-form with optional price).
+      parameters:
+        - name: accountId
+          in: path
+          required: true
+          schema: { type: string }
+        - name: locationId
+          in: query
+          schema: { type: string }
+          description: Override which location to query. If omitted, uses the account's selected location.
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Services fetched successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success: { type: boolean }
+                  accountId: { type: string }
+                  locationId: { type: string }
+                  services:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        structuredServiceItem:
+                          type: object
+                          properties:
+                            serviceTypeId: { type: string }
+                            description: { type: string }
+                        freeFormServiceItem:
+                          type: object
+                          properties:
+                            category: { type: string }
+                            label:
+                              type: object
+                              properties:
+                                displayName: { type: string }
+                                description: { type: string }
+                        price:
+                          type: object
+                          properties:
+                            currencyCode: { type: string, example: "USD" }
+                            units: { type: string, example: "50" }
+                            nanos: { type: integer }
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ErrorResponse' }
+    put:
+      operationId: updateGoogleBusinessServices
+      tags: [GMB Services]
+      summary: Replace services
+      description: |
+        Replaces the entire service list for a location.
+        Google's API requires full replacement; individual item updates are not supported.
+        Each service can be structured (using a predefined serviceTypeId) or free-form (custom label).
+      parameters:
+        - name: accountId
+          in: path
+          required: true
+          schema: { type: string }
+        - name: locationId
+          in: query
+          schema: { type: string }
+          description: Override which location to target. If omitted, uses the account's selected location.
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [serviceItems]
+              properties:
+                serviceItems:
+                  type: array
+                  items:
+                    type: object
+                    properties:
+                      structuredServiceItem:
+                        type: object
+                        properties:
+                          serviceTypeId: { type: string }
+                          description: { type: string }
+                      freeFormServiceItem:
+                        type: object
+                        properties:
+                          category: { type: string }
+                          label:
+                            type: object
+                            properties:
+                              displayName: { type: string }
+                              description: { type: string }
+                      price:
+                        type: object
+                        properties:
+                          currencyCode: { type: string }
+                          units: { type: string }
+                          nanos: { type: integer }
+            example:
+              serviceItems:
+                - freeFormServiceItem:
+                    category: "categories/gcid:plumber"
+                    label: { displayName: "Pipe Repair", description: "Emergency and scheduled pipe repair" }
+                  price: { currencyCode: "USD", units: "150" }
+      responses:
+        '200':
+          description: Services updated successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success: { type: boolean }
+                  services: { type: array, items: { type: object } }
+        '400':
+          description: Invalid request
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ErrorResponse' }
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ErrorResponse' }
+
+  /v1/accounts/{accountId}/gmb-reviews/batch:
+    post:
+      operationId: batchGetGoogleBusinessReviews
+      tags: [GMB Reviews]
+      summary: Batch get reviews
+      description: |
+        Fetches reviews across multiple locations in a single request.
+        More efficient than calling GET /gmb-reviews per location for multi-location businesses.
+        Reviews are grouped by location in the response.
+      parameters:
+        - name: accountId
+          in: path
+          required: true
+          schema: { type: string }
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [locationNames]
+              properties:
+                locationNames:
+                  type: array
+                  items: { type: string }
+                  description: "Array of full location resource names (e.g. ['accounts/123/locations/456'])"
+                pageSize:
+                  type: integer
+                  maximum: 50
+                  default: 50
+                  description: Number of reviews per page (max 50)
+                pageToken:
+                  type: string
+                  description: Pagination token from previous response
+            example:
+              locationNames: ["accounts/123/locations/456", "accounts/123/locations/789"]
+              pageSize: 50
+      responses:
+        '200':
+          description: Batch reviews fetched successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success: { type: boolean }
+                  accountId: { type: string }
+                  locationReviews:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        locationName: { type: string }
+                        reviews: { type: array, items: { type: object } }
+                        averageRating: { type: number }
+                        totalReviewCount: { type: integer }
+                  nextPageToken: { type: string }
+        '400':
+          description: Invalid request
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ErrorResponse' }
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ErrorResponse' }
 
   /v1/connect/pending-data:
     get:
@@ -11079,6 +11850,166 @@ paths:
         '401': { $ref: '#/components/responses/Unauthorized' }
         '404': { description: Account not found }
 
+  /v1/accounts/{accountId}/discord-settings:
+    get:
+      operationId: getDiscordSettings
+      tags: [Discord]
+      summary: Get Discord account settings
+      description: Returns the current Discord account settings including webhook identity (display name and avatar), connected channel, and guild information.
+      parameters:
+        - name: accountId
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        '200':
+          description: Discord account settings
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  account:
+                    type: object
+                    properties:
+                      _id: { type: string }
+                      platform: { type: string, example: discord }
+                      username: { type: string, description: Channel name }
+                      displayName: { type: string, description: "Guild - #channel display name" }
+                      profilePicture: { type: string, description: Guild icon URL }
+                      channelId: { type: string, description: Connected channel snowflake ID }
+                      channelName: { type: string, description: Channel name }
+                      channelType: { type: string, description: "Channel type (0 = text, 5 = announcement, 15 = forum)" }
+                      guildId: { type: string, description: Guild (server) snowflake ID }
+                      webhookUsername: { type: string, nullable: true, description: Custom webhook display name (null = default "Zernio") }
+                      webhookAvatarUrl: { type: string, nullable: true, description: Custom webhook avatar URL (null = default bot avatar) }
+              example:
+                account:
+                  _id: "abc123"
+                  platform: "discord"
+                  username: "announcements"
+                  displayName: "My Server - #announcements"
+                  profilePicture: "https://cdn.discordapp.com/icons/123/abc.png"
+                  channelId: "1234567890123456789"
+                  channelName: "announcements"
+                  channelType: "0"
+                  guildId: "9876543210987654321"
+                  webhookUsername: "My Brand"
+                  webhookAvatarUrl: "https://example.com/logo.png"
+        '400': { description: Not a Discord account }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404': { description: Account not found }
+
+    patch:
+      operationId: updateDiscordSettings
+      tags: [Discord]
+      summary: Update Discord settings
+      description: |
+        Update Discord account settings. Supports two operations (can be combined):
+
+        1. **Webhook identity** - Set the default display name and avatar that appear as the message author on every post. These are account-level defaults; individual posts can override them via platformSpecificData.webhookUsername / webhookAvatarUrl.
+
+        2. **Switch channel** - Move the connection to a different channel in the same guild. A new webhook is automatically created in the target channel.
+      parameters:
+        - name: accountId
+          in: path
+          required: true
+          schema: { type: string }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                webhookUsername:
+                  type: string
+                  description: Custom display name for the webhook (1-80 chars). Empty string resets to default ("Zernio"). Cannot contain "clyde" or "discord".
+                webhookAvatarUrl:
+                  type: string
+                  description: Custom avatar URL. Empty string resets to default bot avatar.
+                channelId:
+                  type: string
+                  description: Switch to a different channel in the same guild. Must be a text (0), announcement (5), or forum (15) channel.
+            examples:
+              identity:
+                summary: Update webhook identity
+                value:
+                  webhookUsername: "My Brand"
+                  webhookAvatarUrl: "https://example.com/logo.png"
+              channel:
+                summary: Switch channel
+                value:
+                  channelId: "9999999999999999999"
+      responses:
+        '200':
+          description: Settings updated
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message: { type: string, example: Discord settings updated }
+                  account:
+                    type: object
+                    properties:
+                      _id: { type: string }
+                      platform: { type: string }
+                      username: { type: string }
+                      displayName: { type: string }
+                      profilePicture: { type: string }
+                      channelId: { type: string }
+                      channelName: { type: string }
+                      channelType: { type: string }
+                      guildId: { type: string }
+                      webhookUsername: { type: string, nullable: true }
+                      webhookAvatarUrl: { type: string, nullable: true }
+        '400': { description: Invalid request (no changes, invalid channel type, or bot cannot access channel) }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404': { description: Discord account not found }
+
+  /v1/accounts/{accountId}/discord-channels:
+    get:
+      operationId: getDiscordChannels
+      tags: [Discord]
+      summary: List Discord guild channels
+      description: Returns the text, announcement, and forum channels in the connected Discord guild. Use this to discover available channels when switching the connected channel via PATCH /v1/accounts/{accountId}/discord-settings.
+      parameters:
+        - name: accountId
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        '200':
+          description: Channel list
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  channels:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id: { type: string, description: Channel snowflake ID }
+                        name: { type: string, description: Channel name }
+                        type: { type: integer, description: "Channel type: 0 (text), 5 (announcement), 15 (forum)" }
+              example:
+                channels:
+                  - id: "1234567890123456789"
+                    name: "general"
+                    type: 0
+                  - id: "2345678901234567890"
+                    name: "announcements"
+                    type: 5
+                  - id: "3456789012345678901"
+                    name: "feedback"
+                    type: 15
+        '400': { description: Not a Discord account or missing guild info }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404': { description: Account not found }
+
   /v1/queue/slots:
     get:
       operationId: listQueueSlots
@@ -11465,6 +12396,8 @@ paths:
       description: |
         Create a new webhook configuration. Maximum 10 webhooks per user.
 
+        `name`, `url` and `events` are required. `url` must be a valid URL and `events` must contain at least one event. Whitespace is trimmed from `url` before validation.
+
         Webhooks are automatically disabled after 10 consecutive delivery failures.
       security:
         - bearerAuth: []
@@ -11474,27 +12407,34 @@ paths:
           application/json:
             schema:
               type: object
+              required:
+                - name
+                - url
+                - events
               properties:
                 name:
                   type: string
-                  description: Webhook name (max 50 characters)
+                  description: Webhook name (1-50 characters)
+                  minLength: 1
                   maxLength: 50
                 url:
                   type: string
                   format: uri
-                  description: Webhook endpoint URL (must be HTTPS in production)
+                  description: Webhook endpoint URL (must be a valid URL, whitespace trimmed)
                 secret:
                   type: string
                   description: Secret key for HMAC-SHA256 signature verification
                 events:
                   type: array
+                  minItems: 1
                   items:
                     type: string
-                    enum: [post.scheduled, post.published, post.failed, post.partial, post.cancelled, post.recycled, account.connected, account.disconnected, message.received, comment.received]
-                  description: Events to subscribe to
+                    enum: [post.scheduled, post.published, post.failed, post.partial, post.cancelled, post.recycled, account.connected, account.disconnected, message.received, comment.received, review.new, review.updated]
+                  description: Events to subscribe to (at least one required)
                 isActive:
                   type: boolean
-                  description: Enable or disable webhook delivery
+                  default: true
+                  description: Enable or disable webhook delivery. Defaults to `true` when omitted.
                 customHeaders:
                   type: object
                   additionalProperties:
@@ -11507,7 +12447,7 @@ paths:
                   name: "My Production Webhook"
                   url: "https://example.com/webhook"
                   secret: "your-secret-key"
-                  events: ["post.scheduled", "post.published", "post.failed", "post.partial", "post.cancelled", "post.recycled", "account.connected", "account.disconnected", "message.received", "comment.received"]
+                  events: ["post.scheduled", "post.published", "post.failed", "post.partial", "post.cancelled", "post.recycled", "account.connected", "account.disconnected", "message.received", "comment.received", "review.new", "review.updated"]
                   isActive: true
       responses:
         '200':
@@ -11527,7 +12467,9 @@ paths:
       tags: [Webhooks]
       summary: Update webhook
       description: |
-        Update an existing webhook configuration. All fields except _id are optional; only provided fields will be updated.
+        Update an existing webhook configuration. All fields except `_id` are optional; only provided fields will be updated.
+
+        When provided, `name` must be 1-50 characters, `url` must be a valid URL, and `events` must contain at least one event. Whitespace is trimmed from `url` before validation.
 
         Webhooks are automatically disabled after 10 consecutive delivery failures.
       security:
@@ -11546,21 +12488,23 @@ paths:
                   description: Webhook ID to update (required)
                 name:
                   type: string
-                  description: Webhook name (max 50 characters)
+                  description: Webhook name (1-50 characters). Must be non-empty if provided.
+                  minLength: 1
                   maxLength: 50
                 url:
                   type: string
                   format: uri
-                  description: Webhook endpoint URL (must be HTTPS in production)
+                  description: Webhook endpoint URL (must be a valid URL, whitespace trimmed). Must be a valid URL if provided.
                 secret:
                   type: string
                   description: Secret key for HMAC-SHA256 signature verification
                 events:
                   type: array
+                  minItems: 1
                   items:
                     type: string
-                    enum: [post.scheduled, post.published, post.failed, post.partial, post.cancelled, post.recycled, account.connected, account.disconnected, message.received, comment.received]
-                  description: Events to subscribe to
+                    enum: [post.scheduled, post.published, post.failed, post.partial, post.cancelled, post.recycled, account.connected, account.disconnected, message.received, comment.received, review.new, review.updated]
+                  description: Events to subscribe to. Must contain at least one event if provided.
                 isActive:
                   type: boolean
                   description: Enable or disable webhook delivery
@@ -12168,6 +13112,8 @@ paths:
         '401': { $ref: '#/components/responses/Unauthorized' }
         '403':
           description: Inbox addon required
+        '404':
+          description: Conversation not found (WhatsApp only; other platforms upsert)
 
   /v1/inbox/conversations/{conversationId}/messages:
     get:
@@ -12304,7 +13250,15 @@ paths:
     post:
       operationId: sendInboxMessage
       summary: Send message
-      description: Send a message in a conversation. Supports text, attachments, quick replies, buttons, and message tags. Attachment and interactive message support varies by platform.
+      description: |
+        Send a message in a conversation. Supports text, attachments, quick replies,
+        buttons, templates, and message tags. Attachment and interactive message
+        support varies by platform.
+
+        WhatsApp rich interactive messages (list, CTA URL, Flow) are available via
+        the `interactive` field. Tap events are delivered through the
+        `message.received` webhook with WhatsApp-specific `metadata` fields
+        (`interactiveType`, `interactiveId`, `flowResponseJson`, `flowResponseData`).
       tags: [Messages]
       security: [{ bearerAuth: [] }]
       parameters:
@@ -12377,6 +13331,109 @@ paths:
                                 title: { type: string, maxLength: 20 }
                                 url: { type: string }
                                 payload: { type: string }
+                interactive:
+                  type: object
+                  description: |
+                    WhatsApp-only. Rich interactive payload for list messages, CTA URL
+                    buttons, and Flow prompts. When set, takes priority over `buttons`
+                    and `quickReplies`. The shape mirrors Meta's Cloud API `interactive`
+                    object verbatim, so any payload that works against Meta directly
+                    will also work here.
+
+                    Use `buttons` / `quickReplies` for simple button replies
+                    (WhatsApp's `interactive.type: "button"`) — the abstraction caps at
+                    3 buttons and handles the auto-conversion for you. Use this field
+                    only for `list`, `cta_url`, or `flow` messages.
+
+                    Tap events come back via the `message.received` webhook with
+                    `metadata.interactiveType` set to `list_reply` or `nfm_reply`.
+                  required: [type, body, action]
+                  properties:
+                    type:
+                      type: string
+                      enum: [list, cta_url, flow]
+                      description: Which interactive layout to render.
+                    header:
+                      type: object
+                      description: Optional header shown above the body.
+                      properties:
+                        type: { type: string, enum: [text, image, video, document] }
+                        text: { type: string, description: Required when header type is text. }
+                        image: { type: object, properties: { link: { type: string } } }
+                        video: { type: object, properties: { link: { type: string } } }
+                        document: { type: object, properties: { link: { type: string } } }
+                    body:
+                      type: object
+                      required: [text]
+                      properties:
+                        text: { type: string, description: Main body text. }
+                    footer:
+                      type: object
+                      description: Optional footer shown below the action.
+                      properties:
+                        text: { type: string }
+                    action:
+                      oneOf:
+                        - type: object
+                          description: List action. `type` on the parent must be `list`.
+                          required: [button, sections]
+                          properties:
+                            button:
+                              type: string
+                              description: CTA label that opens the list (max ~20 chars).
+                            sections:
+                              type: array
+                              minItems: 1
+                              maxItems: 10
+                              description: 1-10 sections. Total rows across all sections cannot exceed 10.
+                              items:
+                                type: object
+                                required: [rows]
+                                properties:
+                                  title: { type: string, description: Optional section header (max 24 chars). }
+                                  rows:
+                                    type: array
+                                    minItems: 1
+                                    maxItems: 10
+                                    items:
+                                      type: object
+                                      required: [id, title]
+                                      properties:
+                                        id: { type: string, description: Identifier returned in the webhook as metadata.interactiveId (max 200 chars). }
+                                        title: { type: string, description: Row label (max 24 chars). }
+                                        description: { type: string, description: Optional description below the title (max 72 chars). }
+                        - type: object
+                          description: CTA URL action. `type` on the parent must be `cta_url`.
+                          required: [name, parameters]
+                          properties:
+                            name: { type: string, enum: [cta_url] }
+                            parameters:
+                              type: object
+                              required: [display_text, url]
+                              properties:
+                                display_text: { type: string, description: Button label (max 20 chars). }
+                                url: { type: string, format: uri, description: Target URL opened when the user taps the button. }
+                        - type: object
+                          description: Flow action. `type` on the parent must be `flow`.
+                          required: [name, parameters]
+                          properties:
+                            name: { type: string, enum: [flow] }
+                            parameters:
+                              type: object
+                              required: [flow_token, flow_id, flow_cta, flow_action]
+                              properties:
+                                flow_message_version: { type: string, enum: ['3'], description: Defaults to "3" when omitted. }
+                                flow_token: { type: string, description: Opaque token you choose to correlate Flow responses with your own state (max 200 chars). }
+                                flow_id: { type: string, description: Published Flow ID from Meta Business Manager. }
+                                flow_cta: { type: string, description: Button label that opens the Flow (max 20 chars). }
+                                flow_action: { type: string, enum: [navigate, data_exchange], description: "`navigate` sends the user to `flow_action_payload.screen`; `data_exchange` posts data to your Flow endpoint." }
+                                flow_action_payload:
+                                  type: object
+                                  description: Required when flow_action is `navigate`.
+                                  properties:
+                                    screen: { type: string, description: First screen to show. }
+                                    data: { type: object, additionalProperties: true, description: Optional pre-filled data passed to the screen. }
+                                mode: { type: string, enum: [draft], description: Set to `draft` to test an unpublished Flow. }
                 replyMarkup:
                   type: object
                   description: Telegram-native keyboard markup. Ignored on other platforms.
@@ -12404,7 +13461,7 @@ paths:
                   description: Facebook message tag for messaging outside 24h window. Requires messagingType MESSAGE_TAG. Instagram only supports HUMAN_AGENT.
                 replyTo:
                   type: string
-                  description: Platform message ID to reply to (Telegram only).
+                  description: Platform message ID to quote-reply to. For WhatsApp, pass the wamid (available in message.platformMessageId from webhooks). For Telegram, pass the Telegram message ID.
           multipart/form-data:
             schema:
               type: object
@@ -12436,7 +13493,7 @@ paths:
                   description: Message tag (requires messagingType MESSAGE_TAG)
                 replyTo:
                   type: string
-                  description: Platform message ID to reply to (Telegram only)
+                  description: Platform message ID to quote-reply to. For WhatsApp, pass the wamid (available in message.platformMessageId from webhooks). For Telegram, pass the Telegram message ID.
       responses:
         '200':
           description: Message sent
@@ -16924,7 +17981,7 @@ paths:
       parameters:
         - $ref: '#/components/parameters/PageParam'
         - { name: limit, in: query, schema: { type: integer, minimum: 1, maximum: 500, default: 50 } }
-        - { name: source, in: query, schema: { type: string, enum: [zernio, all], default: zernio }, description: "zernio = Zernio-created only, all = include external ads" }
+        - { name: source, in: query, schema: { type: string, enum: [zernio, all], default: all }, description: "all (default) = Zernio-created + platform-discovered ads. zernio = restrict to Zernio-created only." }
         - { name: status, in: query, schema: { $ref: '#/components/schemas/AdStatus' } }
         - { name: platform, in: query, schema: { type: string, enum: [facebook, instagram, tiktok, linkedin, pinterest, google, twitter] } }
         - { name: accountId, in: query, schema: { type: string }, description: Social account ID }
@@ -16963,7 +18020,7 @@ paths:
       parameters:
         - $ref: '#/components/parameters/PageParam'
         - { name: limit, in: query, schema: { type: integer, minimum: 1, maximum: 100, default: 20 } }
-        - { name: source, in: query, schema: { type: string, enum: [zernio, all], default: zernio } }
+        - { name: source, in: query, schema: { type: string, enum: [zernio, all], default: all }, description: "`all` (default) returns both Zernio-created ads and those discovered from the platform's ad manager — matches the web UI's default view. Pass `zernio` to restrict to isExternal=false only. Status is NOT filtered by default — use the `status` param for that." }
         - { name: platform, in: query, schema: { type: string, enum: [facebook, instagram, tiktok, linkedin, pinterest, google, twitter] } }
         - { name: status, in: query, schema: { $ref: '#/components/schemas/AdStatus' }, description: Filter by derived campaign status (post-aggregation) }
         - { name: adAccountId, in: query, schema: { type: string }, description: Platform ad account ID (e.g. act_123 for Meta) }
@@ -17025,6 +18082,296 @@ paths:
         '404':
           description: No ads found for this campaign
 
+  /v1/ads/campaigns/{campaignId}:
+    put:
+      operationId: updateAdCampaign
+      tags: [Ad Campaigns]
+      summary: Update a campaign (budget)
+      description: |
+        Campaign-level edits. Currently supports updating the CBO (Campaign Budget Optimization) budget.
+        For ABO campaigns (where the budget lives on the ad set), use PUT /v1/ads/ad-sets/{adSetId} instead — this endpoint will return 409 with code BUDGET_LEVEL_MISMATCH.
+
+        Meta-only for now. Other platforms return 501 Not Implemented.
+      security:
+        - bearerAuth: []
+      parameters:
+        - { name: campaignId, in: path, required: true, schema: { type: string }, description: Platform campaign ID }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [platform, budget]
+              properties:
+                platform: { type: string, enum: [facebook, instagram] }
+                budget:
+                  type: object
+                  required: [amount, type]
+                  properties:
+                    amount: { type: number, description: Budget amount in the ad account's currency }
+                    type: { type: string, enum: [daily, lifetime] }
+      responses:
+        '200':
+          description: Campaign budget updated
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  updated: { type: integer }
+                  budget: { $ref: '#/components/schemas/AdBudget' }
+                  budgetLevel: { type: string, enum: [campaign] }
+        '400': { description: Invalid input }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404': { description: Campaign not found }
+        '409': { description: "Campaign is ABO — route to /v1/ads/ad-sets/{adSetId} instead" }
+        '501': { description: Operation not supported on this platform }
+
+    delete:
+      operationId: deleteAdCampaign
+      tags: [Ad Campaigns]
+      summary: Delete a campaign
+      description: |
+        Deletes the whole campaign on the platform, cascading to its ad sets
+        and ads. Locally, all Ad documents for this campaign are marked
+        `status: cancelled`.
+
+        Meta-only for now. Other platforms return 501 Not Implemented — fall
+        back to DELETE /v1/ads/{adId} per ad in the meantime.
+      security:
+        - bearerAuth: []
+      parameters:
+        - { name: campaignId, in: path, required: true, schema: { type: string }, description: Platform campaign ID }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [platform]
+              properties:
+                platform: { type: string, enum: [facebook, instagram] }
+      responses:
+        '200':
+          description: Campaign deleted
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  deleted: { type: boolean }
+                  adCount: { type: integer, description: Number of local Ad docs marked cancelled }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404': { description: Campaign not found }
+        '501': { description: Operation not supported on this platform }
+
+  /v1/ads/campaigns/bulk-status:
+    post:
+      operationId: bulkUpdateAdCampaignStatus
+      tags: [Ad Campaigns]
+      summary: Pause or resume many campaigns
+      description: |
+        Process up to 50 campaigns in one call. Each campaign is updated
+        concurrently and the response contains a per-campaign result so a
+        single bad row does not fail the whole batch.
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [status, campaigns]
+              properties:
+                status: { type: string, enum: [active, paused] }
+                campaigns:
+                  type: array
+                  maxItems: 50
+                  items:
+                    type: object
+                    required: [platformCampaignId, platform]
+                    properties:
+                      platformCampaignId: { type: string }
+                      platform: { type: string, enum: [facebook, instagram, tiktok, linkedin, pinterest, google, twitter] }
+      responses:
+        '200':
+          description: Per-campaign results
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status: { type: string, enum: [active, paused] }
+                  totals:
+                    type: object
+                    properties:
+                      updated: { type: integer }
+                      skipped: { type: integer }
+                      failed: { type: integer }
+                  results:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        platformCampaignId: { type: string }
+                        platform: { type: string }
+                        updated: { type: integer }
+                        skipped: { type: integer }
+                        error: { type: string }
+        '400': { description: Invalid input }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+
+  /v1/ads/campaigns/{campaignId}/duplicate:
+    post:
+      operationId: duplicateAdCampaign
+      tags: [Ad Campaigns]
+      summary: Duplicate a campaign
+      description: |
+        Duplicates a campaign, including its ad sets, ads, creatives, and
+        targeting by default (`deepCopy: true`). On Meta, this uses
+        `POST /{campaign-id}/copies`. The copy is created paused by default so
+        callers can review before launching.
+
+        The platform's duplication is asynchronous from our side; once the
+        copy is created on the platform, we trigger a sync discovery so the
+        new hierarchy shows up in /v1/ads/tree. Set `syncAfter: false` to
+        skip the discovery trigger and poll on your own cadence.
+
+        Meta-only for now. Other platforms return 501 Not Implemented.
+      security:
+        - bearerAuth: []
+      parameters:
+        - { name: campaignId, in: path, required: true, schema: { type: string }, description: Source platform campaign ID }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [platform]
+              properties:
+                platform: { type: string, enum: [facebook, instagram] }
+                deepCopy: { type: boolean, default: true, description: Copy child ad sets + ads + creatives + targeting }
+                statusOption:
+                  type: string
+                  enum: [ACTIVE, PAUSED, INHERITED_FROM_SOURCE]
+                  default: PAUSED
+                startTime: { type: string, format: date-time, description: Reschedule the copied hierarchy's start time }
+                endTime: { type: string, format: date-time }
+                renameStrategy:
+                  type: string
+                  enum: [DEEP_RENAME, ONLY_TOP_LEVEL_RENAME, NO_RENAME]
+                renamePrefix: { type: string }
+                renameSuffix: { type: string }
+                syncAfter: { type: boolean, default: true, description: Trigger ads discovery on the owning account after the copy succeeds }
+      responses:
+        '200':
+          description: Campaign duplicated
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  copiedCampaignId: { type: string, description: Platform ID of the new campaign }
+                  discovery: { type: string, enum: [triggered, skipped, failed] }
+                  raw:
+                    type: object
+                    description: Platform-native response from the copy endpoint (Meta includes ad_object_ids for child copies)
+        '400': { description: Invalid input }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404': { description: Source campaign not found }
+        '501': { description: Operation not supported on this platform }
+
+  /v1/ads/ad-sets/{adSetId}:
+    put:
+      operationId: updateAdSet
+      tags: [Ad Campaigns]
+      summary: Update an ad set (budget and/or status)
+      description: |
+        Ad-set-level writes. Use this for ABO budget updates and ad-set-scoped
+        pause/resume. Provide `budget` and/or `status` in the body.
+
+        When updating `budget` on an ABO campaign: if the parent campaign is
+        CBO, the response is 409 with code BUDGET_LEVEL_MISMATCH — route to
+        PUT /v1/ads/campaigns/{campaignId} instead.
+      security:
+        - bearerAuth: []
+      parameters:
+        - { name: adSetId, in: path, required: true, schema: { type: string }, description: Platform ad set ID }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [platform]
+              properties:
+                platform: { type: string, enum: [facebook, instagram, tiktok, linkedin, pinterest, google, twitter] }
+                budget:
+                  type: object
+                  description: Omit if only toggling status
+                  properties:
+                    amount: { type: number }
+                    type: { type: string, enum: [daily, lifetime] }
+                status: { type: string, enum: [active, paused], description: Omit if only updating budget }
+      responses:
+        '200':
+          description: Ad set updated
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  budget: { $ref: '#/components/schemas/AdBudget' }
+                  budgetLevel: { type: string, enum: [adset] }
+                  status: { type: string, enum: [active, paused] }
+                  statusUpdated: { type: integer }
+                  statusSkipped: { type: integer }
+        '400': { description: Invalid input }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404': { description: Ad set not found }
+        '409': { description: "Campaign is CBO — route to /v1/ads/campaigns/{campaignId} instead" }
+
+  /v1/ads/ad-sets/{adSetId}/status:
+    put:
+      operationId: updateAdSetStatus
+      tags: [Ad Campaigns]
+      summary: Pause or resume a single ad set
+      description: |
+        Ad-set-scoped pause/resume (doesn't touch sibling ad sets). Thin wrapper
+        over PUT /v1/ads/ad-sets/{adSetId} for callers that only want the
+        status toggle and prefer a symmetric URL to
+        /v1/ads/campaigns/{campaignId}/status.
+      security:
+        - bearerAuth: []
+      parameters:
+        - { name: adSetId, in: path, required: true, schema: { type: string }, description: Platform ad set ID }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [status, platform]
+              properties:
+                status: { type: string, enum: [active, paused] }
+                platform: { type: string, enum: [facebook, instagram, tiktok, linkedin, pinterest, google, twitter] }
+      responses:
+        '200':
+          description: Ad set status updated
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  updated: { type: integer }
+                  skipped: { type: integer }
+        '400': { description: Invalid input }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404': { description: Ad set not found }
+
   /v1/ads/tree:
     get:
       operationId: getAdTree
@@ -17042,7 +18389,7 @@ paths:
       parameters:
         - $ref: '#/components/parameters/PageParam'
         - { name: limit, in: query, schema: { type: integer, minimum: 1, maximum: 100, default: 20 }, description: Campaigns per page }
-        - { name: source, in: query, schema: { type: string, enum: [zernio, all], default: zernio } }
+        - { name: source, in: query, schema: { type: string, enum: [zernio, all], default: all }, description: "`all` (default) returns both Zernio-created ads and those discovered from the platform's ad manager — matches the web UI's default view. Pass `zernio` to restrict to isExternal=false only. Status is NOT filtered by default — use the `status` param for that." }
         - { name: platform, in: query, schema: { type: string, enum: [facebook, instagram, tiktok, linkedin, pinterest, google, twitter] } }
         - { name: status, in: query, schema: { $ref: '#/components/schemas/AdStatus' }, description: Filter by derived campaign status (post-aggregation) }
         - { name: adAccountId, in: query, schema: { type: string }, description: Platform ad account ID }
@@ -17125,6 +18472,7 @@ paths:
                         properties:
                           id: { type: string }
                           name: { type: string }
+                    advantage_audience: { type: integer, enum: [0, 1], description: "Meta only. Omit to preserve the existing setting on update. 0 = disabled, 1 = enabled." }
                 name: { type: string }
       responses:
         '200':
@@ -17269,7 +18617,7 @@ paths:
                 accountId: { type: string, description: Social account ID }
                 adAccountId: { type: string, description: Platform ad account ID }
                 name: { type: string, maxLength: 255 }
-                goal: { type: string, enum: [engagement, traffic, awareness, video_views] }
+                goal: { type: string, enum: [engagement, traffic, awareness, video_views, lead_generation, conversions, app_promotion], description: "Available goals vary by platform. Meta (Facebook/Instagram) and TikTok support all 7. LinkedIn supports all except app_promotion. Twitter/X supports engagement, traffic, awareness, video_views, app_promotion. Pinterest and Google Ads support only engagement, traffic, awareness, video_views." }
                 budget:
                   type: object
                   required: [amount, type]
@@ -17297,6 +18645,7 @@ paths:
                         properties:
                           id: { type: string }
                           name: { type: string }
+                    advantage_audience: { type: integer, enum: [0, 1], description: "Meta only. 0 = disabled (default), 1 = enabled." }
                 bidAmount: { type: number, description: "Max bid cap (Meta only)" }
                 tracking:
                   type: object
@@ -17345,7 +18694,7 @@ paths:
                 accountId: { type: string }
                 adAccountId: { type: string }
                 name: { type: string, maxLength: 255 }
-                goal: { type: string, enum: [engagement, traffic, awareness, video_views] }
+                goal: { type: string, enum: [engagement, traffic, awareness, video_views, lead_generation, conversions, app_promotion], description: "Available goals vary by platform. Meta (Facebook/Instagram) and TikTok support all 7. LinkedIn supports all except app_promotion. Twitter/X supports engagement, traffic, awareness, video_views, app_promotion. Pinterest and Google Ads support only engagement, traffic, awareness, video_views." }
                 budgetAmount: { type: number }
                 budgetType: { type: string, enum: [daily, lifetime] }
                 currency: { type: string }
@@ -17375,6 +18724,7 @@ paths:
                 keywords: { type: array, items: { type: string }, description: Google Search only }
                 additionalHeadlines: { type: array, items: { type: string }, description: "Google Search RSA only. Extra headlines." }
                 additionalDescriptions: { type: array, items: { type: string }, description: "Google Search RSA only. Extra descriptions." }
+                advantageAudience: { type: integer, enum: [0, 1], description: "Meta only. Controls the Advantage audience feature (targeting_automation). 0 = disabled (default), 1 = enabled. Meta Marketing API requires this field on all ad set creation requests." }
       responses:
         '201':
           description: Ad created

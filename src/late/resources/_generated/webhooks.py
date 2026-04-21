@@ -54,12 +54,12 @@ class WebhooksResource:
 
     def create_webhook_settings(
         self,
+        name: str,
+        url: str,
+        events: list[str],
         *,
-        name: str | None = None,
-        url: str | None = None,
         secret: str | None = None,
-        events: list[str] | None = None,
-        is_active: bool | None = None,
+        is_active: bool | None = True,
         custom_headers: dict[str, Any] | None = None,
     ) -> dict[str, Any]:
         """Create webhook"""
@@ -116,12 +116,12 @@ class WebhooksResource:
 
     async def acreate_webhook_settings(
         self,
+        name: str,
+        url: str,
+        events: list[str],
         *,
-        name: str | None = None,
-        url: str | None = None,
         secret: str | None = None,
-        events: list[str] | None = None,
-        is_active: bool | None = None,
+        is_active: bool | None = True,
         custom_headers: dict[str, Any] | None = None,
     ) -> dict[str, Any]:
         """Create webhook (async)"""

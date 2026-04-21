@@ -10,6 +10,8 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Any
 
 if TYPE_CHECKING:
+    from datetime import datetime
+
     from ..client.base import BaseClient
 
 
@@ -53,7 +55,7 @@ class AdCampaignsResource:
         *,
         page: int | None = 1,
         limit: int | None = 20,
-        source: str | None = "zernio",
+        source: str | None = "all",
         platform: str | None = None,
         status: Any | None = None,
         ad_account_id: str | None = None,
@@ -85,12 +87,92 @@ class AdCampaignsResource:
             f"/v1/ads/campaigns/{campaign_id}/status", data=payload
         )
 
+    def update_ad_campaign(
+        self, campaign_id: str, platform: str, budget: dict[str, Any]
+    ) -> dict[str, Any]:
+        """Update a campaign (budget)"""
+        payload = self._build_payload(
+            platform=platform,
+            budget=budget,
+        )
+        return self._client._put(f"/v1/ads/campaigns/{campaign_id}", data=payload)
+
+    def delete_ad_campaign(self, campaign_id: str, platform: str) -> dict[str, Any]:
+        """Delete a campaign"""
+        return self._client._delete(f"/v1/ads/campaigns/{campaign_id}")
+
+    def bulk_update_ad_campaign_status(
+        self, status: str, campaigns: list[dict[str, Any]]
+    ) -> dict[str, Any]:
+        """Pause or resume many campaigns"""
+        payload = self._build_payload(
+            status=status,
+            campaigns=campaigns,
+        )
+        return self._client._post("/v1/ads/campaigns/bulk-status", data=payload)
+
+    def duplicate_ad_campaign(
+        self,
+        campaign_id: str,
+        platform: str,
+        *,
+        deep_copy: bool | None = True,
+        status_option: str | None = "PAUSED",
+        start_time: datetime | str | None = None,
+        end_time: datetime | str | None = None,
+        rename_strategy: str | None = None,
+        rename_prefix: str | None = None,
+        rename_suffix: str | None = None,
+        sync_after: bool | None = True,
+    ) -> dict[str, Any]:
+        """Duplicate a campaign"""
+        payload = self._build_payload(
+            platform=platform,
+            deep_copy=deep_copy,
+            status_option=status_option,
+            start_time=start_time,
+            end_time=end_time,
+            rename_strategy=rename_strategy,
+            rename_prefix=rename_prefix,
+            rename_suffix=rename_suffix,
+            sync_after=sync_after,
+        )
+        return self._client._post(
+            f"/v1/ads/campaigns/{campaign_id}/duplicate", data=payload
+        )
+
+    def update_ad_set(
+        self,
+        ad_set_id: str,
+        platform: str,
+        *,
+        budget: dict[str, Any] | None = None,
+        status: str | None = None,
+    ) -> dict[str, Any]:
+        """Update an ad set (budget and/or status)"""
+        payload = self._build_payload(
+            platform=platform,
+            budget=budget,
+            status=status,
+        )
+        return self._client._put(f"/v1/ads/ad-sets/{ad_set_id}", data=payload)
+
+    def update_ad_set_status(
+        self, ad_set_id: str, status: str, platform: str
+    ) -> dict[str, Any]:
+        """Pause or resume a single ad set"""
+        payload = self._build_payload(
+            status=status,
+            platform=platform,
+        )
+        return self._client._put(f"/v1/ads/ad-sets/{ad_set_id}/status", data=payload)
+
     def get_ad_tree(
         self,
         *,
         page: int | None = 1,
         limit: int | None = 20,
-        source: str | None = "zernio",
+        source: str | None = "all",
         platform: str | None = None,
         status: Any | None = None,
         ad_account_id: str | None = None,
@@ -119,7 +201,7 @@ class AdCampaignsResource:
         *,
         page: int | None = 1,
         limit: int | None = 20,
-        source: str | None = "zernio",
+        source: str | None = "all",
         platform: str | None = None,
         status: Any | None = None,
         ad_account_id: str | None = None,
@@ -151,12 +233,98 @@ class AdCampaignsResource:
             f"/v1/ads/campaigns/{campaign_id}/status", data=payload
         )
 
+    async def aupdate_ad_campaign(
+        self, campaign_id: str, platform: str, budget: dict[str, Any]
+    ) -> dict[str, Any]:
+        """Update a campaign (budget) (async)"""
+        payload = self._build_payload(
+            platform=platform,
+            budget=budget,
+        )
+        return await self._client._aput(
+            f"/v1/ads/campaigns/{campaign_id}", data=payload
+        )
+
+    async def adelete_ad_campaign(
+        self, campaign_id: str, platform: str
+    ) -> dict[str, Any]:
+        """Delete a campaign (async)"""
+        return await self._client._adelete(f"/v1/ads/campaigns/{campaign_id}")
+
+    async def abulk_update_ad_campaign_status(
+        self, status: str, campaigns: list[dict[str, Any]]
+    ) -> dict[str, Any]:
+        """Pause or resume many campaigns (async)"""
+        payload = self._build_payload(
+            status=status,
+            campaigns=campaigns,
+        )
+        return await self._client._apost("/v1/ads/campaigns/bulk-status", data=payload)
+
+    async def aduplicate_ad_campaign(
+        self,
+        campaign_id: str,
+        platform: str,
+        *,
+        deep_copy: bool | None = True,
+        status_option: str | None = "PAUSED",
+        start_time: datetime | str | None = None,
+        end_time: datetime | str | None = None,
+        rename_strategy: str | None = None,
+        rename_prefix: str | None = None,
+        rename_suffix: str | None = None,
+        sync_after: bool | None = True,
+    ) -> dict[str, Any]:
+        """Duplicate a campaign (async)"""
+        payload = self._build_payload(
+            platform=platform,
+            deep_copy=deep_copy,
+            status_option=status_option,
+            start_time=start_time,
+            end_time=end_time,
+            rename_strategy=rename_strategy,
+            rename_prefix=rename_prefix,
+            rename_suffix=rename_suffix,
+            sync_after=sync_after,
+        )
+        return await self._client._apost(
+            f"/v1/ads/campaigns/{campaign_id}/duplicate", data=payload
+        )
+
+    async def aupdate_ad_set(
+        self,
+        ad_set_id: str,
+        platform: str,
+        *,
+        budget: dict[str, Any] | None = None,
+        status: str | None = None,
+    ) -> dict[str, Any]:
+        """Update an ad set (budget and/or status) (async)"""
+        payload = self._build_payload(
+            platform=platform,
+            budget=budget,
+            status=status,
+        )
+        return await self._client._aput(f"/v1/ads/ad-sets/{ad_set_id}", data=payload)
+
+    async def aupdate_ad_set_status(
+        self, ad_set_id: str, status: str, platform: str
+    ) -> dict[str, Any]:
+        """Pause or resume a single ad set (async)"""
+        payload = self._build_payload(
+            status=status,
+            platform=platform,
+        )
+        return await self._client._aput(
+            f"/v1/ads/ad-sets/{ad_set_id}/status", data=payload
+        )
+
     async def aget_ad_tree(
         self,
         *,
         page: int | None = 1,
         limit: int | None = 20,
-        source: str | None = "zernio",
+        source: str | None = "all",
         platform: str | None = None,
         status: Any | None = None,
         ad_account_id: str | None = None,

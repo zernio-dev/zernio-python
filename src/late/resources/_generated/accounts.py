@@ -347,6 +347,43 @@ class AccountsResource:
             f"/v1/accounts/{account_id}/gmb-place-actions", params=params
         )
 
+    def update_google_business_place_action(
+        self,
+        account_id: str,
+        name: str,
+        *,
+        location_id: str | None = None,
+        uri: str | None = None,
+        place_action_type: str | None = None,
+    ) -> dict[str, Any]:
+        """Update action link"""
+        payload = self._build_payload(
+            name=name,
+            uri=uri,
+            place_action_type=place_action_type,
+        )
+        return self._client._patch(
+            f"/v1/accounts/{account_id}/gmb-place-actions", data=payload
+        )
+
+    def batch_get_google_business_reviews(
+        self,
+        account_id: str,
+        location_names: list[str],
+        *,
+        page_size: int | None = 50,
+        page_token: str | None = None,
+    ) -> dict[str, Any]:
+        """Batch get reviews"""
+        payload = self._build_payload(
+            location_names=location_names,
+            page_size=page_size,
+            page_token=page_token,
+        )
+        return self._client._post(
+            f"/v1/accounts/{account_id}/gmb-reviews/batch", data=payload
+        )
+
     def get_linked_in_mentions(
         self, account_id: str, url: str, *, display_name: str | None = None
     ) -> dict[str, Any]:
@@ -660,6 +697,43 @@ class AccountsResource:
         )
         return await self._client._adelete(
             f"/v1/accounts/{account_id}/gmb-place-actions", params=params
+        )
+
+    async def aupdate_google_business_place_action(
+        self,
+        account_id: str,
+        name: str,
+        *,
+        location_id: str | None = None,
+        uri: str | None = None,
+        place_action_type: str | None = None,
+    ) -> dict[str, Any]:
+        """Update action link (async)"""
+        payload = self._build_payload(
+            name=name,
+            uri=uri,
+            place_action_type=place_action_type,
+        )
+        return await self._client._apatch(
+            f"/v1/accounts/{account_id}/gmb-place-actions", data=payload
+        )
+
+    async def abatch_get_google_business_reviews(
+        self,
+        account_id: str,
+        location_names: list[str],
+        *,
+        page_size: int | None = 50,
+        page_token: str | None = None,
+    ) -> dict[str, Any]:
+        """Batch get reviews (async)"""
+        payload = self._build_payload(
+            location_names=location_names,
+            page_size=page_size,
+            page_token=page_token,
+        )
+        return await self._client._apost(
+            f"/v1/accounts/{account_id}/gmb-reviews/batch", data=payload
         )
 
     async def aget_linked_in_mentions(

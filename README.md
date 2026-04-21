@@ -205,6 +205,7 @@ Both `from zernio import ...` and `from late import ...` work identically. The `
 | `accounts.get_tik_tok_creator_info()` | Get TikTok creator info |
 | `accounts.update_account()` | Update account |
 | `accounts.delete_account()` | Disconnect account |
+| `accounts.batch_get_google_business_reviews()` | Batch get reviews |
 
 ### Profiles
 | Method | Description |
@@ -362,8 +363,14 @@ Both `from zernio import ...` and `from late import ...` work identically. The `
 | Method | Description |
 |--------|-------------|
 | `ad_campaigns.list_ad_campaigns()` | List campaigns |
+| `ad_campaigns.bulk_update_ad_campaign_status()` | Pause or resume many campaigns |
 | `ad_campaigns.get_ad_tree()` | Get campaign tree |
+| `ad_campaigns.update_ad_campaign()` | Update a campaign (budget) |
 | `ad_campaigns.update_ad_campaign_status()` | Pause or resume a campaign |
+| `ad_campaigns.update_ad_set()` | Update an ad set (budget and/or status) |
+| `ad_campaigns.update_ad_set_status()` | Pause or resume a single ad set |
+| `ad_campaigns.delete_ad_campaign()` | Delete a campaign |
+| `ad_campaigns.duplicate_ad_campaign()` | Duplicate a campaign |
 
 ### Ads
 | Method | Description |
@@ -438,6 +445,13 @@ Both `from zernio import ...` and `from late import ...` work identically. The `
 | `custom_fields.clear_contact_field_value()` | Clear custom field value |
 | `custom_fields.set_contact_field_value()` | Set custom field value |
 
+### Discord
+| Method | Description |
+|--------|-------------|
+| `discord.get_discord_channels()` | List Discord guild channels |
+| `discord.get_discord_settings()` | Get Discord account settings |
+| `discord.update_discord_settings()` | Update Discord settings |
+
 ### GMB Attributes
 | Method | Description |
 |--------|-------------|
@@ -468,7 +482,14 @@ Both `from zernio import ...` and `from late import ...` work identically. The `
 |--------|-------------|
 | `gmb_place_actions.list_google_business_place_actions()` | List action links |
 | `gmb_place_actions.create_google_business_place_action()` | Create action link |
+| `gmb_place_actions.update_google_business_place_action()` | Update action link |
 | `gmb_place_actions.delete_google_business_place_action()` | Delete action link |
+
+### GMB Services
+| Method | Description |
+|--------|-------------|
+| `gmb_services.get_google_business_services()` | Get services |
+| `gmb_services.update_google_business_services()` | Replace services |
 
 ### Messages (Inbox)
 | Method | Description |
