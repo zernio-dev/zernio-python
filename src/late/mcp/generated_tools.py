@@ -1344,16 +1344,18 @@ def register_generated_tools(mcp, _get_client):
         account_id: str,
         ad_account_id: str,
         name: str,
-        goal: str,
-        budget_amount: float,
-        budget_type: str,
-        body: str,
+        goal: str = "",
+        budget_amount: float = 0.0,
+        budget_type: str = "",
         currency: str = "",
         headline: str = "",
         long_headline: str = "",
+        body: str = "",
         call_to_action: str = "",
         link_url: str = "",
         image_url: str = "",
+        creatives: str = "",
+        ad_set_id: str = "",
         business_name: str = "",
         board_id: str = "",
         countries: str = "",
@@ -1370,33 +1372,41 @@ def register_generated_tools(mcp, _get_client):
     ) -> str:
         """Create standalone ad
 
-        Args:
-            account_id: (required)
-            ad_account_id: (required)
-            name: (required)
-            goal: Available goals vary by platform. Meta (Facebook/Instagram) and TikTok support all 7. LinkedIn supports all except app_promotion. Twitter/X supports engagement, traffic, awareness, video_views, app_promotion. Pinterest and Google Ads support only engagement, traffic, awareness, video_views. (required)
-            budget_amount: (required)
-            budget_type: (required)
-            currency
-            headline: Required for most platforms. Max: Meta=255, Google=30, Pinterest=100
-            long_headline: Google Display only
-            body: Max: Google=90, Pinterest=500 (required)
-            call_to_action: Meta only
-            link_url
-            image_url: Image URL (or video URL for TikTok). Not required for Google Search campaigns.
-            business_name: Google Display only
-            board_id: Pinterest only. Board ID (auto-creates if not provided).
-            countries
-            age_min
-            age_max
-            interests: Interest objects from /v1/ads/interests. Each must include id and name.
-            end_date: Required for lifetime budgets
-            audience_id: Custom audience ID for targeting
-            campaign_type: Google only
-            keywords: Google Search only
-            additional_headlines: Google Search RSA only. Extra headlines.
-            additional_descriptions: Google Search RSA only. Extra descriptions.
-            advantage_audience: Meta only. Controls the Advantage audience feature (targeting_automation). 0 = disabled (default), 1 = enabled. Meta Marketing API requires this field on all ad set creation requests."""
+            Args:
+                account_id: (required)
+                ad_account_id: (required)
+                name: (required)
+                goal: Required on legacy + multi-creative shapes. Inherited from the ad set on the attach shape. Available goals vary by platform.
+                budget_amount: Required on legacy + multi-creative shapes. Inherited on attach.
+                budget_type: Required on legacy + multi-creative shapes. Inherited on attach.
+                currency
+                headline: Required on legacy + attach shapes (skip for multi-creative — use `creatives[].headline`). Max: Meta=255, Google=30, Pinterest=100
+                long_headline: Google Display only
+                body: Required on legacy + attach shapes. Max: Google=90, Pinterest=500
+                call_to_action: Required on legacy + attach shapes. Meta only.
+                link_url: Required on legacy + attach shapes. Skip for multi-creative.
+                image_url: Required on legacy + attach shapes. Not required for Google Search campaigns.
+                creatives: Meta-only. When present, switches to the multi-creative shape:
+        creates 1 campaign + 1 ad set + N ads (one per entry here).
+        Top-level `headline` / `body` / `imageUrl` / `linkUrl` /
+        `callToAction` are ignored in this mode. Mutually exclusive with `adSetId`.
+                ad_set_id: Meta-only. When present, switches to the attach shape: adds
+        one new ad to this existing ad set without creating a new
+        campaign. Budget, targeting, goal, and schedule are inherited
+        from the ad set on Meta. Mutually exclusive with `creatives[]`.
+                business_name: Google Display only
+                board_id: Pinterest only. Board ID (auto-creates if not provided).
+                countries
+                age_min
+                age_max
+                interests: Interest objects from /v1/ads/interests. Each must include id and name.
+                end_date: Required for lifetime budgets
+                audience_id: Custom audience ID for targeting
+                campaign_type: Google only
+                keywords: Google Search only
+                additional_headlines: Google Search RSA only. Extra headlines.
+                additional_descriptions: Google Search RSA only. Extra descriptions.
+                advantage_audience: Meta only. Controls the Advantage audience feature (targeting_automation). 0 = disabled (default), 1 = enabled. Meta Marketing API requires this field on all ad set creation requests."""
         client = _get_client()
         try:
             response = client.ads.create_standalone_ad(
@@ -1413,6 +1423,8 @@ def register_generated_tools(mcp, _get_client):
                 call_to_action=call_to_action,
                 link_url=link_url,
                 image_url=image_url,
+                creatives=creatives,
+                ad_set_id=ad_set_id,
                 business_name=business_name,
                 board_id=board_id,
                 countries=countries,

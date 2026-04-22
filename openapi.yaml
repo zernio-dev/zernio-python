@@ -18694,7 +18694,14 @@ paths:
       operationId: createStandaloneAd
       tags: [Ads]
       summary: Create standalone ad
-      description: Creates a paid ad with custom creative (headline, body, image/video, link). Creates the full platform campaign hierarchy.
+      description: |
+        Creates a paid ad with custom creative. The request body supports three mutually-exclusive shapes:
+
+        1. **Legacy single-creative** (all platforms). Top-level `headline` + `body` + `imageUrl` + `linkUrl` + `callToAction` create 1 campaign + 1 ad set + 1 ad.
+        2. **Multi-creative** (Meta only — use `creatives[]` array). Creates 1 campaign + 1 ad set + N ads sharing the same budget / targeting / schedule. This is the standard performance-marketing creative-testing flow — Meta's delivery algorithm A/B tests the creatives inside a single ad set so budget isn't fragmented across N parallel campaigns.
+        3. **Attach to existing ad set** (Meta only — pass `adSetId` + a single creative). Adds one new ad to an existing ad set without creating a new campaign. Budget, targeting, goal are inherited from the ad set on Meta.
+
+        `creatives[]` and `adSetId` are mutually exclusive; specifying both returns 400.
       security:
         - bearerAuth: []
       requestBody:
@@ -18703,21 +18710,45 @@ paths:
           application/json:
             schema:
               type: object
-              required: [accountId, adAccountId, name, goal, budgetAmount, budgetType, body]
+              required: [accountId, adAccountId, name]
               properties:
                 accountId: { type: string }
                 adAccountId: { type: string }
                 name: { type: string, maxLength: 255 }
-                goal: { type: string, enum: [engagement, traffic, awareness, video_views, lead_generation, conversions, app_promotion], description: "Available goals vary by platform. Meta (Facebook/Instagram) and TikTok support all 7. LinkedIn supports all except app_promotion. Twitter/X supports engagement, traffic, awareness, video_views, app_promotion. Pinterest and Google Ads support only engagement, traffic, awareness, video_views." }
-                budgetAmount: { type: number }
-                budgetType: { type: string, enum: [daily, lifetime] }
+                goal: { type: string, enum: [engagement, traffic, awareness, video_views, lead_generation, conversions, app_promotion], description: "Required on legacy + multi-creative shapes. Inherited from the ad set on the attach shape. Available goals vary by platform." }
+                budgetAmount: { type: number, description: "Required on legacy + multi-creative shapes. Inherited on attach." }
+                budgetType: { type: string, enum: [daily, lifetime], description: "Required on legacy + multi-creative shapes. Inherited on attach." }
                 currency: { type: string }
-                headline: { type: string, description: "Required for most platforms. Max: Meta=255, Google=30, Pinterest=100" }
+                headline: { type: string, description: "Required on legacy + attach shapes (skip for multi-creative — use `creatives[].headline`). Max: Meta=255, Google=30, Pinterest=100" }
                 longHeadline: { type: string, maxLength: 90, description: "Google Display only" }
-                body: { type: string, description: "Max: Google=90, Pinterest=500" }
-                callToAction: { type: string, enum: [LEARN_MORE, SHOP_NOW, SIGN_UP, BOOK_TRAVEL, CONTACT_US, DOWNLOAD, GET_OFFER, GET_QUOTE, SUBSCRIBE, WATCH_MORE], description: Meta only }
-                linkUrl: { type: string, format: uri }
-                imageUrl: { type: string, format: uri, description: "Image URL (or video URL for TikTok). Not required for Google Search campaigns." }
+                body: { type: string, description: "Required on legacy + attach shapes. Max: Google=90, Pinterest=500" }
+                callToAction: { type: string, enum: [LEARN_MORE, SHOP_NOW, SIGN_UP, BOOK_TRAVEL, CONTACT_US, DOWNLOAD, GET_OFFER, GET_QUOTE, SUBSCRIBE, WATCH_MORE], description: "Required on legacy + attach shapes. Meta only." }
+                linkUrl: { type: string, format: uri, description: "Required on legacy + attach shapes. Skip for multi-creative." }
+                imageUrl: { type: string, format: uri, description: "Required on legacy + attach shapes. Not required for Google Search campaigns." }
+                creatives:
+                  type: array
+                  minItems: 1
+                  description: |
+                    Meta-only. When present, switches to the multi-creative shape:
+                    creates 1 campaign + 1 ad set + N ads (one per entry here).
+                    Top-level `headline` / `body` / `imageUrl` / `linkUrl` /
+                    `callToAction` are ignored in this mode. Mutually exclusive with `adSetId`.
+                  items:
+                    type: object
+                    required: [headline, body, imageUrl, linkUrl, callToAction]
+                    properties:
+                      headline: { type: string, maxLength: 255 }
+                      body: { type: string }
+                      imageUrl: { type: string, format: uri }
+                      linkUrl: { type: string, format: uri }
+                      callToAction: { type: string, enum: [LEARN_MORE, SHOP_NOW, SIGN_UP, BOOK_TRAVEL, CONTACT_US, DOWNLOAD, GET_OFFER, GET_QUOTE, SUBSCRIBE, WATCH_MORE] }
+                adSetId:
+                  type: string
+                  description: |
+                    Meta-only. When present, switches to the attach shape: adds
+                    one new ad to this existing ad set without creating a new
+                    campaign. Budget, targeting, goal, and schedule are inherited
+                    from the ad set on Meta. Mutually exclusive with `creatives[]`.
                 businessName: { type: string, maxLength: 25, description: "Google Display only" }
                 boardId: { type: string, description: "Pinterest only. Board ID (auto-creates if not provided)." }
                 countries: { type: array, items: { type: string } }
@@ -18741,16 +18772,27 @@ paths:
                 advantageAudience: { type: integer, enum: [0, 1], description: "Meta only. Controls the Advantage audience feature (targeting_automation). 0 = disabled (default), 1 = enabled. Meta Marketing API requires this field on all ad set creation requests." }
       responses:
         '201':
-          description: Ad created
+          description: Ad(s) created
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  ad: { $ref: '#/components/schemas/Ad' }
-                  message: { type: string }
+                oneOf:
+                  - type: object
+                    description: "Legacy + attach shapes — one ad returned."
+                    properties:
+                      ad: { $ref: '#/components/schemas/Ad' }
+                      message: { type: string }
+                  - type: object
+                    description: "Multi-creative shape — N ads returned sharing platformCampaignId / platformAdSetId."
+                    properties:
+                      ads:
+                        type: array
+                        items: { $ref: '#/components/schemas/Ad' }
+                      platformCampaignId: { type: string }
+                      platformAdSetId: { type: string }
+                      message: { type: string }
         '400':
-          description: Missing required fields or invalid values
+          description: Missing required fields, invalid values, or non-Meta platform used with creatives[] / adSetId
         '401': { $ref: '#/components/responses/Unauthorized' }
         '403':
           description: Ads add-on required
