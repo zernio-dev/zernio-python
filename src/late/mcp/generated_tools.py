@@ -1354,6 +1354,7 @@ def register_generated_tools(mcp, _get_client):
         call_to_action: str = "",
         link_url: str = "",
         image_url: str = "",
+        images: str = "",
         video: str = "",
         creatives: str = "",
         ad_set_id: str = "",
@@ -1386,7 +1387,8 @@ def register_generated_tools(mcp, _get_client):
                 body: Required on legacy + attach shapes. For X/Twitter this is the tweet text (max 280 chars including a ~24-char URL when `linkUrl` is set). Max: Google=90, Pinterest=500.
                 call_to_action: Required on legacy + attach shapes. Meta only.
                 link_url: Required on legacy + attach shapes. Skip for multi-creative.
-                image_url: Image creative for Meta/Google/Pinterest on legacy + attach shapes (mutually exclusive with `video`). Not required for Google Search campaigns. For TikTok, this field carries the VIDEO URL (the TikTok ads endpoint is video-only; the field retains the `imageUrl` name for cross-platform consistency). Ignored for X/Twitter.
+                image_url: Image creative for Meta/Google/Pinterest on legacy + attach shapes (mutually exclusive with `video`). Not required for Google Search campaigns. For TikTok, this field carries the VIDEO URL (the TikTok ads endpoint is video-only; the field retains the `imageUrl` name for cross-platform consistency). Ignored for X/Twitter. For Google Display, treated as the landscape image (alias of `images.landscape`); supply `images.square` alongside or the request is rejected.
+                images: Google Display (Responsive Display Ads) only. Google RDA requires both a landscape (1.91:1) and a square (1:1) marketing image; sending only one is rejected upstream as 'Too few.' (NOT_ENOUGH_*_MARKETING_IMAGE_ASSET). Supply both URLs here. Either this field or the legacy `imageUrl` can provide the landscape, but `square` has no legacy counterpart so it must be set here for Display.
                 video: Meta only (facebook, instagram). When set, creates a VIDEO ad on the legacy or attach shape. Mutually exclusive with `imageUrl`. For multi-creative, set `video` per entry inside `creatives[]` instead.
                 creatives: Meta-only. When present, switches to the multi-creative shape:
         creates 1 campaign + 1 ad set + N ads (one per entry here).
@@ -1425,6 +1427,7 @@ def register_generated_tools(mcp, _get_client):
                 call_to_action=call_to_action,
                 link_url=link_url,
                 image_url=image_url,
+                images=images,
                 video=video,
                 creatives=creatives,
                 ad_set_id=ad_set_id,

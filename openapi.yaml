@@ -18727,7 +18727,7 @@ paths:
 
         **Per-platform required fields** (the platform is inferred from `accountId`):
         - **Meta (facebook, instagram)**: `accountId`, `adAccountId`, `name`, `goal`, `budgetAmount`, `budgetType`, `headline`, `body`, `imageUrl`, `linkUrl`, `callToAction`.
-        - **Google Ads (Display)**: `accountId`, `adAccountId`, `name`, `goal`, `budgetAmount`, `budgetType`, `headline`, `body`, `linkUrl`, `imageUrl`, `businessName`. `longHeadline` defaults to `headline` if omitted (max 90 chars).
+        - **Google Ads (Display)**: `accountId`, `adAccountId`, `name`, `goal`, `budgetAmount`, `budgetType`, `headline`, `body`, `linkUrl`, `images.landscape` (1.91:1) + `images.square` (1:1), `businessName`. Google's Responsive Display Ads require BOTH a landscape and a square marketing image; supplying only one is rejected by Google as "Too few.". The legacy top-level `imageUrl` is accepted as an alias for `images.landscape` for back-compat. `longHeadline` defaults to `headline` if omitted (max 90 chars).
         - **Google Ads (Search)**: `accountId`, `adAccountId`, `name`, `goal`, `budgetAmount`, `budgetType`, `headline`, `body`, `linkUrl`, `businessName`. `imageUrl` is NOT required for Search. Set `campaignType: "search"`.
         - **TikTok**: `accountId`, `adAccountId`, `name`, `goal`, `budgetAmount`, `budgetType`, `body`, `linkUrl`, `imageUrl` (this field **carries the VIDEO URL** for TikTok; the TikTok ads endpoint is video-only and the field is named `imageUrl` for cross-platform consistency).
         - **Pinterest**: `accountId`, `adAccountId`, `name`, `goal`, `budgetAmount`, `budgetType`, `headline`, `body`, `imageUrl`, `linkUrl`. Optional `boardId` (auto-creates "Zernio Ads" board if omitted).
@@ -18758,7 +18758,13 @@ paths:
                 body: { type: string, description: "Required on legacy + attach shapes. For X/Twitter this is the tweet text (max 280 chars including a ~24-char URL when `linkUrl` is set). Max: Google=90, Pinterest=500." }
                 callToAction: { type: string, enum: [LEARN_MORE, SHOP_NOW, SIGN_UP, BOOK_TRAVEL, CONTACT_US, DOWNLOAD, GET_OFFER, GET_QUOTE, SUBSCRIBE, WATCH_MORE], description: "Required on legacy + attach shapes. Meta only." }
                 linkUrl: { type: string, format: uri, description: "Required on legacy + attach shapes. Skip for multi-creative." }
-                imageUrl: { type: string, format: uri, description: "Image creative for Meta/Google/Pinterest on legacy + attach shapes (mutually exclusive with `video`). Not required for Google Search campaigns. For TikTok, this field carries the VIDEO URL (the TikTok ads endpoint is video-only; the field retains the `imageUrl` name for cross-platform consistency). Ignored for X/Twitter." }
+                imageUrl: { type: string, format: uri, description: "Image creative for Meta/Google/Pinterest on legacy + attach shapes (mutually exclusive with `video`). Not required for Google Search campaigns. For TikTok, this field carries the VIDEO URL (the TikTok ads endpoint is video-only; the field retains the `imageUrl` name for cross-platform consistency). Ignored for X/Twitter. For Google Display, treated as the landscape image (alias of `images.landscape`); supply `images.square` alongside or the request is rejected." }
+                images:
+                  type: object
+                  description: "Google Display (Responsive Display Ads) only. Google RDA requires both a landscape (1.91:1) and a square (1:1) marketing image; sending only one is rejected upstream as 'Too few.' (NOT_ENOUGH_*_MARKETING_IMAGE_ASSET). Supply both URLs here. Either this field or the legacy `imageUrl` can provide the landscape, but `square` has no legacy counterpart so it must be set here for Display."
+                  properties:
+                    landscape: { type: string, format: uri, description: "Landscape 1.91:1 marketing image URL (e.g. 1200x628). Also accepted via the top-level `imageUrl` for backward compatibility." }
+                    square: { type: string, format: uri, description: "Square 1:1 marketing image URL (e.g. 1080x1080). Required for Google Display." }
                 video:
                   type: object
                   description: "Meta only (facebook, instagram). When set, creates a VIDEO ad on the legacy or attach shape. Mutually exclusive with `imageUrl`. For multi-creative, set `video` per entry inside `creatives[]` instead."
