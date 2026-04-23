@@ -18761,6 +18761,74 @@ paths:
           description: Ads add-on required
         '404': { $ref: '#/components/responses/NotFound' }
 
+  /v1/ads/{adId}/comments:
+    get:
+      operationId: getAdComments
+      tags: [Ads]
+      summary: List comments on an ad
+      description: |
+        Returns comments on an ad's underlying creative post. Useful for moderating or analyzing
+        engagement on dark posts (ad creatives that never went live organically), which the
+        regular `/v1/inbox/comments/{postId}` endpoint cannot serve because dark posts aren't
+        in Zernio's post database.
+
+        Resolves the ad's creative `effective_object_story_id` (Facebook) or
+        `effective_instagram_media_id` (Instagram) via the Marketing API on each call
+        (cached in-process by the platform client), then fetches comments from the Graph API.
+
+        **Meta-only**: other ad platforms (TikTok, LinkedIn, Pinterest, Google, X) do not
+        expose a public per-ad comments API and return `feature_not_available`.
+
+        Requires the Ads add-on. Response shape matches `/v1/inbox/comments/{postId}`.
+      security:
+        - bearerAuth: []
+      parameters:
+        - { name: adId, in: path, required: true, schema: { type: string }, description: "Internal Zernio ad ID (ObjectId)." }
+        - { name: limit, in: query, schema: { type: integer, minimum: 1, maximum: 100, default: 25 } }
+        - { name: cursor, in: query, schema: { type: string }, description: "Pagination cursor from a previous response." }
+      responses:
+        '200':
+          description: Comments on the ad
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [status, comments, pagination, meta]
+                properties:
+                  status: { type: string, enum: [success] }
+                  comments:
+                    type: array
+                    items:
+                      type: object
+                      description: Normalized comment. Same shape as /v1/inbox/comments/{postId} responses.
+                  pagination:
+                    type: object
+                    properties:
+                      hasMore: { type: boolean }
+                      cursor: { type: string }
+                  meta:
+                    type: object
+                    required: [platform, adId, platformAdId, effectiveStoryId, accountId, lastUpdated]
+                    properties:
+                      platform: { type: string, enum: [facebook, instagram] }
+                      adId: { type: string, description: "Internal Zernio ad ID." }
+                      platformAdId: { type: string, description: "Meta ad ID." }
+                      effectiveStoryId:
+                        type: string
+                        description: "Underlying post ID the comments belong to (effective_object_story_id for FB, effective_instagram_media_id for IG)."
+                      accountId: { type: string, description: "Social account ID (ads SocialAccount)." }
+                      lastUpdated: { type: string, format: date-time }
+        '400':
+          description: |
+            Invalid ad ID format, or the ad's creative format does not expose a commentable
+            underlying post (code `ad_not_commentable`).
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403':
+          description: Ads add-on required, or ad platform is not Meta (code `feature_not_available`).
+        '404': { $ref: '#/components/responses/NotFound' }
+        '422':
+          description: Ads connection missing or account token unavailable (code `ads_connection_required`).
+
   /v1/ads/accounts:
     get:
       operationId: listAdAccounts

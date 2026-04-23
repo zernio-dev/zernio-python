@@ -381,6 +381,7 @@ Both `from zernio import ...` and `from late import ...` work identically. The `
 | `ads.create_standalone_ad()` | Create standalone ad |
 | `ads.get_ad()` | Get ad details |
 | `ads.get_ad_analytics()` | Get ad analytics |
+| `ads.get_ad_comments()` | List comments on an ad |
 | `ads.update_ad()` | Update ad |
 | `ads.delete_ad()` | Cancel an ad |
 | `ads.boost_post()` | Boost post as ad |

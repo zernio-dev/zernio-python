@@ -1274,6 +1274,23 @@ def register_generated_tools(mcp, _get_client):
             return f"Error: {e}"
 
     @mcp.tool()
+    def ads_get_ad_comments(ad_id: str, limit: int = 25, cursor: str = "") -> str:
+        """List comments on an ad
+
+        Args:
+            ad_id: Internal Zernio ad ID (ObjectId). (required)
+            limit
+            cursor: Pagination cursor from a previous response."""
+        client = _get_client()
+        try:
+            response = client.ads.get_ad_comments(
+                ad_id=ad_id, limit=limit, cursor=cursor
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool()
     def ads_list_ad_accounts(account_id: str) -> str:
         """List ad accounts
 
