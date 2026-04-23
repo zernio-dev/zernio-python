@@ -994,6 +994,26 @@ components:
               type: string
               nullable: true
               description: Parent comment ID if this is a reply
+            ad:
+              type: object
+              description: |
+                Ad context. Present only when the comment was made on paid content.
+                Instagram: populated from the webhook payload's `value.media.ad_id`/`ad_title`.
+                Facebook: populated via a Graph API lookup of the parent post's `promotion_status`.
+                Absent for comments on organic posts that are not currently promoted.
+              properties:
+                id:
+                  type: string
+                  description: Meta ad ID (Instagram only).
+                title:
+                  type: string
+                  description: Ad creative title (Instagram only).
+                promotionStatus:
+                  type: string
+                  description: |
+                    Facebook promotion status returned by Graph API. Common values:
+                    "active" (organic post currently boosted), "ineligible" (dark
+                    post / ad creative — not promotable because it already is an ad).
         post:
           type: object
           required: [id, platformPostId]
