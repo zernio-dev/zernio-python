@@ -1354,6 +1354,7 @@ def register_generated_tools(mcp, _get_client):
         call_to_action: str = "",
         link_url: str = "",
         image_url: str = "",
+        video: str = "",
         creatives: str = "",
         ad_set_id: str = "",
         business_name: str = "",
@@ -1380,12 +1381,13 @@ def register_generated_tools(mcp, _get_client):
                 budget_amount: Required on legacy + multi-creative shapes. Inherited on attach.
                 budget_type: Required on legacy + multi-creative shapes. Inherited on attach.
                 currency
-                headline: Required on legacy + attach shapes (skip for multi-creative — use `creatives[].headline`). Max: Meta=255, Google=30, Pinterest=100
-                long_headline: Google Display only
-                body: Required on legacy + attach shapes. Max: Google=90, Pinterest=500
+                headline: Required for Meta, Google, and Pinterest on legacy + attach shapes (skip for multi-creative — use `creatives[].headline`). Ignored for TikTok and X/Twitter. Max: Meta=255, Google=30, Pinterest=100.
+                long_headline: Google Display only. Defaults to `headline` if omitted.
+                body: Required on legacy + attach shapes. For X/Twitter this is the tweet text (max 280 chars including a ~24-char URL when `linkUrl` is set). Max: Google=90, Pinterest=500.
                 call_to_action: Required on legacy + attach shapes. Meta only.
                 link_url: Required on legacy + attach shapes. Skip for multi-creative.
-                image_url: Required on legacy + attach shapes. Not required for Google Search campaigns.
+                image_url: Image creative for Meta/Google/Pinterest on legacy + attach shapes (mutually exclusive with `video`). Not required for Google Search campaigns. For TikTok, this field carries the VIDEO URL (the TikTok ads endpoint is video-only; the field retains the `imageUrl` name for cross-platform consistency). Ignored for X/Twitter.
+                video: Meta only (facebook, instagram). When set, creates a VIDEO ad on the legacy or attach shape. Mutually exclusive with `imageUrl`. For multi-creative, set `video` per entry inside `creatives[]` instead.
                 creatives: Meta-only. When present, switches to the multi-creative shape:
         creates 1 campaign + 1 ad set + N ads (one per entry here).
         Top-level `headline` / `body` / `imageUrl` / `linkUrl` /
@@ -1423,6 +1425,7 @@ def register_generated_tools(mcp, _get_client):
                 call_to_action=call_to_action,
                 link_url=link_url,
                 image_url=image_url,
+                video=video,
                 creatives=creatives,
                 ad_set_id=ad_set_id,
                 business_name=business_name,

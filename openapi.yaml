@@ -18724,6 +18724,18 @@ paths:
         3. **Attach to existing ad set** (Meta only — pass `adSetId` + a single creative). Adds one new ad to an existing ad set without creating a new campaign. Budget, targeting, goal are inherited from the ad set on Meta.
 
         `creatives[]` and `adSetId` are mutually exclusive; specifying both returns 400.
+
+        **Per-platform required fields** (the platform is inferred from `accountId`):
+        - **Meta (facebook, instagram)**: `accountId`, `adAccountId`, `name`, `goal`, `budgetAmount`, `budgetType`, `headline`, `body`, `imageUrl`, `linkUrl`, `callToAction`.
+        - **Google Ads (Display)**: `accountId`, `adAccountId`, `name`, `goal`, `budgetAmount`, `budgetType`, `headline`, `body`, `linkUrl`, `imageUrl`, `businessName`. `longHeadline` defaults to `headline` if omitted (max 90 chars).
+        - **Google Ads (Search)**: `accountId`, `adAccountId`, `name`, `goal`, `budgetAmount`, `budgetType`, `headline`, `body`, `linkUrl`, `businessName`. `imageUrl` is NOT required for Search. Set `campaignType: "search"`.
+        - **TikTok**: `accountId`, `adAccountId`, `name`, `goal`, `budgetAmount`, `budgetType`, `body`, `linkUrl`, `imageUrl` (this field **carries the VIDEO URL** for TikTok; the TikTok ads endpoint is video-only and the field is named `imageUrl` for cross-platform consistency).
+        - **Pinterest**: `accountId`, `adAccountId`, `name`, `goal`, `budgetAmount`, `budgetType`, `headline`, `body`, `imageUrl`, `linkUrl`. Optional `boardId` (auto-creates "Zernio Ads" board if omitted).
+        - **X / Twitter**: `accountId` (the posting account, internally resolved to the linked X Ads credential), `adAccountId`, `name`, `goal`, `budgetAmount`, `budgetType`, `body` (the tweet text, max 280 chars with `linkUrl` adding ~24). `headline`, `imageUrl`, `callToAction`, and targeting fields are ignored. Requires a connected X Ads account (`/v1/connect/twitter/ads`); otherwise 422.
+
+        **Budget minimums** are enforced per platform in USD: TikTok=$20, Pinterest=$5, all others=$1. If you pass `currency` other than USD, this minimum is currently still evaluated as USD. Pass the ad account's native currency on every request so Meta-side amount conversion is correct.
+
+        **Video ads (Meta only).** Meta (facebook, instagram) supports video creatives on all three shapes (legacy, multi-creative via `creatives[].video`, attach). Set `video: { url, thumbnailUrl }` at the request root (for legacy/attach) or per-entry inside `creatives[]` (for multi-creative). `video` and `imageUrl` are mutually exclusive per creative; supply exactly one. `video.thumbnailUrl` is required because Meta requires a thumbnail on every video creative. The video is uploaded to Meta via chunked transfer and the request blocks on Meta's transcoding (`status.video_status === 'ready'`). This path can take several minutes for longer videos; this endpoint is configured with `maxDuration = 800` on Vercel (13 min) to cover it, but your HTTP client should allow for the same. If transcoding hasn't finished within 10 minutes, the request fails with a `platform_error`. Video on non-Meta platforms is NOT supported here: TikTok uses its own flow (pass the video URL via `imageUrl`); other platforms are image-only.
       security:
         - bearerAuth: []
       requestBody:
@@ -18741,12 +18753,19 @@ paths:
                 budgetAmount: { type: number, description: "Required on legacy + multi-creative shapes. Inherited on attach." }
                 budgetType: { type: string, enum: [daily, lifetime], description: "Required on legacy + multi-creative shapes. Inherited on attach." }
                 currency: { type: string }
-                headline: { type: string, description: "Required on legacy + attach shapes (skip for multi-creative — use `creatives[].headline`). Max: Meta=255, Google=30, Pinterest=100" }
-                longHeadline: { type: string, maxLength: 90, description: "Google Display only" }
-                body: { type: string, description: "Required on legacy + attach shapes. Max: Google=90, Pinterest=500" }
+                headline: { type: string, description: "Required for Meta, Google, and Pinterest on legacy + attach shapes (skip for multi-creative — use `creatives[].headline`). Ignored for TikTok and X/Twitter. Max: Meta=255, Google=30, Pinterest=100." }
+                longHeadline: { type: string, maxLength: 90, description: "Google Display only. Defaults to `headline` if omitted." }
+                body: { type: string, description: "Required on legacy + attach shapes. For X/Twitter this is the tweet text (max 280 chars including a ~24-char URL when `linkUrl` is set). Max: Google=90, Pinterest=500." }
                 callToAction: { type: string, enum: [LEARN_MORE, SHOP_NOW, SIGN_UP, BOOK_TRAVEL, CONTACT_US, DOWNLOAD, GET_OFFER, GET_QUOTE, SUBSCRIBE, WATCH_MORE], description: "Required on legacy + attach shapes. Meta only." }
                 linkUrl: { type: string, format: uri, description: "Required on legacy + attach shapes. Skip for multi-creative." }
-                imageUrl: { type: string, format: uri, description: "Required on legacy + attach shapes. Not required for Google Search campaigns." }
+                imageUrl: { type: string, format: uri, description: "Image creative for Meta/Google/Pinterest on legacy + attach shapes (mutually exclusive with `video`). Not required for Google Search campaigns. For TikTok, this field carries the VIDEO URL (the TikTok ads endpoint is video-only; the field retains the `imageUrl` name for cross-platform consistency). Ignored for X/Twitter." }
+                video:
+                  type: object
+                  description: "Meta only (facebook, instagram). When set, creates a VIDEO ad on the legacy or attach shape. Mutually exclusive with `imageUrl`. For multi-creative, set `video` per entry inside `creatives[]` instead."
+                  required: [url, thumbnailUrl]
+                  properties:
+                    url: { type: string, format: uri, description: "Public URL of the video. Uploaded to Meta via chunked transfer on /act_X/advideos; then the request blocks on Meta's transcoding until status.video_status === 'ready'." }
+                    thumbnailUrl: { type: string, format: uri, description: "Public URL of a still-image thumbnail for the video. Required by Meta on every video creative. Uploaded to Meta as an ad image and referenced as the thumbnail in object_story_spec.video_data." }
                 creatives:
                   type: array
                   minItems: 1
@@ -18757,11 +18776,19 @@ paths:
                     `callToAction` are ignored in this mode. Mutually exclusive with `adSetId`.
                   items:
                     type: object
-                    required: [headline, body, imageUrl, linkUrl, callToAction]
+                    required: [headline, body, linkUrl, callToAction]
+                    description: "Each creative must supply EXACTLY ONE of `imageUrl` (image creative) or `video` (video creative)."
                     properties:
                       headline: { type: string, maxLength: 255 }
                       body: { type: string }
-                      imageUrl: { type: string, format: uri }
+                      imageUrl: { type: string, format: uri, description: "Image creative. Mutually exclusive with `video`." }
+                      video:
+                        type: object
+                        description: "Video creative for this entry. Mutually exclusive with `imageUrl`."
+                        required: [url, thumbnailUrl]
+                        properties:
+                          url: { type: string, format: uri }
+                          thumbnailUrl: { type: string, format: uri }
                       linkUrl: { type: string, format: uri }
                       callToAction: { type: string, enum: [LEARN_MORE, SHOP_NOW, SIGN_UP, BOOK_TRAVEL, CONTACT_US, DOWNLOAD, GET_OFFER, GET_QUOTE, SUBSCRIBE, WATCH_MORE] }
                 adSetId:
