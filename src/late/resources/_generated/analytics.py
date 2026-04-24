@@ -81,6 +81,67 @@ class AnalyticsResource:
         )
         return self._client._get("/v1/analytics", params=params)
 
+    def get_you_tube_channel_insights(
+        self,
+        account_id: str,
+        *,
+        metrics: str | None = None,
+        since: str | None = None,
+        until: str | None = None,
+        metric_type: str | None = "total_value",
+    ) -> dict[str, Any]:
+        """Get YouTube channel-level insights"""
+        params = self._build_params(
+            account_id=account_id,
+            metrics=metrics,
+            since=since,
+            until=until,
+            metric_type=metric_type,
+        )
+        return self._client._get(
+            "/v1/analytics/youtube/channel-insights", params=params
+        )
+
+    def get_linked_in_org_aggregate_analytics(
+        self,
+        account_id: str,
+        *,
+        metrics: str | None = None,
+        since: str | None = None,
+        until: str | None = None,
+        metric_type: str | None = "total_value",
+    ) -> dict[str, Any]:
+        """Get LinkedIn organization page aggregate analytics"""
+        params = self._build_params(
+            account_id=account_id,
+            metrics=metrics,
+            since=since,
+            until=until,
+            metric_type=metric_type,
+        )
+        return self._client._get(
+            "/v1/analytics/linkedin/org-aggregate-analytics", params=params
+        )
+
+    def get_tik_tok_account_insights(
+        self,
+        account_id: str,
+        *,
+        metrics: str | None = None,
+        since: str | None = None,
+        until: str | None = None,
+        metric_type: str | None = "total_value",
+    ) -> dict[str, Any]:
+        """Get TikTok account-level insights"""
+        params = self._build_params(
+            account_id=account_id,
+            metrics=metrics,
+            since=since,
+            until=until,
+            metric_type=metric_type,
+        )
+        return self._client._get("/v1/analytics/tiktok/account-insights", params=params)
+
     def get_you_tube_daily_views(
         self,
         video_id: str,
@@ -97,6 +158,25 @@ class AnalyticsResource:
             end_date=end_date,
         )
         return self._client._get("/v1/analytics/youtube/daily-views", params=params)
+
+    def get_facebook_page_insights(
+        self,
+        account_id: str,
+        *,
+        metrics: str | None = None,
+        since: str | None = None,
+        until: str | None = None,
+        metric_type: str | None = "total_value",
+    ) -> dict[str, Any]:
+        """Get Facebook Page insights"""
+        params = self._build_params(
+            account_id=account_id,
+            metrics=metrics,
+            since=since,
+            until=until,
+            metric_type=metric_type,
+        )
+        return self._client._get("/v1/analytics/facebook/page-insights", params=params)
 
     def get_instagram_account_insights(
         self,
@@ -119,6 +199,27 @@ class AnalyticsResource:
         )
         return self._client._get(
             "/v1/analytics/instagram/account-insights", params=params
+        )
+
+    def get_instagram_follower_history(
+        self,
+        account_id: str,
+        *,
+        metrics: str | None = None,
+        since: str | None = None,
+        until: str | None = None,
+        metric_type: str | None = "total_value",
+    ) -> dict[str, Any]:
+        """Get Instagram follower history"""
+        params = self._build_params(
+            account_id=account_id,
+            metrics=metrics,
+            since=since,
+            until=until,
+            metric_type=metric_type,
+        )
+        return self._client._get(
+            "/v1/analytics/instagram/follower-history", params=params
         )
 
     def get_instagram_demographics(
@@ -350,6 +451,69 @@ class AnalyticsResource:
         )
         return await self._client._aget("/v1/analytics", params=params)
 
+    async def aget_you_tube_channel_insights(
+        self,
+        account_id: str,
+        *,
+        metrics: str | None = None,
+        since: str | None = None,
+        until: str | None = None,
+        metric_type: str | None = "total_value",
+    ) -> dict[str, Any]:
+        """Get YouTube channel-level insights (async)"""
+        params = self._build_params(
+            account_id=account_id,
+            metrics=metrics,
+            since=since,
+            until=until,
+            metric_type=metric_type,
+        )
+        return await self._client._aget(
+            "/v1/analytics/youtube/channel-insights", params=params
+        )
+
+    async def aget_linked_in_org_aggregate_analytics(
+        self,
+        account_id: str,
+        *,
+        metrics: str | None = None,
+        since: str | None = None,
+        until: str | None = None,
+        metric_type: str | None = "total_value",
+    ) -> dict[str, Any]:
+        """Get LinkedIn organization page aggregate analytics (async)"""
+        params = self._build_params(
+            account_id=account_id,
+            metrics=metrics,
+            since=since,
+            until=until,
+            metric_type=metric_type,
+        )
+        return await self._client._aget(
+            "/v1/analytics/linkedin/org-aggregate-analytics", params=params
+        )
+
+    async def aget_tik_tok_account_insights(
+        self,
+        account_id: str,
+        *,
+        metrics: str | None = None,
+        since: str | None = None,
+        until: str | None = None,
+        metric_type: str | None = "total_value",
+    ) -> dict[str, Any]:
+        """Get TikTok account-level insights (async)"""
+        params = self._build_params(
+            account_id=account_id,
+            metrics=metrics,
+            since=since,
+            until=until,
+            metric_type=metric_type,
+        )
+        return await self._client._aget(
+            "/v1/analytics/tiktok/account-insights", params=params
+        )
+
     async def aget_you_tube_daily_views(
         self,
         video_id: str,
@@ -367,6 +531,27 @@ class AnalyticsResource:
         )
         return await self._client._aget(
             "/v1/analytics/youtube/daily-views", params=params
+        )
+
+    async def aget_facebook_page_insights(
+        self,
+        account_id: str,
+        *,
+        metrics: str | None = None,
+        since: str | None = None,
+        until: str | None = None,
+        metric_type: str | None = "total_value",
+    ) -> dict[str, Any]:
+        """Get Facebook Page insights (async)"""
+        params = self._build_params(
+            account_id=account_id,
+            metrics=metrics,
+            since=since,
+            until=until,
+            metric_type=metric_type,
+        )
+        return await self._client._aget(
+            "/v1/analytics/facebook/page-insights", params=params
         )
 
     async def aget_instagram_account_insights(
@@ -390,6 +575,27 @@ class AnalyticsResource:
         )
         return await self._client._aget(
             "/v1/analytics/instagram/account-insights", params=params
+        )
+
+    async def aget_instagram_follower_history(
+        self,
+        account_id: str,
+        *,
+        metrics: str | None = None,
+        since: str | None = None,
+        until: str | None = None,
+        metric_type: str | None = "total_value",
+    ) -> dict[str, Any]:
+        """Get Instagram follower history (async)"""
+        params = self._build_params(
+            account_id=account_id,
+            metrics=metrics,
+            since=since,
+            until=until,
+            metric_type=metric_type,
+        )
+        return await self._client._aget(
+            "/v1/analytics/instagram/follower-history", params=params
         )
 
     async def aget_instagram_demographics(

@@ -1575,6 +1575,145 @@ def register_generated_tools(mcp, _get_client):
             return f"Error: {e}"
 
     @mcp.tool()
+    def analytics_get_you_tube_channel_insights(
+        account_id: str,
+        metrics: str = "",
+        since: str = "",
+        until: str = "",
+        metric_type: str = "total_value",
+    ) -> str:
+        """Get YouTube channel-level insights
+
+            Args:
+                account_id: The Zernio SocialAccount ID for the YouTube account. (required)
+                metrics: Comma-separated list. Defaults to "views,estimatedMinutesWatched,subscribersGained,subscribersLost".
+
+        Live YouTube Analytics v2 metrics:
+          - views
+          - estimatedMinutesWatched
+          - averageViewDuration          (ratio - weighted mean computed across days)
+          - subscribersGained
+          - subscribersLost
+
+        Zernio-synthesized from daily follower snapshots (cross-platform parity):
+          - followers_gained
+          - followers_lost
+                since: Start date (YYYY-MM-DD). Defaults to 30 days ago.
+                until: End date (YYYY-MM-DD). Defaults to today. YouTube Analytics has a 2-3 day delay,
+        so the fetch is internally clamped to 3 days ago; any requested range extending
+        beyond that returns zero values for the tail days. The response's dateRange.until
+        field reflects your requested value.
+                metric_type: "total_value" (default) returns aggregated totals.
+        "time_series" returns per-day values in the "values" array."""
+        client = _get_client()
+        try:
+            response = client.analytics.get_you_tube_channel_insights(
+                account_id=account_id,
+                metrics=metrics,
+                since=since,
+                until=until,
+                metric_type=metric_type,
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool()
+    def analytics_get_linked_in_org_aggregate_analytics(
+        account_id: str,
+        metrics: str = "",
+        since: str = "",
+        until: str = "",
+        metric_type: str = "total_value",
+    ) -> str:
+        """Get LinkedIn organization page aggregate analytics
+
+            Args:
+                account_id: The Zernio SocialAccount ID for the LinkedIn organization account. (required)
+                metrics: Comma-separated list. Defaults to
+        "impressions,clicks,engagement_rate,organic_followers_gained,followers_gained,followers_lost".
+
+        Share statistics (support both total_value and time_series):
+          - impressions
+          - unique_impressions
+          - clicks
+          - likes
+          - comments
+          - shares
+          - engagement_rate       (0..1, LinkedIn-computed)
+
+        Follower-gain statistics (support total_value and time_series):
+          - organic_followers_gained   (per-day organic gains for time_series; sum of organic gains over the range for total_value)
+          - paid_followers_gained      (per-day paid gains for time_series; sum of paid gains over the range for total_value)
+
+        Page-view statistics (total_value ONLY - LinkedIn platform limit):
+          - page_views_total
+          - page_views_overview
+          - page_views_careers
+          - page_views_jobs
+          - page_views_life
+
+        Zernio-synthesized from daily follower snapshots:
+          - followers_gained
+          - followers_lost
+                since: Start date (YYYY-MM-DD). Defaults to 30 days ago.
+                until: End date (YYYY-MM-DD). Defaults to today.
+                metric_type"""
+        client = _get_client()
+        try:
+            response = client.analytics.get_linked_in_org_aggregate_analytics(
+                account_id=account_id,
+                metrics=metrics,
+                since=since,
+                until=until,
+                metric_type=metric_type,
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool()
+    def analytics_get_tik_tok_account_insights(
+        account_id: str,
+        metrics: str = "",
+        since: str = "",
+        until: str = "",
+        metric_type: str = "total_value",
+    ) -> str:
+        """Get TikTok account-level insights
+
+            Args:
+                account_id: The Zernio SocialAccount ID for the TikTok account. (required)
+                metrics: Comma-separated list. Defaults to
+        "follower_count,likes_count,video_count,followers_gained,followers_lost".
+
+        Live from /v2/user/info/ (requires user.info.stats scope):
+          - follower_count  (cumulative; time series joined from AccountStats)
+          - following_count (cumulative; time series joined from AccountStats.metadata)
+          - likes_count     (cumulative; time series joined from AccountStats.metadata)
+          - video_count     (cumulative; time series joined from AccountStats.metadata)
+
+        Zernio-synthesized:
+          - followers_gained  (sum of positive daily follower deltas)
+          - followers_lost    (sum of absolute negative daily deltas)
+                since: Start date (YYYY-MM-DD). Defaults to 30 days ago.
+                until: End date (YYYY-MM-DD). Defaults to today.
+                metric_type: "total_value" returns the latest cumulative counter value.
+        "time_series" returns daily values joined from AccountStats snapshots."""
+        client = _get_client()
+        try:
+            response = client.analytics.get_tik_tok_account_insights(
+                account_id=account_id,
+                metrics=metrics,
+                since=since,
+                until=until,
+                metric_type=metric_type,
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool()
     def analytics_get_you_tube_daily_views(
         video_id: str, account_id: str, start_date: str = "", end_date: str = ""
     ) -> str:
@@ -1598,6 +1737,50 @@ def register_generated_tools(mcp, _get_client):
             return f"Error: {e}"
 
     @mcp.tool()
+    def analytics_get_facebook_page_insights(
+        account_id: str,
+        metrics: str = "",
+        since: str = "",
+        until: str = "",
+        metric_type: str = "total_value",
+    ) -> str:
+        """Get Facebook Page insights
+
+            Args:
+                account_id: The Zernio SocialAccount ID for the connected Facebook Page. (required)
+                metrics: Comma-separated list of metrics. Defaults to
+        "page_media_view,page_post_engagements,page_follows,followers_gained,followers_lost".
+
+        Live Meta metrics (current names, post-Nov-2025):
+          - page_media_view       (replaces deprecated page_impressions)
+          - page_views_total
+          - page_post_engagements
+          - page_video_views
+          - page_video_view_time
+          - page_follows          (replaces deprecated page_fans)
+
+        Zernio-synthesized from daily follower snapshots (filling the Nov-2025 gap
+        left by the page_fan_adds / page_fan_removes deprecation):
+          - followers_gained
+          - followers_lost
+                since: Start date (YYYY-MM-DD). Defaults to 30 days ago.
+                until: End date (YYYY-MM-DD). Defaults to today.
+                metric_type: "total_value" (default) returns aggregated totals only.
+        "time_series" returns daily values in the "values" array."""
+        client = _get_client()
+        try:
+            response = client.analytics.get_facebook_page_insights(
+                account_id=account_id,
+                metrics=metrics,
+                since=since,
+                until=until,
+                metric_type=metric_type,
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool()
     def analytics_get_instagram_account_insights(
         account_id: str,
         metrics: str = "",
@@ -1613,7 +1796,10 @@ def register_generated_tools(mcp, _get_client):
                 metrics: Comma-separated list of metrics. Defaults to "reach,views,accounts_engaged,total_interactions".
         Valid metrics: reach, views, accounts_engaged, total_interactions, comments, likes, saves, shares,
         replies, reposts, follows_and_unfollows, profile_links_taps.
-        Note: only "reach" supports metricType=time_series. All other metrics are total_value only.
+        Note: only "reach" supports metricType=time_series. All other metrics (including
+        follows_and_unfollows) are total_value only. This is an Instagram Graph API limitation,
+        not a Zernio limitation - the IG API does not return time-series data for these metrics.
+        For a daily running follower count, use /v1/analytics/instagram/follower-history instead.
                 since: Start date (YYYY-MM-DD). Defaults to 30 days ago.
                 until: End date (YYYY-MM-DD). Defaults to today.
                 metric_type: "total_value" (default) returns aggregated totals and supports breakdowns.
@@ -1629,6 +1815,39 @@ def register_generated_tools(mcp, _get_client):
                 until=until,
                 metric_type=metric_type,
                 breakdown=breakdown,
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool()
+    def analytics_get_instagram_follower_history(
+        account_id: str,
+        metrics: str = "",
+        since: str = "",
+        until: str = "",
+        metric_type: str = "total_value",
+    ) -> str:
+        """Get Instagram follower history
+
+            Args:
+                account_id: The Zernio SocialAccount ID for the Instagram account. (required)
+                metrics: Comma-separated list. Defaults to "follower_count,followers_gained,followers_lost".
+          - follower_count   : per-day raw follower count
+          - followers_gained : sum of positive daily deltas
+          - followers_lost   : sum of absolute negative daily deltas
+                since: Start date (YYYY-MM-DD). Defaults to 30 days ago.
+                until: End date (YYYY-MM-DD). Defaults to today.
+                metric_type: "total_value" returns aggregated totals (latest for follower_count, sum for gained/lost).
+        "time_series" returns per-day values in the "values" array."""
+        client = _get_client()
+        try:
+            response = client.analytics.get_instagram_follower_history(
+                account_id=account_id,
+                metrics=metrics,
+                since=since,
+                until=until,
+                metric_type=metric_type,
             )
             return _format_response(response)
         except Exception as e:
@@ -1855,7 +2074,7 @@ def register_generated_tools(mcp, _get_client):
             aggregation: TOTAL (default, lifetime totals) or DAILY (time series). MEMBERS_REACHED not available with DAILY.
             start_date: Start date (YYYY-MM-DD). If omitted, returns lifetime analytics.
             end_date: End date (YYYY-MM-DD, exclusive). Defaults to today if omitted.
-            metrics: Comma-separated metrics: IMPRESSION, MEMBERS_REACHED, REACTION, COMMENT, RESHARE. Omit for all."""
+            metrics: Comma-separated metrics: IMPRESSION, MEMBERS_REACHED, REACTION, COMMENT, RESHARE, POST_SAVE, POST_SEND. Omit for all."""
         client = _get_client()
         try:
             response = client.analytics.get_linked_in_aggregate_analytics(

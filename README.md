@@ -223,15 +223,20 @@ Both `from zernio import ...` and `from late import ...` work identically. The `
 | `analytics.get_best_time_to_post()` | Get best times to post |
 | `analytics.get_content_decay()` | Get content performance decay |
 | `analytics.get_daily_metrics()` | Get daily aggregated metrics |
+| `analytics.get_facebook_page_insights()` | Get Facebook Page insights |
 | `analytics.get_google_business_performance()` | Get GBP performance metrics |
 | `analytics.get_google_business_search_keywords()` | Get GBP search keywords |
 | `analytics.get_instagram_account_insights()` | Get Instagram insights |
 | `analytics.get_instagram_demographics()` | Get Instagram demographics |
+| `analytics.get_instagram_follower_history()` | Get Instagram follower history |
 | `analytics.get_linked_in_aggregate_analytics()` | Get LinkedIn aggregate stats |
+| `analytics.get_linked_in_org_aggregate_analytics()` | Get LinkedIn organization page aggregate analytics |
 | `analytics.get_linked_in_post_analytics()` | Get LinkedIn post stats |
 | `analytics.get_linked_in_post_reactions()` | Get LinkedIn post reactions |
 | `analytics.get_post_timeline()` | Get post analytics timeline |
 | `analytics.get_posting_frequency()` | Get frequency vs engagement |
+| `analytics.get_tik_tok_account_insights()` | Get TikTok account-level insights |
+| `analytics.get_you_tube_channel_insights()` | Get YouTube channel-level insights |
 | `analytics.get_you_tube_daily_views()` | Get YouTube daily views |
 | `analytics.get_you_tube_demographics()` | Get YouTube demographics |
 

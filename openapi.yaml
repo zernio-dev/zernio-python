@@ -653,6 +653,12 @@ components:
               description: URL to redirect user for reauthorization
     InstagramAccountInsightsResponse:
       type: object
+      description: |
+        Shared account-insights response envelope used by every platform-level
+        analytics endpoint (/v1/analytics/{facebook|instagram|youtube|linkedin|tiktok}/*).
+        The name is historical - the shape was first shipped for Instagram and every
+        new platform endpoint reuses it for response-shape consistency. The platform
+        field echoes back which platform served the response.
       properties:
         success:
           type: boolean
@@ -662,7 +668,8 @@ components:
           description: The Zernio SocialAccount ID
         platform:
           type: string
-          example: "instagram"
+          description: Platform that served this response.
+          enum: [facebook, instagram, youtube, linkedin, tiktok]
         dateRange:
           type: object
           properties:
@@ -2978,6 +2985,8 @@ components:
             reactions: { type: integer, description: Total reactions across all posts }
             comments: { type: integer, description: Total comments across all posts }
             shares: { type: integer, description: Total reshares across all posts }
+            saves: { type: integer, description: Total times posts were saved (personal accounts only) }
+            sends: { type: integer, description: Total times posts were sent via LinkedIn messaging (personal accounts only) }
             engagementRate: { type: number, description: Overall engagement rate as percentage }
         note: { type: string }
         lastUpdated: { type: string, format: date-time }
@@ -3023,6 +3032,22 @@ components:
                   count: { type: integer }
             shares:
               type: array
+              items:
+                type: object
+                properties:
+                  date: { type: string, format: date }
+                  count: { type: integer }
+            saves:
+              type: array
+              description: Daily saves (personal accounts only)
+              items:
+                type: object
+                properties:
+                  date: { type: string, format: date }
+                  count: { type: integer }
+            sends:
+              type: array
+              description: Daily sends via LinkedIn messaging (personal accounts only)
               items:
                 type: object
                 properties:
@@ -4486,6 +4511,276 @@ paths:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
 
+  /v1/analytics/youtube/channel-insights:
+    get:
+      operationId: getYouTubeChannelInsights
+      tags: [Analytics]
+      summary: Get YouTube channel-level insights
+      description: |
+        Returns channel-scoped aggregate metrics from YouTube Analytics API v2. Saves you
+        from looping /v1/analytics/youtube/daily-views over every video when you only need
+        channel totals.
+
+        Response shape matches /v1/analytics/instagram/account-insights so the same client
+        handling works. Requires yt-analytics.readonly scope (412 with reauthorizeUrl if
+        missing). Data has a 2-3 day delay (endDate is clamped accordingly). Max 89 days,
+        defaults to last 30 days. Requires the Analytics add-on.
+
+        NOT exposed: impressions (Studio thumbnail impressions) and impressionsClickThroughRate.
+        YouTube Analytics API v2 does not expose these for any principal type, not channel
+        owners, not Partner Program channels, not content owners with CMS access. The only way
+        to get them is Studio CSV export. This is a Google-side limitation.
+      parameters:
+        - name: accountId
+          in: query
+          required: true
+          schema: { type: string }
+          description: The Zernio SocialAccount ID for the YouTube account.
+        - name: metrics
+          in: query
+          schema: { type: string }
+          description: |
+            Comma-separated list. Defaults to "views,estimatedMinutesWatched,subscribersGained,subscribersLost".
+
+            Live YouTube Analytics v2 metrics:
+              - views
+              - estimatedMinutesWatched
+              - averageViewDuration          (ratio - weighted mean computed across days)
+              - subscribersGained
+              - subscribersLost
+
+            Zernio-synthesized from daily follower snapshots (cross-platform parity):
+              - followers_gained
+              - followers_lost
+        - name: since
+          in: query
+          schema: { type: string, format: date }
+          description: Start date (YYYY-MM-DD). Defaults to 30 days ago.
+        - name: until
+          in: query
+          schema: { type: string, format: date }
+          description: |
+            End date (YYYY-MM-DD). Defaults to today. YouTube Analytics has a 2-3 day delay,
+            so the fetch is internally clamped to 3 days ago; any requested range extending
+            beyond that returns zero values for the tail days. The response's dateRange.until
+            field reflects your requested value.
+        - name: metricType
+          in: query
+          schema:
+            type: string
+            enum: [time_series, total_value]
+            default: total_value
+          description: |
+            "total_value" (default) returns aggregated totals.
+            "time_series" returns per-day values in the "values" array.
+      responses:
+        '200':
+          description: Channel insights data
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InstagramAccountInsightsResponse'
+        '400':
+          description: Bad request (invalid accountId / metrics / metricType / date range, or account is not a YouTube account)
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '402':
+          description: Analytics add-on required
+        '404':
+          description: Account not found
+        '412':
+          description: Missing YouTube Analytics scope
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/YouTubeScopeMissingResponse'
+
+  /v1/analytics/linkedin/org-aggregate-analytics:
+    get:
+      operationId: getLinkedInOrgAggregateAnalytics
+      tags: [Analytics]
+      summary: Get LinkedIn organization page aggregate analytics
+      description: |
+        Returns aggregate analytics for a LinkedIn organization page. Parallel to
+        /v1/accounts/{id}/linkedin-aggregate-analytics (which handles personal accounts only).
+        Backed by LinkedIn's organizationalEntityShareStatistics,
+        organizationalEntityFollowerStatistics, and organizationPageStatistics endpoints.
+
+        Response shape matches /v1/analytics/instagram/account-insights. Max 89 days,
+        defaults to last 30 days. Requires the Analytics add-on.
+
+        Scope requirements: r_organization_social, r_organization_followers, and
+        r_organization_admin must all be present on the account. Accounts connected before
+        these scopes were included in the OAuth flow will return 412 with a reauth hint.
+
+        Enforced by this endpoint:
+          - Page-view metrics accept only metricType=total_value (LinkedIn omits per-day
+            segmentation even when the API is called with DAY granularity, so a time-series
+            response would be meaningless).
+          - Date range capped at 89 days.
+
+        LinkedIn-side platform limits (not re-enforced here, but worth knowing for larger
+        ranges in a future release):
+          - Follower stats: rolling 12-month window, end must be no later than 2 days ago.
+          - Share stats: rolling 12-month window.
+      parameters:
+        - name: accountId
+          in: query
+          required: true
+          schema: { type: string }
+          description: The Zernio SocialAccount ID for the LinkedIn organization account.
+        - name: metrics
+          in: query
+          schema: { type: string }
+          description: |
+            Comma-separated list. Defaults to
+            "impressions,clicks,engagement_rate,organic_followers_gained,followers_gained,followers_lost".
+
+            Share statistics (support both total_value and time_series):
+              - impressions
+              - unique_impressions
+              - clicks
+              - likes
+              - comments
+              - shares
+              - engagement_rate       (0..1, LinkedIn-computed)
+
+            Follower-gain statistics (support total_value and time_series):
+              - organic_followers_gained   (per-day organic gains for time_series; sum of organic gains over the range for total_value)
+              - paid_followers_gained      (per-day paid gains for time_series; sum of paid gains over the range for total_value)
+
+            Page-view statistics (total_value ONLY - LinkedIn platform limit):
+              - page_views_total
+              - page_views_overview
+              - page_views_careers
+              - page_views_jobs
+              - page_views_life
+
+            Zernio-synthesized from daily follower snapshots:
+              - followers_gained
+              - followers_lost
+        - name: since
+          in: query
+          schema: { type: string, format: date }
+          description: Start date (YYYY-MM-DD). Defaults to 30 days ago.
+        - name: until
+          in: query
+          schema: { type: string, format: date }
+          description: End date (YYYY-MM-DD). Defaults to today.
+        - name: metricType
+          in: query
+          schema:
+            type: string
+            enum: [time_series, total_value]
+            default: total_value
+      responses:
+        '200':
+          description: Organization analytics data
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InstagramAccountInsightsResponse'
+        '400':
+          description: |
+            Bad request. Common cases:
+              - Account is a personal LinkedIn account, not organization (code personal_account_not_supported, use /v1/accounts/{id}/linkedin-aggregate-analytics instead)
+              - Invalid metric name, metricType, or date range
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '402':
+          description: Analytics add-on required
+        '403':
+          description: |
+            Platform error. The authenticated member lacks the required
+            ADMINISTRATOR role on the organization. LinkedIn enforces admin-only
+            access for all three org statistics endpoints. The error envelope is
+            type platform_error, and the raw LinkedIn error is echoed in the
+            platformError field.
+        '404':
+          description: Account not found
+        '412':
+          description: Missing LinkedIn organization analytics scopes (r_organization_social + r_organization_followers + r_organization_admin)
+
+  /v1/analytics/tiktok/account-insights:
+    get:
+      operationId: getTikTokAccountInsights
+      tags: [Analytics]
+      summary: Get TikTok account-level insights
+      description: |
+        Returns account-level TikTok insights from /v2/user/info/ (live) plus historical
+        time series joined from Zernio's daily snapshotter (AccountStats).
+
+        Response shape matches /v1/analytics/instagram/account-insights. Max 89 days,
+        defaults to last 30 days. Requires the Analytics add-on and the user.info.stats
+        scope on the account (412 if missing).
+
+        Scope intentionally narrow. TikTok's public API exposes only the four counter
+        metrics below. The deep metrics that live in TikTok Studio are NOT available on any
+        public TikTok API, even for Business accounts:
+          - profile_views
+          - account-level impressions / reach
+          - follower inflow / outflow breakdown
+          - video watch time, average watch time, full-watched rate
+          - impression_sources (FYP / Following / Hashtag / Search / Personal profile)
+
+        TikTok's Research API doesn't expose those fields either, and is restricted to
+        non-commercial academic use per TikTok's eligibility policy. There is no public
+        API workaround. Post-level metrics (views, likes, comments, shares per video) are
+        available via /v1/analytics?postId=... from TikTok's /v2/video/query/.
+      parameters:
+        - name: accountId
+          in: query
+          required: true
+          schema: { type: string }
+          description: The Zernio SocialAccount ID for the TikTok account.
+        - name: metrics
+          in: query
+          schema: { type: string }
+          description: |
+            Comma-separated list. Defaults to
+            "follower_count,likes_count,video_count,followers_gained,followers_lost".
+
+            Live from /v2/user/info/ (requires user.info.stats scope):
+              - follower_count  (cumulative; time series joined from AccountStats)
+              - following_count (cumulative; time series joined from AccountStats.metadata)
+              - likes_count     (cumulative; time series joined from AccountStats.metadata)
+              - video_count     (cumulative; time series joined from AccountStats.metadata)
+
+            Zernio-synthesized:
+              - followers_gained  (sum of positive daily follower deltas)
+              - followers_lost    (sum of absolute negative daily deltas)
+        - name: since
+          in: query
+          schema: { type: string, format: date }
+          description: Start date (YYYY-MM-DD). Defaults to 30 days ago.
+        - name: until
+          in: query
+          schema: { type: string, format: date }
+          description: End date (YYYY-MM-DD). Defaults to today.
+        - name: metricType
+          in: query
+          schema:
+            type: string
+            enum: [time_series, total_value]
+            default: total_value
+          description: |
+            "total_value" returns the latest cumulative counter value.
+            "time_series" returns daily values joined from AccountStats snapshots.
+      responses:
+        '200':
+          description: Account insights data
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InstagramAccountInsightsResponse'
+        '400':
+          description: Bad request (invalid accountId / metrics / metricType / date range, or account is not a TikTok account)
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '402':
+          description: Analytics add-on required
+        '404':
+          description: Account not found
+        '412':
+          description: Missing user.info.stats scope
+
   /v1/analytics/youtube/daily-views:
     get:
       operationId: getYouTubeDailyViews
@@ -4612,6 +4907,111 @@ paths:
                   success: { type: boolean, example: false }
                   error: { type: string }
 
+  /v1/analytics/facebook/page-insights:
+    get:
+      operationId: getFacebookPageInsights
+      tags: [Analytics]
+      summary: Get Facebook Page insights
+      description: |
+        Returns page-level Facebook insights (media views, views, post engagements, video metrics,
+        follower counts). Response shape matches /v1/analytics/instagram/account-insights so the
+        same client handling works across platforms.
+
+        Metric names track the current (post-November 2025) Meta Graph API. The legacy
+        page_impressions / page_fans / page_fan_adds / page_fan_removes metrics were deprecated
+        by Meta on November 15, 2025 and are NOT accepted by this endpoint. Use the replacements
+        below. Because Meta did not provide direct adds/removes replacements, Zernio synthesizes
+        followers_gained / followers_lost from the daily follower snapshotter.
+
+        Max 89 days, defaults to last 30 days. Requires the Analytics add-on.
+      parameters:
+        - name: accountId
+          in: query
+          required: true
+          schema: { type: string }
+          description: The Zernio SocialAccount ID for the connected Facebook Page.
+        - name: metrics
+          in: query
+          schema: { type: string }
+          description: |
+            Comma-separated list of metrics. Defaults to
+            "page_media_view,page_post_engagements,page_follows,followers_gained,followers_lost".
+
+            Live Meta metrics (current names, post-Nov-2025):
+              - page_media_view       (replaces deprecated page_impressions)
+              - page_views_total
+              - page_post_engagements
+              - page_video_views
+              - page_video_view_time
+              - page_follows          (replaces deprecated page_fans)
+
+            Zernio-synthesized from daily follower snapshots (filling the Nov-2025 gap
+            left by the page_fan_adds / page_fan_removes deprecation):
+              - followers_gained
+              - followers_lost
+        - name: since
+          in: query
+          schema: { type: string, format: date }
+          description: Start date (YYYY-MM-DD). Defaults to 30 days ago.
+        - name: until
+          in: query
+          schema: { type: string, format: date }
+          description: End date (YYYY-MM-DD). Defaults to today.
+        - name: metricType
+          in: query
+          schema:
+            type: string
+            enum: [time_series, total_value]
+            default: total_value
+          description: |
+            "total_value" (default) returns aggregated totals only.
+            "time_series" returns daily values in the "values" array.
+      responses:
+        '200':
+          description: Page insights data
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InstagramAccountInsightsResponse'
+              examples:
+                timeSeries:
+                  summary: Time series with computed follower deltas
+                  value:
+                    success: true
+                    accountId: "64e1a2b3c4d5e6f7a8b9c0d1"
+                    platform: "facebook"
+                    dateRange: { since: "2026-03-01", until: "2026-03-22" }
+                    metricType: "time_series"
+                    metrics:
+                      page_media_view:
+                        total: 125000
+                        values:
+                          - { date: "2026-03-01", value: 5400 }
+                          - { date: "2026-03-02", value: 4820 }
+                      followers_gained:
+                        total: 142
+                        values:
+                          - { date: "2026-03-01", value: 7 }
+                          - { date: "2026-03-02", value: 5 }
+                      followers_lost:
+                        total: 23
+                        values:
+                          - { date: "2026-03-01", value: 1 }
+                          - { date: "2026-03-02", value: 0 }
+                    dataDelay: "Meta page insights may be delayed up to 24 hours. Metrics reflect the current (post-November 2025) Graph API names."
+        '400':
+          description: |
+            Bad request. Common cases:
+              - Requested a deprecated metric (page_impressions, page_fans, page_fan_adds, page_fan_removes) - use current names instead
+              - Account has no Page selected (metadata.pageAccessToken missing)
+              - Invalid accountId / metrics / metricType / date range
+              - Account is not a Facebook account
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '402':
+          description: Analytics add-on required
+        '404':
+          description: Account not found
+
   /v1/analytics/instagram/account-insights:
     get:
       operationId: getInstagramAccountInsights
@@ -4635,7 +5035,10 @@ paths:
             Comma-separated list of metrics. Defaults to "reach,views,accounts_engaged,total_interactions".
             Valid metrics: reach, views, accounts_engaged, total_interactions, comments, likes, saves, shares,
             replies, reposts, follows_and_unfollows, profile_links_taps.
-            Note: only "reach" supports metricType=time_series. All other metrics are total_value only.
+            Note: only "reach" supports metricType=time_series. All other metrics (including
+            follows_and_unfollows) are total_value only. This is an Instagram Graph API limitation,
+            not a Zernio limitation - the IG API does not return time-series data for these metrics.
+            For a daily running follower count, use /v1/analytics/instagram/follower-history instead.
         - name: since
           in: query
           schema: { type: string, format: date }
@@ -4755,6 +5158,65 @@ paths:
                 type: object
                 properties:
                   error: { type: string, example: "Account not found" }
+
+  /v1/analytics/instagram/follower-history:
+    get:
+      operationId: getInstagramFollowerHistory
+      tags: [Analytics]
+      summary: Get Instagram follower history
+      description: |
+        Returns a daily running Instagram follower count time series, served from Zernio's
+        cross-platform daily snapshotter. Exists because Meta removed follower_count from
+        the /insights endpoint in Graph API v22+ and never exposed a historical daily series
+        via any public API.
+
+        Response envelope matches /v1/analytics/instagram/account-insights so the same client
+        handling works. Max 89 days, defaults to last 30 days. Requires the Analytics add-on.
+      parameters:
+        - name: accountId
+          in: query
+          required: true
+          schema: { type: string }
+          description: The Zernio SocialAccount ID for the Instagram account.
+        - name: metrics
+          in: query
+          schema: { type: string }
+          description: |
+            Comma-separated list. Defaults to "follower_count,followers_gained,followers_lost".
+              - follower_count   : per-day raw follower count
+              - followers_gained : sum of positive daily deltas
+              - followers_lost   : sum of absolute negative daily deltas
+        - name: since
+          in: query
+          schema: { type: string, format: date }
+          description: Start date (YYYY-MM-DD). Defaults to 30 days ago.
+        - name: until
+          in: query
+          schema: { type: string, format: date }
+          description: End date (YYYY-MM-DD). Defaults to today.
+        - name: metricType
+          in: query
+          schema:
+            type: string
+            enum: [time_series, total_value]
+            default: total_value
+          description: |
+            "total_value" returns aggregated totals (latest for follower_count, sum for gained/lost).
+            "time_series" returns per-day values in the "values" array.
+      responses:
+        '200':
+          description: Follower history data
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InstagramAccountInsightsResponse'
+        '400':
+          description: Bad request (invalid accountId / metrics / date range, or account is not an Instagram account)
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '402':
+          description: Analytics add-on required
+        '404':
+          description: Account not found
 
   /v1/analytics/instagram/demographics:
     get:
@@ -11019,7 +11481,7 @@ paths:
       operationId: getLinkedInAggregateAnalytics
       tags: [Analytics]
       summary: Get LinkedIn aggregate stats
-      description: Returns aggregate analytics across all posts for a LinkedIn personal account. Only includes posts published through Zernio (LinkedIn API limitation). Org accounts should use /v1/analytics instead. Requires r_member_postAnalytics scope.
+      description: Returns aggregate analytics across all posts for a LinkedIn personal account. Only includes posts published through Zernio (LinkedIn API limitation). Org accounts should use /v1/analytics instead. Requires r_member_postAnalytics scope. Saves (POST_SAVE) and sends (POST_SEND) are available for personal accounts; organization pages always return 0 for these two metrics because LinkedIn does not expose them on the organization analytics endpoint.
       parameters:
         - name: accountId
           in: path
@@ -11053,10 +11515,10 @@ paths:
         - name: metrics
           in: query
           required: false
-          description: "Comma-separated metrics: IMPRESSION, MEMBERS_REACHED, REACTION, COMMENT, RESHARE. Omit for all."
+          description: "Comma-separated metrics: IMPRESSION, MEMBERS_REACHED, REACTION, COMMENT, RESHARE, POST_SAVE, POST_SEND. Omit for all."
           schema:
             type: string
-          example: "IMPRESSION,REACTION,COMMENT"
+          example: "IMPRESSION,REACTION,COMMENT,POST_SAVE,POST_SEND"
       responses:
         '200':
           description: Aggregate analytics data
@@ -11082,7 +11544,9 @@ paths:
                       reactions: 7500
                       comments: 2500
                       shares: 1200
-                      engagementRate: 0.90
+                      saves: 3400
+                      sends: 900
+                      engagementRate: 1.24
                     note: "Aggregate analytics across all posts on this LinkedIn personal account (lifetime totals)."
                     lastUpdated: "2025-01-15T10:30:00.000Z"
                 totalWithDateRange:
@@ -11102,7 +11566,9 @@ paths:
                       reactions: 750
                       comments: 250
                       shares: 120
-                      engagementRate: 0.90
+                      saves: 340
+                      sends: 90
+                      engagementRate: 1.24
                     note: "Aggregate analytics for the specified date range."
                     lastUpdated: "2025-01-15T10:30:00.000Z"
                 dailyAggregation:
@@ -11137,6 +11603,16 @@ paths:
                           count: 2
                         - date: "2024-05-05"
                           count: 4
+                      saves:
+                        - date: "2024-05-04"
+                          count: 8
+                        - date: "2024-05-05"
+                          count: 12
+                      sends:
+                        - date: "2024-05-04"
+                          count: 1
+                        - date: "2024-05-05"
+                          count: 3
                     skippedMetrics:
                       - "MEMBERS_REACHED (not supported with DAILY aggregation)"
                     note: "Daily breakdown of analytics across all posts. MEMBERS_REACHED is not available with DAILY aggregation per LinkedIn API limitations."
@@ -11179,9 +11655,9 @@ paths:
                 invalid_metrics:
                   summary: Invalid metrics requested
                   value:
-                    error: "Invalid metrics: INVALID_METRIC. Valid options: IMPRESSION, MEMBERS_REACHED, REACTION, COMMENT, RESHARE"
+                    error: "Invalid metrics: INVALID_METRIC. Valid options: IMPRESSION, MEMBERS_REACHED, REACTION, COMMENT, RESHARE, POST_SAVE, POST_SEND"
                     code: "invalid_metrics"
-                    validOptions: ["IMPRESSION", "MEMBERS_REACHED", "REACTION", "COMMENT", "RESHARE"]
+                    validOptions: ["IMPRESSION", "MEMBERS_REACHED", "REACTION", "COMMENT", "RESHARE", "POST_SAVE", "POST_SEND"]
         '401': { $ref: '#/components/responses/Unauthorized' }
         '402':
           description: Analytics add-on required
@@ -11215,7 +11691,7 @@ paths:
       operationId: getLinkedInPostAnalytics
       tags: [Analytics]
       summary: Get LinkedIn post stats
-      description: Returns analytics for a specific LinkedIn post by URN. Works for both personal and organization accounts.
+      description: Returns analytics for a specific LinkedIn post by URN. Works for both personal and organization accounts. Saves and sends are only populated for personal accounts (LinkedIn does not expose these metrics on the organization analytics endpoint).
       parameters:
         - name: accountId
           in: path
@@ -11249,6 +11725,8 @@ paths:
                       likes: { type: integer, description: Reactions on the post }
                       comments: { type: integer, description: Comments on the post }
                       shares: { type: integer, description: Reshares of the post }
+                      saves: { type: integer, description: Times the post was saved (personal accounts only; 0 for organization accounts) }
+                      sends: { type: integer, description: Times the post was sent via LinkedIn messaging (personal accounts only; 0 for organization accounts) }
                       clicks: { type: integer, description: Clicks on the post (organization accounts only) }
                       views: { type: integer, description: Video views (video posts only) }
                       engagementRate: { type: number, description: Engagement rate as percentage }
@@ -11265,9 +11743,11 @@ paths:
                   likes: 156
                   comments: 23
                   shares: 12
+                  saves: 48
+                  sends: 9
                   clicks: 0
                   views: 1250
-                  engagementRate: 5.17
+                  engagementRate: 6.22
                 lastUpdated: "2025-01-15T10:30:00.000Z"
         '400':
           description: Invalid request
