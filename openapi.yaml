@@ -18534,8 +18534,10 @@ paths:
                         commenterId: { type: string }
                         commenterName: { type: string }
                         commentText: { type: string }
-                        status: { type: string, enum: [sent, failed, skipped] }
-                        error: { type: string }
+                        status: { type: string, enum: [sent, failed, skipped], description: DM outcome }
+                        error: { type: string, description: DM error message if status is failed }
+                        commentReplyStatus: { type: string, enum: [sent, failed, skipped], description: "Outcome of the optional public reply on the triggering comment. 'skipped' if no commentReply was configured or if the DM failed (the public reply is not attempted in that case)." }
+                        commentReplyError: { type: string, description: Public-reply error message if commentReplyStatus is failed }
                         createdAt: { type: string, format: date-time }
         '401': { $ref: '#/components/responses/Unauthorized' }
         '404': { $ref: '#/components/responses/NotFound' }
@@ -18628,8 +18630,10 @@ paths:
                         commenterId: { type: string }
                         commenterName: { type: string }
                         commentText: { type: string }
-                        status: { type: string, enum: [sent, failed, skipped] }
-                        error: { type: string }
+                        status: { type: string, enum: [sent, failed, skipped], description: DM outcome }
+                        error: { type: string, description: DM error message if status is failed }
+                        commentReplyStatus: { type: string, enum: [sent, failed, skipped], description: "Outcome of the optional public reply on the triggering comment. 'skipped' if no commentReply was configured or if the DM failed (the public reply is not attempted in that case)." }
+                        commentReplyError: { type: string, description: Public-reply error message if commentReplyStatus is failed }
                         createdAt: { type: string, format: date-time }
                   pagination:
                     type: object
