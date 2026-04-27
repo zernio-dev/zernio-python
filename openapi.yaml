@@ -139,6 +139,7 @@ x-documentation:
     - `post.recycled` - Post recycled (cloned and re-scheduled)
     - `account.connected` - Social account connected
     - `account.disconnected` - Social account disconnected (token expired)
+    - `account.ads.initial_sync_completed` - Initial ads sync (discovery + 90-day backfill) completed for an ads-enabled account
     - `message.received` - New DM received
     - `message.sent` - DM sent via the API
     - `message.edited` - A sender edited a message (Instagram, Messenger, Telegram)
@@ -261,7 +262,7 @@ tags:
       Requires the Ads add-on.
   - name: Webhooks
     description: |
-      Configure webhooks for real-time notifications. Events: post.scheduled, post.published, post.failed, post.partial, post.cancelled, post.recycled, account.connected, account.disconnected, message.received, message.sent, comment.received, review.new, review.updated, webhook.test.
+      Configure webhooks for real-time notifications. Events: post.scheduled, post.published, post.failed, post.partial, post.cancelled, post.recycled, account.connected, account.disconnected, account.ads.initial_sync_completed, message.received, message.sent, comment.received, review.new, review.updated, webhook.test.
       Security: optional HMAC-SHA256 signature in X-Zernio-Signature header. Configure a secret key to enable verification. Custom headers supported.
   - name: Webhook Events
     description: |
@@ -818,7 +819,7 @@ components:
           type: array
           items:
             type: string
-            enum: [post.scheduled, post.published, post.failed, post.partial, post.cancelled, post.recycled, account.connected, account.disconnected, message.received, message.sent, message.edited, message.deleted, message.delivered, message.read, message.failed, comment.received, review.new, review.updated]
+            enum: [post.scheduled, post.published, post.failed, post.partial, post.cancelled, post.recycled, account.connected, account.disconnected, account.ads.initial_sync_completed, message.received, message.sent, message.edited, message.deleted, message.delivered, message.read, message.failed, comment.received, review.new, review.updated]
           description: Events subscribed to
         isActive:
           type: boolean
@@ -945,6 +946,64 @@ components:
             reason:
               type: string
               description: Human-readable reason for the disconnection
+        timestamp:
+          type: string
+          format: date-time
+    WebhookPayloadAccountAdsInitialSyncCompleted:
+      type: object
+      description: |
+        Webhook payload for `account.ads.initial_sync_completed` events.
+        Fired once per ads-enabled account when the initial discovery + 90-day
+        ad backfill finishes (whether it succeeded fully, partially, or failed).
+      required: [id, event, account, sync, timestamp]
+      properties:
+        id:
+          type: string
+          description: Stable webhook event ID
+        event:
+          type: string
+          enum: [account.ads.initial_sync_completed]
+        account:
+          type: object
+          required: [accountId, profileId, platform, username]
+          properties:
+            accountId:
+              type: string
+              description: The account's unique identifier (same as used in /v1/accounts/{accountId})
+            profileId:
+              type: string
+              description: The profile's unique identifier this account belongs to
+            platform:
+              type: string
+            username:
+              type: string
+            displayName:
+              type: string
+            platformUserId:
+              type: string
+              description: The platform-side account/ad-account ID (e.g. Meta ad account ID).
+            profilePicture:
+              type: string
+              format: uri
+              description: URL of the account's profile picture, when available.
+        sync:
+          type: object
+          description: Summary of the initial ads sync backfill results.
+          required: [status, totalAds, synced, failed]
+          properties:
+            status:
+              type: string
+              enum: [success, failure]
+              description: Overall outcome of the initial sync.
+            totalAds:
+              type: integer
+              description: Total number of ads discovered for backfill.
+            synced:
+              type: integer
+              description: Number of ads successfully synced.
+            failed:
+              type: integer
+              description: Number of ads that failed to sync.
         timestamp:
           type: string
           format: date-time
@@ -3830,6 +3889,24 @@ webhooks:
           application/json:
             schema:
               $ref: '#/components/schemas/WebhookPayloadAccountDisconnected'
+      responses:
+        '200':
+          description: Webhook received successfully
+  account.ads.initial_sync_completed:
+    post:
+      operationId: onAccountAdsInitialSyncCompleted
+      summary: Ads initial sync completed event
+      description: |
+        Fired once per ads-enabled account when the initial sync (ad-account
+        discovery + 90-day historical ad backfill) completes. The `sync` block
+        reports whether the backfill succeeded and how many ads were synced.
+      tags: [Webhook Events]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/WebhookPayloadAccountAdsInitialSyncCompleted'
       responses:
         '200':
           description: Webhook received successfully
@@ -13085,7 +13162,7 @@ paths:
                   minItems: 1
                   items:
                     type: string
-                    enum: [post.scheduled, post.published, post.failed, post.partial, post.cancelled, post.recycled, account.connected, account.disconnected, message.received, comment.received, review.new, review.updated]
+                    enum: [post.scheduled, post.published, post.failed, post.partial, post.cancelled, post.recycled, account.connected, account.disconnected, account.ads.initial_sync_completed, message.received, comment.received, review.new, review.updated]
                   description: Events to subscribe to (at least one required)
                 isActive:
                   type: boolean
@@ -13103,7 +13180,7 @@ paths:
                   name: "My Production Webhook"
                   url: "https://example.com/webhook"
                   secret: "your-secret-key"
-                  events: ["post.scheduled", "post.published", "post.failed", "post.partial", "post.cancelled", "post.recycled", "account.connected", "account.disconnected", "message.received", "comment.received", "review.new", "review.updated"]
+                  events: ["post.scheduled", "post.published", "post.failed", "post.partial", "post.cancelled", "post.recycled", "account.connected", "account.disconnected", "account.ads.initial_sync_completed", "message.received", "comment.received", "review.new", "review.updated"]
                   isActive: true
       responses:
         '200':
@@ -13159,7 +13236,7 @@ paths:
                   minItems: 1
                   items:
                     type: string
-                    enum: [post.scheduled, post.published, post.failed, post.partial, post.cancelled, post.recycled, account.connected, account.disconnected, message.received, comment.received, review.new, review.updated]
+                    enum: [post.scheduled, post.published, post.failed, post.partial, post.cancelled, post.recycled, account.connected, account.disconnected, account.ads.initial_sync_completed, message.received, comment.received, review.new, review.updated]
                   description: Events to subscribe to. Must contain at least one event if provided.
                 isActive:
                   type: boolean
