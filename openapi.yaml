@@ -19621,6 +19621,7 @@ paths:
                 additionalHeadlines: { type: array, items: { type: string }, description: "Google Search RSA only. Extra headlines." }
                 additionalDescriptions: { type: array, items: { type: string }, description: "Google Search RSA only. Extra descriptions." }
                 advantageAudience: { type: integer, enum: [0, 1], description: "Meta only. Controls the Advantage audience feature (targeting_automation). 0 = disabled (default), 1 = enabled. Meta Marketing API requires this field on all ad set creation requests." }
+                gender: { type: string, enum: [all, male, female], default: all, description: "Meta only. Restrict the audience by gender. 'male' targets men only, 'female' targets women only, 'all' (default) targets everyone. Ignored by non-Meta platforms." }
       responses:
         '201':
           description: Ad(s) created

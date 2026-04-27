@@ -1388,6 +1388,7 @@ def register_generated_tools(mcp, _get_client):
         additional_headlines: str = "",
         additional_descriptions: str = "",
         advantage_audience: int = 0,
+        gender: str = "all",
     ) -> str:
         """Create standalone ad
 
@@ -1427,7 +1428,8 @@ def register_generated_tools(mcp, _get_client):
                 keywords: Google Search only
                 additional_headlines: Google Search RSA only. Extra headlines.
                 additional_descriptions: Google Search RSA only. Extra descriptions.
-                advantage_audience: Meta only. Controls the Advantage audience feature (targeting_automation). 0 = disabled (default), 1 = enabled. Meta Marketing API requires this field on all ad set creation requests."""
+                advantage_audience: Meta only. Controls the Advantage audience feature (targeting_automation). 0 = disabled (default), 1 = enabled. Meta Marketing API requires this field on all ad set creation requests.
+                gender: Meta only. Restrict the audience by gender. 'male' targets men only, 'female' targets women only, 'all' (default) targets everyone. Ignored by non-Meta platforms."""
         client = _get_client()
         try:
             response = client.ads.create_standalone_ad(
@@ -1461,6 +1463,7 @@ def register_generated_tools(mcp, _get_client):
                 additional_headlines=additional_headlines,
                 additional_descriptions=additional_descriptions,
                 advantage_audience=advantage_audience,
+                gender=gender,
             )
             return _format_response(response)
         except Exception as e:

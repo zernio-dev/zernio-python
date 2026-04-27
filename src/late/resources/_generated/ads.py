@@ -208,6 +208,7 @@ class AdsResource:
         additional_headlines: list[str] | None = None,
         additional_descriptions: list[str] | None = None,
         advantage_audience: int | None = None,
+        gender: str | None = "all",
     ) -> dict[str, Any]:
         """Create standalone ad"""
         payload = self._build_payload(
@@ -241,6 +242,7 @@ class AdsResource:
             additional_headlines=additional_headlines,
             additional_descriptions=additional_descriptions,
             advantage_audience=advantage_audience,
+            gender=gender,
         )
         return self._client._post("/v1/ads/create", data=payload)
 
@@ -478,6 +480,7 @@ class AdsResource:
         additional_headlines: list[str] | None = None,
         additional_descriptions: list[str] | None = None,
         advantage_audience: int | None = None,
+        gender: str | None = "all",
     ) -> dict[str, Any]:
         """Create standalone ad (async)"""
         payload = self._build_payload(
@@ -511,6 +514,7 @@ class AdsResource:
             additional_headlines=additional_headlines,
             additional_descriptions=additional_descriptions,
             advantage_audience=advantage_audience,
+            gender=gender,
         )
         return await self._client._apost("/v1/ads/create", data=payload)
 
