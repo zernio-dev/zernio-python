@@ -6670,6 +6670,11 @@ paths:
             enum: [scheduled-desc, scheduled-asc, created-desc, created-asc, status, platform]
             default: scheduled-desc
           description: Sort order for results.
+        - name: accountId
+          in: query
+          required: false
+          schema: { type: string }
+          description: Filter posts to those published via a specific social account (24-char hex ObjectId).
       responses:
         '200':
           description: Paginated posts

@@ -4165,6 +4165,7 @@ def register_generated_tools(mcp, _get_client):
         include_hidden: bool = False,
         search: str = "",
         sort_by: str = "scheduled-desc",
+        account_id: str = "",
     ) -> str:
         """List posts
 
@@ -4179,7 +4180,8 @@ def register_generated_tools(mcp, _get_client):
             date_to
             include_hidden
             search: Search posts by text content.
-            sort_by: Sort order for results."""
+            sort_by: Sort order for results.
+            account_id: Filter posts to those published via a specific social account (24-char hex ObjectId)."""
         client = _get_client()
         try:
             response = client.posts.list_posts(
@@ -4194,6 +4196,7 @@ def register_generated_tools(mcp, _get_client):
                 include_hidden=include_hidden,
                 search=search,
                 sort_by=sort_by,
+                account_id=account_id,
             )
             return _format_response(response)
         except Exception as e:

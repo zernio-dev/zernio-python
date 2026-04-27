@@ -64,6 +64,7 @@ class PostsResource:
         include_hidden: bool | None = False,
         search: str | None = None,
         sort_by: str | None = "scheduled-desc",
+        account_id: str | None = None,
     ) -> dict[str, Any]:
         """List posts"""
         params = self._build_params(
@@ -78,6 +79,7 @@ class PostsResource:
             include_hidden=include_hidden,
             search=search,
             sort_by=sort_by,
+            account_id=account_id,
         )
         return self._client._get("/v1/posts", params=params)
 
@@ -228,6 +230,7 @@ class PostsResource:
         include_hidden: bool | None = False,
         search: str | None = None,
         sort_by: str | None = "scheduled-desc",
+        account_id: str | None = None,
     ) -> dict[str, Any]:
         """List posts (async)"""
         params = self._build_params(
@@ -242,6 +245,7 @@ class PostsResource:
             include_hidden=include_hidden,
             search=search,
             sort_by=sort_by,
+            account_id=account_id,
         )
         return await self._client._aget("/v1/posts", params=params)
 
