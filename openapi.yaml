@@ -20009,3 +20009,327 @@ paths:
           description: Ads add-on required.
         '404':
           description: Account not found or not accessible.
+
+  /v1/whatsapp/conversions:
+    post:
+      operationId: sendWhatsAppConversion
+      tags: [WhatsApp, Ads]
+      summary: Send a WhatsApp conversation event to Meta CAPI for Business Messaging
+      description: |
+        Forward a WhatsApp Business Messaging conversion event (`LeadSubmitted`,
+        `Purchase`, `AddToCart`, `InitiateCheckout`, `ViewContent`) to Meta's
+        Conversions API with `action_source = business_messaging` and
+        `messaging_channel = whatsapp`. The endpoint looks up the originating
+        CTWA click ID (`ctwa_clid`) captured on the first inbound message of
+        the conversation and replays it on every event so Meta can attribute
+        the conversion back to the Click-to-WhatsApp ad that drove the chat.
+
+        Configuration prerequisites on the WhatsApp account metadata:
+          - `metaCapiDatasetId`: the Meta Pixel/Dataset ID linked to the WABA.
+          - `connectedFacebookPageId`: the Facebook Page paired with the
+            WhatsApp Business number.
+
+        Identify the conversation by either `conversationId` (preferred) or
+        `phoneE164` (digits only, no '+') — at least one is required. If the
+        conversation has no captured `ctwa_clid`, the request returns 422 —
+        there's nothing to attribute.
+
+        Token + dataset coupling: the WhatsApp account's accessToken must have
+        access to the configured `metaCapiDatasetId`. By default a WABA's
+        system-user token is scoped to the WABA's own Business Manager and
+        cannot post to a pixel owned by a different Business — Meta returns
+        code 100 in that case. Either share the dataset with the WhatsApp
+        app's Business in BM, or use a dataset already in the same Business
+        as the WABA.
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [accountId, eventName, eventId]
+              description: |
+                In addition to the `required` list, **at least one of
+                `conversationId` or `phoneE164` must be supplied** (used to
+                resolve the originating CTWA conversation). The route enforces
+                this at the Zod boundary; OpenAPI's `required` cannot express
+                OR-required cleanly.
+              properties:
+                accountId:
+                  type: string
+                  minLength: 1
+                  description: WhatsApp SocialAccount ID.
+                eventName:
+                  type: string
+                  enum: [LeadSubmitted, Purchase, AddToCart, InitiateCheckout, ViewContent]
+                  description: |
+                    Live-verified allowlist of event names accepted by Meta's
+                    CAPI for Business Messaging (Graph API v25.0). Other
+                    standard pixel events including `Lead`,
+                    `CompleteRegistration`, `Subscribe`, `Schedule`, `Contact`,
+                    `StartTrial`, `AddPaymentInfo`, `Search`, and
+                    `SubmitApplication` are rejected with subcode 2804066
+                    ("Messaging Event Invalid Event Type") on
+                    `action_source = business_messaging` events. Custom event
+                    names are also rejected.
+
+                    Use `LeadSubmitted` (NOT `Lead`) for lead-style conversions.
+                eventTime:
+                  type: number
+                  description: |
+                    Unix seconds. Defaults to the time of the request when
+                    omitted. Meta's attribution window is 7 days from click;
+                    events older than that lose attribution.
+                eventId:
+                  type: string
+                  minLength: 1
+                  description: |
+                    Stable dedup key. Reuse to suppress duplicate events
+                    (Meta dedupes against pixel events with the same id).
+                conversationId:
+                  type: string
+                  minLength: 1
+                  description: |
+                    Zernio Conversation `_id` (preferred lookup). The
+                    conversation must have a captured `ctwa_clid` in metadata
+                    (set automatically by the WhatsApp webhook on the first
+                    inbound message after a CTWA ad click).
+                phoneE164:
+                  type: string
+                  minLength: 1
+                  description: |
+                    Contact phone number, digits only with no '+'. When used
+                    in lieu of `conversationId`, the handler resolves to the
+                    most recent CTWA-attributed conversation for this phone
+                    on the supplied account.
+                value:
+                  type: number
+                  description: Conversion value (e.g. order total).
+                currency:
+                  type: string
+                  minLength: 3
+                  maxLength: 3
+                  description: ISO 4217 currency code (e.g. `USD`).
+                contentIds:
+                  type: array
+                  items: { type: string }
+                  description: Optional product / content identifiers.
+                email:
+                  type: string
+                  format: email
+                  description: User email. Normalized + SHA-256 hashed before sending to Meta.
+                externalId:
+                  type: string
+                  description: |
+                    Stable customer identifier. Lowercased + SHA-256 hashed
+                    before sending to Meta.
+                testCode:
+                  type: string
+                  description: |
+                    Meta `test_event_code` passthrough. Routes the event to
+                    the Test Events tab in Events Manager instead of the
+                    production dataset, useful for development.
+      responses:
+        '200':
+          description: |
+            Event submitted to Meta. **Inspect `eventsFailed` and `failures[]`
+            to detect partial failures** — a 200 does NOT mean Meta accepted
+            the event. The status reflects "request reached Meta" only.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  platform: { type: string, enum: [metaads] }
+                  eventsReceived:
+                    type: integer
+                    description: Events accepted by Meta.
+                  eventsFailed:
+                    type: integer
+                    description: Events rejected by Meta (see failures).
+                  failures:
+                    type: array
+                    description: |
+                      Per-event failure detail. Empty when all events were
+                      accepted.
+                    items:
+                      type: object
+                      properties:
+                        eventIndex:
+                          type: integer
+                          description: Index into the submitted events array.
+                        eventId:
+                          type: string
+                          description: Echoes back the eventId of the failed event.
+                        message: { type: string }
+                        code:
+                          oneOf:
+                            - { type: string }
+                            - { type: integer }
+                  traceId:
+                    type: string
+                    description: |
+                      Meta `fbtrace_id` for debugging. Surface in support
+                      tickets.
+        '400': { description: Invalid body. }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404': { description: Conversation not found. }
+        '422':
+          description: |
+            Configuration missing (no `metaCapiDatasetId` /
+            `connectedFacebookPageId` on the account) OR the resolved
+            conversation has no captured `ctwa_clid`.
+
+  /v1/ads/ctwa:
+    post:
+      operationId: createCtwaAd
+      tags: [Ads]
+      summary: Create a Click-to-WhatsApp (CTWA) ad
+      description: |
+        Create a CTWA ad on Meta — when tapped, the ad opens a WhatsApp
+        conversation with the business attached to the supplied Facebook
+        Page. The full hierarchy (campaign → ad set → creative → ad) is
+        created and activated in one call.
+
+        The CTA is locked to `WHATSAPP_MESSAGE` and the destination is
+        hard-coded to `https://api.whatsapp.com/send` — Meta resolves the
+        actual WhatsApp number from the Page-to-WA pairing the user
+        configured in Page settings or Business Manager.
+
+        Prerequisites enforced by Meta (failure surfaces as a `platform_error`):
+          - The Facebook Page must already be paired with a verified WhatsApp
+            Business number.
+          - The WhatsApp Business Account must be business-verified.
+          - The Meta access token must carry `ads_management`.
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [accountId, adAccountId, name, headline, body, budgetAmount, budgetType]
+              description: |
+                In addition to the `required` list, **exactly one of `imageUrl`
+                or `video` must be supplied** (mutually exclusive). The route
+                enforces this at the Zod boundary; OpenAPI's `required` cannot
+                express OR-required cleanly.
+              properties:
+                accountId:
+                  type: string
+                  minLength: 1
+                  description: Facebook or Instagram SocialAccount ID.
+                adAccountId:
+                  type: string
+                  minLength: 1
+                  description: Meta ad account ID, e.g. `act_123456789`.
+                name:
+                  type: string
+                  minLength: 1
+                  description: Ad display name. Used to derive campaign / ad set names.
+                headline:
+                  type: string
+                  minLength: 1
+                  maxLength: 255
+                body:
+                  type: string
+                  minLength: 1
+                  description: Primary text shown above the image / video.
+                imageUrl:
+                  type: string
+                  format: uri
+                  description: |
+                    Image asset for image creatives. Mutually exclusive with
+                    `video`. Required if `video` is not supplied.
+                video:
+                  type: object
+                  required: [url, thumbnailUrl]
+                  properties:
+                    url: { type: string, format: uri }
+                    thumbnailUrl:
+                      type: string
+                      format: uri
+                      description: |
+                        Required by Meta for every video creative. Used as the
+                        ad thumbnail.
+                  description: |
+                    Video creative. Mutually exclusive with `imageUrl`.
+                    Required if `imageUrl` is not supplied.
+                budgetAmount:
+                  type: number
+                  exclusiveMinimum: 0
+                  description: |
+                    Budget amount in the ad account's currency major units
+                    (e.g. dollars for USD, not cents). Must be positive.
+                budgetType:
+                  type: string
+                  enum: [daily, lifetime]
+                currency:
+                  type: string
+                  minLength: 3
+                  maxLength: 3
+                  description: |
+                    ISO 4217 currency code matching the ad account's currency
+                    (e.g. `USD`). Optional — Meta infers from the ad account
+                    when omitted.
+                endDate:
+                  type: string
+                  format: date-time
+                  description: |
+                    ISO 8601 datetime. Required when `budgetType` is `lifetime`.
+                countries:
+                  type: array
+                  items: { type: string, minLength: 2, maxLength: 2 }
+                  description: ISO 3166-1 alpha-2 country codes. Defaults to `["US"]`.
+                ageMin: { type: integer, minimum: 13, maximum: 65 }
+                ageMax: { type: integer, minimum: 13, maximum: 65 }
+                interests:
+                  type: array
+                  items:
+                    type: object
+                    required: [id]
+                    properties:
+                      id: { type: string }
+                      name: { type: string }
+                audienceId:
+                  type: string
+                  description: Custom audience ID to target.
+                advantageAudience:
+                  type: integer
+                  enum: [0, 1]
+                  description: |
+                    Meta's Advantage+ audience expansion. `0` (default) keeps
+                    targeting strict; `1` lets Meta expand beyond the supplied
+                    targeting when its delivery system finds better matches.
+                    Always sent on CREATE (Meta requires it).
+                objective:
+                  type: string
+                  enum: [OUTCOME_ENGAGEMENT, OUTCOME_SALES, OUTCOME_LEADS]
+                  description: |
+                    Defaults to `OUTCOME_ENGAGEMENT` (the broadly-supported CTWA
+                    objective). `OUTCOME_SALES` and `OUTCOME_LEADS` require
+                    additional account configuration (Dataset linked to the WABA
+                    for sales) and may be rejected by Meta if missing.
+      responses:
+        '201':
+          description: CTWA ad created and submitted to Meta for review.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  ad: { type: object, description: The persisted Ad document. }
+                  message: { type: string }
+        '400': { description: Invalid body. }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { description: Ads add-on required. }
+        '404': { description: SocialAccount not found. }
+        '422':
+          description: Page is not connected to a verified WhatsApp number.
+        '502':
+          description: |
+            Meta rejected the request (e.g. WABA business verification
+            missing). Inspect `platformError` for the upstream Meta payload.

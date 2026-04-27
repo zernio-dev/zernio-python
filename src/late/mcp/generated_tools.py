@@ -1525,6 +1525,86 @@ def register_generated_tools(mcp, _get_client):
         except Exception as e:
             return f"Error: {e}"
 
+    @mcp.tool()
+    def ads_create_ctwa_ad(
+        account_id: str,
+        ad_account_id: str,
+        name: str,
+        headline: str,
+        body: str,
+        budget_amount: float,
+        budget_type: str,
+        image_url: str = "",
+        video: str = "",
+        currency: str = "",
+        end_date: str = "",
+        countries: str = "",
+        age_min: int = 0,
+        age_max: int = 0,
+        interests: str = "",
+        audience_id: str = "",
+        advantage_audience: int = 0,
+        objective: str = "",
+    ) -> str:
+        """Create a Click-to-WhatsApp (CTWA) ad
+
+            Args:
+                account_id: Facebook or Instagram SocialAccount ID. (required)
+                ad_account_id: Meta ad account ID, e.g. `act_123456789`. (required)
+                name: Ad display name. Used to derive campaign / ad set names. (required)
+                headline: (required)
+                body: Primary text shown above the image / video. (required)
+                image_url: Image asset for image creatives. Mutually exclusive with
+        `video`. Required if `video` is not supplied.
+                video: Video creative. Mutually exclusive with `imageUrl`.
+        Required if `imageUrl` is not supplied.
+                budget_amount: Budget amount in the ad account's currency major units
+        (e.g. dollars for USD, not cents). Must be positive.
+         (required)
+                budget_type: (required)
+                currency: ISO 4217 currency code matching the ad account's currency
+        (e.g. `USD`). Optional — Meta infers from the ad account
+        when omitted.
+                end_date: ISO 8601 datetime. Required when `budgetType` is `lifetime`.
+                countries: ISO 3166-1 alpha-2 country codes. Defaults to `["US"]`.
+                age_min
+                age_max
+                interests
+                audience_id: Custom audience ID to target.
+                advantage_audience: Meta's Advantage+ audience expansion. `0` (default) keeps
+        targeting strict; `1` lets Meta expand beyond the supplied
+        targeting when its delivery system finds better matches.
+        Always sent on CREATE (Meta requires it).
+                objective: Defaults to `OUTCOME_ENGAGEMENT` (the broadly-supported CTWA
+        objective). `OUTCOME_SALES` and `OUTCOME_LEADS` require
+        additional account configuration (Dataset linked to the WABA
+        for sales) and may be rejected by Meta if missing."""
+        client = _get_client()
+        try:
+            response = client.ads.create_ctwa_ad(
+                account_id=account_id,
+                ad_account_id=ad_account_id,
+                name=name,
+                headline=headline,
+                body=body,
+                image_url=image_url,
+                video=video,
+                budget_amount=budget_amount,
+                budget_type=budget_type,
+                currency=currency,
+                end_date=end_date,
+                countries=countries,
+                age_min=age_min,
+                age_max=age_max,
+                interests=interests,
+                audience_id=audience_id,
+                advantage_audience=advantage_audience,
+                objective=objective,
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
     # ANALYTICS
 
     @mcp.tool()
@@ -5634,6 +5714,80 @@ def register_generated_tools(mcp, _get_client):
         try:
             response = client.whatsapp.reject_whats_app_group_join_requests(
                 group_id=group_id, account_id=account_id, phone_numbers=phone_numbers
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool()
+    def whatsapp_send_whats_app_conversion(
+        account_id: str,
+        event_name: str,
+        event_id: str,
+        event_time: float = 0.0,
+        conversation_id: str = "",
+        phone_e164: str = "",
+        value: float = 0.0,
+        currency: str = "",
+        content_ids: str = "",
+        email: str = "",
+        external_id: str = "",
+        test_code: str = "",
+    ) -> str:
+        """Send a WhatsApp conversation event to Meta CAPI for Business Messaging
+
+            Args:
+                account_id: WhatsApp SocialAccount ID. (required)
+                event_name: Live-verified allowlist of event names accepted by Meta's
+        CAPI for Business Messaging (Graph API v25.0). Other
+        standard pixel events including `Lead`,
+        `CompleteRegistration`, `Subscribe`, `Schedule`, `Contact`,
+        `StartTrial`, `AddPaymentInfo`, `Search`, and
+        `SubmitApplication` are rejected with subcode 2804066
+        ("Messaging Event Invalid Event Type") on
+        `action_source = business_messaging` events. Custom event
+        names are also rejected.
+
+        Use `LeadSubmitted` (NOT `Lead`) for lead-style conversions.
+         (required)
+                event_time: Unix seconds. Defaults to the time of the request when
+        omitted. Meta's attribution window is 7 days from click;
+        events older than that lose attribution.
+                event_id: Stable dedup key. Reuse to suppress duplicate events
+        (Meta dedupes against pixel events with the same id).
+         (required)
+                conversation_id: Zernio Conversation `_id` (preferred lookup). The
+        conversation must have a captured `ctwa_clid` in metadata
+        (set automatically by the WhatsApp webhook on the first
+        inbound message after a CTWA ad click).
+                phone_e164: Contact phone number, digits only with no '+'. When used
+        in lieu of `conversationId`, the handler resolves to the
+        most recent CTWA-attributed conversation for this phone
+        on the supplied account.
+                value: Conversion value (e.g. order total).
+                currency: ISO 4217 currency code (e.g. `USD`).
+                content_ids: Optional product / content identifiers.
+                email: User email. Normalized + SHA-256 hashed before sending to Meta.
+                external_id: Stable customer identifier. Lowercased + SHA-256 hashed
+        before sending to Meta.
+                test_code: Meta `test_event_code` passthrough. Routes the event to
+        the Test Events tab in Events Manager instead of the
+        production dataset, useful for development."""
+        client = _get_client()
+        try:
+            response = client.whatsapp.send_whats_app_conversion(
+                account_id=account_id,
+                event_name=event_name,
+                event_time=event_time,
+                event_id=event_id,
+                conversation_id=conversation_id,
+                phone_e164=phone_e164,
+                value=value,
+                currency=currency,
+                content_ids=content_ids,
+                email=email,
+                external_id=external_id,
+                test_code=test_code,
             )
             return _format_response(response)
         except Exception as e:

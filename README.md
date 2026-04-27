@@ -383,6 +383,7 @@ Both `from zernio import ...` and `from late import ...` work identically. The `
 | `ads.list_ad_accounts()` | List ad accounts |
 | `ads.list_ads()` | List ads |
 | `ads.list_conversion_destinations()` | List destinations for the Conversions API |
+| `ads.create_ctwa_ad()` | Create a Click-to-WhatsApp (CTWA) ad |
 | `ads.create_standalone_ad()` | Create standalone ad |
 | `ads.get_ad()` | Get ad details |
 | `ads.get_ad_analytics()` | Get ad analytics |
@@ -575,6 +576,7 @@ Both `from zernio import ...` and `from late import ...` work identically. The `
 | `whatsapp.approve_whats_app_group_join_requests()` | Approve join requests |
 | `whatsapp.reject_whats_app_group_join_requests()` | Reject join requests |
 | `whatsapp.remove_whats_app_group_participants()` | Remove participants |
+| `whatsapp.send_whats_app_conversion()` | Send a WhatsApp conversation event to Meta CAPI for Business Messaging |
 | `whatsapp.upload_whats_app_profile_photo()` | Upload profile picture |
 
 ### WhatsApp Flows

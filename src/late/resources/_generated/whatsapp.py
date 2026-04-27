@@ -300,6 +300,39 @@ class WhatsappResource:
             f"/v1/whatsapp/wa-groups/{group_id}/join-requests", params=params
         )
 
+    def send_whats_app_conversion(
+        self,
+        account_id: str,
+        event_name: str,
+        event_id: str,
+        *,
+        event_time: float | None = None,
+        conversation_id: str | None = None,
+        phone_e164: str | None = None,
+        value: float | None = None,
+        currency: str | None = None,
+        content_ids: list[str] | None = None,
+        email: str | None = None,
+        external_id: str | None = None,
+        test_code: str | None = None,
+    ) -> dict[str, Any]:
+        """Send a WhatsApp conversation event to Meta CAPI for Business Messaging"""
+        payload = self._build_payload(
+            account_id=account_id,
+            event_name=event_name,
+            event_time=event_time,
+            event_id=event_id,
+            conversation_id=conversation_id,
+            phone_e164=phone_e164,
+            value=value,
+            currency=currency,
+            content_ids=content_ids,
+            email=email,
+            external_id=external_id,
+            test_code=test_code,
+        )
+        return self._client._post("/v1/whatsapp/conversions", data=payload)
+
     async def aget_whats_app_templates(self, account_id: str) -> dict[str, Any]:
         """List templates (async)"""
         params = self._build_params(
@@ -557,3 +590,36 @@ class WhatsappResource:
         return await self._client._adelete(
             f"/v1/whatsapp/wa-groups/{group_id}/join-requests", params=params
         )
+
+    async def asend_whats_app_conversion(
+        self,
+        account_id: str,
+        event_name: str,
+        event_id: str,
+        *,
+        event_time: float | None = None,
+        conversation_id: str | None = None,
+        phone_e164: str | None = None,
+        value: float | None = None,
+        currency: str | None = None,
+        content_ids: list[str] | None = None,
+        email: str | None = None,
+        external_id: str | None = None,
+        test_code: str | None = None,
+    ) -> dict[str, Any]:
+        """Send a WhatsApp conversation event to Meta CAPI for Business Messaging (async)"""
+        payload = self._build_payload(
+            account_id=account_id,
+            event_name=event_name,
+            event_time=event_time,
+            event_id=event_id,
+            conversation_id=conversation_id,
+            phone_e164=phone_e164,
+            value=value,
+            currency=currency,
+            content_ids=content_ids,
+            email=email,
+            external_id=external_id,
+            test_code=test_code,
+        )
+        return await self._client._apost("/v1/whatsapp/conversions", data=payload)

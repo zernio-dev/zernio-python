@@ -275,6 +275,51 @@ class AdsResource:
         """List destinations for the Conversions API"""
         return self._client._get(f"/v1/accounts/{account_id}/conversion-destinations")
 
+    def create_ctwa_ad(
+        self,
+        account_id: str,
+        ad_account_id: str,
+        name: str,
+        headline: str,
+        body: str,
+        budget_amount: float,
+        budget_type: str,
+        *,
+        image_url: str | None = None,
+        video: dict[str, Any] | None = None,
+        currency: str | None = None,
+        end_date: datetime | str | None = None,
+        countries: list[str] | None = None,
+        age_min: int | None = None,
+        age_max: int | None = None,
+        interests: list[dict[str, Any]] | None = None,
+        audience_id: str | None = None,
+        advantage_audience: int | None = None,
+        objective: str | None = None,
+    ) -> dict[str, Any]:
+        """Create a Click-to-WhatsApp (CTWA) ad"""
+        payload = self._build_payload(
+            account_id=account_id,
+            ad_account_id=ad_account_id,
+            name=name,
+            headline=headline,
+            body=body,
+            image_url=image_url,
+            video=video,
+            budget_amount=budget_amount,
+            budget_type=budget_type,
+            currency=currency,
+            end_date=end_date,
+            countries=countries,
+            age_min=age_min,
+            age_max=age_max,
+            interests=interests,
+            audience_id=audience_id,
+            advantage_audience=advantage_audience,
+            objective=objective,
+        )
+        return self._client._post("/v1/ads/ctwa", data=payload)
+
     async def alist_ads(
         self,
         *,
@@ -501,3 +546,48 @@ class AdsResource:
         return await self._client._aget(
             f"/v1/accounts/{account_id}/conversion-destinations"
         )
+
+    async def acreate_ctwa_ad(
+        self,
+        account_id: str,
+        ad_account_id: str,
+        name: str,
+        headline: str,
+        body: str,
+        budget_amount: float,
+        budget_type: str,
+        *,
+        image_url: str | None = None,
+        video: dict[str, Any] | None = None,
+        currency: str | None = None,
+        end_date: datetime | str | None = None,
+        countries: list[str] | None = None,
+        age_min: int | None = None,
+        age_max: int | None = None,
+        interests: list[dict[str, Any]] | None = None,
+        audience_id: str | None = None,
+        advantage_audience: int | None = None,
+        objective: str | None = None,
+    ) -> dict[str, Any]:
+        """Create a Click-to-WhatsApp (CTWA) ad (async)"""
+        payload = self._build_payload(
+            account_id=account_id,
+            ad_account_id=ad_account_id,
+            name=name,
+            headline=headline,
+            body=body,
+            image_url=image_url,
+            video=video,
+            budget_amount=budget_amount,
+            budget_type=budget_type,
+            currency=currency,
+            end_date=end_date,
+            countries=countries,
+            age_min=age_min,
+            age_max=age_max,
+            interests=interests,
+            audience_id=audience_id,
+            advantage_audience=advantage_audience,
+            objective=objective,
+        )
+        return await self._client._apost("/v1/ads/ctwa", data=payload)
