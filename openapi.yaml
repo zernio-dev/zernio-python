@@ -20260,10 +20260,11 @@ paths:
                     Required if `imageUrl` is not supplied.
                 budgetAmount:
                   type: number
-                  exclusiveMinimum: 0
+                  minimum: 0
+                  exclusiveMinimum: true
                   description: |
                     Budget amount in the ad account's currency major units
-                    (e.g. dollars for USD, not cents). Must be positive.
+                    (e.g. dollars for USD, not cents). Must be > 0.
                 budgetType:
                   type: string
                   enum: [daily, lifetime]

@@ -1559,7 +1559,7 @@ def register_generated_tools(mcp, _get_client):
                 video: Video creative. Mutually exclusive with `imageUrl`.
         Required if `imageUrl` is not supplied.
                 budget_amount: Budget amount in the ad account's currency major units
-        (e.g. dollars for USD, not cents). Must be positive.
+        (e.g. dollars for USD, not cents). Must be > 0.
          (required)
                 budget_type: (required)
                 currency: ISO 4217 currency code matching the ad account's currency
