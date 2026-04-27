@@ -114,6 +114,8 @@ x-documentation:
 
     > **LinkedIn Analytics Note:** For personal LinkedIn accounts, analytics are only available for posts published through Zernio. This is a LinkedIn API limitation: the `memberCreatorPostAnalytics` endpoint only returns metrics for posts authored by the authenticated user. Company/organization page analytics are not affected and work for all posts.
 
+    > **Google Business Analytics Note:** Per-post analytics for Google Business Profile are deprecated by Google with no replacement. Location-level metrics (impressions, clicks, calls, directions, bookings) are available via the dedicated `/v1/analytics/googlebusiness/performance` endpoint.
+
     ## Rate Limits
 
     | Plan | Requests/min | Posts/month |
