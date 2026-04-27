@@ -114,11 +114,20 @@ class MessagesResource:
         )
 
     def get_inbox_conversation_messages(
-        self, conversation_id: str, account_id: str
+        self,
+        conversation_id: str,
+        account_id: str,
+        *,
+        limit: int | None = 100,
+        cursor: str | None = None,
+        sort_order: str | None = "asc",
     ) -> dict[str, Any]:
         """List messages"""
         params = self._build_params(
             account_id=account_id,
+            limit=limit,
+            cursor=cursor,
+            sort_order=sort_order,
         )
         return self._client._get(
             f"/v1/inbox/conversations/{conversation_id}/messages", params=params
@@ -298,11 +307,20 @@ class MessagesResource:
         )
 
     async def aget_inbox_conversation_messages(
-        self, conversation_id: str, account_id: str
+        self,
+        conversation_id: str,
+        account_id: str,
+        *,
+        limit: int | None = 100,
+        cursor: str | None = None,
+        sort_order: str | None = "asc",
     ) -> dict[str, Any]:
         """List messages (async)"""
         params = self._build_params(
             account_id=account_id,
+            limit=limit,
+            cursor=cursor,
+            sort_order=sort_order,
         )
         return await self._client._aget(
             f"/v1/inbox/conversations/{conversation_id}/messages", params=params

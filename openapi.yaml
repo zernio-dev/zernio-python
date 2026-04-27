@@ -1542,6 +1542,36 @@ components:
                 WhatsApp only. Parsed Flow response JSON. Populated when
                 `flowResponseJson` is valid JSON; otherwise omitted. Keys and
                 value types depend on the specific Flow that was submitted.
+            referral:
+              type: object
+              description: |
+                WhatsApp only. Click-to-WhatsApp (CTWA) ad attribution. Present
+                only on the FIRST inbound message after a user reaches the
+                business via a CTWA ad. Forwarded verbatim from Meta's referral
+                envelope so it can be replayed to the Conversions API for
+                Business Messaging. Attribution window is 7 days from click.
+              properties:
+                ctwa_clid:
+                  type: string
+                  description: Meta's GCLID-equivalent click identifier.
+                source_id:
+                  type: string
+                source_type:
+                  type: string
+                source_url:
+                  type: string
+                headline:
+                  type: string
+                body:
+                  type: string
+                media_type:
+                  type: string
+                image_url:
+                  type: string
+                video_url:
+                  type: string
+                thumbnail_url:
+                  type: string
         timestamp:
           type: string
           format: date-time
@@ -13858,7 +13888,25 @@ paths:
       operationId: getInboxConversationMessages
       summary: List messages
       description: |
-        Fetch messages for a specific conversation. Requires accountId query parameter.
+        Fetch messages for a specific conversation, with cursor-based pagination
+        and ordering control.
+
+        Pagination: pass `pagination.nextCursor` from a prior response back as
+        the `cursor` query param to fetch the next page. The cursor is opaque;
+        do not parse or construct it client-side.
+
+        Sort order: defaults to `asc` (oldest first, chat style). For the
+        "show me the latest messages" pattern, pass `?sortOrder=desc&limit=N`.
+        For Twitter, Facebook and Bluesky, the upstream APIs only return
+        newest-first and have no order parameter — sort order is best-effort
+        and only reverses items within a single page (pages still walk
+        newest→oldest). The response field `sortOrderApplied` tells you what
+        was actually applied.
+
+        Reddit threads are paginated client-side because Reddit's API has no
+        per-thread cursor. Very long threads may be upstream-truncated by
+        Reddit's inbox/sent windows (~100 most-recent items each); this is a
+        Reddit platform limitation.
 
         Twitter/X limitation: X's encrypted "X Chat" messages are not accessible via the API. Conversations where the other participant uses encrypted X Chat may only show your outgoing messages. See the list conversations endpoint for more details.
       tags: [Messages]
@@ -13874,6 +13922,25 @@ paths:
           required: true
           schema: { type: string }
           description: Social account ID
+        - name: limit
+          in: query
+          required: false
+          schema: { type: integer, minimum: 1, maximum: 100, default: 100 }
+          description: Number of messages to return per page. Default 100, max 100.
+        - name: cursor
+          in: query
+          required: false
+          schema: { type: string }
+          description: Opaque pagination cursor. Pass `pagination.nextCursor` from a prior response.
+        - name: sortOrder
+          in: query
+          required: false
+          schema: { type: string, enum: [asc, desc], default: asc }
+          description: |
+            Order of returned messages. Default `asc` (oldest first, chat style).
+            For Twitter, Facebook and Bluesky, only intra-page ordering is
+            affected — pages always walk newest→oldest. See `sortOrderApplied`
+            in the response.
       responses:
         '200':
           description: Messages in conversation
@@ -13883,6 +13950,23 @@ paths:
                 type: object
                 properties:
                   status: { type: string }
+                  pagination:
+                    type: object
+                    properties:
+                      hasMore:
+                        type: boolean
+                        description: Whether more messages are available beyond this page.
+                      nextCursor:
+                        type: string
+                        nullable: true
+                        description: Opaque cursor to fetch the next page. `null` on the last page.
+                  sortOrderApplied:
+                    type: string
+                    enum: [asc, desc]
+                    description: |
+                      Sort order actually applied to the returned page. May
+                      differ from the requested `sortOrder` for Twitter,
+                      Facebook and Bluesky (always `desc` regardless of request).
                   messages:
                     type: array
                     items:

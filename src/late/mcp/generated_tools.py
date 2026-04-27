@@ -4032,17 +4032,31 @@ def register_generated_tools(mcp, _get_client):
 
     @mcp.tool()
     def messages_get_inbox_conversation_messages(
-        conversation_id: str, account_id: str
+        conversation_id: str,
+        account_id: str,
+        limit: int = 100,
+        cursor: str = "",
+        sort_order: str = "asc",
     ) -> str:
         """List messages
 
-        Args:
-            conversation_id: The conversation ID (id field from list conversations endpoint). This is the platform-specific conversation identifier, not an internal database ID. (required)
-            account_id: Social account ID (required)"""
+            Args:
+                conversation_id: The conversation ID (id field from list conversations endpoint). This is the platform-specific conversation identifier, not an internal database ID. (required)
+                account_id: Social account ID (required)
+                limit: Number of messages to return per page. Default 100, max 100.
+                cursor: Opaque pagination cursor. Pass `pagination.nextCursor` from a prior response.
+                sort_order: Order of returned messages. Default `asc` (oldest first, chat style).
+        For Twitter, Facebook and Bluesky, only intra-page ordering is
+        affected — pages always walk newest→oldest. See `sortOrderApplied`
+        in the response."""
         client = _get_client()
         try:
             response = client.messages.get_inbox_conversation_messages(
-                conversation_id=conversation_id, account_id=account_id
+                conversation_id=conversation_id,
+                account_id=account_id,
+                limit=limit,
+                cursor=cursor,
+                sort_order=sort_order,
             )
             return _format_response(response)
         except Exception as e:
