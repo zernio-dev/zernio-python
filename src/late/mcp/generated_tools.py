@@ -1546,7 +1546,7 @@ def register_generated_tools(mcp, _get_client):
         advantage_audience: int = 0,
         objective: str = "",
     ) -> str:
-        """Create a Click-to-WhatsApp (CTWA) ad
+        """Create Click-to-WhatsApp ad
 
             Args:
                 account_id: Facebook or Instagram SocialAccount ID. (required)
@@ -1563,7 +1563,7 @@ def register_generated_tools(mcp, _get_client):
          (required)
                 budget_type: (required)
                 currency: ISO 4217 currency code matching the ad account's currency
-        (e.g. `USD`). Optional — Meta infers from the ad account
+        (e.g. `USD`). Optional; Meta infers from the ad account
         when omitted.
                 end_date: ISO 8601 datetime. Required when `budgetType` is `lifetime`.
                 countries: ISO 3166-1 alpha-2 country codes. Defaults to `["US"]`.
@@ -5734,7 +5734,7 @@ def register_generated_tools(mcp, _get_client):
         external_id: str = "",
         test_code: str = "",
     ) -> str:
-        """Send a WhatsApp conversation event to Meta CAPI for Business Messaging
+        """Send WhatsApp conversion event
 
             Args:
                 account_id: WhatsApp SocialAccount ID. (required)

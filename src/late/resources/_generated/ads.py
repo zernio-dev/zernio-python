@@ -297,7 +297,7 @@ class AdsResource:
         advantage_audience: int | None = None,
         objective: str | None = None,
     ) -> dict[str, Any]:
-        """Create a Click-to-WhatsApp (CTWA) ad"""
+        """Create Click-to-WhatsApp ad"""
         payload = self._build_payload(
             account_id=account_id,
             ad_account_id=ad_account_id,
@@ -569,7 +569,7 @@ class AdsResource:
         advantage_audience: int | None = None,
         objective: str | None = None,
     ) -> dict[str, Any]:
-        """Create a Click-to-WhatsApp (CTWA) ad (async)"""
+        """Create Click-to-WhatsApp ad (async)"""
         payload = self._build_payload(
             account_id=account_id,
             ad_account_id=ad_account_id,

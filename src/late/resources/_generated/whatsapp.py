@@ -316,7 +316,7 @@ class WhatsappResource:
         external_id: str | None = None,
         test_code: str | None = None,
     ) -> dict[str, Any]:
-        """Send a WhatsApp conversation event to Meta CAPI for Business Messaging"""
+        """Send WhatsApp conversion event"""
         payload = self._build_payload(
             account_id=account_id,
             event_name=event_name,
@@ -607,7 +607,7 @@ class WhatsappResource:
         external_id: str | None = None,
         test_code: str | None = None,
     ) -> dict[str, Any]:
-        """Send a WhatsApp conversation event to Meta CAPI for Business Messaging (async)"""
+        """Send WhatsApp conversion event (async)"""
         payload = self._build_payload(
             account_id=account_id,
             event_name=event_name,
