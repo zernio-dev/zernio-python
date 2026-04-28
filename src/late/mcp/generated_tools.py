@@ -1318,23 +1318,31 @@ def register_generated_tools(mcp, _get_client):
         bid_amount: float = 0.0,
         tracking: str = "",
         special_ad_categories: str = "",
+        dsa_beneficiary: str = "",
+        dsa_payor: str = "",
     ) -> str:
         """Boost post as ad
 
-        Args:
-            post_id: Zernio post ID (provide this or platformPostId)
-            platform_post_id: Platform post ID (alternative to postId)
-            account_id: Social account ID (required)
-            ad_account_id: Platform ad account ID (required)
-            name: (required)
-            goal: Available goals vary by platform. Meta (Facebook/Instagram) and TikTok support all 7. LinkedIn supports all except app_promotion. Twitter/X supports engagement, traffic, awareness, video_views, app_promotion. Pinterest and Google Ads support only engagement, traffic, awareness, video_views. (required)
-            budget: (required)
-            currency
-            schedule
-            targeting
-            bid_amount: Max bid cap (Meta only)
-            tracking: Meta only. Tracking specs (pixel, URL tags).
-            special_ad_categories: Meta only. Required for housing, employment, credit, or political ads."""
+            Args:
+                post_id: Zernio post ID (provide this or platformPostId)
+                platform_post_id: Platform post ID (alternative to postId)
+                account_id: Social account ID (required)
+                ad_account_id: Platform ad account ID (required)
+                name: (required)
+                goal: Available goals vary by platform. Meta (Facebook/Instagram) and TikTok support all 7. LinkedIn supports all except app_promotion. Twitter/X supports engagement, traffic, awareness, video_views, app_promotion. Pinterest and Google Ads support only engagement, traffic, awareness, video_views. (required)
+                budget: (required)
+                currency
+                schedule
+                targeting
+                bid_amount: Max bid cap (Meta only)
+                tracking: Meta only. Tracking specs (pixel, URL tags).
+                special_ad_categories: Meta only. Required for housing, employment, credit, or political ads.
+                dsa_beneficiary: Name of the legal entity benefiting from the ad.
+        Required by Meta when targeting EU users (DSA Article 26).
+        Not enforced at schema level; enforced server-side when targeting intersects EU member states.
+                dsa_payor: Name of the legal entity paying for the ad.
+        Required by Meta when targeting EU users (DSA Article 26).
+        Note Meta API spelling: dsa_payor (not dsa_payer)."""
         client = _get_client()
         try:
             response = client.ads.boost_post(
@@ -1351,6 +1359,8 @@ def register_generated_tools(mcp, _get_client):
                 bid_amount=bid_amount,
                 tracking=tracking,
                 special_ad_categories=special_ad_categories,
+                dsa_beneficiary=dsa_beneficiary,
+                dsa_payor=dsa_payor,
             )
             return _format_response(response)
         except Exception as e:
@@ -1389,6 +1399,8 @@ def register_generated_tools(mcp, _get_client):
         additional_descriptions: str = "",
         advantage_audience: int = 0,
         gender: str = "all",
+        dsa_beneficiary: str = "",
+        dsa_payor: str = "",
     ) -> str:
         """Create standalone ad
 
@@ -1429,7 +1441,13 @@ def register_generated_tools(mcp, _get_client):
                 additional_headlines: Google Search RSA only. Extra headlines.
                 additional_descriptions: Google Search RSA only. Extra descriptions.
                 advantage_audience: Meta only. Controls the Advantage audience feature (targeting_automation). 0 = disabled (default), 1 = enabled. Meta Marketing API requires this field on all ad set creation requests.
-                gender: Meta only. Restrict the audience by gender. 'male' targets men only, 'female' targets women only, 'all' (default) targets everyone. Ignored by non-Meta platforms."""
+                gender: Meta only. Restrict the audience by gender. 'male' targets men only, 'female' targets women only, 'all' (default) targets everyone. Ignored by non-Meta platforms.
+                dsa_beneficiary: Name of the legal entity benefiting from the ad.
+        Required by Meta when targeting EU users (DSA Article 26).
+        Not enforced at schema level; enforced server-side when targeting intersects EU member states.
+                dsa_payor: Name of the legal entity paying for the ad.
+        Required by Meta when targeting EU users (DSA Article 26).
+        Note Meta API spelling: dsa_payor (not dsa_payer)."""
         client = _get_client()
         try:
             response = client.ads.create_standalone_ad(
@@ -1464,6 +1482,8 @@ def register_generated_tools(mcp, _get_client):
                 additional_descriptions=additional_descriptions,
                 advantage_audience=advantage_audience,
                 gender=gender,
+                dsa_beneficiary=dsa_beneficiary,
+                dsa_payor=dsa_payor,
             )
             return _format_response(response)
         except Exception as e:
@@ -1548,6 +1568,8 @@ def register_generated_tools(mcp, _get_client):
         audience_id: str = "",
         advantage_audience: int = 0,
         objective: str = "",
+        dsa_beneficiary: str = "",
+        dsa_payor: str = "",
     ) -> str:
         """Create Click-to-WhatsApp ad
 
@@ -1581,7 +1603,13 @@ def register_generated_tools(mcp, _get_client):
                 objective: Defaults to `OUTCOME_ENGAGEMENT` (the broadly-supported CTWA
         objective). `OUTCOME_SALES` and `OUTCOME_LEADS` require
         additional account configuration (Dataset linked to the WABA
-        for sales) and may be rejected by Meta if missing."""
+        for sales) and may be rejected by Meta if missing.
+                dsa_beneficiary: Name of the legal entity benefiting from the ad.
+        Required by Meta when targeting EU users (DSA Article 26).
+        Not enforced at schema level; enforced server-side when targeting intersects EU member states.
+                dsa_payor: Name of the legal entity paying for the ad.
+        Required by Meta when targeting EU users (DSA Article 26).
+        Note Meta API spelling: dsa_payor (not dsa_payer)."""
         client = _get_client()
         try:
             response = client.ads.create_ctwa_ad(
@@ -1603,6 +1631,8 @@ def register_generated_tools(mcp, _get_client):
                 audience_id=audience_id,
                 advantage_audience=advantage_audience,
                 objective=objective,
+                dsa_beneficiary=dsa_beneficiary,
+                dsa_payor=dsa_payor,
             )
             return _format_response(response)
         except Exception as e:

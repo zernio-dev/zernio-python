@@ -156,6 +156,8 @@ class AdsResource:
         bid_amount: float | None = None,
         tracking: dict[str, Any] | None = None,
         special_ad_categories: list[str] | None = None,
+        dsa_beneficiary: str | None = None,
+        dsa_payor: str | None = None,
     ) -> dict[str, Any]:
         """Boost post as ad"""
         payload = self._build_payload(
@@ -172,6 +174,8 @@ class AdsResource:
             bid_amount=bid_amount,
             tracking=tracking,
             special_ad_categories=special_ad_categories,
+            dsa_beneficiary=dsa_beneficiary,
+            dsa_payor=dsa_payor,
         )
         return self._client._post("/v1/ads/boost", data=payload)
 
@@ -209,6 +213,8 @@ class AdsResource:
         additional_descriptions: list[str] | None = None,
         advantage_audience: int | None = None,
         gender: str | None = "all",
+        dsa_beneficiary: str | None = None,
+        dsa_payor: str | None = None,
     ) -> dict[str, Any]:
         """Create standalone ad"""
         payload = self._build_payload(
@@ -243,6 +249,8 @@ class AdsResource:
             additional_descriptions=additional_descriptions,
             advantage_audience=advantage_audience,
             gender=gender,
+            dsa_beneficiary=dsa_beneficiary,
+            dsa_payor=dsa_payor,
         )
         return self._client._post("/v1/ads/create", data=payload)
 
@@ -298,6 +306,8 @@ class AdsResource:
         audience_id: str | None = None,
         advantage_audience: int | None = None,
         objective: str | None = None,
+        dsa_beneficiary: str | None = None,
+        dsa_payor: str | None = None,
     ) -> dict[str, Any]:
         """Create Click-to-WhatsApp ad"""
         payload = self._build_payload(
@@ -319,6 +329,8 @@ class AdsResource:
             audience_id=audience_id,
             advantage_audience=advantage_audience,
             objective=objective,
+            dsa_beneficiary=dsa_beneficiary,
+            dsa_payor=dsa_payor,
         )
         return self._client._post("/v1/ads/ctwa", data=payload)
 
@@ -428,6 +440,8 @@ class AdsResource:
         bid_amount: float | None = None,
         tracking: dict[str, Any] | None = None,
         special_ad_categories: list[str] | None = None,
+        dsa_beneficiary: str | None = None,
+        dsa_payor: str | None = None,
     ) -> dict[str, Any]:
         """Boost post as ad (async)"""
         payload = self._build_payload(
@@ -444,6 +458,8 @@ class AdsResource:
             bid_amount=bid_amount,
             tracking=tracking,
             special_ad_categories=special_ad_categories,
+            dsa_beneficiary=dsa_beneficiary,
+            dsa_payor=dsa_payor,
         )
         return await self._client._apost("/v1/ads/boost", data=payload)
 
@@ -481,6 +497,8 @@ class AdsResource:
         additional_descriptions: list[str] | None = None,
         advantage_audience: int | None = None,
         gender: str | None = "all",
+        dsa_beneficiary: str | None = None,
+        dsa_payor: str | None = None,
     ) -> dict[str, Any]:
         """Create standalone ad (async)"""
         payload = self._build_payload(
@@ -515,6 +533,8 @@ class AdsResource:
             additional_descriptions=additional_descriptions,
             advantage_audience=advantage_audience,
             gender=gender,
+            dsa_beneficiary=dsa_beneficiary,
+            dsa_payor=dsa_payor,
         )
         return await self._client._apost("/v1/ads/create", data=payload)
 
@@ -572,6 +592,8 @@ class AdsResource:
         audience_id: str | None = None,
         advantage_audience: int | None = None,
         objective: str | None = None,
+        dsa_beneficiary: str | None = None,
+        dsa_payor: str | None = None,
     ) -> dict[str, Any]:
         """Create Click-to-WhatsApp ad (async)"""
         payload = self._build_payload(
@@ -593,5 +615,7 @@ class AdsResource:
             audience_id=audience_id,
             advantage_audience=advantage_audience,
             objective=objective,
+            dsa_beneficiary=dsa_beneficiary,
+            dsa_payor=dsa_payor,
         )
         return await self._client._apost("/v1/ads/ctwa", data=payload)

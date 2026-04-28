@@ -19573,6 +19573,20 @@ paths:
                   type: array
                   description: "Meta only. Required for housing, employment, credit, or political ads."
                   items: { type: string, enum: [HOUSING, EMPLOYMENT, CREDIT, ISSUES_ELECTIONS_POLITICS] }
+                dsaBeneficiary:
+                  type: string
+                  maxLength: 100
+                  description: |
+                    Name of the legal entity benefiting from the ad.
+                    Required by Meta when targeting EU users (DSA Article 26).
+                    Not enforced at schema level; enforced server-side when targeting intersects EU member states.
+                dsaPayor:
+                  type: string
+                  maxLength: 100
+                  description: |
+                    Name of the legal entity paying for the ad.
+                    Required by Meta when targeting EU users (DSA Article 26).
+                    Note Meta API spelling: dsa_payor (not dsa_payer).
       responses:
         '201':
           description: Ad created
@@ -19706,6 +19720,20 @@ paths:
                 additionalDescriptions: { type: array, items: { type: string }, description: "Google Search RSA only. Extra descriptions." }
                 advantageAudience: { type: integer, enum: [0, 1], description: "Meta only. Controls the Advantage audience feature (targeting_automation). 0 = disabled (default), 1 = enabled. Meta Marketing API requires this field on all ad set creation requests." }
                 gender: { type: string, enum: [all, male, female], default: all, description: "Meta only. Restrict the audience by gender. 'male' targets men only, 'female' targets women only, 'all' (default) targets everyone. Ignored by non-Meta platforms." }
+                dsaBeneficiary:
+                  type: string
+                  maxLength: 100
+                  description: |
+                    Name of the legal entity benefiting from the ad.
+                    Required by Meta when targeting EU users (DSA Article 26).
+                    Not enforced at schema level; enforced server-side when targeting intersects EU member states.
+                dsaPayor:
+                  type: string
+                  maxLength: 100
+                  description: |
+                    Name of the legal entity paying for the ad.
+                    Required by Meta when targeting EU users (DSA Article 26).
+                    Note Meta API spelling: dsa_payor (not dsa_payer).
       responses:
         '201':
           description: Ad(s) created
@@ -20399,6 +20427,20 @@ paths:
                     objective). `OUTCOME_SALES` and `OUTCOME_LEADS` require
                     additional account configuration (Dataset linked to the WABA
                     for sales) and may be rejected by Meta if missing.
+                dsaBeneficiary:
+                  type: string
+                  maxLength: 100
+                  description: |
+                    Name of the legal entity benefiting from the ad.
+                    Required by Meta when targeting EU users (DSA Article 26).
+                    Not enforced at schema level; enforced server-side when targeting intersects EU member states.
+                dsaPayor:
+                  type: string
+                  maxLength: 100
+                  description: |
+                    Name of the legal entity paying for the ad.
+                    Required by Meta when targeting EU users (DSA Article 26).
+                    Note Meta API spelling: dsa_payor (not dsa_payer).
       responses:
         '201':
           description: CTWA ad created and submitted to Meta for review.
