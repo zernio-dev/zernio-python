@@ -3512,7 +3512,6 @@ components:
           nullable: true
         platformAdId: { type: string }
         platformAdAccountId: { type: string }
-        platformAdAccountName: { type: string, nullable: true, description: "Human-readable advertiser/account name from the platform. Refreshed on every sync." }
         platformCampaignId: { type: string }
         platformAdSetId: { type: string }
         campaignName: { type: string }
