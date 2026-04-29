@@ -92,6 +92,7 @@ class AdsResource:
         status: str | None = None,
         budget: dict[str, Any] | None = None,
         targeting: dict[str, Any] | None = None,
+        creative: dict[str, Any] | None = None,
         name: str | None = None,
     ) -> dict[str, Any]:
         """Update ad"""
@@ -99,6 +100,7 @@ class AdsResource:
             status=status,
             budget=budget,
             targeting=targeting,
+            creative=creative,
             name=name,
         )
         return self._client._put(f"/v1/ads/{ad_id}", data=payload)
@@ -133,10 +135,32 @@ class AdsResource:
         )
         return self._client._get(f"/v1/ads/{ad_id}/comments", params=params)
 
-    def list_ad_accounts(self, account_id: str) -> dict[str, Any]:
+    def list_ads_business_centers(self, account_id: str) -> dict[str, Any]:
+        """List TikTok Business Centers"""
+        params = self._build_params(
+            account_id=account_id,
+        )
+        return self._client._get("/v1/ads/business-centers", params=params)
+
+    def trigger_ads_initial_sync(self, account_id: str) -> dict[str, Any]:
+        """Re-sync an ads account"""
+        payload = self._build_payload(
+            account_id=account_id,
+        )
+        return self._client._post("/v1/ads/sync/initial", data=payload)
+
+    def list_ad_accounts(
+        self,
+        account_id: str,
+        *,
+        ad_account_id: str | None = None,
+        limit: int | None = None,
+    ) -> dict[str, Any]:
         """List ad accounts"""
         params = self._build_params(
             account_id=account_id,
+            ad_account_id=ad_account_id,
+            limit=limit,
         )
         return self._client._get("/v1/ads/accounts", params=params)
 
@@ -160,6 +184,7 @@ class AdsResource:
         special_ad_categories: list[str] | None = None,
         link_url: str | None = None,
         call_to_action: str | None = None,
+        spark_auth_code: str | None = None,
         dsa_beneficiary: str | None = None,
         dsa_payor: str | None = None,
     ) -> dict[str, Any]:
@@ -182,6 +207,7 @@ class AdsResource:
             special_ad_categories=special_ad_categories,
             link_url=link_url,
             call_to_action=call_to_action,
+            spark_auth_code=spark_auth_code,
             dsa_beneficiary=dsa_beneficiary,
             dsa_payor=dsa_payor,
         )
@@ -390,6 +416,7 @@ class AdsResource:
         status: str | None = None,
         budget: dict[str, Any] | None = None,
         targeting: dict[str, Any] | None = None,
+        creative: dict[str, Any] | None = None,
         name: str | None = None,
     ) -> dict[str, Any]:
         """Update ad (async)"""
@@ -397,6 +424,7 @@ class AdsResource:
             status=status,
             budget=budget,
             targeting=targeting,
+            creative=creative,
             name=name,
         )
         return await self._client._aput(f"/v1/ads/{ad_id}", data=payload)
@@ -431,10 +459,32 @@ class AdsResource:
         )
         return await self._client._aget(f"/v1/ads/{ad_id}/comments", params=params)
 
-    async def alist_ad_accounts(self, account_id: str) -> dict[str, Any]:
+    async def alist_ads_business_centers(self, account_id: str) -> dict[str, Any]:
+        """List TikTok Business Centers (async)"""
+        params = self._build_params(
+            account_id=account_id,
+        )
+        return await self._client._aget("/v1/ads/business-centers", params=params)
+
+    async def atrigger_ads_initial_sync(self, account_id: str) -> dict[str, Any]:
+        """Re-sync an ads account (async)"""
+        payload = self._build_payload(
+            account_id=account_id,
+        )
+        return await self._client._apost("/v1/ads/sync/initial", data=payload)
+
+    async def alist_ad_accounts(
+        self,
+        account_id: str,
+        *,
+        ad_account_id: str | None = None,
+        limit: int | None = None,
+    ) -> dict[str, Any]:
         """List ad accounts (async)"""
         params = self._build_params(
             account_id=account_id,
+            ad_account_id=ad_account_id,
+            limit=limit,
         )
         return await self._client._aget("/v1/ads/accounts", params=params)
 
@@ -458,6 +508,7 @@ class AdsResource:
         special_ad_categories: list[str] | None = None,
         link_url: str | None = None,
         call_to_action: str | None = None,
+        spark_auth_code: str | None = None,
         dsa_beneficiary: str | None = None,
         dsa_payor: str | None = None,
     ) -> dict[str, Any]:
@@ -480,6 +531,7 @@ class AdsResource:
             special_ad_categories=special_ad_categories,
             link_url=link_url,
             call_to_action=call_to_action,
+            spark_auth_code=spark_auth_code,
             dsa_beneficiary=dsa_beneficiary,
             dsa_payor=dsa_payor,
         )

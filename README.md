@@ -382,6 +382,7 @@ Both `from zernio import ...` and `from late import ...` work identically. The `
 |--------|-------------|
 | `ads.list_ad_accounts()` | List ad accounts |
 | `ads.list_ads()` | List ads |
+| `ads.list_ads_business_centers()` | List TikTok Business Centers |
 | `ads.list_conversion_destinations()` | List destinations for the Conversions API |
 | `ads.create_ctwa_ad()` | Create Click-to-WhatsApp ad |
 | `ads.create_standalone_ad()` | Create standalone ad |
@@ -393,6 +394,7 @@ Both `from zernio import ...` and `from late import ...` work identically. The `
 | `ads.boost_post()` | Boost post as ad |
 | `ads.search_ad_interests()` | Search targeting interests |
 | `ads.send_conversions()` | Send conversion events to an ad platform |
+| `ads.trigger_ads_initial_sync()` | Re-sync an ads account |
 
 ### Broadcasts
 | Method | Description |

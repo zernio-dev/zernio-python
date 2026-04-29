@@ -194,6 +194,13 @@ tags:
   - name: TikTok
   - name: Queue
   - name: Analytics
+    description: |
+      Cross-platform analytics for connected social accounts: per-post timelines, account-level insights,
+      follower history, demographics, posting frequency, and best-time-to-post recommendations.
+
+      **Requires the Analytics add-on.** Endpoints in this group return `402` with code
+      `analytics_addon_required` when the calling user (or root user, for invited team members) does not
+      have the addon active. Subscribe via the Zernio dashboard or via Stripe.
   - name: Inbox Access
     description: |
       Check and manage inbox feature access.
@@ -3446,6 +3453,25 @@ components:
     AdStatus:
       type: string
       enum: [active, paused, pending_review, rejected, completed, cancelled, error]
+    BusinessCenter:
+      type: object
+      description: |
+        TikTok Business Center entity. Returned by `GET /v1/ads/business-centers`. BCs are
+        TikTok's agency container — one BC owns N advertisers (ad accounts). Most solo
+        advertisers don't have one; the agency token uses BCs to roll up multi-client access.
+      properties:
+        bcId:
+          type: string
+          description: Business Center ID
+          example: "7123456789012345678"
+        name:
+          type: string
+          description: Display name set by the BC owner
+          example: "Acme Agency"
+        advertiserCount:
+          type: integer
+          description: Number of advertisers (ad accounts) reachable under this BC for the calling token
+          example: 23
     BidStrategy:
       type: string
       enum: [LOWEST_COST_WITHOUT_CAP, LOWEST_COST_WITH_BID_CAP, COST_CAP, LOWEST_COST_WITH_MIN_ROAS]
@@ -3486,6 +3512,7 @@ components:
           nullable: true
         platformAdId: { type: string }
         platformAdAccountId: { type: string }
+        platformAdAccountName: { type: string, nullable: true, description: "Human-readable advertiser/account name from the platform. Refreshed on every sync." }
         platformCampaignId: { type: string }
         platformAdSetId: { type: string }
         campaignName: { type: string }
@@ -3500,6 +3527,25 @@ components:
           nullable: true
           description: "Meta ad set optimization goal (e.g. OFFSITE_CONVERSIONS, VALUE, LEAD_GENERATION, LINK_CLICKS). Only present for Meta ads."
           example: OFFSITE_CONVERSIONS
+        platformAdAccountName:
+          type: string
+          nullable: true
+          description: |
+            Human-readable advertiser/account name (Meta `AdAccount.name`, TikTok
+            `advertiser_name`, LinkedIn / X / Pinterest equivalents). Refreshed every
+            sync so platform-side renames propagate within one cycle. `null` when the
+            platform doesn't return a name or the sync hasn't run yet.
+          example: "Zernio - previously Late"
+        platformCreatedAt:
+          type: string
+          format: date-time
+          nullable: true
+          description: |
+            Platform-reported creation timestamp (Meta `created_time`, TikTok `create_time`).
+            Distinct from `createdAt` which reflects when Zernio first synced the doc — for
+            sort/filter by "when the ad was actually created on the platform", read this field.
+            `null` for legacy ads synced before this field was added; aggregations fall back
+            to `createdAt` in that case.
         bidStrategy:
           allOf: [{ $ref: '#/components/schemas/BidStrategy' }]
           nullable: true
@@ -3680,6 +3726,7 @@ components:
           description: "ISO 4217 currency code (e.g. USD, EUR, CLP, JPY) for all budget amounts in this campaign node. Budgets are NOT normalized to USD."
         metrics: { $ref: '#/components/schemas/AdMetrics' }
         platformAdAccountId: { type: string }
+        platformAdAccountName: { type: string, nullable: true, description: "Human-readable advertiser/account name from the platform. Refreshed on every sync." }
         accountId: { type: string }
         profileId: { type: string }
         platformObjective: { type: string, nullable: true, description: "Raw Meta campaign objective (e.g. OUTCOME_SALES, OUTCOME_LEADS, OUTCOME_TRAFFIC)" }
@@ -3756,6 +3803,7 @@ components:
           description: "ISO 4217 currency code for all budget amounts. Budgets are NOT normalized to USD."
         metrics: { $ref: '#/components/schemas/AdMetrics' }
         platformAdAccountId: { type: string }
+        platformAdAccountName: { type: string, nullable: true, description: "Human-readable advertiser/account name from the platform. Refreshed on every sync." }
         accountId: { type: string }
         profileId: { type: string }
         platformObjective: { type: string, nullable: true, description: "Raw Meta campaign objective (e.g. OUTCOME_SALES, OUTCOME_LEADS, OUTCOME_TRAFFIC)" }
@@ -19175,16 +19223,23 @@ paths:
       summary: Duplicate a campaign
       description: |
         Duplicates a campaign, including its ad sets, ads, creatives, and
-        targeting by default (`deepCopy: true`). On Meta, this uses
-        `POST /{campaign-id}/copies`. The copy is created paused by default so
-        callers can review before launching.
+        targeting by default (`deepCopy: true`). The copy is created paused
+        so callers can review before launching.
 
-        The platform's duplication is asynchronous from our side; once the
-        copy is created on the platform, we trigger a sync discovery so the
-        new hierarchy shows up in /v1/ads/tree. Set `syncAfter: false` to
-        skip the discovery trigger and poll on your own cadence.
+        Per-platform implementation:
+        - **Meta** uses the native `POST /{campaign-id}/copies` endpoint.
+        - **TikTok** has no native copy primitive; Zernio walks the source
+          graph (`/v2/campaign/get/`, `/v2/adgroup/get/`, `/v2/ad/get/`) and
+          recreates each entity via the corresponding `/create/` endpoints,
+          carrying over budget / targeting / bid_type / bid_price /
+          deep_bid_type / creative fields. Spark Ad linkage (`tiktok_item_id`)
+          is preserved.
 
-        Meta-only for now. Other platforms return 501 Not Implemented.
+        The new hierarchy is asynchronous to materialize in our DB — we
+        trigger sync discovery automatically. Set `syncAfter: false` to
+        skip and poll `/v1/ads/tree` on your own cadence.
+
+        Other platforms return 501 Not Implemented.
       security:
         - bearerAuth: []
       parameters:
@@ -19197,7 +19252,7 @@ paths:
               type: object
               required: [platform]
               properties:
-                platform: { type: string, enum: [facebook, instagram] }
+                platform: { type: string, enum: [facebook, instagram, tiktok] }
                 deepCopy: { type: boolean, default: true, description: Copy child ad sets + ads + creatives + targeting }
                 statusOption:
                   type: string
@@ -19412,7 +19467,16 @@ paths:
       operationId: updateAd
       tags: [Ads]
       summary: Update ad
-      description: Update one or more fields on an ad. Status changes and budget updates are propagated to the platform. Targeting updates are Meta-only.
+      description: |
+        Patch one or more fields on an ad. Status, budget, targeting, and creative changes
+        are propagated to the platform.
+
+        Per-platform support:
+        - **Meta** (Facebook + Instagram): all fields supported.
+        - **TikTok**: status, budget, targeting (via `/v2/adgroup/update/`), and creative
+          (via `/v2/ad/update/` patch-style — `headline` is ignored, `body` becomes `ad_text`).
+        - **Pinterest / X / LinkedIn / Google**: status + budget only. Sending `targeting`
+          or `creative` returns 501 with code `unsupported_platform_operation`.
       security:
         - bearerAuth: []
       parameters:
@@ -19432,7 +19496,8 @@ paths:
                     type: { type: string, enum: [daily, lifetime] }
                 targeting:
                   type: object
-                  description: Meta-only. Targeting updates for other platforms are not supported after creation.
+                  description: |
+                    Meta + TikTok only. Pinterest / X / LinkedIn / Google return 501.
                   properties:
                     ageMin: { type: integer, minimum: 13, maximum: 65 }
                     ageMax: { type: integer, minimum: 13, maximum: 65 }
@@ -19447,6 +19512,24 @@ paths:
                           id: { type: string }
                           name: { type: string }
                     advantage_audience: { type: integer, enum: [0, 1], description: "Meta only. Omit to preserve the existing setting on update. 0 = disabled, 1 = enabled." }
+                creative:
+                  type: object
+                  description: |
+                    Replace the ad's creative. Meta + TikTok only.
+
+                    - **Meta**: requires `headline`, `body`, `callToAction`, `linkUrl`, `imageUrl`. The
+                      ad's existing creative is replaced via a new `/act_X/adcreatives` upload + ad
+                      update. The old creative is retained on the ad account for historical reporting.
+                    - **TikTok**: patch-style. Pass any subset; `headline` is ignored (TikTok creatives
+                      have no headline slot). `body` becomes the in-feed `ad_text`; `linkUrl` becomes
+                      `landing_page_url`; `videoUrl` triggers a fresh upload.
+                  properties:
+                    headline: { type: string, description: "Meta only" }
+                    body: { type: string }
+                    callToAction: { type: string }
+                    linkUrl: { type: string, format: uri }
+                    imageUrl: { type: string, format: uri }
+                    videoUrl: { type: string, format: uri }
                 name: { type: string }
       responses:
         '200':
@@ -19462,6 +19545,7 @@ paths:
           description: Invalid status transition or budget below minimum
         '401': { $ref: '#/components/responses/Unauthorized' }
         '404': { $ref: '#/components/responses/NotFound' }
+        '501': { description: "targeting or creative not supported on the platform (Meta + TikTok only)" }
     delete:
       operationId: deleteAd
       tags: [Ads]
@@ -19607,6 +19691,91 @@ paths:
         '422':
           description: Ads connection missing or account token unavailable (code ads_connection_required).
 
+  /v1/ads/business-centers:
+    get:
+      operationId: listAdsBusinessCenters
+      tags: [Ads]
+      summary: List TikTok Business Centers
+      description: |
+        Returns the TikTok Business Centers (BCs) the connected `tiktokads` account can read.
+        Each BC reports its advertiser count so callers can build agency-style pickers
+        without re-walking `/v1/ads/accounts` per BC.
+
+        TikTok-only. Solo advertisers (non-agency tokens) return an empty array.
+      security:
+        - bearerAuth: []
+      parameters:
+        - { name: accountId, in: query, required: true, schema: { type: string }, description: ID of the `tiktokads` (or parent `tiktok` posting) SocialAccount }
+      responses:
+        '200':
+          description: Business centers
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  businessCenters:
+                    type: array
+                    items: { $ref: '#/components/schemas/BusinessCenter' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404': { description: TikTok account not found }
+        '422': { description: TikTok Ads not connected }
+
+  /v1/ads/sync/initial:
+    post:
+      operationId: triggerAdsInitialSync
+      tags: [Ads]
+      summary: Re-sync an ads account
+      description: |
+        Enqueue a full re-sync (discovery + 90-day metrics backfill) for one ads
+        SocialAccount. Returns immediately with a trace ID; subscribe to the
+        `account.ads.initial_sync_completed` webhook for completion.
+
+        Use this when:
+        - the customer changed which TikTok Business Center / Meta ad account a
+          token can reach and wants Zernio to discover the new ads,
+        - a previous sync errored out and the customer wants a clean retry,
+        - the customer rotated permissions on the platform side.
+
+        Per-account 1h debounce: subsequent calls within an hour return `202`
+        with `status: "already_queued"` and the prior trace ID.
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [accountId]
+              properties:
+                accountId:
+                  type: string
+                  description: |
+                    ID of the ads SocialAccount to re-sync (e.g. `metaads` / `tiktokads` doc).
+                    Posting accounts (`facebook` / `tiktok`) are rejected — pass the ads-side
+                    account ID that owns the platform tokens.
+      responses:
+        '202':
+          description: Sync queued (or already-queued debounce hit)
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    enum: [queued, already_queued]
+                  traceId:
+                    type: string
+                    nullable: true
+                    description: Trace ID for the enqueued job. Reused on `already_queued`.
+                  message: { type: string }
+        '400': { description: Invalid input }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404': { description: Ads SocialAccount not found }
+        '503': { description: Sync queue not configured on this environment }
+
   /v1/ads/accounts:
     get:
       operationId: listAdAccounts
@@ -19625,6 +19794,8 @@ paths:
         - bearerAuth: []
       parameters:
         - { name: accountId, in: query, required: true, schema: { type: string }, description: Social account ID }
+        - { name: adAccountId, in: query, required: false, schema: { type: string }, description: "Filter response to a single platform ad account ID (e.g. `act_123` for Meta, advertiser_id for TikTok). Returns at most one item." }
+        - { name: limit, in: query, required: false, schema: { type: integer, minimum: 1, maximum: 1000 }, description: "Clamp the returned `accounts[]` length. Useful for typeahead pickers on agency tokens with hundreds of advertisers." }
       responses:
         '200':
           description: Ad accounts
@@ -19742,6 +19913,15 @@ paths:
                     `call_to_action` on the creative entry of /v2/ad/create/. Pass-through —
                     the platform validates the value. See TikTok's "Enumeration - Call-to-Action"
                     reference for the full list.
+                sparkAuthCode:
+                  type: string
+                  description: |
+                    TikTok-only. Spark Code (creator's `auth_code`) authorizing cross-creator
+                    Spark Ads — the advertiser can boost a video owned by a DIFFERENT TikTok
+                    account. Without this, boosts are limited to videos owned by the same
+                    account running the ads (same-BC creators only). The creator generates the
+                    code in their TikTok app's Promote settings and shares it with the
+                    advertiser. Maps to `auth_code` on the creative entry of /v2/ad/create/.
                 dsaBeneficiary:
                   type: string
                   maxLength: 100
@@ -19859,6 +20039,10 @@ paths:
                     in attach mode returns 400. To change an existing ad set's
                     bid, use `PUT /v1/ads/ad-sets/{adSetId}`. Mutually exclusive
                     with `creatives[]`.
+
+                    Supported on Meta (facebook, instagram) and TikTok. On TikTok
+                    the `adSetId` is the ad group ID; the new ad inherits the
+                    ad group's bid + budget + targeting.
                 businessName: { type: string, maxLength: 25, description: "Google Display only" }
                 boardId: { type: string, description: "Pinterest only. Board ID (auto-creates if not provided)." }
                 countries: { type: array, items: { type: string } }

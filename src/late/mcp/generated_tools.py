@@ -1245,16 +1245,25 @@ def register_generated_tools(mcp, _get_client):
         status: str = "",
         budget: str = "",
         targeting: str = "",
+        creative: str = "",
         name: str = "",
     ) -> str:
         """Update ad
 
-        Args:
-            ad_id: (required)
-            status
-            budget
-            targeting: Meta-only. Targeting updates for other platforms are not supported after creation.
-            name"""
+            Args:
+                ad_id: (required)
+                status
+                budget
+                targeting: Meta + TikTok only. Pinterest / X / LinkedIn / Google return 501.
+                creative: Replace the ad's creative. Meta + TikTok only.
+
+        - **Meta**: requires `headline`, `body`, `callToAction`, `linkUrl`, `imageUrl`. The
+          ad's existing creative is replaced via a new `/act_X/adcreatives` upload + ad
+          update. The old creative is retained on the ad account for historical reporting.
+        - **TikTok**: patch-style. Pass any subset; `headline` is ignored (TikTok creatives
+          have no headline slot). `body` becomes the in-feed `ad_text`; `linkUrl` becomes
+          `landing_page_url`; `videoUrl` triggers a fresh upload.
+                name"""
         client = _get_client()
         try:
             response = client.ads.update_ad(
@@ -1262,6 +1271,7 @@ def register_generated_tools(mcp, _get_client):
                 status=status,
                 budget=budget,
                 targeting=targeting,
+                creative=creative,
                 name=name,
             )
             return _format_response(response)
@@ -1319,14 +1329,49 @@ def register_generated_tools(mcp, _get_client):
             return f"Error: {e}"
 
     @mcp.tool()
-    def ads_list_ad_accounts(account_id: str) -> str:
+    def ads_list_ads_business_centers(account_id: str) -> str:
+        """List TikTok Business Centers
+
+        Args:
+            account_id: ID of the `tiktokads` (or parent `tiktok` posting) SocialAccount (required)"""
+        client = _get_client()
+        try:
+            response = client.ads.list_ads_business_centers(account_id=account_id)
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool()
+    def ads_trigger_ads_initial_sync(account_id: str) -> str:
+        """Re-sync an ads account
+
+            Args:
+                account_id: ID of the ads SocialAccount to re-sync (e.g. `metaads` / `tiktokads` doc).
+        Posting accounts (`facebook` / `tiktok`) are rejected — pass the ads-side
+        account ID that owns the platform tokens.
+         (required)"""
+        client = _get_client()
+        try:
+            response = client.ads.trigger_ads_initial_sync(account_id=account_id)
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool()
+    def ads_list_ad_accounts(
+        account_id: str, ad_account_id: str = "", limit: int = 0
+    ) -> str:
         """List ad accounts
 
         Args:
-            account_id: Social account ID (required)"""
+            account_id: Social account ID (required)
+            ad_account_id: Filter response to a single platform ad account ID (e.g. `act_123` for Meta, advertiser_id for TikTok). Returns at most one item.
+            limit: Clamp the returned `accounts[]` length. Useful for typeahead pickers on agency tokens with hundreds of advertisers."""
         client = _get_client()
         try:
-            response = client.ads.list_ad_accounts(account_id=account_id)
+            response = client.ads.list_ad_accounts(
+                account_id=account_id, ad_account_id=ad_account_id, limit=limit
+            )
             return _format_response(response)
         except Exception as e:
             return f"Error: {e}"
@@ -1350,6 +1395,7 @@ def register_generated_tools(mcp, _get_client):
         special_ad_categories: str = "",
         link_url: str = "",
         call_to_action: str = "",
+        spark_auth_code: str = "",
         dsa_beneficiary: str = "",
         dsa_payor: str = "",
     ) -> str:
@@ -1386,6 +1432,12 @@ def register_generated_tools(mcp, _get_client):
         `call_to_action` on the creative entry of /v2/ad/create/. Pass-through —
         the platform validates the value. See TikTok's "Enumeration - Call-to-Action"
         reference for the full list.
+                spark_auth_code: TikTok-only. Spark Code (creator's `auth_code`) authorizing cross-creator
+        Spark Ads — the advertiser can boost a video owned by a DIFFERENT TikTok
+        account. Without this, boosts are limited to videos owned by the same
+        account running the ads (same-BC creators only). The creator generates the
+        code in their TikTok app's Promote settings and shares it with the
+        advertiser. Maps to `auth_code` on the creative entry of /v2/ad/create/.
                 dsa_beneficiary: Name of the legal entity benefiting from the ad.
         Required by Meta when targeting EU users (DSA Article 26).
         Not enforced at schema level; enforced server-side when targeting intersects EU member states.
@@ -1412,6 +1464,7 @@ def register_generated_tools(mcp, _get_client):
                 special_ad_categories=special_ad_categories,
                 link_url=link_url,
                 call_to_action=call_to_action,
+                spark_auth_code=spark_auth_code,
                 dsa_beneficiary=dsa_beneficiary,
                 dsa_payor=dsa_payor,
             )
@@ -1487,6 +1540,10 @@ def register_generated_tools(mcp, _get_client):
         in attach mode returns 400. To change an existing ad set's
         bid, use `PUT /v1/ads/ad-sets/{adSetId}`. Mutually exclusive
         with `creatives[]`.
+
+        Supported on Meta (facebook, instagram) and TikTok. On TikTok
+        the `adSetId` is the ad group ID; the new ad inherits the
+        ad group's bid + budget + targeting.
                 business_name: Google Display only
                 board_id: Pinterest only. Board ID (auto-creates if not provided).
                 countries
