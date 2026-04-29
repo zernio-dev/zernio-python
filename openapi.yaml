@@ -194,13 +194,6 @@ tags:
   - name: TikTok
   - name: Queue
   - name: Analytics
-    description: |
-      Cross-platform analytics for connected social accounts: per-post timelines, account-level insights,
-      follower history, demographics, posting frequency, and best-time-to-post recommendations.
-
-      **Requires the Analytics add-on.** Endpoints in this group return `402` with code
-      `analytics_addon_required` when the calling user (or root user, for invited team members) does not
-      have the addon active. Subscribe via the Zernio dashboard or via Stripe.
   - name: Inbox Access
     description: |
       Check and manage inbox feature access.
