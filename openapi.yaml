@@ -19720,61 +19720,6 @@ paths:
         '404': { description: TikTok account not found }
         '422': { description: TikTok Ads not connected }
 
-  /v1/ads/sync/initial:
-    post:
-      operationId: triggerAdsInitialSync
-      tags: [Ads]
-      summary: Re-sync an ads account
-      description: |
-        Enqueue a full re-sync (discovery + 90-day metrics backfill) for one ads
-        SocialAccount. Returns immediately with a trace ID; subscribe to the
-        `account.ads.initial_sync_completed` webhook for completion.
-
-        Use this when:
-        - the customer changed which TikTok Business Center / Meta ad account a
-          token can reach and wants Zernio to discover the new ads,
-        - a previous sync errored out and the customer wants a clean retry,
-        - the customer rotated permissions on the platform side.
-
-        Per-account 1h debounce: subsequent calls within an hour return `202`
-        with `status: "already_queued"` and the prior trace ID.
-      security:
-        - bearerAuth: []
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              required: [accountId]
-              properties:
-                accountId:
-                  type: string
-                  description: |
-                    ID of the ads SocialAccount to re-sync (e.g. `metaads` / `tiktokads` doc).
-                    Posting accounts (`facebook` / `tiktok`) are rejected — pass the ads-side
-                    account ID that owns the platform tokens.
-      responses:
-        '202':
-          description: Sync queued (or already-queued debounce hit)
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  status:
-                    type: string
-                    enum: [queued, already_queued]
-                  traceId:
-                    type: string
-                    nullable: true
-                    description: Trace ID for the enqueued job. Reused on `already_queued`.
-                  message: { type: string }
-        '400': { description: Invalid input }
-        '401': { $ref: '#/components/responses/Unauthorized' }
-        '404': { description: Ads SocialAccount not found }
-        '503': { description: Sync queue not configured on this environment }
-
   /v1/ads/accounts:
     get:
       operationId: listAdAccounts

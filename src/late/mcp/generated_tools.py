@@ -1342,22 +1342,6 @@ def register_generated_tools(mcp, _get_client):
             return f"Error: {e}"
 
     @mcp.tool()
-    def ads_trigger_ads_initial_sync(account_id: str) -> str:
-        """Re-sync an ads account
-
-            Args:
-                account_id: ID of the ads SocialAccount to re-sync (e.g. `metaads` / `tiktokads` doc).
-        Posting accounts (`facebook` / `tiktok`) are rejected — pass the ads-side
-        account ID that owns the platform tokens.
-         (required)"""
-        client = _get_client()
-        try:
-            response = client.ads.trigger_ads_initial_sync(account_id=account_id)
-            return _format_response(response)
-        except Exception as e:
-            return f"Error: {e}"
-
-    @mcp.tool()
     def ads_list_ad_accounts(
         account_id: str, ad_account_id: str = "", limit: int = 0
     ) -> str:

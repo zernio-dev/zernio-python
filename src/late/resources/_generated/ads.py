@@ -142,13 +142,6 @@ class AdsResource:
         )
         return self._client._get("/v1/ads/business-centers", params=params)
 
-    def trigger_ads_initial_sync(self, account_id: str) -> dict[str, Any]:
-        """Re-sync an ads account"""
-        payload = self._build_payload(
-            account_id=account_id,
-        )
-        return self._client._post("/v1/ads/sync/initial", data=payload)
-
     def list_ad_accounts(
         self,
         account_id: str,
@@ -465,13 +458,6 @@ class AdsResource:
             account_id=account_id,
         )
         return await self._client._aget("/v1/ads/business-centers", params=params)
-
-    async def atrigger_ads_initial_sync(self, account_id: str) -> dict[str, Any]:
-        """Re-sync an ads account (async)"""
-        payload = self._build_payload(
-            account_id=account_id,
-        )
-        return await self._client._apost("/v1/ads/sync/initial", data=payload)
 
     async def alist_ad_accounts(
         self,
