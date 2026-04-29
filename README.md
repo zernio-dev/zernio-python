@@ -370,9 +370,9 @@ Both `from zernio import ...` and `from late import ...` work identically. The `
 | `ad_campaigns.list_ad_campaigns()` | List campaigns |
 | `ad_campaigns.bulk_update_ad_campaign_status()` | Pause or resume many campaigns |
 | `ad_campaigns.get_ad_tree()` | Get campaign tree |
-| `ad_campaigns.update_ad_campaign()` | Update a campaign (budget) |
+| `ad_campaigns.update_ad_campaign()` | Update a campaign (budget and/or bid strategy) |
 | `ad_campaigns.update_ad_campaign_status()` | Pause or resume a campaign |
-| `ad_campaigns.update_ad_set()` | Update an ad set (budget and/or status) |
+| `ad_campaigns.update_ad_set()` | Update an ad set (budget, status, and/or bid strategy) |
 | `ad_campaigns.update_ad_set_status()` | Pause or resume a single ad set |
 | `ad_campaigns.delete_ad_campaign()` | Delete a campaign |
 | `ad_campaigns.duplicate_ad_campaign()` | Duplicate a campaign |

@@ -485,10 +485,12 @@ def register_generated_tools(mcp, _get_client):
     ) -> str:
         """Get location details
 
-        Args:
-            account_id: The Zernio account ID (from /v1/accounts) (required)
-            location_id: Override which location to query. If omitted, uses the account's selected location. Use GET /gmb-locations to list valid IDs.
-            read_mask: Comma-separated fields to return. Available: name, title, phoneNumbers, categories, storefrontAddress, websiteUri, regularHours, specialHours, serviceArea, serviceItems, profile, openInfo, metadata, moreHours."""
+            Args:
+                account_id: The Zernio account ID (from /v1/accounts) (required)
+                location_id: Override which location to query. If omitted, uses the account's selected location. Use GET /gmb-locations to list valid IDs.
+                read_mask: Comma-separated fields to return. Available: name, title, phoneNumbers, categories, storefrontAddress, websiteUri, regularHours, specialHours, serviceArea, serviceItems, profile, openInfo, metadata, moreHours.
+        `title` and `metadata` are always included in the response so the `location` summary block can be populated, even if you omit them here.
+        Note: `location` is a derived response field, not a Google readMask value, passing it returns 400."""
         client = _get_client()
         try:
             response = client.accounts.get_google_business_location_details(
@@ -973,18 +975,22 @@ def register_generated_tools(mcp, _get_client):
 
     @mcp.tool()
     def ad_campaigns_update_ad_campaign(
-        campaign_id: str, platform: str, budget: str
+        campaign_id: str, platform: str, budget: str = "", bid_strategy: str = ""
     ) -> str:
-        """Update a campaign (budget)
+        """Update a campaign (budget and/or bid strategy)
 
         Args:
             campaign_id: Platform campaign ID (required)
             platform: (required)
-            budget: (required)"""
+            budget
+            bid_strategy: Campaign-level default. Ad sets inherit this unless they override."""
         client = _get_client()
         try:
             response = client.ad_campaigns.update_ad_campaign(
-                campaign_id=campaign_id, platform=platform, budget=budget
+                campaign_id=campaign_id,
+                platform=platform,
+                budget=budget,
+                bid_strategy=bid_strategy,
             )
             return _format_response(response)
         except Exception as e:
@@ -1068,19 +1074,41 @@ def register_generated_tools(mcp, _get_client):
 
     @mcp.tool()
     def ad_campaigns_update_ad_set(
-        ad_set_id: str, platform: str, budget: str = "", status: str = ""
+        ad_set_id: str,
+        platform: str,
+        budget: str = "",
+        status: str = "",
+        bid_strategy: str = "",
+        bid_amount: float = 0.0,
+        roas_average_floor: float = 0.0,
     ) -> str:
-        """Update an ad set (budget and/or status)
+        """Update an ad set (budget, status, and/or bid strategy)
 
-        Args:
-            ad_set_id: Platform ad set ID (required)
-            platform: (required)
-            budget: Omit if only toggling status
-            status: Omit if only updating budget"""
+            Args:
+                ad_set_id: Platform ad set ID (required)
+                platform: (required)
+                budget: Omit if not updating budget
+                status: Omit if not toggling delivery state
+                bid_strategy: Ad-set-level bid strategy. Overrides the campaign-level default.
+        Supported on Meta (facebook, instagram) and TikTok. On TikTok the
+        Meta-style enum is mapped to bid_type / bid_price / deep_bid_type
+        automatically. Other platforms (linkedin, pinterest, google, twitter)
+        return 501 Not Implemented when bidStrategy is set.
+                bid_amount: Bid cap in WHOLE currency units (USD: 5 = $5.00; JPY: 100 = ¥100). Required when
+        bidStrategy is LOWEST_COST_WITH_BID_CAP or COST_CAP. Internally converted to Meta's
+        smallest-denomination integer.
+                roas_average_floor: Minimum ROAS as a decimal multiplier (2.0 = 2.0x). Required when bidStrategy is
+        LOWEST_COST_WITH_MIN_ROAS. Sent to Meta as `bid_constraints.roas_average_floor` × 10000."""
         client = _get_client()
         try:
             response = client.ad_campaigns.update_ad_set(
-                ad_set_id=ad_set_id, platform=platform, budget=budget, status=status
+                ad_set_id=ad_set_id,
+                platform=platform,
+                budget=budget,
+                status=status,
+                bid_strategy=bid_strategy,
+                bid_amount=bid_amount,
+                roas_average_floor=roas_average_floor,
             )
             return _format_response(response)
         except Exception as e:
@@ -1315,9 +1343,13 @@ def register_generated_tools(mcp, _get_client):
         currency: str = "",
         schedule: str = "",
         targeting: str = "",
+        bid_strategy: str = "",
         bid_amount: float = 0.0,
+        roas_average_floor: float = 0.0,
         tracking: str = "",
         special_ad_categories: str = "",
+        link_url: str = "",
+        call_to_action: str = "",
         dsa_beneficiary: str = "",
         dsa_payor: str = "",
     ) -> str:
@@ -1334,9 +1366,26 @@ def register_generated_tools(mcp, _get_client):
                 currency
                 schedule
                 targeting
-                bid_amount: Max bid cap (Meta only)
+                bid_strategy: Meta bid strategy applied to the ad set. On TikTok, mapped to
+        `bid_type` / `bid_price` / `deep_bid_type` automatically.
+                bid_amount: Bid cap in WHOLE currency units (USD: 5 = $5.00; JPY: 100 = ¥100). Required when
+        `bidStrategy` is `LOWEST_COST_WITH_BID_CAP` or `COST_CAP`. Backward-compat: providing
+        `bidAmount` without `bidStrategy` is treated as `LOWEST_COST_WITH_BID_CAP`.
+                roas_average_floor: Minimum ROAS as a decimal multiplier (e.g. 2.0 = 2.0x ROAS). Required when
+        `bidStrategy` is `LOWEST_COST_WITH_MIN_ROAS`. Sent to Meta as
+        `bid_constraints.roas_average_floor` × 10000 (Meta uses fixed-point integers).
                 tracking: Meta only. Tracking specs (pixel, URL tags).
                 special_ad_categories: Meta only. Required for housing, employment, credit, or political ads.
+                link_url: TikTok-only. Custom destination URL for the Spark Ad. Without this, TikTok
+        Spark Ads have no clickable destination — required for traffic / conversion
+        objectives. Maps to `landing_page_url` on the creative entry of /v2/ad/create/
+        (TikTok SDK `AdcreateCreatives.landing_page_url`). Ignored on Meta / LinkedIn /
+        Pinterest / X / Google (those infer the destination from the boosted post).
+                call_to_action: TikTok-only. Call-to-action button label on the Spark Ad creative (e.g.
+        `LEARN_MORE`, `SHOP_NOW`, `DOWNLOAD_NOW`, `SIGN_UP`, `WATCH_NOW`). Maps to
+        `call_to_action` on the creative entry of /v2/ad/create/. Pass-through —
+        the platform validates the value. See TikTok's "Enumeration - Call-to-Action"
+        reference for the full list.
                 dsa_beneficiary: Name of the legal entity benefiting from the ad.
         Required by Meta when targeting EU users (DSA Article 26).
         Not enforced at schema level; enforced server-side when targeting intersects EU member states.
@@ -1356,9 +1405,13 @@ def register_generated_tools(mcp, _get_client):
                 currency=currency,
                 schedule=schedule,
                 targeting=targeting,
+                bid_strategy=bid_strategy,
                 bid_amount=bid_amount,
+                roas_average_floor=roas_average_floor,
                 tracking=tracking,
                 special_ad_categories=special_ad_categories,
+                link_url=link_url,
+                call_to_action=call_to_action,
                 dsa_beneficiary=dsa_beneficiary,
                 dsa_payor=dsa_payor,
             )
@@ -1399,6 +1452,9 @@ def register_generated_tools(mcp, _get_client):
         additional_descriptions: str = "",
         advantage_audience: int = 0,
         gender: str = "all",
+        bid_strategy: str = "",
+        bid_amount: float = 0.0,
+        roas_average_floor: float = 0.0,
         dsa_beneficiary: str = "",
         dsa_payor: str = "",
     ) -> str:
@@ -1426,8 +1482,11 @@ def register_generated_tools(mcp, _get_client):
         `callToAction` are ignored in this mode. Mutually exclusive with `adSetId`.
                 ad_set_id: Meta-only. When present, switches to the attach shape: adds
         one new ad to this existing ad set without creating a new
-        campaign. Budget, targeting, goal, and schedule are inherited
-        from the ad set on Meta. Mutually exclusive with `creatives[]`.
+        campaign. Budget, targeting, goal, schedule, AND bid strategy
+        are inherited from the ad set on Meta — passing `bidStrategy`
+        in attach mode returns 400. To change an existing ad set's
+        bid, use `PUT /v1/ads/ad-sets/{adSetId}`. Mutually exclusive
+        with `creatives[]`.
                 business_name: Google Display only
                 board_id: Pinterest only. Board ID (auto-creates if not provided).
                 countries
@@ -1442,6 +1501,12 @@ def register_generated_tools(mcp, _get_client):
                 additional_descriptions: Google Search RSA only. Extra descriptions.
                 advantage_audience: Meta only. Controls the Advantage audience feature (targeting_automation). 0 = disabled (default), 1 = enabled. Meta Marketing API requires this field on all ad set creation requests.
                 gender: Meta only. Restrict the audience by gender. 'male' targets men only, 'female' targets women only, 'all' (default) targets everyone. Ignored by non-Meta platforms.
+                bid_strategy: Meta bid strategy applied to the ad set.
+                bid_amount: Bid cap in WHOLE currency units (USD: 5 = $5.00; JPY: 100 = ¥100). Required when
+        `bidStrategy` is `LOWEST_COST_WITH_BID_CAP` or `COST_CAP`.
+                roas_average_floor: Minimum ROAS as a decimal multiplier (e.g. 2.0 = 2.0x ROAS). Required when
+        `bidStrategy` is `LOWEST_COST_WITH_MIN_ROAS`. Sent to Meta as
+        `bid_constraints.roas_average_floor` × 10000.
                 dsa_beneficiary: Name of the legal entity benefiting from the ad.
         Required by Meta when targeting EU users (DSA Article 26).
         Not enforced at schema level; enforced server-side when targeting intersects EU member states.
@@ -1482,6 +1547,9 @@ def register_generated_tools(mcp, _get_client):
                 additional_descriptions=additional_descriptions,
                 advantage_audience=advantage_audience,
                 gender=gender,
+                bid_strategy=bid_strategy,
+                bid_amount=bid_amount,
+                roas_average_floor=roas_average_floor,
                 dsa_beneficiary=dsa_beneficiary,
                 dsa_payor=dsa_payor,
             )
