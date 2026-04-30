@@ -282,12 +282,14 @@ class AnalyticsResource:
         *,
         platform: str | None = None,
         profile_id: str | None = None,
+        account_id: str | None = None,
         source: str | None = "all",
     ) -> dict[str, Any]:
         """Get best times to post"""
         params = self._build_params(
             platform=platform,
             profile_id=profile_id,
+            account_id=account_id,
             source=source,
         )
         return self._client._get("/v1/analytics/best-time", params=params)
@@ -297,12 +299,14 @@ class AnalyticsResource:
         *,
         platform: str | None = None,
         profile_id: str | None = None,
+        account_id: str | None = None,
         source: str | None = "all",
     ) -> dict[str, Any]:
         """Get content performance decay"""
         params = self._build_params(
             platform=platform,
             profile_id=profile_id,
+            account_id=account_id,
             source=source,
         )
         return self._client._get("/v1/analytics/content-decay", params=params)
@@ -312,12 +316,14 @@ class AnalyticsResource:
         *,
         platform: str | None = None,
         profile_id: str | None = None,
+        account_id: str | None = None,
         source: str | None = "all",
     ) -> dict[str, Any]:
         """Get frequency vs engagement"""
         params = self._build_params(
             platform=platform,
             profile_id=profile_id,
+            account_id=account_id,
             source=source,
         )
         return self._client._get("/v1/analytics/posting-frequency", params=params)
@@ -662,12 +668,14 @@ class AnalyticsResource:
         *,
         platform: str | None = None,
         profile_id: str | None = None,
+        account_id: str | None = None,
         source: str | None = "all",
     ) -> dict[str, Any]:
         """Get best times to post (async)"""
         params = self._build_params(
             platform=platform,
             profile_id=profile_id,
+            account_id=account_id,
             source=source,
         )
         return await self._client._aget("/v1/analytics/best-time", params=params)
@@ -677,12 +685,14 @@ class AnalyticsResource:
         *,
         platform: str | None = None,
         profile_id: str | None = None,
+        account_id: str | None = None,
         source: str | None = "all",
     ) -> dict[str, Any]:
         """Get content performance decay (async)"""
         params = self._build_params(
             platform=platform,
             profile_id=profile_id,
+            account_id=account_id,
             source=source,
         )
         return await self._client._aget("/v1/analytics/content-decay", params=params)
@@ -692,12 +702,14 @@ class AnalyticsResource:
         *,
         platform: str | None = None,
         profile_id: str | None = None,
+        account_id: str | None = None,
         source: str | None = "all",
     ) -> dict[str, Any]:
         """Get frequency vs engagement (async)"""
         params = self._build_params(
             platform=platform,
             profile_id=profile_id,
+            account_id=account_id,
             source=source,
         )
         return await self._client._aget(

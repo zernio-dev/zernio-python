@@ -2160,18 +2160,25 @@ def register_generated_tools(mcp, _get_client):
 
     @mcp.tool()
     def analytics_get_best_time_to_post(
-        platform: str = "", profile_id: str = "", source: str = "all"
+        platform: str = "",
+        profile_id: str = "",
+        account_id: str = "",
+        source: str = "all",
     ) -> str:
         """Get best times to post
 
         Args:
             platform: Filter by platform (e.g. "instagram", "tiktok"). Omit for all platforms.
             profile_id: Filter by profile ID. Omit for all profiles.
+            account_id: Filter by social account ID. Omit for all accounts.
             source: Filter by post origin. "late" for posts published via Zernio, "external" for posts imported from platforms."""
         client = _get_client()
         try:
             response = client.analytics.get_best_time_to_post(
-                platform=platform, profile_id=profile_id, source=source
+                platform=platform,
+                profile_id=profile_id,
+                account_id=account_id,
+                source=source,
             )
             return _format_response(response)
         except Exception as e:
@@ -2179,18 +2186,25 @@ def register_generated_tools(mcp, _get_client):
 
     @mcp.tool()
     def analytics_get_content_decay(
-        platform: str = "", profile_id: str = "", source: str = "all"
+        platform: str = "",
+        profile_id: str = "",
+        account_id: str = "",
+        source: str = "all",
     ) -> str:
         """Get content performance decay
 
         Args:
             platform: Filter by platform (e.g. "instagram", "tiktok"). Omit for all platforms.
             profile_id: Filter by profile ID. Omit for all profiles.
+            account_id: Filter by social account ID. Omit for all accounts.
             source: Filter by post origin. "late" for posts published via Zernio, "external" for posts imported from platforms."""
         client = _get_client()
         try:
             response = client.analytics.get_content_decay(
-                platform=platform, profile_id=profile_id, source=source
+                platform=platform,
+                profile_id=profile_id,
+                account_id=account_id,
+                source=source,
             )
             return _format_response(response)
         except Exception as e:
@@ -2198,18 +2212,25 @@ def register_generated_tools(mcp, _get_client):
 
     @mcp.tool()
     def analytics_get_posting_frequency(
-        platform: str = "", profile_id: str = "", source: str = "all"
+        platform: str = "",
+        profile_id: str = "",
+        account_id: str = "",
+        source: str = "all",
     ) -> str:
         """Get frequency vs engagement
 
         Args:
             platform: Filter by platform (e.g. "instagram", "tiktok"). Omit for all platforms.
             profile_id: Filter by profile ID. Omit for all profiles.
+            account_id: Filter by social account ID. Omit for all accounts.
             source: Filter by post origin. "late" for posts published via Zernio, "external" for posts imported from platforms."""
         client = _get_client()
         try:
             response = client.analytics.get_posting_frequency(
-                platform=platform, profile_id=profile_id, source=source
+                platform=platform,
+                profile_id=profile_id,
+                account_id=account_id,
+                source=source,
             )
             return _format_response(response)
         except Exception as e:

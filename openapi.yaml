@@ -5799,6 +5799,10 @@ paths:
           in: query
           schema: { type: string }
           description: Filter by profile ID. Omit for all profiles.
+        - name: accountId
+          in: query
+          schema: { type: string }
+          description: Filter by social account ID. Omit for all accounts.
         - name: source
           in: query
           schema:
@@ -5869,6 +5873,10 @@ paths:
           in: query
           schema: { type: string }
           description: Filter by profile ID. Omit for all profiles.
+        - name: accountId
+          in: query
+          schema: { type: string }
+          description: Filter by social account ID. Omit for all accounts.
         - name: source
           in: query
           schema:
@@ -5955,6 +5963,10 @@ paths:
           in: query
           schema: { type: string }
           description: Filter by profile ID. Omit for all profiles.
+        - name: accountId
+          in: query
+          schema: { type: string }
+          description: Filter by social account ID. Omit for all accounts.
         - name: source
           in: query
           schema:
