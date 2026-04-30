@@ -93,6 +93,17 @@ class ConnectResource:
         )
         return self._client._get(f"/v1/connect/{platform}/ads", params=params)
 
+    def configure_tik_tok_ads_brand_identity(
+        self, account_id: str, display_name: str, image_url: str
+    ) -> dict[str, Any]:
+        """Configure TikTok Ads Brand Identity"""
+        payload = self._build_payload(
+            account_id=account_id,
+            display_name=display_name,
+            image_url=image_url,
+        )
+        return self._client._patch("/v1/connect/tiktok-ads", data=payload)
+
     def list_facebook_pages(self, profile_id: str, temp_token: str) -> dict[str, Any]:
         """List Facebook pages"""
         params = self._build_params(
@@ -474,6 +485,17 @@ class ConnectResource:
             headless=headless,
         )
         return await self._client._aget(f"/v1/connect/{platform}/ads", params=params)
+
+    async def aconfigure_tik_tok_ads_brand_identity(
+        self, account_id: str, display_name: str, image_url: str
+    ) -> dict[str, Any]:
+        """Configure TikTok Ads Brand Identity (async)"""
+        payload = self._build_payload(
+            account_id=account_id,
+            display_name=display_name,
+            image_url=image_url,
+        )
+        return await self._client._apatch("/v1/connect/tiktok-ads", data=payload)
 
     async def alist_facebook_pages(
         self, profile_id: str, temp_token: str

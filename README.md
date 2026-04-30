@@ -325,6 +325,7 @@ Both `from zernio import ...` and `from late import ...` work identically. The `
 | `connect.update_reddit_subreddits()` | Set default subreddit |
 | `connect.update_youtube_default_playlist()` | Set default YouTube playlist |
 | `connect.complete_telegram_connect()` | Check Telegram status |
+| `connect.configure_tik_tok_ads_brand_identity()` | Configure TikTok Ads Brand Identity |
 | `connect.connect_ads()` | Connect ads for a platform |
 | `connect.connect_bluesky_credentials()` | Connect Bluesky account |
 | `connect.connect_whats_app_credentials()` | Connect WhatsApp via credentials |

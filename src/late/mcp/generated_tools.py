@@ -1496,6 +1496,8 @@ def register_generated_tools(mcp, _get_client):
         roas_average_floor: float = 0.0,
         dsa_beneficiary: str = "",
         dsa_payor: str = "",
+        brand_identity: str = "",
+        identity_type: str = "",
         promoted_object: str = "",
     ) -> str:
         """Create standalone ad
@@ -1561,6 +1563,31 @@ def register_generated_tools(mcp, _get_client):
                 dsa_payor: Name of the legal entity paying for the ad.
         Required by Meta when targeting EU users (DSA Article 26).
         Note Meta API spelling: dsa_payor (not dsa_payer).
+                brand_identity: TikTok only. Synthetic Brand Identity used when the ad
+        attributes to a CUSTOMIZED_USER (instead of a real TT_USER
+        @username). Required on the FIRST CUSTOMIZED_USER ad on a
+        `tiktokads` SocialAccount with no cached identity; omit on
+        subsequent ads (the identity is cached on the account after
+        first creation). Non-TikTok platforms ignore this field.
+
+        Alternative: configure once via `PATCH /v1/connect/tiktok-ads`,
+        then create ads without this field.
+                identity_type: TikTok only. Forces the identity attribution on the ad:
+
+          - `TT_USER`: the posting account's open_id (real @username
+            branding). Requires a connected TikTok posting account
+            on the same profile.
+          - `CUSTOMIZED_USER`: synthetic Brand Identity (display
+            name + avatar). Requires a configured Brand Identity
+            (cached on the `tiktokads` SocialAccount via
+            `PATCH /v1/connect/tiktok-ads`) or an inline
+            `brandIdentity` to create one on the fly.
+
+        When omitted, defaults to `TT_USER` if a posting account is
+        connected on this profile, else `CUSTOMIZED_USER`. Spark
+        Ads (`POST /v1/ads/boost`) always use `TT_USER` regardless
+        of this field — TikTok requires the original organic
+        post's author identity for Spark.
                 promoted_object: Meta only. Forwarded to the ad set's `promoted_object` (snake-cased).
 
         Required for goals whose ad-set optimization_goal points at a specific
@@ -1612,6 +1639,8 @@ def register_generated_tools(mcp, _get_client):
                 roas_average_floor=roas_average_floor,
                 dsa_beneficiary=dsa_beneficiary,
                 dsa_payor=dsa_payor,
+                brand_identity=brand_identity,
+                identity_type=identity_type,
                 promoted_object=promoted_object,
             )
             return _format_response(response)
@@ -3100,12 +3129,15 @@ def register_generated_tools(mcp, _get_client):
     ) -> str:
         """Connect ads for a platform
 
-        Args:
-            platform: Platform to connect ads for. Only platforms with ads support are accepted. (required)
-            profile_id: Your Zernio profile ID (required)
-            account_id: Existing SocialAccount ID. Required for separate-token platforms (tiktok, twitter). Ignored for same-token and standalone platforms.
-            redirect_url: Custom redirect URL after OAuth completes (same-token platforms only)
-            headless: Enable headless mode (same-token platforms only)"""
+            Args:
+                platform: Platform to connect ads for. Only platforms with ads support are accepted. (required)
+                profile_id: Your Zernio profile ID (required)
+                account_id: Existing SocialAccount ID. Required for `twitter` (X Ads). Optional for `tiktok` —
+        omit to enter ads-only mode (no TikTok posting account linked; ad creation uses
+        a Brand Identity instead of a TT_USER). Ignored for same-token (`facebook`,
+        `instagram`, `linkedin`, `pinterest`) and standalone (`googleads`) platforms.
+                redirect_url: Custom redirect URL after OAuth completes (same-token platforms only)
+                headless: Enable headless mode (same-token platforms only)"""
         client = _get_client()
         try:
             response = client.connect.connect_ads(
@@ -3114,6 +3146,25 @@ def register_generated_tools(mcp, _get_client):
                 account_id=account_id,
                 redirect_url=redirect_url,
                 headless=headless,
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool()
+    def connect_configure_tik_tok_ads_brand_identity(
+        account_id: str, display_name: str, image_url: str
+    ) -> str:
+        """Configure TikTok Ads Brand Identity
+
+        Args:
+            account_id: SocialAccount ID of the `tiktokads` account. (required)
+            display_name: Brand name shown above the ad on TikTok. (required)
+            image_url: Public URL of a square brand image (≥98×98 px, JPG/PNG, max 5 MB). Used as the brand avatar on the ad. (required)"""
+        client = _get_client()
+        try:
+            response = client.connect.configure_tik_tok_ads_brand_identity(
+                account_id=account_id, display_name=display_name, image_url=image_url
             )
             return _format_response(response)
         except Exception as e:

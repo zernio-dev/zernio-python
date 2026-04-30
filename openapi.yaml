@@ -8884,7 +8884,9 @@ paths:
 
         Same-token platforms (facebook, instagram, linkedin, pinterest): Creates an ads SocialAccount (metaads, linkedinads, pinterestads) with a copied OAuth token from the parent posting account. If the ads account already exists, returns alreadyConnected: true. No extra OAuth needed.
 
-        Separate-token platforms (tiktok, twitter): Starts the platform-specific marketing API OAuth flow and creates an ads SocialAccount (tiktokads, xads) with its own token. Requires an existing posting account (accountId param). If the ads account already exists, returns alreadyConnected: true.
+        Separate-token platforms (tiktok, twitter): Starts the platform-specific marketing API OAuth flow and creates an ads SocialAccount (tiktokads, xads) with its own token. If the ads account already exists, returns alreadyConnected: true.
+          - tiktok: accountId is OPTIONAL. With accountId, the new tiktokads account links to that posting account (parentAccountId set) — Spark Ads + standalone ads using the posting TT_USER identity become available. Without accountId, ads-only mode kicks in: the new tiktokads account has parentAccountId=null and standalone ads use a synthetic CUSTOMIZED_USER ("Brand Identity"); Spark Ads are unavailable because TikTok requires a posting account for them. The Brand Identity is configured separately via PATCH /v1/connect/tiktok-ads (or inline on POST /v1/ads/create via the brandIdentity field).
+          - twitter (X Ads): accountId is REQUIRED. There's no ads-only mode — tweets need to be authored by a real X user.
 
         Standalone platforms (googleads): Starts the Google Ads OAuth flow and creates a standalone ads SocialAccount (googleads) with no parent. If the account already exists, returns alreadyConnected: true.
 
@@ -8905,7 +8907,11 @@ paths:
         - name: accountId
           in: query
           schema: { type: string }
-          description: Existing SocialAccount ID. Required for separate-token platforms (tiktok, twitter). Ignored for same-token and standalone platforms.
+          description: |
+            Existing SocialAccount ID. Required for `twitter` (X Ads). Optional for `tiktok` —
+            omit to enter ads-only mode (no TikTok posting account linked; ad creation uses
+            a Brand Identity instead of a TT_USER). Ignored for same-token (`facebook`,
+            `instagram`, `linkedin`, `pinterest`) and standalone (`googleads`) platforms.
         - name: redirect_url
           in: query
           schema: { type: string, format: uri }
@@ -8951,12 +8957,80 @@ paths:
                     authUrl: "https://business-api.tiktok.com/portal/auth?app_id=..."
                     state: "user123-profile456-account789-1234567890"
         '400':
-          description: "Platform doesn't support ads, or missing accountId for separate-token platform"
+          description: "Platform doesn't support ads, or missing accountId for X Ads"
         '401': { $ref: '#/components/responses/Unauthorized' }
         '403':
           description: "Ads add-on required, or no access to profile"
         '404':
           description: "Profile or posting account not found"
+
+  /v1/connect/tiktok-ads:
+    patch:
+      operationId: configureTikTokAdsBrandIdentity
+      tags: [Connect]
+      summary: Configure TikTok Ads Brand Identity
+      description: |
+        Set or update the Brand Identity (display name + avatar) for a
+        `tiktokads` SocialAccount. TikTok requires every ad to carry an
+        `identity_id + identity_type` pair. The Brand Identity is the
+        CUSTOMIZED_USER alternative to attributing ads to a real @username
+        (TT_USER). This route uploads the supplied image to TikTok, creates
+        the identity via `/v2/identity/create/`, and caches the resulting
+        `identity_id` on the account so subsequent `POST /v1/ads/create`
+        calls can opt into it via `identityType: 'CUSTOMIZED_USER'`.
+
+        Configurable on every `tiktokads` account, including linked-mode ones
+        (those with a posting account on the same profile). Configuration is
+        idempotent and harmless when posting is also connected: the default
+        ad-create path still prefers TT_USER, and CUSTOMIZED_USER is only used
+        per-ad when the caller explicitly opts in.
+
+        TikTok identities are immutable post-creation. Re-saving creates a new
+        identity on TikTok and swaps the cached id; the old identity stays
+        orphaned on TikTok's side (harmless, no billing impact).
+
+        Alternative: pass `brandIdentity` directly on `POST /v1/ads/create` to
+        configure on first ad creation in a single round-trip.
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [accountId, displayName, imageUrl]
+              properties:
+                accountId:
+                  type: string
+                  description: SocialAccount ID of the `tiktokads` account.
+                displayName:
+                  type: string
+                  minLength: 1
+                  maxLength: 40
+                  description: Brand name shown above the ad on TikTok.
+                imageUrl:
+                  type: string
+                  format: uri
+                  description: Public URL of a square brand image (≥98×98 px, JPG/PNG, max 5 MB). Used as the brand avatar on the ad.
+      responses:
+        '200':
+          description: Brand identity configured (or updated)
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success: { type: boolean, example: true }
+                  identityId: { type: string, description: The TikTok-assigned identity_id, cached on the account. }
+                  displayName: { type: string }
+        '400':
+          description: "Missing fields, invalid lengths, account is in linked mode, or no advertiser found on the account"
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404':
+          description: TikTok Ads account not found
+        '500':
+          description: Failed to create the TikTok identity (TikTok API error)
 
   /v1/connect/facebook/select-page:
     get:
@@ -20074,6 +20148,49 @@ paths:
                     Name of the legal entity paying for the ad.
                     Required by Meta when targeting EU users (DSA Article 26).
                     Note Meta API spelling: dsa_payor (not dsa_payer).
+                brandIdentity:
+                  type: object
+                  description: |
+                    TikTok only. Synthetic Brand Identity used when the ad
+                    attributes to a CUSTOMIZED_USER (instead of a real TT_USER
+                    @username). Required on the FIRST CUSTOMIZED_USER ad on a
+                    `tiktokads` SocialAccount with no cached identity; omit on
+                    subsequent ads (the identity is cached on the account after
+                    first creation). Non-TikTok platforms ignore this field.
+
+                    Alternative: configure once via `PATCH /v1/connect/tiktok-ads`,
+                    then create ads without this field.
+                  required: [displayName, imageUrl]
+                  properties:
+                    displayName:
+                      type: string
+                      minLength: 1
+                      maxLength: 40
+                      description: Brand name shown above the ad on TikTok.
+                    imageUrl:
+                      type: string
+                      format: uri
+                      description: Public URL of a square brand image (≥98×98 px, JPG/PNG). Used as the brand avatar on the ad.
+                identityType:
+                  type: string
+                  enum: [TT_USER, CUSTOMIZED_USER]
+                  description: |
+                    TikTok only. Forces the identity attribution on the ad:
+
+                      - `TT_USER`: the posting account's open_id (real @username
+                        branding). Requires a connected TikTok posting account
+                        on the same profile.
+                      - `CUSTOMIZED_USER`: synthetic Brand Identity (display
+                        name + avatar). Requires a configured Brand Identity
+                        (cached on the `tiktokads` SocialAccount via
+                        `PATCH /v1/connect/tiktok-ads`) or an inline
+                        `brandIdentity` to create one on the fly.
+
+                    When omitted, defaults to `TT_USER` if a posting account is
+                    connected on this profile, else `CUSTOMIZED_USER`. Spark
+                    Ads (`POST /v1/ads/boost`) always use `TT_USER` regardless
+                    of this field — TikTok requires the original organic
+                    post's author identity for Spark.
                 promotedObject:
                   type: object
                   description: |
