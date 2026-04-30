@@ -229,6 +229,8 @@ class AdsResource:
         business_name: str | None = None,
         board_id: str | None = None,
         countries: list[str] | None = None,
+        cities: list[dict[str, Any]] | None = None,
+        regions: list[dict[str, Any]] | None = None,
         age_min: int | None = None,
         age_max: int | None = None,
         interests: list[dict[str, Any]] | None = None,
@@ -269,6 +271,8 @@ class AdsResource:
             business_name=business_name,
             board_id=board_id,
             countries=countries,
+            cities=cities,
+            regions=regions,
             age_min=age_min,
             age_max=age_max,
             interests=interests,
@@ -296,6 +300,25 @@ class AdsResource:
             account_id=account_id,
         )
         return self._client._get("/v1/ads/interests", params=params)
+
+    def search_ad_targeting_locations(
+        self,
+        account_id: str,
+        q: str,
+        *,
+        type: str | None = "city",
+        country_code: str | None = None,
+        limit: int | None = 25,
+    ) -> dict[str, Any]:
+        """Search geo targeting locations (Meta)"""
+        params = self._build_params(
+            account_id=account_id,
+            q=q,
+            type=type,
+            country_code=country_code,
+            limit=limit,
+        )
+        return self._client._get("/v1/ads/targeting/search", params=params)
 
     def send_conversions(
         self,
@@ -548,6 +571,8 @@ class AdsResource:
         business_name: str | None = None,
         board_id: str | None = None,
         countries: list[str] | None = None,
+        cities: list[dict[str, Any]] | None = None,
+        regions: list[dict[str, Any]] | None = None,
         age_min: int | None = None,
         age_max: int | None = None,
         interests: list[dict[str, Any]] | None = None,
@@ -588,6 +613,8 @@ class AdsResource:
             business_name=business_name,
             board_id=board_id,
             countries=countries,
+            cities=cities,
+            regions=regions,
             age_min=age_min,
             age_max=age_max,
             interests=interests,
@@ -615,6 +642,25 @@ class AdsResource:
             account_id=account_id,
         )
         return await self._client._aget("/v1/ads/interests", params=params)
+
+    async def asearch_ad_targeting_locations(
+        self,
+        account_id: str,
+        q: str,
+        *,
+        type: str | None = "city",
+        country_code: str | None = None,
+        limit: int | None = 25,
+    ) -> dict[str, Any]:
+        """Search geo targeting locations (Meta) (async)"""
+        params = self._build_params(
+            account_id=account_id,
+            q=q,
+            type=type,
+            country_code=country_code,
+            limit=limit,
+        )
+        return await self._client._aget("/v1/ads/targeting/search", params=params)
 
     async def asend_conversions(
         self,

@@ -20004,7 +20004,29 @@ paths:
                     ad group's bid + budget + targeting.
                 businessName: { type: string, maxLength: 25, description: "Google Display only" }
                 boardId: { type: string, description: "Pinterest only. Board ID (auto-creates if not provided)." }
-                countries: { type: array, items: { type: string } }
+                countries: { type: array, items: { type: string }, description: "ISO 3166-1 alpha-2 country codes (e.g. ['NL']). Defaults to ['US'] when no `cities` or `regions` are provided." }
+                cities:
+                  type: array
+                  description: |
+                    Meta-only. City-level geo targeting. Each city is targeted by Meta's opaque `key` (the city ID) which can be looked up via `GET /v1/ads/targeting/search?type=city&q=<name>&country_code=<ISO>`. Optional `radius` + `distance_unit` extend the targeting beyond the city limits (e.g. radius 25 km around the city center). Both must be set together, or both omitted (Meta defaults to ~16 km when omitted).
+
+                    Cannot overlap with the same country in `countries` (Meta returns a "locations overlap" error). Either drop the country or scope it to a different country.
+                  items:
+                    type: object
+                    required: [key]
+                    properties:
+                      key: { type: string, description: "Meta city ID, from /v1/ads/targeting/search results." }
+                      radius: { type: number, description: "Optional radius around the city. Must be set together with distance_unit." }
+                      distance_unit: { type: string, enum: [mile, kilometer], description: "Unit for radius. Required if radius is set." }
+                regions:
+                  type: array
+                  description: |
+                    Meta-only. Region-level (state/province) geo targeting. Each region is targeted by Meta's opaque `key` (the region ID) which can be looked up via `GET /v1/ads/targeting/search?type=region&q=<name>&country_code=<ISO>`.
+                  items:
+                    type: object
+                    required: [key]
+                    properties:
+                      key: { type: string, description: "Meta region ID, from /v1/ads/targeting/search results." }
                 ageMin: { type: integer, minimum: 13, maximum: 65 }
                 ageMax: { type: integer, minimum: 13, maximum: 65 }
                 interests:
@@ -20155,6 +20177,63 @@ paths:
         '401': { $ref: '#/components/responses/Unauthorized' }
         '403':
           description: Ads add-on required
+
+  /v1/ads/targeting/search:
+    get:
+      operationId: searchAdTargetingLocations
+      tags: [Ads]
+      summary: Search geo targeting locations (Meta)
+      description: |
+        Resolve a human-readable location name into Meta's opaque `key` used in
+        `targeting.cities[]` / `targeting.regions[]` on `POST /v1/ads/create`
+        (and the same fields under `targeting.geo_locations` on
+        `POST /v1/ads/boost`). Wraps Meta's `/search?type=adgeolocation`
+        endpoint.
+
+        Meta-only for now. Other platforms have their own location id systems
+        and are not exposed here.
+
+        Per Meta's docs, `q` must contain only the locality name (e.g.
+        `"Amsterdam"`, not `"Amsterdam, NL"`). Use `countryCode` to
+        disambiguate when the same name exists in multiple countries.
+      security:
+        - bearerAuth: []
+      parameters:
+        - { name: accountId, in: query, required: true, schema: { type: string }, description: "Social account ID (must be a connected Facebook or Instagram account)." }
+        - { name: q, in: query, required: true, schema: { type: string }, description: "Location name. Locality only — no region/country suffix." }
+        - { name: type, in: query, required: false, schema: { type: string, enum: [country, region, city, subcity, neighborhood, zip, metro_area, geo_market], default: city }, description: "Type of location to search. Defaults to city." }
+        - { name: countryCode, in: query, required: false, schema: { type: string, minLength: 2, maxLength: 2 }, description: "ISO 3166-1 alpha-2 country code (e.g. NL) to scope the search." }
+        - { name: limit, in: query, required: false, schema: { type: integer, minimum: 1, maximum: 100, default: 25 }, description: "Maximum results to return." }
+      responses:
+        '200':
+          description: Matching locations
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  results:
+                    type: array
+                    items:
+                      type: object
+                      required: [key, name, type]
+                      properties:
+                        key: { type: string, description: "Meta's opaque location ID. Use this in targeting.cities[].key / regions[].key." }
+                        name: { type: string }
+                        type: { type: string, description: "Location type as returned by Meta (city, region, country, etc.)." }
+                        countryCode: { type: string }
+                        countryName: { type: string }
+                        region: { type: string, description: "Parent region/state name (cities only)." }
+                        regionId: { oneOf: [{ type: string }, { type: integer }], description: "Parent region ID (cities only)." }
+                        supportsRegion: { type: boolean }
+                        supportsCity: { type: boolean }
+        '400':
+          description: Missing or invalid query parameters
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403':
+          description: Ads add-on required
+        '404':
+          description: Account not found, or platform does not support targeting search (Meta only)
 
   /v1/ads/audiences:
     get:

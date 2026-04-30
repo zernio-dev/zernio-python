@@ -393,6 +393,7 @@ Both `from zernio import ...` and `from late import ...` work identically. The `
 | `ads.delete_ad()` | Cancel an ad |
 | `ads.boost_post()` | Boost post as ad |
 | `ads.search_ad_interests()` | Search targeting interests |
+| `ads.search_ad_targeting_locations()` | Search geo targeting locations (Meta) |
 | `ads.send_conversions()` | Send conversion events to an ad platform |
 
 ### Broadcasts

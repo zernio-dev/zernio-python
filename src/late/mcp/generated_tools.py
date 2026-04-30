@@ -1478,6 +1478,8 @@ def register_generated_tools(mcp, _get_client):
         business_name: str = "",
         board_id: str = "",
         countries: str = "",
+        cities: str = "",
+        regions: str = "",
         age_min: int = 0,
         age_max: int = 0,
         interests: str = "",
@@ -1531,7 +1533,11 @@ def register_generated_tools(mcp, _get_client):
         ad group's bid + budget + targeting.
                 business_name: Google Display only
                 board_id: Pinterest only. Board ID (auto-creates if not provided).
-                countries
+                countries: ISO 3166-1 alpha-2 country codes (e.g. ['NL']). Defaults to ['US'] when no `cities` or `regions` are provided.
+                cities: Meta-only. City-level geo targeting. Each city is targeted by Meta's opaque `key` (the city ID) which can be looked up via `GET /v1/ads/targeting/search?type=city&q=<name>&country_code=<ISO>`. Optional `radius` + `distance_unit` extend the targeting beyond the city limits (e.g. radius 25 km around the city center). Both must be set together, or both omitted (Meta defaults to ~16 km when omitted).
+
+        Cannot overlap with the same country in `countries` (Meta returns a "locations overlap" error). Either drop the country or scope it to a different country.
+                regions: Meta-only. Region-level (state/province) geo targeting. Each region is targeted by Meta's opaque `key` (the region ID) which can be looked up via `GET /v1/ads/targeting/search?type=region&q=<name>&country_code=<ISO>`.
                 age_min
                 age_max
                 interests: Interest objects from /v1/ads/interests. Each must include id and name.
@@ -1588,6 +1594,8 @@ def register_generated_tools(mcp, _get_client):
                 business_name=business_name,
                 board_id=board_id,
                 countries=countries,
+                cities=cities,
+                regions=regions,
                 age_min=age_min,
                 age_max=age_max,
                 interests=interests,
@@ -1620,6 +1628,35 @@ def register_generated_tools(mcp, _get_client):
         client = _get_client()
         try:
             response = client.ads.search_ad_interests(q=q, account_id=account_id)
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool()
+    def ads_search_ad_targeting_locations(
+        account_id: str,
+        q: str,
+        type: str = "city",
+        country_code: str = "",
+        limit: int = 25,
+    ) -> str:
+        """Search geo targeting locations (Meta)
+
+        Args:
+            account_id: Social account ID (must be a connected Facebook or Instagram account). (required)
+            q: Location name. Locality only — no region/country suffix. (required)
+            type: Type of location to search. Defaults to city.
+            country_code: ISO 3166-1 alpha-2 country code (e.g. NL) to scope the search.
+            limit: Maximum results to return."""
+        client = _get_client()
+        try:
+            response = client.ads.search_ad_targeting_locations(
+                account_id=account_id,
+                q=q,
+                type=type,
+                country_code=country_code,
+                limit=limit,
+            )
             return _format_response(response)
         except Exception as e:
             return f"Error: {e}"
