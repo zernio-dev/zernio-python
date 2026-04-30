@@ -245,6 +245,7 @@ class AdsResource:
         roas_average_floor: float | None = None,
         dsa_beneficiary: str | None = None,
         dsa_payor: str | None = None,
+        promoted_object: dict[str, Any] | None = None,
     ) -> dict[str, Any]:
         """Create standalone ad"""
         payload = self._build_payload(
@@ -284,6 +285,7 @@ class AdsResource:
             roas_average_floor=roas_average_floor,
             dsa_beneficiary=dsa_beneficiary,
             dsa_payor=dsa_payor,
+            promoted_object=promoted_object,
         )
         return self._client._post("/v1/ads/create", data=payload)
 
@@ -562,6 +564,7 @@ class AdsResource:
         roas_average_floor: float | None = None,
         dsa_beneficiary: str | None = None,
         dsa_payor: str | None = None,
+        promoted_object: dict[str, Any] | None = None,
     ) -> dict[str, Any]:
         """Create standalone ad (async)"""
         payload = self._build_payload(
@@ -601,6 +604,7 @@ class AdsResource:
             roas_average_floor=roas_average_floor,
             dsa_beneficiary=dsa_beneficiary,
             dsa_payor=dsa_payor,
+            promoted_object=promoted_object,
         )
         return await self._client._apost("/v1/ads/create", data=payload)
 

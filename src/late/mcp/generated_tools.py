@@ -1494,6 +1494,7 @@ def register_generated_tools(mcp, _get_client):
         roas_average_floor: float = 0.0,
         dsa_beneficiary: str = "",
         dsa_payor: str = "",
+        promoted_object: str = "",
     ) -> str:
         """Create standalone ad
 
@@ -1501,7 +1502,7 @@ def register_generated_tools(mcp, _get_client):
                 account_id: (required)
                 ad_account_id: (required)
                 name: (required)
-                goal: Required on legacy + multi-creative shapes. Inherited from the ad set on the attach shape. Available goals vary by platform.
+                goal: Required on legacy + multi-creative shapes. Inherited from the ad set on the attach shape. Available goals vary by platform. Meta-specific: `conversions` requires `promotedObject.pixelId` + `promotedObject.customEventType`; `app_promotion` requires `promotedObject.applicationId` + `promotedObject.objectStoreUrl`; `lead_generation` accepts an optional `promotedObject.pageId` (auto-filled from the connected Page when omitted).
                 budget_amount: Required on legacy + multi-creative shapes. Inherited on attach.
                 budget_type: Required on legacy + multi-creative shapes. Inherited on attach.
                 currency
@@ -1553,7 +1554,17 @@ def register_generated_tools(mcp, _get_client):
         Not enforced at schema level; enforced server-side when targeting intersects EU member states.
                 dsa_payor: Name of the legal entity paying for the ad.
         Required by Meta when targeting EU users (DSA Article 26).
-        Note Meta API spelling: dsa_payor (not dsa_payer)."""
+        Note Meta API spelling: dsa_payor (not dsa_payer).
+                promoted_object: Meta only. Forwarded to the ad set's `promoted_object` (snake-cased).
+
+        Required for goals whose ad-set optimization_goal points at a specific
+        event/page/app — without it Meta rejects the ad-set create with
+        `error_subcode: 1815430` "Please select a promoted object for your ad set":
+          - `goal: conversions` (OFFSITE_CONVERSIONS) — requires `pixelId` + `customEventType`
+          - `goal: app_promotion` (APP_INSTALLS) — requires `applicationId` + `objectStoreUrl`
+          - `goal: lead_generation` (LEAD_GENERATION) — `pageId` is auto-filled from the connected Page when omitted
+
+        Other goals (engagement, traffic, awareness, video_views) ignore this field."""
         client = _get_client()
         try:
             response = client.ads.create_standalone_ad(
@@ -1593,6 +1604,7 @@ def register_generated_tools(mcp, _get_client):
                 roas_average_floor=roas_average_floor,
                 dsa_beneficiary=dsa_beneficiary,
                 dsa_payor=dsa_payor,
+                promoted_object=promoted_object,
             )
             return _format_response(response)
         except Exception as e:
