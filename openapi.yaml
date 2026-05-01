@@ -6408,18 +6408,14 @@ paths:
           application/json:
             schema:
               type: object
-              required: [name, profileId, accountIds]
+              required: [name, accountIds]
               properties:
                 name: { type: string }
-                profileId:
-                  type: string
-                  description: ID of the profile this group belongs to. All accountIds must belong to this profile.
                 accountIds:
                   type: array
                   items: { type: string }
             example:
               name: "Marketing Accounts"
-              profileId: "6507a1b2c3d4e5f6a7b8c9aa"
               accountIds:
                 - "64e1f0a9e2b5af0012ab34cd"
                 - "64e1f0a9e2b5af0012ab34ce"

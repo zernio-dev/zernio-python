@@ -52,13 +52,10 @@ class AccountGroupsResource:
         """List groups"""
         return self._client._get("/v1/account-groups")
 
-    def create_account_group(
-        self, name: str, profile_id: str, account_ids: list[str]
-    ) -> dict[str, Any]:
+    def create_account_group(self, name: str, account_ids: list[str]) -> dict[str, Any]:
         """Create group"""
         payload = self._build_payload(
             name=name,
-            profile_id=profile_id,
             account_ids=account_ids,
         )
         return self._client._post("/v1/account-groups", data=payload)
@@ -86,12 +83,11 @@ class AccountGroupsResource:
         return await self._client._aget("/v1/account-groups")
 
     async def acreate_account_group(
-        self, name: str, profile_id: str, account_ids: list[str]
+        self, name: str, account_ids: list[str]
     ) -> dict[str, Any]:
         """Create group (async)"""
         payload = self._build_payload(
             name=name,
-            profile_id=profile_id,
             account_ids=account_ids,
         )
         return await self._client._apost("/v1/account-groups", data=payload)
