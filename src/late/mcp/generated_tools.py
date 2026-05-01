@@ -2716,9 +2716,9 @@ def register_generated_tools(mcp, _get_client):
     def comment_automations_create_comment_automation(
         profile_id: str,
         account_id: str,
-        platform_post_id: str,
         name: str,
         dm_message: str,
+        platform_post_id: str = "",
         post_id: str = "",
         post_title: str = "",
         keywords: str = "",
@@ -2730,8 +2730,8 @@ def register_generated_tools(mcp, _get_client):
         Args:
             profile_id: (required)
             account_id: Instagram or Facebook account ID (required)
-            platform_post_id: Platform media/post ID (required)
-            post_id: Zernio post ID (optional)
+            platform_post_id: Platform media/post ID. Omit for an account-wide (any-post) automation.
+            post_id: Zernio post ID. Required only when also targeting a specific post via platformPostId.
             post_title: Post content snippet for display
             name: Automation label (required)
             keywords: Trigger keywords (empty = any comment triggers)
