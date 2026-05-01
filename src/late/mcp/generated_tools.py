@@ -81,16 +81,19 @@ def register_generated_tools(mcp, _get_client):
             return f"Error: {e}"
 
     @mcp.tool()
-    def account_groups_create_account_group(name: str, account_ids: str) -> str:
+    def account_groups_create_account_group(
+        name: str, profile_id: str, account_ids: str
+    ) -> str:
         """Create group
 
         Args:
             name: (required)
+            profile_id: ID of the profile this group belongs to. All accountIds must belong to this profile. (required)
             account_ids: (required)"""
         client = _get_client()
         try:
             response = client.account_groups.create_account_group(
-                name=name, account_ids=account_ids
+                name=name, profile_id=profile_id, account_ids=account_ids
             )
             return _format_response(response)
         except Exception as e:
