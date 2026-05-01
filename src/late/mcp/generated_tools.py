@@ -81,16 +81,20 @@ def register_generated_tools(mcp, _get_client):
             return f"Error: {e}"
 
     @mcp.tool()
-    def account_groups_create_account_group(name: str, account_ids: str) -> str:
+    def account_groups_create_account_group(
+        name: str, account_ids: str, profile_id: str = ""
+    ) -> str:
         """Create group
 
-        Args:
-            name: (required)
-            account_ids: (required)"""
+            Args:
+                name: (required)
+                account_ids: (required)
+                profile_id: Deprecated. Accepted for backward compatibility but ignored.
+        Groups are no longer scoped to a single profile."""
         client = _get_client()
         try:
             response = client.account_groups.create_account_group(
-                name=name, account_ids=account_ids
+                name=name, account_ids=account_ids, profile_id=profile_id
             )
             return _format_response(response)
         except Exception as e:
@@ -3126,6 +3130,8 @@ def register_generated_tools(mcp, _get_client):
         account_id: str = "",
         redirect_url: str = "",
         headless: bool = False,
+        ad_account_id: str = "",
+        ad_account_ids: str = "",
     ) -> str:
         """Connect ads for a platform
 
@@ -3137,7 +3143,18 @@ def register_generated_tools(mcp, _get_client):
         a Brand Identity instead of a TT_USER). Ignored for same-token (`facebook`,
         `instagram`, `linkedin`, `pinterest`) and standalone (`googleads`) platforms.
                 redirect_url: Custom redirect URL after OAuth completes (same-token platforms only)
-                headless: Enable headless mode (same-token platforms only)"""
+                headless: Enable headless mode (same-token platforms only)
+                ad_account_id: (metaads only) Scope ad sync to a single Meta ad account. Without this
+        param, sync covers every `act_*` the connected token can see. Pass this
+        to limit `sync.totalAds` / `synced` and the resulting ads to one ad
+        account. Format: `act_<digits>` (matches what `/me/adaccounts` returns).
+        Validated against the connected token; unreachable IDs return 400.
+        For multiple accounts use `adAccountIds` instead.
+                ad_account_ids: (metaads only) Scope ad sync to multiple Meta ad accounts. Repeat the
+        param (`?adAccountIds=act_1&adAccountIds=act_2`) or comma-separate
+        (`?adAccountIds=act_1,act_2`). Validated against the connected token.
+        Persisted server-side; latest call wins. Omitting both `adAccountId`
+        and `adAccountIds` keeps any previously persisted scope unchanged."""
         client = _get_client()
         try:
             response = client.connect.connect_ads(
@@ -3146,6 +3163,8 @@ def register_generated_tools(mcp, _get_client):
                 account_id=account_id,
                 redirect_url=redirect_url,
                 headless=headless,
+                ad_account_id=ad_account_id,
+                ad_account_ids=ad_account_ids,
             )
             return _format_response(response)
         except Exception as e:

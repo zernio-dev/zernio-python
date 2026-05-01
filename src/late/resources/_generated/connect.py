@@ -83,6 +83,8 @@ class ConnectResource:
         account_id: str | None = None,
         redirect_url: str | None = None,
         headless: bool | None = False,
+        ad_account_id: str | None = None,
+        ad_account_ids: list[str] | None = None,
     ) -> dict[str, Any]:
         """Connect ads for a platform"""
         params = self._build_params(
@@ -90,6 +92,8 @@ class ConnectResource:
             account_id=account_id,
             redirect_url=redirect_url,
             headless=headless,
+            ad_account_id=ad_account_id,
+            ad_account_ids=ad_account_ids,
         )
         return self._client._get(f"/v1/connect/{platform}/ads", params=params)
 
@@ -476,6 +480,8 @@ class ConnectResource:
         account_id: str | None = None,
         redirect_url: str | None = None,
         headless: bool | None = False,
+        ad_account_id: str | None = None,
+        ad_account_ids: list[str] | None = None,
     ) -> dict[str, Any]:
         """Connect ads for a platform (async)"""
         params = self._build_params(
@@ -483,6 +489,8 @@ class ConnectResource:
             account_id=account_id,
             redirect_url=redirect_url,
             headless=headless,
+            ad_account_id=ad_account_id,
+            ad_account_ids=ad_account_ids,
         )
         return await self._client._aget(f"/v1/connect/{platform}/ads", params=params)
 
