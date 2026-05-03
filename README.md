@@ -501,6 +501,18 @@ Both `from zernio import ...` and `from late import ...` work identically. The `
 | `gmb_services.get_google_business_services()` | Get services |
 | `gmb_services.update_google_business_services()` | Replace services |
 
+### Lead Forms
+| Method | Description |
+|--------|-------------|
+| `lead_forms.list_lead_form_leads()` | List submitted leads for a form |
+| `lead_forms.list_lead_forms()` | List Meta Lead Gen Forms |
+| `lead_forms.create_lead_form()` | Create a Meta Lead Gen Form |
+| `lead_forms.create_lead_form_test_lead()` | Create a synthetic test lead |
+| `lead_forms.get_lead_form()` | Get a Lead Gen Form |
+| `lead_forms.update_lead_form()` | Update a Lead Gen Form (status only) |
+| `lead_forms.delete_lead_form()` | Delete a Lead Gen Form |
+| `lead_forms.delete_lead_form_test_lead()` | Delete a (test) lead |
+
 ### Messages (Inbox)
 | Method | Description |
 |--------|-------------|

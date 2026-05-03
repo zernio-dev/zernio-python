@@ -1473,6 +1473,7 @@ def register_generated_tools(mcp, _get_client):
         long_headline: str = "",
         body: str = "",
         call_to_action: str = "",
+        lead_gen_form_id: str = "",
         link_url: str = "",
         image_url: str = "",
         images: str = "",
@@ -1517,7 +1518,8 @@ def register_generated_tools(mcp, _get_client):
                 headline: Required for Meta, Google, and Pinterest on legacy + attach shapes (skip for multi-creative — use `creatives[].headline`). Ignored for TikTok and X/Twitter. Max: Meta=255, Google=30, Pinterest=100.
                 long_headline: Google Display only. Defaults to `headline` if omitted.
                 body: Required on legacy + attach shapes. For X/Twitter this is the tweet text (max 280 chars including a ~24-char URL when `linkUrl` is set). Max: Google=90, Pinterest=500.
-                call_to_action: Required on legacy + attach shapes for Meta. Honoured on TikTok too — passes through to the Spark Ad creative's `call_to_action`. Ignored by other platforms.
+                call_to_action: Required on legacy + attach shapes for Meta. Honoured on TikTok too — passes through to the Spark Ad creative's `call_to_action`. Ignored by other platforms. Ignored on Meta when `leadGenFormId` is set — lead ads force CTA type to SIGN_UP.
+                lead_gen_form_id: Meta-only. Attaches a Lead Gen (Instant) Form to the creative. Required when `goal="lead_generation"`. Force-overrides the CTA to SIGN_UP. Create a form first via POST /v1/ads/lead-forms. On the multi-creative shape this can also be set per `creatives[i]` to A/B different forms inside one ad set.
                 link_url: Required on legacy + attach shapes. Skip for multi-creative.
                 image_url: Image creative for Meta/Google/Pinterest on legacy + attach shapes (mutually exclusive with `video`). Not required for Google Search campaigns. For TikTok, this field carries the VIDEO URL (the TikTok ads endpoint is video-only; the field retains the `imageUrl` name for cross-platform consistency). Ignored for X/Twitter. For Google Display, treated as the landscape image (alias of `images.landscape`); supply `images.square` alongside or the request is rejected.
                 images: Google Display (Responsive Display Ads) only. Google RDA requires both a landscape (1.91:1) and a square (1:1) marketing image; sending only one is rejected upstream as 'Too few.' (NOT_ENOUGH_*_MARKETING_IMAGE_ASSET). Supply both URLs here. Either this field or the legacy `imageUrl` can provide the landscape, but `square` has no legacy counterpart so it must be set here for Display.
@@ -1616,6 +1618,7 @@ def register_generated_tools(mcp, _get_client):
                 long_headline=long_headline,
                 body=body,
                 call_to_action=call_to_action,
+                lead_gen_form_id=lead_gen_form_id,
                 link_url=link_url,
                 image_url=image_url,
                 images=images,
@@ -4142,6 +4145,149 @@ def register_generated_tools(mcp, _get_client):
         try:
             response = client.invites.create_invite_token(
                 scope=scope, profile_ids=profile_ids
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    # LEAD_FORMS
+
+    @mcp.tool()
+    def lead_forms_list_lead_forms(
+        account_id: str, limit: int = 25, cursor: str = ""
+    ) -> str:
+        """List Meta Lead Gen Forms
+
+        Args:
+            account_id: Facebook social account ID (Late SocialAccount _id) (required)
+            limit
+            cursor: Meta `paging.cursors.after` from a prior page"""
+        client = _get_client()
+        try:
+            response = client.lead_forms.list_lead_forms(
+                account_id=account_id, limit=limit, cursor=cursor
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool()
+    def lead_forms_create_lead_form() -> str:
+        """Create a Meta Lead Gen Form"""
+        client = _get_client()
+        try:
+            response = client.lead_forms.create_lead_form()
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool()
+    def lead_forms_get_lead_form(form_id: str, account_id: str) -> str:
+        """Get a Lead Gen Form
+
+        Args:
+            form_id: Meta lead form ID (numeric string) (required)
+            account_id: (required)"""
+        client = _get_client()
+        try:
+            response = client.lead_forms.get_lead_form(
+                form_id=form_id, account_id=account_id
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool()
+    def lead_forms_update_lead_form(form_id: str, account_id: str, status: str) -> str:
+        """Update a Lead Gen Form (status only)
+
+        Args:
+            form_id: (required)
+            account_id: (required)
+            status: (required)"""
+        client = _get_client()
+        try:
+            response = client.lead_forms.update_lead_form(
+                form_id=form_id, account_id=account_id, status=status
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool()
+    def lead_forms_delete_lead_form(form_id: str, account_id: str) -> str:
+        """Delete a Lead Gen Form
+
+        Args:
+            form_id: (required)
+            account_id: (required)"""
+        client = _get_client()
+        try:
+            response = client.lead_forms.delete_lead_form(
+                form_id=form_id, account_id=account_id
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool()
+    def lead_forms_list_lead_form_leads(
+        form_id: str, account_id: str, limit: int = 25, cursor: str = "", since: int = 0
+    ) -> str:
+        """List submitted leads for a form
+
+        Args:
+            form_id: (required)
+            account_id: (required)
+            limit
+            cursor
+            since: Unix timestamp; only return leads created strictly after this."""
+        client = _get_client()
+        try:
+            response = client.lead_forms.list_lead_form_leads(
+                form_id=form_id,
+                account_id=account_id,
+                limit=limit,
+                cursor=cursor,
+                since=since,
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool()
+    def lead_forms_create_lead_form_test_lead(
+        form_id: str, account_id: str, field_data: str
+    ) -> str:
+        """Create a synthetic test lead
+
+        Args:
+            form_id: (required)
+            account_id: (required)
+            field_data: (required)"""
+        client = _get_client()
+        try:
+            response = client.lead_forms.create_lead_form_test_lead(
+                form_id=form_id, account_id=account_id, field_data=field_data
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool()
+    def lead_forms_delete_lead_form_test_lead(
+        form_id: str, lead_id: str, account_id: str
+    ) -> str:
+        """Delete a (test) lead
+
+        Args:
+            form_id: (required)
+            lead_id: (required)
+            account_id: (required)"""
+        client = _get_client()
+        try:
+            response = client.lead_forms.delete_lead_form_test_lead(
+                form_id=form_id, lead_id=lead_id, account_id=account_id
             )
             return _format_response(response)
         except Exception as e:

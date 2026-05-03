@@ -21,6 +21,7 @@ from ._generated.custom_fields import CustomFieldsResource
 from ._generated.discord import DiscordResource
 from ._generated.gmb_services import GmbServicesResource
 from ._generated.invites import InvitesResource
+from ._generated.lead_forms import LeadFormsResource
 from ._generated.logs import LogsResource
 from ._generated.messages import MessagesResource
 from ._generated.reddit import RedditResource
@@ -60,6 +61,7 @@ __all__ = [
     "DiscordResource",
     "GmbServicesResource",
     "InvitesResource",
+    "LeadFormsResource",
     "LogsResource",
     "MediaResource",
     "MessagesResource",

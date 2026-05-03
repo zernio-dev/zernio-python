@@ -150,6 +150,7 @@ x-documentation:
     - `comment.received` - New comment received on a post
     - `review.new` - New review posted on a connected account (Google Business Profile)
     - `review.updated` - Review updated or reply added (Google Business Profile, or via reply API)
+    - `lead.received` - New lead submitted against a Meta Lead Gen (Instant) Form (requires the Ads add-on)
     - `webhook.test` - Test event sent when verifying a webhook endpoint
 
     Webhook payloads are signed with HMAC-SHA256 via the `X-Zernio-Signature` header.
@@ -365,6 +366,135 @@ components:
         details:
           type: object
           additionalProperties: true
+
+    # ─── Lead Forms ────────────────────────────────────────────────────────
+    LeadFormResponseMeta:
+      type: object
+      description: Common meta-block returned alongside lead-form responses for traceability.
+      properties:
+        platform: { type: string, example: facebook }
+        accountId: { type: string }
+        formId: { type: string, nullable: true }
+        leadId: { type: string, nullable: true }
+        pageId: { type: string, nullable: true }
+        lastUpdated: { type: string, format: date-time }
+
+    LeadGenFormQuestion:
+      type: object
+      description: |
+        A single question on a Meta Instant Form. The `type` enum spans Meta's
+        prefill set (FULL_NAME, EMAIL, PHONE, STREET_ADDRESS, CITY, STATE,
+        COUNTRY, POST_CODE, DOB, GENDER, JOB_TITLE, COMPANY_NAME, etc.) plus
+        custom types (CUSTOM, MULTIPLE_CHOICE, CONDITIONAL, STORE_LOOKUP,
+        APPOINTMENT_REQUEST). See Meta's Lead Ads docs for the full list —
+        we forward whatever string the caller sends so new types work without
+        a Zernio release.
+      required: [type]
+      properties:
+        key: { type: string, description: "Stable key returned in `field_data` on each lead. If omitted, Meta auto-derives one from `label`." }
+        label: { type: string, description: Display text shown above the input. }
+        type: { type: string, example: EMAIL }
+        options:
+          type: array
+          description: Required for MULTIPLE_CHOICE / CONDITIONAL questions.
+          items:
+            type: object
+            properties:
+              key: { type: string }
+              value: { type: string }
+        inline_context: { type: string, description: Help text rendered below the field. }
+
+    LeadGenForm:
+      type: object
+      description: A Meta Lead Gen (Instant) Form definition.
+      properties:
+        id: { type: string }
+        name: { type: string }
+        status: { type: string, enum: [ACTIVE, ARCHIVED, DELETED, DRAFT] }
+        locale: { type: string, example: EN_US }
+        created_time: { type: string, format: date-time }
+        leads_count: { type: integer, description: Total leads (real + organic). }
+        organic_leads_count: { type: integer, nullable: true }
+        expired_leads_count: { type: integer, nullable: true }
+        questions:
+          type: array
+          items: { $ref: '#/components/schemas/LeadGenFormQuestion' }
+        privacy_policy_url: { type: string, nullable: true }
+        follow_up_action_url: { type: string, nullable: true }
+        thank_you_page: { type: object, nullable: true }
+        context_card: { type: object, nullable: true }
+        question_page_custom_headline: { type: string, nullable: true }
+        is_optimized_for_quality: { type: boolean, nullable: true }
+        page_id: { type: string, nullable: true }
+
+    CreateLeadFormBody:
+      type: object
+      required: [accountId, name, questions, privacyPolicyUrl]
+      properties:
+        accountId: { type: string, description: Facebook social account ID (Late SocialAccount _id). }
+        name: { type: string, maxLength: 200 }
+        questions:
+          type: array
+          minItems: 1
+          items: { $ref: '#/components/schemas/LeadGenFormQuestion' }
+        privacyPolicyUrl: { type: string, format: uri, description: Required by Meta. Must be reachable from Meta's crawler. }
+        privacyPolicyLinkText: { type: string, maxLength: 70 }
+        followUpActionUrl: { type: string, format: uri }
+        locale: { type: string, example: EN_US }
+        thankYouTitle: { type: string }
+        thankYouBody: { type: string }
+        thankYouButtonText: { type: string }
+        thankYouButtonType: { type: string, description: "Meta enum (e.g. VIEW_WEBSITE, CALL_BUSINESS, DOWNLOAD)" }
+        thankYouWebsiteUrl: { type: string, format: uri }
+        isOptimizedForQuality: { type: boolean }
+        contextCard:
+          type: object
+          properties:
+            title: { type: string, maxLength: 60 }
+            style: { type: string, enum: [LIST_STYLE, PARAGRAPH_STYLE] }
+            content:
+              type: array
+              maxItems: 5
+              items: { type: string }
+            buttonText: { type: string, maxLength: 60 }
+        legalContent:
+          type: object
+          properties:
+            customDisclaimer:
+              type: object
+              properties:
+                title: { type: string }
+                body: { type: string }
+        trackingParameters:
+          type: object
+          additionalProperties: { type: string }
+          description: Up to 20 key/value pairs surfaced on every lead for attribution.
+        questionPageCustomHeadline: { type: string, maxLength: 120 }
+        allowOrganicLead: { type: boolean }
+        blockDisplayForNonTargetedViewer: { type: boolean }
+
+    Lead:
+      type: object
+      description: A single lead submission returned by the leads endpoint and the lead.received webhook.
+      properties:
+        id: { type: string, description: Meta `leadgen_id`. }
+        createdTime: { type: string, format: date-time }
+        adId: { type: string, nullable: true, description: Meta ad ID that surfaced the form. Organic leads omit this. }
+        formId: { type: string }
+        fields:
+          type: object
+          additionalProperties: { type: string }
+          description: Flattened key→value map of answers (multi-value fields joined with ", ").
+        fieldData:
+          type: array
+          description: Raw `field_data` from Meta (one entry per question).
+          items:
+            type: object
+            properties:
+              name: { type: string }
+              values:
+                type: array
+                items: { type: string }
     WhatsAppTemplateButton:
       type: object
       required: [type, text]
@@ -821,7 +951,7 @@ components:
           type: array
           items:
             type: string
-            enum: [post.scheduled, post.published, post.failed, post.partial, post.cancelled, post.recycled, account.connected, account.disconnected, account.ads.initial_sync_completed, message.received, message.sent, message.edited, message.deleted, message.delivered, message.read, message.failed, comment.received, review.new, review.updated]
+            enum: [post.scheduled, post.published, post.failed, post.partial, post.cancelled, post.recycled, account.connected, account.disconnected, account.ads.initial_sync_completed, message.received, message.sent, message.edited, message.deleted, message.delivered, message.read, message.failed, comment.received, review.new, review.updated, lead.received]
           description: Events subscribed to
         isActive:
           type: boolean
@@ -1258,6 +1388,32 @@ components:
         timestamp:
           type: string
           format: date-time
+    WebhookPayloadLeadReceived:
+      type: object
+      description: |
+        Webhook payload for the lead.received event. Fired when a Meta Lead Gen
+        Form receives a new submission. Real-time delivery requires the page to
+        be subscribed to the `leadgen` webhook field — Zernio subscribes
+        on connect; existing accounts get backfilled by
+        `scripts/backfill-fb-webhook-subscriptions.ts`.
+
+        Requires the Ads add-on. Subscribers without the add-on are filtered at
+        delivery time.
+      required: [id, event, lead, account, timestamp]
+      properties:
+        id: { type: string, description: Stable webhook event ID }
+        event:
+          type: string
+          enum: [lead.received]
+        lead: { $ref: '#/components/schemas/Lead' }
+        account:
+          type: object
+          required: [id, platform, username]
+          properties:
+            id: { type: string }
+            platform: { type: string, example: facebook }
+            username: { type: string }
+        timestamp: { type: string, format: date-time }
     # ─── Shared sub-schemas for inbox lifecycle webhook payloads ────────────
     # WebhookPayloadMessageEdited / Deleted / DeliveryStatus reference these
     # as $refs. They were added as top-level named schemas (rather than nested
@@ -4257,6 +4413,24 @@ webhooks:
           application/json:
             schema:
               $ref: '#/components/schemas/WebhookPayloadReviewUpdated'
+      responses:
+        '200':
+          description: Webhook received successfully
+  lead.received:
+    post:
+      operationId: onLeadReceived
+      summary: Lead received event
+      description: |
+        Fired when a Meta Lead Gen (Instant) Form receives a new submission.
+        Delivered in real time via Meta's `leadgen` page webhook. Requires the
+        Ads add-on; subscribers without it are filtered at delivery time.
+      tags: [Webhook Events]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/WebhookPayloadLeadReceived'
       responses:
         '200':
           description: Webhook received successfully
@@ -20124,7 +20298,8 @@ paths:
                 headline: { type: string, description: "Required for Meta, Google, and Pinterest on legacy + attach shapes (skip for multi-creative — use `creatives[].headline`). Ignored for TikTok and X/Twitter. Max: Meta=255, Google=30, Pinterest=100." }
                 longHeadline: { type: string, maxLength: 90, description: "Google Display only. Defaults to `headline` if omitted." }
                 body: { type: string, description: "Required on legacy + attach shapes. For X/Twitter this is the tweet text (max 280 chars including a ~24-char URL when `linkUrl` is set). Max: Google=90, Pinterest=500." }
-                callToAction: { type: string, enum: [LEARN_MORE, SHOP_NOW, SIGN_UP, BOOK_TRAVEL, CONTACT_US, DOWNLOAD, GET_OFFER, GET_QUOTE, SUBSCRIBE, WATCH_MORE], description: "Required on legacy + attach shapes for Meta. Honoured on TikTok too — passes through to the Spark Ad creative's `call_to_action`. Ignored by other platforms." }
+                callToAction: { type: string, enum: [LEARN_MORE, SHOP_NOW, SIGN_UP, BOOK_TRAVEL, CONTACT_US, DOWNLOAD, GET_OFFER, GET_QUOTE, SUBSCRIBE, WATCH_MORE], description: "Required on legacy + attach shapes for Meta. Honoured on TikTok too — passes through to the Spark Ad creative's `call_to_action`. Ignored by other platforms. Ignored on Meta when `leadGenFormId` is set — lead ads force CTA type to SIGN_UP." }
+                leadGenFormId: { type: string, description: "Meta-only. Attaches a Lead Gen (Instant) Form to the creative. Required when `goal=\"lead_generation\"`. Force-overrides the CTA to SIGN_UP. Create a form first via POST /v1/ads/lead-forms. On the multi-creative shape this can also be set per `creatives[i]` to A/B different forms inside one ad set." }
                 linkUrl: { type: string, format: uri, description: "Required on legacy + attach shapes. Skip for multi-creative." }
                 imageUrl: { type: string, format: uri, description: "Image creative for Meta/Google/Pinterest on legacy + attach shapes (mutually exclusive with `video`). Not required for Google Search campaigns. For TikTok, this field carries the VIDEO URL (the TikTok ads endpoint is video-only; the field retains the `imageUrl` name for cross-platform consistency). Ignored for X/Twitter. For Google Display, treated as the landscape image (alias of `images.landscape`); supply `images.square` alongside or the request is rejected." }
                 images:
@@ -20165,6 +20340,7 @@ paths:
                           thumbnailUrl: { type: string, format: uri }
                       linkUrl: { type: string, format: uri }
                       callToAction: { type: string, enum: [LEARN_MORE, SHOP_NOW, SIGN_UP, BOOK_TRAVEL, CONTACT_US, DOWNLOAD, GET_OFFER, GET_QUOTE, SUBSCRIBE, WATCH_MORE] }
+                      leadGenFormId: { type: string, description: "Per-creative Lead Gen Form ID. Wins over the top-level `leadGenFormId` so each ad in a campaign can A/B a different form. Forces CTA to SIGN_UP." }
                 adSetId:
                   type: string
                   description: |
@@ -20627,6 +20803,301 @@ paths:
         '404': { $ref: '#/components/responses/NotFound' }
         '422':
           description: Audience is not a customer_list type or has no platform ID yet
+
+  /v1/ads/lead-forms:
+    get:
+      operationId: listLeadForms
+      tags: [Lead Forms]
+      summary: List Meta Lead Gen Forms
+      description: |
+        Returns Meta Instant Forms attached to the Facebook Page connected via the
+        given social account. Forms live on Facebook Pages — Instagram lead ads
+        reuse the linked Page under the hood, so even Instagram-only ad accounts
+        list forms from the linked Facebook Page. Requires the Ads add-on.
+      security:
+        - bearerAuth: []
+      parameters:
+        - { name: accountId, in: query, required: true, schema: { type: string }, description: Facebook social account ID (Late SocialAccount _id) }
+        - { name: limit, in: query, schema: { type: integer, minimum: 1, maximum: 100, default: 25 } }
+        - { name: cursor, in: query, schema: { type: string }, description: Meta `paging.cursors.after` from a prior page }
+      responses:
+        '200':
+          description: Forms list
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status: { type: string, example: success }
+                  forms:
+                    type: array
+                    items: { $ref: '#/components/schemas/LeadGenForm' }
+                  pagination:
+                    type: object
+                    properties:
+                      hasMore: { type: boolean }
+                      cursor: { type: string, nullable: true }
+                  meta: { $ref: '#/components/schemas/LeadFormResponseMeta' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { description: Ads add-on required }
+        '404': { description: Social account not found }
+    post:
+      operationId: createLeadForm
+      tags: [Lead Forms]
+      summary: Create a Meta Lead Gen Form
+      description: |
+        Creates a new Instant Form on the Facebook Page tied to the given social
+        account. The form is created in `ACTIVE` status and is immediately
+        attachable to ads (see `leadGenFormId` on POST /v1/ads/create).
+
+        Once a form has received any leads, its questions / privacy policy /
+        thank-you page become immutable on Meta's side; only `status` may be
+        changed via PATCH.
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/CreateLeadFormBody' }
+      responses:
+        '201':
+          description: Form created
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status: { type: string, example: success }
+                  form:
+                    type: object
+                    properties:
+                      id: { type: string }
+                      name: { type: string }
+                  meta: { $ref: '#/components/schemas/LeadFormResponseMeta' }
+        '400': { description: Validation failure }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { description: Ads add-on required }
+        '404': { description: Social account not found }
+
+  /v1/ads/lead-forms/{formId}:
+    get:
+      operationId: getLeadForm
+      tags: [Lead Forms]
+      summary: Get a Lead Gen Form
+      description: Returns full details for a single form, including questions, privacy policy, and lead counts.
+      security:
+        - bearerAuth: []
+      parameters:
+        - { name: formId, in: path, required: true, schema: { type: string }, description: Meta lead form ID (numeric string) }
+        - { name: accountId, in: query, required: true, schema: { type: string } }
+      responses:
+        '200':
+          description: Form details
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status: { type: string, example: success }
+                  form: { $ref: '#/components/schemas/LeadGenForm' }
+                  meta: { $ref: '#/components/schemas/LeadFormResponseMeta' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { description: Ads add-on required }
+        '404': { description: Form or account not found }
+    patch:
+      operationId: updateLeadForm
+      tags: [Lead Forms]
+      summary: Update a Lead Gen Form (status only)
+      description: |
+        Update mutable fields on an existing form. Today only `status` is
+        mutable on Meta's side — questions / privacy_policy / thank_you_page
+        are immutable once a form has received any leads.
+      security:
+        - bearerAuth: []
+      parameters:
+        - { name: formId, in: path, required: true, schema: { type: string } }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [accountId, status]
+              properties:
+                accountId: { type: string }
+                status: { type: string, enum: [ACTIVE, ARCHIVED, DRAFT] }
+      responses:
+        '200':
+          description: Form updated
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status: { type: string, example: success }
+                  success: { type: boolean }
+                  meta: { $ref: '#/components/schemas/LeadFormResponseMeta' }
+        '400': { description: Validation failure }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { description: Ads add-on required }
+        '404': { description: Form not found }
+    delete:
+      operationId: deleteLeadForm
+      tags: [Lead Forms]
+      summary: Delete a Lead Gen Form
+      description: |
+        Deletes the form from Meta. If the form has already received leads,
+        Meta archives it instead of hard-deleting; the response is the same
+        either way.
+      security:
+        - bearerAuth: []
+      parameters:
+        - { name: formId, in: path, required: true, schema: { type: string } }
+        - { name: accountId, in: query, required: true, schema: { type: string } }
+      responses:
+        '200':
+          description: Form deleted (or archived)
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status: { type: string, example: success }
+                  success: { type: boolean }
+                  meta: { $ref: '#/components/schemas/LeadFormResponseMeta' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { description: Ads add-on required }
+        '404': { description: Form not found }
+
+  /v1/ads/lead-forms/{formId}/leads:
+    get:
+      operationId: listLeadFormLeads
+      tags: [Lead Forms]
+      summary: List submitted leads for a form
+      description: |
+        Returns leads submitted against a Lead Gen Form. The page access token
+        on the connected account must have the `leads_retrieval` permission —
+        if the token was minted before that scope was approved, this endpoint
+        returns `code: scope_reconnect_required` (HTTP 422) and the customer
+        must reconnect the Facebook account.
+
+        For real-time delivery without polling, subscribe a webhook to the
+        `lead.received` event.
+      security:
+        - bearerAuth: []
+      parameters:
+        - { name: formId, in: path, required: true, schema: { type: string } }
+        - { name: accountId, in: query, required: true, schema: { type: string } }
+        - { name: limit, in: query, schema: { type: integer, minimum: 1, maximum: 100, default: 25 } }
+        - { name: cursor, in: query, schema: { type: string } }
+        - { name: since, in: query, schema: { type: integer }, description: Unix timestamp; only return leads created strictly after this. }
+      responses:
+        '200':
+          description: Leads
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status: { type: string, example: success }
+                  leads:
+                    type: array
+                    items: { $ref: '#/components/schemas/Lead' }
+                  pagination:
+                    type: object
+                    properties:
+                      hasMore: { type: boolean }
+                      cursor: { type: string, nullable: true }
+                  meta: { $ref: '#/components/schemas/LeadFormResponseMeta' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { description: Ads add-on required }
+        '422':
+          description: Connected account is missing the `leads_retrieval` scope and must be reconnected. `code` is `scope_reconnect_required`.
+
+  /v1/ads/lead-forms/{formId}/test-leads:
+    post:
+      operationId: createLeadFormTestLead
+      tags: [Lead Forms]
+      summary: Create a synthetic test lead
+      description: |
+        Submits a fake lead against a form. Useful for QA, App Review demos,
+        and exercising webhook subscribers without waiting for real ad
+        impressions. Meta caps a form to one outstanding test lead — call
+        DELETE on the returned id before re-submitting.
+      security:
+        - bearerAuth: []
+      parameters:
+        - { name: formId, in: path, required: true, schema: { type: string } }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [accountId, fieldData]
+              properties:
+                accountId: { type: string }
+                fieldData:
+                  type: array
+                  minItems: 1
+                  items:
+                    type: object
+                    required: [name, values]
+                    properties:
+                      name: { type: string, description: Question key (matches `key` from form definition) }
+                      values:
+                        type: array
+                        minItems: 1
+                        items: { type: string }
+      responses:
+        '200':
+          description: Test lead created
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status: { type: string, example: success }
+                  testLead:
+                    type: object
+                    properties:
+                      id: { type: string }
+                  meta: { $ref: '#/components/schemas/LeadFormResponseMeta' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { description: Ads add-on required }
+        '404': { description: Form or account not found }
+
+  /v1/ads/lead-forms/{formId}/test-leads/{leadId}:
+    delete:
+      operationId: deleteLeadFormTestLead
+      tags: [Lead Forms]
+      summary: Delete a (test) lead
+      description: |
+        Deletes a single lead by ID. Primarily used to clear the outstanding
+        test lead so you can submit a new one. The same Graph API call works
+        on real leads too; for production lead deletion (GDPR/CCPA) prefer a
+        dedicated flow.
+      security:
+        - bearerAuth: []
+      parameters:
+        - { name: formId, in: path, required: true, schema: { type: string } }
+        - { name: leadId, in: path, required: true, schema: { type: string } }
+        - { name: accountId, in: query, required: true, schema: { type: string } }
+      responses:
+        '200':
+          description: Lead deleted
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status: { type: string, example: success }
+                  success: { type: boolean }
+                  meta: { $ref: '#/components/schemas/LeadFormResponseMeta' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { description: Ads add-on required }
+        '404': { description: Lead not found }
 
   /v1/ads/conversions:
     post:
