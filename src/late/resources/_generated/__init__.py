@@ -19,7 +19,6 @@ from .custom_fields import CustomFieldsResource
 from .discord import DiscordResource
 from .gmb_services import GmbServicesResource
 from .invites import InvitesResource
-from .lead_forms import LeadFormsResource
 from .logs import LogsResource
 from .media import MediaResource
 from .messages import MessagesResource
@@ -56,7 +55,6 @@ __all__ = [
     "DiscordResource",
     "GmbServicesResource",
     "InvitesResource",
-    "LeadFormsResource",
     "LogsResource",
     "MediaResource",
     "MessagesResource",

@@ -26,7 +26,6 @@ from ..resources import (
     DiscordResource,
     GmbServicesResource,
     InvitesResource,
-    LeadFormsResource,
     LogsResource,
     MediaResource,
     MessagesResource,
@@ -134,7 +133,6 @@ class Zernio(BaseClient):
         self.discord = DiscordResource(self)
         self.gmb_services = GmbServicesResource(self)
         self.invites = InvitesResource(self)
-        self.lead_forms = LeadFormsResource(self)
         self.logs = LogsResource(self)
         self.media = MediaResource(self)
         self.messages = MessagesResource(self)
