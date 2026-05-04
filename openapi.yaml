@@ -11284,7 +11284,12 @@ paths:
       operationId: getPendingOAuthData
       tags: [Connect]
       summary: Get pending OAuth data
-      description: Fetch pending OAuth data for headless mode using the pendingDataToken from the redirect URL. One-time use, expires after 10 minutes. No authentication required.
+      description: |
+        Fetch pending OAuth data for headless mode using the pendingDataToken from the redirect URL.
+
+        **Scope**: This endpoint is used only for LinkedIn organizations and Snapchat profiles, where the selection list is too large to fit in URL params. WhatsApp, Facebook, Pinterest, Google Business and other platforms pass selection state directly via URL query params on the redirect (`profileId`, `tempToken`, `step`), no pending record is created, so this endpoint will return 404 for those flows. Use the platform-specific selection endpoint instead (e.g. `/v1/connect/whatsapp/select-phone-number`).
+
+        Token is one-time use and expires after 10 minutes. No authentication required.
       parameters:
         - name: token
           in: query
@@ -12015,6 +12020,164 @@ paths:
           description: Invalid or expired access token
         '403':
           description: Profile limit exceeded for this plan
+
+  /v1/connect/whatsapp/select-phone-number:
+    get:
+      operationId: listWhatsAppPhoneNumbers
+      tags: [Connect]
+      summary: List WhatsApp phone numbers for selection
+      description: |
+        Fetch the WhatsApp phone numbers available across the user's WhatsApp Business Accounts (WABAs) after a headless OAuth flow.
+
+        WhatsApp OAuth grants access at the WABA level. When a connected WABA has 2 or more phone numbers, you must call this endpoint to list them and then `POST /v1/connect/whatsapp/select-phone-number` to bind one to the Zernio profile. Single-phone WABAs auto-complete during the OAuth callback and never reach this endpoint.
+
+        Use the `profileId` and `tempToken` returned in the headless redirect (`step=select_phone_number`).
+
+        Alternative: if you already know `wabaId` and `phoneNumberId` (e.g. from Meta Business Suite), use `connectWhatsAppCredentials` instead, which skips this two-step flow.
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: profileId
+          in: query
+          required: true
+          schema: { type: string }
+          description: The Zernio profile ID from the headless redirect
+        - name: tempToken
+          in: query
+          required: true
+          schema: { type: string }
+          description: The temporary access token from the headless redirect
+        - name: X-Connect-Token
+          in: header
+          required: false
+          schema: { type: string }
+          description: Alternative auth for API users' end customers (used when the bearer token is scoped to a different user)
+      responses:
+        '200':
+          description: Phone numbers fetched successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  phoneNumbers:
+                    type: array
+                    items:
+                      type: object
+                      description: Phone number entry. Field names use Meta WhatsApp Cloud API snake_case (passed through unchanged); wabaId and wabaName are Zernio enrichment.
+                      properties:
+                        id: { type: string, description: Phone Number ID (Meta) }
+                        display_phone_number: { type: string, description: E.164-formatted display number }
+                        verified_name: { type: string, description: Meta-verified business name }
+                        quality_rating: { type: string, description: 'GREEN, YELLOW, RED, or UNKNOWN' }
+                        name_status: { type: string, description: 'APPROVED, PENDING_REVIEW, DECLINED, or NONE' }
+                        messaging_limit_tier: { type: string, description: 'TIER_250, TIER_1K, TIER_10K, TIER_100K, or TIER_UNLIMITED' }
+                        wabaId: { type: string, description: WhatsApp Business Account ID (Zernio enrichment) }
+                        wabaName: { type: string, description: WABA display name (Zernio enrichment) }
+              example:
+                phoneNumbers:
+                  - id: "1875844705851813"
+                    display_phone_number: "+55 83 8793-2039"
+                    verified_name: "Bioface"
+                    quality_rating: "GREEN"
+                    name_status: "APPROVED"
+                    messaging_limit_tier: "TIER_1K"
+                    wabaId: "317766992490131"
+                    wabaName: "Bioface WABA"
+        '400':
+          description: Missing profileId or tempToken
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ErrorResponse' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '500':
+          description: Failed to fetch phone numbers (Meta API error, expired token, or insufficient permissions)
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ErrorResponse' }
+    post:
+      operationId: completeWhatsAppPhoneSelection
+      tags: [Connect]
+      summary: Complete WhatsApp phone number selection
+      description: |
+        Bind a specific WhatsApp phone number to the Zernio profile after the user picks one from `listWhatsAppPhoneNumbers`. Exchanges the short-lived OAuth token for a long-lived token, subscribes the WABA to webhooks, and creates the SocialAccount.
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: X-Connect-Token
+          in: header
+          required: false
+          schema: { type: string }
+          description: Alternative auth for API users' end customers
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [profileId, phoneNumberId, wabaId, tempToken]
+              properties:
+                profileId: { type: string, description: The Zernio profile ID }
+                phoneNumberId: { type: string, description: The selected phone number ID (from listWhatsAppPhoneNumbers) }
+                wabaId: { type: string, description: The WABA ID containing the selected phone }
+                tempToken: { type: string, description: The temporary access token from the headless redirect }
+                userProfile:
+                  type: object
+                  description: Optional user profile data (passthrough)
+                redirect_url:
+                  type: string
+                  description: Optional URL to receive the post-connection redirect target
+            example:
+              profileId: "6507a1b2c3d4e5f6a7b8c9d0"
+              phoneNumberId: "1875844705851813"
+              wabaId: "317766992490131"
+              tempToken: "EAABsbCS...short-lived-token"
+      responses:
+        '200':
+          description: Phone number connected successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message: { type: string }
+                  redirect_url: { type: string, description: 'Present only if redirect_url was provided in the request' }
+                  account:
+                    type: object
+                    properties:
+                      accountId: { type: string }
+                      platform: { type: string, enum: [whatsapp] }
+                      username: { type: string, description: Display phone number }
+                      displayName: { type: string, description: Meta-verified business name }
+                      isActive: { type: boolean }
+                      selectedPhoneNumber: { type: string }
+              example:
+                message: "WhatsApp phone number connected successfully"
+                account:
+                  accountId: "6507a1b2c3d4e5f6a7b8c9d0"
+                  platform: "whatsapp"
+                  username: "+55 83 8793-2039"
+                  displayName: "Bioface"
+                  isActive: true
+                  selectedPhoneNumber: "+55 83 8793-2039"
+        '400':
+          description: Missing required fields (profileId, phoneNumberId, wabaId, or tempToken)
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ErrorResponse' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403':
+          description: Profile limit exceeded for the user's plan (PROFILE_LIMIT_EXCEEDED)
+        '404':
+          description: Selected phone number not found in the specified WABA
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ErrorResponse' }
+        '500':
+          description: Failed to bind phone number
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ErrorResponse' }
 
   /v1/connect/telegram:
     get:

@@ -3513,6 +3513,54 @@ def register_generated_tools(mcp, _get_client):
             return f"Error: {e}"
 
     @mcp.tool()
+    def connect_list_whats_app_phone_numbers(profile_id: str, temp_token: str) -> str:
+        """List WhatsApp phone numbers for selection
+
+        Args:
+            profile_id: The Zernio profile ID from the headless redirect (required)
+            temp_token: The temporary access token from the headless redirect (required)"""
+        client = _get_client()
+        try:
+            response = client.connect.list_whats_app_phone_numbers(
+                profile_id=profile_id, temp_token=temp_token
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool()
+    def connect_complete_whats_app_phone_selection(
+        profile_id: str,
+        phone_number_id: str,
+        waba_id: str,
+        temp_token: str,
+        user_profile: str = "",
+        redirect_url: str = "",
+    ) -> str:
+        """Complete WhatsApp phone number selection
+
+        Args:
+            profile_id: The Zernio profile ID (required)
+            phone_number_id: The selected phone number ID (from listWhatsAppPhoneNumbers) (required)
+            waba_id: The WABA ID containing the selected phone (required)
+            temp_token: The temporary access token from the headless redirect (required)
+            user_profile: Optional user profile data (passthrough)
+            redirect_url: Optional URL to receive the post-connection redirect target"""
+        client = _get_client()
+        try:
+            response = client.connect.complete_whats_app_phone_selection(
+                profile_id=profile_id,
+                phone_number_id=phone_number_id,
+                waba_id=waba_id,
+                temp_token=temp_token,
+                user_profile=user_profile,
+                redirect_url=redirect_url,
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool()
     def connect_get_telegram_connect_status(profile_id: str) -> str:
         """Generate Telegram code
 

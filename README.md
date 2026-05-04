@@ -309,6 +309,7 @@ Both `from zernio import ...` and `from late import ...` work identically. The `
 | `connect.list_linked_in_organizations()` | List LinkedIn orgs |
 | `connect.list_pinterest_boards_for_selection()` | List Pinterest boards |
 | `connect.list_snapchat_profiles()` | List Snapchat profiles |
+| `connect.list_whats_app_phone_numbers()` | List WhatsApp phone numbers for selection |
 | `connect.get_connect_url()` | Get OAuth connect URL |
 | `connect.get_facebook_pages()` | List Facebook pages |
 | `connect.get_gmb_locations()` | List GBP locations |
@@ -326,6 +327,7 @@ Both `from zernio import ...` and `from late import ...` work identically. The `
 | `connect.update_reddit_subreddits()` | Set default subreddit |
 | `connect.update_youtube_default_playlist()` | Set default YouTube playlist |
 | `connect.complete_telegram_connect()` | Check Telegram status |
+| `connect.complete_whats_app_phone_selection()` | Complete WhatsApp phone number selection |
 | `connect.configure_tik_tok_ads_brand_identity()` | Configure TikTok Ads Brand Identity |
 | `connect.connect_ads()` | Connect ads for a platform |
 | `connect.connect_bluesky_credentials()` | Connect Bluesky account |
