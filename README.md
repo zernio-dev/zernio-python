@@ -294,6 +294,7 @@ Both `from zernio import ...` and `from late import ...` work identically. The `
 | Method | Description |
 |--------|-------------|
 | `usage.get_usage_stats()` | Get plan and usage stats |
+| `usage.get_x_api_pricing()` | Get X/Twitter API pricing table |
 
 ### Logs
 | Method | Description |

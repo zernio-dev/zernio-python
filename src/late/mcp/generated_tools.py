@@ -336,18 +336,28 @@ def register_generated_tools(mcp, _get_client):
 
     @mcp.tool()
     def accounts_update_account(
-        account_id: str, username: str = "", display_name: str = ""
+        account_id: str,
+        username: str = "",
+        display_name: str = "",
+        x_capabilities: str = "",
     ) -> str:
         """Update account
 
-        Args:
-            account_id: (required)
-            username
-            display_name"""
+            Args:
+                account_id: (required)
+                username
+                display_name
+                x_capabilities: X/Twitter only. Per-account opt-in toggles for background API
+        operations that incur X API pass-through costs. Each call is
+        billed via Metronome at the X tier rate. Either field can be
+        sent independently; omitted fields are unchanged."""
         client = _get_client()
         try:
             response = client.accounts.update_account(
-                account_id=account_id, username=username, display_name=display_name
+                account_id=account_id,
+                username=username,
+                display_name=display_name,
+                x_capabilities=x_capabilities,
             )
             return _format_response(response)
         except Exception as e:
@@ -5397,6 +5407,16 @@ def register_generated_tools(mcp, _get_client):
             return f"Error: {e}"
 
     # USAGE
+
+    @mcp.tool()
+    def usage_get_x_api_pricing() -> str:
+        """Get X/Twitter API pricing table"""
+        client = _get_client()
+        try:
+            response = client.usage.get_x_api_pricing()
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
 
     @mcp.tool()
     def usage_get_usage_stats() -> str:

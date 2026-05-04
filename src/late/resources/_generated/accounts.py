@@ -92,11 +92,13 @@ class AccountsResource:
         *,
         username: str | None = None,
         display_name: str | None = None,
+        x_capabilities: dict[str, Any] | None = None,
     ) -> dict[str, Any]:
         """Update account"""
         payload = self._build_payload(
             username=username,
             display_name=display_name,
+            x_capabilities=x_capabilities,
         )
         return self._client._put(f"/v1/accounts/{account_id}", data=payload)
 
@@ -440,11 +442,13 @@ class AccountsResource:
         *,
         username: str | None = None,
         display_name: str | None = None,
+        x_capabilities: dict[str, Any] | None = None,
     ) -> dict[str, Any]:
         """Update account (async)"""
         payload = self._build_payload(
             username=username,
             display_name=display_name,
+            x_capabilities=x_capabilities,
         )
         return await self._client._aput(f"/v1/accounts/{account_id}", data=payload)
 

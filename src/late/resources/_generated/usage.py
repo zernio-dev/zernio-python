@@ -48,9 +48,17 @@ class UsageResource:
                 result[to_camel(k)] = v
         return result
 
+    def get_x_api_pricing(self) -> dict[str, Any]:
+        """Get X/Twitter API pricing table"""
+        return self._client._get("/v1/billing/x-pricing")
+
     def get_usage_stats(self) -> dict[str, Any]:
         """Get plan and usage stats"""
         return self._client._get("/v1/usage-stats")
+
+    async def aget_x_api_pricing(self) -> dict[str, Any]:
+        """Get X/Twitter API pricing table (async)"""
+        return await self._client._aget("/v1/billing/x-pricing")
 
     async def aget_usage_stats(self) -> dict[str, Any]:
         """Get plan and usage stats (async)"""
