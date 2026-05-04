@@ -118,11 +118,14 @@ x-documentation:
 
     ## Rate Limits
 
-    API request throughput is rate-limited per minute on a sliding window. Limits scale with your account:
+    API request throughput is rate-limited per minute on a sliding window. Limits scale with your team's total connected social accounts:
 
-    - **Free** (first 2 social accounts): 60 req/min
-    - **Paid** (any usage-based account, including AppSumo lifetime tiers): 600 req/min
-    - **High-volume / Enterprise**: 1,200 req/min — contact support to upgrade
+    - **1–10 accounts**: 60 req/min
+    - **11–100 accounts**: 120 req/min
+    - **101–2,000 accounts**: 600 req/min
+    - **2,001+ accounts**: 1,200 req/min
+
+    Legacy AppSumo lifetime tiers get a flat 600 req/min regardless of tier.
 
     Posts themselves are unlimited on every connected social account; the rate limit applies only to API request throughput. Per-platform safety caps still apply at the social-network side (Instagram 100/day per account, Twitter 20/day per account, Pinterest 25/day per account).
 
