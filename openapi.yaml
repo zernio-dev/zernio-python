@@ -15632,7 +15632,11 @@ paths:
     post:
       operationId: sendPrivateReplyToComment
       summary: Send private reply
-      description: Send a private message to the author of a comment. Supported on Instagram and Facebook only. One reply per comment, must be sent within 7 days, text only.
+      description: |
+        Send a private message to the author of a comment. Supported on Instagram and Facebook only.
+        One reply per comment, must be sent within 7 days. Optionally include up to 13 quick-reply
+        chips (`quickReplies`) on the same first message — useful for comment-to-DM automations
+        that want to capture intent in a single round-trip.
       tags: [Comments]
       security: [{ bearerAuth: [] }]
       parameters:
@@ -15660,9 +15664,43 @@ paths:
                 message:
                   type: string
                   description: The message text to send as a private DM
-            example:
-              accountId: "507f1f77bcf86cd799439011"
-              message: "Hi! Thanks for your comment. I wanted to reach out privately to help with your question."
+                quickReplies:
+                  type: array
+                  description: |
+                    Optional quick-reply chips appended to the message. Visible only in the
+                    Instagram and Messenger apps (not on web). Maximum 13 entries.
+                  maxItems: 13
+                  items:
+                    type: object
+                    required: [title, payload]
+                    properties:
+                      title:
+                        type: string
+                        maxLength: 20
+                        description: Label shown on the chip. Truncated by Meta beyond 20 characters.
+                      payload:
+                        type: string
+                        description: Opaque value returned in the inbound webhook when the user taps the chip.
+                      imageUrl:
+                        type: string
+                        format: uri
+                        description: Optional thumbnail shown next to the chip title.
+            examples:
+              textOnly:
+                summary: Plain text reply
+                value:
+                  accountId: "507f1f77bcf86cd799439011"
+                  message: "Hi! Thanks for your comment. I wanted to reach out privately to help with your question."
+              withQuickReplies:
+                summary: Comment-to-DM with quick replies
+                value:
+                  accountId: "507f1f77bcf86cd799439011"
+                  message: "Thanks for commenting! Want me to send the link?"
+                  quickReplies:
+                    - title: "Yes, send it"
+                      payload: "SEND_LINK"
+                    - title: "No thanks"
+                      payload: "DECLINE"
       responses:
         '200':
           description: Private reply sent successfully

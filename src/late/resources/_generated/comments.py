@@ -181,12 +181,19 @@ class CommentsResource:
         )
 
     def send_private_reply_to_comment(
-        self, post_id: str, comment_id: str, account_id: str, message: str
+        self,
+        post_id: str,
+        comment_id: str,
+        account_id: str,
+        message: str,
+        *,
+        quick_replies: list[dict[str, Any]] | None = None,
     ) -> dict[str, Any]:
         """Send private reply"""
         payload = self._build_payload(
             account_id=account_id,
             message=message,
+            quick_replies=quick_replies,
         )
         return self._client._post(
             f"/v1/inbox/comments/{post_id}/{comment_id}/private-reply", data=payload
@@ -325,12 +332,19 @@ class CommentsResource:
         )
 
     async def asend_private_reply_to_comment(
-        self, post_id: str, comment_id: str, account_id: str, message: str
+        self,
+        post_id: str,
+        comment_id: str,
+        account_id: str,
+        message: str,
+        *,
+        quick_replies: list[dict[str, Any]] | None = None,
     ) -> dict[str, Any]:
         """Send private reply (async)"""
         payload = self._build_payload(
             account_id=account_id,
             message=message,
+            quick_replies=quick_replies,
         )
         return await self._client._apost(
             f"/v1/inbox/comments/{post_id}/{comment_id}/private-reply", data=payload

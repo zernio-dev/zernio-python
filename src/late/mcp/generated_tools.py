@@ -3057,15 +3057,21 @@ def register_generated_tools(mcp, _get_client):
 
     @mcp.tool()
     def comments_send_private_reply_to_comment(
-        post_id: str, comment_id: str, account_id: str, message: str
+        post_id: str,
+        comment_id: str,
+        account_id: str,
+        message: str,
+        quick_replies: str = "",
     ) -> str:
         """Send private reply
 
-        Args:
-            post_id: The media/post ID (Instagram media ID or Facebook post ID) (required)
-            comment_id: The comment ID to send a private reply to (required)
-            account_id: The social account ID (Instagram or Facebook) (required)
-            message: The message text to send as a private DM (required)"""
+            Args:
+                post_id: The media/post ID (Instagram media ID or Facebook post ID) (required)
+                comment_id: The comment ID to send a private reply to (required)
+                account_id: The social account ID (Instagram or Facebook) (required)
+                message: The message text to send as a private DM (required)
+                quick_replies: Optional quick-reply chips appended to the message. Visible only in the
+        Instagram and Messenger apps (not on web). Maximum 13 entries."""
         client = _get_client()
         try:
             response = client.comments.send_private_reply_to_comment(
@@ -3073,6 +3079,7 @@ def register_generated_tools(mcp, _get_client):
                 comment_id=comment_id,
                 account_id=account_id,
                 message=message,
+                quick_replies=quick_replies,
             )
             return _format_response(response)
         except Exception as e:
