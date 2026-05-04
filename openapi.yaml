@@ -120,9 +120,8 @@ x-documentation:
 
     API request throughput is rate-limited per minute on a sliding window. Limits scale with your team's total connected social accounts:
 
-    - **1–10 accounts**: 60 req/min
-    - **11–100 accounts**: 120 req/min
-    - **101–2,000 accounts**: 600 req/min
+    - **0–2 accounts** (free tier): 60 req/min
+    - **3–2,000 accounts**: 600 req/min
     - **2,001+ accounts**: 1,200 req/min
 
     Legacy AppSumo lifetime tiers get a flat 600 req/min regardless of tier.
