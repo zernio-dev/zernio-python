@@ -56,6 +56,20 @@ Available tools are prefixed by resource:
 - posts_*    : Create, list, update, delete posts
 - media_*    : Upload images and videos
 - docs_*     : Search Zernio API documentation
+
+MULTI-ACCOUNT WORKFLOW (agencies, multi-client setups):
+When a user has more than one account on the same platform, you MUST
+disambiguate before posting:
+
+  1. Call accounts_list (or profiles_list then accounts_list with a
+     profile_id filter) to discover account IDs.
+  2. Pass account_id to posts_create / posts_publish_now, or account_ids
+     (parallel to platforms) to posts_cross_post.
+
+If account_id is omitted and the selection is ambiguous, the write tools
+return an error containing the candidate list - read it, pick the right
+account, and retry with account_id set. Never guess. The legacy behaviour
+of silently picking the first matching account has been removed.
 """,
 )
 
@@ -129,6 +143,74 @@ def _platform_str(value: Any) -> str:
     return str(value).lower()
 
 
+def _resolve_account(
+    client: Late,
+    platform: str,
+    account_id: str = "",
+    profile_id: str = "",
+) -> Any:
+    """Resolve a single account for a given platform without silent guessing.
+
+    Resolution order:
+      1. account_id  -> verify it exists and matches the requested platform.
+      2. profile_id  -> list accounts in that profile, filter by platform.
+      3. neither     -> list all accounts, filter by platform.
+
+    Raises ValueError with an LLM-readable message when the selection is
+    ambiguous (>= 2 candidates) or empty. This is the load-bearing piece of
+    the multi-account fix: previously the MCP silently picked matching[0],
+    which routed agency posts to the wrong client account.
+    """
+    platform_l = platform.lower()
+
+    # Path 1: explicit account_id. We still cross-check the platform so the
+    # LLM can't accidentally publish a tweet to a LinkedIn account.
+    if account_id:
+        accounts = (client.accounts.list().accounts or [])
+        acc = next((a for a in accounts if a.field_id == account_id), None)
+        if not acc:
+            raise ValueError(
+                f"Account {account_id} not found or not accessible with this API key."
+            )
+        if _platform_str(acc.platform) != platform_l:
+            raise ValueError(
+                f"Account {account_id} is a {_platform_str(acc.platform)} "
+                f"account, not {platform_l}."
+            )
+        return acc
+
+    # Path 2 & 3: list (optionally scoped to a profile) then filter by platform.
+    pool = (
+        client.accounts.list(profile_id=profile_id).accounts
+        if profile_id else client.accounts.list().accounts
+    ) or []
+
+    matching = [
+        a for a in pool
+        if a.platform and _platform_str(a.platform) == platform_l
+    ]
+
+    if not matching:
+        scope = f" in profile {profile_id}" if profile_id else ""
+        available = sorted({_platform_str(a.platform) for a in pool if a.platform})
+        raise ValueError(
+            f"No {platform_l} account found{scope}. "
+            f"Available platforms: {', '.join(available) or '(none)'}."
+        )
+
+    if len(matching) > 1:
+        listing = "\n".join(
+            f"  - {a.username or a.displayName or a.field_id} (account_id: {a.field_id})"
+            for a in matching
+        )
+        raise ValueError(
+            f"Multiple {platform_l} accounts available. Pass account_id "
+            f"(or profile_id to scope) and retry:\n{listing}"
+        )
+
+    return matching[0]
+
+
 # ============================================================================
 # ACCOUNTS
 # ============================================================================
@@ -156,17 +238,18 @@ def accounts_list() -> str:
 @use_tool_def("accounts_get")
 def accounts_get(platform: str) -> str:
     client = _get_client()
-    response = client.accounts.list()
-    accounts = response.accounts or []
-
-    matching = [a for a in accounts if a.platform and _platform_str(a.platform) == platform.lower()]
-
-    if not matching:
-        available = list({_platform_str(a.platform) for a in accounts if a.platform})
-        return f"No {platform} account found. Available: {', '.join(available)}"
-
-    acc = matching[0]
-    return f"Platform: {_platform_str(acc.platform)}\nUsername: {acc.username or 'N/A'}\nID: {acc.field_id}"
+    try:
+        acc = _resolve_account(client, platform)
+    except ValueError as e:
+        # Surface ambiguity / missing-account errors to the LLM so it can
+        # call accounts_list and retry with a specific ID. Previously this
+        # path silently returned matching[0].
+        return str(e)
+    return (
+        f"Platform: {_platform_str(acc.platform)}\n"
+        f"Username: {acc.username or 'N/A'}\n"
+        f"ID: {acc.field_id}"
+    )
 
 
 # ============================================================================
@@ -343,6 +426,8 @@ def posts_get(post_id: str) -> str:
 def posts_create(
     content: str,
     platform: str,
+    account_id: str = "",
+    profile_id: str = "",
     is_draft: bool = False,
     publish_now: bool = False,
     schedule_minutes: int = 0,
@@ -351,16 +436,14 @@ def posts_create(
 ) -> str:
     client = _get_client()
 
-    # Find account for platform
-    accounts_response = client.accounts.list()
-    accounts = accounts_response.accounts or []
-    matching = [a for a in accounts if a.platform and _platform_str(a.platform) == platform.lower()]
-
-    if not matching:
-        available = list({_platform_str(a.platform) for a in accounts if a.platform})
-        return f"No {platform} account connected. Available platforms: {', '.join(available)}"
-
-    account = matching[0]
+    # Resolve the target account. _resolve_account raises ValueError with a
+    # helpful candidate list when the user has multiple accounts and no
+    # account_id was passed - we surface that string back to the LLM so it
+    # can retry. Previously this silently picked accounts[0].
+    try:
+        account = _resolve_account(client, platform, account_id, profile_id)
+    except ValueError as e:
+        return f"❌ {e}"
 
     # Build request
     params: dict[str, Any] = {
@@ -421,9 +504,20 @@ def posts_create(
 
 @mcp.tool()
 @use_tool_def("posts_publish_now")
-def posts_publish_now(content: str, platform: str, media_urls: str = "") -> str:
+def posts_publish_now(
+    content: str,
+    platform: str,
+    account_id: str = "",
+    profile_id: str = "",
+    media_urls: str = "",
+) -> str:
     return posts_create(
-        content=content, platform=platform, publish_now=True, media_urls=media_urls
+        content=content,
+        platform=platform,
+        account_id=account_id,
+        profile_id=profile_id,
+        publish_now=True,
+        media_urls=media_urls,
     )
 
 
@@ -432,34 +526,44 @@ def posts_publish_now(content: str, platform: str, media_urls: str = "") -> str:
 def posts_cross_post(
     content: str,
     platforms: str,
+    account_ids: str = "",
+    profile_id: str = "",
     is_draft: bool = False,
     publish_now: bool = False,
     media_urls: str = "",
 ) -> str:
     client = _get_client()
 
-    target_platforms = [p.strip().lower() for p in platforms.split(",")]
-    accounts_response = client.accounts.list()
-    accounts = accounts_response.accounts or []
+    target_platforms = [p.strip().lower() for p in platforms.split(",") if p.strip()]
+    # account_ids is parallel to platforms (same order). Pad with empty strings
+    # so positions without a specific ID fall back to profile/auto-resolution.
+    ids = [i.strip() for i in account_ids.split(",")] if account_ids else []
+    ids += [""] * max(0, len(target_platforms) - len(ids))
 
     platform_targets = []
-    not_found = []
+    errors = []
 
-    for platform in target_platforms:
-        matching = [a for a in accounts if a.platform and _platform_str(a.platform) == platform]
-        if matching:
+    # Resolve each (platform, account_id) pair via the shared resolver so the
+    # ambiguity / not-found behaviour matches posts_create exactly. Repeating
+    # a platform with different account_ids is supported (e.g. agency posting
+    # to two Twitter accounts in one cross_post call).
+    for plat, acc_id in zip(target_platforms, ids):
+        try:
+            acc = _resolve_account(client, plat, acc_id, profile_id)
             platform_targets.append(
                 {
-                    "platform": _platform_str(matching[0].platform),
-                    "accountId": matching[0].field_id,
+                    "platform": _platform_str(acc.platform),
+                    "accountId": acc.field_id,
                 }
             )
-        else:
-            not_found.append(platform)
+        except ValueError as e:
+            errors.append(f"{plat}: {e}")
+
+    if errors:
+        return "❌ Could not resolve account(s):\n" + "\n".join(errors)
 
     if not platform_targets:
-        available = list({_platform_str(a.platform) for a in accounts if a.platform})
-        return f"No matching accounts found. Available: {', '.join(available)}"
+        return "❌ No platforms specified."
 
     params: dict[str, Any] = {
         "content": content,
@@ -503,9 +607,8 @@ def posts_cross_post(
     else:
         result = f"\u2705 {'Published' if publish_now else 'Scheduled'} to: {', '.join(posted_to)}{media_info}\nPost ID: {post_id}"
 
-    if not_found:
-        result += f"\n\u26a0\ufe0f Accounts not found for: {', '.join(not_found)}"
-
+    # not_found is no longer accumulated: resolution errors short-circuit
+    # above. If we got here, every requested target was resolved.
     return result
 
 

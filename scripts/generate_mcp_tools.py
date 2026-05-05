@@ -60,7 +60,11 @@ SKIP_OPERATIONS = {
     "deleteUser",
     "deleteTeam",
     # Already have custom implementations
-    "createPost",
+    # Note: createPost is intentionally NOT skipped anymore. The simplified
+    # posts_create wrapper in tool_definitions.py is friendlier for single-
+    # account flows, but power users (agencies cross-posting with per-target
+    # customContent / scheduledFor / platformSpecificData) need the full
+    # nested-array form. Both are exposed; LLMs pick whichever fits.
     "retryPost",
     "generateMediaUploadToken",
     "checkMediaUploadToken",

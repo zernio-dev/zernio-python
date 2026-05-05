@@ -313,10 +313,17 @@ Use when user says: "publish now", "post now", "publica ya", "immediately", "rig
 Use when user says: "schedule", "programar", "in X minutes/hours", "at 3pm", "tomorrow"
 → Post is scheduled for future publication. Use schedule_minutes to set the delay.
 
+⚠️ MULTI-ACCOUNT USERS (agencies, multi-client setups):
+If the user has more than one account on the target platform, you MUST pass
+`account_id`. Call `accounts_list` (or `profiles_list` then `accounts_list`)
+first to discover the right ID. If you omit account_id when multiple accounts
+exist, the tool returns an error listing the candidates - use it to retry.
+
 Examples:
 - "Create a draft tweet" → is_draft=True
 - "Post this to Twitter now" → publish_now=True
-- "Schedule a LinkedIn post for 2 hours from now" → schedule_minutes=120""",
+- "Schedule a LinkedIn post for 2 hours from now" → schedule_minutes=120
+- "Post this to Acme's Twitter" → call accounts_list, find Acme's twitter ID, pass account_id""",
     params=[
         ParamDef(
             name="content",
@@ -329,6 +336,20 @@ Examples:
             type="str",
             description="Target platform: twitter, instagram, linkedin, tiktok, bluesky, facebook, youtube, pinterest, threads",
             required=True,
+        ),
+        ParamDef(
+            name="account_id",
+            type="str",
+            description="Specific account ID to post from. REQUIRED when the user has multiple accounts on this platform. Call accounts_list first to find IDs. Leave empty only if there is exactly one account for this platform.",
+            required=False,
+            default="",
+        ),
+        ParamDef(
+            name="profile_id",
+            type="str",
+            description="Scope account resolution to one profile (e.g. one client in an agency setup). Use when account_id is unknown but the target profile is. Call profiles_list to find IDs.",
+            required=False,
+            default="",
         ),
         ParamDef(
             name="is_draft",
@@ -374,7 +395,10 @@ POSTS_PUBLISH_NOW = ToolDef(
     description="""Publish a post immediately to a platform. The post goes live right away.
 
 Use this when user explicitly wants to publish NOW, not schedule for later.
-This is a convenience wrapper around posts_create with publish_now=True.""",
+This is a convenience wrapper around posts_create with publish_now=True.
+
+⚠️ MULTI-ACCOUNT USERS: pass `account_id` when the user has more than one
+account on this platform. Call `accounts_list` first to find the right ID.""",
     params=[
         ParamDef(
             name="content",
@@ -387,6 +411,20 @@ This is a convenience wrapper around posts_create with publish_now=True.""",
             type="str",
             description="Target platform: twitter, instagram, linkedin, tiktok, bluesky, etc.",
             required=True,
+        ),
+        ParamDef(
+            name="account_id",
+            type="str",
+            description="Specific account ID. REQUIRED when the user has multiple accounts on this platform. Leave empty only if there is exactly one.",
+            required=False,
+            default="",
+        ),
+        ParamDef(
+            name="profile_id",
+            type="str",
+            description="Scope auto-resolution to a single profile when account_id is unknown.",
+            required=False,
+            default="",
         ),
         ParamDef(
             name="media_urls",
@@ -415,7 +453,16 @@ Use when user says: "publish now", "post now", "immediately"
 
 **SCHEDULED MODE (default)**
 Use when user says: "schedule", "programar", "in X hours"
-→ Posts are scheduled for 1 hour from now.""",
+→ Posts are scheduled for 1 hour from now.
+
+⚠️ MULTI-ACCOUNT USERS:
+- To pick a specific account per platform, pass `account_ids` parallel to
+  `platforms` (same order, comma-separated). Use empty string for a position
+  to fall back to profile/auto-resolution.
+- To target multiple accounts of the SAME platform in one call, repeat the
+  platform: platforms='twitter,twitter', account_ids='acc_a,acc_b'.
+- If you omit account_ids and the user has multiple accounts for any of the
+  requested platforms, the tool errors with the candidate list - use it to retry.""",
     params=[
         ParamDef(
             name="content",
@@ -426,8 +473,22 @@ Use when user says: "schedule", "programar", "in X hours"
         ParamDef(
             name="platforms",
             type="str",
-            description="Comma-separated list of platforms (e.g., 'twitter,linkedin,bluesky')",
+            description="Comma-separated list of platforms (e.g., 'twitter,linkedin,bluesky'). Repeat a platform to target multiple accounts of it: 'twitter,twitter'.",
             required=True,
+        ),
+        ParamDef(
+            name="account_ids",
+            type="str",
+            description="Comma-separated account IDs, parallel to `platforms`. Empty positions fall back to profile/auto-resolution. Required for multi-account users to disambiguate.",
+            required=False,
+            default="",
+        ),
+        ParamDef(
+            name="profile_id",
+            type="str",
+            description="Scope auto-resolution to one profile when account_ids is empty.",
+            required=False,
+            default="",
         ),
         ParamDef(
             name="is_draft",
