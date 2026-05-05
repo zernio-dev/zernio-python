@@ -3072,6 +3072,7 @@ def register_generated_tools(mcp, _get_client):
         account_id: str,
         message: str,
         quick_replies: str = "",
+        buttons: str = "",
     ) -> str:
         """Send private reply
 
@@ -3081,7 +3082,13 @@ def register_generated_tools(mcp, _get_client):
                 account_id: The social account ID (Instagram or Facebook) (required)
                 message: The message text to send as a private DM (required)
                 quick_replies: Optional quick-reply chips appended to the message. Visible only in the
-        Instagram and Messenger apps (not on web). Maximum 13 entries."""
+        Instagram and Messenger apps (not on web). Maximum 13 entries. Mutually
+        exclusive with `buttons`. Note: chips do NOT render in the Instagram
+        Message Requests folder where DMs from non-followers land — use `buttons`
+        instead for cold reach.
+                buttons: Optional 1-3 inline buttons rendered as part of the same message bubble
+        via Meta's button_template. Visible in the Instagram Message Requests
+        folder (unlike quick replies). Mutually exclusive with `quickReplies`."""
         client = _get_client()
         try:
             response = client.comments.send_private_reply_to_comment(
@@ -3090,6 +3097,7 @@ def register_generated_tools(mcp, _get_client):
                 account_id=account_id,
                 message=message,
                 quick_replies=quick_replies,
+                buttons=buttons,
             )
             return _format_response(response)
         except Exception as e:

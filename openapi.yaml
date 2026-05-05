@@ -16224,9 +16224,11 @@ paths:
       summary: Send private reply
       description: |
         Send a private message to the author of a comment. Supported on Instagram and Facebook only.
-        One reply per comment, must be sent within 7 days. Optionally include up to 13 quick-reply
-        chips (`quickReplies`) on the same first message — useful for comment-to-DM automations
-        that want to capture intent in a single round-trip.
+        One reply per comment, must be sent within 7 days. Optionally attach interactive elements:
+        `quickReplies` (chips above the keyboard, max 13) or `buttons` (1-3 inline postback/url
+        buttons rendered in the same bubble via Meta's button_template). Buttons are recommended
+        for cold reach since chips do not render in the Instagram Message Requests folder.
+        `quickReplies` and `buttons` are mutually exclusive.
       tags: [Comments]
       security: [{ bearerAuth: [] }]
       parameters:
@@ -16258,7 +16260,10 @@ paths:
                   type: array
                   description: |
                     Optional quick-reply chips appended to the message. Visible only in the
-                    Instagram and Messenger apps (not on web). Maximum 13 entries.
+                    Instagram and Messenger apps (not on web). Maximum 13 entries. Mutually
+                    exclusive with `buttons`. Note: chips do NOT render in the Instagram
+                    Message Requests folder where DMs from non-followers land — use `buttons`
+                    instead for cold reach.
                   maxItems: 13
                   items:
                     type: object
@@ -16275,6 +16280,34 @@ paths:
                         type: string
                         format: uri
                         description: Optional thumbnail shown next to the chip title.
+                buttons:
+                  type: array
+                  description: |
+                    Optional 1-3 inline buttons rendered as part of the same message bubble
+                    via Meta's button_template. Visible in the Instagram Message Requests
+                    folder (unlike quick replies). Mutually exclusive with `quickReplies`.
+                  minItems: 1
+                  maxItems: 3
+                  items:
+                    oneOf:
+                      - type: object
+                        required: [type, title, url]
+                        properties:
+                          type: { type: string, enum: [url] }
+                          title: { type: string, maxLength: 20, description: Label shown on the button. }
+                          url: { type: string, format: uri, description: URL opened when the button is tapped. }
+                      - type: object
+                        required: [type, title, payload]
+                        properties:
+                          type: { type: string, enum: [postback] }
+                          title: { type: string, maxLength: 20, description: Label shown on the button. }
+                          payload: { type: string, description: Opaque value returned in the inbound webhook when the user taps the button. }
+                      - type: object
+                        required: [type, title, phone]
+                        properties:
+                          type: { type: string, enum: [phone] }
+                          title: { type: string, maxLength: 20, description: Label shown on the button. Facebook only. }
+                          phone: { type: string, description: 'E.164 phone number dialed when tapped. Facebook only.' }
             examples:
               textOnly:
                 summary: Plain text reply
@@ -16291,6 +16324,18 @@ paths:
                       payload: "SEND_LINK"
                     - title: "No thanks"
                       payload: "DECLINE"
+              withButtons:
+                summary: Comment-to-DM with inline buttons (recommended for cold reach)
+                value:
+                  accountId: "507f1f77bcf86cd799439011"
+                  message: "Thanks for commenting! Tap below to grab the link."
+                  buttons:
+                    - type: "url"
+                      title: "Get the link"
+                      url: "https://tribenest.co/landing"
+                    - type: "postback"
+                      title: "Remind me later"
+                      payload: "REMIND_LATER"
       responses:
         '200':
           description: Private reply sent successfully
