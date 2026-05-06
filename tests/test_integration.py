@@ -78,6 +78,10 @@ def mock_account() -> dict[str, Any]:
         "username": "testuser",
         "displayName": "Test User",
         "profileId": "profile_123",
+        # Required by SocialAccount schema. Was added to the public OpenAPI
+        # spec; without it pydantic v2 strict validation fails the regen
+        # smoke tests with "Field required: accounts.0.isActive".
+        "isActive": True,
     }
 
 
