@@ -1171,8 +1171,8 @@ def register_generated_tools(mcp, _get_client):
             ad_account_id: Platform ad account ID
             account_id: Social account ID
             profile_id: Profile ID
-            from_date: Start of metrics date range (YYYY-MM-DD). Defaults to 90 days ago.
-            to_date: End of metrics date range (YYYY-MM-DD). Defaults to today. Max 90-day range."""
+            from_date: Start of metrics date range (YYYY-MM-DD). Defaults to 90 days ago. Ranges older than 90 days trigger an on-demand platform fetch when scoped to a specific accountId.
+            to_date: End of metrics date range (YYYY-MM-DD). Defaults to today. Max 730-day range."""
         client = _get_client()
         try:
             response = client.ad_campaigns.get_ad_tree(
@@ -1219,8 +1219,8 @@ def register_generated_tools(mcp, _get_client):
             ad_account_id: Platform ad account ID (e.g. act_123 for Meta). Mirrors the same filter on /v1/ads/campaigns and /v1/ads/tree.
             profile_id: Profile ID
             campaign_id: Platform campaign ID (filter ads within a campaign)
-            from_date: Start of metrics date range (YYYY-MM-DD). Defaults to 90 days ago.
-            to_date: End of metrics date range (YYYY-MM-DD). Defaults to today. Max 90-day range."""
+            from_date: Start of metrics date range (YYYY-MM-DD). Defaults to 90 days ago. Ranges older than 90 days trigger an on-demand platform fetch when scoped to a specific accountId.
+            to_date: End of metrics date range (YYYY-MM-DD). Defaults to today. Max 730-day range."""
         client = _get_client()
         try:
             response = client.ads.list_ads(
@@ -1313,8 +1313,8 @@ def register_generated_tools(mcp, _get_client):
 
         Args:
             ad_id: (required)
-            from_date: Start of date range (YYYY-MM-DD). Defaults to 90 days ago.
-            to_date: End of date range (YYYY-MM-DD). Defaults to today. Max 90-day range.
+            from_date: Start of date range (YYYY-MM-DD). Defaults to 90 days ago. Ranges older than 90 days trigger an on-demand platform fetch.
+            to_date: End of date range (YYYY-MM-DD). Defaults to today. Max 730-day range.
             breakdowns: Comma-separated breakdown dimensions. Meta: age, gender, country, publisher_platform, device_platform, region. TikTok: gender, age, country_code, platform, ac, language."""
         client = _get_client()
         try:
