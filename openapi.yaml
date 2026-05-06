@@ -19821,7 +19821,6 @@ paths:
         Returns a paginated list of ads with metrics computed over an optional date range.
         Use source=all to include externally-synced ads from platform ad managers.
         If no date range is provided, defaults to the last 90 days. Date range is capped at 730 days max.
-        Ranges older than 90 days trigger a one-time on-demand fetch from the platform when scoped to a specific accountId, then serve from cache on subsequent requests.
       security:
         - bearerAuth: []
       parameters:
@@ -19834,7 +19833,7 @@ paths:
         - { name: adAccountId, in: query, schema: { type: string }, description: "Platform ad account ID (e.g. act_123 for Meta). Mirrors the same filter on /v1/ads/campaigns and /v1/ads/tree." }
         - { name: profileId, in: query, schema: { type: string }, description: Profile ID }
         - { name: campaignId, in: query, schema: { type: string }, description: Platform campaign ID (filter ads within a campaign) }
-        - { name: fromDate, in: query, schema: { type: string, format: date }, description: "Start of metrics date range (YYYY-MM-DD). Defaults to 90 days ago. Ranges older than 90 days trigger an on-demand platform fetch when scoped to a specific accountId." }
+        - { name: fromDate, in: query, schema: { type: string, format: date }, description: "Start of metrics date range (YYYY-MM-DD). Defaults to 90 days ago." }
         - { name: toDate, in: query, schema: { type: string, format: date }, description: "End of metrics date range (YYYY-MM-DD). Defaults to today. Max 730-day range." }
       responses:
         '200':
@@ -20275,7 +20274,6 @@ paths:
         and campaign levels. Pagination is at the campaign level. Ads without a campaign or ad set
         ID are grouped into synthetic "Ungrouped" buckets.
         If no date range is provided, defaults to the last 90 days. Date range is capped at 730 days max.
-        Ranges older than 90 days trigger a one-time on-demand fetch from the platform when scoped to a specific accountId, then serve from cache on subsequent requests.
       security:
         - bearerAuth: []
       parameters:
@@ -20287,7 +20285,7 @@ paths:
         - { name: adAccountId, in: query, schema: { type: string }, description: Platform ad account ID }
         - { name: accountId, in: query, schema: { type: string }, description: Social account ID }
         - { name: profileId, in: query, schema: { type: string }, description: Profile ID }
-        - { name: fromDate, in: query, schema: { type: string, format: date }, description: "Start of metrics date range (YYYY-MM-DD). Defaults to 90 days ago. Ranges older than 90 days trigger an on-demand platform fetch when scoped to a specific accountId." }
+        - { name: fromDate, in: query, schema: { type: string, format: date }, description: "Start of metrics date range (YYYY-MM-DD). Defaults to 90 days ago." }
         - { name: toDate, in: query, schema: { type: string, format: date }, description: "End of metrics date range (YYYY-MM-DD). Defaults to today. Max 730-day range." }
       responses:
         '200':
@@ -20439,12 +20437,11 @@ paths:
         Returns detailed performance analytics for an ad. Includes summary metrics, a daily timeline
         over the requested date range, and optional demographic breakdowns (Meta and TikTok only).
         If no date range is provided, defaults to the last 90 days. Date range is capped at 730 days max.
-        Ranges older than 90 days trigger a one-time on-demand fetch from the platform, then serve from cache on subsequent requests.
       security:
         - bearerAuth: []
       parameters:
         - { name: adId, in: path, required: true, schema: { type: string } }
-        - { name: fromDate, in: query, schema: { type: string, format: date }, description: "Start of date range (YYYY-MM-DD). Defaults to 90 days ago. Ranges older than 90 days trigger an on-demand platform fetch." }
+        - { name: fromDate, in: query, schema: { type: string, format: date }, description: "Start of date range (YYYY-MM-DD). Defaults to 90 days ago." }
         - { name: toDate, in: query, schema: { type: string, format: date }, description: "End of date range (YYYY-MM-DD). Defaults to today. Max 730-day range." }
         - name: breakdowns
           in: query
