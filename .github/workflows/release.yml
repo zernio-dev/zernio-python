@@ -90,6 +90,15 @@ jobs:
         if: steps.check_tag.outputs.exists == 'false'
         uses: softprops/action-gh-release@v2
         with:
+          # Pin the tag to the commit that triggered this workflow (the one
+          # we just built the wheel from), not the repo's default branch.
+          # Without this, softprops/action-gh-release defaults to the
+          # default branch (develop), so the GitHub release page links to
+          # a develop commit that has nothing to do with the published
+          # wheel. The wheel itself is unaffected because PyPI doesn't
+          # consult git tags, but the cross-link from the release page is
+          # misleading.
+          target_commitish: ${{ github.sha }}
           tag_name: v${{ steps.version.outputs.version }}
           name: v${{ steps.version.outputs.version }}
           files: dist/*
