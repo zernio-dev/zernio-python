@@ -547,7 +547,9 @@ def posts_cross_post(
     # ambiguity / not-found behaviour matches posts_create exactly. Repeating
     # a platform with different account_ids is supported (e.g. agency posting
     # to two Twitter accounts in one cross_post call).
-    for plat, acc_id in zip(target_platforms, ids):
+    # ids is padded to len(target_platforms) above, so strict=True is safe
+    # and catches any future logic error that would silently truncate.
+    for plat, acc_id in zip(target_platforms, ids, strict=True):
         try:
             acc = _resolve_account(client, plat, acc_id, profile_id)
             platform_targets.append(
