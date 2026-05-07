@@ -60,7 +60,11 @@ SKIP_OPERATIONS = {
     "deleteUser",
     "deleteTeam",
     # Already have custom implementations
-    "createPost",
+    # Note: createPost is intentionally NOT skipped anymore. The simplified
+    # posts_create wrapper in tool_definitions.py is friendlier for single-
+    # account flows, but power users (agencies cross-posting with per-target
+    # customContent / scheduledFor / platformSpecificData) need the full
+    # nested-array form. Both are exposed; LLMs pick whichever fits.
     "retryPost",
     "generateMediaUploadToken",
     "checkMediaUploadToken",
@@ -75,10 +79,100 @@ def camel_to_snake(name: str) -> str:
     return name.lower()
 
 
-def get_python_type(schema: dict[str, Any], required: bool = True) -> tuple[str, str]:
-    """Convert OpenAPI schema to Python type and default value."""
+def _resolve_ref(ref: str, spec: dict[str, Any]) -> dict[str, Any]:
+    """Resolve a `#/components/schemas/Foo` style JSON-pointer against spec.
+
+    Returns an empty dict if any segment is missing, so callers can keep
+    walking without raising on a malformed/external ref.
+    """
+    parts = ref.lstrip("#/").split("/")
+    node: Any = spec
+    for p in parts:
+        if not isinstance(node, dict):
+            return {}
+        node = node.get(p, {})
+    return node if isinstance(node, dict) else {}
+
+
+def _resolve_schema(schema: dict[str, Any], spec: dict[str, Any] | None) -> dict[str, Any]:
+    """Dereference a property schema into something with a concrete `type`.
+
+    Handles three composite forms commonly used in our OpenAPI spec:
+
+      - `{"$ref": "..."}`        -> look up the target schema.
+      - `{"allOf": [{...}, ...]}` -> return the first branch with a concrete
+        `type` (we mostly see single-element allOf as a "ref + description"
+        pattern, but this generalises safely).
+      - `{"oneOf"|"anyOf": [...]}` -> if every branch resolves to the same
+        scalar/object/array `type`, return that branch; otherwise leave the
+        schema alone so the caller falls back to `str`. A deliberately
+        over-broad type is worse than no type for the LLM.
+
+    Without spec access (spec=None) the function is a no-op so unit tests
+    that don't load the full spec still work.
+    """
+    if not schema or not isinstance(schema, dict) or spec is None:
+        return schema
+
+    if "$ref" in schema:
+        return _resolve_schema(_resolve_ref(schema["$ref"], spec), spec)
+
+    if "allOf" in schema and isinstance(schema["allOf"], list):
+        for branch in schema["allOf"]:
+            resolved = _resolve_schema(branch, spec)
+            if resolved.get("type") in ("string", "integer", "number", "boolean", "array", "object"):
+                return resolved
+
+    for combinator in ("oneOf", "anyOf"):
+        if combinator in schema and isinstance(schema[combinator], list):
+            resolved_branches = [_resolve_schema(b, spec) for b in schema[combinator]]
+            types = {b.get("type") for b in resolved_branches if isinstance(b, dict)}
+            types.discard(None)
+            if len(types) == 1:
+                only = types.pop()
+                for b in resolved_branches:
+                    if b.get("type") == only:
+                        return b
+
+    return schema
+
+
+def get_python_type(
+    schema: dict[str, Any],
+    required: bool = True,
+    spec: dict[str, Any] | None = None,
+) -> tuple[str, str]:
+    """Convert OpenAPI schema to a Python type annotation and default literal.
+
+    For scalar types (string/integer/number/boolean) we map to the obvious
+    Python type with a sensible default ('', 0, 0.0, False).
+
+    For complex types (array / object) we emit proper container types with a
+    `None` default. Previously these were collapsed to `str = ""` with the
+    intent that callers would pass comma-separated strings, but the
+    generated wrapper never parsed them back - it forwarded the literal
+    string straight into the SDK, which then sent it to the API expecting
+    an array/object and got rejected with `Expected array, received string`.
+
+    Emitting the correct container type (e.g. `list[str] | None`) means:
+      - FastMCP's JSON-schema introspection now declares the right shape
+        to the LLM, so the model passes a real array.
+      - The SDK's `_build_payload` already filters `None` values, so leaving
+        an unused param at `None` is a no-op upstream.
+
+    Item types for arrays are inferred from `items.type`; $ref/allOf wrappers
+    on either the top-level schema or the items schema are dereferenced via
+    `_resolve_schema`. Unknown item types fall back to `Any`.
+    """
     if not schema:
         return "str", '""'
+
+    # Dereference $ref / allOf / single-type oneOf|anyOf so we can read the
+    # underlying `type` consistently. Without this, properties like
+    # `createPost.tiktokSettings` (a $ref to an object schema) would fall
+    # through to the `str` branch and the wrapper would forward a string
+    # where the API expects an object.
+    schema = _resolve_schema(schema, spec)
 
     schema_type = schema.get("type")
     default = schema.get("default")
@@ -96,8 +190,30 @@ def get_python_type(schema: dict[str, Any], required: bool = True) -> tuple[str,
         type_str = "bool"
         default_str = str(default) if default is not None else "False"
     elif schema_type == "array":
-        type_str = "str"  # Accept comma-separated
-        default_str = '""'
+        # Inspect items.type so the LLM gets the right inner schema. Most
+        # array fields in the spec hold strings (countries, keywords, etc.)
+        # or objects (cities, interests, creatives, plus any $ref-wrapped
+        # object). Items themselves may be $ref/allOf/oneOf so resolve
+        # before reading the type.
+        items_schema = _resolve_schema(schema.get("items", {}) or {}, spec)
+        items_type = items_schema.get("type")
+        if items_type == "string":
+            inner = "str"
+        elif items_type == "integer":
+            inner = "int"
+        elif items_type == "number":
+            inner = "float"
+        elif items_type == "boolean":
+            inner = "bool"
+        elif items_type == "object":
+            inner = "dict[str, Any]"
+        else:
+            inner = "Any"
+        type_str = f"list[{inner}] | None"
+        default_str = "None"
+    elif schema_type == "object":
+        type_str = "dict[str, Any] | None"
+        default_str = "None"
     else:
         type_str = "str"
         default_str = '""'
@@ -107,8 +223,14 @@ def get_python_type(schema: dict[str, Any], required: bool = True) -> tuple[str,
     return type_str, ""
 
 
-def extract_parameters(operation: dict[str, Any]) -> list[dict[str, Any]]:
+def extract_parameters(
+    operation: dict[str, Any],
+    spec: dict[str, Any] | None = None,
+) -> list[dict[str, Any]]:
     """Extract parameters from operation.
+
+    `spec` is threaded through so `get_python_type` can dereference
+    `$ref`/`allOf` schemas to read the underlying type.
 
     Dedupes by Python name: when the same parameter appears in both the path
     and the request body (e.g. `accountId` as a path param and also in the
@@ -116,7 +238,7 @@ def extract_parameters(operation: dict[str, Any]) -> list[dict[str, Any]]:
     signature, so we keep the first occurrence (path > query > body) and
     drop subsequent ones. This prevents SyntaxErrors in generated_tools.py.
     """
-    params = []
+    params: list[dict[str, Any]] = []
     seen_names: set[str] = set()
 
     def add_param(entry: dict[str, Any]) -> None:
@@ -164,7 +286,8 @@ def extract_parameters(operation: dict[str, Any]) -> list[dict[str, Any]]:
 
         type_str, default_str = get_python_type(
             param.get("schema", {}),
-            param.get("required", False)
+            param.get("required", False),
+            spec,
         )
 
         add_param({
@@ -193,7 +316,7 @@ def extract_parameters(operation: dict[str, Any]) -> list[dict[str, Any]]:
                 if not py_name:  # Was just "_"
                     continue
             is_required = prop_name in required_props
-            type_str, default_str = get_python_type(prop_schema, is_required)
+            type_str, default_str = get_python_type(prop_schema, is_required, spec)
 
             add_param({
                 "name": py_name,
@@ -285,6 +408,7 @@ def main() -> int:
 
     # Collect operations
     operations = []
+
     # Track tool_names already emitted. Two different (path, method) pairs can
     # produce the same tool_name when their operationIds snake-case to the
     # same string, or when the spec has a duplicate operation. Either way,
@@ -324,7 +448,7 @@ def main() -> int:
                 "resource": resource,
                 "sdk_method": sdk_method,
                 "summary": operation.get("summary", operation_id),
-                "params": extract_parameters(operation),
+                "params": extract_parameters(operation, spec),
             })
 
     # Generate output file

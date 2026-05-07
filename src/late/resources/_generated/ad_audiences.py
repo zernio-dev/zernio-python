@@ -22,22 +22,24 @@ class AdAudiencesResource:
         self._client = client
 
     def _build_params(self, **kwargs: Any) -> dict[str, Any]:
-        """Build query parameters, filtering None values."""
+        """Build query parameters, filtering None and empty-string values.
 
+        Empty strings are filtered because MCP tool wrappers pass ``""`` as the
+        default for optional string args, and the API rejects empty query
+        values (e.g. ``platform=``) with a 400. Filtering here keeps both direct
+        SDK callers and MCP tool callers safe.
+        """
         def to_camel(s: str) -> str:
             parts = s.split("_")
             return parts[0] + "".join(p.title() for p in parts[1:])
-
-        return {to_camel(k): v for k, v in kwargs.items() if v is not None}
+        return {to_camel(k): v for k, v in kwargs.items() if v is not None and v != ""}
 
     def _build_payload(self, **kwargs: Any) -> dict[str, Any]:
         """Build request payload, filtering None values."""
         from datetime import datetime
-
         def to_camel(s: str) -> str:
             parts = s.split("_")
             return parts[0] + "".join(p.title() for p in parts[1:])
-
         result: dict[str, Any] = {}
         for k, v in kwargs.items():
             if v is None:
@@ -48,9 +50,7 @@ class AdAudiencesResource:
                 result[to_camel(k)] = v
         return result
 
-    def list_ad_audiences(
-        self, account_id: str, ad_account_id: str, *, platform: str | None = None
-    ) -> dict[str, Any]:
+    def list_ad_audiences(self, account_id: str, ad_account_id: str, *, platform: str | None = None) -> dict[str, Any]:
         """List custom audiences"""
         params = self._build_params(
             account_id=account_id,
@@ -59,22 +59,7 @@ class AdAudiencesResource:
         )
         return self._client._get("/v1/ads/audiences", params=params)
 
-    def create_ad_audience(
-        self,
-        account_id: str,
-        ad_account_id: str,
-        name: str,
-        type: str,
-        *,
-        description: str | None = None,
-        pixel_id: str | None = None,
-        retention_days: int | None = None,
-        source_audience_id: str | None = None,
-        country: str | None = None,
-        ratio: float | None = None,
-        rule: dict[str, Any] | None = None,
-        customer_file_source: str | None = None,
-    ) -> dict[str, Any]:
+    def create_ad_audience(self, account_id: str, ad_account_id: str, name: str, type: str, *, description: str | None = None, pixel_id: str | None = None, retention_days: int | None = None, source_audience_id: str | None = None, country: str | None = None, ratio: float | None = None, rule: dict[str, Any] | None = None, customer_file_source: str | None = None) -> dict[str, Any]:
         """Create custom audience"""
         payload = self._build_payload(
             account_id=account_id,
@@ -100,20 +85,14 @@ class AdAudiencesResource:
         """Delete custom audience"""
         return self._client._delete(f"/v1/ads/audiences/{audience_id}")
 
-    def add_users_to_ad_audience(
-        self, audience_id: str, users: list[dict[str, Any]]
-    ) -> dict[str, Any]:
+    def add_users_to_ad_audience(self, audience_id: str, users: list[dict[str, Any]]) -> dict[str, Any]:
         """Add users to audience"""
         payload = self._build_payload(
             users=users,
         )
-        return self._client._post(
-            f"/v1/ads/audiences/{audience_id}/users", data=payload
-        )
+        return self._client._post(f"/v1/ads/audiences/{audience_id}/users", data=payload)
 
-    async def alist_ad_audiences(
-        self, account_id: str, ad_account_id: str, *, platform: str | None = None
-    ) -> dict[str, Any]:
+    async def alist_ad_audiences(self, account_id: str, ad_account_id: str, *, platform: str | None = None) -> dict[str, Any]:
         """List custom audiences (async)"""
         params = self._build_params(
             account_id=account_id,
@@ -122,22 +101,7 @@ class AdAudiencesResource:
         )
         return await self._client._aget("/v1/ads/audiences", params=params)
 
-    async def acreate_ad_audience(
-        self,
-        account_id: str,
-        ad_account_id: str,
-        name: str,
-        type: str,
-        *,
-        description: str | None = None,
-        pixel_id: str | None = None,
-        retention_days: int | None = None,
-        source_audience_id: str | None = None,
-        country: str | None = None,
-        ratio: float | None = None,
-        rule: dict[str, Any] | None = None,
-        customer_file_source: str | None = None,
-    ) -> dict[str, Any]:
+    async def acreate_ad_audience(self, account_id: str, ad_account_id: str, name: str, type: str, *, description: str | None = None, pixel_id: str | None = None, retention_days: int | None = None, source_audience_id: str | None = None, country: str | None = None, ratio: float | None = None, rule: dict[str, Any] | None = None, customer_file_source: str | None = None) -> dict[str, Any]:
         """Create custom audience (async)"""
         payload = self._build_payload(
             account_id=account_id,
@@ -163,13 +127,9 @@ class AdAudiencesResource:
         """Delete custom audience (async)"""
         return await self._client._adelete(f"/v1/ads/audiences/{audience_id}")
 
-    async def aadd_users_to_ad_audience(
-        self, audience_id: str, users: list[dict[str, Any]]
-    ) -> dict[str, Any]:
+    async def aadd_users_to_ad_audience(self, audience_id: str, users: list[dict[str, Any]]) -> dict[str, Any]:
         """Add users to audience (async)"""
         payload = self._build_payload(
             users=users,
         )
-        return await self._client._apost(
-            f"/v1/ads/audiences/{audience_id}/users", data=payload
-        )
+        return await self._client._apost(f"/v1/ads/audiences/{audience_id}/users", data=payload)

@@ -22,22 +22,24 @@ class RedditResource:
         self._client = client
 
     def _build_params(self, **kwargs: Any) -> dict[str, Any]:
-        """Build query parameters, filtering None values."""
+        """Build query parameters, filtering None and empty-string values.
 
+        Empty strings are filtered because MCP tool wrappers pass ``""`` as the
+        default for optional string args, and the API rejects empty query
+        values (e.g. ``platform=``) with a 400. Filtering here keeps both direct
+        SDK callers and MCP tool callers safe.
+        """
         def to_camel(s: str) -> str:
             parts = s.split("_")
             return parts[0] + "".join(p.title() for p in parts[1:])
-
-        return {to_camel(k): v for k, v in kwargs.items() if v is not None}
+        return {to_camel(k): v for k, v in kwargs.items() if v is not None and v != ""}
 
     def _build_payload(self, **kwargs: Any) -> dict[str, Any]:
         """Build request payload, filtering None values."""
         from datetime import datetime
-
         def to_camel(s: str) -> str:
             parts = s.split("_")
             return parts[0] + "".join(p.title() for p in parts[1:])
-
         result: dict[str, Any] = {}
         for k, v in kwargs.items():
             if v is None:
@@ -48,17 +50,7 @@ class RedditResource:
                 result[to_camel(k)] = v
         return result
 
-    def search_reddit(
-        self,
-        account_id: str,
-        q: str,
-        *,
-        subreddit: str | None = None,
-        restrict_sr: str | None = None,
-        sort: str | None = "new",
-        limit: int | None = 25,
-        after: str | None = None,
-    ) -> dict[str, Any]:
+    def search_reddit(self, account_id: str, q: str, *, subreddit: str | None = None, restrict_sr: str | None = None, sort: str | None = "new", limit: int | None = 25, after: str | None = None) -> dict[str, Any]:
         """Search posts"""
         params = self._build_params(
             account_id=account_id,
@@ -71,16 +63,7 @@ class RedditResource:
         )
         return self._client._get("/v1/reddit/search", params=params)
 
-    def get_reddit_feed(
-        self,
-        account_id: str,
-        *,
-        subreddit: str | None = None,
-        sort: str | None = "hot",
-        limit: int | None = 25,
-        after: str | None = None,
-        t: str | None = None,
-    ) -> dict[str, Any]:
+    def get_reddit_feed(self, account_id: str, *, subreddit: str | None = None, sort: str | None = "hot", limit: int | None = 25, after: str | None = None, t: str | None = None) -> dict[str, Any]:
         """Get subreddit feed"""
         params = self._build_params(
             account_id=account_id,
@@ -92,17 +75,7 @@ class RedditResource:
         )
         return self._client._get("/v1/reddit/feed", params=params)
 
-    async def asearch_reddit(
-        self,
-        account_id: str,
-        q: str,
-        *,
-        subreddit: str | None = None,
-        restrict_sr: str | None = None,
-        sort: str | None = "new",
-        limit: int | None = 25,
-        after: str | None = None,
-    ) -> dict[str, Any]:
+    async def asearch_reddit(self, account_id: str, q: str, *, subreddit: str | None = None, restrict_sr: str | None = None, sort: str | None = "new", limit: int | None = 25, after: str | None = None) -> dict[str, Any]:
         """Search posts (async)"""
         params = self._build_params(
             account_id=account_id,
@@ -115,16 +88,7 @@ class RedditResource:
         )
         return await self._client._aget("/v1/reddit/search", params=params)
 
-    async def aget_reddit_feed(
-        self,
-        account_id: str,
-        *,
-        subreddit: str | None = None,
-        sort: str | None = "hot",
-        limit: int | None = 25,
-        after: str | None = None,
-        t: str | None = None,
-    ) -> dict[str, Any]:
+    async def aget_reddit_feed(self, account_id: str, *, subreddit: str | None = None, sort: str | None = "hot", limit: int | None = 25, after: str | None = None, t: str | None = None) -> dict[str, Any]:
         """Get subreddit feed (async)"""
         params = self._build_params(
             account_id=account_id,

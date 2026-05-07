@@ -22,22 +22,24 @@ class ValidateResource:
         self._client = client
 
     def _build_params(self, **kwargs: Any) -> dict[str, Any]:
-        """Build query parameters, filtering None values."""
+        """Build query parameters, filtering None and empty-string values.
 
+        Empty strings are filtered because MCP tool wrappers pass ``""`` as the
+        default for optional string args, and the API rejects empty query
+        values (e.g. ``platform=``) with a 400. Filtering here keeps both direct
+        SDK callers and MCP tool callers safe.
+        """
         def to_camel(s: str) -> str:
             parts = s.split("_")
             return parts[0] + "".join(p.title() for p in parts[1:])
-
-        return {to_camel(k): v for k, v in kwargs.items() if v is not None}
+        return {to_camel(k): v for k, v in kwargs.items() if v is not None and v != ""}
 
     def _build_payload(self, **kwargs: Any) -> dict[str, Any]:
         """Build request payload, filtering None values."""
         from datetime import datetime
-
         def to_camel(s: str) -> str:
             parts = s.split("_")
             return parts[0] + "".join(p.title() for p in parts[1:])
-
         result: dict[str, Any] = {}
         for k, v in kwargs.items():
             if v is None:
@@ -55,13 +57,7 @@ class ValidateResource:
         )
         return self._client._post("/v1/tools/validate/post-length", data=payload)
 
-    def validate_post(
-        self,
-        platforms: list[dict[str, Any]],
-        *,
-        content: str | None = None,
-        media_items: list[dict[str, Any]] | None = None,
-    ) -> dict[str, Any]:
+    def validate_post(self, platforms: list[dict[str, Any]], *, content: str | None = None, media_items: list[dict[str, Any]] | None = None) -> dict[str, Any]:
         """Validate post content"""
         payload = self._build_payload(
             content=content,
@@ -77,9 +73,7 @@ class ValidateResource:
         )
         return self._client._post("/v1/tools/validate/media", data=payload)
 
-    def validate_subreddit(
-        self, name: str, *, account_id: str | None = None
-    ) -> dict[str, Any]:
+    def validate_subreddit(self, name: str, *, account_id: str | None = None) -> dict[str, Any]:
         """Check subreddit existence"""
         params = self._build_params(
             name=name,
@@ -94,13 +88,7 @@ class ValidateResource:
         )
         return await self._client._apost("/v1/tools/validate/post-length", data=payload)
 
-    async def avalidate_post(
-        self,
-        platforms: list[dict[str, Any]],
-        *,
-        content: str | None = None,
-        media_items: list[dict[str, Any]] | None = None,
-    ) -> dict[str, Any]:
+    async def avalidate_post(self, platforms: list[dict[str, Any]], *, content: str | None = None, media_items: list[dict[str, Any]] | None = None) -> dict[str, Any]:
         """Validate post content (async)"""
         payload = self._build_payload(
             content=content,
@@ -116,9 +104,7 @@ class ValidateResource:
         )
         return await self._client._apost("/v1/tools/validate/media", data=payload)
 
-    async def avalidate_subreddit(
-        self, name: str, *, account_id: str | None = None
-    ) -> dict[str, Any]:
+    async def avalidate_subreddit(self, name: str, *, account_id: str | None = None) -> dict[str, Any]:
         """Check subreddit existence (async)"""
         params = self._build_params(
             name=name,

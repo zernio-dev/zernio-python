@@ -22,22 +22,24 @@ class ContactsResource:
         self._client = client
 
     def _build_params(self, **kwargs: Any) -> dict[str, Any]:
-        """Build query parameters, filtering None values."""
+        """Build query parameters, filtering None and empty-string values.
 
+        Empty strings are filtered because MCP tool wrappers pass ``""`` as the
+        default for optional string args, and the API rejects empty query
+        values (e.g. ``platform=``) with a 400. Filtering here keeps both direct
+        SDK callers and MCP tool callers safe.
+        """
         def to_camel(s: str) -> str:
             parts = s.split("_")
             return parts[0] + "".join(p.title() for p in parts[1:])
-
-        return {to_camel(k): v for k, v in kwargs.items() if v is not None}
+        return {to_camel(k): v for k, v in kwargs.items() if v is not None and v != ""}
 
     def _build_payload(self, **kwargs: Any) -> dict[str, Any]:
         """Build request payload, filtering None values."""
         from datetime import datetime
-
         def to_camel(s: str) -> str:
             parts = s.split("_")
             return parts[0] + "".join(p.title() for p in parts[1:])
-
         result: dict[str, Any] = {}
         for k, v in kwargs.items():
             if v is None:
@@ -48,17 +50,7 @@ class ContactsResource:
                 result[to_camel(k)] = v
         return result
 
-    def list_contacts(
-        self,
-        *,
-        profile_id: str | None = None,
-        search: str | None = None,
-        tag: str | None = None,
-        platform: str | None = None,
-        is_subscribed: str | None = None,
-        limit: int | None = 50,
-        skip: int | None = 0,
-    ) -> dict[str, Any]:
+    def list_contacts(self, *, profile_id: str | None = None, search: str | None = None, tag: str | None = None, platform: str | None = None, is_subscribed: str | None = None, limit: int | None = 50, skip: int | None = 0) -> dict[str, Any]:
         """List contacts"""
         params = self._build_params(
             profile_id=profile_id,
@@ -71,21 +63,7 @@ class ContactsResource:
         )
         return self._client._get("/v1/contacts", params=params)
 
-    def create_contact(
-        self,
-        profile_id: str,
-        name: str,
-        *,
-        email: str | None = None,
-        company: str | None = None,
-        tags: list[str] | None = None,
-        is_subscribed: bool | None = True,
-        notes: str | None = None,
-        account_id: str | None = None,
-        platform: str | None = None,
-        platform_identifier: str | None = None,
-        display_identifier: str | None = None,
-    ) -> dict[str, Any]:
+    def create_contact(self, profile_id: str, name: str, *, email: str | None = None, company: str | None = None, tags: list[str] | None = None, is_subscribed: bool | None = True, notes: str | None = None, account_id: str | None = None, platform: str | None = None, platform_identifier: str | None = None, display_identifier: str | None = None) -> dict[str, Any]:
         """Create contact"""
         payload = self._build_payload(
             profile_id=profile_id,
@@ -106,19 +84,7 @@ class ContactsResource:
         """Get contact"""
         return self._client._get(f"/v1/contacts/{contact_id}")
 
-    def update_contact(
-        self,
-        contact_id: str,
-        *,
-        name: str | None = None,
-        email: str | None = None,
-        company: str | None = None,
-        avatar_url: str | None = None,
-        tags: list[str] | None = None,
-        is_subscribed: bool | None = None,
-        is_blocked: bool | None = None,
-        notes: str | None = None,
-    ) -> dict[str, Any]:
+    def update_contact(self, contact_id: str, *, name: str | None = None, email: str | None = None, company: str | None = None, avatar_url: str | None = None, tags: list[str] | None = None, is_subscribed: bool | None = None, is_blocked: bool | None = None, notes: str | None = None) -> dict[str, Any]:
         """Update contact"""
         payload = self._build_payload(
             name=name,
@@ -140,13 +106,7 @@ class ContactsResource:
         """List channels for a contact"""
         return self._client._get(f"/v1/contacts/{contact_id}/channels")
 
-    def bulk_create_contacts(
-        self,
-        profile_id: str,
-        account_id: str,
-        platform: str,
-        contacts: list[dict[str, Any]],
-    ) -> dict[str, Any]:
+    def bulk_create_contacts(self, profile_id: str, account_id: str, platform: str, contacts: list[dict[str, Any]]) -> dict[str, Any]:
         """Bulk create contacts"""
         payload = self._build_payload(
             profile_id=profile_id,
@@ -156,17 +116,7 @@ class ContactsResource:
         )
         return self._client._post("/v1/contacts/bulk", data=payload)
 
-    async def alist_contacts(
-        self,
-        *,
-        profile_id: str | None = None,
-        search: str | None = None,
-        tag: str | None = None,
-        platform: str | None = None,
-        is_subscribed: str | None = None,
-        limit: int | None = 50,
-        skip: int | None = 0,
-    ) -> dict[str, Any]:
+    async def alist_contacts(self, *, profile_id: str | None = None, search: str | None = None, tag: str | None = None, platform: str | None = None, is_subscribed: str | None = None, limit: int | None = 50, skip: int | None = 0) -> dict[str, Any]:
         """List contacts (async)"""
         params = self._build_params(
             profile_id=profile_id,
@@ -179,21 +129,7 @@ class ContactsResource:
         )
         return await self._client._aget("/v1/contacts", params=params)
 
-    async def acreate_contact(
-        self,
-        profile_id: str,
-        name: str,
-        *,
-        email: str | None = None,
-        company: str | None = None,
-        tags: list[str] | None = None,
-        is_subscribed: bool | None = True,
-        notes: str | None = None,
-        account_id: str | None = None,
-        platform: str | None = None,
-        platform_identifier: str | None = None,
-        display_identifier: str | None = None,
-    ) -> dict[str, Any]:
+    async def acreate_contact(self, profile_id: str, name: str, *, email: str | None = None, company: str | None = None, tags: list[str] | None = None, is_subscribed: bool | None = True, notes: str | None = None, account_id: str | None = None, platform: str | None = None, platform_identifier: str | None = None, display_identifier: str | None = None) -> dict[str, Any]:
         """Create contact (async)"""
         payload = self._build_payload(
             profile_id=profile_id,
@@ -214,19 +150,7 @@ class ContactsResource:
         """Get contact (async)"""
         return await self._client._aget(f"/v1/contacts/{contact_id}")
 
-    async def aupdate_contact(
-        self,
-        contact_id: str,
-        *,
-        name: str | None = None,
-        email: str | None = None,
-        company: str | None = None,
-        avatar_url: str | None = None,
-        tags: list[str] | None = None,
-        is_subscribed: bool | None = None,
-        is_blocked: bool | None = None,
-        notes: str | None = None,
-    ) -> dict[str, Any]:
+    async def aupdate_contact(self, contact_id: str, *, name: str | None = None, email: str | None = None, company: str | None = None, avatar_url: str | None = None, tags: list[str] | None = None, is_subscribed: bool | None = None, is_blocked: bool | None = None, notes: str | None = None) -> dict[str, Any]:
         """Update contact (async)"""
         payload = self._build_payload(
             name=name,
@@ -248,13 +172,7 @@ class ContactsResource:
         """List channels for a contact (async)"""
         return await self._client._aget(f"/v1/contacts/{contact_id}/channels")
 
-    async def abulk_create_contacts(
-        self,
-        profile_id: str,
-        account_id: str,
-        platform: str,
-        contacts: list[dict[str, Any]],
-    ) -> dict[str, Any]:
+    async def abulk_create_contacts(self, profile_id: str, account_id: str, platform: str, contacts: list[dict[str, Any]]) -> dict[str, Any]:
         """Bulk create contacts (async)"""
         payload = self._build_payload(
             profile_id=profile_id,

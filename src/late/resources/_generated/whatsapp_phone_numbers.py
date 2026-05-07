@@ -22,22 +22,24 @@ class WhatsappPhoneNumbersResource:
         self._client = client
 
     def _build_params(self, **kwargs: Any) -> dict[str, Any]:
-        """Build query parameters, filtering None values."""
+        """Build query parameters, filtering None and empty-string values.
 
+        Empty strings are filtered because MCP tool wrappers pass ``""`` as the
+        default for optional string args, and the API rejects empty query
+        values (e.g. ``platform=``) with a 400. Filtering here keeps both direct
+        SDK callers and MCP tool callers safe.
+        """
         def to_camel(s: str) -> str:
             parts = s.split("_")
             return parts[0] + "".join(p.title() for p in parts[1:])
-
-        return {to_camel(k): v for k, v in kwargs.items() if v is not None}
+        return {to_camel(k): v for k, v in kwargs.items() if v is not None and v != ""}
 
     def _build_payload(self, **kwargs: Any) -> dict[str, Any]:
         """Build request payload, filtering None values."""
         from datetime import datetime
-
         def to_camel(s: str) -> str:
             parts = s.split("_")
             return parts[0] + "".join(p.title() for p in parts[1:])
-
         result: dict[str, Any] = {}
         for k, v in kwargs.items():
             if v is None:
@@ -48,9 +50,7 @@ class WhatsappPhoneNumbersResource:
                 result[to_camel(k)] = v
         return result
 
-    def get_whats_app_phone_numbers(
-        self, *, status: str | None = None, profile_id: str | None = None
-    ) -> dict[str, Any]:
+    def get_whats_app_phone_numbers(self, *, status: str | None = None, profile_id: str | None = None) -> dict[str, Any]:
         """List phone numbers"""
         params = self._build_params(
             status=status,
@@ -73,9 +73,7 @@ class WhatsappPhoneNumbersResource:
         """Release phone number"""
         return self._client._delete(f"/v1/whatsapp/phone-numbers/{phone_number_id}")
 
-    async def aget_whats_app_phone_numbers(
-        self, *, status: str | None = None, profile_id: str | None = None
-    ) -> dict[str, Any]:
+    async def aget_whats_app_phone_numbers(self, *, status: str | None = None, profile_id: str | None = None) -> dict[str, Any]:
         """List phone numbers (async)"""
         params = self._build_params(
             status=status,
@@ -88,18 +86,12 @@ class WhatsappPhoneNumbersResource:
         payload = self._build_payload(
             profile_id=profile_id,
         )
-        return await self._client._apost(
-            "/v1/whatsapp/phone-numbers/purchase", data=payload
-        )
+        return await self._client._apost("/v1/whatsapp/phone-numbers/purchase", data=payload)
 
     async def aget_whats_app_phone_number(self, phone_number_id: str) -> dict[str, Any]:
         """Get phone number (async)"""
         return await self._client._aget(f"/v1/whatsapp/phone-numbers/{phone_number_id}")
 
-    async def arelease_whats_app_phone_number(
-        self, phone_number_id: str
-    ) -> dict[str, Any]:
+    async def arelease_whats_app_phone_number(self, phone_number_id: str) -> dict[str, Any]:
         """Release phone number (async)"""
-        return await self._client._adelete(
-            f"/v1/whatsapp/phone-numbers/{phone_number_id}"
-        )
+        return await self._client._adelete(f"/v1/whatsapp/phone-numbers/{phone_number_id}")
