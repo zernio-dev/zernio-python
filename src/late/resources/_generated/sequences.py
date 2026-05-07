@@ -29,17 +29,21 @@ class SequencesResource:
         values (e.g. ``platform=``) with a 400. Filtering here keeps both direct
         SDK callers and MCP tool callers safe.
         """
+
         def to_camel(s: str) -> str:
             parts = s.split("_")
             return parts[0] + "".join(p.title() for p in parts[1:])
+
         return {to_camel(k): v for k, v in kwargs.items() if v is not None and v != ""}
 
     def _build_payload(self, **kwargs: Any) -> dict[str, Any]:
         """Build request payload, filtering None values."""
         from datetime import datetime
+
         def to_camel(s: str) -> str:
             parts = s.split("_")
             return parts[0] + "".join(p.title() for p in parts[1:])
+
         result: dict[str, Any] = {}
         for k, v in kwargs.items():
             if v is None:
@@ -50,7 +54,14 @@ class SequencesResource:
                 result[to_camel(k)] = v
         return result
 
-    def list_sequences(self, *, profile_id: str | None = None, status: str | None = None, limit: int | None = 50, skip: int | None = 0) -> dict[str, Any]:
+    def list_sequences(
+        self,
+        *,
+        profile_id: str | None = None,
+        status: str | None = None,
+        limit: int | None = 50,
+        skip: int | None = 0,
+    ) -> dict[str, Any]:
         """List sequences"""
         params = self._build_params(
             profile_id=profile_id,
@@ -60,7 +71,18 @@ class SequencesResource:
         )
         return self._client._get("/v1/sequences", params=params)
 
-    def create_sequence(self, profile_id: str, account_id: str, platform: str, name: str, *, description: str | None = None, steps: list[dict[str, Any]] | None = None, exit_on_reply: bool | None = True, exit_on_unsubscribe: bool | None = True) -> dict[str, Any]:
+    def create_sequence(
+        self,
+        profile_id: str,
+        account_id: str,
+        platform: str,
+        name: str,
+        *,
+        description: str | None = None,
+        steps: list[dict[str, Any]] | None = None,
+        exit_on_reply: bool | None = True,
+        exit_on_unsubscribe: bool | None = True,
+    ) -> dict[str, Any]:
         """Create sequence"""
         payload = self._build_payload(
             profile_id=profile_id,
@@ -94,7 +116,13 @@ class SequencesResource:
         """Pause sequence"""
         return self._client._post(f"/v1/sequences/{sequence_id}/pause")
 
-    def enroll_contacts(self, sequence_id: str, contact_ids: list[str], *, channel_ids: list[str] | None = None) -> dict[str, Any]:
+    def enroll_contacts(
+        self,
+        sequence_id: str,
+        contact_ids: list[str],
+        *,
+        channel_ids: list[str] | None = None,
+    ) -> dict[str, Any]:
         """Enroll contacts in a sequence"""
         payload = self._build_payload(
             contact_ids=contact_ids,
@@ -106,16 +134,32 @@ class SequencesResource:
         """Unenroll contact"""
         return self._client._delete(f"/v1/sequences/{sequence_id}/enroll/{contact_id}")
 
-    def list_sequence_enrollments(self, sequence_id: str, *, status: str | None = None, limit: int | None = 50, skip: int | None = 0) -> dict[str, Any]:
+    def list_sequence_enrollments(
+        self,
+        sequence_id: str,
+        *,
+        status: str | None = None,
+        limit: int | None = 50,
+        skip: int | None = 0,
+    ) -> dict[str, Any]:
         """List enrollments for a sequence"""
         params = self._build_params(
             status=status,
             limit=limit,
             skip=skip,
         )
-        return self._client._get(f"/v1/sequences/{sequence_id}/enrollments", params=params)
+        return self._client._get(
+            f"/v1/sequences/{sequence_id}/enrollments", params=params
+        )
 
-    async def alist_sequences(self, *, profile_id: str | None = None, status: str | None = None, limit: int | None = 50, skip: int | None = 0) -> dict[str, Any]:
+    async def alist_sequences(
+        self,
+        *,
+        profile_id: str | None = None,
+        status: str | None = None,
+        limit: int | None = 50,
+        skip: int | None = 0,
+    ) -> dict[str, Any]:
         """List sequences (async)"""
         params = self._build_params(
             profile_id=profile_id,
@@ -125,7 +169,18 @@ class SequencesResource:
         )
         return await self._client._aget("/v1/sequences", params=params)
 
-    async def acreate_sequence(self, profile_id: str, account_id: str, platform: str, name: str, *, description: str | None = None, steps: list[dict[str, Any]] | None = None, exit_on_reply: bool | None = True, exit_on_unsubscribe: bool | None = True) -> dict[str, Any]:
+    async def acreate_sequence(
+        self,
+        profile_id: str,
+        account_id: str,
+        platform: str,
+        name: str,
+        *,
+        description: str | None = None,
+        steps: list[dict[str, Any]] | None = None,
+        exit_on_reply: bool | None = True,
+        exit_on_unsubscribe: bool | None = True,
+    ) -> dict[str, Any]:
         """Create sequence (async)"""
         payload = self._build_payload(
             profile_id=profile_id,
@@ -159,23 +214,44 @@ class SequencesResource:
         """Pause sequence (async)"""
         return await self._client._apost(f"/v1/sequences/{sequence_id}/pause")
 
-    async def aenroll_contacts(self, sequence_id: str, contact_ids: list[str], *, channel_ids: list[str] | None = None) -> dict[str, Any]:
+    async def aenroll_contacts(
+        self,
+        sequence_id: str,
+        contact_ids: list[str],
+        *,
+        channel_ids: list[str] | None = None,
+    ) -> dict[str, Any]:
         """Enroll contacts in a sequence (async)"""
         payload = self._build_payload(
             contact_ids=contact_ids,
             channel_ids=channel_ids,
         )
-        return await self._client._apost(f"/v1/sequences/{sequence_id}/enroll", data=payload)
+        return await self._client._apost(
+            f"/v1/sequences/{sequence_id}/enroll", data=payload
+        )
 
-    async def aunenroll_contact(self, sequence_id: str, contact_id: str) -> dict[str, Any]:
+    async def aunenroll_contact(
+        self, sequence_id: str, contact_id: str
+    ) -> dict[str, Any]:
         """Unenroll contact (async)"""
-        return await self._client._adelete(f"/v1/sequences/{sequence_id}/enroll/{contact_id}")
+        return await self._client._adelete(
+            f"/v1/sequences/{sequence_id}/enroll/{contact_id}"
+        )
 
-    async def alist_sequence_enrollments(self, sequence_id: str, *, status: str | None = None, limit: int | None = 50, skip: int | None = 0) -> dict[str, Any]:
+    async def alist_sequence_enrollments(
+        self,
+        sequence_id: str,
+        *,
+        status: str | None = None,
+        limit: int | None = 50,
+        skip: int | None = 0,
+    ) -> dict[str, Any]:
         """List enrollments for a sequence (async)"""
         params = self._build_params(
             status=status,
             limit=limit,
             skip=skip,
         )
-        return await self._client._aget(f"/v1/sequences/{sequence_id}/enrollments", params=params)
+        return await self._client._aget(
+            f"/v1/sequences/{sequence_id}/enrollments", params=params
+        )

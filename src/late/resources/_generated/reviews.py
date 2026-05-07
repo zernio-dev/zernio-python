@@ -29,17 +29,21 @@ class ReviewsResource:
         values (e.g. ``platform=``) with a 400. Filtering here keeps both direct
         SDK callers and MCP tool callers safe.
         """
+
         def to_camel(s: str) -> str:
             parts = s.split("_")
             return parts[0] + "".join(p.title() for p in parts[1:])
+
         return {to_camel(k): v for k, v in kwargs.items() if v is not None and v != ""}
 
     def _build_payload(self, **kwargs: Any) -> dict[str, Any]:
         """Build request payload, filtering None values."""
         from datetime import datetime
+
         def to_camel(s: str) -> str:
             parts = s.split("_")
             return parts[0] + "".join(p.title() for p in parts[1:])
+
         result: dict[str, Any] = {}
         for k, v in kwargs.items():
             if v is None:
@@ -50,7 +54,20 @@ class ReviewsResource:
                 result[to_camel(k)] = v
         return result
 
-    def list_inbox_reviews(self, *, profile_id: str | None = None, platform: str | None = None, min_rating: int | None = None, max_rating: int | None = None, has_reply: bool | None = None, sort_by: str | None = "date", sort_order: str | None = "desc", limit: int | None = 25, cursor: str | None = None, account_id: str | None = None) -> dict[str, Any]:
+    def list_inbox_reviews(
+        self,
+        *,
+        profile_id: str | None = None,
+        platform: str | None = None,
+        min_rating: int | None = None,
+        max_rating: int | None = None,
+        has_reply: bool | None = None,
+        sort_by: str | None = "date",
+        sort_order: str | None = "desc",
+        limit: int | None = 25,
+        cursor: str | None = None,
+        account_id: str | None = None,
+    ) -> dict[str, Any]:
         """List reviews"""
         params = self._build_params(
             profile_id=profile_id,
@@ -66,7 +83,9 @@ class ReviewsResource:
         )
         return self._client._get("/v1/inbox/reviews", params=params)
 
-    def reply_to_inbox_review(self, review_id: str, account_id: str, message: str) -> dict[str, Any]:
+    def reply_to_inbox_review(
+        self, review_id: str, account_id: str, message: str
+    ) -> dict[str, Any]:
         """Reply to review"""
         payload = self._build_payload(
             account_id=account_id,
@@ -74,11 +93,26 @@ class ReviewsResource:
         )
         return self._client._post(f"/v1/inbox/reviews/{review_id}/reply", data=payload)
 
-    def delete_inbox_review_reply(self, review_id: str, account_id: str) -> dict[str, Any]:
+    def delete_inbox_review_reply(
+        self, review_id: str, account_id: str
+    ) -> dict[str, Any]:
         """Delete review reply"""
         return self._client._delete(f"/v1/inbox/reviews/{review_id}/reply")
 
-    async def alist_inbox_reviews(self, *, profile_id: str | None = None, platform: str | None = None, min_rating: int | None = None, max_rating: int | None = None, has_reply: bool | None = None, sort_by: str | None = "date", sort_order: str | None = "desc", limit: int | None = 25, cursor: str | None = None, account_id: str | None = None) -> dict[str, Any]:
+    async def alist_inbox_reviews(
+        self,
+        *,
+        profile_id: str | None = None,
+        platform: str | None = None,
+        min_rating: int | None = None,
+        max_rating: int | None = None,
+        has_reply: bool | None = None,
+        sort_by: str | None = "date",
+        sort_order: str | None = "desc",
+        limit: int | None = 25,
+        cursor: str | None = None,
+        account_id: str | None = None,
+    ) -> dict[str, Any]:
         """List reviews (async)"""
         params = self._build_params(
             profile_id=profile_id,
@@ -94,14 +128,20 @@ class ReviewsResource:
         )
         return await self._client._aget("/v1/inbox/reviews", params=params)
 
-    async def areply_to_inbox_review(self, review_id: str, account_id: str, message: str) -> dict[str, Any]:
+    async def areply_to_inbox_review(
+        self, review_id: str, account_id: str, message: str
+    ) -> dict[str, Any]:
         """Reply to review (async)"""
         payload = self._build_payload(
             account_id=account_id,
             message=message,
         )
-        return await self._client._apost(f"/v1/inbox/reviews/{review_id}/reply", data=payload)
+        return await self._client._apost(
+            f"/v1/inbox/reviews/{review_id}/reply", data=payload
+        )
 
-    async def adelete_inbox_review_reply(self, review_id: str, account_id: str) -> dict[str, Any]:
+    async def adelete_inbox_review_reply(
+        self, review_id: str, account_id: str
+    ) -> dict[str, Any]:
         """Delete review reply (async)"""
         return await self._client._adelete(f"/v1/inbox/reviews/{review_id}/reply")

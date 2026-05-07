@@ -29,17 +29,21 @@ class QueueResource:
         values (e.g. ``platform=``) with a 400. Filtering here keeps both direct
         SDK callers and MCP tool callers safe.
         """
+
         def to_camel(s: str) -> str:
             parts = s.split("_")
             return parts[0] + "".join(p.title() for p in parts[1:])
+
         return {to_camel(k): v for k, v in kwargs.items() if v is not None and v != ""}
 
     def _build_payload(self, **kwargs: Any) -> dict[str, Any]:
         """Build request payload, filtering None values."""
         from datetime import datetime
+
         def to_camel(s: str) -> str:
             parts = s.split("_")
             return parts[0] + "".join(p.title() for p in parts[1:])
+
         result: dict[str, Any] = {}
         for k, v in kwargs.items():
             if v is None:
@@ -50,7 +54,9 @@ class QueueResource:
                 result[to_camel(k)] = v
         return result
 
-    def list_queue_slots(self, profile_id: str, *, queue_id: str | None = None, all: str | None = None) -> dict[str, Any]:
+    def list_queue_slots(
+        self, profile_id: str, *, queue_id: str | None = None, all: str | None = None
+    ) -> dict[str, Any]:
         """List schedules"""
         params = self._build_params(
             profile_id=profile_id,
@@ -59,7 +65,15 @@ class QueueResource:
         )
         return self._client._get("/v1/queue/slots", params=params)
 
-    def create_queue_slot(self, profile_id: str, name: str, timezone: str, slots: list[Any], *, active: bool | None = True) -> dict[str, Any]:
+    def create_queue_slot(
+        self,
+        profile_id: str,
+        name: str,
+        timezone: str,
+        slots: list[Any],
+        *,
+        active: bool | None = True,
+    ) -> dict[str, Any]:
         """Create schedule"""
         payload = self._build_payload(
             profile_id=profile_id,
@@ -70,7 +84,18 @@ class QueueResource:
         )
         return self._client._post("/v1/queue/slots", data=payload)
 
-    def update_queue_slot(self, profile_id: str, timezone: str, slots: list[Any], *, queue_id: str | None = None, name: str | None = None, active: bool | None = True, set_as_default: bool | None = None, reshuffle_existing: bool | None = False) -> dict[str, Any]:
+    def update_queue_slot(
+        self,
+        profile_id: str,
+        timezone: str,
+        slots: list[Any],
+        *,
+        queue_id: str | None = None,
+        name: str | None = None,
+        active: bool | None = True,
+        set_as_default: bool | None = None,
+        reshuffle_existing: bool | None = False,
+    ) -> dict[str, Any]:
         """Update schedule"""
         payload = self._build_payload(
             profile_id=profile_id,
@@ -92,7 +117,9 @@ class QueueResource:
         )
         return self._client._delete("/v1/queue/slots", params=params)
 
-    def preview_queue(self, profile_id: str, *, queue_id: str | None = None, count: int | None = 20) -> dict[str, Any]:
+    def preview_queue(
+        self, profile_id: str, *, queue_id: str | None = None, count: int | None = 20
+    ) -> dict[str, Any]:
         """Preview upcoming slots"""
         params = self._build_params(
             profile_id=profile_id,
@@ -101,7 +128,9 @@ class QueueResource:
         )
         return self._client._get("/v1/queue/preview", params=params)
 
-    def get_next_queue_slot(self, profile_id: str, *, queue_id: str | None = None) -> dict[str, Any]:
+    def get_next_queue_slot(
+        self, profile_id: str, *, queue_id: str | None = None
+    ) -> dict[str, Any]:
         """Get next available slot"""
         params = self._build_params(
             profile_id=profile_id,
@@ -109,7 +138,9 @@ class QueueResource:
         )
         return self._client._get("/v1/queue/next-slot", params=params)
 
-    async def alist_queue_slots(self, profile_id: str, *, queue_id: str | None = None, all: str | None = None) -> dict[str, Any]:
+    async def alist_queue_slots(
+        self, profile_id: str, *, queue_id: str | None = None, all: str | None = None
+    ) -> dict[str, Any]:
         """List schedules (async)"""
         params = self._build_params(
             profile_id=profile_id,
@@ -118,7 +149,15 @@ class QueueResource:
         )
         return await self._client._aget("/v1/queue/slots", params=params)
 
-    async def acreate_queue_slot(self, profile_id: str, name: str, timezone: str, slots: list[Any], *, active: bool | None = True) -> dict[str, Any]:
+    async def acreate_queue_slot(
+        self,
+        profile_id: str,
+        name: str,
+        timezone: str,
+        slots: list[Any],
+        *,
+        active: bool | None = True,
+    ) -> dict[str, Any]:
         """Create schedule (async)"""
         payload = self._build_payload(
             profile_id=profile_id,
@@ -129,7 +168,18 @@ class QueueResource:
         )
         return await self._client._apost("/v1/queue/slots", data=payload)
 
-    async def aupdate_queue_slot(self, profile_id: str, timezone: str, slots: list[Any], *, queue_id: str | None = None, name: str | None = None, active: bool | None = True, set_as_default: bool | None = None, reshuffle_existing: bool | None = False) -> dict[str, Any]:
+    async def aupdate_queue_slot(
+        self,
+        profile_id: str,
+        timezone: str,
+        slots: list[Any],
+        *,
+        queue_id: str | None = None,
+        name: str | None = None,
+        active: bool | None = True,
+        set_as_default: bool | None = None,
+        reshuffle_existing: bool | None = False,
+    ) -> dict[str, Any]:
         """Update schedule (async)"""
         payload = self._build_payload(
             profile_id=profile_id,
@@ -143,7 +193,9 @@ class QueueResource:
         )
         return await self._client._aput("/v1/queue/slots", data=payload)
 
-    async def adelete_queue_slot(self, profile_id: str, queue_id: str) -> dict[str, Any]:
+    async def adelete_queue_slot(
+        self, profile_id: str, queue_id: str
+    ) -> dict[str, Any]:
         """Delete schedule (async)"""
         params = self._build_params(
             profile_id=profile_id,
@@ -151,7 +203,9 @@ class QueueResource:
         )
         return await self._client._adelete("/v1/queue/slots", params=params)
 
-    async def apreview_queue(self, profile_id: str, *, queue_id: str | None = None, count: int | None = 20) -> dict[str, Any]:
+    async def apreview_queue(
+        self, profile_id: str, *, queue_id: str | None = None, count: int | None = 20
+    ) -> dict[str, Any]:
         """Preview upcoming slots (async)"""
         params = self._build_params(
             profile_id=profile_id,
@@ -160,7 +214,9 @@ class QueueResource:
         )
         return await self._client._aget("/v1/queue/preview", params=params)
 
-    async def aget_next_queue_slot(self, profile_id: str, *, queue_id: str | None = None) -> dict[str, Any]:
+    async def aget_next_queue_slot(
+        self, profile_id: str, *, queue_id: str | None = None
+    ) -> dict[str, Any]:
         """Get next available slot (async)"""
         params = self._build_params(
             profile_id=profile_id,

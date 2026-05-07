@@ -29,17 +29,21 @@ class WhatsappFlowsResource:
         values (e.g. ``platform=``) with a 400. Filtering here keeps both direct
         SDK callers and MCP tool callers safe.
         """
+
         def to_camel(s: str) -> str:
             parts = s.split("_")
             return parts[0] + "".join(p.title() for p in parts[1:])
+
         return {to_camel(k): v for k, v in kwargs.items() if v is not None and v != ""}
 
     def _build_payload(self, **kwargs: Any) -> dict[str, Any]:
         """Build request payload, filtering None values."""
         from datetime import datetime
+
         def to_camel(s: str) -> str:
             parts = s.split("_")
             return parts[0] + "".join(p.title() for p in parts[1:])
+
         result: dict[str, Any] = {}
         for k, v in kwargs.items():
             if v is None:
@@ -57,7 +61,14 @@ class WhatsappFlowsResource:
         )
         return self._client._get("/v1/whatsapp/flows", params=params)
 
-    def create_whats_app_flow(self, account_id: str, name: str, categories: list[str], *, clone_flow_id: str | None = None) -> dict[str, Any]:
+    def create_whats_app_flow(
+        self,
+        account_id: str,
+        name: str,
+        categories: list[str],
+        *,
+        clone_flow_id: str | None = None,
+    ) -> dict[str, Any]:
         """Create flow"""
         payload = self._build_payload(
             account_id=account_id,
@@ -67,7 +78,9 @@ class WhatsappFlowsResource:
         )
         return self._client._post("/v1/whatsapp/flows", data=payload)
 
-    def get_whats_app_flow(self, flow_id: str, account_id: str, *, fields: str | None = None) -> dict[str, Any]:
+    def get_whats_app_flow(
+        self, flow_id: str, account_id: str, *, fields: str | None = None
+    ) -> dict[str, Any]:
         """Get flow"""
         params = self._build_params(
             account_id=account_id,
@@ -75,7 +88,14 @@ class WhatsappFlowsResource:
         )
         return self._client._get(f"/v1/whatsapp/flows/{flow_id}", params=params)
 
-    def update_whats_app_flow(self, flow_id: str, account_id: str, *, name: str | None = None, categories: list[str] | None = None) -> dict[str, Any]:
+    def update_whats_app_flow(
+        self,
+        flow_id: str,
+        account_id: str,
+        *,
+        name: str | None = None,
+        categories: list[str] | None = None,
+    ) -> dict[str, Any]:
         """Update flow"""
         payload = self._build_payload(
             account_id=account_id,
@@ -98,7 +118,9 @@ class WhatsappFlowsResource:
         )
         return self._client._get(f"/v1/whatsapp/flows/{flow_id}/json", params=params)
 
-    def upload_whats_app_flow_json(self, flow_id: str, account_id: str, flow_json: Any) -> dict[str, Any]:
+    def upload_whats_app_flow_json(
+        self, flow_id: str, account_id: str, flow_json: Any
+    ) -> dict[str, Any]:
         """Upload flow JSON"""
         payload = self._build_payload(
             account_id=account_id,
@@ -118,9 +140,25 @@ class WhatsappFlowsResource:
         payload = self._build_payload(
             account_id=account_id,
         )
-        return self._client._post(f"/v1/whatsapp/flows/{flow_id}/deprecate", data=payload)
+        return self._client._post(
+            f"/v1/whatsapp/flows/{flow_id}/deprecate", data=payload
+        )
 
-    def send_whats_app_flow_message(self, account_id: str, to: str, flow_id: str, flow_cta: str, body: str, *, flow_action: str | None = "navigate", flow_token: str | None = None, flow_action_payload: dict[str, Any] | None = None, header: dict[str, Any] | None = None, footer: str | None = None, draft: bool | None = None) -> dict[str, Any]:
+    def send_whats_app_flow_message(
+        self,
+        account_id: str,
+        to: str,
+        flow_id: str,
+        flow_cta: str,
+        body: str,
+        *,
+        flow_action: str | None = "navigate",
+        flow_token: str | None = None,
+        flow_action_payload: dict[str, Any] | None = None,
+        header: dict[str, Any] | None = None,
+        footer: str | None = None,
+        draft: bool | None = None,
+    ) -> dict[str, Any]:
         """Send flow message"""
         payload = self._build_payload(
             account_id=account_id,
@@ -144,7 +182,14 @@ class WhatsappFlowsResource:
         )
         return await self._client._aget("/v1/whatsapp/flows", params=params)
 
-    async def acreate_whats_app_flow(self, account_id: str, name: str, categories: list[str], *, clone_flow_id: str | None = None) -> dict[str, Any]:
+    async def acreate_whats_app_flow(
+        self,
+        account_id: str,
+        name: str,
+        categories: list[str],
+        *,
+        clone_flow_id: str | None = None,
+    ) -> dict[str, Any]:
         """Create flow (async)"""
         payload = self._build_payload(
             account_id=account_id,
@@ -154,7 +199,9 @@ class WhatsappFlowsResource:
         )
         return await self._client._apost("/v1/whatsapp/flows", data=payload)
 
-    async def aget_whats_app_flow(self, flow_id: str, account_id: str, *, fields: str | None = None) -> dict[str, Any]:
+    async def aget_whats_app_flow(
+        self, flow_id: str, account_id: str, *, fields: str | None = None
+    ) -> dict[str, Any]:
         """Get flow (async)"""
         params = self._build_params(
             account_id=account_id,
@@ -162,7 +209,14 @@ class WhatsappFlowsResource:
         )
         return await self._client._aget(f"/v1/whatsapp/flows/{flow_id}", params=params)
 
-    async def aupdate_whats_app_flow(self, flow_id: str, account_id: str, *, name: str | None = None, categories: list[str] | None = None) -> dict[str, Any]:
+    async def aupdate_whats_app_flow(
+        self,
+        flow_id: str,
+        account_id: str,
+        *,
+        name: str | None = None,
+        categories: list[str] | None = None,
+    ) -> dict[str, Any]:
         """Update flow (async)"""
         payload = self._build_payload(
             account_id=account_id,
@@ -171,43 +225,77 @@ class WhatsappFlowsResource:
         )
         return await self._client._apatch(f"/v1/whatsapp/flows/{flow_id}", data=payload)
 
-    async def adelete_whats_app_flow(self, flow_id: str, account_id: str) -> dict[str, Any]:
+    async def adelete_whats_app_flow(
+        self, flow_id: str, account_id: str
+    ) -> dict[str, Any]:
         """Delete flow (async)"""
         params = self._build_params(
             account_id=account_id,
         )
-        return await self._client._adelete(f"/v1/whatsapp/flows/{flow_id}", params=params)
+        return await self._client._adelete(
+            f"/v1/whatsapp/flows/{flow_id}", params=params
+        )
 
-    async def aget_whats_app_flow_json(self, flow_id: str, account_id: str) -> dict[str, Any]:
+    async def aget_whats_app_flow_json(
+        self, flow_id: str, account_id: str
+    ) -> dict[str, Any]:
         """Get flow JSON asset (async)"""
         params = self._build_params(
             account_id=account_id,
         )
-        return await self._client._aget(f"/v1/whatsapp/flows/{flow_id}/json", params=params)
+        return await self._client._aget(
+            f"/v1/whatsapp/flows/{flow_id}/json", params=params
+        )
 
-    async def aupload_whats_app_flow_json(self, flow_id: str, account_id: str, flow_json: Any) -> dict[str, Any]:
+    async def aupload_whats_app_flow_json(
+        self, flow_id: str, account_id: str, flow_json: Any
+    ) -> dict[str, Any]:
         """Upload flow JSON (async)"""
         payload = self._build_payload(
             account_id=account_id,
             flow_json=flow_json,
         )
-        return await self._client._aput(f"/v1/whatsapp/flows/{flow_id}/json", data=payload)
+        return await self._client._aput(
+            f"/v1/whatsapp/flows/{flow_id}/json", data=payload
+        )
 
-    async def apublish_whats_app_flow(self, flow_id: str, account_id: str) -> dict[str, Any]:
+    async def apublish_whats_app_flow(
+        self, flow_id: str, account_id: str
+    ) -> dict[str, Any]:
         """Publish flow (async)"""
         payload = self._build_payload(
             account_id=account_id,
         )
-        return await self._client._apost(f"/v1/whatsapp/flows/{flow_id}/publish", data=payload)
+        return await self._client._apost(
+            f"/v1/whatsapp/flows/{flow_id}/publish", data=payload
+        )
 
-    async def adeprecate_whats_app_flow(self, flow_id: str, account_id: str) -> dict[str, Any]:
+    async def adeprecate_whats_app_flow(
+        self, flow_id: str, account_id: str
+    ) -> dict[str, Any]:
         """Deprecate flow (async)"""
         payload = self._build_payload(
             account_id=account_id,
         )
-        return await self._client._apost(f"/v1/whatsapp/flows/{flow_id}/deprecate", data=payload)
+        return await self._client._apost(
+            f"/v1/whatsapp/flows/{flow_id}/deprecate", data=payload
+        )
 
-    async def asend_whats_app_flow_message(self, account_id: str, to: str, flow_id: str, flow_cta: str, body: str, *, flow_action: str | None = "navigate", flow_token: str | None = None, flow_action_payload: dict[str, Any] | None = None, header: dict[str, Any] | None = None, footer: str | None = None, draft: bool | None = None) -> dict[str, Any]:
+    async def asend_whats_app_flow_message(
+        self,
+        account_id: str,
+        to: str,
+        flow_id: str,
+        flow_cta: str,
+        body: str,
+        *,
+        flow_action: str | None = "navigate",
+        flow_token: str | None = None,
+        flow_action_payload: dict[str, Any] | None = None,
+        header: dict[str, Any] | None = None,
+        footer: str | None = None,
+        draft: bool | None = None,
+    ) -> dict[str, Any]:
         """Send flow message (async)"""
         payload = self._build_payload(
             account_id=account_id,
