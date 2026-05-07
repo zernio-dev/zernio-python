@@ -81,7 +81,7 @@ def register_generated_tools(mcp, _get_client):
 
 
     @mcp.tool()
-    def account_groups_create_account_group(name: str, account_ids: str) -> str:
+    def account_groups_create_account_group(name: str, account_ids: list[str] | None) -> str:
         """Create group
 
         Args:
@@ -96,7 +96,7 @@ def register_generated_tools(mcp, _get_client):
 
 
     @mcp.tool()
-    def account_groups_update_account_group(group_id: str, name: str = "", account_ids: str = "") -> str:
+    def account_groups_update_account_group(group_id: str, name: str = "", account_ids: list[str] | None = None) -> str:
         """Update group
 
         Args:
@@ -142,7 +142,7 @@ def register_generated_tools(mcp, _get_client):
 
 
     @mcp.tool()
-    def account_settings_set_messenger_menu(account_id: str, persistent_menu: str) -> str:
+    def account_settings_set_messenger_menu(account_id: str, persistent_menu: list[dict[str, Any]] | None) -> str:
         """Set FB persistent menu
 
         Args:
@@ -185,7 +185,7 @@ def register_generated_tools(mcp, _get_client):
 
 
     @mcp.tool()
-    def account_settings_set_instagram_ice_breakers(account_id: str, ice_breakers: str) -> str:
+    def account_settings_set_instagram_ice_breakers(account_id: str, ice_breakers: list[dict[str, Any]] | None) -> str:
         """Set IG ice breakers
 
         Args:
@@ -228,7 +228,7 @@ def register_generated_tools(mcp, _get_client):
 
 
     @mcp.tool()
-    def account_settings_set_telegram_commands(account_id: str, commands: str) -> str:
+    def account_settings_set_telegram_commands(account_id: str, commands: list[dict[str, Any]] | None) -> str:
         """Set TG bot commands
 
         Args:
@@ -402,7 +402,7 @@ def register_generated_tools(mcp, _get_client):
 
 
     @mcp.tool()
-    def accounts_update_google_business_food_menus(account_id: str, menus: str, location_id: str = "", update_mask: str = "") -> str:
+    def accounts_update_google_business_food_menus(account_id: str, menus: list[dict[str, Any]] | None, location_id: str = "", update_mask: str = "") -> str:
         """Update food menus
 
         Args:
@@ -435,7 +435,7 @@ def register_generated_tools(mcp, _get_client):
 
 
     @mcp.tool()
-    def accounts_update_google_business_location_details(account_id: str, update_mask: str, location_id: str = "", regular_hours: str = "", special_hours: str = "", profile: str = "", website_uri: str = "", phone_numbers: str = "", categories: str = "", service_items: str = "") -> str:
+    def accounts_update_google_business_location_details(account_id: str, update_mask: str, location_id: str = "", regular_hours: dict[str, Any] | None = None, special_hours: dict[str, Any] | None = None, profile: dict[str, Any] | None = None, website_uri: str = "", phone_numbers: dict[str, Any] | None = None, categories: dict[str, Any] | None = None, service_items: list[dict[str, Any]] | None = None) -> str:
         """Update location details
 
         Args:
@@ -525,7 +525,7 @@ def register_generated_tools(mcp, _get_client):
 
 
     @mcp.tool()
-    def accounts_update_google_business_attributes(account_id: str, attributes: str, attribute_mask: str, location_id: str = "") -> str:
+    def accounts_update_google_business_attributes(account_id: str, attributes: list[dict[str, Any]] | None, attribute_mask: str, location_id: str = "") -> str:
         """Update attributes
 
         Args:
@@ -626,7 +626,7 @@ def register_generated_tools(mcp, _get_client):
 
 
     @mcp.tool()
-    def ad_audiences_create_ad_audience(account_id: str, ad_account_id: str, name: str, type: str, description: str = "", pixel_id: str = "", retention_days: int = 0, source_audience_id: str = "", country: str = "", ratio: float = 0.0, rule: str = "", customer_file_source: str = "") -> str:
+    def ad_audiences_create_ad_audience(account_id: str, ad_account_id: str, name: str, type: str, description: str = "", pixel_id: str = "", retention_days: int = 0, source_audience_id: str = "", country: str = "", ratio: float = 0.0, rule: dict[str, Any] | None = None, customer_file_source: str = "") -> str:
         """Create custom audience
 
         Args:
@@ -679,7 +679,7 @@ def register_generated_tools(mcp, _get_client):
 
 
     @mcp.tool()
-    def ad_audiences_add_users_to_ad_audience(audience_id: str, users: str) -> str:
+    def ad_audiences_add_users_to_ad_audience(audience_id: str, users: list[dict[str, Any]] | None) -> str:
         """Add users to audience
 
         Args:
@@ -796,7 +796,7 @@ def register_generated_tools(mcp, _get_client):
 
 
     @mcp.tool()
-    def ads_update_ad(ad_id: str, status: str = "", budget: str = "", targeting: str = "", name: str = "") -> str:
+    def ads_update_ad(ad_id: str, status: str = "", budget: dict[str, Any] | None = None, targeting: dict[str, Any] | None = None, name: str = "") -> str:
         """Update ad
 
         Args:
@@ -859,7 +859,7 @@ def register_generated_tools(mcp, _get_client):
 
 
     @mcp.tool()
-    def ads_boost_post(account_id: str, ad_account_id: str, name: str, goal: str, budget: str, post_id: str = "", platform_post_id: str = "", currency: str = "", schedule: str = "", targeting: str = "", bid_amount: float = 0.0, tracking: str = "", special_ad_categories: str = "") -> str:
+    def ads_boost_post(account_id: str, ad_account_id: str, name: str, goal: str, budget: dict[str, Any] | None, post_id: str = "", platform_post_id: str = "", currency: str = "", schedule: dict[str, Any] | None = None, targeting: dict[str, Any] | None = None, bid_amount: float = 0.0, tracking: dict[str, Any] | None = None, special_ad_categories: list[str] | None = None) -> str:
         """Boost post as ad
 
         Args:
@@ -885,7 +885,7 @@ def register_generated_tools(mcp, _get_client):
 
 
     @mcp.tool()
-    def ads_create_standalone_ad(account_id: str, ad_account_id: str, name: str, goal: str, budget_amount: float, budget_type: str, body: str, currency: str = "", headline: str = "", long_headline: str = "", call_to_action: str = "", link_url: str = "", image_url: str = "", business_name: str = "", board_id: str = "", countries: str = "", age_min: int = 0, age_max: int = 0, interests: str = "", end_date: str = "", audience_id: str = "", campaign_type: str = "display", keywords: str = "", additional_headlines: str = "", additional_descriptions: str = "") -> str:
+    def ads_create_standalone_ad(account_id: str, ad_account_id: str, name: str, goal: str, budget_amount: float, budget_type: str, body: str, currency: str = "", headline: str = "", long_headline: str = "", call_to_action: str = "", link_url: str = "", image_url: str = "", business_name: str = "", board_id: str = "", countries: list[str] | None = None, age_min: int = 0, age_max: int = 0, interests: list[dict[str, Any]] | None = None, end_date: str = "", audience_id: str = "", campaign_type: str = "display", keywords: list[str] | None = None, additional_headlines: list[str] | None = None, additional_descriptions: list[str] | None = None) -> str:
         """Create standalone ad
 
         Args:
@@ -938,7 +938,7 @@ def register_generated_tools(mcp, _get_client):
 
 
     @mcp.tool()
-    def ads_send_conversions(account_id: str, destination_id: str, events: str, test_code: str = "", consent: str = "") -> str:
+    def ads_send_conversions(account_id: str, destination_id: str, events: list[dict[str, Any]] | None, test_code: str = "", consent: dict[str, Any] | None = None) -> str:
         """Send conversion events to an ad platform
 
         Args:
@@ -1260,7 +1260,7 @@ def register_generated_tools(mcp, _get_client):
 
 
     @mcp.tool()
-    def api_keys_create_api_key(name: str, expires_in: int = 0, scope: str = "full", profile_ids: str = "", permission: str = "read-write") -> str:
+    def api_keys_create_api_key(name: str, expires_in: int = 0, scope: str = "full", profile_ids: list[str] | None = None, permission: str = "read-write") -> str:
         """Create key
 
         Args:
@@ -1312,7 +1312,7 @@ def register_generated_tools(mcp, _get_client):
 
 
     @mcp.tool()
-    def broadcasts_create_broadcast(profile_id: str, account_id: str, platform: str, name: str, description: str = "", message: str = "", template: str = "", segment_filters: str = "") -> str:
+    def broadcasts_create_broadcast(profile_id: str, account_id: str, platform: str, name: str, description: str = "", message: dict[str, Any] | None = None, template: dict[str, Any] | None = None, segment_filters: dict[str, Any] | None = None) -> str:
         """Create broadcast draft
 
         Args:
@@ -1435,7 +1435,7 @@ def register_generated_tools(mcp, _get_client):
 
 
     @mcp.tool()
-    def broadcasts_add_broadcast_recipients(broadcast_id: str, contact_ids: str = "", phones: str = "", use_segment: bool = False) -> str:
+    def broadcasts_add_broadcast_recipients(broadcast_id: str, contact_ids: list[str] | None = None, phones: list[str] | None = None, use_segment: bool = False) -> str:
         """Add recipients to a broadcast
 
         Args:
@@ -1468,7 +1468,7 @@ def register_generated_tools(mcp, _get_client):
 
 
     @mcp.tool()
-    def comment_automations_create_comment_automation(profile_id: str, account_id: str, platform_post_id: str, name: str, dm_message: str, post_id: str = "", post_title: str = "", keywords: str = "", match_mode: str = "contains", comment_reply: str = "") -> str:
+    def comment_automations_create_comment_automation(profile_id: str, account_id: str, platform_post_id: str, name: str, dm_message: str, post_id: str = "", post_title: str = "", keywords: list[str] | None = None, match_mode: str = "contains", comment_reply: str = "") -> str:
         """Create comment-to-DM automation
 
         Args:
@@ -1505,7 +1505,7 @@ def register_generated_tools(mcp, _get_client):
 
 
     @mcp.tool()
-    def comment_automations_update_comment_automation(automation_id: str, name: str = "", keywords: str = "", match_mode: str = "", dm_message: str = "", comment_reply: str = "", is_active: bool = False) -> str:
+    def comment_automations_update_comment_automation(automation_id: str, name: str = "", keywords: list[str] | None = None, match_mode: str = "", dm_message: str = "", comment_reply: str = "", is_active: bool = False) -> str:
         """Update automation settings
 
         Args:
@@ -1787,7 +1787,7 @@ def register_generated_tools(mcp, _get_client):
 
 
     @mcp.tool()
-    def connect_select_facebook_page(profile_id: str, page_id: str, temp_token: str, user_profile: str, redirect_url: str = "") -> str:
+    def connect_select_facebook_page(profile_id: str, page_id: str, temp_token: str, user_profile: dict[str, Any] | None, redirect_url: str = "") -> str:
         """Select Facebook page
 
         Args:
@@ -1867,7 +1867,7 @@ def register_generated_tools(mcp, _get_client):
 
 
     @mcp.tool()
-    def connect_select_linked_in_organization(profile_id: str, temp_token: str, user_profile: str, account_type: str, selected_organization: str = "", redirect_url: str = "") -> str:
+    def connect_select_linked_in_organization(profile_id: str, temp_token: str, user_profile: dict[str, Any] | None, account_type: str, selected_organization: dict[str, Any] | None = None, redirect_url: str = "") -> str:
         """Select LinkedIn org
 
         Args:
@@ -1901,7 +1901,7 @@ def register_generated_tools(mcp, _get_client):
 
 
     @mcp.tool()
-    def connect_select_pinterest_board(profile_id: str, board_id: str, temp_token: str, board_name: str = "", user_profile: str = "", refresh_token: str = "", expires_in: int = 0, redirect_url: str = "") -> str:
+    def connect_select_pinterest_board(profile_id: str, board_id: str, temp_token: str, board_name: str = "", user_profile: dict[str, Any] | None = None, refresh_token: str = "", expires_in: int = 0, redirect_url: str = "") -> str:
         """Select Pinterest board
 
         Args:
@@ -1937,7 +1937,7 @@ def register_generated_tools(mcp, _get_client):
 
 
     @mcp.tool()
-    def connect_select_snapchat_profile(profile_id: str, selected_public_profile: str, temp_token: str, user_profile: str, refresh_token: str = "", expires_in: int = 0, redirect_url: str = "") -> str:
+    def connect_select_snapchat_profile(profile_id: str, selected_public_profile: dict[str, Any] | None, temp_token: str, user_profile: dict[str, Any] | None, refresh_token: str = "", expires_in: int = 0, redirect_url: str = "") -> str:
         """Select Snapchat profile
 
         Args:
@@ -2077,7 +2077,7 @@ def register_generated_tools(mcp, _get_client):
 
 
     @mcp.tool()
-    def connect_update_linked_in_organization(account_id: str, account_type: str, selected_organization: str = "") -> str:
+    def connect_update_linked_in_organization(account_id: str, account_type: str, selected_organization: dict[str, Any] | None = None) -> str:
         """Switch LinkedIn account type
 
         Args:
@@ -2248,7 +2248,7 @@ def register_generated_tools(mcp, _get_client):
 
 
     @mcp.tool()
-    def contacts_create_contact(profile_id: str, name: str, email: str = "", company: str = "", tags: str = "", is_subscribed: bool = True, notes: str = "", account_id: str = "", platform: str = "", platform_identifier: str = "", display_identifier: str = "") -> str:
+    def contacts_create_contact(profile_id: str, name: str, email: str = "", company: str = "", tags: list[str] | None = None, is_subscribed: bool = True, notes: str = "", account_id: str = "", platform: str = "", platform_identifier: str = "", display_identifier: str = "") -> str:
         """Create contact
 
         Args:
@@ -2286,7 +2286,7 @@ def register_generated_tools(mcp, _get_client):
 
 
     @mcp.tool()
-    def contacts_update_contact(contact_id: str, name: str = "", email: str = "", company: str = "", avatar_url: str = "", tags: str = "", is_subscribed: bool = False, is_blocked: bool = False, notes: str = "") -> str:
+    def contacts_update_contact(contact_id: str, name: str = "", email: str = "", company: str = "", avatar_url: str = "", tags: list[str] | None = None, is_subscribed: bool = False, is_blocked: bool = False, notes: str = "") -> str:
         """Update contact
 
         Args:
@@ -2336,7 +2336,7 @@ def register_generated_tools(mcp, _get_client):
 
 
     @mcp.tool()
-    def contacts_bulk_create_contacts(profile_id: str, account_id: str, platform: str, contacts: str) -> str:
+    def contacts_bulk_create_contacts(profile_id: str, account_id: str, platform: str, contacts: list[dict[str, Any]] | None) -> str:
         """Bulk create contacts
 
         Args:
@@ -2400,7 +2400,7 @@ def register_generated_tools(mcp, _get_client):
 
 
     @mcp.tool()
-    def custom_fields_create_custom_field(profile_id: str, name: str, type: str, slug: str = "", options: str = "") -> str:
+    def custom_fields_create_custom_field(profile_id: str, name: str, type: str, slug: str = "", options: list[str] | None = None) -> str:
         """Create custom field
 
         Args:
@@ -2418,7 +2418,7 @@ def register_generated_tools(mcp, _get_client):
 
 
     @mcp.tool()
-    def custom_fields_update_custom_field(field_id: str, name: str = "", options: str = "") -> str:
+    def custom_fields_update_custom_field(field_id: str, name: str = "", options: list[str] | None = None) -> str:
         """Update custom field
 
         Args:
@@ -2450,7 +2450,7 @@ def register_generated_tools(mcp, _get_client):
 
 
     @mcp.tool()
-    def invites_create_invite_token(scope: str, profile_ids: str = "") -> str:
+    def invites_create_invite_token(scope: str, profile_ids: list[str] | None = None) -> str:
         """Create invite token
 
         Args:
@@ -2592,7 +2592,7 @@ def register_generated_tools(mcp, _get_client):
 
 
     @mcp.tool()
-    def messages_send_inbox_message(conversation_id: str, account_id: str, message: str = "", attachment_url: str = "", attachment_type: str = "", quick_replies: str = "", buttons: str = "", template: str = "", reply_markup: str = "", messaging_type: str = "", message_tag: str = "", reply_to: str = "") -> str:
+    def messages_send_inbox_message(conversation_id: str, account_id: str, message: str = "", attachment_url: str = "", attachment_type: str = "", quick_replies: list[dict[str, Any]] | None = None, buttons: list[dict[str, Any]] | None = None, template: dict[str, Any] | None = None, reply_markup: dict[str, Any] | None = None, messaging_type: str = "", message_tag: str = "", reply_to: str = "") -> str:
         """Send message
 
         Args:
@@ -2617,7 +2617,7 @@ def register_generated_tools(mcp, _get_client):
 
 
     @mcp.tool()
-    def messages_edit_inbox_message(conversation_id: str, message_id: str, account_id: str, text: str = "", reply_markup: str = "") -> str:
+    def messages_edit_inbox_message(conversation_id: str, message_id: str, account_id: str, text: str = "", reply_markup: dict[str, Any] | None = None) -> str:
         """Edit message
 
         Args:
@@ -2736,7 +2736,7 @@ def register_generated_tools(mcp, _get_client):
 
 
     @mcp.tool()
-    def posts_create_post(title: str = "", content: str = "", media_items: str = "", platforms: str = "", scheduled_for: str = "", publish_now: bool = False, is_draft: bool = False, timezone: str = "UTC", tags: str = "", hashtags: str = "", mentions: str = "", crossposting_enabled: bool = True, metadata: str = "", tiktok_settings: str = "", facebook_settings: str = "", recycling: str = "", queued_from_profile: str = "", queue_id: str = "") -> str:
+    def posts_create_post(title: str = "", content: str = "", media_items: list[dict[str, Any]] | None = None, platforms: list[dict[str, Any]] | None = None, scheduled_for: str = "", publish_now: bool = False, is_draft: bool = False, timezone: str = "UTC", tags: list[str] | None = None, hashtags: list[str] | None = None, mentions: list[str] | None = None, crossposting_enabled: bool = True, metadata: dict[str, Any] | None = None, tiktok_settings: dict[str, Any] | None = None, facebook_settings: dict[str, Any] | None = None, recycling: dict[str, Any] | None = None, queued_from_profile: str = "", queue_id: str = "") -> str:
         """Create post
 
         Args:
@@ -2783,7 +2783,7 @@ def register_generated_tools(mcp, _get_client):
 
 
     @mcp.tool()
-    def posts_update_post(post_id: str, content: str = "", scheduled_for: str = "", tiktok_settings: str = "", facebook_settings: str = "", recycling: str = "") -> str:
+    def posts_update_post(post_id: str, content: str = "", scheduled_for: str = "", tiktok_settings: dict[str, Any] | None = None, facebook_settings: dict[str, Any] | None = None, recycling: dict[str, Any] | None = None) -> str:
         """Update post
 
         Args:
@@ -2861,7 +2861,7 @@ def register_generated_tools(mcp, _get_client):
 
 
     @mcp.tool()
-    def posts_update_post_metadata(post_id: str, platform: str, video_id: str = "", account_id: str = "", title: str = "", description: str = "", tags: str = "", category_id: str = "", privacy_status: str = "", thumbnail_url: str = "", made_for_kids: bool = False, contains_synthetic_media: bool = False, playlist_id: str = "") -> str:
+    def posts_update_post_metadata(post_id: str, platform: str, video_id: str = "", account_id: str = "", title: str = "", description: str = "", tags: list[str] | None = None, category_id: str = "", privacy_status: str = "", thumbnail_url: str = "", made_for_kids: bool = False, contains_synthetic_media: bool = False, playlist_id: str = "") -> str:
         """Update post metadata
 
         Args:
@@ -2983,7 +2983,7 @@ def register_generated_tools(mcp, _get_client):
 
 
     @mcp.tool()
-    def queue_create_queue_slot(profile_id: str, name: str, timezone: str, slots: str, active: bool = True) -> str:
+    def queue_create_queue_slot(profile_id: str, name: str, timezone: str, slots: list[dict[str, Any]] | None, active: bool = True) -> str:
         """Create schedule
 
         Args:
@@ -3001,7 +3001,7 @@ def register_generated_tools(mcp, _get_client):
 
 
     @mcp.tool()
-    def queue_update_queue_slot(profile_id: str, timezone: str, slots: str, queue_id: str = "", name: str = "", active: bool = True, set_as_default: bool = False, reshuffle_existing: bool = False) -> str:
+    def queue_update_queue_slot(profile_id: str, timezone: str, slots: list[dict[str, Any]] | None, queue_id: str = "", name: str = "", active: bool = True, set_as_default: bool = False, reshuffle_existing: bool = False) -> str:
         """Update schedule
 
         Args:
@@ -3184,7 +3184,7 @@ def register_generated_tools(mcp, _get_client):
 
 
     @mcp.tool()
-    def sequences_create_sequence(profile_id: str, account_id: str, platform: str, name: str, description: str = "", steps: str = "", exit_on_reply: bool = True, exit_on_unsubscribe: bool = True) -> str:
+    def sequences_create_sequence(profile_id: str, account_id: str, platform: str, name: str, description: str = "", steps: list[dict[str, Any]] | None = None, exit_on_reply: bool = True, exit_on_unsubscribe: bool = True) -> str:
         """Create sequence
 
         Args:
@@ -3275,7 +3275,7 @@ def register_generated_tools(mcp, _get_client):
 
 
     @mcp.tool()
-    def sequences_enroll_contacts(sequence_id: str, contact_ids: str, channel_ids: str = "") -> str:
+    def sequences_enroll_contacts(sequence_id: str, contact_ids: list[str] | None, channel_ids: list[str] | None = None) -> str:
         """Enroll contacts in a sequence
 
         Args:
@@ -3471,7 +3471,7 @@ def register_generated_tools(mcp, _get_client):
 
 
     @mcp.tool()
-    def validate_post(platforms: str, content: str = "", media_items: str = "") -> str:
+    def validate_post(platforms: list[dict[str, Any]] | None, content: str = "", media_items: list[dict[str, Any]] | None = None) -> str:
         """Validate post content
 
         Args:
@@ -3529,7 +3529,7 @@ def register_generated_tools(mcp, _get_client):
 
 
     @mcp.tool()
-    def webhooks_create_webhook_settings(name: str = "", url: str = "", secret: str = "", events: str = "", is_active: bool = False, custom_headers: str = "") -> str:
+    def webhooks_create_webhook_settings(name: str = "", url: str = "", secret: str = "", events: list[str] | None = None, is_active: bool = False, custom_headers: dict[str, Any] | None = None) -> str:
         """Create webhook
 
         Args:
@@ -3548,7 +3548,7 @@ def register_generated_tools(mcp, _get_client):
 
 
     @mcp.tool()
-    def webhooks_update_webhook_settings(id: str, name: str = "", url: str = "", secret: str = "", events: str = "", is_active: bool = False, custom_headers: str = "") -> str:
+    def webhooks_update_webhook_settings(id: str, name: str = "", url: str = "", secret: str = "", events: list[str] | None = None, is_active: bool = False, custom_headers: dict[str, Any] | None = None) -> str:
         """Update webhook
 
         Args:
@@ -3612,7 +3612,7 @@ def register_generated_tools(mcp, _get_client):
 
 
     @mcp.tool()
-    def whatsapp_create_whats_app_template(account_id: str, name: str, category: str, language: str, components: str = "", library_template_name: str = "", library_template_body_inputs: str = "", library_template_button_inputs: str = "") -> str:
+    def whatsapp_create_whats_app_template(account_id: str, name: str, category: str, language: str, components: list[dict[str, Any]] | None = None, library_template_name: str = "", library_template_body_inputs: dict[str, Any] | None = None, library_template_button_inputs: list[dict[str, Any]] | None = None) -> str:
         """Create template
 
         Args:
@@ -3653,7 +3653,7 @@ def register_generated_tools(mcp, _get_client):
 
 
     @mcp.tool()
-    def whatsapp_update_whats_app_template(template_name: str, account_id: str, components: str) -> str:
+    def whatsapp_update_whats_app_template(template_name: str, account_id: str, components: list[dict[str, Any]] | None) -> str:
         """Update template
 
         Args:
@@ -3698,7 +3698,7 @@ def register_generated_tools(mcp, _get_client):
 
 
     @mcp.tool()
-    def whatsapp_update_whats_app_business_profile(account_id: str, about: str = "", address: str = "", description: str = "", email: str = "", websites: str = "", vertical: str = "", profile_picture_handle: str = "") -> str:
+    def whatsapp_update_whats_app_business_profile(account_id: str, about: str = "", address: str = "", description: str = "", email: str = "", websites: list[str] | None = None, vertical: str = "", profile_picture_handle: str = "") -> str:
         """Update business profile
 
         Args:
@@ -3840,7 +3840,7 @@ def register_generated_tools(mcp, _get_client):
 
 
     @mcp.tool()
-    def whatsapp_add_whats_app_group_participants(group_id: str, account_id: str, phone_numbers: str) -> str:
+    def whatsapp_add_whats_app_group_participants(group_id: str, account_id: str, phone_numbers: list[str] | None) -> str:
         """Add participants
 
         Args:
@@ -3856,7 +3856,7 @@ def register_generated_tools(mcp, _get_client):
 
 
     @mcp.tool()
-    def whatsapp_remove_whats_app_group_participants(group_id: str, account_id: str, phone_numbers: str) -> str:
+    def whatsapp_remove_whats_app_group_participants(group_id: str, account_id: str, phone_numbers: list[str] | None) -> str:
         """Remove participants
 
         Args:
@@ -3902,7 +3902,7 @@ def register_generated_tools(mcp, _get_client):
 
 
     @mcp.tool()
-    def whatsapp_approve_whats_app_group_join_requests(group_id: str, account_id: str, phone_numbers: str) -> str:
+    def whatsapp_approve_whats_app_group_join_requests(group_id: str, account_id: str, phone_numbers: list[str] | None) -> str:
         """Approve join requests
 
         Args:
@@ -3918,7 +3918,7 @@ def register_generated_tools(mcp, _get_client):
 
 
     @mcp.tool()
-    def whatsapp_reject_whats_app_group_join_requests(group_id: str, account_id: str, phone_numbers: str) -> str:
+    def whatsapp_reject_whats_app_group_join_requests(group_id: str, account_id: str, phone_numbers: list[str] | None) -> str:
         """Reject join requests
 
         Args:
@@ -3950,7 +3950,7 @@ def register_generated_tools(mcp, _get_client):
 
 
     @mcp.tool()
-    def whatsapp_flows_create_whats_app_flow(account_id: str, name: str, categories: str, clone_flow_id: str = "") -> str:
+    def whatsapp_flows_create_whats_app_flow(account_id: str, name: str, categories: list[str] | None, clone_flow_id: str = "") -> str:
         """Create flow
 
         Args:
@@ -3983,7 +3983,7 @@ def register_generated_tools(mcp, _get_client):
 
 
     @mcp.tool()
-    def whatsapp_flows_update_whats_app_flow(flow_id: str, account_id: str, name: str = "", categories: str = "") -> str:
+    def whatsapp_flows_update_whats_app_flow(flow_id: str, account_id: str, name: str = "", categories: list[str] | None = None) -> str:
         """Update flow
 
         Args:
@@ -4076,7 +4076,7 @@ def register_generated_tools(mcp, _get_client):
 
 
     @mcp.tool()
-    def whatsapp_flows_send_whats_app_flow_message(account_id: str, to: str, flow_id: str, flow_cta: str, body: str, flow_action: str = "navigate", flow_token: str = "", flow_action_payload: str = "", header: str = "", footer: str = "", draft: bool = False) -> str:
+    def whatsapp_flows_send_whats_app_flow_message(account_id: str, to: str, flow_id: str, flow_cta: str, body: str, flow_action: str = "navigate", flow_token: str = "", flow_action_payload: dict[str, Any] | None = None, header: dict[str, Any] | None = None, footer: str = "", draft: bool = False) -> str:
         """Send flow message
 
         Args:
