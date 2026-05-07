@@ -205,6 +205,7 @@ Both `from zernio import ...` and `from late import ...` work identically. The `
 | `accounts.get_tik_tok_creator_info()` | Get TikTok creator info |
 | `accounts.update_account()` | Update account |
 | `accounts.delete_account()` | Disconnect account |
+| `accounts.batch_get_google_business_reviews()` | Batch get reviews |
 
 ### Profiles
 | Method | Description |
@@ -222,15 +223,20 @@ Both `from zernio import ...` and `from late import ...` work identically. The `
 | `analytics.get_best_time_to_post()` | Get best times to post |
 | `analytics.get_content_decay()` | Get content performance decay |
 | `analytics.get_daily_metrics()` | Get daily aggregated metrics |
+| `analytics.get_facebook_page_insights()` | Get Facebook Page insights |
 | `analytics.get_google_business_performance()` | Get GBP performance metrics |
 | `analytics.get_google_business_search_keywords()` | Get GBP search keywords |
 | `analytics.get_instagram_account_insights()` | Get Instagram insights |
 | `analytics.get_instagram_demographics()` | Get Instagram demographics |
+| `analytics.get_instagram_follower_history()` | Get Instagram follower history |
 | `analytics.get_linked_in_aggregate_analytics()` | Get LinkedIn aggregate stats |
+| `analytics.get_linked_in_org_aggregate_analytics()` | Get LinkedIn organization page aggregate analytics |
 | `analytics.get_linked_in_post_analytics()` | Get LinkedIn post stats |
 | `analytics.get_linked_in_post_reactions()` | Get LinkedIn post reactions |
 | `analytics.get_post_timeline()` | Get post analytics timeline |
 | `analytics.get_posting_frequency()` | Get frequency vs engagement |
+| `analytics.get_tik_tok_account_insights()` | Get TikTok account-level insights |
+| `analytics.get_you_tube_channel_insights()` | Get YouTube channel-level insights |
 | `analytics.get_you_tube_daily_views()` | Get YouTube daily views |
 | `analytics.get_you_tube_demographics()` | Get YouTube demographics |
 
@@ -288,6 +294,7 @@ Both `from zernio import ...` and `from late import ...` work identically. The `
 | Method | Description |
 |--------|-------------|
 | `usage.get_usage_stats()` | Get plan and usage stats |
+| `usage.get_x_api_pricing()` | Get X/Twitter API pricing table |
 
 ### Logs
 | Method | Description |
@@ -302,6 +309,7 @@ Both `from zernio import ...` and `from late import ...` work identically. The `
 | `connect.list_linked_in_organizations()` | List LinkedIn orgs |
 | `connect.list_pinterest_boards_for_selection()` | List Pinterest boards |
 | `connect.list_snapchat_profiles()` | List Snapchat profiles |
+| `connect.list_whats_app_phone_numbers()` | List WhatsApp phone numbers for selection |
 | `connect.get_connect_url()` | Get OAuth connect URL |
 | `connect.get_facebook_pages()` | List Facebook pages |
 | `connect.get_gmb_locations()` | List GBP locations |
@@ -319,6 +327,8 @@ Both `from zernio import ...` and `from late import ...` work identically. The `
 | `connect.update_reddit_subreddits()` | Set default subreddit |
 | `connect.update_youtube_default_playlist()` | Set default YouTube playlist |
 | `connect.complete_telegram_connect()` | Check Telegram status |
+| `connect.complete_whats_app_phone_selection()` | Complete WhatsApp phone number selection |
+| `connect.configure_tik_tok_ads_brand_identity()` | Configure TikTok Ads Brand Identity |
 | `connect.connect_ads()` | Connect ads for a platform |
 | `connect.connect_bluesky_credentials()` | Connect Bluesky account |
 | `connect.connect_whats_app_credentials()` | Connect WhatsApp via credentials |
@@ -362,22 +372,32 @@ Both `from zernio import ...` and `from late import ...` work identically. The `
 | Method | Description |
 |--------|-------------|
 | `ad_campaigns.list_ad_campaigns()` | List campaigns |
+| `ad_campaigns.bulk_update_ad_campaign_status()` | Pause or resume many campaigns |
 | `ad_campaigns.get_ad_tree()` | Get campaign tree |
+| `ad_campaigns.update_ad_campaign()` | Update a campaign (budget and/or bid strategy) |
 | `ad_campaigns.update_ad_campaign_status()` | Pause or resume a campaign |
+| `ad_campaigns.update_ad_set()` | Update an ad set (budget, status, and/or bid strategy) |
+| `ad_campaigns.update_ad_set_status()` | Pause or resume a single ad set |
+| `ad_campaigns.delete_ad_campaign()` | Delete a campaign |
+| `ad_campaigns.duplicate_ad_campaign()` | Duplicate a campaign |
 
 ### Ads
 | Method | Description |
 |--------|-------------|
 | `ads.list_ad_accounts()` | List ad accounts |
 | `ads.list_ads()` | List ads |
+| `ads.list_ads_business_centers()` | List TikTok Business Centers |
 | `ads.list_conversion_destinations()` | List destinations for the Conversions API |
+| `ads.create_ctwa_ad()` | Create Click-to-WhatsApp ad |
 | `ads.create_standalone_ad()` | Create standalone ad |
 | `ads.get_ad()` | Get ad details |
 | `ads.get_ad_analytics()` | Get ad analytics |
+| `ads.get_ad_comments()` | List comments on an ad |
 | `ads.update_ad()` | Update ad |
 | `ads.delete_ad()` | Cancel an ad |
 | `ads.boost_post()` | Boost post as ad |
 | `ads.search_ad_interests()` | Search targeting interests |
+| `ads.search_ad_targeting_locations()` | Search geo targeting locations (Meta) |
 | `ads.send_conversions()` | Send conversion events to an ad platform |
 
 ### Broadcasts
@@ -438,6 +458,13 @@ Both `from zernio import ...` and `from late import ...` work identically. The `
 | `custom_fields.clear_contact_field_value()` | Clear custom field value |
 | `custom_fields.set_contact_field_value()` | Set custom field value |
 
+### Discord
+| Method | Description |
+|--------|-------------|
+| `discord.get_discord_channels()` | List Discord guild channels |
+| `discord.get_discord_settings()` | Get Discord account settings |
+| `discord.update_discord_settings()` | Update Discord settings |
+
 ### GMB Attributes
 | Method | Description |
 |--------|-------------|
@@ -468,7 +495,14 @@ Both `from zernio import ...` and `from late import ...` work identically. The `
 |--------|-------------|
 | `gmb_place_actions.list_google_business_place_actions()` | List action links |
 | `gmb_place_actions.create_google_business_place_action()` | Create action link |
+| `gmb_place_actions.update_google_business_place_action()` | Update action link |
 | `gmb_place_actions.delete_google_business_place_action()` | Delete action link |
+
+### GMB Services
+| Method | Description |
+|--------|-------------|
+| `gmb_services.get_google_business_services()` | Get services |
+| `gmb_services.update_google_business_services()` | Replace services |
 
 ### Messages (Inbox)
 | Method | Description |
@@ -548,6 +582,7 @@ Both `from zernio import ...` and `from late import ...` work identically. The `
 | `whatsapp.approve_whats_app_group_join_requests()` | Approve join requests |
 | `whatsapp.reject_whats_app_group_join_requests()` | Reject join requests |
 | `whatsapp.remove_whats_app_group_participants()` | Remove participants |
+| `whatsapp.send_whats_app_conversion()` | Send WhatsApp conversion event |
 | `whatsapp.upload_whats_app_profile_photo()` | Upload profile picture |
 
 ### WhatsApp Flows

@@ -24,24 +24,22 @@ class AdsResource:
         self._client = client
 
     def _build_params(self, **kwargs: Any) -> dict[str, Any]:
-        """Build query parameters, filtering None and empty-string values.
+        """Build query parameters, filtering None values."""
 
-        Empty strings are filtered because MCP tool wrappers pass ``""`` as the
-        default for optional string args, and the API rejects empty query
-        values (e.g. ``platform=``) with a 400. Filtering here keeps both direct
-        SDK callers and MCP tool callers safe.
-        """
         def to_camel(s: str) -> str:
             parts = s.split("_")
             return parts[0] + "".join(p.title() for p in parts[1:])
-        return {to_camel(k): v for k, v in kwargs.items() if v is not None and v != ""}
+
+        return {to_camel(k): v for k, v in kwargs.items() if v is not None}
 
     def _build_payload(self, **kwargs: Any) -> dict[str, Any]:
         """Build request payload, filtering None values."""
         from datetime import datetime
+
         def to_camel(s: str) -> str:
             parts = s.split("_")
             return parts[0] + "".join(p.title() for p in parts[1:])
+
         result: dict[str, Any] = {}
         for k, v in kwargs.items():
             if v is None:
@@ -52,7 +50,21 @@ class AdsResource:
                 result[to_camel(k)] = v
         return result
 
-    def list_ads(self, *, page: int | None = 1, limit: int | None = 50, source: str | None = "zernio", status: Any | None = None, platform: str | None = None, account_id: str | None = None, ad_account_id: str | None = None, profile_id: str | None = None, campaign_id: str | None = None, from_date: str | None = None, to_date: str | None = None) -> dict[str, Any]:
+    def list_ads(
+        self,
+        *,
+        page: int | None = 1,
+        limit: int | None = 50,
+        source: str | None = "all",
+        status: Any | None = None,
+        platform: str | None = None,
+        account_id: str | None = None,
+        ad_account_id: str | None = None,
+        profile_id: str | None = None,
+        campaign_id: str | None = None,
+        from_date: str | None = None,
+        to_date: str | None = None,
+    ) -> dict[str, Any]:
         """List ads"""
         params = self._build_params(
             page=page,
@@ -73,12 +85,22 @@ class AdsResource:
         """Get ad details"""
         return self._client._get(f"/v1/ads/{ad_id}")
 
-    def update_ad(self, ad_id: str, *, status: str | None = None, budget: dict[str, Any] | None = None, targeting: dict[str, Any] | None = None, name: str | None = None) -> dict[str, Any]:
+    def update_ad(
+        self,
+        ad_id: str,
+        *,
+        status: str | None = None,
+        budget: dict[str, Any] | None = None,
+        targeting: dict[str, Any] | None = None,
+        creative: dict[str, Any] | None = None,
+        name: str | None = None,
+    ) -> dict[str, Any]:
         """Update ad"""
         payload = self._build_payload(
             status=status,
             budget=budget,
             targeting=targeting,
+            creative=creative,
             name=name,
         )
         return self._client._put(f"/v1/ads/{ad_id}", data=payload)
@@ -87,7 +109,14 @@ class AdsResource:
         """Cancel an ad"""
         return self._client._delete(f"/v1/ads/{ad_id}")
 
-    def get_ad_analytics(self, ad_id: str, *, from_date: str | None = None, to_date: str | None = None, breakdowns: str | None = None) -> dict[str, Any]:
+    def get_ad_analytics(
+        self,
+        ad_id: str,
+        *,
+        from_date: str | None = None,
+        to_date: str | None = None,
+        breakdowns: str | None = None,
+    ) -> dict[str, Any]:
         """Get ad analytics"""
         params = self._build_params(
             from_date=from_date,
@@ -96,14 +125,62 @@ class AdsResource:
         )
         return self._client._get(f"/v1/ads/{ad_id}/analytics", params=params)
 
-    def list_ad_accounts(self, account_id: str) -> dict[str, Any]:
-        """List ad accounts"""
+    def get_ad_comments(
+        self, ad_id: str, *, limit: int | None = 25, cursor: str | None = None
+    ) -> dict[str, Any]:
+        """List comments on an ad"""
+        params = self._build_params(
+            limit=limit,
+            cursor=cursor,
+        )
+        return self._client._get(f"/v1/ads/{ad_id}/comments", params=params)
+
+    def list_ads_business_centers(self, account_id: str) -> dict[str, Any]:
+        """List TikTok Business Centers"""
         params = self._build_params(
             account_id=account_id,
         )
+        return self._client._get("/v1/ads/business-centers", params=params)
+
+    def list_ad_accounts(
+        self,
+        account_id: str,
+        *,
+        ad_account_id: str | None = None,
+        limit: int | None = None,
+    ) -> dict[str, Any]:
+        """List ad accounts"""
+        params = self._build_params(
+            account_id=account_id,
+            ad_account_id=ad_account_id,
+            limit=limit,
+        )
         return self._client._get("/v1/ads/accounts", params=params)
 
-    def boost_post(self, account_id: str, ad_account_id: str, name: str, goal: str, budget: dict[str, Any], *, post_id: str | None = None, platform_post_id: str | None = None, currency: str | None = None, schedule: dict[str, Any] | None = None, targeting: dict[str, Any] | None = None, bid_amount: float | None = None, tracking: dict[str, Any] | None = None, special_ad_categories: list[str] | None = None) -> dict[str, Any]:
+    def boost_post(
+        self,
+        account_id: str,
+        ad_account_id: str,
+        name: str,
+        goal: str,
+        budget: dict[str, Any],
+        *,
+        post_id: str | None = None,
+        platform_post_id: str | None = None,
+        currency: str | None = None,
+        schedule: dict[str, Any] | None = None,
+        targeting: dict[str, Any] | None = None,
+        bid_strategy: Any | None = None,
+        bid_amount: float | None = None,
+        roas_average_floor: float | None = None,
+        tracking: dict[str, Any] | None = None,
+        special_ad_categories: list[str] | None = None,
+        link_url: str | None = None,
+        call_to_action: str | None = None,
+        spark_auth_code: str | None = None,
+        dsa_beneficiary: str | None = None,
+        dsa_payor: str | None = None,
+    ) -> dict[str, Any]:
         """Boost post as ad"""
         payload = self._build_payload(
             post_id=post_id,
@@ -116,13 +193,64 @@ class AdsResource:
             currency=currency,
             schedule=schedule,
             targeting=targeting,
+            bid_strategy=bid_strategy,
             bid_amount=bid_amount,
+            roas_average_floor=roas_average_floor,
             tracking=tracking,
             special_ad_categories=special_ad_categories,
+            link_url=link_url,
+            call_to_action=call_to_action,
+            spark_auth_code=spark_auth_code,
+            dsa_beneficiary=dsa_beneficiary,
+            dsa_payor=dsa_payor,
         )
         return self._client._post("/v1/ads/boost", data=payload)
 
-    def create_standalone_ad(self, account_id: str, ad_account_id: str, name: str, goal: str, budget_amount: float, budget_type: str, body: str, *, currency: str | None = None, headline: str | None = None, long_headline: str | None = None, call_to_action: str | None = None, link_url: str | None = None, image_url: str | None = None, business_name: str | None = None, board_id: str | None = None, countries: list[str] | None = None, age_min: int | None = None, age_max: int | None = None, interests: list[dict[str, Any]] | None = None, end_date: datetime | str | None = None, audience_id: str | None = None, campaign_type: str | None = "display", keywords: list[str] | None = None, additional_headlines: list[str] | None = None, additional_descriptions: list[str] | None = None) -> dict[str, Any]:
+    def create_standalone_ad(
+        self,
+        account_id: str,
+        ad_account_id: str,
+        name: str,
+        *,
+        goal: str | None = None,
+        budget_amount: float | None = None,
+        budget_type: str | None = None,
+        currency: str | None = None,
+        headline: str | None = None,
+        long_headline: str | None = None,
+        body: str | None = None,
+        call_to_action: str | None = None,
+        link_url: str | None = None,
+        image_url: str | None = None,
+        images: dict[str, Any] | None = None,
+        video: dict[str, Any] | None = None,
+        creatives: list[dict[str, Any]] | None = None,
+        ad_set_id: str | None = None,
+        business_name: str | None = None,
+        board_id: str | None = None,
+        countries: list[str] | None = None,
+        cities: list[dict[str, Any]] | None = None,
+        regions: list[dict[str, Any]] | None = None,
+        age_min: int | None = None,
+        age_max: int | None = None,
+        interests: list[dict[str, Any]] | None = None,
+        end_date: datetime | str | None = None,
+        audience_id: str | None = None,
+        campaign_type: str | None = "display",
+        keywords: list[str] | None = None,
+        additional_headlines: list[str] | None = None,
+        additional_descriptions: list[str] | None = None,
+        advantage_audience: int | None = None,
+        gender: str | None = "all",
+        bid_strategy: Any | None = None,
+        bid_amount: float | None = None,
+        roas_average_floor: float | None = None,
+        dsa_beneficiary: str | None = None,
+        dsa_payor: str | None = None,
+        brand_identity: dict[str, Any] | None = None,
+        identity_type: str | None = None,
+        promoted_object: dict[str, Any] | None = None,
+    ) -> dict[str, Any]:
         """Create standalone ad"""
         payload = self._build_payload(
             account_id=account_id,
@@ -138,9 +266,15 @@ class AdsResource:
             call_to_action=call_to_action,
             link_url=link_url,
             image_url=image_url,
+            images=images,
+            video=video,
+            creatives=creatives,
+            ad_set_id=ad_set_id,
             business_name=business_name,
             board_id=board_id,
             countries=countries,
+            cities=cities,
+            regions=regions,
             age_min=age_min,
             age_max=age_max,
             interests=interests,
@@ -150,6 +284,16 @@ class AdsResource:
             keywords=keywords,
             additional_headlines=additional_headlines,
             additional_descriptions=additional_descriptions,
+            advantage_audience=advantage_audience,
+            gender=gender,
+            bid_strategy=bid_strategy,
+            bid_amount=bid_amount,
+            roas_average_floor=roas_average_floor,
+            dsa_beneficiary=dsa_beneficiary,
+            dsa_payor=dsa_payor,
+            brand_identity=brand_identity,
+            identity_type=identity_type,
+            promoted_object=promoted_object,
         )
         return self._client._post("/v1/ads/create", data=payload)
 
@@ -161,7 +305,34 @@ class AdsResource:
         )
         return self._client._get("/v1/ads/interests", params=params)
 
-    def send_conversions(self, account_id: str, destination_id: str, events: list[Any], *, test_code: str | None = None, consent: dict[str, Any] | None = None) -> dict[str, Any]:
+    def search_ad_targeting_locations(
+        self,
+        account_id: str,
+        q: str,
+        *,
+        type: str | None = "city",
+        country_code: str | None = None,
+        limit: int | None = 25,
+    ) -> dict[str, Any]:
+        """Search geo targeting locations (Meta)"""
+        params = self._build_params(
+            account_id=account_id,
+            q=q,
+            type=type,
+            country_code=country_code,
+            limit=limit,
+        )
+        return self._client._get("/v1/ads/targeting/search", params=params)
+
+    def send_conversions(
+        self,
+        account_id: str,
+        destination_id: str,
+        events: list[Any],
+        *,
+        test_code: str | None = None,
+        consent: dict[str, Any] | None = None,
+    ) -> dict[str, Any]:
         """Send conversion events to an ad platform"""
         payload = self._build_payload(
             account_id=account_id,
@@ -176,7 +347,70 @@ class AdsResource:
         """List destinations for the Conversions API"""
         return self._client._get(f"/v1/accounts/{account_id}/conversion-destinations")
 
-    async def alist_ads(self, *, page: int | None = 1, limit: int | None = 50, source: str | None = "zernio", status: Any | None = None, platform: str | None = None, account_id: str | None = None, ad_account_id: str | None = None, profile_id: str | None = None, campaign_id: str | None = None, from_date: str | None = None, to_date: str | None = None) -> dict[str, Any]:
+    def create_ctwa_ad(
+        self,
+        account_id: str,
+        ad_account_id: str,
+        name: str,
+        headline: str,
+        body: str,
+        budget_amount: float,
+        budget_type: str,
+        *,
+        image_url: str | None = None,
+        video: dict[str, Any] | None = None,
+        currency: str | None = None,
+        end_date: datetime | str | None = None,
+        countries: list[str] | None = None,
+        age_min: int | None = None,
+        age_max: int | None = None,
+        interests: list[dict[str, Any]] | None = None,
+        audience_id: str | None = None,
+        advantage_audience: int | None = None,
+        objective: str | None = None,
+        dsa_beneficiary: str | None = None,
+        dsa_payor: str | None = None,
+    ) -> dict[str, Any]:
+        """Create Click-to-WhatsApp ad"""
+        payload = self._build_payload(
+            account_id=account_id,
+            ad_account_id=ad_account_id,
+            name=name,
+            headline=headline,
+            body=body,
+            image_url=image_url,
+            video=video,
+            budget_amount=budget_amount,
+            budget_type=budget_type,
+            currency=currency,
+            end_date=end_date,
+            countries=countries,
+            age_min=age_min,
+            age_max=age_max,
+            interests=interests,
+            audience_id=audience_id,
+            advantage_audience=advantage_audience,
+            objective=objective,
+            dsa_beneficiary=dsa_beneficiary,
+            dsa_payor=dsa_payor,
+        )
+        return self._client._post("/v1/ads/ctwa", data=payload)
+
+    async def alist_ads(
+        self,
+        *,
+        page: int | None = 1,
+        limit: int | None = 50,
+        source: str | None = "all",
+        status: Any | None = None,
+        platform: str | None = None,
+        account_id: str | None = None,
+        ad_account_id: str | None = None,
+        profile_id: str | None = None,
+        campaign_id: str | None = None,
+        from_date: str | None = None,
+        to_date: str | None = None,
+    ) -> dict[str, Any]:
         """List ads (async)"""
         params = self._build_params(
             page=page,
@@ -197,12 +431,22 @@ class AdsResource:
         """Get ad details (async)"""
         return await self._client._aget(f"/v1/ads/{ad_id}")
 
-    async def aupdate_ad(self, ad_id: str, *, status: str | None = None, budget: dict[str, Any] | None = None, targeting: dict[str, Any] | None = None, name: str | None = None) -> dict[str, Any]:
+    async def aupdate_ad(
+        self,
+        ad_id: str,
+        *,
+        status: str | None = None,
+        budget: dict[str, Any] | None = None,
+        targeting: dict[str, Any] | None = None,
+        creative: dict[str, Any] | None = None,
+        name: str | None = None,
+    ) -> dict[str, Any]:
         """Update ad (async)"""
         payload = self._build_payload(
             status=status,
             budget=budget,
             targeting=targeting,
+            creative=creative,
             name=name,
         )
         return await self._client._aput(f"/v1/ads/{ad_id}", data=payload)
@@ -211,7 +455,14 @@ class AdsResource:
         """Cancel an ad (async)"""
         return await self._client._adelete(f"/v1/ads/{ad_id}")
 
-    async def aget_ad_analytics(self, ad_id: str, *, from_date: str | None = None, to_date: str | None = None, breakdowns: str | None = None) -> dict[str, Any]:
+    async def aget_ad_analytics(
+        self,
+        ad_id: str,
+        *,
+        from_date: str | None = None,
+        to_date: str | None = None,
+        breakdowns: str | None = None,
+    ) -> dict[str, Any]:
         """Get ad analytics (async)"""
         params = self._build_params(
             from_date=from_date,
@@ -220,14 +471,62 @@ class AdsResource:
         )
         return await self._client._aget(f"/v1/ads/{ad_id}/analytics", params=params)
 
-    async def alist_ad_accounts(self, account_id: str) -> dict[str, Any]:
-        """List ad accounts (async)"""
+    async def aget_ad_comments(
+        self, ad_id: str, *, limit: int | None = 25, cursor: str | None = None
+    ) -> dict[str, Any]:
+        """List comments on an ad (async)"""
+        params = self._build_params(
+            limit=limit,
+            cursor=cursor,
+        )
+        return await self._client._aget(f"/v1/ads/{ad_id}/comments", params=params)
+
+    async def alist_ads_business_centers(self, account_id: str) -> dict[str, Any]:
+        """List TikTok Business Centers (async)"""
         params = self._build_params(
             account_id=account_id,
         )
+        return await self._client._aget("/v1/ads/business-centers", params=params)
+
+    async def alist_ad_accounts(
+        self,
+        account_id: str,
+        *,
+        ad_account_id: str | None = None,
+        limit: int | None = None,
+    ) -> dict[str, Any]:
+        """List ad accounts (async)"""
+        params = self._build_params(
+            account_id=account_id,
+            ad_account_id=ad_account_id,
+            limit=limit,
+        )
         return await self._client._aget("/v1/ads/accounts", params=params)
 
-    async def aboost_post(self, account_id: str, ad_account_id: str, name: str, goal: str, budget: dict[str, Any], *, post_id: str | None = None, platform_post_id: str | None = None, currency: str | None = None, schedule: dict[str, Any] | None = None, targeting: dict[str, Any] | None = None, bid_amount: float | None = None, tracking: dict[str, Any] | None = None, special_ad_categories: list[str] | None = None) -> dict[str, Any]:
+    async def aboost_post(
+        self,
+        account_id: str,
+        ad_account_id: str,
+        name: str,
+        goal: str,
+        budget: dict[str, Any],
+        *,
+        post_id: str | None = None,
+        platform_post_id: str | None = None,
+        currency: str | None = None,
+        schedule: dict[str, Any] | None = None,
+        targeting: dict[str, Any] | None = None,
+        bid_strategy: Any | None = None,
+        bid_amount: float | None = None,
+        roas_average_floor: float | None = None,
+        tracking: dict[str, Any] | None = None,
+        special_ad_categories: list[str] | None = None,
+        link_url: str | None = None,
+        call_to_action: str | None = None,
+        spark_auth_code: str | None = None,
+        dsa_beneficiary: str | None = None,
+        dsa_payor: str | None = None,
+    ) -> dict[str, Any]:
         """Boost post as ad (async)"""
         payload = self._build_payload(
             post_id=post_id,
@@ -240,13 +539,64 @@ class AdsResource:
             currency=currency,
             schedule=schedule,
             targeting=targeting,
+            bid_strategy=bid_strategy,
             bid_amount=bid_amount,
+            roas_average_floor=roas_average_floor,
             tracking=tracking,
             special_ad_categories=special_ad_categories,
+            link_url=link_url,
+            call_to_action=call_to_action,
+            spark_auth_code=spark_auth_code,
+            dsa_beneficiary=dsa_beneficiary,
+            dsa_payor=dsa_payor,
         )
         return await self._client._apost("/v1/ads/boost", data=payload)
 
-    async def acreate_standalone_ad(self, account_id: str, ad_account_id: str, name: str, goal: str, budget_amount: float, budget_type: str, body: str, *, currency: str | None = None, headline: str | None = None, long_headline: str | None = None, call_to_action: str | None = None, link_url: str | None = None, image_url: str | None = None, business_name: str | None = None, board_id: str | None = None, countries: list[str] | None = None, age_min: int | None = None, age_max: int | None = None, interests: list[dict[str, Any]] | None = None, end_date: datetime | str | None = None, audience_id: str | None = None, campaign_type: str | None = "display", keywords: list[str] | None = None, additional_headlines: list[str] | None = None, additional_descriptions: list[str] | None = None) -> dict[str, Any]:
+    async def acreate_standalone_ad(
+        self,
+        account_id: str,
+        ad_account_id: str,
+        name: str,
+        *,
+        goal: str | None = None,
+        budget_amount: float | None = None,
+        budget_type: str | None = None,
+        currency: str | None = None,
+        headline: str | None = None,
+        long_headline: str | None = None,
+        body: str | None = None,
+        call_to_action: str | None = None,
+        link_url: str | None = None,
+        image_url: str | None = None,
+        images: dict[str, Any] | None = None,
+        video: dict[str, Any] | None = None,
+        creatives: list[dict[str, Any]] | None = None,
+        ad_set_id: str | None = None,
+        business_name: str | None = None,
+        board_id: str | None = None,
+        countries: list[str] | None = None,
+        cities: list[dict[str, Any]] | None = None,
+        regions: list[dict[str, Any]] | None = None,
+        age_min: int | None = None,
+        age_max: int | None = None,
+        interests: list[dict[str, Any]] | None = None,
+        end_date: datetime | str | None = None,
+        audience_id: str | None = None,
+        campaign_type: str | None = "display",
+        keywords: list[str] | None = None,
+        additional_headlines: list[str] | None = None,
+        additional_descriptions: list[str] | None = None,
+        advantage_audience: int | None = None,
+        gender: str | None = "all",
+        bid_strategy: Any | None = None,
+        bid_amount: float | None = None,
+        roas_average_floor: float | None = None,
+        dsa_beneficiary: str | None = None,
+        dsa_payor: str | None = None,
+        brand_identity: dict[str, Any] | None = None,
+        identity_type: str | None = None,
+        promoted_object: dict[str, Any] | None = None,
+    ) -> dict[str, Any]:
         """Create standalone ad (async)"""
         payload = self._build_payload(
             account_id=account_id,
@@ -262,9 +612,15 @@ class AdsResource:
             call_to_action=call_to_action,
             link_url=link_url,
             image_url=image_url,
+            images=images,
+            video=video,
+            creatives=creatives,
+            ad_set_id=ad_set_id,
             business_name=business_name,
             board_id=board_id,
             countries=countries,
+            cities=cities,
+            regions=regions,
             age_min=age_min,
             age_max=age_max,
             interests=interests,
@@ -274,6 +630,16 @@ class AdsResource:
             keywords=keywords,
             additional_headlines=additional_headlines,
             additional_descriptions=additional_descriptions,
+            advantage_audience=advantage_audience,
+            gender=gender,
+            bid_strategy=bid_strategy,
+            bid_amount=bid_amount,
+            roas_average_floor=roas_average_floor,
+            dsa_beneficiary=dsa_beneficiary,
+            dsa_payor=dsa_payor,
+            brand_identity=brand_identity,
+            identity_type=identity_type,
+            promoted_object=promoted_object,
         )
         return await self._client._apost("/v1/ads/create", data=payload)
 
@@ -285,7 +651,34 @@ class AdsResource:
         )
         return await self._client._aget("/v1/ads/interests", params=params)
 
-    async def asend_conversions(self, account_id: str, destination_id: str, events: list[Any], *, test_code: str | None = None, consent: dict[str, Any] | None = None) -> dict[str, Any]:
+    async def asearch_ad_targeting_locations(
+        self,
+        account_id: str,
+        q: str,
+        *,
+        type: str | None = "city",
+        country_code: str | None = None,
+        limit: int | None = 25,
+    ) -> dict[str, Any]:
+        """Search geo targeting locations (Meta) (async)"""
+        params = self._build_params(
+            account_id=account_id,
+            q=q,
+            type=type,
+            country_code=country_code,
+            limit=limit,
+        )
+        return await self._client._aget("/v1/ads/targeting/search", params=params)
+
+    async def asend_conversions(
+        self,
+        account_id: str,
+        destination_id: str,
+        events: list[Any],
+        *,
+        test_code: str | None = None,
+        consent: dict[str, Any] | None = None,
+    ) -> dict[str, Any]:
         """Send conversion events to an ad platform (async)"""
         payload = self._build_payload(
             account_id=account_id,
@@ -298,4 +691,55 @@ class AdsResource:
 
     async def alist_conversion_destinations(self, account_id: str) -> dict[str, Any]:
         """List destinations for the Conversions API (async)"""
-        return await self._client._aget(f"/v1/accounts/{account_id}/conversion-destinations")
+        return await self._client._aget(
+            f"/v1/accounts/{account_id}/conversion-destinations"
+        )
+
+    async def acreate_ctwa_ad(
+        self,
+        account_id: str,
+        ad_account_id: str,
+        name: str,
+        headline: str,
+        body: str,
+        budget_amount: float,
+        budget_type: str,
+        *,
+        image_url: str | None = None,
+        video: dict[str, Any] | None = None,
+        currency: str | None = None,
+        end_date: datetime | str | None = None,
+        countries: list[str] | None = None,
+        age_min: int | None = None,
+        age_max: int | None = None,
+        interests: list[dict[str, Any]] | None = None,
+        audience_id: str | None = None,
+        advantage_audience: int | None = None,
+        objective: str | None = None,
+        dsa_beneficiary: str | None = None,
+        dsa_payor: str | None = None,
+    ) -> dict[str, Any]:
+        """Create Click-to-WhatsApp ad (async)"""
+        payload = self._build_payload(
+            account_id=account_id,
+            ad_account_id=ad_account_id,
+            name=name,
+            headline=headline,
+            body=body,
+            image_url=image_url,
+            video=video,
+            budget_amount=budget_amount,
+            budget_type=budget_type,
+            currency=currency,
+            end_date=end_date,
+            countries=countries,
+            age_min=age_min,
+            age_max=age_max,
+            interests=interests,
+            audience_id=audience_id,
+            advantage_audience=advantage_audience,
+            objective=objective,
+            dsa_beneficiary=dsa_beneficiary,
+            dsa_payor=dsa_payor,
+        )
+        return await self._client._apost("/v1/ads/ctwa", data=payload)

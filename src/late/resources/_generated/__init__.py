@@ -16,6 +16,8 @@ from .comments import CommentsResource
 from .connect import ConnectResource
 from .contacts import ContactsResource
 from .custom_fields import CustomFieldsResource
+from .discord import DiscordResource
+from .gmb_services import GmbServicesResource
 from .invites import InvitesResource
 from .logs import LogsResource
 from .media import MediaResource
@@ -50,6 +52,8 @@ __all__ = [
     "ConnectResource",
     "ContactsResource",
     "CustomFieldsResource",
+    "DiscordResource",
+    "GmbServicesResource",
     "InvitesResource",
     "LogsResource",
     "MediaResource",

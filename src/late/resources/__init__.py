@@ -18,6 +18,8 @@ from ._generated.comments import CommentsResource
 from ._generated.connect import ConnectResource
 from ._generated.contacts import ContactsResource
 from ._generated.custom_fields import CustomFieldsResource
+from ._generated.discord import DiscordResource
+from ._generated.gmb_services import GmbServicesResource
 from ._generated.invites import InvitesResource
 from ._generated.logs import LogsResource
 from ._generated.messages import MessagesResource
@@ -55,6 +57,8 @@ __all__ = [
     "ConnectResource",
     "ContactsResource",
     "CustomFieldsResource",
+    "DiscordResource",
+    "GmbServicesResource",
     "InvitesResource",
     "LogsResource",
     "MediaResource",

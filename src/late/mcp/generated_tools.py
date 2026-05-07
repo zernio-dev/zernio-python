@@ -81,15 +81,17 @@ def register_generated_tools(mcp, _get_client):
 
 
     @mcp.tool()
-    def account_groups_create_account_group(name: str, account_ids: list[str] | None) -> str:
+    def account_groups_create_account_group(name: str, account_ids: list[str] | None, profile_id: str = "") -> str:
         """Create group
 
         Args:
             name: (required)
-            account_ids: (required)"""
+            account_ids: (required)
+            profile_id: Deprecated. Accepted for backward compatibility but ignored.
+    Groups are no longer scoped to a single profile."""
         client = _get_client()
         try:
-            response = client.account_groups.create_account_group(name=name, account_ids=account_ids)
+            response = client.account_groups.create_account_group(name=name, account_ids=account_ids, profile_id=profile_id)
             return _format_response(response)
         except Exception as e:
             return f'Error: {e}'
@@ -295,16 +297,20 @@ def register_generated_tools(mcp, _get_client):
 
 
     @mcp.tool()
-    def accounts_update_account(account_id: str, username: str = "", display_name: str = "") -> str:
+    def accounts_update_account(account_id: str, username: str = "", display_name: str = "", x_capabilities: dict[str, Any] | None = None) -> str:
         """Update account
 
         Args:
             account_id: (required)
             username
-            display_name"""
+            display_name
+            x_capabilities: X/Twitter only. Per-account opt-in toggles for background API
+    operations that incur X API pass-through costs. Each call is
+    billed via Metronome at the X tier rate. Either field can be
+    sent independently; omitted fields are unchanged."""
         client = _get_client()
         try:
-            response = client.accounts.update_account(account_id=account_id, username=username, display_name=display_name)
+            response = client.accounts.update_account(account_id=account_id, username=username, display_name=display_name, x_capabilities=x_capabilities)
             return _format_response(response)
         except Exception as e:
             return f'Error: {e}'
@@ -425,7 +431,9 @@ def register_generated_tools(mcp, _get_client):
         Args:
             account_id: The Zernio account ID (from /v1/accounts) (required)
             location_id: Override which location to query. If omitted, uses the account's selected location. Use GET /gmb-locations to list valid IDs.
-            read_mask: Comma-separated fields to return. Available: name, title, phoneNumbers, categories, storefrontAddress, websiteUri, regularHours, specialHours, serviceArea, serviceItems, profile, openInfo, metadata, moreHours."""
+            read_mask: Comma-separated fields to return. Available: name, title, phoneNumbers, categories, storefrontAddress, websiteUri, regularHours, specialHours, serviceArea, serviceItems, profile, openInfo, metadata, moreHours.
+    `title` and `metadata` are always included in the response so the `location` summary block can be populated, even if you omit them here.
+    Note: `location` is a derived response field, not a Google readMask value, passing it returns 400."""
         client = _get_client()
         try:
             response = client.accounts.get_google_business_location_details(account_id=account_id, location_id=location_id, read_mask=read_mask)
@@ -592,6 +600,41 @@ def register_generated_tools(mcp, _get_client):
 
 
     @mcp.tool()
+    def accounts_update_google_business_place_action(account_id: str, name: str, location_id: str = "", uri: str = "", place_action_type: str = "") -> str:
+        """Update action link
+
+        Args:
+            account_id: (required)
+            location_id: Override which location to target. If omitted, uses the account's selected location.
+            name: Resource name of the place action link (e.g. locations/123/placeActionLinks/456) (required)
+            uri: New action URL
+            place_action_type: New action type"""
+        client = _get_client()
+        try:
+            response = client.accounts.update_google_business_place_action(account_id=account_id, location_id=location_id, name=name, uri=uri, place_action_type=place_action_type)
+            return _format_response(response)
+        except Exception as e:
+            return f'Error: {e}'
+
+
+    @mcp.tool()
+    def accounts_batch_get_google_business_reviews(account_id: str, location_names: list[str] | None, page_size: int = 50, page_token: str = "") -> str:
+        """Batch get reviews
+
+        Args:
+            account_id: (required)
+            location_names: Array of full location resource names (e.g. ['accounts/123/locations/456']) (required)
+            page_size: Number of reviews per page (max 50)
+            page_token: Pagination token from previous response"""
+        client = _get_client()
+        try:
+            response = client.accounts.batch_get_google_business_reviews(account_id=account_id, location_names=location_names, page_size=page_size, page_token=page_token)
+            return _format_response(response)
+        except Exception as e:
+            return f'Error: {e}'
+
+
+    @mcp.tool()
     def accounts_get_linked_in_mentions(account_id: str, url: str, display_name: str = "") -> str:
         """Resolve LinkedIn mention
 
@@ -696,13 +739,13 @@ def register_generated_tools(mcp, _get_client):
 
 
     @mcp.tool()
-    def ad_campaigns_list_ad_campaigns(page: int = 1, limit: int = 20, source: str = "zernio", platform: str = "", status: str = "", ad_account_id: str = "", account_id: str = "", profile_id: str = "") -> str:
+    def ad_campaigns_list_ad_campaigns(page: int = 1, limit: int = 20, source: str = "all", platform: str = "", status: str = "", ad_account_id: str = "", account_id: str = "", profile_id: str = "") -> str:
         """List campaigns
 
         Args:
             page: Page number
             limit
-            source
+            source: `all` (default) returns both Zernio-created ads and those discovered from the platform's ad manager — matches the web UI's default view. Pass `zernio` to restrict to isExternal=false only. Status is NOT filtered by default — use the `status` param for that.
             platform
             status: Filter by derived campaign status (post-aggregation)
             ad_account_id: Platform ad account ID (e.g. act_123 for Meta)
@@ -733,20 +776,133 @@ def register_generated_tools(mcp, _get_client):
 
 
     @mcp.tool()
-    def ad_campaigns_get_ad_tree(page: int = 1, limit: int = 20, source: str = "zernio", platform: str = "", status: str = "", ad_account_id: str = "", account_id: str = "", profile_id: str = "", from_date: str = "", to_date: str = "") -> str:
+    def ad_campaigns_update_ad_campaign(campaign_id: str, platform: str, budget: dict[str, Any] | None = None, bid_strategy: str = "") -> str:
+        """Update a campaign (budget and/or bid strategy)
+
+        Args:
+            campaign_id: Platform campaign ID (required)
+            platform: (required)
+            budget
+            bid_strategy: Campaign-level default. Ad sets inherit this unless they override."""
+        client = _get_client()
+        try:
+            response = client.ad_campaigns.update_ad_campaign(campaign_id=campaign_id, platform=platform, budget=budget, bid_strategy=bid_strategy)
+            return _format_response(response)
+        except Exception as e:
+            return f'Error: {e}'
+
+
+    @mcp.tool()
+    def ad_campaigns_delete_ad_campaign(campaign_id: str, platform: str) -> str:
+        """Delete a campaign
+
+        Args:
+            campaign_id: Platform campaign ID (required)
+            platform: (required)"""
+        client = _get_client()
+        try:
+            response = client.ad_campaigns.delete_ad_campaign(campaign_id=campaign_id, platform=platform)
+            return _format_response(response)
+        except Exception as e:
+            return f'Error: {e}'
+
+
+    @mcp.tool()
+    def ad_campaigns_bulk_update_ad_campaign_status(status: str, campaigns: list[dict[str, Any]] | None) -> str:
+        """Pause or resume many campaigns
+
+        Args:
+            status: (required)
+            campaigns: (required)"""
+        client = _get_client()
+        try:
+            response = client.ad_campaigns.bulk_update_ad_campaign_status(status=status, campaigns=campaigns)
+            return _format_response(response)
+        except Exception as e:
+            return f'Error: {e}'
+
+
+    @mcp.tool()
+    def ad_campaigns_duplicate_ad_campaign(campaign_id: str, platform: str, deep_copy: bool = True, status_option: str = "PAUSED", start_time: str = "", end_time: str = "", rename_strategy: str = "", rename_prefix: str = "", rename_suffix: str = "", sync_after: bool = True) -> str:
+        """Duplicate a campaign
+
+        Args:
+            campaign_id: Source platform campaign ID (required)
+            platform: (required)
+            deep_copy: Copy child ad sets + ads + creatives + targeting
+            status_option
+            start_time: Reschedule the copied hierarchy's start time
+            end_time
+            rename_strategy
+            rename_prefix
+            rename_suffix
+            sync_after: Trigger ads discovery on the owning account after the copy succeeds"""
+        client = _get_client()
+        try:
+            response = client.ad_campaigns.duplicate_ad_campaign(campaign_id=campaign_id, platform=platform, deep_copy=deep_copy, status_option=status_option, start_time=start_time, end_time=end_time, rename_strategy=rename_strategy, rename_prefix=rename_prefix, rename_suffix=rename_suffix, sync_after=sync_after)
+            return _format_response(response)
+        except Exception as e:
+            return f'Error: {e}'
+
+
+    @mcp.tool()
+    def ad_campaigns_update_ad_set(ad_set_id: str, platform: str, budget: dict[str, Any] | None = None, status: str = "", bid_strategy: str = "", bid_amount: float = 0.0, roas_average_floor: float = 0.0) -> str:
+        """Update an ad set (budget, status, and/or bid strategy)
+
+        Args:
+            ad_set_id: Platform ad set ID (required)
+            platform: (required)
+            budget: Omit if not updating budget
+            status: Omit if not toggling delivery state
+            bid_strategy: Ad-set-level bid strategy. Overrides the campaign-level default.
+    Supported on Meta (facebook, instagram) and TikTok. On TikTok the
+    Meta-style enum is mapped to bid_type / bid_price / deep_bid_type
+    automatically. Other platforms (linkedin, pinterest, google, twitter)
+    return 501 Not Implemented when bidStrategy is set.
+            bid_amount: Bid cap in WHOLE currency units (USD: 5 = $5.00; JPY: 100 = ¥100). Required when
+    bidStrategy is LOWEST_COST_WITH_BID_CAP or COST_CAP. Internally converted to Meta's
+    smallest-denomination integer.
+            roas_average_floor: Minimum ROAS as a decimal multiplier (2.0 = 2.0x). Required when bidStrategy is
+    LOWEST_COST_WITH_MIN_ROAS. Sent to Meta as `bid_constraints.roas_average_floor` × 10000."""
+        client = _get_client()
+        try:
+            response = client.ad_campaigns.update_ad_set(ad_set_id=ad_set_id, platform=platform, budget=budget, status=status, bid_strategy=bid_strategy, bid_amount=bid_amount, roas_average_floor=roas_average_floor)
+            return _format_response(response)
+        except Exception as e:
+            return f'Error: {e}'
+
+
+    @mcp.tool()
+    def ad_campaigns_update_ad_set_status(ad_set_id: str, status: str, platform: str) -> str:
+        """Pause or resume a single ad set
+
+        Args:
+            ad_set_id: Platform ad set ID (required)
+            status: (required)
+            platform: (required)"""
+        client = _get_client()
+        try:
+            response = client.ad_campaigns.update_ad_set_status(ad_set_id=ad_set_id, status=status, platform=platform)
+            return _format_response(response)
+        except Exception as e:
+            return f'Error: {e}'
+
+
+    @mcp.tool()
+    def ad_campaigns_get_ad_tree(page: int = 1, limit: int = 20, source: str = "all", platform: str = "", status: str = "", ad_account_id: str = "", account_id: str = "", profile_id: str = "", from_date: str = "", to_date: str = "") -> str:
         """Get campaign tree
 
         Args:
             page: Page number
             limit: Campaigns per page
-            source
+            source: `all` (default) returns both Zernio-created ads and those discovered from the platform's ad manager — matches the web UI's default view. Pass `zernio` to restrict to isExternal=false only. Status is NOT filtered by default — use the `status` param for that.
             platform
             status: Filter by derived campaign status (post-aggregation)
             ad_account_id: Platform ad account ID
             account_id: Social account ID
             profile_id: Profile ID
             from_date: Start of metrics date range (YYYY-MM-DD). Defaults to 90 days ago.
-            to_date: End of metrics date range (YYYY-MM-DD). Defaults to today. Max 90-day range."""
+            to_date: End of metrics date range (YYYY-MM-DD). Defaults to today. Max 730-day range."""
         client = _get_client()
         try:
             response = client.ad_campaigns.get_ad_tree(page=page, limit=limit, source=source, platform=platform, status=status, ad_account_id=ad_account_id, account_id=account_id, profile_id=profile_id, from_date=from_date, to_date=to_date)
@@ -758,13 +914,13 @@ def register_generated_tools(mcp, _get_client):
 
 
     @mcp.tool()
-    def ads_list_ads(page: int = 1, limit: int = 50, source: str = "zernio", status: str = "", platform: str = "", account_id: str = "", ad_account_id: str = "", profile_id: str = "", campaign_id: str = "", from_date: str = "", to_date: str = "") -> str:
+    def ads_list_ads(page: int = 1, limit: int = 50, source: str = "all", status: str = "", platform: str = "", account_id: str = "", ad_account_id: str = "", profile_id: str = "", campaign_id: str = "", from_date: str = "", to_date: str = "") -> str:
         """List ads
 
         Args:
             page: Page number
             limit
-            source: zernio = Zernio-created only, all = include external ads
+            source: all (default) = Zernio-created + platform-discovered ads. zernio = restrict to Zernio-created only.
             status
             platform
             account_id: Social account ID
@@ -772,7 +928,7 @@ def register_generated_tools(mcp, _get_client):
             profile_id: Profile ID
             campaign_id: Platform campaign ID (filter ads within a campaign)
             from_date: Start of metrics date range (YYYY-MM-DD). Defaults to 90 days ago.
-            to_date: End of metrics date range (YYYY-MM-DD). Defaults to today. Max 90-day range."""
+            to_date: End of metrics date range (YYYY-MM-DD). Defaults to today. Max 730-day range."""
         client = _get_client()
         try:
             response = client.ads.list_ads(page=page, limit=limit, source=source, status=status, platform=platform, account_id=account_id, ad_account_id=ad_account_id, profile_id=profile_id, campaign_id=campaign_id, from_date=from_date, to_date=to_date)
@@ -796,18 +952,26 @@ def register_generated_tools(mcp, _get_client):
 
 
     @mcp.tool()
-    def ads_update_ad(ad_id: str, status: str = "", budget: dict[str, Any] | None = None, targeting: dict[str, Any] | None = None, name: str = "") -> str:
+    def ads_update_ad(ad_id: str, status: str = "", budget: dict[str, Any] | None = None, targeting: dict[str, Any] | None = None, creative: dict[str, Any] | None = None, name: str = "") -> str:
         """Update ad
 
         Args:
             ad_id: (required)
             status
             budget
-            targeting: Meta-only. Targeting updates for other platforms are not supported after creation.
+            targeting: Meta + TikTok only. Pinterest / X / LinkedIn / Google return 501.
+            creative: Replace the ad's creative. Meta + TikTok only.
+
+    - **Meta**: requires `headline`, `body`, `callToAction`, `linkUrl`, `imageUrl`. The
+      ad's existing creative is replaced via a new `/act_X/adcreatives` upload + ad
+      update. The old creative is retained on the ad account for historical reporting.
+    - **TikTok**: patch-style. Pass any subset; `headline` is ignored (TikTok creatives
+      have no headline slot). `body` becomes the in-feed `ad_text`; `linkUrl` becomes
+      `landing_page_url`; `videoUrl` triggers a fresh upload.
             name"""
         client = _get_client()
         try:
-            response = client.ads.update_ad(ad_id=ad_id, status=status, budget=budget, targeting=targeting, name=name)
+            response = client.ads.update_ad(ad_id=ad_id, status=status, budget=budget, targeting=targeting, creative=creative, name=name)
             return _format_response(response)
         except Exception as e:
             return f'Error: {e}'
@@ -834,7 +998,7 @@ def register_generated_tools(mcp, _get_client):
         Args:
             ad_id: (required)
             from_date: Start of date range (YYYY-MM-DD). Defaults to 90 days ago.
-            to_date: End of date range (YYYY-MM-DD). Defaults to today. Max 90-day range.
+            to_date: End of date range (YYYY-MM-DD). Defaults to today. Max 730-day range.
             breakdowns: Comma-separated breakdown dimensions. Meta: age, gender, country, publisher_platform, device_platform, region. TikTok: gender, age, country_code, platform, ac, language."""
         client = _get_client()
         try:
@@ -845,21 +1009,53 @@ def register_generated_tools(mcp, _get_client):
 
 
     @mcp.tool()
-    def ads_list_ad_accounts(account_id: str) -> str:
-        """List ad accounts
+    def ads_get_ad_comments(ad_id: str, limit: int = 25, cursor: str = "") -> str:
+        """List comments on an ad
 
         Args:
-            account_id: Social account ID (required)"""
+            ad_id: Internal Zernio ad ID (ObjectId). (required)
+            limit
+            cursor: Pagination cursor from a previous response."""
         client = _get_client()
         try:
-            response = client.ads.list_ad_accounts(account_id=account_id)
+            response = client.ads.get_ad_comments(ad_id=ad_id, limit=limit, cursor=cursor)
             return _format_response(response)
         except Exception as e:
             return f'Error: {e}'
 
 
     @mcp.tool()
-    def ads_boost_post(account_id: str, ad_account_id: str, name: str, goal: str, budget: dict[str, Any] | None, post_id: str = "", platform_post_id: str = "", currency: str = "", schedule: dict[str, Any] | None = None, targeting: dict[str, Any] | None = None, bid_amount: float = 0.0, tracking: dict[str, Any] | None = None, special_ad_categories: list[str] | None = None) -> str:
+    def ads_list_ads_business_centers(account_id: str) -> str:
+        """List TikTok Business Centers
+
+        Args:
+            account_id: ID of the `tiktokads` (or parent `tiktok` posting) SocialAccount (required)"""
+        client = _get_client()
+        try:
+            response = client.ads.list_ads_business_centers(account_id=account_id)
+            return _format_response(response)
+        except Exception as e:
+            return f'Error: {e}'
+
+
+    @mcp.tool()
+    def ads_list_ad_accounts(account_id: str, ad_account_id: str = "", limit: int = 0) -> str:
+        """List ad accounts
+
+        Args:
+            account_id: Social account ID (required)
+            ad_account_id: Filter response to a single platform ad account ID (e.g. `act_123` for Meta, advertiser_id for TikTok). Returns at most one item.
+            limit: Clamp the returned `accounts[]` length. Useful for typeahead pickers on agency tokens with hundreds of advertisers."""
+        client = _get_client()
+        try:
+            response = client.ads.list_ad_accounts(account_id=account_id, ad_account_id=ad_account_id, limit=limit)
+            return _format_response(response)
+        except Exception as e:
+            return f'Error: {e}'
+
+
+    @mcp.tool()
+    def ads_boost_post(account_id: str, ad_account_id: str, name: str, goal: str, budget: dict[str, Any] | None, post_id: str = "", platform_post_id: str = "", currency: str = "", schedule: dict[str, Any] | None = None, targeting: dict[str, Any] | None = None, bid_strategy: str = "", bid_amount: float = 0.0, roas_average_floor: float = 0.0, tracking: dict[str, Any] | None = None, special_ad_categories: list[str] | None = None, link_url: str = "", call_to_action: str = "", spark_auth_code: str = "", dsa_beneficiary: str = "", dsa_payor: str = "") -> str:
         """Boost post as ad
 
         Args:
@@ -868,43 +1064,93 @@ def register_generated_tools(mcp, _get_client):
             account_id: Social account ID (required)
             ad_account_id: Platform ad account ID (required)
             name: (required)
-            goal: (required)
+            goal: Available goals vary by platform. Meta (Facebook/Instagram) and TikTok support all 7. LinkedIn supports all except app_promotion. Twitter/X supports engagement, traffic, awareness, video_views, app_promotion. Pinterest and Google Ads support only engagement, traffic, awareness, video_views. (required)
             budget: (required)
             currency
             schedule
             targeting
-            bid_amount: Max bid cap (Meta only)
+            bid_strategy: Meta bid strategy applied to the ad set. On TikTok, mapped to
+    `bid_type` / `bid_price` / `deep_bid_type` automatically.
+            bid_amount: Bid cap in WHOLE currency units (USD: 5 = $5.00; JPY: 100 = ¥100). Required when
+    `bidStrategy` is `LOWEST_COST_WITH_BID_CAP` or `COST_CAP`. Backward-compat: providing
+    `bidAmount` without `bidStrategy` is treated as `LOWEST_COST_WITH_BID_CAP`.
+            roas_average_floor: Minimum ROAS as a decimal multiplier (e.g. 2.0 = 2.0x ROAS). Required when
+    `bidStrategy` is `LOWEST_COST_WITH_MIN_ROAS`. Sent to Meta as
+    `bid_constraints.roas_average_floor` × 10000 (Meta uses fixed-point integers).
             tracking: Meta only. Tracking specs (pixel, URL tags).
-            special_ad_categories: Meta only. Required for housing, employment, credit, or political ads."""
+            special_ad_categories: Meta only. Required for housing, employment, credit, or political ads.
+            link_url: TikTok-only. Custom destination URL for the Spark Ad. Without this, TikTok
+    Spark Ads have no clickable destination — required for traffic / conversion
+    objectives. Maps to `landing_page_url` on the creative entry of /v2/ad/create/
+    (TikTok SDK `AdcreateCreatives.landing_page_url`). Ignored on Meta / LinkedIn /
+    Pinterest / X / Google (those infer the destination from the boosted post).
+            call_to_action: TikTok-only. Call-to-action button label on the Spark Ad creative (e.g.
+    `LEARN_MORE`, `SHOP_NOW`, `DOWNLOAD_NOW`, `SIGN_UP`, `WATCH_NOW`). Maps to
+    `call_to_action` on the creative entry of /v2/ad/create/. Pass-through —
+    the platform validates the value. See TikTok's "Enumeration - Call-to-Action"
+    reference for the full list.
+            spark_auth_code: TikTok-only. Spark Code (creator's `auth_code`) authorizing cross-creator
+    Spark Ads — the advertiser can boost a video owned by a DIFFERENT TikTok
+    account. Without this, boosts are limited to videos owned by the same
+    account running the ads (same-BC creators only). The creator generates the
+    code in their TikTok app's Promote settings and shares it with the
+    advertiser. Maps to `auth_code` on the creative entry of /v2/ad/create/.
+            dsa_beneficiary: Name of the legal entity benefiting from the ad.
+    Required by Meta when targeting EU users (DSA Article 26).
+    Not enforced at schema level; enforced server-side when targeting intersects EU member states.
+            dsa_payor: Name of the legal entity paying for the ad.
+    Required by Meta when targeting EU users (DSA Article 26).
+    Note Meta API spelling: dsa_payor (not dsa_payer)."""
         client = _get_client()
         try:
-            response = client.ads.boost_post(post_id=post_id, platform_post_id=platform_post_id, account_id=account_id, ad_account_id=ad_account_id, name=name, goal=goal, budget=budget, currency=currency, schedule=schedule, targeting=targeting, bid_amount=bid_amount, tracking=tracking, special_ad_categories=special_ad_categories)
+            response = client.ads.boost_post(post_id=post_id, platform_post_id=platform_post_id, account_id=account_id, ad_account_id=ad_account_id, name=name, goal=goal, budget=budget, currency=currency, schedule=schedule, targeting=targeting, bid_strategy=bid_strategy, bid_amount=bid_amount, roas_average_floor=roas_average_floor, tracking=tracking, special_ad_categories=special_ad_categories, link_url=link_url, call_to_action=call_to_action, spark_auth_code=spark_auth_code, dsa_beneficiary=dsa_beneficiary, dsa_payor=dsa_payor)
             return _format_response(response)
         except Exception as e:
             return f'Error: {e}'
 
 
     @mcp.tool()
-    def ads_create_standalone_ad(account_id: str, ad_account_id: str, name: str, goal: str, budget_amount: float, budget_type: str, body: str, currency: str = "", headline: str = "", long_headline: str = "", call_to_action: str = "", link_url: str = "", image_url: str = "", business_name: str = "", board_id: str = "", countries: list[str] | None = None, age_min: int = 0, age_max: int = 0, interests: list[dict[str, Any]] | None = None, end_date: str = "", audience_id: str = "", campaign_type: str = "display", keywords: list[str] | None = None, additional_headlines: list[str] | None = None, additional_descriptions: list[str] | None = None) -> str:
+    def ads_create_standalone_ad(account_id: str, ad_account_id: str, name: str, goal: str = "", budget_amount: float = 0.0, budget_type: str = "", currency: str = "", headline: str = "", long_headline: str = "", body: str = "", call_to_action: str = "", link_url: str = "", image_url: str = "", images: dict[str, Any] | None = None, video: dict[str, Any] | None = None, creatives: list[dict[str, Any]] | None = None, ad_set_id: str = "", business_name: str = "", board_id: str = "", countries: list[str] | None = None, cities: list[dict[str, Any]] | None = None, regions: list[dict[str, Any]] | None = None, age_min: int = 0, age_max: int = 0, interests: list[dict[str, Any]] | None = None, end_date: str = "", audience_id: str = "", campaign_type: str = "display", keywords: list[str] | None = None, additional_headlines: list[str] | None = None, additional_descriptions: list[str] | None = None, advantage_audience: int = 0, gender: str = "all", bid_strategy: str = "", bid_amount: float = 0.0, roas_average_floor: float = 0.0, dsa_beneficiary: str = "", dsa_payor: str = "", brand_identity: dict[str, Any] | None = None, identity_type: str = "", promoted_object: dict[str, Any] | None = None) -> str:
         """Create standalone ad
 
         Args:
             account_id: (required)
             ad_account_id: (required)
             name: (required)
-            goal: (required)
-            budget_amount: (required)
-            budget_type: (required)
+            goal: Required on legacy + multi-creative shapes. Inherited from the ad set on the attach shape. Available goals vary by platform. Meta-specific: `conversions` requires `promotedObject.pixelId` + `promotedObject.customEventType`; `app_promotion` requires `promotedObject.applicationId` + `promotedObject.objectStoreUrl`; `lead_generation` accepts an optional `promotedObject.pageId` (auto-filled from the connected Page when omitted).
+            budget_amount: Required on legacy + multi-creative shapes. Inherited on attach.
+            budget_type: Required on legacy + multi-creative shapes. Inherited on attach.
             currency
-            headline: Required for most platforms. Max: Meta=255, Google=30, Pinterest=100
-            long_headline: Google Display only
-            body: Max: Google=90, Pinterest=500 (required)
-            call_to_action: Meta only
-            link_url
-            image_url: Image URL (or video URL for TikTok). Not required for Google Search campaigns.
+            headline: Required for Meta, Google, and Pinterest on legacy + attach shapes (skip for multi-creative — use `creatives[].headline`). Ignored for TikTok and X/Twitter. Max: Meta=255, Google=30, Pinterest=100.
+            long_headline: Google Display only. Defaults to `headline` if omitted.
+            body: Required on legacy + attach shapes. For X/Twitter this is the tweet text (max 280 chars including a ~24-char URL when `linkUrl` is set). Max: Google=90, Pinterest=500.
+            call_to_action: Required on legacy + attach shapes for Meta. Honoured on TikTok too — passes through to the Spark Ad creative's `call_to_action`. Ignored by other platforms.
+            link_url: Required on legacy + attach shapes. Skip for multi-creative.
+            image_url: Image creative for Meta/Google/Pinterest on legacy + attach shapes (mutually exclusive with `video`). Not required for Google Search campaigns. For TikTok, this field carries the VIDEO URL (the TikTok ads endpoint is video-only; the field retains the `imageUrl` name for cross-platform consistency). Ignored for X/Twitter. For Google Display, treated as the landscape image (alias of `images.landscape`); supply `images.square` alongside or the request is rejected.
+            images: Google Display (Responsive Display Ads) only. Google RDA requires both a landscape (1.91:1) and a square (1:1) marketing image; sending only one is rejected upstream as 'Too few.' (NOT_ENOUGH_*_MARKETING_IMAGE_ASSET). Supply both URLs here. Either this field or the legacy `imageUrl` can provide the landscape, but `square` has no legacy counterpart so it must be set here for Display.
+            video: Meta only (facebook, instagram). When set, creates a VIDEO ad on the legacy or attach shape. Mutually exclusive with `imageUrl`. For multi-creative, set `video` per entry inside `creatives[]` instead.
+            creatives: Meta-only. When present, switches to the multi-creative shape:
+    creates 1 campaign + 1 ad set + N ads (one per entry here).
+    Top-level `headline` / `body` / `imageUrl` / `linkUrl` /
+    `callToAction` are ignored in this mode. Mutually exclusive with `adSetId`.
+            ad_set_id: Meta-only. When present, switches to the attach shape: adds
+    one new ad to this existing ad set without creating a new
+    campaign. Budget, targeting, goal, schedule, AND bid strategy
+    are inherited from the ad set on Meta — passing `bidStrategy`
+    in attach mode returns 400. To change an existing ad set's
+    bid, use `PUT /v1/ads/ad-sets/{adSetId}`. Mutually exclusive
+    with `creatives[]`.
+
+    Supported on Meta (facebook, instagram) and TikTok. On TikTok
+    the `adSetId` is the ad group ID; the new ad inherits the
+    ad group's bid + budget + targeting.
             business_name: Google Display only
             board_id: Pinterest only. Board ID (auto-creates if not provided).
-            countries
+            countries: ISO 3166-1 alpha-2 country codes (e.g. ['NL']). Defaults to ['US'] when no `cities` or `regions` are provided.
+            cities: Meta-only. City-level geo targeting. Each city is targeted by Meta's opaque `key` (the city ID) which can be looked up via `GET /v1/ads/targeting/search?type=city&q=<name>&country_code=<ISO>`. Optional `radius` + `distance_unit` extend the targeting beyond the city limits (e.g. radius 25 km around the city center). Both must be set together, or both omitted (Meta defaults to ~16 km when omitted).
+
+    Cannot overlap with the same country in `countries` (Meta returns a "locations overlap" error). Either drop the country or scope it to a different country.
+            regions: Meta-only. Region-level (state/province) geo targeting. Each region is targeted by Meta's opaque `key` (the region ID) which can be looked up via `GET /v1/ads/targeting/search?type=region&q=<name>&country_code=<ISO>`.
             age_min
             age_max
             interests: Interest objects from /v1/ads/interests. Each must include id and name.
@@ -913,10 +1159,59 @@ def register_generated_tools(mcp, _get_client):
             campaign_type: Google only
             keywords: Google Search only
             additional_headlines: Google Search RSA only. Extra headlines.
-            additional_descriptions: Google Search RSA only. Extra descriptions."""
+            additional_descriptions: Google Search RSA only. Extra descriptions.
+            advantage_audience: Meta only. Controls the Advantage audience feature (targeting_automation). 0 = disabled (default), 1 = enabled. Meta Marketing API requires this field on all ad set creation requests.
+            gender: Meta only. Restrict the audience by gender. 'male' targets men only, 'female' targets women only, 'all' (default) targets everyone. Ignored by non-Meta platforms.
+            bid_strategy: Meta bid strategy applied to the ad set.
+            bid_amount: Bid cap in WHOLE currency units (USD: 5 = $5.00; JPY: 100 = ¥100). Required when
+    `bidStrategy` is `LOWEST_COST_WITH_BID_CAP` or `COST_CAP`.
+            roas_average_floor: Minimum ROAS as a decimal multiplier (e.g. 2.0 = 2.0x ROAS). Required when
+    `bidStrategy` is `LOWEST_COST_WITH_MIN_ROAS`. Sent to Meta as
+    `bid_constraints.roas_average_floor` × 10000.
+            dsa_beneficiary: Name of the legal entity benefiting from the ad.
+    Required by Meta when targeting EU users (DSA Article 26).
+    Not enforced at schema level; enforced server-side when targeting intersects EU member states.
+            dsa_payor: Name of the legal entity paying for the ad.
+    Required by Meta when targeting EU users (DSA Article 26).
+    Note Meta API spelling: dsa_payor (not dsa_payer).
+            brand_identity: TikTok only. Synthetic Brand Identity used when the ad
+    attributes to a CUSTOMIZED_USER (instead of a real TT_USER
+    @username). Required on the FIRST CUSTOMIZED_USER ad on a
+    `tiktokads` SocialAccount with no cached identity; omit on
+    subsequent ads (the identity is cached on the account after
+    first creation). Non-TikTok platforms ignore this field.
+
+    Alternative: configure once via `PATCH /v1/connect/tiktok-ads`,
+    then create ads without this field.
+            identity_type: TikTok only. Forces the identity attribution on the ad:
+
+      - `TT_USER`: the posting account's open_id (real @username
+        branding). Requires a connected TikTok posting account
+        on the same profile.
+      - `CUSTOMIZED_USER`: synthetic Brand Identity (display
+        name + avatar). Requires a configured Brand Identity
+        (cached on the `tiktokads` SocialAccount via
+        `PATCH /v1/connect/tiktok-ads`) or an inline
+        `brandIdentity` to create one on the fly.
+
+    When omitted, defaults to `TT_USER` if a posting account is
+    connected on this profile, else `CUSTOMIZED_USER`. Spark
+    Ads (`POST /v1/ads/boost`) always use `TT_USER` regardless
+    of this field — TikTok requires the original organic
+    post's author identity for Spark.
+            promoted_object: Meta only. Forwarded to the ad set's `promoted_object` (snake-cased).
+
+    Required for goals whose ad-set optimization_goal points at a specific
+    event/page/app — without it Meta rejects the ad-set create with
+    `error_subcode: 1815430` "Please select a promoted object for your ad set":
+      - `goal: conversions` (OFFSITE_CONVERSIONS) — requires `pixelId` + `customEventType`
+      - `goal: app_promotion` (APP_INSTALLS) — requires `applicationId` + `objectStoreUrl`
+      - `goal: lead_generation` (LEAD_GENERATION) — `pageId` is auto-filled from the connected Page when omitted
+
+    Other goals (engagement, traffic, awareness, video_views) ignore this field."""
         client = _get_client()
         try:
-            response = client.ads.create_standalone_ad(account_id=account_id, ad_account_id=ad_account_id, name=name, goal=goal, budget_amount=budget_amount, budget_type=budget_type, currency=currency, headline=headline, long_headline=long_headline, body=body, call_to_action=call_to_action, link_url=link_url, image_url=image_url, business_name=business_name, board_id=board_id, countries=countries, age_min=age_min, age_max=age_max, interests=interests, end_date=end_date, audience_id=audience_id, campaign_type=campaign_type, keywords=keywords, additional_headlines=additional_headlines, additional_descriptions=additional_descriptions)
+            response = client.ads.create_standalone_ad(account_id=account_id, ad_account_id=ad_account_id, name=name, goal=goal, budget_amount=budget_amount, budget_type=budget_type, currency=currency, headline=headline, long_headline=long_headline, body=body, call_to_action=call_to_action, link_url=link_url, image_url=image_url, images=images, video=video, creatives=creatives, ad_set_id=ad_set_id, business_name=business_name, board_id=board_id, countries=countries, cities=cities, regions=regions, age_min=age_min, age_max=age_max, interests=interests, end_date=end_date, audience_id=audience_id, campaign_type=campaign_type, keywords=keywords, additional_headlines=additional_headlines, additional_descriptions=additional_descriptions, advantage_audience=advantage_audience, gender=gender, bid_strategy=bid_strategy, bid_amount=bid_amount, roas_average_floor=roas_average_floor, dsa_beneficiary=dsa_beneficiary, dsa_payor=dsa_payor, brand_identity=brand_identity, identity_type=identity_type, promoted_object=promoted_object)
             return _format_response(response)
         except Exception as e:
             return f'Error: {e}'
@@ -932,6 +1227,24 @@ def register_generated_tools(mcp, _get_client):
         client = _get_client()
         try:
             response = client.ads.search_ad_interests(q=q, account_id=account_id)
+            return _format_response(response)
+        except Exception as e:
+            return f'Error: {e}'
+
+
+    @mcp.tool()
+    def ads_search_ad_targeting_locations(account_id: str, q: str, type: str = "city", country_code: str = "", limit: int = 25) -> str:
+        """Search geo targeting locations (Meta)
+
+        Args:
+            account_id: Social account ID (must be a connected Facebook or Instagram account). (required)
+            q: Location name. Locality only — no region/country suffix. (required)
+            type: Type of location to search. Defaults to city.
+            country_code: ISO 3166-1 alpha-2 country code (e.g. NL) to scope the search.
+            limit: Maximum results to return."""
+        client = _get_client()
+        try:
+            response = client.ads.search_ad_targeting_locations(account_id=account_id, q=q, type=type, country_code=country_code, limit=limit)
             return _format_response(response)
         except Exception as e:
             return f'Error: {e}'
@@ -971,6 +1284,55 @@ def register_generated_tools(mcp, _get_client):
         except Exception as e:
             return f'Error: {e}'
 
+
+    @mcp.tool()
+    def ads_create_ctwa_ad(account_id: str, ad_account_id: str, name: str, headline: str, body: str, budget_amount: float, budget_type: str, image_url: str = "", video: dict[str, Any] | None = None, currency: str = "", end_date: str = "", countries: list[str] | None = None, age_min: int = 0, age_max: int = 0, interests: list[dict[str, Any]] | None = None, audience_id: str = "", advantage_audience: int = 0, objective: str = "", dsa_beneficiary: str = "", dsa_payor: str = "") -> str:
+        """Create Click-to-WhatsApp ad
+
+        Args:
+            account_id: Facebook or Instagram SocialAccount ID. (required)
+            ad_account_id: Meta ad account ID, e.g. `act_123456789`. (required)
+            name: Ad display name. Used to derive campaign / ad set names. (required)
+            headline: (required)
+            body: Primary text shown above the image / video. (required)
+            image_url: Image asset for image creatives. Mutually exclusive with
+    `video`. Required if `video` is not supplied.
+            video: Video creative. Mutually exclusive with `imageUrl`.
+    Required if `imageUrl` is not supplied.
+            budget_amount: Budget amount in the ad account's currency major units
+    (e.g. dollars for USD, not cents). Must be > 0.
+     (required)
+            budget_type: (required)
+            currency: ISO 4217 currency code matching the ad account's currency
+    (e.g. `USD`). Optional; Meta infers from the ad account
+    when omitted.
+            end_date: ISO 8601 datetime. Required when `budgetType` is `lifetime`.
+            countries: ISO 3166-1 alpha-2 country codes. Defaults to `["US"]`.
+            age_min
+            age_max
+            interests
+            audience_id: Custom audience ID to target.
+            advantage_audience: Meta's Advantage+ audience expansion. `0` (default) keeps
+    targeting strict; `1` lets Meta expand beyond the supplied
+    targeting when its delivery system finds better matches.
+    Always sent on CREATE (Meta requires it).
+            objective: Defaults to `OUTCOME_ENGAGEMENT` (the broadly-supported CTWA
+    objective). `OUTCOME_SALES` and `OUTCOME_LEADS` require
+    additional account configuration (Dataset linked to the WABA
+    for sales) and may be rejected by Meta if missing.
+            dsa_beneficiary: Name of the legal entity benefiting from the ad.
+    Required by Meta when targeting EU users (DSA Article 26).
+    Not enforced at schema level; enforced server-side when targeting intersects EU member states.
+            dsa_payor: Name of the legal entity paying for the ad.
+    Required by Meta when targeting EU users (DSA Article 26).
+    Note Meta API spelling: dsa_payor (not dsa_payer)."""
+        client = _get_client()
+        try:
+            response = client.ads.create_ctwa_ad(account_id=account_id, ad_account_id=ad_account_id, name=name, headline=headline, body=body, image_url=image_url, video=video, budget_amount=budget_amount, budget_type=budget_type, currency=currency, end_date=end_date, countries=countries, age_min=age_min, age_max=age_max, interests=interests, audience_id=audience_id, advantage_audience=advantage_audience, objective=objective, dsa_beneficiary=dsa_beneficiary, dsa_payor=dsa_payor)
+            return _format_response(response)
+        except Exception as e:
+            return f'Error: {e}'
+
     # ANALYTICS
 
 
@@ -999,6 +1361,112 @@ def register_generated_tools(mcp, _get_client):
 
 
     @mcp.tool()
+    def analytics_get_you_tube_channel_insights(account_id: str, metrics: str = "", since: str = "", until: str = "", metric_type: str = "total_value") -> str:
+        """Get YouTube channel-level insights
+
+        Args:
+            account_id: The Zernio SocialAccount ID for the YouTube account. (required)
+            metrics: Comma-separated list. Defaults to "views,estimatedMinutesWatched,subscribersGained,subscribersLost".
+
+    Live YouTube Analytics v2 metrics:
+      - views
+      - estimatedMinutesWatched
+      - averageViewDuration          (ratio - weighted mean computed across days)
+      - subscribersGained
+      - subscribersLost
+
+    Zernio-synthesized from daily follower snapshots (cross-platform parity):
+      - followers_gained
+      - followers_lost
+            since: Start date (YYYY-MM-DD). Defaults to 30 days ago.
+            until: End date (YYYY-MM-DD). Defaults to today. YouTube Analytics has a 2-3 day delay,
+    so the fetch is internally clamped to 3 days ago; any requested range extending
+    beyond that returns zero values for the tail days. The response's dateRange.until
+    field reflects your requested value.
+            metric_type: "total_value" (default) returns aggregated totals.
+    "time_series" returns per-day values in the "values" array."""
+        client = _get_client()
+        try:
+            response = client.analytics.get_you_tube_channel_insights(account_id=account_id, metrics=metrics, since=since, until=until, metric_type=metric_type)
+            return _format_response(response)
+        except Exception as e:
+            return f'Error: {e}'
+
+
+    @mcp.tool()
+    def analytics_get_linked_in_org_aggregate_analytics(account_id: str, metrics: str = "", since: str = "", until: str = "", metric_type: str = "total_value") -> str:
+        """Get LinkedIn organization page aggregate analytics
+
+        Args:
+            account_id: The Zernio SocialAccount ID for the LinkedIn organization account. (required)
+            metrics: Comma-separated list. Defaults to
+    "impressions,clicks,engagement_rate,organic_followers_gained,followers_gained,followers_lost".
+
+    Share statistics (support both total_value and time_series):
+      - impressions
+      - unique_impressions
+      - clicks
+      - likes
+      - comments
+      - shares
+      - engagement_rate       (0..1, LinkedIn-computed)
+
+    Follower-gain statistics (support total_value and time_series):
+      - organic_followers_gained   (per-day organic gains for time_series; sum of organic gains over the range for total_value)
+      - paid_followers_gained      (per-day paid gains for time_series; sum of paid gains over the range for total_value)
+
+    Page-view statistics (total_value ONLY - LinkedIn platform limit):
+      - page_views_total
+      - page_views_overview
+      - page_views_careers
+      - page_views_jobs
+      - page_views_life
+
+    Zernio-synthesized from daily follower snapshots:
+      - followers_gained
+      - followers_lost
+            since: Start date (YYYY-MM-DD). Defaults to 30 days ago.
+            until: End date (YYYY-MM-DD). Defaults to today.
+            metric_type"""
+        client = _get_client()
+        try:
+            response = client.analytics.get_linked_in_org_aggregate_analytics(account_id=account_id, metrics=metrics, since=since, until=until, metric_type=metric_type)
+            return _format_response(response)
+        except Exception as e:
+            return f'Error: {e}'
+
+
+    @mcp.tool()
+    def analytics_get_tik_tok_account_insights(account_id: str, metrics: str = "", since: str = "", until: str = "", metric_type: str = "total_value") -> str:
+        """Get TikTok account-level insights
+
+        Args:
+            account_id: The Zernio SocialAccount ID for the TikTok account. (required)
+            metrics: Comma-separated list. Defaults to
+    "follower_count,likes_count,video_count,followers_gained,followers_lost".
+
+    Live from /v2/user/info/ (requires user.info.stats scope):
+      - follower_count  (cumulative; time series joined from AccountStats)
+      - following_count (cumulative; time series joined from AccountStats.metadata)
+      - likes_count     (cumulative; time series joined from AccountStats.metadata)
+      - video_count     (cumulative; time series joined from AccountStats.metadata)
+
+    Zernio-synthesized:
+      - followers_gained  (sum of positive daily follower deltas)
+      - followers_lost    (sum of absolute negative daily deltas)
+            since: Start date (YYYY-MM-DD). Defaults to 30 days ago.
+            until: End date (YYYY-MM-DD). Defaults to today.
+            metric_type: "total_value" returns the latest cumulative counter value.
+    "time_series" returns daily values joined from AccountStats snapshots."""
+        client = _get_client()
+        try:
+            response = client.analytics.get_tik_tok_account_insights(account_id=account_id, metrics=metrics, since=since, until=until, metric_type=metric_type)
+            return _format_response(response)
+        except Exception as e:
+            return f'Error: {e}'
+
+
+    @mcp.tool()
     def analytics_get_you_tube_daily_views(video_id: str, account_id: str, start_date: str = "", end_date: str = "") -> str:
         """Get YouTube daily views
 
@@ -1016,6 +1484,39 @@ def register_generated_tools(mcp, _get_client):
 
 
     @mcp.tool()
+    def analytics_get_facebook_page_insights(account_id: str, metrics: str = "", since: str = "", until: str = "", metric_type: str = "total_value") -> str:
+        """Get Facebook Page insights
+
+        Args:
+            account_id: The Zernio SocialAccount ID for the connected Facebook Page. (required)
+            metrics: Comma-separated list of metrics. Defaults to
+    "page_media_view,page_post_engagements,page_follows,followers_gained,followers_lost".
+
+    Live Meta metrics (current names, post-Nov-2025):
+      - page_media_view       (replaces deprecated page_impressions)
+      - page_views_total
+      - page_post_engagements
+      - page_video_views
+      - page_video_view_time
+      - page_follows          (replaces deprecated page_fans)
+
+    Zernio-synthesized from daily follower snapshots (filling the Nov-2025 gap
+    left by the page_fan_adds / page_fan_removes deprecation):
+      - followers_gained
+      - followers_lost
+            since: Start date (YYYY-MM-DD). Defaults to 30 days ago.
+            until: End date (YYYY-MM-DD). Defaults to today.
+            metric_type: "total_value" (default) returns aggregated totals only.
+    "time_series" returns daily values in the "values" array."""
+        client = _get_client()
+        try:
+            response = client.analytics.get_facebook_page_insights(account_id=account_id, metrics=metrics, since=since, until=until, metric_type=metric_type)
+            return _format_response(response)
+        except Exception as e:
+            return f'Error: {e}'
+
+
+    @mcp.tool()
     def analytics_get_instagram_account_insights(account_id: str, metrics: str = "", since: str = "", until: str = "", metric_type: str = "total_value", breakdown: str = "") -> str:
         """Get Instagram insights
 
@@ -1024,7 +1525,10 @@ def register_generated_tools(mcp, _get_client):
             metrics: Comma-separated list of metrics. Defaults to "reach,views,accounts_engaged,total_interactions".
     Valid metrics: reach, views, accounts_engaged, total_interactions, comments, likes, saves, shares,
     replies, reposts, follows_and_unfollows, profile_links_taps.
-    Note: only "reach" supports metricType=time_series. All other metrics are total_value only.
+    Note: only "reach" supports metricType=time_series. All other metrics (including
+    follows_and_unfollows) are total_value only. This is an Instagram Graph API limitation,
+    not a Zernio limitation - the IG API does not return time-series data for these metrics.
+    For a daily running follower count, use /v1/analytics/instagram/follower-history instead.
             since: Start date (YYYY-MM-DD). Defaults to 30 days ago.
             until: End date (YYYY-MM-DD). Defaults to today.
             metric_type: "total_value" (default) returns aggregated totals and supports breakdowns.
@@ -1034,6 +1538,28 @@ def register_generated_tools(mcp, _get_client):
         client = _get_client()
         try:
             response = client.analytics.get_instagram_account_insights(account_id=account_id, metrics=metrics, since=since, until=until, metric_type=metric_type, breakdown=breakdown)
+            return _format_response(response)
+        except Exception as e:
+            return f'Error: {e}'
+
+
+    @mcp.tool()
+    def analytics_get_instagram_follower_history(account_id: str, metrics: str = "", since: str = "", until: str = "", metric_type: str = "total_value") -> str:
+        """Get Instagram follower history
+
+        Args:
+            account_id: The Zernio SocialAccount ID for the Instagram account. (required)
+            metrics: Comma-separated list. Defaults to "follower_count,followers_gained,followers_lost".
+      - follower_count   : per-day raw follower count
+      - followers_gained : sum of positive daily deltas
+      - followers_lost   : sum of absolute negative daily deltas
+            since: Start date (YYYY-MM-DD). Defaults to 30 days ago.
+            until: End date (YYYY-MM-DD). Defaults to today.
+            metric_type: "total_value" returns aggregated totals (latest for follower_count, sum for gained/lost).
+    "time_series" returns per-day values in the "values" array."""
+        client = _get_client()
+        try:
+            response = client.analytics.get_instagram_follower_history(account_id=account_id, metrics=metrics, since=since, until=until, metric_type=metric_type)
             return _format_response(response)
         except Exception as e:
             return f'Error: {e}'
@@ -1095,48 +1621,51 @@ def register_generated_tools(mcp, _get_client):
 
 
     @mcp.tool()
-    def analytics_get_best_time_to_post(platform: str = "", profile_id: str = "", source: str = "all") -> str:
+    def analytics_get_best_time_to_post(platform: str = "", profile_id: str = "", account_id: str = "", source: str = "all") -> str:
         """Get best times to post
 
         Args:
             platform: Filter by platform (e.g. "instagram", "tiktok"). Omit for all platforms.
             profile_id: Filter by profile ID. Omit for all profiles.
+            account_id: Filter by social account ID. Omit for all accounts.
             source: Filter by post origin. "late" for posts published via Zernio, "external" for posts imported from platforms."""
         client = _get_client()
         try:
-            response = client.analytics.get_best_time_to_post(platform=platform, profile_id=profile_id, source=source)
+            response = client.analytics.get_best_time_to_post(platform=platform, profile_id=profile_id, account_id=account_id, source=source)
             return _format_response(response)
         except Exception as e:
             return f'Error: {e}'
 
 
     @mcp.tool()
-    def analytics_get_content_decay(platform: str = "", profile_id: str = "", source: str = "all") -> str:
+    def analytics_get_content_decay(platform: str = "", profile_id: str = "", account_id: str = "", source: str = "all") -> str:
         """Get content performance decay
 
         Args:
             platform: Filter by platform (e.g. "instagram", "tiktok"). Omit for all platforms.
             profile_id: Filter by profile ID. Omit for all profiles.
+            account_id: Filter by social account ID. Omit for all accounts.
             source: Filter by post origin. "late" for posts published via Zernio, "external" for posts imported from platforms."""
         client = _get_client()
         try:
-            response = client.analytics.get_content_decay(platform=platform, profile_id=profile_id, source=source)
+            response = client.analytics.get_content_decay(platform=platform, profile_id=profile_id, account_id=account_id, source=source)
             return _format_response(response)
         except Exception as e:
             return f'Error: {e}'
 
 
     @mcp.tool()
-    def analytics_get_posting_frequency(platform: str = "", profile_id: str = "", source: str = "all") -> str:
+    def analytics_get_posting_frequency(platform: str = "", profile_id: str = "", account_id: str = "", source: str = "all") -> str:
         """Get frequency vs engagement
 
         Args:
             platform: Filter by platform (e.g. "instagram", "tiktok"). Omit for all platforms.
             profile_id: Filter by profile ID. Omit for all profiles.
+            account_id: Filter by social account ID. Omit for all accounts.
             source: Filter by post origin. "late" for posts published via Zernio, "external" for posts imported from platforms."""
         client = _get_client()
         try:
-            response = client.analytics.get_posting_frequency(platform=platform, profile_id=profile_id, source=source)
+            response = client.analytics.get_posting_frequency(platform=platform, profile_id=profile_id, account_id=account_id, source=source)
             return _format_response(response)
         except Exception as e:
             return f'Error: {e}'
@@ -1205,7 +1734,7 @@ def register_generated_tools(mcp, _get_client):
             aggregation: TOTAL (default, lifetime totals) or DAILY (time series). MEMBERS_REACHED not available with DAILY.
             start_date: Start date (YYYY-MM-DD). If omitted, returns lifetime analytics.
             end_date: End date (YYYY-MM-DD, exclusive). Defaults to today if omitted.
-            metrics: Comma-separated metrics: IMPRESSION, MEMBERS_REACHED, REACTION, COMMENT, RESHARE. Omit for all."""
+            metrics: Comma-separated metrics: IMPRESSION, MEMBERS_REACHED, REACTION, COMMENT, RESHARE, POST_SAVE, POST_SEND. Omit for all."""
         client = _get_client()
         try:
             response = client.analytics.get_linked_in_aggregate_analytics(account_id=account_id, aggregation=aggregation, start_date=start_date, end_date=end_date, metrics=metrics)
@@ -1468,14 +1997,14 @@ def register_generated_tools(mcp, _get_client):
 
 
     @mcp.tool()
-    def comment_automations_create_comment_automation(profile_id: str, account_id: str, platform_post_id: str, name: str, dm_message: str, post_id: str = "", post_title: str = "", keywords: list[str] | None = None, match_mode: str = "contains", comment_reply: str = "") -> str:
+    def comment_automations_create_comment_automation(profile_id: str, account_id: str, name: str, dm_message: str, platform_post_id: str = "", post_id: str = "", post_title: str = "", keywords: list[str] | None = None, match_mode: str = "contains", comment_reply: str = "") -> str:
         """Create comment-to-DM automation
 
         Args:
             profile_id: (required)
             account_id: Instagram or Facebook account ID (required)
-            platform_post_id: Platform media/post ID (required)
-            post_id: Zernio post ID (optional)
+            platform_post_id: Platform media/post ID. Omit for an account-wide (any-post) automation.
+            post_id: Zernio post ID. Required only when also targeting a specific post via platformPostId.
             post_title: Post content snippet for display
             name: Automation label (required)
             keywords: Trigger keywords (empty = any comment triggers)
@@ -1701,17 +2230,25 @@ def register_generated_tools(mcp, _get_client):
 
 
     @mcp.tool()
-    def comments_send_private_reply_to_comment(post_id: str, comment_id: str, account_id: str, message: str) -> str:
+    def comments_send_private_reply_to_comment(post_id: str, comment_id: str, account_id: str, message: str, quick_replies: list[dict[str, Any]] | None = None, buttons: list[dict[str, Any]] | None = None) -> str:
         """Send private reply
 
         Args:
             post_id: The media/post ID (Instagram media ID or Facebook post ID) (required)
             comment_id: The comment ID to send a private reply to (required)
             account_id: The social account ID (Instagram or Facebook) (required)
-            message: The message text to send as a private DM (required)"""
+            message: The message text to send as a private DM (required)
+            quick_replies: Optional quick-reply chips appended to the message. Visible only in the
+    Instagram and Messenger apps (not on web). Maximum 13 entries. Mutually
+    exclusive with `buttons`. Note: chips do NOT render in the Instagram
+    Message Requests folder where DMs from non-followers land — use `buttons`
+    instead for cold reach.
+            buttons: Optional 1-3 inline buttons rendered as part of the same message bubble
+    via Meta's button_template. Visible in the Instagram Message Requests
+    folder (unlike quick replies). Mutually exclusive with `quickReplies`."""
         client = _get_client()
         try:
-            response = client.comments.send_private_reply_to_comment(post_id=post_id, comment_id=comment_id, account_id=account_id, message=message)
+            response = client.comments.send_private_reply_to_comment(post_id=post_id, comment_id=comment_id, account_id=account_id, message=message, quick_replies=quick_replies, buttons=buttons)
             return _format_response(response)
         except Exception as e:
             return f'Error: {e}'
@@ -1754,18 +2291,48 @@ def register_generated_tools(mcp, _get_client):
 
 
     @mcp.tool()
-    def connect_ads(platform: str, profile_id: str, account_id: str = "", redirect_url: str = "", headless: bool = False) -> str:
+    def connect_ads(platform: str, profile_id: str, account_id: str = "", redirect_url: str = "", headless: bool = False, ad_account_id: str = "", ad_account_ids: list[str] | None = None) -> str:
         """Connect ads for a platform
 
         Args:
             platform: Platform to connect ads for. Only platforms with ads support are accepted. (required)
             profile_id: Your Zernio profile ID (required)
-            account_id: Existing SocialAccount ID. Required for separate-token platforms (tiktok, twitter). Ignored for same-token and standalone platforms.
+            account_id: Existing SocialAccount ID. Required for `twitter` (X Ads). Optional for `tiktok` —
+    omit to enter ads-only mode (no TikTok posting account linked; ad creation uses
+    a Brand Identity instead of a TT_USER). Ignored for same-token (`facebook`,
+    `instagram`, `linkedin`, `pinterest`) and standalone (`googleads`) platforms.
             redirect_url: Custom redirect URL after OAuth completes (same-token platforms only)
-            headless: Enable headless mode (same-token platforms only)"""
+            headless: Enable headless mode (same-token platforms only)
+            ad_account_id: (metaads only) Scope ad sync to a single Meta ad account. Without this
+    param, sync covers every `act_*` the connected token can see. Pass this
+    to limit `sync.totalAds` / `synced` and the resulting ads to one ad
+    account. Format: `act_<digits>` (matches what `/me/adaccounts` returns).
+    Validated against the connected token; unreachable IDs return 400.
+    For multiple accounts use `adAccountIds` instead.
+            ad_account_ids: (metaads only) Scope ad sync to multiple Meta ad accounts. Repeat the
+    param (`?adAccountIds=act_1&adAccountIds=act_2`) or comma-separate
+    (`?adAccountIds=act_1,act_2`). Validated against the connected token.
+    Persisted server-side; latest call wins. Omitting both `adAccountId`
+    and `adAccountIds` keeps any previously persisted scope unchanged."""
         client = _get_client()
         try:
-            response = client.connect.connect_ads(platform=platform, profile_id=profile_id, account_id=account_id, redirect_url=redirect_url, headless=headless)
+            response = client.connect.connect_ads(platform=platform, profile_id=profile_id, account_id=account_id, redirect_url=redirect_url, headless=headless, ad_account_id=ad_account_id, ad_account_ids=ad_account_ids)
+            return _format_response(response)
+        except Exception as e:
+            return f'Error: {e}'
+
+
+    @mcp.tool()
+    def connect_configure_tik_tok_ads_brand_identity(account_id: str, display_name: str, image_url: str) -> str:
+        """Configure TikTok Ads Brand Identity
+
+        Args:
+            account_id: SocialAccount ID of the `tiktokads` account. (required)
+            display_name: Brand name shown above the ad on TikTok. (required)
+            image_url: Public URL of a square brand image (≥98×98 px, JPG/PNG, max 5 MB). Used as the brand avatar on the ad. (required)"""
+        client = _get_client()
+        try:
+            response = client.connect.configure_tik_tok_ads_brand_identity(account_id=account_id, display_name=display_name, image_url=image_url)
             return _format_response(response)
         except Exception as e:
             return f'Error: {e}'
@@ -1985,6 +2552,40 @@ def register_generated_tools(mcp, _get_client):
         client = _get_client()
         try:
             response = client.connect.connect_whats_app_credentials(profile_id=profile_id, access_token=access_token, waba_id=waba_id, phone_number_id=phone_number_id)
+            return _format_response(response)
+        except Exception as e:
+            return f'Error: {e}'
+
+
+    @mcp.tool()
+    def connect_list_whats_app_phone_numbers(profile_id: str, temp_token: str) -> str:
+        """List WhatsApp phone numbers for selection
+
+        Args:
+            profile_id: The Zernio profile ID from the headless redirect (required)
+            temp_token: The temporary access token from the headless redirect (required)"""
+        client = _get_client()
+        try:
+            response = client.connect.list_whats_app_phone_numbers(profile_id=profile_id, temp_token=temp_token)
+            return _format_response(response)
+        except Exception as e:
+            return f'Error: {e}'
+
+
+    @mcp.tool()
+    def connect_complete_whats_app_phone_selection(profile_id: str, phone_number_id: str, waba_id: str, temp_token: str, user_profile: dict[str, Any] | None = None, redirect_url: str = "") -> str:
+        """Complete WhatsApp phone number selection
+
+        Args:
+            profile_id: The Zernio profile ID (required)
+            phone_number_id: The selected phone number ID (from listWhatsAppPhoneNumbers) (required)
+            waba_id: The WABA ID containing the selected phone (required)
+            temp_token: The temporary access token from the headless redirect (required)
+            user_profile: Optional user profile data (passthrough)
+            redirect_url: Optional URL to receive the post-connection redirect target"""
+        client = _get_client()
+        try:
+            response = client.connect.complete_whats_app_phone_selection(profile_id=profile_id, phone_number_id=phone_number_id, waba_id=waba_id, temp_token=temp_token, user_profile=user_profile, redirect_url=redirect_url)
             return _format_response(response)
         except Exception as e:
             return f'Error: {e}'
@@ -2446,6 +3047,86 @@ def register_generated_tools(mcp, _get_client):
         except Exception as e:
             return f'Error: {e}'
 
+    # DISCORD
+
+
+    @mcp.tool()
+    def discord_get_discord_settings(account_id: str) -> str:
+        """Get Discord account settings
+
+        Args:
+            account_id: (required)"""
+        client = _get_client()
+        try:
+            response = client.discord.get_discord_settings(account_id=account_id)
+            return _format_response(response)
+        except Exception as e:
+            return f'Error: {e}'
+
+
+    @mcp.tool()
+    def discord_update_discord_settings(account_id: str, webhook_username: str = "", webhook_avatar_url: str = "", channel_id: str = "") -> str:
+        """Update Discord settings
+
+        Args:
+            account_id: (required)
+            webhook_username: Custom display name for the webhook (1-80 chars). Empty string resets to default ("Zernio"). Cannot contain "clyde" or "discord".
+            webhook_avatar_url: Custom avatar URL. Empty string resets to default bot avatar.
+            channel_id: Switch to a different channel in the same guild. Must be a text (0), announcement (5), or forum (15) channel."""
+        client = _get_client()
+        try:
+            response = client.discord.update_discord_settings(account_id=account_id, webhook_username=webhook_username, webhook_avatar_url=webhook_avatar_url, channel_id=channel_id)
+            return _format_response(response)
+        except Exception as e:
+            return f'Error: {e}'
+
+
+    @mcp.tool()
+    def discord_get_discord_channels(account_id: str) -> str:
+        """List Discord guild channels
+
+        Args:
+            account_id: (required)"""
+        client = _get_client()
+        try:
+            response = client.discord.get_discord_channels(account_id=account_id)
+            return _format_response(response)
+        except Exception as e:
+            return f'Error: {e}'
+
+    # GMB_SERVICES
+
+
+    @mcp.tool()
+    def gmb_services_get_google_business_services(account_id: str, location_id: str = "") -> str:
+        """Get services
+
+        Args:
+            account_id: (required)
+            location_id: Override which location to query. If omitted, uses the account's selected location."""
+        client = _get_client()
+        try:
+            response = client.gmb_services.get_google_business_services(account_id=account_id, location_id=location_id)
+            return _format_response(response)
+        except Exception as e:
+            return f'Error: {e}'
+
+
+    @mcp.tool()
+    def gmb_services_update_google_business_services(account_id: str, service_items: list[dict[str, Any]] | None, location_id: str = "") -> str:
+        """Replace services
+
+        Args:
+            account_id: (required)
+            location_id: Override which location to target. If omitted, uses the account's selected location.
+            service_items: (required)"""
+        client = _get_client()
+        try:
+            response = client.gmb_services.update_google_business_services(account_id=account_id, location_id=location_id, service_items=service_items)
+            return _format_response(response)
+        except Exception as e:
+            return f'Error: {e}'
+
     # INVITES
 
 
@@ -2577,22 +3258,28 @@ def register_generated_tools(mcp, _get_client):
 
 
     @mcp.tool()
-    def messages_get_inbox_conversation_messages(conversation_id: str, account_id: str) -> str:
+    def messages_get_inbox_conversation_messages(conversation_id: str, account_id: str, limit: int = 100, cursor: str = "", sort_order: str = "asc") -> str:
         """List messages
 
         Args:
             conversation_id: The conversation ID (id field from list conversations endpoint). This is the platform-specific conversation identifier, not an internal database ID. (required)
-            account_id: Social account ID (required)"""
+            account_id: Social account ID (required)
+            limit: Number of messages to return per page. Default 100, max 100.
+            cursor: Opaque pagination cursor. Pass `pagination.nextCursor` from a prior response.
+            sort_order: Order of returned messages. Default `asc` (oldest first, chat style).
+    For Twitter, Facebook and Bluesky, only intra-page ordering is
+    affected — pages always walk newest→oldest. See `sortOrderApplied`
+    in the response."""
         client = _get_client()
         try:
-            response = client.messages.get_inbox_conversation_messages(conversation_id=conversation_id, account_id=account_id)
+            response = client.messages.get_inbox_conversation_messages(conversation_id=conversation_id, account_id=account_id, limit=limit, cursor=cursor, sort_order=sort_order)
             return _format_response(response)
         except Exception as e:
             return f'Error: {e}'
 
 
     @mcp.tool()
-    def messages_send_inbox_message(conversation_id: str, account_id: str, message: str = "", attachment_url: str = "", attachment_type: str = "", quick_replies: list[dict[str, Any]] | None = None, buttons: list[dict[str, Any]] | None = None, template: dict[str, Any] | None = None, reply_markup: dict[str, Any] | None = None, messaging_type: str = "", message_tag: str = "", reply_to: str = "") -> str:
+    def messages_send_inbox_message(conversation_id: str, account_id: str, message: str = "", attachment_url: str = "", attachment_type: str = "", quick_replies: list[dict[str, Any]] | None = None, buttons: list[dict[str, Any]] | None = None, template: dict[str, Any] | None = None, interactive: dict[str, Any] | None = None, reply_markup: dict[str, Any] | None = None, messaging_type: str = "", message_tag: str = "", reply_to: str = "") -> str:
         """Send message
 
         Args:
@@ -2604,13 +3291,26 @@ def register_generated_tools(mcp, _get_client):
             quick_replies: Quick reply buttons. Mutually exclusive with buttons. Max 13 items.
             buttons: Action buttons. Mutually exclusive with quickReplies. Max 3 items.
             template: Generic template for carousels (Instagram/Facebook only, ignored on Telegram).
+            interactive: WhatsApp-only. Rich interactive payload for list messages, CTA URL
+    buttons, and Flow prompts. When set, takes priority over `buttons`
+    and `quickReplies`. The shape mirrors Meta's Cloud API `interactive`
+    object verbatim, so any payload that works against Meta directly
+    will also work here.
+
+    Use `buttons` / `quickReplies` for simple button replies
+    (WhatsApp's `interactive.type: "button"`) — the abstraction caps at
+    3 buttons and handles the auto-conversion for you. Use this field
+    only for `list`, `cta_url`, or `flow` messages.
+
+    Tap events come back via the `message.received` webhook with
+    `metadata.interactiveType` set to `list_reply` or `nfm_reply`.
             reply_markup: Telegram-native keyboard markup. Ignored on other platforms.
             messaging_type: Facebook messaging type. Required when using messageTag.
             message_tag: Facebook message tag for messaging outside 24h window. Requires messagingType MESSAGE_TAG. Instagram only supports HUMAN_AGENT.
-            reply_to: Platform message ID to reply to (Telegram only)."""
+            reply_to: Platform message ID to quote-reply to. For WhatsApp, pass the wamid (available in message.platformMessageId from webhooks). For Telegram, pass the Telegram message ID."""
         client = _get_client()
         try:
-            response = client.messages.send_inbox_message(conversation_id=conversation_id, account_id=account_id, message=message, attachment_url=attachment_url, attachment_type=attachment_type, quick_replies=quick_replies, buttons=buttons, template=template, reply_markup=reply_markup, messaging_type=messaging_type, message_tag=message_tag, reply_to=reply_to)
+            response = client.messages.send_inbox_message(conversation_id=conversation_id, account_id=account_id, message=message, attachment_url=attachment_url, attachment_type=attachment_type, quick_replies=quick_replies, buttons=buttons, template=template, interactive=interactive, reply_markup=reply_markup, messaging_type=messaging_type, message_tag=message_tag, reply_to=reply_to)
             return _format_response(response)
         except Exception as e:
             return f'Error: {e}'
@@ -2712,7 +3412,7 @@ def register_generated_tools(mcp, _get_client):
 
 
     @mcp.tool()
-    def posts_list_posts(page: int = 1, limit: int = 10, status: str = "", platform: str = "", profile_id: str = "", created_by: str = "", date_from: str = "", date_to: str = "", include_hidden: bool = False, search: str = "", sort_by: str = "scheduled-desc") -> str:
+    def posts_list_posts(page: int = 1, limit: int = 10, status: str = "", platform: str = "", profile_id: str = "", created_by: str = "", date_from: str = "", date_to: str = "", include_hidden: bool = False, search: str = "", sort_by: str = "scheduled-desc", account_id: str = "") -> str:
         """List posts
 
         Args:
@@ -2726,10 +3426,11 @@ def register_generated_tools(mcp, _get_client):
             date_to
             include_hidden
             search: Search posts by text content.
-            sort_by: Sort order for results."""
+            sort_by: Sort order for results.
+            account_id: Filter posts to those published via a specific social account (24-char hex ObjectId)."""
         client = _get_client()
         try:
-            response = client.posts.list_posts(page=page, limit=limit, status=status, platform=platform, profile_id=profile_id, created_by=created_by, date_from=date_from, date_to=date_to, include_hidden=include_hidden, search=search, sort_by=sort_by)
+            response = client.posts.list_posts(page=page, limit=limit, status=status, platform=platform, profile_id=profile_id, created_by=created_by, date_from=date_from, date_to=date_to, include_hidden=include_hidden, search=search, sort_by=sort_by, account_id=account_id)
             return _format_response(response)
         except Exception as e:
             return f'Error: {e}'
@@ -3417,6 +4118,17 @@ def register_generated_tools(mcp, _get_client):
 
 
     @mcp.tool()
+    def usage_get_x_api_pricing() -> str:
+        """Get X/Twitter API pricing table"""
+        client = _get_client()
+        try:
+            response = client.usage.get_x_api_pricing()
+            return _format_response(response)
+        except Exception as e:
+            return f'Error: {e}'
+
+
+    @mcp.tool()
     def usage_get_usage_stats() -> str:
         """Get plan and usage stats"""
         client = _get_client()
@@ -3529,15 +4241,15 @@ def register_generated_tools(mcp, _get_client):
 
 
     @mcp.tool()
-    def webhooks_create_webhook_settings(name: str = "", url: str = "", secret: str = "", events: list[str] | None = None, is_active: bool = False, custom_headers: dict[str, Any] | None = None) -> str:
+    def webhooks_create_webhook_settings(name: str, url: str, events: list[str] | None, secret: str = "", is_active: bool = True, custom_headers: dict[str, Any] | None = None) -> str:
         """Create webhook
 
         Args:
-            name: Webhook name (max 50 characters)
-            url: Webhook endpoint URL (must be HTTPS in production)
+            name: Webhook name (1-50 characters) (required)
+            url: Webhook endpoint URL (must be a valid URL, whitespace trimmed) (required)
             secret: Secret key for HMAC-SHA256 signature verification
-            events: Events to subscribe to
-            is_active: Enable or disable webhook delivery
+            events: Events to subscribe to (at least one required) (required)
+            is_active: Enable or disable webhook delivery. Defaults to `true` when omitted.
             custom_headers: Custom headers to include in webhook requests"""
         client = _get_client()
         try:
@@ -3553,10 +4265,10 @@ def register_generated_tools(mcp, _get_client):
 
         Args:
             id: Webhook ID to update (required) (required)
-            name: Webhook name (max 50 characters)
-            url: Webhook endpoint URL (must be HTTPS in production)
+            name: Webhook name (1-50 characters). Must be non-empty if provided.
+            url: Webhook endpoint URL (must be a valid URL, whitespace trimmed). Must be a valid URL if provided.
             secret: Secret key for HMAC-SHA256 signature verification
-            events: Events to subscribe to
+            events: Events to subscribe to. Must contain at least one event if provided.
             is_active: Enable or disable webhook delivery
             custom_headers: Custom headers to include in webhook requests"""
         client = _get_client()
@@ -3928,6 +4640,55 @@ def register_generated_tools(mcp, _get_client):
         client = _get_client()
         try:
             response = client.whatsapp.reject_whats_app_group_join_requests(group_id=group_id, account_id=account_id, phone_numbers=phone_numbers)
+            return _format_response(response)
+        except Exception as e:
+            return f'Error: {e}'
+
+
+    @mcp.tool()
+    def whatsapp_send_whats_app_conversion(account_id: str, event_name: str, event_id: str, event_time: float = 0.0, conversation_id: str = "", phone_e164: str = "", value: float = 0.0, currency: str = "", content_ids: list[str] | None = None, email: str = "", external_id: str = "", test_code: str = "") -> str:
+        """Send WhatsApp conversion event
+
+        Args:
+            account_id: WhatsApp SocialAccount ID. (required)
+            event_name: Live-verified allowlist of event names accepted by Meta's
+    CAPI for Business Messaging (Graph API v25.0). Other
+    standard pixel events including `Lead`,
+    `CompleteRegistration`, `Subscribe`, `Schedule`, `Contact`,
+    `StartTrial`, `AddPaymentInfo`, `Search`, and
+    `SubmitApplication` are rejected with subcode 2804066
+    ("Messaging Event Invalid Event Type") on
+    `action_source = business_messaging` events. Custom event
+    names are also rejected.
+
+    Use `LeadSubmitted` (NOT `Lead`) for lead-style conversions.
+     (required)
+            event_time: Unix seconds. Defaults to the time of the request when
+    omitted. Meta's attribution window is 7 days from click;
+    events older than that lose attribution.
+            event_id: Stable dedup key. Reuse to suppress duplicate events
+    (Meta dedupes against pixel events with the same id).
+     (required)
+            conversation_id: Zernio Conversation `_id` (preferred lookup). The
+    conversation must have a captured `ctwa_clid` in metadata
+    (set automatically by the WhatsApp webhook on the first
+    inbound message after a CTWA ad click).
+            phone_e164: Contact phone number, digits only with no '+'. When used
+    in lieu of `conversationId`, the handler resolves to the
+    most recent CTWA-attributed conversation for this phone
+    on the supplied account.
+            value: Conversion value (e.g. order total).
+            currency: ISO 4217 currency code (e.g. `USD`).
+            content_ids: Optional product / content identifiers.
+            email: User email. Normalized + SHA-256 hashed before sending to Meta.
+            external_id: Stable customer identifier. Lowercased + SHA-256 hashed
+    before sending to Meta.
+            test_code: Meta `test_event_code` passthrough. Routes the event to
+    the Test Events tab in Events Manager instead of the
+    production dataset, useful for development."""
+        client = _get_client()
+        try:
+            response = client.whatsapp.send_whats_app_conversion(account_id=account_id, event_name=event_name, event_time=event_time, event_id=event_id, conversation_id=conversation_id, phone_e164=phone_e164, value=value, currency=currency, content_ids=content_ids, email=email, external_id=external_id, test_code=test_code)
             return _format_response(response)
         except Exception as e:
             return f'Error: {e}'

@@ -10,6 +10,8 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Any
 
 if TYPE_CHECKING:
+    from datetime import datetime
+
     from ..client.base import BaseClient
 
 
@@ -22,24 +24,22 @@ class AdCampaignsResource:
         self._client = client
 
     def _build_params(self, **kwargs: Any) -> dict[str, Any]:
-        """Build query parameters, filtering None and empty-string values.
+        """Build query parameters, filtering None values."""
 
-        Empty strings are filtered because MCP tool wrappers pass ``""`` as the
-        default for optional string args, and the API rejects empty query
-        values (e.g. ``platform=``) with a 400. Filtering here keeps both direct
-        SDK callers and MCP tool callers safe.
-        """
         def to_camel(s: str) -> str:
             parts = s.split("_")
             return parts[0] + "".join(p.title() for p in parts[1:])
-        return {to_camel(k): v for k, v in kwargs.items() if v is not None and v != ""}
+
+        return {to_camel(k): v for k, v in kwargs.items() if v is not None}
 
     def _build_payload(self, **kwargs: Any) -> dict[str, Any]:
         """Build request payload, filtering None values."""
         from datetime import datetime
+
         def to_camel(s: str) -> str:
             parts = s.split("_")
             return parts[0] + "".join(p.title() for p in parts[1:])
+
         result: dict[str, Any] = {}
         for k, v in kwargs.items():
             if v is None:
@@ -50,7 +50,18 @@ class AdCampaignsResource:
                 result[to_camel(k)] = v
         return result
 
-    def list_ad_campaigns(self, *, page: int | None = 1, limit: int | None = 20, source: str | None = "zernio", platform: str | None = None, status: Any | None = None, ad_account_id: str | None = None, account_id: str | None = None, profile_id: str | None = None) -> dict[str, Any]:
+    def list_ad_campaigns(
+        self,
+        *,
+        page: int | None = 1,
+        limit: int | None = 20,
+        source: str | None = "all",
+        platform: str | None = None,
+        status: Any | None = None,
+        ad_account_id: str | None = None,
+        account_id: str | None = None,
+        profile_id: str | None = None,
+    ) -> dict[str, Any]:
         """List campaigns"""
         params = self._build_params(
             page=page,
@@ -64,15 +75,124 @@ class AdCampaignsResource:
         )
         return self._client._get("/v1/ads/campaigns", params=params)
 
-    def update_ad_campaign_status(self, campaign_id: str, status: str, platform: str) -> dict[str, Any]:
+    def update_ad_campaign_status(
+        self, campaign_id: str, status: str, platform: str
+    ) -> dict[str, Any]:
         """Pause or resume a campaign"""
         payload = self._build_payload(
             status=status,
             platform=platform,
         )
-        return self._client._put(f"/v1/ads/campaigns/{campaign_id}/status", data=payload)
+        return self._client._put(
+            f"/v1/ads/campaigns/{campaign_id}/status", data=payload
+        )
 
-    def get_ad_tree(self, *, page: int | None = 1, limit: int | None = 20, source: str | None = "zernio", platform: str | None = None, status: Any | None = None, ad_account_id: str | None = None, account_id: str | None = None, profile_id: str | None = None, from_date: str | None = None, to_date: str | None = None) -> dict[str, Any]:
+    def update_ad_campaign(
+        self,
+        campaign_id: str,
+        platform: str,
+        *,
+        budget: dict[str, Any] | None = None,
+        bid_strategy: Any | None = None,
+    ) -> dict[str, Any]:
+        """Update a campaign (budget and/or bid strategy)"""
+        payload = self._build_payload(
+            platform=platform,
+            budget=budget,
+            bid_strategy=bid_strategy,
+        )
+        return self._client._put(f"/v1/ads/campaigns/{campaign_id}", data=payload)
+
+    def delete_ad_campaign(self, campaign_id: str, platform: str) -> dict[str, Any]:
+        """Delete a campaign"""
+        return self._client._delete(f"/v1/ads/campaigns/{campaign_id}")
+
+    def bulk_update_ad_campaign_status(
+        self, status: str, campaigns: list[dict[str, Any]]
+    ) -> dict[str, Any]:
+        """Pause or resume many campaigns"""
+        payload = self._build_payload(
+            status=status,
+            campaigns=campaigns,
+        )
+        return self._client._post("/v1/ads/campaigns/bulk-status", data=payload)
+
+    def duplicate_ad_campaign(
+        self,
+        campaign_id: str,
+        platform: str,
+        *,
+        deep_copy: bool | None = True,
+        status_option: str | None = "PAUSED",
+        start_time: datetime | str | None = None,
+        end_time: datetime | str | None = None,
+        rename_strategy: str | None = None,
+        rename_prefix: str | None = None,
+        rename_suffix: str | None = None,
+        sync_after: bool | None = True,
+    ) -> dict[str, Any]:
+        """Duplicate a campaign"""
+        payload = self._build_payload(
+            platform=platform,
+            deep_copy=deep_copy,
+            status_option=status_option,
+            start_time=start_time,
+            end_time=end_time,
+            rename_strategy=rename_strategy,
+            rename_prefix=rename_prefix,
+            rename_suffix=rename_suffix,
+            sync_after=sync_after,
+        )
+        return self._client._post(
+            f"/v1/ads/campaigns/{campaign_id}/duplicate", data=payload
+        )
+
+    def update_ad_set(
+        self,
+        ad_set_id: str,
+        platform: str,
+        *,
+        budget: dict[str, Any] | None = None,
+        status: str | None = None,
+        bid_strategy: Any | None = None,
+        bid_amount: float | None = None,
+        roas_average_floor: float | None = None,
+    ) -> dict[str, Any]:
+        """Update an ad set (budget, status, and/or bid strategy)"""
+        payload = self._build_payload(
+            platform=platform,
+            budget=budget,
+            status=status,
+            bid_strategy=bid_strategy,
+            bid_amount=bid_amount,
+            roas_average_floor=roas_average_floor,
+        )
+        return self._client._put(f"/v1/ads/ad-sets/{ad_set_id}", data=payload)
+
+    def update_ad_set_status(
+        self, ad_set_id: str, status: str, platform: str
+    ) -> dict[str, Any]:
+        """Pause or resume a single ad set"""
+        payload = self._build_payload(
+            status=status,
+            platform=platform,
+        )
+        return self._client._put(f"/v1/ads/ad-sets/{ad_set_id}/status", data=payload)
+
+    def get_ad_tree(
+        self,
+        *,
+        page: int | None = 1,
+        limit: int | None = 20,
+        source: str | None = "all",
+        platform: str | None = None,
+        status: Any | None = None,
+        ad_account_id: str | None = None,
+        account_id: str | None = None,
+        profile_id: str | None = None,
+        from_date: str | None = None,
+        to_date: str | None = None,
+    ) -> dict[str, Any]:
         """Get campaign tree"""
         params = self._build_params(
             page=page,
@@ -88,7 +208,18 @@ class AdCampaignsResource:
         )
         return self._client._get("/v1/ads/tree", params=params)
 
-    async def alist_ad_campaigns(self, *, page: int | None = 1, limit: int | None = 20, source: str | None = "zernio", platform: str | None = None, status: Any | None = None, ad_account_id: str | None = None, account_id: str | None = None, profile_id: str | None = None) -> dict[str, Any]:
+    async def alist_ad_campaigns(
+        self,
+        *,
+        page: int | None = 1,
+        limit: int | None = 20,
+        source: str | None = "all",
+        platform: str | None = None,
+        status: Any | None = None,
+        ad_account_id: str | None = None,
+        account_id: str | None = None,
+        profile_id: str | None = None,
+    ) -> dict[str, Any]:
         """List campaigns (async)"""
         params = self._build_params(
             page=page,
@@ -102,15 +233,130 @@ class AdCampaignsResource:
         )
         return await self._client._aget("/v1/ads/campaigns", params=params)
 
-    async def aupdate_ad_campaign_status(self, campaign_id: str, status: str, platform: str) -> dict[str, Any]:
+    async def aupdate_ad_campaign_status(
+        self, campaign_id: str, status: str, platform: str
+    ) -> dict[str, Any]:
         """Pause or resume a campaign (async)"""
         payload = self._build_payload(
             status=status,
             platform=platform,
         )
-        return await self._client._aput(f"/v1/ads/campaigns/{campaign_id}/status", data=payload)
+        return await self._client._aput(
+            f"/v1/ads/campaigns/{campaign_id}/status", data=payload
+        )
 
-    async def aget_ad_tree(self, *, page: int | None = 1, limit: int | None = 20, source: str | None = "zernio", platform: str | None = None, status: Any | None = None, ad_account_id: str | None = None, account_id: str | None = None, profile_id: str | None = None, from_date: str | None = None, to_date: str | None = None) -> dict[str, Any]:
+    async def aupdate_ad_campaign(
+        self,
+        campaign_id: str,
+        platform: str,
+        *,
+        budget: dict[str, Any] | None = None,
+        bid_strategy: Any | None = None,
+    ) -> dict[str, Any]:
+        """Update a campaign (budget and/or bid strategy) (async)"""
+        payload = self._build_payload(
+            platform=platform,
+            budget=budget,
+            bid_strategy=bid_strategy,
+        )
+        return await self._client._aput(
+            f"/v1/ads/campaigns/{campaign_id}", data=payload
+        )
+
+    async def adelete_ad_campaign(
+        self, campaign_id: str, platform: str
+    ) -> dict[str, Any]:
+        """Delete a campaign (async)"""
+        return await self._client._adelete(f"/v1/ads/campaigns/{campaign_id}")
+
+    async def abulk_update_ad_campaign_status(
+        self, status: str, campaigns: list[dict[str, Any]]
+    ) -> dict[str, Any]:
+        """Pause or resume many campaigns (async)"""
+        payload = self._build_payload(
+            status=status,
+            campaigns=campaigns,
+        )
+        return await self._client._apost("/v1/ads/campaigns/bulk-status", data=payload)
+
+    async def aduplicate_ad_campaign(
+        self,
+        campaign_id: str,
+        platform: str,
+        *,
+        deep_copy: bool | None = True,
+        status_option: str | None = "PAUSED",
+        start_time: datetime | str | None = None,
+        end_time: datetime | str | None = None,
+        rename_strategy: str | None = None,
+        rename_prefix: str | None = None,
+        rename_suffix: str | None = None,
+        sync_after: bool | None = True,
+    ) -> dict[str, Any]:
+        """Duplicate a campaign (async)"""
+        payload = self._build_payload(
+            platform=platform,
+            deep_copy=deep_copy,
+            status_option=status_option,
+            start_time=start_time,
+            end_time=end_time,
+            rename_strategy=rename_strategy,
+            rename_prefix=rename_prefix,
+            rename_suffix=rename_suffix,
+            sync_after=sync_after,
+        )
+        return await self._client._apost(
+            f"/v1/ads/campaigns/{campaign_id}/duplicate", data=payload
+        )
+
+    async def aupdate_ad_set(
+        self,
+        ad_set_id: str,
+        platform: str,
+        *,
+        budget: dict[str, Any] | None = None,
+        status: str | None = None,
+        bid_strategy: Any | None = None,
+        bid_amount: float | None = None,
+        roas_average_floor: float | None = None,
+    ) -> dict[str, Any]:
+        """Update an ad set (budget, status, and/or bid strategy) (async)"""
+        payload = self._build_payload(
+            platform=platform,
+            budget=budget,
+            status=status,
+            bid_strategy=bid_strategy,
+            bid_amount=bid_amount,
+            roas_average_floor=roas_average_floor,
+        )
+        return await self._client._aput(f"/v1/ads/ad-sets/{ad_set_id}", data=payload)
+
+    async def aupdate_ad_set_status(
+        self, ad_set_id: str, status: str, platform: str
+    ) -> dict[str, Any]:
+        """Pause or resume a single ad set (async)"""
+        payload = self._build_payload(
+            status=status,
+            platform=platform,
+        )
+        return await self._client._aput(
+            f"/v1/ads/ad-sets/{ad_set_id}/status", data=payload
+        )
+
+    async def aget_ad_tree(
+        self,
+        *,
+        page: int | None = 1,
+        limit: int | None = 20,
+        source: str | None = "all",
+        platform: str | None = None,
+        status: Any | None = None,
+        ad_account_id: str | None = None,
+        account_id: str | None = None,
+        profile_id: str | None = None,
+        from_date: str | None = None,
+        to_date: str | None = None,
+    ) -> dict[str, Any]:
         """Get campaign tree (async)"""
         params = self._build_params(
             page=page,

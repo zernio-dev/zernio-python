@@ -227,15 +227,31 @@ def extract_parameters(
     operation: dict[str, Any],
     spec: dict[str, Any] | None = None,
 ) -> list[dict[str, Any]]:
-    """Extract parameters from operation. `spec` is threaded through so
-    `get_python_type` can dereference `$ref`/`allOf` schemas."""
-    params = []
+    """Extract parameters from operation.
+
+    `spec` is threaded through so `get_python_type` can dereference
+    `$ref`/`allOf` schemas to read the underlying type.
+
+    Dedupes by Python name: when the same parameter appears in both the path
+    and the request body (e.g. `accountId` as a path param and also in the
+    body schema), Python can't accept duplicate kwargs in a function
+    signature, so we keep the first occurrence (path > query > body) and
+    drop subsequent ones. This prevents SyntaxErrors in generated_tools.py.
+    """
+    params: list[dict[str, Any]] = []
+    seen_names: set[str] = set()
+
+    def add_param(entry: dict[str, Any]) -> None:
+        if entry["name"] in seen_names:
+            return
+        seen_names.add(entry["name"])
+        params.append(entry)
 
     for param in operation.get("parameters", []):
         if "$ref" in param:
             ref = param["$ref"]
             if "PageParam" in ref:
-                params.append({
+                add_param({
                     "name": "page",
                     "type": "int",
                     "required": False,
@@ -244,7 +260,7 @@ def extract_parameters(
                     "sdk_name": "page",
                 })
             elif "LimitParam" in ref:
-                params.append({
+                add_param({
                     "name": "limit",
                     "type": "int",
                     "required": False,
@@ -274,7 +290,7 @@ def extract_parameters(
             spec,
         )
 
-        params.append({
+        add_param({
             "name": py_name,
             "type": type_str,
             "required": param.get("required", False),
@@ -302,7 +318,7 @@ def extract_parameters(
             is_required = prop_name in required_props
             type_str, default_str = get_python_type(prop_schema, is_required, spec)
 
-            params.append({
+            add_param({
                 "name": py_name,
                 "type": type_str,
                 "required": is_required,
@@ -393,6 +409,13 @@ def main() -> int:
     # Collect operations
     operations = []
 
+    # Track tool_names already emitted. Two different (path, method) pairs can
+    # produce the same tool_name when their operationIds snake-case to the
+    # same string, or when the spec has a duplicate operation. Either way,
+    # emitting two @mcp.tool() functions with the same name causes an F811
+    # redefinition lint failure, so we skip collisions with a warning.
+    seen_tool_names: set[str] = set()
+
     for path, path_item in spec.get("paths", {}).items():
         for method, operation in path_item.items():
             if method not in ("get", "post", "put", "patch", "delete"):
@@ -410,6 +433,15 @@ def main() -> int:
             tool_name = f"{resource}_{sdk_method}"
             # Clean up redundant prefixes
             tool_name = re.sub(rf"^{resource}_{resource}_", f"{resource}_", tool_name)
+
+            if tool_name in seen_tool_names:
+                print(
+                    f"Warning: duplicate MCP tool_name '{tool_name}' at "
+                    f"{method.upper()} {path} (operationId={operation_id}); skipping.",
+                    file=sys.stderr,
+                )
+                continue
+            seen_tool_names.add(tool_name)
 
             operations.append({
                 "tool_name": tool_name,

@@ -22,24 +22,22 @@ class AccountGroupsResource:
         self._client = client
 
     def _build_params(self, **kwargs: Any) -> dict[str, Any]:
-        """Build query parameters, filtering None and empty-string values.
+        """Build query parameters, filtering None values."""
 
-        Empty strings are filtered because MCP tool wrappers pass ``""`` as the
-        default for optional string args, and the API rejects empty query
-        values (e.g. ``platform=``) with a 400. Filtering here keeps both direct
-        SDK callers and MCP tool callers safe.
-        """
         def to_camel(s: str) -> str:
             parts = s.split("_")
             return parts[0] + "".join(p.title() for p in parts[1:])
-        return {to_camel(k): v for k, v in kwargs.items() if v is not None and v != ""}
+
+        return {to_camel(k): v for k, v in kwargs.items() if v is not None}
 
     def _build_payload(self, **kwargs: Any) -> dict[str, Any]:
         """Build request payload, filtering None values."""
         from datetime import datetime
+
         def to_camel(s: str) -> str:
             parts = s.split("_")
             return parts[0] + "".join(p.title() for p in parts[1:])
+
         result: dict[str, Any] = {}
         for k, v in kwargs.items():
             if v is None:
@@ -54,15 +52,24 @@ class AccountGroupsResource:
         """List groups"""
         return self._client._get("/v1/account-groups")
 
-    def create_account_group(self, name: str, account_ids: list[str]) -> dict[str, Any]:
+    def create_account_group(
+        self, name: str, account_ids: list[str], *, profile_id: str | None = None
+    ) -> dict[str, Any]:
         """Create group"""
         payload = self._build_payload(
             name=name,
             account_ids=account_ids,
+            profile_id=profile_id,
         )
         return self._client._post("/v1/account-groups", data=payload)
 
-    def update_account_group(self, group_id: str, *, name: str | None = None, account_ids: list[str] | None = None) -> dict[str, Any]:
+    def update_account_group(
+        self,
+        group_id: str,
+        *,
+        name: str | None = None,
+        account_ids: list[str] | None = None,
+    ) -> dict[str, Any]:
         """Update group"""
         payload = self._build_payload(
             name=name,
@@ -78,15 +85,24 @@ class AccountGroupsResource:
         """List groups (async)"""
         return await self._client._aget("/v1/account-groups")
 
-    async def acreate_account_group(self, name: str, account_ids: list[str]) -> dict[str, Any]:
+    async def acreate_account_group(
+        self, name: str, account_ids: list[str], *, profile_id: str | None = None
+    ) -> dict[str, Any]:
         """Create group (async)"""
         payload = self._build_payload(
             name=name,
             account_ids=account_ids,
+            profile_id=profile_id,
         )
         return await self._client._apost("/v1/account-groups", data=payload)
 
-    async def aupdate_account_group(self, group_id: str, *, name: str | None = None, account_ids: list[str] | None = None) -> dict[str, Any]:
+    async def aupdate_account_group(
+        self,
+        group_id: str,
+        *,
+        name: str | None = None,
+        account_ids: list[str] | None = None,
+    ) -> dict[str, Any]:
         """Update group (async)"""
         payload = self._build_payload(
             name=name,

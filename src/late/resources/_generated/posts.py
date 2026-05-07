@@ -24,24 +24,22 @@ class PostsResource:
         self._client = client
 
     def _build_params(self, **kwargs: Any) -> dict[str, Any]:
-        """Build query parameters, filtering None and empty-string values.
+        """Build query parameters, filtering None values."""
 
-        Empty strings are filtered because MCP tool wrappers pass ``""`` as the
-        default for optional string args, and the API rejects empty query
-        values (e.g. ``platform=``) with a 400. Filtering here keeps both direct
-        SDK callers and MCP tool callers safe.
-        """
         def to_camel(s: str) -> str:
             parts = s.split("_")
             return parts[0] + "".join(p.title() for p in parts[1:])
-        return {to_camel(k): v for k, v in kwargs.items() if v is not None and v != ""}
+
+        return {to_camel(k): v for k, v in kwargs.items() if v is not None}
 
     def _build_payload(self, **kwargs: Any) -> dict[str, Any]:
         """Build request payload, filtering None values."""
         from datetime import datetime
+
         def to_camel(s: str) -> str:
             parts = s.split("_")
             return parts[0] + "".join(p.title() for p in parts[1:])
+
         result: dict[str, Any] = {}
         for k, v in kwargs.items():
             if v is None:
@@ -52,7 +50,22 @@ class PostsResource:
                 result[to_camel(k)] = v
         return result
 
-    def list_posts(self, *, page: int | None = 1, limit: int | None = 10, status: str | None = None, platform: str | None = None, profile_id: str | None = None, created_by: str | None = None, date_from: str | None = None, date_to: str | None = None, include_hidden: bool | None = False, search: str | None = None, sort_by: str | None = "scheduled-desc") -> dict[str, Any]:
+    def list_posts(
+        self,
+        *,
+        page: int | None = 1,
+        limit: int | None = 10,
+        status: str | None = None,
+        platform: str | None = None,
+        profile_id: str | None = None,
+        created_by: str | None = None,
+        date_from: str | None = None,
+        date_to: str | None = None,
+        include_hidden: bool | None = False,
+        search: str | None = None,
+        sort_by: str | None = "scheduled-desc",
+        account_id: str | None = None,
+    ) -> dict[str, Any]:
         """List posts"""
         params = self._build_params(
             page=page,
@@ -66,10 +79,32 @@ class PostsResource:
             include_hidden=include_hidden,
             search=search,
             sort_by=sort_by,
+            account_id=account_id,
         )
         return self._client._get("/v1/posts", params=params)
 
-    def create_post(self, *, title: str | None = None, content: str | None = None, media_items: list[dict[str, Any]] | None = None, platforms: list[dict[str, Any]] | None = None, scheduled_for: datetime | str | None = None, publish_now: bool | None = False, is_draft: bool | None = False, timezone: str | None = "UTC", tags: list[str] | None = None, hashtags: list[str] | None = None, mentions: list[str] | None = None, crossposting_enabled: bool | None = True, metadata: dict[str, Any] | None = None, tiktok_settings: Any | None = None, facebook_settings: Any | None = None, recycling: Any | None = None, queued_from_profile: str | None = None, queue_id: str | None = None) -> dict[str, Any]:
+    def create_post(
+        self,
+        *,
+        title: str | None = None,
+        content: str | None = None,
+        media_items: list[dict[str, Any]] | None = None,
+        platforms: list[dict[str, Any]] | None = None,
+        scheduled_for: datetime | str | None = None,
+        publish_now: bool | None = False,
+        is_draft: bool | None = False,
+        timezone: str | None = "UTC",
+        tags: list[str] | None = None,
+        hashtags: list[str] | None = None,
+        mentions: list[str] | None = None,
+        crossposting_enabled: bool | None = True,
+        metadata: dict[str, Any] | None = None,
+        tiktok_settings: Any | None = None,
+        facebook_settings: Any | None = None,
+        recycling: Any | None = None,
+        queued_from_profile: str | None = None,
+        queue_id: str | None = None,
+    ) -> dict[str, Any]:
         """Create post"""
         payload = self._build_payload(
             title=title,
@@ -97,7 +132,16 @@ class PostsResource:
         """Get post"""
         return self._client._get(f"/v1/posts/{post_id}")
 
-    def update_post(self, post_id: str, *, content: str | None = None, scheduled_for: datetime | str | None = None, tiktok_settings: Any | None = None, facebook_settings: Any | None = None, recycling: Any | None = None) -> dict[str, Any]:
+    def update_post(
+        self,
+        post_id: str,
+        *,
+        content: str | None = None,
+        scheduled_for: datetime | str | None = None,
+        tiktok_settings: Any | None = None,
+        facebook_settings: Any | None = None,
+        recycling: Any | None = None,
+    ) -> dict[str, Any]:
         """Update post"""
         payload = self._build_payload(
             content=content,
@@ -138,7 +182,23 @@ class PostsResource:
         )
         return self._client._post(f"/v1/posts/{post_id}/edit", data=payload)
 
-    def update_post_metadata(self, post_id: str, platform: str, *, video_id: str | None = None, account_id: str | None = None, title: str | None = None, description: str | None = None, tags: list[str] | None = None, category_id: str | None = None, privacy_status: str | None = None, thumbnail_url: str | None = None, made_for_kids: bool | None = None, contains_synthetic_media: bool | None = None, playlist_id: str | None = None) -> dict[str, Any]:
+    def update_post_metadata(
+        self,
+        post_id: str,
+        platform: str,
+        *,
+        video_id: str | None = None,
+        account_id: str | None = None,
+        title: str | None = None,
+        description: str | None = None,
+        tags: list[str] | None = None,
+        category_id: str | None = None,
+        privacy_status: str | None = None,
+        thumbnail_url: str | None = None,
+        made_for_kids: bool | None = None,
+        contains_synthetic_media: bool | None = None,
+        playlist_id: str | None = None,
+    ) -> dict[str, Any]:
         """Update post metadata"""
         payload = self._build_payload(
             platform=platform,
@@ -156,7 +216,22 @@ class PostsResource:
         )
         return self._client._post(f"/v1/posts/{post_id}/update-metadata", data=payload)
 
-    async def alist_posts(self, *, page: int | None = 1, limit: int | None = 10, status: str | None = None, platform: str | None = None, profile_id: str | None = None, created_by: str | None = None, date_from: str | None = None, date_to: str | None = None, include_hidden: bool | None = False, search: str | None = None, sort_by: str | None = "scheduled-desc") -> dict[str, Any]:
+    async def alist_posts(
+        self,
+        *,
+        page: int | None = 1,
+        limit: int | None = 10,
+        status: str | None = None,
+        platform: str | None = None,
+        profile_id: str | None = None,
+        created_by: str | None = None,
+        date_from: str | None = None,
+        date_to: str | None = None,
+        include_hidden: bool | None = False,
+        search: str | None = None,
+        sort_by: str | None = "scheduled-desc",
+        account_id: str | None = None,
+    ) -> dict[str, Any]:
         """List posts (async)"""
         params = self._build_params(
             page=page,
@@ -170,10 +245,32 @@ class PostsResource:
             include_hidden=include_hidden,
             search=search,
             sort_by=sort_by,
+            account_id=account_id,
         )
         return await self._client._aget("/v1/posts", params=params)
 
-    async def acreate_post(self, *, title: str | None = None, content: str | None = None, media_items: list[dict[str, Any]] | None = None, platforms: list[dict[str, Any]] | None = None, scheduled_for: datetime | str | None = None, publish_now: bool | None = False, is_draft: bool | None = False, timezone: str | None = "UTC", tags: list[str] | None = None, hashtags: list[str] | None = None, mentions: list[str] | None = None, crossposting_enabled: bool | None = True, metadata: dict[str, Any] | None = None, tiktok_settings: Any | None = None, facebook_settings: Any | None = None, recycling: Any | None = None, queued_from_profile: str | None = None, queue_id: str | None = None) -> dict[str, Any]:
+    async def acreate_post(
+        self,
+        *,
+        title: str | None = None,
+        content: str | None = None,
+        media_items: list[dict[str, Any]] | None = None,
+        platforms: list[dict[str, Any]] | None = None,
+        scheduled_for: datetime | str | None = None,
+        publish_now: bool | None = False,
+        is_draft: bool | None = False,
+        timezone: str | None = "UTC",
+        tags: list[str] | None = None,
+        hashtags: list[str] | None = None,
+        mentions: list[str] | None = None,
+        crossposting_enabled: bool | None = True,
+        metadata: dict[str, Any] | None = None,
+        tiktok_settings: Any | None = None,
+        facebook_settings: Any | None = None,
+        recycling: Any | None = None,
+        queued_from_profile: str | None = None,
+        queue_id: str | None = None,
+    ) -> dict[str, Any]:
         """Create post (async)"""
         payload = self._build_payload(
             title=title,
@@ -201,7 +298,16 @@ class PostsResource:
         """Get post (async)"""
         return await self._client._aget(f"/v1/posts/{post_id}")
 
-    async def aupdate_post(self, post_id: str, *, content: str | None = None, scheduled_for: datetime | str | None = None, tiktok_settings: Any | None = None, facebook_settings: Any | None = None, recycling: Any | None = None) -> dict[str, Any]:
+    async def aupdate_post(
+        self,
+        post_id: str,
+        *,
+        content: str | None = None,
+        scheduled_for: datetime | str | None = None,
+        tiktok_settings: Any | None = None,
+        facebook_settings: Any | None = None,
+        recycling: Any | None = None,
+    ) -> dict[str, Any]:
         """Update post (async)"""
         payload = self._build_payload(
             content=content,
@@ -216,7 +322,9 @@ class PostsResource:
         """Delete post (async)"""
         return await self._client._adelete(f"/v1/posts/{post_id}")
 
-    async def abulk_upload_posts(self, *, dry_run: bool | None = False) -> dict[str, Any]:
+    async def abulk_upload_posts(
+        self, *, dry_run: bool | None = False
+    ) -> dict[str, Any]:
         """Bulk upload from CSV (async)"""
         params = self._build_params(
             dry_run=dry_run,
@@ -234,7 +342,9 @@ class PostsResource:
         )
         return await self._client._apost(f"/v1/posts/{post_id}/unpublish", data=payload)
 
-    async def aedit_post(self, post_id: str, platform: str, content: str) -> dict[str, Any]:
+    async def aedit_post(
+        self, post_id: str, platform: str, content: str
+    ) -> dict[str, Any]:
         """Edit published post (async)"""
         payload = self._build_payload(
             platform=platform,
@@ -242,7 +352,23 @@ class PostsResource:
         )
         return await self._client._apost(f"/v1/posts/{post_id}/edit", data=payload)
 
-    async def aupdate_post_metadata(self, post_id: str, platform: str, *, video_id: str | None = None, account_id: str | None = None, title: str | None = None, description: str | None = None, tags: list[str] | None = None, category_id: str | None = None, privacy_status: str | None = None, thumbnail_url: str | None = None, made_for_kids: bool | None = None, contains_synthetic_media: bool | None = None, playlist_id: str | None = None) -> dict[str, Any]:
+    async def aupdate_post_metadata(
+        self,
+        post_id: str,
+        platform: str,
+        *,
+        video_id: str | None = None,
+        account_id: str | None = None,
+        title: str | None = None,
+        description: str | None = None,
+        tags: list[str] | None = None,
+        category_id: str | None = None,
+        privacy_status: str | None = None,
+        thumbnail_url: str | None = None,
+        made_for_kids: bool | None = None,
+        contains_synthetic_media: bool | None = None,
+        playlist_id: str | None = None,
+    ) -> dict[str, Any]:
         """Update post metadata (async)"""
         payload = self._build_payload(
             platform=platform,
@@ -258,4 +384,6 @@ class PostsResource:
             contains_synthetic_media=contains_synthetic_media,
             playlist_id=playlist_id,
         )
-        return await self._client._apost(f"/v1/posts/{post_id}/update-metadata", data=payload)
+        return await self._client._apost(
+            f"/v1/posts/{post_id}/update-metadata", data=payload
+        )

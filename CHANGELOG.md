@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.4.2]
+
+### Fixed
+- Merged the multi-account routing fix (1.4.0, originally landed on `main`) and the array/object schema fix (1.4.1, also `main`) into the `develop` branch so the next OpenAPI auto-regen doesn't reintroduce the bugs. Develop now has both fixes applied on top of its accumulated auto-regen content (new endpoints up through v1.3.120). No new behavioural changes beyond 1.4.1.
+- Generator now combines `develop`'s param/tool-name dedupe (prevents duplicate-kwarg SyntaxErrors and F811 lint failures) with `main`'s `$ref`/`allOf` schema resolution and `list[T]`/`dict[str, Any]` typing. With develop's newer OpenAPI spec, this means newer fields on `ads_create_standalone_ad` (`cities`, `regions`, `creatives`, `images`, `video`, `brand_identity`, `promoted_object`) are now properly typed alongside the original four (`keywords`, `countries`, `additional_headlines`, `additional_descriptions`).
+
 ## [1.4.1]
 
 ### Fixed
