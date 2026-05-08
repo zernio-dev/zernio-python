@@ -177,18 +177,59 @@ def get_python_type(
     schema_type = schema.get("type")
     default = schema.get("default")
 
+    # Scalars: respect the OpenAPI-declared default when present, otherwise
+    # use `None` so the SDK's `_build_payload` can drop the field before it
+    # reaches the API. Previously optional scalars defaulted to zero values
+    # (0/0.0/"" / False) which got forwarded literally and tripped Zod
+    # validators server-side - e.g. `bidAmount=0` fails
+    # `z.number().positive().optional()` even though the field is optional,
+    # surfacing as the cryptic "Number must be greater than 0" with no
+    # field name attached.
+    #
+    # Required scalars keep their bare type (no `| None`) regardless - the
+    # function-signature renderer drops the default, and the LLM is
+    # expected to always provide a value. The `| None` widening only
+    # applies when we're emitting a `= None` default.
     if schema_type == "string":
-        type_str = "str"
-        default_str = f'"{default}"' if default else '""'
+        if default is not None:
+            type_str = "str"
+            default_str = f'"{default}"'
+        elif required:
+            type_str = "str"
+            default_str = ""  # placeholder; not rendered for required
+        else:
+            type_str = "str | None"
+            default_str = "None"
     elif schema_type == "integer":
-        type_str = "int"
-        default_str = str(default) if default is not None else "0"
+        if default is not None:
+            type_str = "int"
+            default_str = str(default)
+        elif required:
+            type_str = "int"
+            default_str = ""
+        else:
+            type_str = "int | None"
+            default_str = "None"
     elif schema_type == "number":
-        type_str = "float"
-        default_str = str(default) if default is not None else "0.0"
+        if default is not None:
+            type_str = "float"
+            default_str = str(default)
+        elif required:
+            type_str = "float"
+            default_str = ""
+        else:
+            type_str = "float | None"
+            default_str = "None"
     elif schema_type == "boolean":
-        type_str = "bool"
-        default_str = str(default) if default is not None else "False"
+        if default is not None:
+            type_str = "bool"
+            default_str = str(default)
+        elif required:
+            type_str = "bool"
+            default_str = ""
+        else:
+            type_str = "bool | None"
+            default_str = "None"
     elif schema_type == "array":
         # Inspect items.type so the LLM gets the right inner schema. Most
         # array fields in the spec hold strings (countries, keywords, etc.)
@@ -215,8 +256,16 @@ def get_python_type(
         type_str = "dict[str, Any] | None"
         default_str = "None"
     else:
-        type_str = "str"
-        default_str = '""'
+        # Fallback for schemas we couldn't classify (mixed-type oneOf,
+        # unknown shapes). Type as str, but default to None when optional
+        # so the SDK can drop the field instead of forwarding an empty
+        # string that may fail enum/min-length/email validators.
+        if required:
+            type_str = "str"
+            default_str = ""
+        else:
+            type_str = "str | None"
+            default_str = "None"
 
     if not required:
         return type_str, default_str

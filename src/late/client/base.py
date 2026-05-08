@@ -127,10 +127,16 @@ class BaseClient:
 
         if response.status_code >= 400:
             error_data = response.json() if response.content else {}
+            # Pass the entire response body through as `details` so callers
+            # (and __str__) can surface the field name (`param`), the stable
+            # error code (`code`), and platform-specific context. The API
+            # returns `{error, type, code, param, ...}` at the top level -
+            # not nested under a `details` key - so the previous
+            # `error_data.get("details")` was always None.
             raise LateAPIError(
                 message=error_data.get("error", f"HTTP {response.status_code}"),
                 status_code=response.status_code,
-                details=error_data.get("details"),
+                details=error_data if isinstance(error_data, dict) else None,
             )
 
         # Return parsed JSON or empty dict

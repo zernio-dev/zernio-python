@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.4.5]
+
+### Fixed
+- **Optional scalar params no longer ship zero values to the API.** The MCP autogenerator was emitting `0` / `0.0` / `""` / `False` as defaults for optional scalars without OpenAPI-declared defaults, which the SDK's `_build_payload` couldn't filter (it only drops `None`). The literal `0.0` then tripped Zod's `z.number().positive().optional()` validators server-side, surfacing as `[400] Number must be greater than 0` even when the field was genuinely optional. Hit in practice on `ads_create_standalone_ad` for Google Search campaigns where `roas_average_floor` defaulted to `0.0` and was forwarded into the API. Optional scalars now default to `None` (typed as `T | None`) so unset fields are dropped before reaching the server. OpenAPI-declared defaults (e.g. `campaign_type="display"`, `gender="all"`) are still respected.
+- **`LateAPIError` now surfaces field names and stable error codes.** The API returns `{error, type, code, param}` on validation failures but the SDK was reading `error_data.get("details")` (a key the API doesn't send), so `param` was always lost. The SDK now stores the full envelope in `details`, and `__str__` formats as `[400] {message} (field: {param}; code: {code})` when those are present. Direct fix for Hein's "the error doesn't identify the offending field" feedback.
+
 ## [1.4.2]
 
 ### Fixed

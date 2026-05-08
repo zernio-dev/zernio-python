@@ -31,9 +31,22 @@ class LateAPIError(LateError):
         super().__init__(self.message)
 
     def __str__(self) -> str:
-        if self.status_code:
-            return f"[{self.status_code}] {self.message}"
-        return self.message
+        # Surface field name + error code from the API envelope when present.
+        # The API returns {error, type, code, param} on validation failures;
+        # __str__ used to drop everything but `error`, leaving callers
+        # (notably the MCP wrapper, which prints str(exc)) staring at
+        # cryptic messages like "Number must be greater than 0" with no clue
+        # which field tripped it.
+        prefix = f"[{self.status_code}] " if self.status_code else ""
+        suffix_parts: list[str] = []
+        param = self.details.get("param") if self.details else None
+        code = self.details.get("code") if self.details else None
+        if param:
+            suffix_parts.append(f"field: {param}")
+        if code:
+            suffix_parts.append(f"code: {code}")
+        suffix = f" ({'; '.join(suffix_parts)})" if suffix_parts else ""
+        return f"{prefix}{self.message}{suffix}"
 
 
 class LateAuthenticationError(LateAPIError):
