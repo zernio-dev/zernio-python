@@ -353,6 +353,158 @@ class AdsResource:
         """List destinations for the Conversions API"""
         return self._client._get(f"/v1/accounts/{account_id}/conversion-destinations")
 
+    def create_conversion_destination(
+        self,
+        account_id: str,
+        ad_account_id: str,
+        name: str,
+        type: str,
+        *,
+        attribution_type: str | None = None,
+        post_click_attribution_window_size: int | None = None,
+        view_through_attribution_window_size: int | None = None,
+        value_type: str | None = None,
+        value: dict[str, Any] | None = None,
+        auto_association_type: str | None = "ALL_CAMPAIGNS",
+    ) -> dict[str, Any]:
+        """Create a conversion destination (LinkedIn)"""
+        payload = self._build_payload(
+            ad_account_id=ad_account_id,
+            name=name,
+            type=type,
+            attribution_type=attribution_type,
+            post_click_attribution_window_size=post_click_attribution_window_size,
+            view_through_attribution_window_size=view_through_attribution_window_size,
+            value_type=value_type,
+            value=value,
+            auto_association_type=auto_association_type,
+        )
+        return self._client._post(
+            f"/v1/accounts/{account_id}/conversion-destinations", data=payload
+        )
+
+    def get_conversion_destination(
+        self, account_id: str, destination_id: str, ad_account_id: str
+    ) -> dict[str, Any]:
+        """Fetch a single conversion destination"""
+        params = self._build_params(
+            ad_account_id=ad_account_id,
+        )
+        return self._client._get(
+            f"/v1/accounts/{account_id}/conversion-destinations/{destination_id}",
+            params=params,
+        )
+
+    def update_conversion_destination(
+        self,
+        account_id: str,
+        destination_id: str,
+        ad_account_id: str,
+        *,
+        name: str | None = None,
+        enabled: bool | None = None,
+        attribution_type: str | None = None,
+        post_click_attribution_window_size: int | None = None,
+        view_through_attribution_window_size: int | None = None,
+        value_type: str | None = None,
+        value: dict[str, Any] | None = None,
+    ) -> dict[str, Any]:
+        """Update a conversion destination"""
+        payload = self._build_payload(
+            ad_account_id=ad_account_id,
+            name=name,
+            enabled=enabled,
+            attribution_type=attribution_type,
+            post_click_attribution_window_size=post_click_attribution_window_size,
+            view_through_attribution_window_size=view_through_attribution_window_size,
+            value_type=value_type,
+            value=value,
+        )
+        return self._client._patch(
+            f"/v1/accounts/{account_id}/conversion-destinations/{destination_id}",
+            data=payload,
+        )
+
+    def delete_conversion_destination(
+        self, account_id: str, destination_id: str, *, ad_account_id: str | None = None
+    ) -> dict[str, Any]:
+        """Soft-delete a conversion destination"""
+        params = self._build_params(
+            ad_account_id=ad_account_id,
+        )
+        return self._client._delete(
+            f"/v1/accounts/{account_id}/conversion-destinations/{destination_id}",
+            params=params,
+        )
+
+    def list_conversion_associations(
+        self, account_id: str, destination_id: str, ad_account_id: str
+    ) -> dict[str, Any]:
+        """List campaigns associated with a conversion destination"""
+        params = self._build_params(
+            ad_account_id=ad_account_id,
+        )
+        return self._client._get(
+            f"/v1/accounts/{account_id}/conversion-destinations/{destination_id}/associations",
+            params=params,
+        )
+
+    def add_conversion_associations(
+        self,
+        account_id: str,
+        destination_id: str,
+        ad_account_id: str,
+        campaign_ids: list[str],
+    ) -> dict[str, Any]:
+        """Associate campaigns with a conversion destination"""
+        payload = self._build_payload(
+            ad_account_id=ad_account_id,
+            campaign_ids=campaign_ids,
+        )
+        return self._client._post(
+            f"/v1/accounts/{account_id}/conversion-destinations/{destination_id}/associations",
+            data=payload,
+        )
+
+    def remove_conversion_associations(
+        self,
+        account_id: str,
+        destination_id: str,
+        ad_account_id: str,
+        campaign_ids: str,
+    ) -> dict[str, Any]:
+        """Remove campaign↔conversion associations"""
+        params = self._build_params(
+            ad_account_id=ad_account_id,
+            campaign_ids=campaign_ids,
+        )
+        return self._client._delete(
+            f"/v1/accounts/{account_id}/conversion-destinations/{destination_id}/associations",
+            params=params,
+        )
+
+    def get_conversion_metrics(
+        self,
+        account_id: str,
+        destination_id: str,
+        ad_account_id: str,
+        start_date: str,
+        *,
+        end_date: str | None = None,
+        granularity: str | None = "DAILY",
+    ) -> dict[str, Any]:
+        """Fetch attribution metrics for a conversion destination"""
+        params = self._build_params(
+            ad_account_id=ad_account_id,
+            start_date=start_date,
+            end_date=end_date,
+            granularity=granularity,
+        )
+        return self._client._get(
+            f"/v1/accounts/{account_id}/conversion-destinations/{destination_id}/metrics",
+            params=params,
+        )
+
     def create_ctwa_ad(
         self,
         account_id: str,
@@ -699,6 +851,158 @@ class AdsResource:
         """List destinations for the Conversions API (async)"""
         return await self._client._aget(
             f"/v1/accounts/{account_id}/conversion-destinations"
+        )
+
+    async def acreate_conversion_destination(
+        self,
+        account_id: str,
+        ad_account_id: str,
+        name: str,
+        type: str,
+        *,
+        attribution_type: str | None = None,
+        post_click_attribution_window_size: int | None = None,
+        view_through_attribution_window_size: int | None = None,
+        value_type: str | None = None,
+        value: dict[str, Any] | None = None,
+        auto_association_type: str | None = "ALL_CAMPAIGNS",
+    ) -> dict[str, Any]:
+        """Create a conversion destination (LinkedIn) (async)"""
+        payload = self._build_payload(
+            ad_account_id=ad_account_id,
+            name=name,
+            type=type,
+            attribution_type=attribution_type,
+            post_click_attribution_window_size=post_click_attribution_window_size,
+            view_through_attribution_window_size=view_through_attribution_window_size,
+            value_type=value_type,
+            value=value,
+            auto_association_type=auto_association_type,
+        )
+        return await self._client._apost(
+            f"/v1/accounts/{account_id}/conversion-destinations", data=payload
+        )
+
+    async def aget_conversion_destination(
+        self, account_id: str, destination_id: str, ad_account_id: str
+    ) -> dict[str, Any]:
+        """Fetch a single conversion destination (async)"""
+        params = self._build_params(
+            ad_account_id=ad_account_id,
+        )
+        return await self._client._aget(
+            f"/v1/accounts/{account_id}/conversion-destinations/{destination_id}",
+            params=params,
+        )
+
+    async def aupdate_conversion_destination(
+        self,
+        account_id: str,
+        destination_id: str,
+        ad_account_id: str,
+        *,
+        name: str | None = None,
+        enabled: bool | None = None,
+        attribution_type: str | None = None,
+        post_click_attribution_window_size: int | None = None,
+        view_through_attribution_window_size: int | None = None,
+        value_type: str | None = None,
+        value: dict[str, Any] | None = None,
+    ) -> dict[str, Any]:
+        """Update a conversion destination (async)"""
+        payload = self._build_payload(
+            ad_account_id=ad_account_id,
+            name=name,
+            enabled=enabled,
+            attribution_type=attribution_type,
+            post_click_attribution_window_size=post_click_attribution_window_size,
+            view_through_attribution_window_size=view_through_attribution_window_size,
+            value_type=value_type,
+            value=value,
+        )
+        return await self._client._apatch(
+            f"/v1/accounts/{account_id}/conversion-destinations/{destination_id}",
+            data=payload,
+        )
+
+    async def adelete_conversion_destination(
+        self, account_id: str, destination_id: str, *, ad_account_id: str | None = None
+    ) -> dict[str, Any]:
+        """Soft-delete a conversion destination (async)"""
+        params = self._build_params(
+            ad_account_id=ad_account_id,
+        )
+        return await self._client._adelete(
+            f"/v1/accounts/{account_id}/conversion-destinations/{destination_id}",
+            params=params,
+        )
+
+    async def alist_conversion_associations(
+        self, account_id: str, destination_id: str, ad_account_id: str
+    ) -> dict[str, Any]:
+        """List campaigns associated with a conversion destination (async)"""
+        params = self._build_params(
+            ad_account_id=ad_account_id,
+        )
+        return await self._client._aget(
+            f"/v1/accounts/{account_id}/conversion-destinations/{destination_id}/associations",
+            params=params,
+        )
+
+    async def aadd_conversion_associations(
+        self,
+        account_id: str,
+        destination_id: str,
+        ad_account_id: str,
+        campaign_ids: list[str],
+    ) -> dict[str, Any]:
+        """Associate campaigns with a conversion destination (async)"""
+        payload = self._build_payload(
+            ad_account_id=ad_account_id,
+            campaign_ids=campaign_ids,
+        )
+        return await self._client._apost(
+            f"/v1/accounts/{account_id}/conversion-destinations/{destination_id}/associations",
+            data=payload,
+        )
+
+    async def aremove_conversion_associations(
+        self,
+        account_id: str,
+        destination_id: str,
+        ad_account_id: str,
+        campaign_ids: str,
+    ) -> dict[str, Any]:
+        """Remove campaign↔conversion associations (async)"""
+        params = self._build_params(
+            ad_account_id=ad_account_id,
+            campaign_ids=campaign_ids,
+        )
+        return await self._client._adelete(
+            f"/v1/accounts/{account_id}/conversion-destinations/{destination_id}/associations",
+            params=params,
+        )
+
+    async def aget_conversion_metrics(
+        self,
+        account_id: str,
+        destination_id: str,
+        ad_account_id: str,
+        start_date: str,
+        *,
+        end_date: str | None = None,
+        granularity: str | None = "DAILY",
+    ) -> dict[str, Any]:
+        """Fetch attribution metrics for a conversion destination (async)"""
+        params = self._build_params(
+            ad_account_id=ad_account_id,
+            start_date=start_date,
+            end_date=end_date,
+            granularity=granularity,
+        )
+        return await self._client._aget(
+            f"/v1/accounts/{account_id}/conversion-destinations/{destination_id}/metrics",
+            params=params,
         )
 
     async def acreate_ctwa_ad(

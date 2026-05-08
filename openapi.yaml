@@ -4194,7 +4194,12 @@ components:
             Standard event name (Purchase, Lead, CompleteRegistration, AddToCart,
             InitiateCheckout, AddPaymentInfo, Subscribe, StartTrial, ViewContent,
             Search, Contact, SubmitApplication, Schedule) or a custom string
-            (only supported on platforms that accept custom events).
+            (only supported on platforms that accept custom events — Meta).
+
+            Per-platform behavior:
+            - Meta: free-form; standard names match Meta's built-ins.
+            - Google: ignored — the conversion action's category determines the type.
+            - LinkedIn: ignored — the conversion rule's `type` is locked to the destination.
           example: Purchase
         eventTime:
           type: integer
@@ -4204,8 +4209,10 @@ components:
           type: string
           description: |
             Unique dedup key. The same eventId must be used on pixel + CAPI
-            to prevent double-counting. Mapped to event_id on Meta and
-            transactionId on Google.
+            to prevent double-counting. Mapped to event_id on Meta,
+            transactionId on Google, eventId on LinkedIn (LinkedIn deduplicates
+            against Insight Tag events with the same eventId; the Insight Tag
+            event wins when both arrive).
           example: order_abc_123
         value:
           type: number
@@ -4223,7 +4230,13 @@ components:
             phone: { type: string, description: "Phone number, ideally E.164. Hashed server-side." }
             firstName: { type: string, description: Plaintext first name. Hashed server-side. }
             lastName: { type: string, description: Plaintext last name. Hashed server-side. }
-            externalId: { type: string, description: "Stable customer identifier (e.g. CRM user ID). Hashed server-side." }
+            externalId:
+              type: string
+              description: |
+                Stable customer identifier (e.g. CRM user ID). Hashed
+                server-side for Meta and Google. Sent as plaintext to LinkedIn
+                (LinkedIn's Conversions API spec requires the raw value).
+                Maximum effective list size on LinkedIn is 1.
             ipAddress: { type: string, description: Client IP address. Sent plaintext. }
             userAgent: { type: string, description: Client user-agent string. Sent plaintext. }
             country: { type: string, description: "ISO 3166-1 alpha-2 country code, e.g. 'us'." }
@@ -4236,6 +4249,15 @@ components:
                 gclid: { type: string, description: Google click ID (from gclid URL param). }
                 gbraid: { type: string, description: Google iOS 14.5+ app attribution ID. }
                 wbraid: { type: string, description: Google iOS 14.5+ web-to-app attribution ID. }
+                li_fat_id:
+                  type: string
+                  description: |
+                    LinkedIn first-party ad tracking click ID. Captured by
+                    parsing `li_fat_id` from landing-page URLs after the
+                    advertiser enables enhanced conversion tracking on the
+                    LinkedIn Insight Tag. Sent to LinkedIn as the
+                    LINKEDIN_FIRST_PARTY_ADS_TRACKING_UUID userId. Opaque
+                    token, not hashed.
         items:
           type: array
           description: Item-level detail for ecommerce events.
@@ -4259,6 +4281,40 @@ components:
           type: object
           additionalProperties: true
           description: Escape hatch for platform-specific fields we haven't normalized. Forwarded as-is.
+
+    ConversionDestination:
+      type: object
+      description: |
+        A discoverable conversion destination on an ad platform — a Meta pixel,
+        Google conversion action, or LinkedIn conversion rule. Returned by
+        `listConversionDestinations`, `getConversionDestination`,
+        `createConversionDestination`, and `updateConversionDestination`.
+      required: [id, name]
+      properties:
+        id:
+          type: string
+          description: |
+            Platform-native identifier. Pass back as `destinationId` on event
+            send and as the path segment on CRUD endpoints.
+        name: { type: string }
+        type:
+          type: string
+          description: |
+            Present when the platform locks the event type/category to the
+            destination (Google conversion actions, LinkedIn conversion rules).
+            Absent for Meta pixels (which accept any event name per request).
+        status:
+          type: string
+          enum: [active, inactive]
+          description: |
+            For LinkedIn, `inactive` means the rule is soft-deleted (`enabled: false`).
+        adAccountId:
+          type: string
+          description: |
+            Set by adapters whose destinations are scoped to a specific ad
+            account (LinkedIn). Pass back on subsequent CRUD calls to
+            identify the parent ad account.
+
 webhooks:
   post.scheduled:
     post:
@@ -21335,29 +21391,49 @@ paths:
       description: |
         Relay one or more conversion events to the target ad platform's native
         Conversions API. Supported platforms: Meta (metaads) via Graph API,
-        Google Ads (googleads) via Data Manager API `ingestEvents`.
+        Google Ads (googleads) via Data Manager API `ingestEvents`, LinkedIn
+        (linkedinads) via `/rest/conversionEvents`.
 
         Platform is inferred from the provided `accountId`. `destinationId`
         semantics differ per platform:
         - Meta: pixel (dataset) ID, e.g. "123456789012345"
         - Google: conversion action resource name, e.g.
           "customers/1234567890/conversionActions/987654321"
+        - LinkedIn: conversion rule ID or URN, e.g. "104012" or
+          "urn:lla:llaPartnerConversion:104012"
 
         Callers can list valid destinations via
         `GET /v1/accounts/{accountId}/conversion-destinations`.
 
         All PII (email, phone, names, external IDs) is hashed with SHA-256
         server-side per each platform's normalization spec (including Google's
-        Gmail-specific dot/plus-suffix stripping). Send plaintext.
+        Gmail-specific dot/plus-suffix stripping). Send plaintext. Note:
+        LinkedIn `externalIds` are passed through as plaintext per LinkedIn's
+        spec — only emails and phones are hashed.
 
-        Requires the Ads add-on.
+        Requires the Ads add-on. For LinkedIn, the connected account must
+        have been authorized after the Conversions API rollout (i.e. the
+        OAuth grant must include `rw_conversions`); older accounts must
+        reconnect.
 
         Batching: Meta caps at 1000 events per request and rejects the entire
-        batch if any event is malformed. Google caps at 2000. Both are handled
-        automatically by chunking.
+        batch if any event is malformed. Google caps at 2000. LinkedIn caps
+        at 5000 and is also all-or-nothing per chunk. All three are handled
+        automatically.
 
-        Dedup: pass a stable `eventId` on every event. Meta uses it to dedupe
-        against pixel events; Google maps it to transactionId.
+        Dedup: pass a stable `eventId` on every event. Meta and LinkedIn use
+        it to dedupe against browser-side pixel/Insight Tag events; Google
+        maps it to transactionId.
+
+        Per-platform `eventName` semantics:
+        - Meta: free-form. Standard names (Purchase, Lead, ...) match Meta's
+          built-in events; custom strings are accepted.
+        - Google: ignored — the conversion action's category determines the
+          event type. Send the standard name closest to your action for
+          documentation, but the platform will not branch on it.
+        - LinkedIn: ignored — the conversion rule's `type` (LEAD, PURCHASE,
+          etc.) is locked to the destination at rule-creation time. Send the
+          standard name for documentation; LinkedIn does not branch on it.
       security:
         - bearerAuth: []
       requestBody:
@@ -21370,24 +21446,27 @@ paths:
               properties:
                 accountId:
                   type: string
-                  description: SocialAccount ID (metaads or googleads).
+                  description: SocialAccount ID (metaads, googleads, or linkedinads).
                 destinationId:
                   type: string
                   description: |
                     Platform destination identifier. For Meta, the pixel/dataset
-                    ID. For Google, the conversion action resource name.
+                    ID. For Google, the conversion action resource name. For
+                    LinkedIn, the conversion rule ID or full
+                    `urn:lla:llaPartnerConversion:{id}` URN.
                 events:
                   type: array
                   minItems: 1
                   items: { $ref: '#/components/schemas/ConversionEvent' }
                 testCode:
                   type: string
-                  description: Meta `test_event_code` passthrough. Ignored by Google.
+                  description: Meta `test_event_code` passthrough. Ignored by Google and LinkedIn.
                 consent:
                   type: object
                   description: |
                     Batch-level user consent. Required by Google for EEA/UK
-                    events under the Feb 2026 restrictions. Ignored by Meta.
+                    events under the Feb 2026 restrictions. Ignored by Meta
+                    and LinkedIn.
                   properties:
                     adUserData: { type: string, enum: [GRANTED, DENIED] }
                     adPersonalization: { type: string, enum: [GRANTED, DENIED] }
@@ -21404,7 +21483,7 @@ paths:
               schema:
                 type: object
                 properties:
-                  platform: { type: string, enum: [metaads, googleads] }
+                  platform: { type: string, enum: [metaads, googleads, linkedinads] }
                   eventsReceived: { type: integer, description: Events accepted by the platform. }
                   eventsFailed: { type: integer, description: Events rejected (see failures). }
                   failures:
@@ -21418,14 +21497,24 @@ paths:
                         code: { oneOf: [{ type: string }, { type: integer }] }
                   traceId:
                     type: string
-                    description: Platform trace ID (fbtrace_id for Meta, requestId for Google) for debugging.
+                    description: |
+                      Platform trace ID for debugging. fbtrace_id for Meta,
+                      requestId for Google. Absent for LinkedIn (LinkedIn's
+                      conversionEvents endpoint does not surface a trace ID).
         '400':
           description: Invalid body (missing accountId/destinationId/events, malformed event shape).
         '401': { $ref: '#/components/responses/Unauthorized' }
         '403':
-          description: Ads add-on required.
+          description: |
+            Ads add-on required, OR (for LinkedIn) the connected account
+            lacks the `rw_conversions` scope and must be reconnected.
         '404':
           description: Account not found or not accessible.
+        '429':
+          description: |
+            LinkedIn token-level rate limit hit (600 requests/min, 300k/day
+            per token). Retry with backoff. Meta and Google have their own
+            rate-limit semantics surfaced via platform-specific 4xx responses.
 
   /v1/accounts/{accountId}/conversion-destinations:
     get:
@@ -21433,14 +21522,20 @@ paths:
       tags: [Ads]
       summary: List destinations for the Conversions API
       description: |
-        Returns the list of pixels (Meta) or conversion actions (Google)
-        accessible to the connected ads account. Use the returned `id` as
-        `destinationId` when posting to `POST /v1/ads/conversions`.
+        Returns the list of pixels (Meta), conversion actions (Google), or
+        conversion rules (LinkedIn) accessible to the connected ads account.
+        Use the returned `id` as `destinationId` when posting to
+        `POST /v1/ads/conversions`.
 
-        For Google, each destination's `type` reflects the conversion action's
-        category (PURCHASE, LEAD, SIGN_UP, etc.) — the event type is locked to
-        the destination. For Meta, `type` is absent: pixels accept any event
-        name per request.
+        For Google and LinkedIn, each destination's `type` reflects the
+        conversion type (PURCHASE, LEAD, SIGN_UP, etc.) — the event type is
+        locked to the destination. For Meta, `type` is absent: pixels accept
+        any event name per request.
+
+        For LinkedIn, destinations are returned across every sponsored ad
+        account the connected token can access; the `adAccountId` field on
+        each destination identifies the parent ad account and is required for
+        subsequent CRUD calls (update, delete, associations, metrics).
       security:
         - bearerAuth: []
       parameters:
@@ -21448,7 +21543,7 @@ paths:
           in: path
           required: true
           schema: { type: string }
-          description: SocialAccount ID (metaads or googleads).
+          description: SocialAccount ID (metaads, googleads, or linkedinads).
       responses:
         '200':
           description: Destinations listed
@@ -21457,7 +21552,7 @@ paths:
               schema:
                 type: object
                 properties:
-                  platform: { type: string, enum: [metaads, googleads] }
+                  platform: { type: string, enum: [metaads, googleads, linkedinads] }
                   destinations:
                     type: array
                     items:
@@ -21467,21 +21562,505 @@ paths:
                           type: string
                           description: |
                             Destination identifier. Meta: pixel ID. Google:
-                            conversion action resource name.
+                            conversion action resource name. LinkedIn:
+                            numeric conversion rule ID.
                         name: { type: string }
                         type:
                           type: string
                           description: |
                             Present when the platform locks event type to the
-                            destination (Google conversion actions).
+                            destination (Google conversion actions, LinkedIn
+                            conversion rules).
                         status: { type: string, enum: [active, inactive] }
+                        adAccountId:
+                          type: string
+                          description: |
+                            Set by adapters whose destinations are scoped to a
+                            specific ad account (LinkedIn). Pass back on
+                            subsequent CRUD calls.
         '400':
           description: Account's platform is not supported by the Conversions API.
         '401': { $ref: '#/components/responses/Unauthorized' }
         '403':
-          description: Ads add-on required.
+          description: |
+            Ads add-on required, OR (for LinkedIn) the connected account
+            lacks the `rw_conversions` scope and must be reconnected.
         '404':
           description: Account not found or not accessible.
+        '429':
+          description: LinkedIn rate limit hit. Retry with backoff.
+
+    post:
+      operationId: createConversionDestination
+      tags: [Ads]
+      summary: Create a conversion destination (LinkedIn)
+      description: |
+        Create a new conversion rule on the platform. LinkedIn-only today;
+        other platforms manage destinations in their own UIs and return 405.
+
+        For LinkedIn, the rule is created with `conversionMethod=CONVERSIONS_API`
+        and (by default) auto-associated with all of the ad account's campaigns
+        via `autoAssociationType=ALL_CAMPAIGNS`. Pass `autoAssociationType: NONE`
+        to opt out and manage associations explicitly via the associations
+        endpoints below.
+
+        365-day attribution windows are only valid for `SUBMIT_APPLICATION`,
+        `PURCHASE`, `ADD_TO_CART`, `QUALIFIED_LEAD`, and `LEAD` rule types;
+        the API rejects other combinations locally.
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: accountId
+          in: path
+          required: true
+          schema: { type: string }
+          description: SocialAccount ID (linkedinads).
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [adAccountId, name, type]
+              properties:
+                adAccountId:
+                  type: string
+                  description: |
+                    Sponsored ad account ID. Numeric (e.g. "5123456") or
+                    full `urn:li:sponsoredAccount:{id}` URN.
+                name: { type: string, maxLength: 255 }
+                type:
+                  type: string
+                  description: |
+                    Either a unified standard event name (e.g. "Purchase",
+                    "Lead", "AddToCart") or a LinkedIn rule type enum value
+                    (e.g. "PURCHASE", "QUALIFIED_LEAD"). The API maps
+                    standard names to LinkedIn enum values automatically.
+                attributionType:
+                  type: string
+                  enum: [LAST_TOUCH_BY_CAMPAIGN, LAST_TOUCH_BY_CONVERSION]
+                postClickAttributionWindowSize:
+                  type: integer
+                  enum: [1, 7, 30, 90, 365]
+                  description: |
+                    Default 30. 365 only allowed for LEAD, PURCHASE,
+                    ADD_TO_CART, QUALIFIED_LEAD, SUBMIT_APPLICATION rule
+                    types — the API rejects other combinations locally.
+                viewThroughAttributionWindowSize:
+                  type: integer
+                  enum: [1, 7, 30, 90, 365]
+                  description: |
+                    Default 7. Same 365-day-window type restriction applies
+                    as `postClickAttributionWindowSize`.
+                valueType:
+                  type: string
+                  enum: [DYNAMIC, FIXED, NO_VALUE]
+                  description: |
+                    DYNAMIC (default) uses the per-event `value` from
+                    `sendConversions`. FIXED uses the rule's `value` field.
+                    NO_VALUE drops monetary value entirely.
+                value:
+                  type: object
+                  required: [currencyCode, amount]
+                  description: |
+                    Static conversion value. Used when `valueType=FIXED`.
+                    The currency should match the ad account's currency.
+                  properties:
+                    currencyCode: { type: string, minLength: 3, maxLength: 3, description: ISO 4217 (e.g. "USD"). }
+                    amount: { type: string, description: 'Decimal string (e.g. "49.99").' }
+                autoAssociationType:
+                  type: string
+                  enum: [ALL_CAMPAIGNS, OBJECTIVE_BASED, NONE]
+                  default: ALL_CAMPAIGNS
+                  description: |
+                    Controls campaign association at rule-creation time:
+                    - ALL_CAMPAIGNS: associate the rule with every active,
+                      paused, and draft campaign in the ad account
+                    - OBJECTIVE_BASED: associate only campaigns whose
+                      objective matches the rule's type
+                    - NONE: don't auto-associate. Manage associations via
+                      the `/associations` endpoints below.
+                    Note: auto-association runs once at create time; new
+                    campaigns added after the rule still need explicit
+                    association.
+      responses:
+        '201':
+          description: Destination created
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  platform: { type: string, enum: [linkedinads] }
+                  destination: { $ref: '#/components/schemas/ConversionDestination' }
+        '400':
+          description: Invalid body or LinkedIn validation failure.
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403':
+          description: |
+            Ads add-on required, or the connected LinkedIn account lacks the
+            `rw_conversions` scope (reconnect required).
+        '404':
+          description: Account not found or not accessible.
+        '405':
+          description: Platform does not support destination creation.
+        '429':
+          description: LinkedIn rate limit hit. Retry with backoff.
+
+  /v1/accounts/{accountId}/conversion-destinations/{destinationId}:
+    get:
+      operationId: getConversionDestination
+      tags: [Ads]
+      summary: Fetch a single conversion destination
+      description: |
+        LinkedIn-only today. Returns the full destination record for one
+        conversion rule. The `adAccountId` query parameter is required because
+        LinkedIn rules are scoped to a sponsored ad account.
+      security:
+        - bearerAuth: []
+      parameters:
+        - { name: accountId, in: path, required: true, schema: { type: string } }
+        - { name: destinationId, in: path, required: true, schema: { type: string } }
+        - name: adAccountId
+          in: query
+          required: true
+          schema: { type: string }
+          description: Numeric ID or full `urn:li:sponsoredAccount:{id}` URN.
+      responses:
+        '200':
+          description: Destination fetched
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  platform: { type: string, enum: [linkedinads] }
+                  destination: { $ref: '#/components/schemas/ConversionDestination' }
+        '400': { description: Validation error. }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { description: Ads add-on or LinkedIn reconnect required. }
+        '404': { description: Account or destination not found. }
+        '405': { description: Platform does not support fetching a single destination. }
+        '429': { description: LinkedIn rate limit hit. Retry with backoff. }
+
+    patch:
+      operationId: updateConversionDestination
+      tags: [Ads]
+      summary: Update a conversion destination
+      description: |
+        Partial-update a conversion rule. LinkedIn-only today. Whitelisted
+        fields: `name`, `enabled`, attribution windows, `valueType`, `value`,
+        `attributionType`. The rule's `type` and parent ad account are
+        intentionally not exposed for update — recreate the rule if those
+        need to change.
+      security:
+        - bearerAuth: []
+      parameters:
+        - { name: accountId, in: path, required: true, schema: { type: string } }
+        - { name: destinationId, in: path, required: true, schema: { type: string } }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [adAccountId]
+              description: |
+                At least one mutable field beyond `adAccountId` is required;
+                the route returns 400 if no patch fields are provided.
+              properties:
+                adAccountId: { type: string }
+                name: { type: string, maxLength: 255 }
+                enabled:
+                  type: boolean
+                  description: |
+                    Setting `false` is equivalent to calling DELETE — the
+                    rule will appear as `inactive` afterwards.
+                attributionType:
+                  type: string
+                  enum: [LAST_TOUCH_BY_CAMPAIGN, LAST_TOUCH_BY_CONVERSION]
+                postClickAttributionWindowSize:
+                  type: integer
+                  enum: [1, 7, 30, 90, 365]
+                  description: |
+                    365 only allowed for LEAD, PURCHASE, ADD_TO_CART,
+                    QUALIFIED_LEAD, SUBMIT_APPLICATION rule types.
+                viewThroughAttributionWindowSize:
+                  type: integer
+                  enum: [1, 7, 30, 90, 365]
+                  description: |
+                    365 only allowed for LEAD, PURCHASE, ADD_TO_CART,
+                    QUALIFIED_LEAD, SUBMIT_APPLICATION rule types.
+                valueType:
+                  type: string
+                  enum: [DYNAMIC, FIXED, NO_VALUE]
+                value:
+                  type: object
+                  description: Used when `valueType=FIXED`.
+                  properties:
+                    currencyCode: { type: string, description: ISO 4217. }
+                    amount: { type: string, description: 'Decimal string (e.g. "49.99").' }
+      responses:
+        '200':
+          description: Destination updated (re-fetched canonical state)
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  platform: { type: string, enum: [linkedinads] }
+                  destination: { $ref: '#/components/schemas/ConversionDestination' }
+        '400': { description: Invalid body or LinkedIn validation failure. }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { description: Ads add-on or LinkedIn reconnect required. }
+        '404': { description: Account or destination not found. }
+        '405': { description: Platform does not support updating destinations. }
+        '429': { description: LinkedIn rate limit hit. Retry with backoff. }
+
+    delete:
+      operationId: deleteConversionDestination
+      tags: [Ads]
+      summary: Soft-delete a conversion destination
+      description: |
+        LinkedIn-only today. LinkedIn does not expose hard-delete on conversion
+        rules — what their UI calls "delete" is the same `enabled: false` flip
+        we apply here. The rule remains fetchable via GET with
+        `status: 'inactive'`; the unified discovery endpoint hides it by
+        default.
+
+        `adAccountId` may be passed as a query parameter (recommended) or as
+        a JSON body field for clients that can send DELETE bodies.
+      security:
+        - bearerAuth: []
+      parameters:
+        - { name: accountId, in: path, required: true, schema: { type: string } }
+        - { name: destinationId, in: path, required: true, schema: { type: string } }
+        - name: adAccountId
+          in: query
+          schema: { type: string }
+          description: Required as query OR in JSON body.
+      responses:
+        '204': { description: Soft-deleted. }
+        '400': { description: adAccountId missing. }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { description: Ads add-on or LinkedIn reconnect required. }
+        '404': { description: Account or destination not found. }
+        '405': { description: Platform does not support deleting destinations. }
+        '429': { description: LinkedIn rate limit hit. Retry with backoff. }
+
+  /v1/accounts/{accountId}/conversion-destinations/{destinationId}/associations:
+    get:
+      operationId: listConversionAssociations
+      tags: [Ads]
+      summary: List campaigns associated with a conversion destination
+      description: |
+        LinkedIn-only today. Returns the campaigns currently associated with
+        this conversion rule. Note that auto-association on rule creation
+        runs once at create time; campaigns created after the rule still need
+        explicit association.
+      security:
+        - bearerAuth: []
+      parameters:
+        - { name: accountId, in: path, required: true, schema: { type: string } }
+        - { name: destinationId, in: path, required: true, schema: { type: string } }
+        - name: adAccountId
+          in: query
+          required: true
+          schema: { type: string }
+      responses:
+        '200':
+          description: Associations listed
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  platform: { type: string, enum: [linkedinads] }
+                  associations:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        campaignId: { type: string }
+                        conversionId: { type: string }
+                        associatedAt: { type: integer, description: Epoch ms. }
+        '400': { description: Validation error. }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { description: Ads add-on or LinkedIn reconnect required. }
+        '404': { description: Account or destination not found. }
+        '405': { description: Platform does not support associations. }
+        '429': { description: LinkedIn rate limit hit. Retry with backoff. }
+
+    post:
+      operationId: addConversionAssociations
+      tags: [Ads]
+      summary: Associate campaigns with a conversion destination
+      description: |
+        Associate one or more campaigns with this conversion rule. Returns a
+        per-campaign success/failure result so callers can retry only the
+        rows that failed (e.g. wrong campaign type for the rule's objective).
+      security:
+        - bearerAuth: []
+      parameters:
+        - { name: accountId, in: path, required: true, schema: { type: string } }
+        - { name: destinationId, in: path, required: true, schema: { type: string } }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [adAccountId, campaignIds]
+              properties:
+                adAccountId: { type: string }
+                campaignIds:
+                  type: array
+                  minItems: 1
+                  maxItems: 100
+                  items:
+                    type: string
+                    description: Numeric campaign ID or full `urn:li:sponsoredCampaign:{id}` URN.
+      responses:
+        '200':
+          description: |
+            Per-campaign batch result. Status is 200 even when some rows
+            failed — inspect `failed[]` for details. Inputs that fail local
+            URN validation are bucketed into `failed` without ever hitting
+            LinkedIn.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  platform: { type: string, enum: [linkedinads] }
+                  succeeded:
+                    type: array
+                    description: Numeric campaign IDs that were successfully associated.
+                    items: { type: string }
+                  failed:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        campaignId: { type: string }
+                        reason: { type: string }
+        '400': { description: Invalid body. }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { description: Ads add-on or LinkedIn reconnect required. }
+        '404': { description: Account or destination not found. }
+        '405': { description: Platform does not support associations. }
+        '429': { description: LinkedIn rate limit hit. Retry with backoff. }
+
+    delete:
+      operationId: removeConversionAssociations
+      tags: [Ads]
+      summary: Remove campaign↔conversion associations
+      description: |
+        Remove one or more campaign associations from this conversion rule.
+        Pass `adAccountId` and `campaignIds` as query parameters
+        (`campaignIds` is comma-separated). The route also accepts a JSON
+        body with the same fields for clients that prefer DELETE-with-body,
+        but the documented surface is query-only because some SDK code
+        generators (e.g. Python) collapse query + body parameters with the
+        same name into a single kwarg.
+      security:
+        - bearerAuth: []
+      parameters:
+        - { name: accountId, in: path, required: true, schema: { type: string } }
+        - { name: destinationId, in: path, required: true, schema: { type: string } }
+        - { name: adAccountId, in: query, required: true, schema: { type: string } }
+        - { name: campaignIds, in: query, required: true, schema: { type: string }, description: 'Comma-separated list of campaign IDs.' }
+      responses:
+        '200':
+          description: |
+            Per-campaign batch result. Status is 200 even when some rows
+            failed — inspect `failed[]` for details.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  platform: { type: string, enum: [linkedinads] }
+                  succeeded:
+                    type: array
+                    description: Numeric campaign IDs that were successfully removed.
+                    items: { type: string }
+                  failed:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        campaignId: { type: string }
+                        reason: { type: string }
+        '400':
+          description: |
+            Validation error: missing `adAccountId` or `campaignIds`, or
+            campaignIds exceeds 100 entries per request.
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { description: Ads add-on or LinkedIn reconnect required. }
+        '404': { description: Account or destination not found. }
+        '405': { description: Platform does not support associations. }
+        '429': { description: LinkedIn rate limit hit. Retry with backoff. }
+
+  /v1/accounts/{accountId}/conversion-destinations/{destinationId}/metrics:
+    get:
+      operationId: getConversionMetrics
+      tags: [Ads]
+      summary: Fetch attribution metrics for a conversion destination
+      description: |
+        LinkedIn-only today. Returns conversion-attribution metrics
+        (`externalWebsiteConversions`, `externalWebsitePostClickConversions`,
+        `externalWebsitePostViewConversions`, `conversionValueInLocalCurrency`,
+        `qualifiedLeads`, `costInLocalCurrency`) bucketed by date.
+
+        Date-range constraints (passed through from LinkedIn):
+        - `granularity=DAILY` is retained for ~6 months only
+        - `granularity=ALL` with a range > 6 months auto-rounds to month boundaries
+        - `granularity=MONTHLY`/`YEARLY` retains 24 months
+
+        Throttle: LinkedIn caps adAnalytics at 45M metric values per 5-minute
+        window across the calling token. Single-rule queries are well within
+        that limit; surfaces as 429 if hit.
+      security:
+        - bearerAuth: []
+      parameters:
+        - { name: accountId, in: path, required: true, schema: { type: string } }
+        - { name: destinationId, in: path, required: true, schema: { type: string } }
+        - { name: adAccountId, in: query, required: true, schema: { type: string } }
+        - { name: startDate, in: query, required: true, schema: { type: string, pattern: '^\\d{4}-\\d{2}-\\d{2}$' } }
+        - { name: endDate, in: query, schema: { type: string, pattern: '^\\d{4}-\\d{2}-\\d{2}$' } }
+        - name: granularity
+          in: query
+          schema:
+            type: string
+            enum: [ALL, DAILY, MONTHLY, YEARLY]
+            default: DAILY
+      responses:
+        '200':
+          description: Metrics rows
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  platform: { type: string, enum: [linkedinads] }
+                  granularity: { type: string, enum: [ALL, DAILY, MONTHLY, YEARLY] }
+                  rows:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        start: { type: string, description: 'YYYY-MM-DD' }
+                        end: { type: string, description: 'YYYY-MM-DD (inclusive)' }
+                        metrics:
+                          type: object
+                          additionalProperties: { oneOf: [{ type: number }, { type: string }] }
+        '400': { description: Validation error or invalid date range. }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { description: Ads add-on or LinkedIn reconnect required. }
+        '404': { description: Account or destination not found. }
+        '405': { description: Platform does not support metrics readback. }
+        '429': { description: LinkedIn analytics rate limit hit. }
 
   /v1/whatsapp/conversions:
     post:

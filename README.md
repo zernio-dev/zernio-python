@@ -387,15 +387,23 @@ Both `from zernio import ...` and `from late import ...` work identically. The `
 | `ads.list_ad_accounts()` | List ad accounts |
 | `ads.list_ads()` | List ads |
 | `ads.list_ads_business_centers()` | List TikTok Business Centers |
+| `ads.list_conversion_associations()` | List campaigns associated with a conversion destination |
 | `ads.list_conversion_destinations()` | List destinations for the Conversions API |
+| `ads.create_conversion_destination()` | Create a conversion destination (LinkedIn) |
 | `ads.create_ctwa_ad()` | Create Click-to-WhatsApp ad |
 | `ads.create_standalone_ad()` | Create standalone ad |
 | `ads.get_ad()` | Get ad details |
 | `ads.get_ad_analytics()` | Get ad analytics |
 | `ads.get_ad_comments()` | List comments on an ad |
+| `ads.get_conversion_destination()` | Fetch a single conversion destination |
+| `ads.get_conversion_metrics()` | Fetch attribution metrics for a conversion destination |
 | `ads.update_ad()` | Update ad |
+| `ads.update_conversion_destination()` | Update a conversion destination |
 | `ads.delete_ad()` | Cancel an ad |
+| `ads.delete_conversion_destination()` | Soft-delete a conversion destination |
+| `ads.add_conversion_associations()` | Associate campaigns with a conversion destination |
 | `ads.boost_post()` | Boost post as ad |
+| `ads.remove_conversion_associations()` | Remove campaign↔conversion associations |
 | `ads.search_ad_interests()` | Search targeting interests |
 | `ads.search_ad_targeting_locations()` | Search geo targeting locations (Meta) |
 | `ads.send_conversions()` | Send conversion events to an ad platform |

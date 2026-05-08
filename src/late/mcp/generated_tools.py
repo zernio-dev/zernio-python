@@ -1743,14 +1743,17 @@ def register_generated_tools(mcp, _get_client):
         """Send conversion events to an ad platform
 
             Args:
-                account_id: SocialAccount ID (metaads or googleads). (required)
+                account_id: SocialAccount ID (metaads, googleads, or linkedinads). (required)
                 destination_id: Platform destination identifier. For Meta, the pixel/dataset
-        ID. For Google, the conversion action resource name.
+        ID. For Google, the conversion action resource name. For
+        LinkedIn, the conversion rule ID or full
+        `urn:lla:llaPartnerConversion:{id}` URN.
          (required)
                 events: (required)
-                test_code: Meta `test_event_code` passthrough. Ignored by Google.
+                test_code: Meta `test_event_code` passthrough. Ignored by Google and LinkedIn.
                 consent: Batch-level user consent. Required by Google for EEA/UK
-        events under the Feb 2026 restrictions. Ignored by Meta."""
+        events under the Feb 2026 restrictions. Ignored by Meta
+        and LinkedIn."""
         client = _get_client()
         try:
             response = client.ads.send_conversions(
@@ -1769,10 +1772,266 @@ def register_generated_tools(mcp, _get_client):
         """List destinations for the Conversions API
 
         Args:
-            account_id: SocialAccount ID (metaads or googleads). (required)"""
+            account_id: SocialAccount ID (metaads, googleads, or linkedinads). (required)"""
         client = _get_client()
         try:
             response = client.ads.list_conversion_destinations(account_id=account_id)
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool()
+    def ads_create_conversion_destination(
+        account_id: str,
+        ad_account_id: str,
+        name: str,
+        type: str,
+        attribution_type: str | None = None,
+        post_click_attribution_window_size: int | None = None,
+        view_through_attribution_window_size: int | None = None,
+        value_type: str | None = None,
+        value: dict[str, Any] | None = None,
+        auto_association_type: str = "ALL_CAMPAIGNS",
+    ) -> str:
+        """Create a conversion destination (LinkedIn)
+
+            Args:
+                account_id: SocialAccount ID (linkedinads). (required)
+                ad_account_id: Sponsored ad account ID. Numeric (e.g. "5123456") or
+        full `urn:li:sponsoredAccount:{id}` URN.
+         (required)
+                name: (required)
+                type: Either a unified standard event name (e.g. "Purchase",
+        "Lead", "AddToCart") or a LinkedIn rule type enum value
+        (e.g. "PURCHASE", "QUALIFIED_LEAD"). The API maps
+        standard names to LinkedIn enum values automatically.
+         (required)
+                attribution_type
+                post_click_attribution_window_size: Default 30. 365 only allowed for LEAD, PURCHASE,
+        ADD_TO_CART, QUALIFIED_LEAD, SUBMIT_APPLICATION rule
+        types — the API rejects other combinations locally.
+                view_through_attribution_window_size: Default 7. Same 365-day-window type restriction applies
+        as `postClickAttributionWindowSize`.
+                value_type: DYNAMIC (default) uses the per-event `value` from
+        `sendConversions`. FIXED uses the rule's `value` field.
+        NO_VALUE drops monetary value entirely.
+                value: Static conversion value. Used when `valueType=FIXED`.
+        The currency should match the ad account's currency.
+                auto_association_type: Controls campaign association at rule-creation time:
+        - ALL_CAMPAIGNS: associate the rule with every active,
+          paused, and draft campaign in the ad account
+        - OBJECTIVE_BASED: associate only campaigns whose
+          objective matches the rule's type
+        - NONE: don't auto-associate. Manage associations via
+          the `/associations` endpoints below.
+        Note: auto-association runs once at create time; new
+        campaigns added after the rule still need explicit
+        association."""
+        client = _get_client()
+        try:
+            response = client.ads.create_conversion_destination(
+                account_id=account_id,
+                ad_account_id=ad_account_id,
+                name=name,
+                type=type,
+                attribution_type=attribution_type,
+                post_click_attribution_window_size=post_click_attribution_window_size,
+                view_through_attribution_window_size=view_through_attribution_window_size,
+                value_type=value_type,
+                value=value,
+                auto_association_type=auto_association_type,
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool()
+    def ads_get_conversion_destination(
+        account_id: str, destination_id: str, ad_account_id: str
+    ) -> str:
+        """Fetch a single conversion destination
+
+        Args:
+            account_id: (required)
+            destination_id: (required)
+            ad_account_id: Numeric ID or full `urn:li:sponsoredAccount:{id}` URN. (required)"""
+        client = _get_client()
+        try:
+            response = client.ads.get_conversion_destination(
+                account_id=account_id,
+                destination_id=destination_id,
+                ad_account_id=ad_account_id,
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool()
+    def ads_update_conversion_destination(
+        account_id: str,
+        destination_id: str,
+        ad_account_id: str,
+        name: str | None = None,
+        enabled: bool | None = None,
+        attribution_type: str | None = None,
+        post_click_attribution_window_size: int | None = None,
+        view_through_attribution_window_size: int | None = None,
+        value_type: str | None = None,
+        value: dict[str, Any] | None = None,
+    ) -> str:
+        """Update a conversion destination
+
+            Args:
+                account_id: (required)
+                destination_id: (required)
+                ad_account_id: (required)
+                name
+                enabled: Setting `false` is equivalent to calling DELETE — the
+        rule will appear as `inactive` afterwards.
+                attribution_type
+                post_click_attribution_window_size: 365 only allowed for LEAD, PURCHASE, ADD_TO_CART,
+        QUALIFIED_LEAD, SUBMIT_APPLICATION rule types.
+                view_through_attribution_window_size: 365 only allowed for LEAD, PURCHASE, ADD_TO_CART,
+        QUALIFIED_LEAD, SUBMIT_APPLICATION rule types.
+                value_type
+                value: Used when `valueType=FIXED`."""
+        client = _get_client()
+        try:
+            response = client.ads.update_conversion_destination(
+                account_id=account_id,
+                destination_id=destination_id,
+                ad_account_id=ad_account_id,
+                name=name,
+                enabled=enabled,
+                attribution_type=attribution_type,
+                post_click_attribution_window_size=post_click_attribution_window_size,
+                view_through_attribution_window_size=view_through_attribution_window_size,
+                value_type=value_type,
+                value=value,
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool()
+    def ads_delete_conversion_destination(
+        account_id: str, destination_id: str, ad_account_id: str | None = None
+    ) -> str:
+        """Soft-delete a conversion destination
+
+        Args:
+            account_id: (required)
+            destination_id: (required)
+            ad_account_id: Required as query OR in JSON body."""
+        client = _get_client()
+        try:
+            response = client.ads.delete_conversion_destination(
+                account_id=account_id,
+                destination_id=destination_id,
+                ad_account_id=ad_account_id,
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool()
+    def ads_list_conversion_associations(
+        account_id: str, destination_id: str, ad_account_id: str
+    ) -> str:
+        """List campaigns associated with a conversion destination
+
+        Args:
+            account_id: (required)
+            destination_id: (required)
+            ad_account_id: (required)"""
+        client = _get_client()
+        try:
+            response = client.ads.list_conversion_associations(
+                account_id=account_id,
+                destination_id=destination_id,
+                ad_account_id=ad_account_id,
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool()
+    def ads_add_conversion_associations(
+        account_id: str,
+        destination_id: str,
+        ad_account_id: str,
+        campaign_ids: list[str] | None,
+    ) -> str:
+        """Associate campaigns with a conversion destination
+
+        Args:
+            account_id: (required)
+            destination_id: (required)
+            ad_account_id: (required)
+            campaign_ids: (required)"""
+        client = _get_client()
+        try:
+            response = client.ads.add_conversion_associations(
+                account_id=account_id,
+                destination_id=destination_id,
+                ad_account_id=ad_account_id,
+                campaign_ids=campaign_ids,
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool()
+    def ads_remove_conversion_associations(
+        account_id: str, destination_id: str, ad_account_id: str, campaign_ids: str
+    ) -> str:
+        """Remove campaign↔conversion associations
+
+        Args:
+            account_id: (required)
+            destination_id: (required)
+            ad_account_id: (required)
+            campaign_ids: Comma-separated list of campaign IDs. (required)"""
+        client = _get_client()
+        try:
+            response = client.ads.remove_conversion_associations(
+                account_id=account_id,
+                destination_id=destination_id,
+                ad_account_id=ad_account_id,
+                campaign_ids=campaign_ids,
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool()
+    def ads_get_conversion_metrics(
+        account_id: str,
+        destination_id: str,
+        ad_account_id: str,
+        start_date: str,
+        end_date: str | None = None,
+        granularity: str = "DAILY",
+    ) -> str:
+        """Fetch attribution metrics for a conversion destination
+
+        Args:
+            account_id: (required)
+            destination_id: (required)
+            ad_account_id: (required)
+            start_date: (required)
+            end_date
+            granularity"""
+        client = _get_client()
+        try:
+            response = client.ads.get_conversion_metrics(
+                account_id=account_id,
+                destination_id=destination_id,
+                ad_account_id=ad_account_id,
+                start_date=start_date,
+                end_date=end_date,
+                granularity=granularity,
+            )
             return _format_response(response)
         except Exception as e:
             return f"Error: {e}"
