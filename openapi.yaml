@@ -3215,25 +3215,33 @@ components:
               description: "Metronome users only. Accounts currently connected across the team."
             xApiCalls:
               type: object
+              deprecated: true
               description: |
-                Metronome users only. Aggregated X API call counts bucketed by
-                price tier (backward-compat). For per-operation breakdown use
-                `xApiCallsByOperation`.
+                **Deprecated.** Legacy 3-tier aggregate. Operations outside the
+                three historical prices ($0.005/$0.010/$0.015) — notably the
+                $0.200 "Posts with URL" tier added April 2026 — are silently
+                excluded from this shape. Use `xApiCallsByOperation` instead;
+                it captures every tier and is the source of truth for
+                per-operation call counts.
               properties:
-                x_api_005: { type: integer, description: "Calls at $0.005 per call (reads, list mgmt, bookmarks, etc.)" }
-                x_api_010: { type: integer, description: "Calls at $0.010 per call (publish/delete, DM reads, follows)" }
-                x_api_015: { type: integer, description: "Calls at $0.015 per call (sending DMs, follow actions)" }
+                x_api_005: { type: integer, description: "Calls at $0.005 per call (reads, lists, bookmarks, content manage, etc.)" }
+                x_api_010: { type: integer, description: "Calls at $0.010 per call (user reads, DM reads, follow reads, trends, list create, privacy update)" }
+                x_api_015: { type: integer, description: "Calls at $0.015 per call (posts/replies, DM sends, user interactions)" }
             xApiCallsByOperation:
               type: object
               additionalProperties:
                 type: integer
               description: |
                 Metronome users only. Per-operation X API call counts keyed by
-                operation (e.g. `posts_read`, `content_create`). Resolve each key
-                to price and metadata via `GET /v1/billing/x-pricing`.
+                operation (e.g. `posts_read`, `content_create`,
+                `content_create_with_url`). Resolve each key to price and metadata
+                via `GET /v1/billing/x-pricing`. This is the canonical source —
+                covers every price tier including the $0.200 URL tier that
+                `xApiCalls` excludes.
               example:
                 posts_read: 42
                 content_create: 7
+                content_create_with_url: 3
                 dm_interaction_create: 1
         spend:
           type: object
@@ -3248,8 +3256,10 @@ components:
             xSpendCents:
               type: integer
               description: |
-                Current-period X/Twitter API spend in cents, derived from the per-tier
-                call counts. Rounded up for conservative enforcement against `xSpendLimitCents`.
+                Current-period X/Twitter API spend in cents, summed from
+                `xApiCallsByOperation` × per-operation prices. Tier-agnostic
+                (covers every price including the $0.200 URL tier). Rounded
+                up for conservative enforcement against `xSpendLimitCents`.
             xSpendLimitCents:
               type: integer
               nullable: true
@@ -3281,8 +3291,13 @@ components:
             properties:
               tier:
                 type: string
-                enum: [x_api_005, x_api_010, x_api_015]
-                description: Historical bucket key used in `xApiCalls` aggregation.
+                description: |
+                  Tier key derived from price (e.g. `x_api_005` for $0.005,
+                  `x_api_200` for $0.200). The first three keys map to the
+                  legacy `xApiCalls` aggregate; new tiers (e.g. `x_api_200`
+                  for the URL tier added April 2026) are surfaced here but
+                  not in the legacy shape.
+                example: x_api_005
               pricePerCallUsd: { type: number, example: 0.005 }
               operationCount: { type: integer, example: 13 }
         operations:
@@ -3314,8 +3329,11 @@ components:
           description: Per-call price in cents. Fractional values are intentional.
         tier:
           type: string
-          enum: [x_api_005, x_api_010, x_api_015]
-          description: Which aggregate price tier this operation falls into.
+          description: |
+            Tier key derived from `pricePerCallUsd` (e.g. `x_api_005` for
+            $0.005, `x_api_200` for $0.200). Useful for grouping operations
+            by price in dashboards.
+          example: x_api_005
         triggeredBy:
           type: array
           description: Zernio platform methods that emit this operation, with their metering rule.
@@ -7252,8 +7270,9 @@ paths:
                 lastVerified: "2026-03-26"
                 tiers:
                   - { tier: x_api_005, pricePerCallUsd: 0.005, operationCount: 13 }
-                  - { tier: x_api_010, pricePerCallUsd: 0.010, operationCount: 9 }
-                  - { tier: x_api_015, pricePerCallUsd: 0.015, operationCount: 2 }
+                  - { tier: x_api_010, pricePerCallUsd: 0.010, operationCount: 8 }
+                  - { tier: x_api_015, pricePerCallUsd: 0.015, operationCount: 3 }
+                  - { tier: x_api_200, pricePerCallUsd: 0.200, operationCount: 1 }
                 operations:
                   - operation: posts_read
                     eventType: x_posts_read
@@ -7268,9 +7287,17 @@ paths:
                   - operation: content_create
                     eventType: x_content_create
                     displayName: "X API: Content Create"
-                    pricePerCallUsd: 0.010
-                    pricePerCallCents: 1.0
-                    tier: x_api_010
+                    pricePerCallUsd: 0.015
+                    pricePerCallCents: 1.5
+                    tier: x_api_015
+                    triggeredBy:
+                      - { method: publishPost, metering: always }
+                  - operation: content_create_with_url
+                    eventType: x_content_create_with_url
+                    displayName: "X API: Content Create (with URL)"
+                    pricePerCallUsd: 0.200
+                    pricePerCallCents: 20.0
+                    tier: x_api_200
                     triggeredBy:
                       - { method: publishPost, metering: always }
         '401': { $ref: '#/components/responses/Unauthorized' }
@@ -7285,10 +7312,13 @@ paths:
         The response shape depends on the account's `billingSystem`:
           * Stripe users: per-period `usage.uploads` / `usage.profiles` counters.
           * Metronome (usage-based) users: `usage.connectedAccounts`,
-            `usage.xApiCalls` (aggregated by tier), `usage.xApiCallsByOperation`
-            (per-operation map — resolve keys via `GET /v1/billing/x-pricing`),
-            plus a `spend` block with `currentPeriodCents`, `xSpendCents`, and
-            `xSpendLimitCents`.
+            `usage.xApiCallsByOperation` (per-operation X API call counts —
+            resolve keys via `GET /v1/billing/x-pricing`), plus a `spend`
+            block with `currentPeriodCents`, `xSpendCents`, and
+            `xSpendLimitCents`. The legacy `usage.xApiCalls` 3-tier
+            aggregate is still emitted for back-compat but excludes the
+            $0.200 URL tier and any future tiers — new clients should
+            consume `xApiCallsByOperation` only.
       responses:
         '200':
           description: Usage stats
@@ -7326,19 +7356,24 @@ paths:
                       profiles: -1
                     usage:
                       connectedAccounts: 5
+                      # DEPRECATED — kept for back-compat. Excludes the
+                      # $0.200 URL tier; use xApiCallsByOperation.
                       xApiCalls:
                         x_api_005: 42
-                        x_api_010: 8
-                        x_api_015: 1
+                        x_api_010: 1
+                        x_api_015: 7
                       xApiCallsByOperation:
                         posts_read: 42
                         content_create: 7
+                        content_create_with_url: 3
                         dm_event_read: 1
                         dm_interaction_create: 1
                     spend:
                       currentPeriodCents: 1293
                       creditsRemainingCents: 0
-                      xSpendCents: 31
+                      # 42 × $0.005 + 7 × $0.015 + 3 × $0.200 + 1 × $0.010 + 1 × $0.015
+                      # = $0.21 + $0.105 + $0.60 + $0.01 + $0.015 = $0.94 -> 94¢
+                      xSpendCents: 94
                       xSpendLimitCents: 1000
                     hasAccess: true
                     isInvitedUser: false
