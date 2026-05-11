@@ -36,6 +36,7 @@ from ..resources import (
     ReviewsResource,
     SequencesResource,
     ToolsResource,
+    TrackingTagsResource,
     TwitterEngagementResource,
     UsageResource,
     UsersResource,
@@ -143,6 +144,7 @@ class Zernio(BaseClient):
         self.reviews = ReviewsResource(self)
         self.sequences = SequencesResource(self)
         self.tools = ToolsResource(self)
+        self.tracking_tags = TrackingTagsResource(self)
         self.twitter_engagement = TwitterEngagementResource(self)
         self.usage = UsageResource(self)
         self.users = UsersResource(self)

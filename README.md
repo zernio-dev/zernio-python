@@ -389,29 +389,21 @@ Both `from zernio import ...` and `from late import ...` work identically. The `
 | `ads.list_ads_business_centers()` | List TikTok Business Centers |
 | `ads.list_conversion_associations()` | List campaigns associated with a conversion destination |
 | `ads.list_conversion_destinations()` | List destinations for the Conversions API |
-| `ads.list_tracking_tag_shared_accounts()` | List ad accounts a tracking tag is shared with |
-| `ads.list_tracking_tags()` | List tracking tags (Meta Pixels) |
 | `ads.create_conversion_destination()` | Create a conversion destination (LinkedIn) |
 | `ads.create_ctwa_ad()` | Create Click-to-WhatsApp ad |
 | `ads.create_standalone_ad()` | Create standalone ad |
-| `ads.create_tracking_tag()` | Create a tracking tag (Meta Pixel) |
 | `ads.get_ad()` | Get ad details |
 | `ads.get_ad_analytics()` | Get ad analytics |
 | `ads.get_ad_comments()` | List comments on an ad |
 | `ads.get_conversion_destination()` | Fetch a single conversion destination |
 | `ads.get_conversion_metrics()` | Fetch attribution metrics for a conversion destination |
-| `ads.get_tracking_tag()` | Fetch a single tracking tag (Meta Pixel) |
-| `ads.get_tracking_tag_stats()` | Aggregated event stats for a tracking tag (Meta Pixel) |
 | `ads.update_ad()` | Update ad |
 | `ads.update_conversion_destination()` | Update a conversion destination |
-| `ads.update_tracking_tag()` | Update a tracking tag (Meta Pixel) |
 | `ads.delete_ad()` | Cancel an ad |
 | `ads.delete_conversion_destination()` | Soft-delete a conversion destination |
 | `ads.add_conversion_associations()` | Associate campaigns with a conversion destination |
-| `ads.add_tracking_tag_shared_account()` | Share a tracking tag with an ad account |
 | `ads.boost_post()` | Boost post as ad |
 | `ads.remove_conversion_associations()` | Remove campaign↔conversion associations |
-| `ads.remove_tracking_tag_shared_account()` | Stop sharing a tracking tag with an ad account |
 | `ads.search_ad_interests()` | Search targeting interests |
 | `ads.search_ad_targeting_locations()` | Search geo targeting locations (Meta) |
 | `ads.send_conversions()` | Send conversion events to an ad platform |
@@ -556,6 +548,18 @@ Both `from zernio import ...` and `from late import ...` work identically. The `
 | `sequences.enroll_contacts()` | Enroll contacts in a sequence |
 | `sequences.pause_sequence()` | Pause sequence |
 | `sequences.unenroll_contact()` | Unenroll contact |
+
+### Tracking Tags
+| Method | Description |
+|--------|-------------|
+| `tracking_tags.list_tracking_tag_shared_accounts()` | List ad accounts a tracking tag is shared with |
+| `tracking_tags.list_tracking_tags()` | List tracking tags (Meta Pixels) |
+| `tracking_tags.create_tracking_tag()` | Create a tracking tag (Meta Pixel) |
+| `tracking_tags.get_tracking_tag()` | Fetch a single tracking tag (Meta Pixel) |
+| `tracking_tags.get_tracking_tag_stats()` | Aggregated event stats for a tracking tag (Meta Pixel) |
+| `tracking_tags.update_tracking_tag()` | Update a tracking tag (Meta Pixel) |
+| `tracking_tags.add_tracking_tag_shared_account()` | Share a tracking tag with an ad account |
+| `tracking_tags.remove_tracking_tag_shared_account()` | Stop sharing a tracking tag with an ad account |
 
 ### Twitter Engagement
 | Method | Description |

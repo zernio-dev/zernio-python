@@ -28,6 +28,7 @@ from .queue import QueueResource
 from .reddit import RedditResource
 from .reviews import ReviewsResource
 from .sequences import SequencesResource
+from .tracking_tags import TrackingTagsResource
 from .twitter_engagement import TwitterEngagementResource
 from .usage import UsageResource
 from .users import UsersResource
@@ -64,6 +65,7 @@ __all__ = [
     "RedditResource",
     "ReviewsResource",
     "SequencesResource",
+    "TrackingTagsResource",
     "TwitterEngagementResource",
     "UsageResource",
     "UsersResource",

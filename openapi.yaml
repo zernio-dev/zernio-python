@@ -265,6 +265,14 @@ tags:
       and lookalike audiences. Upload user data (hashed server-side). Currently Meta-only for creation,
       read-only for other platforms.
       Requires the Ads add-on.
+  - name: Tracking Tags
+    description: |
+      Manage the platform measurement tag — the thing you create, install on a website, send events to,
+      and target ads against. On Meta this is a Pixel; the surface is platform-neutral so other platforms
+      (Pinterest Tag, LinkedIn Insight Tag, etc.) can be added without changing the contract. Create a tag,
+      get it (including the install code snippet), rename + adjust matching/cookie/data-use settings, share
+      it with ad accounts, and read aggregated event stats. Currently Meta-only.
+      Requires the Ads add-on.
   - name: Webhooks
     description: |
       Configure webhooks for real-time notifications. Webhooks can be created from the dashboard (Settings → Webhooks) or via this API.
@@ -22589,7 +22597,7 @@ paths:
   /v1/accounts/{accountId}/tracking-tags:
     get:
       operationId: listTrackingTags
-      tags: [Ads]
+      tags: [Tracking Tags]
       summary: List tracking tags (Meta Pixels)
       description: |
         Returns the tracking tags (Meta Pixels) the connected ads account can
@@ -22628,7 +22636,7 @@ paths:
 
     post:
       operationId: createTrackingTag
-      tags: [Ads]
+      tags: [Tracking Tags]
       summary: Create a tracking tag (Meta Pixel)
       description: |
         Creates a Meta Pixel on the given ad account (`POST /act_{id}/adspixels`
@@ -22677,7 +22685,7 @@ paths:
   /v1/accounts/{accountId}/tracking-tags/{tagId}:
     get:
       operationId: getTrackingTag
-      tags: [Ads]
+      tags: [Tracking Tags]
       summary: Fetch a single tracking tag (Meta Pixel)
       description: |
         Returns the full tag record including the base-code `code` snippet,
@@ -22705,7 +22713,7 @@ paths:
 
     patch:
       operationId: updateTrackingTag
-      tags: [Ads]
+      tags: [Tracking Tags]
       summary: Update a tracking tag (Meta Pixel)
       description: |
         Partial-update a pixel. Whitelisted fields: `name` (rename),
@@ -22770,7 +22778,7 @@ paths:
   /v1/accounts/{accountId}/tracking-tags/{tagId}/shared-accounts:
     get:
       operationId: listTrackingTagSharedAccounts
-      tags: [Ads]
+      tags: [Tracking Tags]
       summary: List ad accounts a tracking tag is shared with
       description: Meta only (platform `metaads`); other platforms return 405.
       security:
@@ -22797,7 +22805,7 @@ paths:
 
     post:
       operationId: addTrackingTagSharedAccount
-      tags: [Ads]
+      tags: [Tracking Tags]
       summary: Share a tracking tag with an ad account
       description: |
         Shares the pixel with another ad account so campaigns/audiences in that
@@ -22837,7 +22845,7 @@ paths:
 
     delete:
       operationId: removeTrackingTagSharedAccount
-      tags: [Ads]
+      tags: [Tracking Tags]
       summary: Stop sharing a tracking tag with an ad account
       description: |
         `adAccountId` may be passed as a query parameter (recommended) or as a
@@ -22860,7 +22868,7 @@ paths:
   /v1/accounts/{accountId}/tracking-tags/{tagId}/stats:
     get:
       operationId: getTrackingTagStats
-      tags: [Ads]
+      tags: [Tracking Tags]
       summary: Aggregated event stats for a tracking tag (Meta Pixel)
       description: |
         Returns aggregated event counts for the pixel (`GET /{pixel_id}/stats`).
