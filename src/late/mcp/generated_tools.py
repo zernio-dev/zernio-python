@@ -2126,6 +2126,176 @@ def register_generated_tools(mcp, _get_client):
         except Exception as e:
             return f"Error: {e}"
 
+    @mcp.tool()
+    def ads_list_tracking_tags(
+        account_id: str, ad_account_id: str | None = None
+    ) -> str:
+        """List tracking tags (Meta Pixels)
+
+        Args:
+            account_id: Meta ads SocialAccount id (platform `metaads`). (required)
+            ad_account_id: Optional. Scope to one ad account, e.g. `act_123456789`."""
+        client = _get_client()
+        try:
+            response = client.ads.list_tracking_tags(
+                account_id=account_id, ad_account_id=ad_account_id
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool()
+    def ads_create_tracking_tag(account_id: str, ad_account_id: str, name: str) -> str:
+        """Create a tracking tag (Meta Pixel)
+
+        Args:
+            account_id: Meta ads SocialAccount id (platform `metaads`). (required)
+            ad_account_id: Meta ad account id, e.g. `act_123456789`. (required)
+            name: (required)"""
+        client = _get_client()
+        try:
+            response = client.ads.create_tracking_tag(
+                account_id=account_id, ad_account_id=ad_account_id, name=name
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool()
+    def ads_get_tracking_tag(account_id: str, tag_id: str) -> str:
+        """Fetch a single tracking tag (Meta Pixel)
+
+        Args:
+            account_id: (required)
+            tag_id: Pixel id. (required)"""
+        client = _get_client()
+        try:
+            response = client.ads.get_tracking_tag(account_id=account_id, tag_id=tag_id)
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool()
+    def ads_update_tracking_tag(
+        account_id: str,
+        tag_id: str,
+        name: str | None = None,
+        enable_automatic_matching: bool | None = None,
+        automatic_matching_fields: list[str] | None = None,
+        first_party_cookie_status: str | None = None,
+        data_use_setting: str | None = None,
+    ) -> str:
+        """Update a tracking tag (Meta Pixel)
+
+            Args:
+                account_id: (required)
+                tag_id: Pixel id. (required)
+                name
+                enable_automatic_matching: Meta Advanced Matching toggle (`enable_automatic_matching`).
+                automatic_matching_fields: Which user fields Advanced Matching may collect. Meta's
+        terse codes: em=email, ph=phone, fn=first name, ln=last
+        name, ge=gender, db=date of birth, ct=city, st=state,
+        zp=zip.
+                first_party_cookie_status
+                data_use_setting"""
+        client = _get_client()
+        try:
+            response = client.ads.update_tracking_tag(
+                account_id=account_id,
+                tag_id=tag_id,
+                name=name,
+                enable_automatic_matching=enable_automatic_matching,
+                automatic_matching_fields=automatic_matching_fields,
+                first_party_cookie_status=first_party_cookie_status,
+                data_use_setting=data_use_setting,
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool()
+    def ads_list_tracking_tag_shared_accounts(account_id: str, tag_id: str) -> str:
+        """List ad accounts a tracking tag is shared with
+
+        Args:
+            account_id: (required)
+            tag_id: Pixel id. (required)"""
+        client = _get_client()
+        try:
+            response = client.ads.list_tracking_tag_shared_accounts(
+                account_id=account_id, tag_id=tag_id
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool()
+    def ads_add_tracking_tag_shared_account(
+        account_id: str, tag_id: str, ad_account_id: str
+    ) -> str:
+        """Share a tracking tag with an ad account
+
+        Args:
+            account_id: (required)
+            tag_id: Pixel id. (required)
+            ad_account_id: Ad account to share with, e.g. `act_123456789`. (required)"""
+        client = _get_client()
+        try:
+            response = client.ads.add_tracking_tag_shared_account(
+                account_id=account_id, tag_id=tag_id, ad_account_id=ad_account_id
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool()
+    def ads_remove_tracking_tag_shared_account(
+        account_id: str, tag_id: str, ad_account_id: str | None = None
+    ) -> str:
+        """Stop sharing a tracking tag with an ad account
+
+        Args:
+            account_id: (required)
+            tag_id: Pixel id. (required)
+            ad_account_id: Ad account to unshare, e.g. `act_123456789`. May also be sent in the JSON body."""
+        client = _get_client()
+        try:
+            response = client.ads.remove_tracking_tag_shared_account(
+                account_id=account_id, tag_id=tag_id, ad_account_id=ad_account_id
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool()
+    def ads_get_tracking_tag_stats(
+        account_id: str,
+        tag_id: str,
+        aggregation: str = "event",
+        start_time: int | None = None,
+        end_time: int | None = None,
+    ) -> str:
+        """Aggregated event stats for a tracking tag (Meta Pixel)
+
+        Args:
+            account_id: (required)
+            tag_id: Pixel id. (required)
+            aggregation: Aggregation dimension. Defaults to `event`.
+            start_time: Unix seconds lower bound.
+            end_time: Unix seconds upper bound."""
+        client = _get_client()
+        try:
+            response = client.ads.get_tracking_tag_stats(
+                account_id=account_id,
+                tag_id=tag_id,
+                aggregation=aggregation,
+                start_time=start_time,
+                end_time=end_time,
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
     # ANALYTICS
 
     @mcp.tool()

@@ -554,6 +554,107 @@ class AdsResource:
         )
         return self._client._post("/v1/ads/ctwa", data=payload)
 
+    def list_tracking_tags(
+        self, account_id: str, *, ad_account_id: str | None = None
+    ) -> dict[str, Any]:
+        """List tracking tags (Meta Pixels)"""
+        params = self._build_params(
+            ad_account_id=ad_account_id,
+        )
+        return self._client._get(
+            f"/v1/accounts/{account_id}/tracking-tags", params=params
+        )
+
+    def create_tracking_tag(
+        self, account_id: str, ad_account_id: str, name: str
+    ) -> dict[str, Any]:
+        """Create a tracking tag (Meta Pixel)"""
+        payload = self._build_payload(
+            ad_account_id=ad_account_id,
+            name=name,
+        )
+        return self._client._post(
+            f"/v1/accounts/{account_id}/tracking-tags", data=payload
+        )
+
+    def get_tracking_tag(self, account_id: str, tag_id: str) -> dict[str, Any]:
+        """Fetch a single tracking tag (Meta Pixel)"""
+        return self._client._get(f"/v1/accounts/{account_id}/tracking-tags/{tag_id}")
+
+    def update_tracking_tag(
+        self,
+        account_id: str,
+        tag_id: str,
+        *,
+        name: str | None = None,
+        enable_automatic_matching: bool | None = None,
+        automatic_matching_fields: list[str] | None = None,
+        first_party_cookie_status: str | None = None,
+        data_use_setting: str | None = None,
+    ) -> dict[str, Any]:
+        """Update a tracking tag (Meta Pixel)"""
+        payload = self._build_payload(
+            name=name,
+            enable_automatic_matching=enable_automatic_matching,
+            automatic_matching_fields=automatic_matching_fields,
+            first_party_cookie_status=first_party_cookie_status,
+            data_use_setting=data_use_setting,
+        )
+        return self._client._patch(
+            f"/v1/accounts/{account_id}/tracking-tags/{tag_id}", data=payload
+        )
+
+    def list_tracking_tag_shared_accounts(
+        self, account_id: str, tag_id: str
+    ) -> dict[str, Any]:
+        """List ad accounts a tracking tag is shared with"""
+        return self._client._get(
+            f"/v1/accounts/{account_id}/tracking-tags/{tag_id}/shared-accounts"
+        )
+
+    def add_tracking_tag_shared_account(
+        self, account_id: str, tag_id: str, ad_account_id: str
+    ) -> dict[str, Any]:
+        """Share a tracking tag with an ad account"""
+        payload = self._build_payload(
+            ad_account_id=ad_account_id,
+        )
+        return self._client._post(
+            f"/v1/accounts/{account_id}/tracking-tags/{tag_id}/shared-accounts",
+            data=payload,
+        )
+
+    def remove_tracking_tag_shared_account(
+        self, account_id: str, tag_id: str, *, ad_account_id: str | None = None
+    ) -> dict[str, Any]:
+        """Stop sharing a tracking tag with an ad account"""
+        params = self._build_params(
+            ad_account_id=ad_account_id,
+        )
+        return self._client._delete(
+            f"/v1/accounts/{account_id}/tracking-tags/{tag_id}/shared-accounts",
+            params=params,
+        )
+
+    def get_tracking_tag_stats(
+        self,
+        account_id: str,
+        tag_id: str,
+        *,
+        aggregation: str | None = "event",
+        start_time: int | None = None,
+        end_time: int | None = None,
+    ) -> dict[str, Any]:
+        """Aggregated event stats for a tracking tag (Meta Pixel)"""
+        params = self._build_params(
+            aggregation=aggregation,
+            start_time=start_time,
+            end_time=end_time,
+        )
+        return self._client._get(
+            f"/v1/accounts/{account_id}/tracking-tags/{tag_id}/stats", params=params
+        )
+
     async def alist_ads(
         self,
         *,
@@ -1053,3 +1154,106 @@ class AdsResource:
             dsa_payor=dsa_payor,
         )
         return await self._client._apost("/v1/ads/ctwa", data=payload)
+
+    async def alist_tracking_tags(
+        self, account_id: str, *, ad_account_id: str | None = None
+    ) -> dict[str, Any]:
+        """List tracking tags (Meta Pixels) (async)"""
+        params = self._build_params(
+            ad_account_id=ad_account_id,
+        )
+        return await self._client._aget(
+            f"/v1/accounts/{account_id}/tracking-tags", params=params
+        )
+
+    async def acreate_tracking_tag(
+        self, account_id: str, ad_account_id: str, name: str
+    ) -> dict[str, Any]:
+        """Create a tracking tag (Meta Pixel) (async)"""
+        payload = self._build_payload(
+            ad_account_id=ad_account_id,
+            name=name,
+        )
+        return await self._client._apost(
+            f"/v1/accounts/{account_id}/tracking-tags", data=payload
+        )
+
+    async def aget_tracking_tag(self, account_id: str, tag_id: str) -> dict[str, Any]:
+        """Fetch a single tracking tag (Meta Pixel) (async)"""
+        return await self._client._aget(
+            f"/v1/accounts/{account_id}/tracking-tags/{tag_id}"
+        )
+
+    async def aupdate_tracking_tag(
+        self,
+        account_id: str,
+        tag_id: str,
+        *,
+        name: str | None = None,
+        enable_automatic_matching: bool | None = None,
+        automatic_matching_fields: list[str] | None = None,
+        first_party_cookie_status: str | None = None,
+        data_use_setting: str | None = None,
+    ) -> dict[str, Any]:
+        """Update a tracking tag (Meta Pixel) (async)"""
+        payload = self._build_payload(
+            name=name,
+            enable_automatic_matching=enable_automatic_matching,
+            automatic_matching_fields=automatic_matching_fields,
+            first_party_cookie_status=first_party_cookie_status,
+            data_use_setting=data_use_setting,
+        )
+        return await self._client._apatch(
+            f"/v1/accounts/{account_id}/tracking-tags/{tag_id}", data=payload
+        )
+
+    async def alist_tracking_tag_shared_accounts(
+        self, account_id: str, tag_id: str
+    ) -> dict[str, Any]:
+        """List ad accounts a tracking tag is shared with (async)"""
+        return await self._client._aget(
+            f"/v1/accounts/{account_id}/tracking-tags/{tag_id}/shared-accounts"
+        )
+
+    async def aadd_tracking_tag_shared_account(
+        self, account_id: str, tag_id: str, ad_account_id: str
+    ) -> dict[str, Any]:
+        """Share a tracking tag with an ad account (async)"""
+        payload = self._build_payload(
+            ad_account_id=ad_account_id,
+        )
+        return await self._client._apost(
+            f"/v1/accounts/{account_id}/tracking-tags/{tag_id}/shared-accounts",
+            data=payload,
+        )
+
+    async def aremove_tracking_tag_shared_account(
+        self, account_id: str, tag_id: str, *, ad_account_id: str | None = None
+    ) -> dict[str, Any]:
+        """Stop sharing a tracking tag with an ad account (async)"""
+        params = self._build_params(
+            ad_account_id=ad_account_id,
+        )
+        return await self._client._adelete(
+            f"/v1/accounts/{account_id}/tracking-tags/{tag_id}/shared-accounts",
+            params=params,
+        )
+
+    async def aget_tracking_tag_stats(
+        self,
+        account_id: str,
+        tag_id: str,
+        *,
+        aggregation: str | None = "event",
+        start_time: int | None = None,
+        end_time: int | None = None,
+    ) -> dict[str, Any]:
+        """Aggregated event stats for a tracking tag (Meta Pixel) (async)"""
+        params = self._build_params(
+            aggregation=aggregation,
+            start_time=start_time,
+            end_time=end_time,
+        )
+        return await self._client._aget(
+            f"/v1/accounts/{account_id}/tracking-tags/{tag_id}/stats", params=params
+        )
