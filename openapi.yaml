@@ -494,6 +494,20 @@ components:
         details:
           type: object
           additionalProperties: true
+    DmButton:
+      type: object
+      description: |
+        A single inline button rendered inside an auto-DM via Meta's button_template.
+        Up to 3 buttons per automation. `url` and `postback` work on Instagram and
+        Facebook; `phone` is Facebook-only. When buttons are set, `dmMessage` becomes
+        the button_template text and must be 640 characters or less.
+      required: [type, title]
+      properties:
+        type: { type: string, enum: [url, postback, phone] }
+        title: { type: string, maxLength: 20, description: Button label (20 chars max) }
+        url: { type: string, format: uri, description: Target URL (required when type is url) }
+        payload: { type: string, description: Postback payload delivered via the messaging_postbacks webhook (required when type is postback) }
+        phone: { type: string, description: "Phone number, e.g. +14155551234 (required when type is phone; Facebook only)" }
     WhatsAppTemplateButton:
       type: object
       required: [type, text]
@@ -19737,6 +19751,10 @@ paths:
                         keywords: { type: array, items: { type: string } }
                         matchMode: { type: string, enum: [exact, contains] }
                         dmMessage: { type: string }
+                        buttons:
+                          type: array
+                          items: { $ref: '#/components/schemas/DmButton' }
+                          description: Inline DM buttons (up to 3). Omitted when none are set.
                         commentReply: { type: string }
                         isActive: { type: boolean }
                         stats:
@@ -19784,7 +19802,12 @@ paths:
                   items: { type: string }
                   description: Trigger keywords (empty = any comment triggers)
                 matchMode: { type: string, enum: [exact, contains], default: contains }
-                dmMessage: { type: string, description: DM text to send to commenter }
+                dmMessage: { type: string, description: "DM text to send to commenter. Max 640 chars when buttons are set, otherwise ~1000." }
+                buttons:
+                  type: array
+                  maxItems: 3
+                  items: { $ref: '#/components/schemas/DmButton' }
+                  description: "Optional inline DM buttons (1-3). Phone buttons are Facebook-only. Omit or pass [] for a plain-text DM."
                 commentReply: { type: string, description: Optional public reply to the comment }
       responses:
         '200':
@@ -19805,6 +19828,10 @@ paths:
                       keywords: { type: array, items: { type: string } }
                       matchMode: { type: string, enum: [exact, contains] }
                       dmMessage: { type: string }
+                      buttons:
+                        type: array
+                        items: { $ref: '#/components/schemas/DmButton' }
+                        description: Inline DM buttons (up to 3). Omitted when none are set.
                       commentReply: { type: string }
                       isActive: { type: boolean }
                       stats: { type: object, properties: { totalTriggered: { type: integer }, totalSent: { type: integer }, totalFailed: { type: integer } } }
@@ -19845,6 +19872,10 @@ paths:
                       keywords: { type: array, items: { type: string } }
                       matchMode: { type: string, enum: [exact, contains] }
                       dmMessage: { type: string }
+                      buttons:
+                        type: array
+                        items: { $ref: '#/components/schemas/DmButton' }
+                        description: Inline DM buttons (up to 3). Omitted when none are set.
                       commentReply: { type: string }
                       isActive: { type: boolean }
                       stats: { type: object, properties: { totalTriggered: { type: integer }, totalSent: { type: integer }, totalFailed: { type: integer } } }
@@ -19871,7 +19902,10 @@ paths:
       operationId: updateCommentAutomation
       tags: [Comment Automations]
       summary: Update automation settings
-      description: Update an automation's keywords, DM message, comment reply, or active status.
+      description: |
+        Update an automation's keywords, DM message, inline buttons, comment reply, or active status.
+        Pass `buttons: []` to clear all buttons. When `buttons` is non-empty, `dmMessage` (the new
+        one if you're changing it, otherwise the stored one) must be 640 characters or less.
       security:
         - bearerAuth: []
       parameters:
@@ -19886,6 +19920,11 @@ paths:
                 keywords: { type: array, items: { type: string } }
                 matchMode: { type: string, enum: [exact, contains] }
                 dmMessage: { type: string }
+                buttons:
+                  type: array
+                  maxItems: 3
+                  items: { $ref: '#/components/schemas/DmButton' }
+                  description: "Inline DM buttons (1-3). Pass [] to clear all buttons."
                 commentReply: { type: string }
                 isActive: { type: boolean }
       responses:
@@ -19905,6 +19944,10 @@ paths:
                       keywords: { type: array, items: { type: string } }
                       matchMode: { type: string, enum: [exact, contains] }
                       dmMessage: { type: string }
+                      buttons:
+                        type: array
+                        items: { $ref: '#/components/schemas/DmButton' }
+                        description: Inline DM buttons (up to 3). Omitted when none are set.
                       commentReply: { type: string }
                       isActive: { type: boolean }
                       updatedAt: { type: string, format: date-time }

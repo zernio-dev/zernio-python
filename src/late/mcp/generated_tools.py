@@ -3035,6 +3035,7 @@ def register_generated_tools(mcp, _get_client):
         post_title: str | None = None,
         keywords: list[str] | None = None,
         match_mode: str = "contains",
+        buttons: list[dict[str, Any]] | None = None,
         comment_reply: str | None = None,
     ) -> str:
         """Create comment-to-DM automation
@@ -3048,7 +3049,8 @@ def register_generated_tools(mcp, _get_client):
             name: Automation label (required)
             keywords: Trigger keywords (empty = any comment triggers)
             match_mode
-            dm_message: DM text to send to commenter (required)
+            dm_message: DM text to send to commenter. Max 640 chars when buttons are set, otherwise ~1000. (required)
+            buttons: Optional inline DM buttons (1-3). Phone buttons are Facebook-only. Omit or pass [] for a plain-text DM.
             comment_reply: Optional public reply to the comment"""
         client = _get_client()
         try:
@@ -3062,6 +3064,7 @@ def register_generated_tools(mcp, _get_client):
                 keywords=keywords,
                 match_mode=match_mode,
                 dm_message=dm_message,
+                buttons=buttons,
                 comment_reply=comment_reply,
             )
             return _format_response(response)
@@ -3090,6 +3093,7 @@ def register_generated_tools(mcp, _get_client):
         keywords: list[str] | None = None,
         match_mode: str | None = None,
         dm_message: str | None = None,
+        buttons: list[dict[str, Any]] | None = None,
         comment_reply: str | None = None,
         is_active: bool | None = None,
     ) -> str:
@@ -3101,6 +3105,7 @@ def register_generated_tools(mcp, _get_client):
             keywords
             match_mode
             dm_message
+            buttons: Inline DM buttons (1-3). Pass [] to clear all buttons.
             comment_reply
             is_active"""
         client = _get_client()
@@ -3111,6 +3116,7 @@ def register_generated_tools(mcp, _get_client):
                 keywords=keywords,
                 match_mode=match_mode,
                 dm_message=dm_message,
+                buttons=buttons,
                 comment_reply=comment_reply,
                 is_active=is_active,
             )
