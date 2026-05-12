@@ -1362,18 +1362,22 @@ def register_generated_tools(mcp, _get_client):
 
     @mcp.tool()
     def ads_get_ad_comments(
-        ad_id: str, limit: int = 25, cursor: str | None = None
+        ad_id: str,
+        placement: str | None = None,
+        limit: int = 25,
+        cursor: str | None = None,
     ) -> str:
         """List comments on an ad
 
         Args:
             ad_id: Internal Zernio ad ID (ObjectId). (required)
+            placement: Which side of the ad to return comments for. Omit to default to the Instagram side when present, else Facebook. Returns ad_not_commentable if the ad has no such placement.
             limit
             cursor: Pagination cursor from a previous response."""
         client = _get_client()
         try:
             response = client.ads.get_ad_comments(
-                ad_id=ad_id, limit=limit, cursor=cursor
+                ad_id=ad_id, placement=placement, limit=limit, cursor=cursor
             )
             return _format_response(response)
         except Exception as e:

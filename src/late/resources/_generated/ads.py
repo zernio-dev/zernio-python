@@ -138,10 +138,16 @@ class AdsResource:
         return self._client._get(f"/v1/ads/{ad_id}/analytics", params=params)
 
     def get_ad_comments(
-        self, ad_id: str, *, limit: int | None = 25, cursor: str | None = None
+        self,
+        ad_id: str,
+        *,
+        placement: str | None = None,
+        limit: int | None = 25,
+        cursor: str | None = None,
     ) -> dict[str, Any]:
         """List comments on an ad"""
         params = self._build_params(
+            placement=placement,
             limit=limit,
             cursor=cursor,
         )
@@ -642,10 +648,16 @@ class AdsResource:
         return await self._client._aget(f"/v1/ads/{ad_id}/analytics", params=params)
 
     async def aget_ad_comments(
-        self, ad_id: str, *, limit: int | None = 25, cursor: str | None = None
+        self,
+        ad_id: str,
+        *,
+        placement: str | None = None,
+        limit: int | None = 25,
+        cursor: str | None = None,
     ) -> dict[str, Any]:
         """List comments on an ad (async)"""
         params = self._build_params(
+            placement=placement,
             limit=limit,
             cursor=cursor,
         )
