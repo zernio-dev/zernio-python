@@ -1563,7 +1563,7 @@ def register_generated_tools(mcp, _get_client):
                 account_id: (required)
                 ad_account_id: (required)
                 name: (required)
-                goal: Required on legacy + multi-creative shapes. Inherited from the ad set on the attach shape. Available goals vary by platform. Meta-specific: `conversions` requires `promotedObject.pixelId` + `promotedObject.customEventType`; `app_promotion` requires `promotedObject.applicationId` + `promotedObject.objectStoreUrl`; `lead_generation` accepts an optional `promotedObject.pageId` (auto-filled from the connected Page when omitted). LinkedIn-specific: only `engagement`, `traffic`, and `awareness` are supported for standalone ads (creates a Direct Sponsored Content single image ad); `traffic` requires `linkUrl`. For `video_views` / `lead_generation` / `conversions` on LinkedIn — or to promote an existing post — use `POST /v1/ads/boost`.
+                goal: Required on legacy + multi-creative shapes. Inherited from the ad set on the attach shape. Available goals vary by platform. Meta-specific: `conversions` requires `promotedObject.pixelId` + `promotedObject.customEventType`; `app_promotion` requires `promotedObject.applicationId` + `promotedObject.objectStoreUrl`; `lead_generation` accepts an optional `promotedObject.pageId` (auto-filled from the connected Page when omitted). TikTok-specific: `conversions` (website-conversion ad group) requires `promotedObject.pixelId` (your TikTok Pixel ID) and accepts an optional `promotedObject.customEventType` (a TikTok `optimization_event` code like `ON_WEB_ORDER`, `INITIATE_ORDER`, `ON_WEB_REGISTER`, `FORM`); to inherit a pixel + event from an existing ad group, pass `adSetId` instead. LinkedIn-specific: `engagement`, `traffic`, `awareness`, and `video_views` are supported for standalone ads (creates a Direct Sponsored Content single image or single video ad). `traffic` requires `linkUrl`; `video_views` requires the `video` field. For `lead_generation` / `conversions` on LinkedIn — or to promote an existing post — use `POST /v1/ads/boost`.
                 budget_amount: Required on legacy + multi-creative shapes. Inherited on attach.
                 budget_type: Required on legacy + multi-creative shapes. Inherited on attach.
                 currency
@@ -1572,9 +1572,9 @@ def register_generated_tools(mcp, _get_client):
                 body: Required on legacy + attach shapes. For X/Twitter this is the tweet text (max 280 chars including a ~24-char URL when `linkUrl` is set). On LinkedIn this is the post commentary (the intro text shown above the ad). Max: Google=90, Pinterest=500.
                 call_to_action: Required on legacy + attach shapes for Meta. Honoured on TikTok (passes through to the Spark Ad creative's `call_to_action`) and on LinkedIn (the CTA button on the ad; defaults to LEARN_MORE when `linkUrl` is set). LinkedIn accepts: LEARN_MORE, SIGN_UP, DOWNLOAD, SUBSCRIBE, REGISTER, JOIN, ATTEND, REQUEST_DEMO, VIEW_QUOTE, APPLY, SEE_MORE, SHOP_NOW, BUY_NOW. Ignored by Google, Pinterest, and X/Twitter.
                 link_url: Required on legacy + attach shapes (skip for multi-creative). On LinkedIn it's the ad's destination URL; required for `traffic` ads, optional for `engagement` / `awareness`.
-                image_url: Image creative for Meta/Google/Pinterest/LinkedIn on legacy + attach shapes (mutually exclusive with `video`). Required for LinkedIn ads. Not required for Google Search campaigns. For TikTok, this field carries the VIDEO URL (the TikTok ads endpoint is video-only; the field retains the `imageUrl` name for cross-platform consistency). Ignored for X/Twitter. For Google Display, treated as the landscape image (alias of `images.landscape`); supply `images.square` alongside or the request is rejected. For LinkedIn the image is uploaded to LinkedIn under the authoring Company Page (see `organizationId`); recommended ratio 1.91:1 (e.g. 1200×627).
+                image_url: Image creative for Meta/Google/Pinterest/LinkedIn on legacy + attach shapes (mutually exclusive with `video`). Required for LinkedIn ads unless `video` is set. Not required for Google Search campaigns. For TikTok, this field carries the VIDEO URL (the TikTok ads endpoint is video-only; the field retains the `imageUrl` name for cross-platform consistency). Ignored for X/Twitter. For Google Display, treated as the landscape image (alias of `images.landscape`); supply `images.square` alongside or the request is rejected. For LinkedIn the image is uploaded to LinkedIn under the authoring Company Page (see `organizationId`); recommended ratio 1.91:1 (e.g. 1200×627).
                 images: Google Display (Responsive Display Ads) only. Google RDA requires both a landscape (1.91:1) and a square (1:1) marketing image; sending only one is rejected upstream as 'Too few.' (NOT_ENOUGH_*_MARKETING_IMAGE_ASSET). Supply both URLs here. Either this field or the legacy `imageUrl` can provide the landscape, but `square` has no legacy counterpart so it must be set here for Display.
-                video: Meta only (facebook, instagram). When set, creates a VIDEO ad on the legacy or attach shape. Mutually exclusive with `imageUrl`. For multi-creative, set `video` per entry inside `creatives[]` instead.
+                video: Meta (facebook, instagram) and LinkedIn. When set, creates a VIDEO ad on the legacy (or, for Meta, attach) shape. Mutually exclusive with `imageUrl`. For Meta multi-creative, set `video` per entry inside `creatives[]` instead. For LinkedIn the video is uploaded to LinkedIn under the authoring Company Page (see `organizationId`) and the campaign format is set to SINGLE_VIDEO; LinkedIn ignores `thumbnailUrl` (it auto-generates the poster frame) — supply MP4 H.264/AAC, 3s-30min, 75KB-500MB.
                 creatives: Meta-only. When present, switches to the multi-creative shape:
         creates 1 campaign + 1 ad set + N ads (one per entry here).
         Top-level `headline` / `body` / `imageUrl` / `linkUrl` /
@@ -1655,16 +1655,27 @@ def register_generated_tools(mcp, _get_client):
         Ads (`POST /v1/ads/boost`) always use `TT_USER` regardless
         of this field — TikTok requires the original organic
         post's author identity for Spark.
-                promoted_object: Meta only. Forwarded to the ad set's `promoted_object` (snake-cased).
+                promoted_object: What the ad optimises against. Behaviour depends on the platform.
 
+        **Meta**: forwarded to the ad set's `promoted_object` (snake-cased).
         Required for goals whose ad-set optimization_goal points at a specific
-        event/page/app — without it Meta rejects the ad-set create with
-        `error_subcode: 1815430` "Please select a promoted object for your ad set":
-          - `goal: conversions` (OFFSITE_CONVERSIONS) — requires `pixelId` + `customEventType`
-          - `goal: app_promotion` (APP_INSTALLS) — requires `applicationId` + `objectStoreUrl`
-          - `goal: lead_generation` (LEAD_GENERATION) — `pageId` is auto-filled from the connected Page when omitted
+        event/page/app (without it Meta rejects the ad-set create with
+        `error_subcode: 1815430` "Please select a promoted object for your ad set"):
+          - `goal: conversions` (OFFSITE_CONVERSIONS): requires `pixelId` + `customEventType`
+          - `goal: app_promotion` (APP_INSTALLS): requires `applicationId` + `objectStoreUrl`
+          - `goal: lead_generation` (LEAD_GENERATION): `pageId` is auto-filled from the connected Page when omitted
 
-        Other goals (engagement, traffic, awareness, video_views) ignore this field."""
+        Other Meta goals (engagement, traffic, awareness, video_views) ignore this field.
+
+        **TikTok**: only `goal: conversions` uses it.
+          - `pixelId` maps to the ad group's `pixel_id`. Required: a TikTok website-conversion
+            ad group without a pixel is rejected with `40002: Please select a pixel`.
+          - `customEventType` maps to the ad group's `optimization_event` (the pixel event to
+            optimise for). Optional: TikTok accepts a pixel-only auto-bid conversion ad group.
+            See the `customEventType` field below for the valid TikTok codes.
+
+        The remaining `promotedObject.*` fields are Meta-only. Platforms other than
+        Meta and TikTok ignore `promotedObject` entirely."""
         client = _get_client()
         try:
             response = client.ads.create_standalone_ad(

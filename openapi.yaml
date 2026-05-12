@@ -21120,11 +21120,12 @@ paths:
         multi-creative shape via the creatives array (one ad set with N ads
         sharing budget and targeting), and a Meta-only attach shape via adSetId
         (adds one new ad to an existing ad set). Per-platform required fields,
-        budget minimums, and video-ad rules (Meta only) are documented on each
-        property below. LinkedIn creates a Single Image Ad backed by a Direct
-        Sponsored Content "dark post" authored by a Company Page (see
-        `organizationId`); supported goals are engagement, traffic, and
-        awareness, and traffic ads require `linkUrl`.
+        budget minimums, and video-ad rules are documented on each property
+        below. LinkedIn creates a Single Image or Single Video Ad backed by a
+        Direct Sponsored Content "dark post" authored by a Company Page (see
+        `organizationId`); supported goals are engagement, traffic, awareness,
+        and video_views (video ads use the `video` field; video_views requires
+        a video), and traffic ads require `linkUrl`.
       security:
         - bearerAuth: []
       requestBody:
@@ -21138,7 +21139,7 @@ paths:
                 accountId: { type: string }
                 adAccountId: { type: string }
                 name: { type: string, maxLength: 255 }
-                goal: { type: string, enum: [engagement, traffic, awareness, video_views, lead_generation, conversions, app_promotion], description: "Required on legacy + multi-creative shapes. Inherited from the ad set on the attach shape. Available goals vary by platform. Meta-specific: `conversions` requires `promotedObject.pixelId` + `promotedObject.customEventType`; `app_promotion` requires `promotedObject.applicationId` + `promotedObject.objectStoreUrl`; `lead_generation` accepts an optional `promotedObject.pageId` (auto-filled from the connected Page when omitted). LinkedIn-specific: only `engagement`, `traffic`, and `awareness` are supported for standalone ads (creates a Direct Sponsored Content single image ad); `traffic` requires `linkUrl`. For `video_views` / `lead_generation` / `conversions` on LinkedIn — or to promote an existing post — use `POST /v1/ads/boost`." }
+                goal: { type: string, enum: [engagement, traffic, awareness, video_views, lead_generation, conversions, app_promotion], description: "Required on legacy + multi-creative shapes. Inherited from the ad set on the attach shape. Available goals vary by platform. Meta-specific: `conversions` requires `promotedObject.pixelId` + `promotedObject.customEventType`; `app_promotion` requires `promotedObject.applicationId` + `promotedObject.objectStoreUrl`; `lead_generation` accepts an optional `promotedObject.pageId` (auto-filled from the connected Page when omitted). TikTok-specific: `conversions` (website-conversion ad group) requires `promotedObject.pixelId` (your TikTok Pixel ID) and accepts an optional `promotedObject.customEventType` (a TikTok `optimization_event` code like `ON_WEB_ORDER`, `INITIATE_ORDER`, `ON_WEB_REGISTER`, `FORM`); to inherit a pixel + event from an existing ad group, pass `adSetId` instead. LinkedIn-specific: `engagement`, `traffic`, `awareness`, and `video_views` are supported for standalone ads (creates a Direct Sponsored Content single image or single video ad). `traffic` requires `linkUrl`; `video_views` requires the `video` field. For `lead_generation` / `conversions` on LinkedIn — or to promote an existing post — use `POST /v1/ads/boost`." }
                 budgetAmount: { type: number, description: "Required on legacy + multi-creative shapes. Inherited on attach." }
                 budgetType: { type: string, enum: [daily, lifetime], description: "Required on legacy + multi-creative shapes. Inherited on attach." }
                 currency: { type: string }
@@ -21147,7 +21148,7 @@ paths:
                 body: { type: string, description: "Required on legacy + attach shapes. For X/Twitter this is the tweet text (max 280 chars including a ~24-char URL when `linkUrl` is set). On LinkedIn this is the post commentary (the intro text shown above the ad). Max: Google=90, Pinterest=500." }
                 callToAction: { type: string, enum: [LEARN_MORE, SHOP_NOW, SIGN_UP, BOOK_TRAVEL, CONTACT_US, DOWNLOAD, GET_OFFER, GET_QUOTE, SUBSCRIBE, WATCH_MORE, REGISTER, JOIN, ATTEND, REQUEST_DEMO, VIEW_QUOTE, APPLY, SEE_MORE, BUY_NOW], description: "Required on legacy + attach shapes for Meta. Honoured on TikTok (passes through to the Spark Ad creative's `call_to_action`) and on LinkedIn (the CTA button on the ad; defaults to LEARN_MORE when `linkUrl` is set). LinkedIn accepts: LEARN_MORE, SIGN_UP, DOWNLOAD, SUBSCRIBE, REGISTER, JOIN, ATTEND, REQUEST_DEMO, VIEW_QUOTE, APPLY, SEE_MORE, SHOP_NOW, BUY_NOW. Ignored by Google, Pinterest, and X/Twitter." }
                 linkUrl: { type: string, format: uri, description: "Required on legacy + attach shapes (skip for multi-creative). On LinkedIn it's the ad's destination URL; required for `traffic` ads, optional for `engagement` / `awareness`." }
-                imageUrl: { type: string, format: uri, description: "Image creative for Meta/Google/Pinterest/LinkedIn on legacy + attach shapes (mutually exclusive with `video`). Required for LinkedIn ads. Not required for Google Search campaigns. For TikTok, this field carries the VIDEO URL (the TikTok ads endpoint is video-only; the field retains the `imageUrl` name for cross-platform consistency). Ignored for X/Twitter. For Google Display, treated as the landscape image (alias of `images.landscape`); supply `images.square` alongside or the request is rejected. For LinkedIn the image is uploaded to LinkedIn under the authoring Company Page (see `organizationId`); recommended ratio 1.91:1 (e.g. 1200×627)." }
+                imageUrl: { type: string, format: uri, description: "Image creative for Meta/Google/Pinterest/LinkedIn on legacy + attach shapes (mutually exclusive with `video`). Required for LinkedIn ads unless `video` is set. Not required for Google Search campaigns. For TikTok, this field carries the VIDEO URL (the TikTok ads endpoint is video-only; the field retains the `imageUrl` name for cross-platform consistency). Ignored for X/Twitter. For Google Display, treated as the landscape image (alias of `images.landscape`); supply `images.square` alongside or the request is rejected. For LinkedIn the image is uploaded to LinkedIn under the authoring Company Page (see `organizationId`); recommended ratio 1.91:1 (e.g. 1200×627)." }
                 images:
                   type: object
                   description: "Google Display (Responsive Display Ads) only. Google RDA requires both a landscape (1.91:1) and a square (1:1) marketing image; sending only one is rejected upstream as 'Too few.' (NOT_ENOUGH_*_MARKETING_IMAGE_ASSET). Supply both URLs here. Either this field or the legacy `imageUrl` can provide the landscape, but `square` has no legacy counterpart so it must be set here for Display."
@@ -21156,11 +21157,11 @@ paths:
                     square: { type: string, format: uri, description: "Square 1:1 marketing image URL (e.g. 1080x1080). Required for Google Display." }
                 video:
                   type: object
-                  description: "Meta only (facebook, instagram). When set, creates a VIDEO ad on the legacy or attach shape. Mutually exclusive with `imageUrl`. For multi-creative, set `video` per entry inside `creatives[]` instead."
-                  required: [url, thumbnailUrl]
+                  description: "Meta (facebook, instagram) and LinkedIn. When set, creates a VIDEO ad on the legacy (or, for Meta, attach) shape. Mutually exclusive with `imageUrl`. For Meta multi-creative, set `video` per entry inside `creatives[]` instead. For LinkedIn the video is uploaded to LinkedIn under the authoring Company Page (see `organizationId`) and the campaign format is set to SINGLE_VIDEO; LinkedIn ignores `thumbnailUrl` (it auto-generates the poster frame) — supply MP4 H.264/AAC, 3s-30min, 75KB-500MB."
+                  required: [url]
                   properties:
-                    url: { type: string, format: uri, description: "Public URL of the video. Uploaded to Meta via chunked transfer on /act_X/advideos; then the request blocks on Meta's transcoding until status.video_status === 'ready'." }
-                    thumbnailUrl: { type: string, format: uri, description: "Public URL of a still-image thumbnail for the video. Required by Meta on every video creative. Uploaded to Meta as an ad image and referenced as the thumbnail in object_story_spec.video_data." }
+                    url: { type: string, format: uri, description: "Public URL of the video. Meta: uploaded via chunked transfer on /act_X/advideos, then the request blocks on Meta's transcoding until status.video_status === 'ready'. LinkedIn: uploaded via the Videos API (multipart), then the request blocks until LinkedIn finishes transcoding (status AVAILABLE) — short clips take ~10-30s." }
+                    thumbnailUrl: { type: string, format: uri, description: "Public URL of a still-image thumbnail for the video. Required by Meta on every video creative (uploaded as an ad image and referenced in object_story_spec.video_data). Ignored by LinkedIn (auto-generated poster frame)." }
                 creatives:
                   type: array
                   minItems: 1
@@ -21339,26 +21340,48 @@ paths:
                 promotedObject:
                   type: object
                   description: |
-                    Meta only. Forwarded to the ad set's `promoted_object` (snake-cased).
+                    What the ad optimises against. Behaviour depends on the platform.
 
+                    **Meta**: forwarded to the ad set's `promoted_object` (snake-cased).
                     Required for goals whose ad-set optimization_goal points at a specific
-                    event/page/app — without it Meta rejects the ad-set create with
-                    `error_subcode: 1815430` "Please select a promoted object for your ad set":
-                      - `goal: conversions` (OFFSITE_CONVERSIONS) — requires `pixelId` + `customEventType`
-                      - `goal: app_promotion` (APP_INSTALLS) — requires `applicationId` + `objectStoreUrl`
-                      - `goal: lead_generation` (LEAD_GENERATION) — `pageId` is auto-filled from the connected Page when omitted
+                    event/page/app (without it Meta rejects the ad-set create with
+                    `error_subcode: 1815430` "Please select a promoted object for your ad set"):
+                      - `goal: conversions` (OFFSITE_CONVERSIONS): requires `pixelId` + `customEventType`
+                      - `goal: app_promotion` (APP_INSTALLS): requires `applicationId` + `objectStoreUrl`
+                      - `goal: lead_generation` (LEAD_GENERATION): `pageId` is auto-filled from the connected Page when omitted
 
-                    Other goals (engagement, traffic, awareness, video_views) ignore this field.
+                    Other Meta goals (engagement, traffic, awareness, video_views) ignore this field.
+
+                    **TikTok**: only `goal: conversions` uses it.
+                      - `pixelId` maps to the ad group's `pixel_id`. Required: a TikTok website-conversion
+                        ad group without a pixel is rejected with `40002: Please select a pixel`.
+                      - `customEventType` maps to the ad group's `optimization_event` (the pixel event to
+                        optimise for). Optional: TikTok accepts a pixel-only auto-bid conversion ad group.
+                        See the `customEventType` field below for the valid TikTok codes.
+
+                    The remaining `promotedObject.*` fields are Meta-only. Platforms other than
+                    Meta and TikTok ignore `promotedObject` entirely.
                   properties:
                     pixelId:
                       type: string
-                      description: "Facebook Pixel ID. Required for `goal: conversions`."
+                      description: |
+                        Pixel ID. **Meta:** Facebook Pixel ID, required for `goal: conversions`.
+                        **TikTok:** TikTok Pixel ID, required for `goal: conversions`.
                     customEventType:
                       type: string
                       description: |
-                        Standard event the campaign optimises against, e.g. `PURCHASE`, `LEAD`,
-                        `COMPLETE_REGISTRATION`, `ADD_TO_CART`. Uppercased internally so callers
-                        can pass any case. Required for `goal: conversions`.
+                        The event the campaign/ad group optimises against.
+
+                        **Meta:** standard event like `PURCHASE`, `LEAD`, `COMPLETE_REGISTRATION`,
+                        `ADD_TO_CART`. Uppercased internally so callers can pass any case. Required
+                        for `goal: conversions`.
+
+                        **TikTok:** an `optimization_event` code (UPPER_SNAKE, not Meta's vocabulary
+                        and not PascalCase), e.g. `ON_WEB_ORDER` (Complete Payment), `INITIATE_ORDER`
+                        (Place an Order), `ON_WEB_CART` (Add to Cart), `ON_WEB_REGISTER` (Complete
+                        Registration), `FORM` (Submit Form), `ON_WEB_DETAIL` (View Content). Must be
+                        one of the events your TikTok Pixel is configured to track; passed through
+                        verbatim and validated by TikTok. Optional for `goal: conversions`.
                     pageId:
                       type: string
                       description: |
