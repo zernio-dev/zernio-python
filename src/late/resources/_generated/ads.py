@@ -68,6 +68,9 @@ class AdsResource:
         ad_account_id: str | None = None,
         profile_id: str | None = None,
         campaign_id: str | None = None,
+        platform_ad_id: str | None = None,
+        effective_object_story_id: str | None = None,
+        effective_instagram_media_id: str | None = None,
         from_date: str | None = None,
         to_date: str | None = None,
     ) -> dict[str, Any]:
@@ -82,6 +85,9 @@ class AdsResource:
             ad_account_id=ad_account_id,
             profile_id=profile_id,
             campaign_id=campaign_id,
+            platform_ad_id=platform_ad_id,
+            effective_object_story_id=effective_object_story_id,
+            effective_instagram_media_id=effective_instagram_media_id,
             from_date=from_date,
             to_date=to_date,
         )
@@ -566,6 +572,9 @@ class AdsResource:
         ad_account_id: str | None = None,
         profile_id: str | None = None,
         campaign_id: str | None = None,
+        platform_ad_id: str | None = None,
+        effective_object_story_id: str | None = None,
+        effective_instagram_media_id: str | None = None,
         from_date: str | None = None,
         to_date: str | None = None,
     ) -> dict[str, Any]:
@@ -580,6 +589,9 @@ class AdsResource:
             ad_account_id=ad_account_id,
             profile_id=profile_id,
             campaign_id=campaign_id,
+            platform_ad_id=platform_ad_id,
+            effective_object_story_id=effective_object_story_id,
+            effective_instagram_media_id=effective_instagram_media_id,
             from_date=from_date,
             to_date=to_date,
         )

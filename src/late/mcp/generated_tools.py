@@ -1227,6 +1227,9 @@ def register_generated_tools(mcp, _get_client):
         ad_account_id: str | None = None,
         profile_id: str | None = None,
         campaign_id: str | None = None,
+        platform_ad_id: str | None = None,
+        effective_object_story_id: str | None = None,
+        effective_instagram_media_id: str | None = None,
         from_date: str | None = None,
         to_date: str | None = None,
     ) -> str:
@@ -1242,6 +1245,9 @@ def register_generated_tools(mcp, _get_client):
             ad_account_id: Platform ad account ID (e.g. act_123 for Meta). Mirrors the same filter on /v1/ads/campaigns and /v1/ads/tree.
             profile_id: Profile ID
             campaign_id: Platform campaign ID (filter ads within a campaign)
+            platform_ad_id: Meta ad ID. Returns the ad with this platform-side ad ID.
+            effective_object_story_id: Facebook `{pageId}_{postId}` of the post the ad's engagement lives on (Meta `effective_object_story_id`). Use to map a Business-Manager-visible post back to the Zernio ad.
+            effective_instagram_media_id: Instagram media ID of the boosted post (Meta `effective_instagram_media_id`). Use to map a Business-Manager-visible IG post back to the Zernio ad.
             from_date: Start of metrics date range (YYYY-MM-DD). Defaults to 90 days ago.
             to_date: End of metrics date range (YYYY-MM-DD). Defaults to today. Max 730-day range."""
         client = _get_client()
@@ -1256,6 +1262,9 @@ def register_generated_tools(mcp, _get_client):
                 ad_account_id=ad_account_id,
                 profile_id=profile_id,
                 campaign_id=campaign_id,
+                platform_ad_id=platform_ad_id,
+                effective_object_story_id=effective_object_story_id,
+                effective_instagram_media_id=effective_instagram_media_id,
                 from_date=from_date,
                 to_date=to_date,
             )
@@ -3177,7 +3186,7 @@ def register_generated_tools(mcp, _get_client):
 
         Args:
             profile_id: Filter by profile ID
-            platform: Filter by platform
+            platform: Filter by platform. `metaads` is a synthetic value meaning the user's ads (boosted/dark posts) only; `facebook`/`instagram` return organic posts only.
             min_comments: Minimum comment count
             since: Posts created after this date
             sort_by: Sort field
