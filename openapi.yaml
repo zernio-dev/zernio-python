@@ -967,7 +967,7 @@ components:
           description: Webhook endpoint URL
         secret:
           type: string
-          description: Secret key for HMAC-SHA256 signature (not returned in responses for security)
+          description: Secret key for HMAC-SHA256 signature verification.
         events:
           type: array
           items:
