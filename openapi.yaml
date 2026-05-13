@@ -20666,6 +20666,69 @@ paths:
         '403':
           description: Ads add-on required
 
+  /v1/ads/timeline:
+    get:
+      operationId: getAdsTimeline
+      tags: [Ad Campaigns]
+      summary: Get daily aggregate ad metrics for an account
+      description: |
+        Returns daily aggregate metrics across all ads in a SocialAccount as a single
+        time series — one row per calendar day in the requested range. Use this for
+        dashboards that draw a daily-spend or daily-conversions chart, instead of
+        calling `/v1/ads/tree` once per day.
+
+        `accountId` is required. The lookup is sibling-expanded so passing the `metaads`
+        ID also includes ads under the linked `facebook` / `instagram` posting account
+        (and vice-versa) — same convention as `/v1/ads/tree` and `/v1/ads`.
+
+        Date range defaults to the last 90 days. Capped at 730 days. Ranges older
+        than the 90-day cache window trigger an on-demand backfill from the platform
+        before returning.
+      security:
+        - bearerAuth: []
+      parameters:
+        - { name: accountId, in: query, required: true, schema: { type: string }, description: Social account ID. Sibling-expanded to its linked posting↔ads pair. }
+        - { name: fromDate, in: query, schema: { type: string, format: date }, description: "Inclusive start of metrics range (YYYY-MM-DD). Defaults to 90 days ago." }
+        - { name: toDate, in: query, schema: { type: string, format: date }, description: "Inclusive end of metrics range (YYYY-MM-DD). Defaults to today. Max 730-day range." }
+        - { name: platform, in: query, schema: { type: string, enum: [facebook, instagram, tiktok, linkedin, pinterest, google, twitter] }, description: Restrict to one platform. }
+      responses:
+        '200':
+          description: Daily time series of aggregate metrics. Empty `rows` means the account has no ad activity in the range.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  rows:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        date: { type: string, format: date }
+                        spend: { type: number, description: "Native currency units (matches /ads/tree convention)." }
+                        impressions: { type: integer }
+                        reach: { type: integer }
+                        clicks: { type: integer }
+                        engagement: { type: integer }
+                        ctr: { type: number, description: "Click-through rate as a percentage (0–100)." }
+                        cpc: { type: number, description: "Cost per click in native currency." }
+                        cpm: { type: number, description: "Cost per 1000 impressions in native currency." }
+                        conversions: { type: integer, description: "Sum of conversion events matching the campaign optimization goal. Meta-only at time of writing." }
+                        costPerConversion: { type: number }
+                        actions:
+                          type: object
+                          additionalProperties: { type: number }
+                          description: "Per-action-type counts merged across all ads on this day. Keys are platform-native action types."
+                        actionValues:
+                          type: object
+                          additionalProperties: { type: number }
+                          description: "Monetary mirror of `actions` in native currency."
+                        purchaseValue: { type: number, description: "Sum of purchase-type action values on this day, native currency." }
+                        roas: { type: number, description: "Derived purchaseValue / spend." }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403':
+          description: Ads add-on required
+
   /v1/ads/{adId}:
     get:
       operationId: getAd

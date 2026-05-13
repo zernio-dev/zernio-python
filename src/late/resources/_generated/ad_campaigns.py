@@ -214,6 +214,23 @@ class AdCampaignsResource:
         )
         return self._client._get("/v1/ads/tree", params=params)
 
+    def get_ads_timeline(
+        self,
+        account_id: str,
+        *,
+        from_date: str | None = None,
+        to_date: str | None = None,
+        platform: str | None = None,
+    ) -> dict[str, Any]:
+        """Get daily aggregate ad metrics for an account"""
+        params = self._build_params(
+            account_id=account_id,
+            from_date=from_date,
+            to_date=to_date,
+            platform=platform,
+        )
+        return self._client._get("/v1/ads/timeline", params=params)
+
     async def alist_ad_campaigns(
         self,
         *,
@@ -377,3 +394,20 @@ class AdCampaignsResource:
             to_date=to_date,
         )
         return await self._client._aget("/v1/ads/tree", params=params)
+
+    async def aget_ads_timeline(
+        self,
+        account_id: str,
+        *,
+        from_date: str | None = None,
+        to_date: str | None = None,
+        platform: str | None = None,
+    ) -> dict[str, Any]:
+        """Get daily aggregate ad metrics for an account (async)"""
+        params = self._build_params(
+            account_id=account_id,
+            from_date=from_date,
+            to_date=to_date,
+            platform=platform,
+        )
+        return await self._client._aget("/v1/ads/timeline", params=params)

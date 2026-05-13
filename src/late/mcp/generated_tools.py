@@ -1230,6 +1230,32 @@ def register_generated_tools(mcp, _get_client):
         except Exception as e:
             return f"Error: {e}"
 
+    @mcp.tool()
+    def ad_campaigns_get_ads_timeline(
+        account_id: str,
+        from_date: str | None = None,
+        to_date: str | None = None,
+        platform: str | None = None,
+    ) -> str:
+        """Get daily aggregate ad metrics for an account
+
+        Args:
+            account_id: Social account ID. Sibling-expanded to its linked posting↔ads pair. (required)
+            from_date: Inclusive start of metrics range (YYYY-MM-DD). Defaults to 90 days ago.
+            to_date: Inclusive end of metrics range (YYYY-MM-DD). Defaults to today. Max 730-day range.
+            platform: Restrict to one platform."""
+        client = _get_client()
+        try:
+            response = client.ad_campaigns.get_ads_timeline(
+                account_id=account_id,
+                from_date=from_date,
+                to_date=to_date,
+                platform=platform,
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
     # ADS
 
     @mcp.tool()
