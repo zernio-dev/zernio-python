@@ -5267,7 +5267,7 @@ paths:
                   details: { type: object, description: 'Detailed validation errors' }
         '401': { $ref: '#/components/responses/Unauthorized' }
         '402':
-          description: Analytics add-on required
+          description: Analytics access required. Legacy plans need the Analytics add-on; included by default on usage-based plans.
           content:
             application/json:
               schema:
@@ -5362,7 +5362,7 @@ paths:
           description: Bad request (invalid accountId / metrics / metricType / date range, or account is not a YouTube account)
         '401': { $ref: '#/components/responses/Unauthorized' }
         '402':
-          description: Analytics add-on required
+          description: Analytics access required. Legacy plans need the Analytics add-on; included by default on usage-based plans.
         '404':
           description: Account not found
         '412':
@@ -5464,7 +5464,7 @@ paths:
               - Invalid metric name, metricType, or date range
         '401': { $ref: '#/components/responses/Unauthorized' }
         '402':
-          description: Analytics add-on required
+          description: Analytics access required. Legacy plans need the Analytics add-on; included by default on usage-based plans.
         '403':
           description: |
             Platform error. The authenticated member lacks the required
@@ -5553,7 +5553,7 @@ paths:
           description: Bad request (invalid accountId / metrics / metricType / date range, or account is not a TikTok account)
         '401': { $ref: '#/components/responses/Unauthorized' }
         '402':
-          description: Analytics add-on required
+          description: Analytics access required. Legacy plans need the Analytics add-on; included by default on usage-based plans.
         '404':
           description: Account not found
         '412':
@@ -5642,7 +5642,7 @@ paths:
                     error: "Invalid startDate format. Use YYYY-MM-DD."
         '401': { $ref: '#/components/responses/Unauthorized' }
         '402':
-          description: Analytics add-on required
+          description: Analytics access required. Legacy plans need the Analytics add-on; included by default on usage-based plans.
           content:
             application/json:
               schema:
@@ -5786,7 +5786,7 @@ paths:
               - Account is not a Facebook account
         '401': { $ref: '#/components/responses/Unauthorized' }
         '402':
-          description: Analytics add-on required
+          description: Analytics access required. Legacy plans need the Analytics add-on; included by default on usage-based plans.
         '404':
           description: Account not found
 
@@ -5912,7 +5912,7 @@ paths:
                     error: "Breakdowns are only supported with metricType=total_value"
         '401': { $ref: '#/components/responses/Unauthorized' }
         '402':
-          description: Analytics add-on required
+          description: Analytics access required. Legacy plans need the Analytics add-on; included by default on usage-based plans.
           content:
             application/json:
               schema:
@@ -5992,7 +5992,7 @@ paths:
           description: Bad request (invalid accountId / metrics / date range, or account is not an Instagram account)
         '401': { $ref: '#/components/responses/Unauthorized' }
         '402':
-          description: Analytics add-on required
+          description: Analytics access required. Legacy plans need the Analytics add-on; included by default on usage-based plans.
         '404':
           description: Account not found
 
@@ -6091,7 +6091,7 @@ paths:
                     code: "instagram_insufficient_followers"
         '401': { $ref: '#/components/responses/Unauthorized' }
         '402':
-          description: Analytics add-on required
+          description: Analytics access required. Legacy plans need the Analytics add-on; included by default on usage-based plans.
           content:
             application/json:
               schema:
@@ -6191,7 +6191,7 @@ paths:
                   error: { type: string }
         '401': { $ref: '#/components/responses/Unauthorized' }
         '402':
-          description: Analytics add-on required
+          description: Analytics access required. Legacy plans need the Analytics add-on; included by default on usage-based plans.
           content:
             application/json:
               schema:
@@ -6343,7 +6343,7 @@ paths:
                         views: 45200
         '401': { $ref: '#/components/responses/Unauthorized' }
         '402':
-          description: Analytics add-on required
+          description: Analytics access required. Legacy plans need the Analytics add-on; included by default on usage-based plans.
           content:
             application/json:
               schema:
@@ -6416,7 +6416,7 @@ paths:
                         post_count: 8
         '401': { $ref: '#/components/responses/Unauthorized' }
         '403':
-          description: Analytics add-on required
+          description: Analytics access required. Legacy plans need the Analytics add-on; included by default on usage-based plans.
           content:
             application/json:
               schema:
@@ -6506,7 +6506,7 @@ paths:
                         post_count: 41
         '401': { $ref: '#/components/responses/Unauthorized' }
         '403':
-          description: Analytics add-on required
+          description: Analytics access required. Legacy plans need the Analytics add-on; included by default on usage-based plans.
           content:
             application/json:
               schema:
@@ -6584,7 +6584,7 @@ paths:
                         weeks_count: 10
         '401': { $ref: '#/components/responses/Unauthorized' }
         '403':
-          description: Analytics add-on required
+          description: Analytics access required. Legacy plans need the Analytics add-on; included by default on usage-based plans.
           content:
             application/json:
               schema:
@@ -6682,7 +6682,7 @@ paths:
                   error: { type: string, example: "Missing required parameter: postId" }
         '401': { $ref: '#/components/responses/Unauthorized' }
         '402':
-          description: Analytics add-on required
+          description: Analytics access required. Legacy plans need the Analytics add-on; included by default on usage-based plans.
           content:
             application/json:
               schema:
@@ -6814,7 +6814,7 @@ paths:
                     items: { type: string }
         '401': { $ref: '#/components/responses/Unauthorized' }
         '402':
-          description: Analytics add-on required
+          description: Analytics access required. Legacy plans need the Analytics add-on; included by default on usage-based plans.
           content:
             application/json:
               schema:
@@ -6906,7 +6906,7 @@ paths:
                   error: { type: string, example: "Invalid startMonth format. Use YYYY-MM." }
         '401': { $ref: '#/components/responses/Unauthorized' }
         '402':
-          description: Analytics add-on required
+          description: Analytics access required. Legacy plans need the Analytics add-on; included by default on usage-based plans.
           content:
             application/json:
               schema:
@@ -8939,7 +8939,7 @@ paths:
                     granularity: "daily"
         '401': { $ref: '#/components/responses/Unauthorized' }
         '403':
-          description: Analytics add-on required
+          description: Analytics access required. Legacy plans need the Analytics add-on; included by default on usage-based plans.
           content:
             application/json:
               schema:
@@ -9783,7 +9783,7 @@ paths:
           description: "Platform doesn't support ads, or missing accountId for X Ads"
         '401': { $ref: '#/components/responses/Unauthorized' }
         '403':
-          description: "Ads add-on required, or no access to profile"
+          description: "Ads access required (Ads add-on on legacy plans, included on usage-based plans), or no access to profile"
         '404':
           description: "Profile or posting account not found"
 
@@ -12979,7 +12979,7 @@ paths:
                     validOptions: ["IMPRESSION", "MEMBERS_REACHED", "REACTION", "COMMENT", "RESHARE", "POST_SAVE", "POST_SEND"]
         '401': { $ref: '#/components/responses/Unauthorized' }
         '402':
-          description: Analytics add-on required
+          description: Analytics access required. Legacy plans need the Analytics add-on; included by default on usage-based plans.
           content:
             application/json:
               schema:
@@ -13090,7 +13090,7 @@ paths:
                     providedUrn: "invalid-urn"
         '401': { $ref: '#/components/responses/Unauthorized' }
         '402':
-          description: Analytics add-on required
+          description: Analytics access required. Legacy plans need the Analytics add-on; included by default on usage-based plans.
         '403':
           description: Missing required LinkedIn scope
           content:
@@ -13225,7 +13225,7 @@ paths:
                   code: { type: string, enum: [missing_urn, invalid_urn, invalid_platform, PLATFORM_LIMITATION] }
         '401': { $ref: '#/components/responses/Unauthorized' }
         '402':
-          description: Analytics add-on required
+          description: Analytics access required. Legacy plans need the Analytics add-on; included by default on usage-based plans.
         '403':
           description: Missing required LinkedIn scope
         '404':
@@ -20212,7 +20212,7 @@ paths:
                   pagination: { $ref: '#/components/schemas/Pagination' }
         '401': { $ref: '#/components/responses/Unauthorized' }
         '403':
-          description: Ads add-on required
+          description: Ads access required. Legacy plans need the Ads add-on; included by default on usage-based plans.
 
   /v1/ads/campaigns:
     get:
@@ -20248,7 +20248,7 @@ paths:
                   pagination: { $ref: '#/components/schemas/Pagination' }
         '401': { $ref: '#/components/responses/Unauthorized' }
         '403':
-          description: Ads add-on required
+          description: Ads access required. Legacy plans need the Ads add-on; included by default on usage-based plans.
 
   /v1/ads/campaigns/{campaignId}/status:
     put:
@@ -20664,7 +20664,7 @@ paths:
                   pagination: { $ref: '#/components/schemas/Pagination' }
         '401': { $ref: '#/components/responses/Unauthorized' }
         '403':
-          description: Ads add-on required
+          description: Ads access required. Legacy plans need the Ads add-on; included by default on usage-based plans.
 
   /v1/ads/timeline:
     get:
@@ -20728,7 +20728,7 @@ paths:
                         roas: { type: number, description: "Derived purchaseValue / spend." }
         '401': { $ref: '#/components/responses/Unauthorized' }
         '403':
-          description: Ads add-on required
+          description: Ads access required. Legacy plans need the Ads add-on; included by default on usage-based plans.
 
   /v1/ads/{adId}:
     get:
@@ -20908,7 +20908,7 @@ paths:
                           items: { type: object }
         '401': { $ref: '#/components/responses/Unauthorized' }
         '403':
-          description: Ads add-on required
+          description: Ads access required. Legacy plans need the Ads add-on; included by default on usage-based plans.
         '404': { $ref: '#/components/responses/NotFound' }
 
   /v1/ads/{adId}/comments:
@@ -20997,7 +20997,7 @@ paths:
             underlying post (code ad_not_commentable).
         '401': { $ref: '#/components/responses/Unauthorized' }
         '403':
-          description: Ads add-on required, or ad platform is not Meta (code feature_not_available).
+          description: Ads access required (legacy plans need the Ads add-on; included by default on usage-based plans), or ad platform is not Meta (code feature_not_available).
         '404': { $ref: '#/components/responses/NotFound' }
         '422':
           description: |
@@ -21208,7 +21208,7 @@ paths:
           description: Missing required fields or invalid values
         '401': { $ref: '#/components/responses/Unauthorized' }
         '403':
-          description: Ads add-on required
+          description: Ads access required. Legacy plans need the Ads add-on; included by default on usage-based plans.
         '422':
           description: |
             Platform ads connection required (TikTok Ads, X Ads), missing linked
@@ -21538,7 +21538,7 @@ paths:
           description: Missing required fields, invalid values, or non-Meta platform used with creatives[] / adSetId
         '401': { $ref: '#/components/responses/Unauthorized' }
         '403':
-          description: Ads add-on required
+          description: Ads access required. Legacy plans need the Ads add-on; included by default on usage-based plans.
         '422':
           description: Platform ads connection required (TikTok Ads, X Ads) or missing linked account
 
@@ -21571,7 +21571,7 @@ paths:
                         category: { type: string }
         '401': { $ref: '#/components/responses/Unauthorized' }
         '403':
-          description: Ads add-on required
+          description: Ads access required. Legacy plans need the Ads add-on; included by default on usage-based plans.
 
   /v1/ads/targeting/search:
     get:
@@ -21626,7 +21626,7 @@ paths:
           description: Missing or invalid query parameters
         '401': { $ref: '#/components/responses/Unauthorized' }
         '403':
-          description: Ads add-on required
+          description: Ads access required. Legacy plans need the Ads add-on; included by default on usage-based plans.
         '404':
           description: Account not found, or platform does not support targeting search (Meta only)
 
@@ -21665,7 +21665,7 @@ paths:
                         status: { type: string }
         '401': { $ref: '#/components/responses/Unauthorized' }
         '403':
-          description: Ads add-on required
+          description: Ads access required. Legacy plans need the Ads add-on; included by default on usage-based plans.
     post:
       operationId: createAdAudience
       tags: [Ad Audiences]
@@ -21707,7 +21707,7 @@ paths:
           description: Missing required fields
         '401': { $ref: '#/components/responses/Unauthorized' }
         '403':
-          description: Ads add-on required
+          description: Ads access required. Legacy plans need the Ads add-on; included by default on usage-based plans.
 
   /v1/ads/audiences/{audienceId}:
     get:
@@ -21731,7 +21731,7 @@ paths:
                   metaData: { type: object, nullable: true, description: Fresh data from Meta API }
         '401': { $ref: '#/components/responses/Unauthorized' }
         '403':
-          description: Ads add-on required
+          description: Ads access required. Legacy plans need the Ads add-on; included by default on usage-based plans.
         '404': { $ref: '#/components/responses/NotFound' }
     delete:
       operationId: deleteAdAudience
@@ -21753,7 +21753,7 @@ paths:
                   message: { type: string }
         '401': { $ref: '#/components/responses/Unauthorized' }
         '403':
-          description: Ads add-on required
+          description: Ads access required. Legacy plans need the Ads add-on; included by default on usage-based plans.
         '404': { $ref: '#/components/responses/NotFound' }
 
   /v1/ads/audiences/{audienceId}/users:
@@ -21798,7 +21798,7 @@ paths:
           description: Invalid input (empty users array, missing email/phone)
         '401': { $ref: '#/components/responses/Unauthorized' }
         '403':
-          description: Ads add-on required
+          description: Ads access required. Legacy plans need the Ads add-on; included by default on usage-based plans.
         '404': { $ref: '#/components/responses/NotFound' }
         '422':
           description: Audience is not a customer_list type or has no platform ID yet
@@ -21926,8 +21926,8 @@ paths:
         '401': { $ref: '#/components/responses/Unauthorized' }
         '403':
           description: |
-            Ads add-on required, OR (for LinkedIn) the connected account
-            lacks the `rw_conversions` scope and must be reconnected.
+            Ads access required (Ads add-on on legacy plans, included on usage-based plans),
+            OR (for LinkedIn) the connected account lacks the `rw_conversions` scope and must be reconnected.
         '404':
           description: Account not found or not accessible.
         '429':
@@ -22003,8 +22003,8 @@ paths:
         '401': { $ref: '#/components/responses/Unauthorized' }
         '403':
           description: |
-            Ads add-on required, OR (for LinkedIn) the connected account
-            lacks the `rw_conversions` scope and must be reconnected.
+            Ads access required (Ads add-on on legacy plans, included on usage-based plans),
+            OR (for LinkedIn) the connected account lacks the `rw_conversions` scope and must be reconnected.
         '404':
           description: Account not found or not accessible.
         '429':
@@ -22118,8 +22118,8 @@ paths:
         '401': { $ref: '#/components/responses/Unauthorized' }
         '403':
           description: |
-            Ads add-on required, or the connected LinkedIn account lacks the
-            `rw_conversions` scope (reconnect required).
+            Ads access required (Ads add-on on legacy plans, included on usage-based plans),
+            or the connected LinkedIn account lacks the `rw_conversions` scope (reconnect required).
         '404':
           description: Account not found or not accessible.
         '405':
@@ -22808,7 +22808,7 @@ paths:
                   message: { type: string }
         '400': { description: Invalid body. }
         '401': { $ref: '#/components/responses/Unauthorized' }
-        '403': { description: Ads add-on required. }
+        '403': { description: "Ads access required. Legacy plans need the Ads add-on; included by default on usage-based plans." }
         '404': { description: SocialAccount not found. }
         '422':
           description: Page is not connected to a verified WhatsApp number.
@@ -22853,7 +22853,7 @@ paths:
                     items: { $ref: '#/components/schemas/TrackingTag' }
         '400': { description: 'Account platform not supported, or invalid `adAccountId`.' }
         '401': { $ref: '#/components/responses/Unauthorized' }
-        '403': { description: 'Ads add-on required, or the Meta token lacks ads permissions (reconnect required).' }
+        '403': { description: 'Ads access required (Ads add-on on legacy plans, included on usage-based plans), or the Meta token lacks ads permissions (reconnect required).' }
         '404': { description: Account not found or not accessible. }
         '405': { description: Platform does not support listing tracking tags. }
 
@@ -22901,7 +22901,7 @@ paths:
                   tag: { $ref: '#/components/schemas/TrackingTag' }
         '400': { description: 'Invalid body, invalid `adAccountId`, over the per-business pixel cap, or ad account not in a Business Manager.' }
         '401': { $ref: '#/components/responses/Unauthorized' }
-        '403': { description: 'Ads add-on required, or the Meta token lacks ads permissions (reconnect required).' }
+        '403': { description: 'Ads access required (Ads add-on on legacy plans, included on usage-based plans), or the Meta token lacks ads permissions (reconnect required).' }
         '404': { description: Account not found or not accessible. }
         '405': { description: Platform does not support creating tracking tags. }
 
@@ -22930,7 +22930,7 @@ paths:
                   platform: { type: string, enum: [metaads] }
                   tag: { $ref: '#/components/schemas/TrackingTag' }
         '401': { $ref: '#/components/responses/Unauthorized' }
-        '403': { description: 'Ads add-on required, or the Meta token lacks ads permissions (reconnect required).' }
+        '403': { description: 'Ads access required (Ads add-on on legacy plans, included on usage-based plans), or the Meta token lacks ads permissions (reconnect required).' }
         '404': { description: Account or tracking tag not found. }
         '405': { description: Platform does not support fetching a tracking tag. }
 
@@ -22994,7 +22994,7 @@ paths:
                   tag: { $ref: '#/components/schemas/TrackingTag' }
         '400': { description: Invalid body (e.g. no fields supplied) or Meta validation failure. }
         '401': { $ref: '#/components/responses/Unauthorized' }
-        '403': { description: 'Ads add-on required, or the Meta token lacks ads permissions (reconnect required).' }
+        '403': { description: 'Ads access required (Ads add-on on legacy plans, included on usage-based plans), or the Meta token lacks ads permissions (reconnect required).' }
         '404': { description: Account or tracking tag not found. }
         '405': { description: Platform does not support updating tracking tags. }
 
@@ -23022,7 +23022,7 @@ paths:
                     type: array
                     items: { $ref: '#/components/schemas/SharedAdAccount' }
         '401': { $ref: '#/components/responses/Unauthorized' }
-        '403': { description: 'Ads add-on required, or the Meta token lacks ads permissions (reconnect required).' }
+        '403': { description: 'Ads access required (Ads add-on on legacy plans, included on usage-based plans), or the Meta token lacks ads permissions (reconnect required).' }
         '404': { description: Account or tracking tag not found. }
         '405': { description: Platform does not support shared accounts. }
 
@@ -23062,7 +23062,7 @@ paths:
                   ok: { type: boolean }
         '400': { description: 'Invalid body / `adAccountId`, or Meta rejected the share (e.g. personal ad account).' }
         '401': { $ref: '#/components/responses/Unauthorized' }
-        '403': { description: 'Ads add-on required, or the Meta token lacks ads permissions (reconnect required).' }
+        '403': { description: 'Ads access required (Ads add-on on legacy plans, included on usage-based plans), or the Meta token lacks ads permissions (reconnect required).' }
         '404': { description: Account or tracking tag not found. }
         '405': { description: Platform does not support shared accounts. }
 
@@ -23084,7 +23084,7 @@ paths:
         '204': { description: Ad account unshared (no content). }
         '400': { description: '`adAccountId` missing (neither query nor body), or Meta rejected the unshare.' }
         '401': { $ref: '#/components/responses/Unauthorized' }
-        '403': { description: 'Ads add-on required, or the Meta token lacks ads permissions (reconnect required).' }
+        '403': { description: 'Ads access required (Ads add-on on legacy plans, included on usage-based plans), or the Meta token lacks ads permissions (reconnect required).' }
         '404': { description: Account or tracking tag not found. }
         '405': { description: Platform does not support shared accounts. }
 
@@ -23149,6 +23149,6 @@ paths:
                         items: { type: object, additionalProperties: true }
         '400': { description: Invalid query parameter. }
         '401': { $ref: '#/components/responses/Unauthorized' }
-        '403': { description: 'Ads add-on required, or the Meta token lacks ads permissions (reconnect required).' }
+        '403': { description: 'Ads access required (Ads add-on on legacy plans, included on usage-based plans), or the Meta token lacks ads permissions (reconnect required).' }
         '404': { description: Account or tracking tag not found. }
         '405': { description: Platform does not support tracking-tag stats. }
