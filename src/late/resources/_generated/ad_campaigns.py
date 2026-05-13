@@ -218,6 +218,7 @@ class AdCampaignsResource:
         self,
         account_id: str,
         *,
+        ad_account_id: str | None = None,
         from_date: str | None = None,
         to_date: str | None = None,
         platform: str | None = None,
@@ -225,6 +226,7 @@ class AdCampaignsResource:
         """Get daily aggregate ad metrics for an account"""
         params = self._build_params(
             account_id=account_id,
+            ad_account_id=ad_account_id,
             from_date=from_date,
             to_date=to_date,
             platform=platform,
@@ -399,6 +401,7 @@ class AdCampaignsResource:
         self,
         account_id: str,
         *,
+        ad_account_id: str | None = None,
         from_date: str | None = None,
         to_date: str | None = None,
         platform: str | None = None,
@@ -406,6 +409,7 @@ class AdCampaignsResource:
         """Get daily aggregate ad metrics for an account (async)"""
         params = self._build_params(
             account_id=account_id,
+            ad_account_id=ad_account_id,
             from_date=from_date,
             to_date=to_date,
             platform=platform,

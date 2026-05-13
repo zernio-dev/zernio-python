@@ -1233,6 +1233,7 @@ def register_generated_tools(mcp, _get_client):
     @mcp.tool()
     def ad_campaigns_get_ads_timeline(
         account_id: str,
+        ad_account_id: str | None = None,
         from_date: str | None = None,
         to_date: str | None = None,
         platform: str | None = None,
@@ -1241,6 +1242,7 @@ def register_generated_tools(mcp, _get_client):
 
         Args:
             account_id: Social account ID. Sibling-expanded to its linked posting↔ads pair. (required)
+            ad_account_id: Optional platform-native ad account ID (e.g. Meta `act_…`, TikTok advertiser ID). Use when the connection wraps multiple platform ad accounts and the chart should show one only. Note: rows ingested before 2026-05-13 don't carry this column; the recurring 7-day re-sync repopulates them naturally.
             from_date: Inclusive start of metrics range (YYYY-MM-DD). Defaults to 90 days ago.
             to_date: Inclusive end of metrics range (YYYY-MM-DD). Defaults to today. Max 730-day range.
             platform: Restrict to one platform."""
@@ -1248,6 +1250,7 @@ def register_generated_tools(mcp, _get_client):
         try:
             response = client.ad_campaigns.get_ads_timeline(
                 account_id=account_id,
+                ad_account_id=ad_account_id,
                 from_date=from_date,
                 to_date=to_date,
                 platform=platform,

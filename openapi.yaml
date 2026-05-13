@@ -20688,6 +20688,7 @@ paths:
         - bearerAuth: []
       parameters:
         - { name: accountId, in: query, required: true, schema: { type: string }, description: Social account ID. Sibling-expanded to its linked posting↔ads pair. }
+        - { name: adAccountId, in: query, schema: { type: string }, description: "Optional platform-native ad account ID (e.g. Meta `act_…`, TikTok advertiser ID). Use when the connection wraps multiple platform ad accounts and the chart should show one only. Note: rows ingested before 2026-05-13 don't carry this column; the recurring 7-day re-sync repopulates them naturally." }
         - { name: fromDate, in: query, schema: { type: string, format: date }, description: "Inclusive start of metrics range (YYYY-MM-DD). Defaults to 90 days ago." }
         - { name: toDate, in: query, schema: { type: string, format: date }, description: "Inclusive end of metrics range (YYYY-MM-DD). Defaults to today. Max 730-day range." }
         - { name: platform, in: query, schema: { type: string, enum: [facebook, instagram, tiktok, linkedin, pinterest, google, twitter] }, description: Restrict to one platform. }
