@@ -9033,6 +9033,52 @@ paths:
         '400': { description: Invalid request (e.g. xCapabilities on a non-X account) }
         '401': { $ref: '#/components/responses/Unauthorized' }
         '404': { $ref: '#/components/responses/NotFound' }
+    patch:
+      operationId: moveAccountToProfile
+      tags: [Accounts]
+      summary: Move account to a different profile
+      description: |
+        Moves a connected social account to a different profile owned by the same
+        user. The target profile must belong to the same user as the account.
+
+        For API keys restricted to specific profiles, BOTH the source account's
+        current profile AND the target profile must be in the key's allowed set.
+        Calls with a target profile outside the key's scope return 403.
+      parameters:
+        - name: accountId
+          in: path
+          required: true
+          schema: { type: string }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [profileId]
+              properties:
+                profileId:
+                  type: string
+                  description: Target profile ID (must be a valid ObjectId and owned by the same user as the account).
+            example:
+              profileId: "65f1a2b3c4d5e6f7a8b9c0d1"
+      responses:
+        '200':
+          description: Account moved
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message: { type: string }
+                  profileId: { type: string }
+              example:
+                message: "Account updated successfully"
+                profileId: "65f1a2b3c4d5e6f7a8b9c0d1"
+        '400': { description: Missing or invalid profileId }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { description: API key does not have access to the source account or target profile }
+        '404': { description: Account or target profile not found }
     delete:
       operationId: deleteAccount
       tags: [Accounts]

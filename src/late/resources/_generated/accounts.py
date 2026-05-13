@@ -108,6 +108,15 @@ class AccountsResource:
         )
         return self._client._put(f"/v1/accounts/{account_id}", data=payload)
 
+    def move_account_to_profile(
+        self, account_id: str, profile_id: str
+    ) -> dict[str, Any]:
+        """Move account to a different profile"""
+        payload = self._build_payload(
+            profile_id=profile_id,
+        )
+        return self._client._patch(f"/v1/accounts/{account_id}", data=payload)
+
     def delete_account(self, account_id: str) -> dict[str, Any]:
         """Disconnect account"""
         return self._client._delete(f"/v1/accounts/{account_id}")
@@ -457,6 +466,15 @@ class AccountsResource:
             x_capabilities=x_capabilities,
         )
         return await self._client._aput(f"/v1/accounts/{account_id}", data=payload)
+
+    async def amove_account_to_profile(
+        self, account_id: str, profile_id: str
+    ) -> dict[str, Any]:
+        """Move account to a different profile (async)"""
+        payload = self._build_payload(
+            profile_id=profile_id,
+        )
+        return await self._client._apatch(f"/v1/accounts/{account_id}", data=payload)
 
     async def adelete_account(self, account_id: str) -> dict[str, Any]:
         """Disconnect account (async)"""

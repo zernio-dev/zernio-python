@@ -206,6 +206,7 @@ Both `from zernio import ...` and `from late import ...` work identically. The `
 | `accounts.update_account()` | Update account |
 | `accounts.delete_account()` | Disconnect account |
 | `accounts.batch_get_google_business_reviews()` | Batch get reviews |
+| `accounts.move_account_to_profile()` | Move account to a different profile |
 
 ### Profiles
 | Method | Description |

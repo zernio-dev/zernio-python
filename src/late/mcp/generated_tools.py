@@ -366,6 +366,22 @@ def register_generated_tools(mcp, _get_client):
             return f"Error: {e}"
 
     @mcp.tool()
+    def accounts_move_account_to_profile(account_id: str, profile_id: str) -> str:
+        """Move account to a different profile
+
+        Args:
+            account_id: (required)
+            profile_id: Target profile ID (must be a valid ObjectId and owned by the same user as the account). (required)"""
+        client = _get_client()
+        try:
+            response = client.accounts.move_account_to_profile(
+                account_id=account_id, profile_id=profile_id
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool()
     def accounts_delete_account(account_id: str) -> str:
         """Disconnect account
 
