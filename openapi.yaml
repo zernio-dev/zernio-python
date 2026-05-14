@@ -153,6 +153,7 @@ x-documentation:
     - `comment.received` - New comment received on a post
     - `review.new` - New review posted on a connected account (Google Business Profile)
     - `review.updated` - Review updated or reply added (Google Business Profile, or via reply API)
+    - `ad.status_changed` - Ad, ad set, or campaign changed status on the ad platform (Meta: `in_process_ad_objects` entry/exit and `with_issues_ad_objects` violations)
     - `webhook.test` - Test event sent when verifying a webhook endpoint
 
     Webhook payloads are signed with HMAC-SHA256 via the `X-Zernio-Signature` header.
@@ -276,7 +277,7 @@ tags:
   - name: Webhooks
     description: |
       Configure webhooks for real-time notifications. Webhooks can be created from the dashboard (Settings → Webhooks) or via this API.
-      Events: post.scheduled, post.published, post.failed, post.partial, post.cancelled, post.recycled, account.connected, account.disconnected, account.ads.initial_sync_completed, message.received, message.sent, message.edited, message.deleted, message.delivered, message.read, message.failed, comment.received, review.new, review.updated, webhook.test.
+      Events: post.scheduled, post.published, post.failed, post.partial, post.cancelled, post.recycled, account.connected, account.disconnected, account.ads.initial_sync_completed, message.received, message.sent, message.edited, message.deleted, message.delivered, message.read, message.failed, comment.received, review.new, review.updated, ad.status_changed, webhook.test.
       Security: optional HMAC-SHA256 signature in X-Zernio-Signature header. Configure a secret key to enable verification. Custom headers supported.
   - name: Webhook Events
     description: |
@@ -972,7 +973,7 @@ components:
           type: array
           items:
             type: string
-            enum: [post.scheduled, post.published, post.failed, post.partial, post.cancelled, post.recycled, account.connected, account.disconnected, account.ads.initial_sync_completed, message.received, message.sent, message.edited, message.deleted, message.delivered, message.read, message.failed, comment.received, review.new, review.updated]
+            enum: [post.scheduled, post.published, post.failed, post.partial, post.cancelled, post.recycled, account.connected, account.disconnected, account.ads.initial_sync_completed, message.received, message.sent, message.edited, message.deleted, message.delivered, message.read, message.failed, comment.received, review.new, review.updated, ad.status_changed]
           description: Events subscribed to
         isActive:
           type: boolean
@@ -2052,6 +2053,115 @@ components:
         account:
           $ref: '#/components/schemas/InboxWebhookAccount'
         timestamp: { type: string, format: date-time }
+    WebhookPayloadAdStatusChanged:
+      type: object
+      description: |
+        Webhook payload for the `ad.status_changed` event. Currently emitted
+        only for Meta (`metaads`).
+
+        Sourced from two Meta `ad_account` webhook fields:
+          - `in_process_ad_objects` - the ad object finished processing and
+            exited `IN_PROCESS`. `status.raw` carries Meta's `status_name`.
+          - `with_issues_ad_objects` - the ad object entered `WITH_ISSUES`.
+            `status.raw` is `WITH_ISSUES` and the `error` block is populated
+            from Meta's `error_code` / `error_summary` / `error_message`.
+      required: [id, event, account, adObject, status, timestamp]
+      properties:
+        id:
+          type: string
+          description: Stable webhook event ID
+        event:
+          type: string
+          enum: [ad.status_changed]
+        account:
+          type: object
+          description: The connected ad-platform account that owns the ad object.
+          required: [accountId, profileId, platform, username]
+          properties:
+            accountId:
+              type: string
+              description: Internal Zernio account ID (same as used in /v1/accounts/{accountId}).
+            profileId:
+              type: string
+              description: Internal Zernio profile ID this account belongs to.
+            platform:
+              type: string
+              description: Ad platform identifier. Currently always `metaads`.
+              example: metaads
+            username:
+              type: string
+              description: Display username of the connected ad-platform account.
+            displayName:
+              type: string
+              description: Human-readable display name of the account, when available.
+        adObject:
+          type: object
+          description: The ad-platform object the status change applies to.
+          required: [level, platformId, platformAdAccountId]
+          properties:
+            level:
+              type: string
+              enum: [CAMPAIGN, AD_SET, AD]
+              description: Hierarchy level the status applies to. Mirrors Meta's `level`. Creative-level events are not forwarded.
+            platformId:
+              type: string
+              description: |
+                Platform-native ID of the campaign / ad set / ad. For Meta this is
+                the bare numeric ID (e.g. `120244894077860689`).
+              example: "120244894077860689"
+            platformAdAccountId:
+              type: string
+              description: |
+                Platform-native ad-account ID. For Meta this uses the `act_<id>`
+                shape.
+              example: act_2129800524463520
+        status:
+          type: object
+          description: Status info. Branch on `status.raw` to handle each transition.
+          required: [raw]
+          properties:
+            raw:
+              type: string
+              description: |
+                Platform-native status string, forwarded verbatim. For Meta
+                this is `status_name` from `in_process_ad_objects` (e.g.
+                `ACTIVE`, `PAUSED`, `PENDING_REVIEW`, `ARCHIVED`, `DELETED`,
+                `DISAPPROVED`), or `WITH_ISSUES` when sourced from
+                `with_issues_ad_objects`. Not constrained by an `enum` — Meta
+                may add new values.
+              example: ACTIVE
+        error:
+          type: object
+          description: |
+            Optional. Present on most `WITH_ISSUES` events, carrying the
+            platform's error diagnostics. May be absent on some `WITH_ISSUES`
+            events (Meta does not always include diagnostics). Always absent
+            for any other `status.raw` value. Always null-check before reading.
+          required: [code]
+          properties:
+            code:
+              type: string
+              description: |
+                Platform-native error code, forwarded verbatim. For Meta this
+                is `error_code` as a string. Use as the stable discriminator —
+                `summary` and `message` are localized.
+              example: "2643001"
+            summary:
+              type: string
+              description: |
+                Short human-readable summary (Meta `error_summary`). Localized
+                to the ad-account owner's Meta locale — display only, do not
+                match on it.
+              example: Ad Processing Error
+            message:
+              type: string
+              description: |
+                Full human-readable error message (Meta `error_message`).
+                Localized — display only.
+        timestamp:
+          type: string
+          format: date-time
+          description: ISO-8601 timestamp the webhook was produced.
     WebhookPayloadTest:
       type: object
       description: Webhook payload for test deliveries
@@ -4777,6 +4887,105 @@ webhooks:
           application/json:
             schema:
               $ref: '#/components/schemas/WebhookPayloadReviewUpdated'
+      responses:
+        '200':
+          description: Webhook received successfully
+  ad.status_changed:
+    post:
+      operationId: onAdStatusChanged
+      summary: Ad status changed event
+      description: |
+        Fired when a campaign, ad set, or ad on a connected ad platform changes status.
+        Currently emitted only for Meta (`metaads`).
+
+        Subscribed to two Meta `ad_account` webhook fields:
+          - `in_process_ad_objects` - the ad object finished processing and exited
+            the `IN_PROCESS` state. `status.raw` carries Meta's `status_name`
+            (e.g. `ACTIVE`, `PAUSED`, `ARCHIVED`, `DELETED`).
+          - `with_issues_ad_objects` - the ad object entered the `WITH_ISSUES`
+            state. `status.raw` is set to `WITH_ISSUES` and the `error` block is
+            populated from Meta's `error_code` / `error_summary` / `error_message`.
+
+        `adObject.level` mirrors Meta's `level` and is one of `CAMPAIGN`,
+        `AD_SET`, or `AD`. Creative-level events are not forwarded.
+
+        Branch on `status.raw` to handle each transition; use `error.code` (when
+        present) as the stable discriminator — `error.summary` and `error.message`
+        are localized to the ad-account owner's Meta locale.
+
+        The `error` block is optional. It's present on most `WITH_ISSUES`
+        events but can be absent (Meta does not always include diagnostics),
+        and is never present on any other status. Always null-check `error`
+        before reading `error.code`.
+
+        **Fan-out:** matching is keyed on `adObject.platformAdAccountId`. When
+        multiple connected Zernio `metaads` accounts are linked to the same Meta
+        ad account, each receives its own delivery.
+      tags: [Webhook Events]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/WebhookPayloadAdStatusChanged'
+            examples:
+              inProcessActive:
+                summary: in_process_ad_objects → ACTIVE (ad approved)
+                value:
+                  id: "01J7K3P4N5Q6R7S8T9V0W1X2Y3"
+                  event: ad.status_changed
+                  account:
+                    accountId: "65c8f7e2a1b3c4d5e6f7a8b9"
+                    profileId: "65c8f7e2a1b3c4d5e6f7a800"
+                    platform: metaads
+                    username: acme-ads
+                    displayName: Acme Ads
+                  adObject:
+                    level: AD
+                    platformId: "120244894077860689"
+                    platformAdAccountId: act_2129800524463520
+                  status:
+                    raw: ACTIVE
+                  timestamp: "2026-05-05T15:25:27.944Z"
+              withIssuesError:
+                summary: with_issues_ad_objects → WITH_ISSUES (error populated)
+                value:
+                  id: "01J7K3P4N5Q6R7S8T9V0W1X2Y4"
+                  event: ad.status_changed
+                  account:
+                    accountId: "65c8f7e2a1b3c4d5e6f7a8b9"
+                    profileId: "65c8f7e2a1b3c4d5e6f7a800"
+                    platform: metaads
+                    username: acme-ads
+                    displayName: Acme Ads
+                  adObject:
+                    level: AD
+                    platformId: "120244560555500043"
+                    platformAdAccountId: act_587875401826220
+                  status:
+                    raw: WITH_ISSUES
+                  error:
+                    code: "2643001"
+                    summary: Ad Processing Error
+                    message: "Ad Processing Error: We are having trouble processing your request. To resolve the issue, please try to publish again."
+                  timestamp: "2026-05-08T04:22:35.821Z"
+              inProcessWithIssues:
+                summary: in_process_ad_objects → WITH_ISSUES (no error block)
+                value:
+                  id: "01J7K3P4N5Q6R7S8T9V0W1X2Y5"
+                  event: ad.status_changed
+                  account:
+                    accountId: "65c8f7e2a1b3c4d5e6f7a8b9"
+                    profileId: "65c8f7e2a1b3c4d5e6f7a800"
+                    platform: metaads
+                    username: acme-ads
+                  adObject:
+                    level: AD
+                    platformId: "120244560555500043"
+                    platformAdAccountId: act_587875401826220
+                  status:
+                    raw: WITH_ISSUES
+                  timestamp: "2026-05-08T04:22:35.821Z"
       responses:
         '200':
           description: Webhook received successfully
@@ -14402,7 +14611,7 @@ paths:
                   minItems: 1
                   items:
                     type: string
-                    enum: [post.scheduled, post.published, post.failed, post.partial, post.cancelled, post.recycled, account.connected, account.disconnected, account.ads.initial_sync_completed, message.received, message.sent, message.edited, message.deleted, message.delivered, message.read, message.failed, comment.received, review.new, review.updated]
+                    enum: [post.scheduled, post.published, post.failed, post.partial, post.cancelled, post.recycled, account.connected, account.disconnected, account.ads.initial_sync_completed, message.received, message.sent, message.edited, message.deleted, message.delivered, message.read, message.failed, comment.received, review.new, review.updated, ad.status_changed]
                   description: Events to subscribe to (at least one required)
                 isActive:
                   type: boolean
@@ -14420,7 +14629,7 @@ paths:
                   name: "My Production Webhook"
                   url: "https://example.com/webhook"
                   secret: "your-secret-key"
-                  events: ["post.scheduled", "post.published", "post.failed", "post.partial", "post.cancelled", "post.recycled", "account.connected", "account.disconnected", "account.ads.initial_sync_completed", "message.received", "message.sent", "message.edited", "message.deleted", "message.delivered", "message.read", "message.failed", "comment.received", "review.new", "review.updated"]
+                  events: ["post.scheduled", "post.published", "post.failed", "post.partial", "post.cancelled", "post.recycled", "account.connected", "account.disconnected", "account.ads.initial_sync_completed", "message.received", "message.sent", "message.edited", "message.deleted", "message.delivered", "message.read", "message.failed", "comment.received", "review.new", "review.updated", "ad.status_changed"]
                   isActive: true
       responses:
         '200':
@@ -14476,7 +14685,7 @@ paths:
                   minItems: 1
                   items:
                     type: string
-                    enum: [post.scheduled, post.published, post.failed, post.partial, post.cancelled, post.recycled, account.connected, account.disconnected, account.ads.initial_sync_completed, message.received, message.sent, message.edited, message.deleted, message.delivered, message.read, message.failed, comment.received, review.new, review.updated]
+                    enum: [post.scheduled, post.published, post.failed, post.partial, post.cancelled, post.recycled, account.connected, account.disconnected, account.ads.initial_sync_completed, message.received, message.sent, message.edited, message.deleted, message.delivered, message.read, message.failed, comment.received, review.new, review.updated, ad.status_changed]
                   description: Events to subscribe to. Must contain at least one event if provided.
                 isActive:
                   type: boolean
