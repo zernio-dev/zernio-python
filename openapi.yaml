@@ -20889,6 +20889,10 @@ paths:
                       name: { type: string }
                       platform: { type: string }
                       status: { type: string }
+                      currency:
+                        type: string
+                        nullable: true
+                        description: "ISO 4217 code of the ad account that owns this ad (e.g. USD, THB, INR). All money values in `summary` and `daily` are in this currency. Null only on legacy ads synced before currency was persisted."
                   analytics:
                     type: object
                     properties:
