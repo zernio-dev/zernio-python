@@ -2674,10 +2674,44 @@ components:
           description: Target Facebook Page ID for multi-page posting. If omitted, uses the default page. Use GET /v1/accounts/{id}/facebook-page to list pages.
         geoRestriction:
           $ref: '#/components/schemas/GeoRestriction'
+        carouselCards:
+          type: array
+          minItems: 2
+          maxItems: 5
+          description: >
+            Renders the post as a multi-link carousel (organic Page post). When set, mediaItems
+            must be provided with the same length and all items must be images (no videos).
+            Each cards[i] adds the click-through link and headline for the image at mediaItems[i].
+            Mutually exclusive with contentType=story|reel. Facebook display truncates name at
+            ~35 chars and description at ~30 chars; longer strings are accepted but get truncated
+            on render.
+          items:
+            type: object
+            required: [link]
+            properties:
+              link:
+                type: string
+                format: uri
+                description: Per-card click destination (required).
+              name:
+                type: string
+                maxLength: 255
+                description: Per-card headline (optional, ~35-char display).
+              description:
+                type: string
+                maxLength: 255
+                description: Per-card subhead (optional, ~30-char display).
+        carouselLink:
+          type: string
+          format: uri
+          description: >
+            Optional top-level "See more" destination shown on the carousel end card. Defaults
+            to the first card's link when omitted. Only used together with carouselCards.
       description: >
         Feed posts support up to 10 images (no mixed video+image). Stories require single media (24h, no captions).
-        Reels require single vertical video (9:16, 3-60s). Geo-restriction is a hard visibility restriction:
-        users outside the specified countries cannot see the post. Not supported for stories.
+        Reels require single vertical video (9:16, 3-60s). Carousel posts (carouselCards) render a 2-5 card
+        multi-link post, images only, mutually exclusive with story/reel. Geo-restriction is a hard visibility
+        restriction: users outside the specified countries cannot see the post. Not supported for stories.
 
     InstagramPlatformData:
       type: object
@@ -8167,6 +8201,37 @@ paths:
                   publishNow: true
                   facebookSettings:
                     draft: true
+              facebookCarousel:
+                summary: Facebook multi-link carousel post
+                description: |
+                  Posts a 2-5 card carousel where each image has its own click-through link
+                  and optional headline. mediaItems and carouselCards must have the same
+                  length, in the same order. Images only (no video cards).
+                value:
+                  content: "Check out our new inventory"
+                  mediaItems:
+                    - url: "https://cdn.example.com/car-1.jpg"
+                      type: image
+                    - url: "https://cdn.example.com/car-2.jpg"
+                      type: image
+                    - url: "https://cdn.example.com/car-3.jpg"
+                      type: image
+                  platforms:
+                    - platform: facebook
+                      accountId: "64e1f0a9e2b5af0012ab34cd"
+                  publishNow: true
+                  facebookSettings:
+                    carouselLink: "https://example.com/inventory"
+                    carouselCards:
+                      - link: "https://example.com/inventory/car-1"
+                        name: "2024 Sedan"
+                        description: "Low miles"
+                      - link: "https://example.com/inventory/car-2"
+                        name: "2023 SUV"
+                        description: "Certified pre-owned"
+                      - link: "https://example.com/inventory/car-3"
+                        name: "2024 Truck"
+                        description: "Loaded"
               recyclingPost:
                 summary: Post with weekly recycling and content variations
                 value:
