@@ -1011,6 +1011,8 @@ def register_generated_tools(mcp, _get_client):
         ad_account_id: str | None = None,
         account_id: str | None = None,
         profile_id: str | None = None,
+        from_date: str | None = None,
+        to_date: str | None = None,
     ) -> str:
         """List campaigns
 
@@ -1022,7 +1024,9 @@ def register_generated_tools(mcp, _get_client):
             status: Filter by derived campaign status (post-aggregation)
             ad_account_id: Platform ad account ID (e.g. act_123 for Meta)
             account_id: Social account ID
-            profile_id: Profile ID"""
+            profile_id: Profile ID
+            from_date: Start of metrics date range (YYYY-MM-DD, inclusive). Defaults to 90 days ago when both date params are omitted.
+            to_date: End of metrics date range (YYYY-MM-DD, inclusive). Defaults to today. Max 730-day range."""
         client = _get_client()
         try:
             response = client.ad_campaigns.list_ad_campaigns(
@@ -1034,6 +1038,8 @@ def register_generated_tools(mcp, _get_client):
                 ad_account_id=ad_account_id,
                 account_id=account_id,
                 profile_id=profile_id,
+                from_date=from_date,
+                to_date=to_date,
             )
             return _format_response(response)
         except Exception as e:

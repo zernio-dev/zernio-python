@@ -20675,6 +20675,8 @@ paths:
         - { name: adAccountId, in: query, schema: { type: string }, description: Platform ad account ID (e.g. act_123 for Meta) }
         - { name: accountId, in: query, schema: { type: string }, description: Social account ID }
         - { name: profileId, in: query, schema: { type: string }, description: Profile ID }
+        - { name: fromDate, in: query, schema: { type: string, format: date }, description: "Start of metrics date range (YYYY-MM-DD, inclusive). Defaults to 90 days ago when both date params are omitted." }
+        - { name: toDate, in: query, schema: { type: string, format: date }, description: "End of metrics date range (YYYY-MM-DD, inclusive). Defaults to today. Max 730-day range." }
       responses:
         '200':
           description: Paginated campaigns
