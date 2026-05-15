@@ -140,6 +140,8 @@ x-documentation:
     - `post.partial` - Post published to some platforms, failed on others
     - `post.cancelled` - Post publishing was cancelled
     - `post.recycled` - Post recycled (cloned and re-scheduled)
+    - `post.platform.published` - A single platform target inside a post finished publishing successfully. Fires once per platform-account as it terminates, without waiting for other platforms on the same post. Use this for incremental UIs; use `post.published` for the post-level rollup.
+    - `post.platform.failed` - A single platform target inside a post failed permanently. Temporary/retryable failures do NOT fire this event, only permanent ones, so retry loops stay quiet.
     - `account.connected` - Social account connected
     - `account.disconnected` - Social account disconnected (token expired)
     - `account.ads.initial_sync_completed` - Initial ads sync (discovery + 90-day backfill) completed for an ads-enabled account
@@ -278,7 +280,7 @@ tags:
   - name: Webhooks
     description: |
       Configure webhooks for real-time notifications. Webhooks can be created from the dashboard (Settings → Webhooks) or via this API.
-      Events: post.scheduled, post.published, post.failed, post.partial, post.cancelled, post.recycled, account.connected, account.disconnected, account.ads.initial_sync_completed, message.received, message.sent, message.edited, message.deleted, message.delivered, message.read, message.failed, comment.received, review.new, review.updated, ad.status_changed, whatsapp.template.status_updated, webhook.test.
+      Events: post.scheduled, post.published, post.failed, post.partial, post.cancelled, post.recycled, post.platform.published, post.platform.failed, account.connected, account.disconnected, account.ads.initial_sync_completed, message.received, message.sent, message.edited, message.deleted, message.delivered, message.read, message.failed, comment.received, review.new, review.updated, ad.status_changed, whatsapp.template.status_updated, webhook.test.
       Security: optional HMAC-SHA256 signature in X-Zernio-Signature header. Configure a secret key to enable verification. Custom headers supported.
   - name: Webhook Events
     description: |
@@ -974,7 +976,7 @@ components:
           type: array
           items:
             type: string
-            enum: [post.scheduled, post.published, post.failed, post.partial, post.cancelled, post.recycled, account.connected, account.disconnected, account.ads.initial_sync_completed, message.received, message.sent, message.edited, message.deleted, message.delivered, message.read, message.failed, comment.received, review.new, review.updated, ad.status_changed, whatsapp.template.status_updated]
+            enum: [post.scheduled, post.published, post.failed, post.partial, post.cancelled, post.recycled, post.platform.published, post.platform.failed, account.connected, account.disconnected, account.ads.initial_sync_completed, message.received, message.sent, message.edited, message.deleted, message.delivered, message.read, message.failed, comment.received, review.new, review.updated, ad.status_changed, whatsapp.template.status_updated]
           description: Events subscribed to
         isActive:
           type: boolean
@@ -1034,6 +1036,83 @@ components:
                     type: string
                   error:
                     type: string
+        timestamp:
+          type: string
+          format: date-time
+    WebhookPayloadPostPlatform:
+      type: object
+      description: |
+        Webhook payload for the per-platform terminal events
+        `post.platform.published` and `post.platform.failed`. Fires once
+        per platform target inside a post as that platform reaches a
+        terminal state (published or permanent failure). The `post`
+        envelope mirrors the shape of `WebhookPayloadPost` so consumers
+        can reuse rendering logic; the `platform` block identifies which
+        specific platform transitioned; the `account` block identifies
+        the connected social account behind that platform-write.
+      required: [id, event, post, platform, account, timestamp]
+      properties:
+        id:
+          type: string
+          description: Stable webhook event ID.
+        event:
+          type: string
+          enum: [post.platform.published, post.platform.failed]
+        post:
+          type: object
+          required: [id, content, status, scheduledFor, platforms]
+          properties:
+            id: { type: string }
+            content: { type: string }
+            status:
+              type: string
+              description: |
+                Post-level status AT FIRE TIME. May still be `publishing`
+                if other platforms haven't terminated; check this field
+                rather than assuming.
+            scheduledFor: { type: string, format: date-time }
+            publishedAt: { type: string, format: date-time }
+            platforms:
+              type: array
+              items:
+                type: object
+                required: [platform, status]
+                properties:
+                  platform: { type: string }
+                  status: { type: string }
+                  platformPostId: { type: string }
+                  publishedUrl: { type: string }
+                  error: { type: string }
+        platform:
+          type: object
+          description: The specific platform that just transitioned to a terminal state.
+          required: [name, status]
+          properties:
+            name:
+              type: string
+              description: Platform name (e.g. `twitter`, `tiktok`, `instagram`).
+            status:
+              type: string
+              enum: [published, failed]
+              description: Terminal status this event fires on. Matches the event suffix.
+            platformPostId:
+              type: string
+              description: Platform-native post id. Present on `published`, absent on `failed`.
+            publishedUrl:
+              type: string
+              description: Public URL to the platform-side post. Present on `published` (when the platform exposes one and it is not a draft).
+            error:
+              type: string
+              description: Error message from the platform. Present on `failed`, absent on `published`.
+        account:
+          type: object
+          description: The connected social account the platform-write went through.
+          required: [accountId, platform, username]
+          properties:
+            accountId: { type: string }
+            platform: { type: string }
+            username: { type: string }
+            displayName: { type: string }
         timestamp:
           type: string
           format: date-time
@@ -4754,6 +4833,47 @@ webhooks:
           application/json:
             schema:
               $ref: '#/components/schemas/WebhookPayloadPost'
+      responses:
+        '200':
+          description: Webhook received successfully
+  post.platform.published:
+    post:
+      operationId: onPostPlatformPublished
+      summary: Post platform published event
+      description: |
+        Fired once per platform target inside a post as that platform finishes
+        publishing successfully. Does NOT wait for the post-level rollup —
+        consumers building incremental UIs get notified immediately, even
+        when other platforms on the same post are still processing.
+        The envelope event (`post.published` / `post.partial`) fires
+        separately AFTER all platforms have terminated.
+      tags: [Webhook Events]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/WebhookPayloadPostPlatform'
+      responses:
+        '200':
+          description: Webhook received successfully
+  post.platform.failed:
+    post:
+      operationId: onPostPlatformFailed
+      summary: Post platform failed event
+      description: |
+        Fired once per platform target inside a post as that platform fails
+        permanently. Temporary/retryable failures do NOT fire this event —
+        only permanent ones, so retry loops stay quiet. The envelope event
+        (`post.failed` / `post.partial`) fires separately AFTER all
+        platforms have terminated.
+      tags: [Webhook Events]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/WebhookPayloadPostPlatform'
       responses:
         '200':
           description: Webhook received successfully
@@ -14843,7 +14963,7 @@ paths:
                   minItems: 1
                   items:
                     type: string
-                    enum: [post.scheduled, post.published, post.failed, post.partial, post.cancelled, post.recycled, account.connected, account.disconnected, account.ads.initial_sync_completed, message.received, message.sent, message.edited, message.deleted, message.delivered, message.read, message.failed, comment.received, review.new, review.updated, ad.status_changed]
+                    enum: [post.scheduled, post.published, post.failed, post.partial, post.cancelled, post.recycled, post.platform.published, post.platform.failed, account.connected, account.disconnected, account.ads.initial_sync_completed, message.received, message.sent, message.edited, message.deleted, message.delivered, message.read, message.failed, comment.received, review.new, review.updated, ad.status_changed, whatsapp.template.status_updated]
                   description: Events to subscribe to (at least one required)
                 isActive:
                   type: boolean
@@ -14917,7 +15037,7 @@ paths:
                   minItems: 1
                   items:
                     type: string
-                    enum: [post.scheduled, post.published, post.failed, post.partial, post.cancelled, post.recycled, account.connected, account.disconnected, account.ads.initial_sync_completed, message.received, message.sent, message.edited, message.deleted, message.delivered, message.read, message.failed, comment.received, review.new, review.updated, ad.status_changed]
+                    enum: [post.scheduled, post.published, post.failed, post.partial, post.cancelled, post.recycled, post.platform.published, post.platform.failed, account.connected, account.disconnected, account.ads.initial_sync_completed, message.received, message.sent, message.edited, message.deleted, message.delivered, message.read, message.failed, comment.received, review.new, review.updated, ad.status_changed, whatsapp.template.status_updated]
                   description: Events to subscribe to. Must contain at least one event if provided.
                 isActive:
                   type: boolean
