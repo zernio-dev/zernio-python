@@ -154,6 +154,7 @@ x-documentation:
     - `review.new` - New review posted on a connected account (Google Business Profile)
     - `review.updated` - Review updated or reply added (Google Business Profile, or via reply API)
     - `ad.status_changed` - Ad, ad set, or campaign changed status on the ad platform (Meta: `in_process_ad_objects` entry/exit and `with_issues_ad_objects` violations)
+    - `whatsapp.template.status_updated` - WhatsApp Business template completed (re)review by Meta. `template.status` carries the new state (APPROVED, REJECTED, PENDING, PAUSED, DISABLED, IN_APPEAL, PENDING_DELETION); `template.reason` is Meta's free-form reason or "NONE".
     - `webhook.test` - Test event sent when verifying a webhook endpoint
 
     Webhook payloads are signed with HMAC-SHA256 via the `X-Zernio-Signature` header.
@@ -277,7 +278,7 @@ tags:
   - name: Webhooks
     description: |
       Configure webhooks for real-time notifications. Webhooks can be created from the dashboard (Settings → Webhooks) or via this API.
-      Events: post.scheduled, post.published, post.failed, post.partial, post.cancelled, post.recycled, account.connected, account.disconnected, account.ads.initial_sync_completed, message.received, message.sent, message.edited, message.deleted, message.delivered, message.read, message.failed, comment.received, review.new, review.updated, ad.status_changed, webhook.test.
+      Events: post.scheduled, post.published, post.failed, post.partial, post.cancelled, post.recycled, account.connected, account.disconnected, account.ads.initial_sync_completed, message.received, message.sent, message.edited, message.deleted, message.delivered, message.read, message.failed, comment.received, review.new, review.updated, ad.status_changed, whatsapp.template.status_updated, webhook.test.
       Security: optional HMAC-SHA256 signature in X-Zernio-Signature header. Configure a secret key to enable verification. Custom headers supported.
   - name: Webhook Events
     description: |
@@ -973,7 +974,7 @@ components:
           type: array
           items:
             type: string
-            enum: [post.scheduled, post.published, post.failed, post.partial, post.cancelled, post.recycled, account.connected, account.disconnected, account.ads.initial_sync_completed, message.received, message.sent, message.edited, message.deleted, message.delivered, message.read, message.failed, comment.received, review.new, review.updated, ad.status_changed]
+            enum: [post.scheduled, post.published, post.failed, post.partial, post.cancelled, post.recycled, account.connected, account.disconnected, account.ads.initial_sync_completed, message.received, message.sent, message.edited, message.deleted, message.delivered, message.read, message.failed, comment.received, review.new, review.updated, ad.status_changed, whatsapp.template.status_updated]
           description: Events subscribed to
         isActive:
           type: boolean
@@ -2158,6 +2159,59 @@ components:
               description: |
                 Full human-readable error message (Meta `error_message`).
                 Localized — display only.
+        timestamp:
+          type: string
+          format: date-time
+          description: ISO-8601 timestamp the webhook was produced.
+    WebhookPayloadWhatsAppTemplateStatusUpdated:
+      type: object
+      description: |
+        Webhook payload for the `whatsapp.template.status_updated` event.
+        Fired when Meta completes (re)review of a template attached to a
+        connected WABA. Maps Meta's `message_template_status_update` field
+        onto our event envelope.
+      required: [id, event, account, template, timestamp]
+      properties:
+        id:
+          type: string
+          description: Stable webhook event ID
+        event:
+          type: string
+          enum: [whatsapp.template.status_updated]
+        account:
+          type: object
+          required: [accountId, profileId, platform, username]
+          properties:
+            accountId: { type: string }
+            profileId: { type: string }
+            platform: { type: string, enum: [whatsapp] }
+            username: { type: string }
+            displayName: { type: string }
+        template:
+          type: object
+          required: [templateId, name, language, status, reason]
+          properties:
+            templateId:
+              type: string
+              description: Meta's `message_template_id`, returned as a string.
+            name:
+              type: string
+              description: Meta's `message_template_name`.
+            language:
+              type: string
+              description: Meta's `message_template_language` (e.g. `en_US`).
+            status:
+              type: string
+              enum: [APPROVED, REJECTED, PENDING, PAUSED, DISABLED, IN_APPEAL, PENDING_DELETION]
+              description: |
+                New status. Forwarded verbatim from Meta's `event` field.
+                `PENDING_DELETION` is the 24h-grace state after a delete
+                request before the template is actually removed.
+            reason:
+              type: string
+              description: |
+                Meta's free-form reason for the transition. `"NONE"` on
+                approval; an explanation string on rejection.
         timestamp:
           type: string
           format: date-time
@@ -5018,6 +5072,28 @@ webhooks:
                   status:
                     raw: WITH_ISSUES
                   timestamp: "2026-05-08T04:22:35.821Z"
+      responses:
+        '200':
+          description: Webhook received successfully
+  whatsapp.template.status_updated:
+    post:
+      operationId: onWhatsAppTemplateStatusUpdated
+      summary: WhatsApp template status updated event
+      description: |
+        Fired when Meta finishes (re)reviewing a WhatsApp Business template
+        attached to a connected WABA. Forwarded from Meta's
+        `message_template_status_update` webhook field on the WhatsApp
+        Business Account. Consumers branch on `template.status` (APPROVED,
+        REJECTED, PENDING, PAUSED, DISABLED, IN_APPEAL, PENDING_DELETION).
+        Meta does not include the previous status or the template's category
+        in this event.
+      tags: [Webhook Events]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/WebhookPayloadWhatsAppTemplateStatusUpdated'
       responses:
         '200':
           description: Webhook received successfully
