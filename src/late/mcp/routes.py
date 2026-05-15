@@ -71,18 +71,25 @@ def create_sse_handler(mcp_server, sse_transport: SseServerTransport, debug: boo
     async def handle_sse(request: Request) -> Response:
         """Handle SSE connection with authentication."""
         # Extract API key from request
+        # 401 responses include `WWW-Authenticate: Bearer realm="zernio-mcp"` per
+        # RFC 6750 so spec-compliant MCP clients (mcp-remote, etc.) know this is
+        # static Bearer auth and don't fall back to OAuth discovery — see the
+        # docstring on `_send_json_error` below for the full rationale.
+        bearer_challenge = {"WWW-Authenticate": 'Bearer realm="zernio-mcp"'}
         api_key = extract_late_api_key(request)
         if not api_key:
             return JSONResponse(
                 {"error": "Missing API key. Provide via Authorization header: 'Authorization: Bearer YOUR_API_KEY'"},
-                status_code=401
+                status_code=401,
+                headers=bearer_challenge,
             )
 
         # Verify API key by making test request
         if not await verify_late_api_key(api_key):
             return JSONResponse(
                 {"error": "Invalid API key"},
-                status_code=401
+                status_code=401,
+                headers=bearer_challenge,
             )
 
         # Store API key in request state for use in MCP tools
@@ -124,8 +131,17 @@ async def _send_json_error(scope: Scope, receive: Receive, send: Send, status: i
     Used by the Streamable HTTP wrapper because the session manager expects
     a raw ASGI callable, not a Starlette endpoint — so we can't just `return
     JSONResponse(...)` from the wrapper.
+
+    On 401 we add `WWW-Authenticate: Bearer realm="zernio-mcp"` per RFC 6750.
+    Without this header, MCP clients like `mcp-remote` interpret the 401 as
+    "OAuth required" and probe `/.well-known/oauth-authorization-server`,
+    which 404s here (we use static API-key auth, not OAuth) and surfaces to
+    the user as a confusing JSON parse error. Advertising the bearer scheme
+    tells spec-compliant clients to send the static Bearer token they
+    already have and skip OAuth discovery entirely.
     """
-    response = JSONResponse({"error": message}, status_code=status)
+    headers = {"WWW-Authenticate": 'Bearer realm="zernio-mcp"'} if status == 401 else None
+    response = JSONResponse({"error": message}, status_code=status, headers=headers)
     await response(scope, receive, send)
 
 
