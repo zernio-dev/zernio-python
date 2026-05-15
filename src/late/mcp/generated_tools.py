@@ -829,6 +829,43 @@ def register_generated_tools(mcp, _get_client):
             return f"Error: {e}"
 
     @mcp.tool()
+    def accounts_reply_to_google_business_review(
+        account_id: str, review_id: str, comment: str
+    ) -> str:
+        """Reply to a review
+
+        Args:
+            account_id: The Zernio account ID (from /v1/accounts) (required)
+            review_id: The review ID portion (e.g. "AIe9_BGx1234567890"), not the full resource name (required)
+            comment: The reply text to post on the review. Must be non-empty. (required)"""
+        client = _get_client()
+        try:
+            response = client.accounts.reply_to_google_business_review(
+                account_id=account_id, review_id=review_id, comment=comment
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool()
+    def accounts_delete_google_business_review_reply(
+        account_id: str, review_id: str
+    ) -> str:
+        """Delete a review reply
+
+        Args:
+            account_id: The Zernio account ID (from /v1/accounts) (required)
+            review_id: The review ID portion (e.g. "AIe9_BGx1234567890"), not the full resource name (required)"""
+        client = _get_client()
+        try:
+            response = client.accounts.delete_google_business_review_reply(
+                account_id=account_id, review_id=review_id
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool()
     def accounts_get_linked_in_mentions(
         account_id: str, url: str, display_name: str | None = None
     ) -> str:
@@ -2124,12 +2161,13 @@ def register_generated_tools(mcp, _get_client):
         account_id: str,
         ad_account_id: str,
         name: str,
-        headline: str,
-        body: str,
         budget_amount: float,
         budget_type: str,
+        headline: str | None = None,
+        body: str | None = None,
         image_url: str | None = None,
         video: dict[str, Any] | None = None,
+        creatives: list[dict[str, Any]] | None = None,
         currency: str | None = None,
         end_date: str | None = None,
         countries: list[str] | None = None,
@@ -2139,21 +2177,38 @@ def register_generated_tools(mcp, _get_client):
         audience_id: str | None = None,
         advantage_audience: int | None = None,
         objective: str | None = None,
+        bid_strategy: str | None = None,
+        bid_amount: float | None = None,
+        roas_average_floor: float | None = None,
         dsa_beneficiary: str | None = None,
         dsa_payor: str | None = None,
     ) -> str:
-        """Create Click-to-WhatsApp ad
+        """Create Click-to-WhatsApp ad(s)
 
             Args:
                 account_id: Facebook or Instagram SocialAccount ID. (required)
                 ad_account_id: Meta ad account ID, e.g. `act_123456789`. (required)
-                name: Ad display name. Used to derive campaign / ad set names. (required)
-                headline: (required)
-                body: Primary text shown above the image / video. (required)
-                image_url: Image asset for image creatives. Mutually exclusive with
-        `video`. Required if `video` is not supplied.
-                video: Video creative. Mutually exclusive with `imageUrl`.
-        Required if `imageUrl` is not supplied.
+                name: Ad display name. Used to derive campaign / ad set names.
+        On the multi-creative shape, each ad's Meta name gets a
+        " #N" suffix (1-indexed) so Ads Manager shows them as a
+        numbered batch.
+         (required)
+                headline: Single-creative shape only. Mutually exclusive with
+        `creatives[]`.
+                body: Primary text shown above the image / video. Single-creative
+        shape only. Mutually exclusive with `creatives[]`.
+                image_url: Image asset for single-creative shape. Mutually exclusive
+        with `video` and with `creatives[]`. Required on the
+        single-creative shape if `video` is not supplied.
+                video: Video creative for single-creative shape. Mutually
+        exclusive with `imageUrl` and with `creatives[]`. Required
+        on the single-creative shape if `imageUrl` is not supplied.
+                creatives: Multi-creative shape: N CTWA ads under one campaign + one
+        ad set, sharing budget and targeting. Mutually exclusive
+        with the top-level single-creative fields (`headline` /
+        `body` / `imageUrl` / `video`). Each entry must supply its
+        own headline, body, and exactly one of `imageUrl` /
+        `video`.
                 budget_amount: Budget amount in the ad account's currency major units
         (e.g. dollars for USD, not cents). Must be > 0.
          (required)
@@ -2175,6 +2230,19 @@ def register_generated_tools(mcp, _get_client):
         objective). `OUTCOME_SALES` and `OUTCOME_LEADS` require
         additional account configuration (Dataset linked to the WABA
         for sales) and may be rejected by Meta if missing.
+                bid_strategy: Meta bid strategy applied to the shared ad set. Defaults to
+        `LOWEST_COST_WITHOUT_CAP` (auto-bid) when omitted.
+        `LOWEST_COST_WITH_BID_CAP` and `COST_CAP` require
+        `bidAmount`. `LOWEST_COST_WITH_MIN_ROAS` requires
+        `roasAverageFloor`. CTWA's `optimization_goal` is fixed to
+        `CONVERSATIONS`, but the bid strategy is independent.
+                bid_amount: Whole currency units (e.g. `5` = $5.00 on a USD account).
+        Required when `bidStrategy` is `LOWEST_COST_WITH_BID_CAP`
+        or `COST_CAP`; rejected otherwise.
+                roas_average_floor: Decimal ROAS multiplier (e.g. `2.0` = 2.0× ROAS floor).
+        Required when `bidStrategy` is `LOWEST_COST_WITH_MIN_ROAS`;
+        rejected otherwise. Meta enforces its own upper bound
+        server-side.
                 dsa_beneficiary: Name of the legal entity benefiting from the ad.
         Required by Meta when targeting EU users (DSA Article 26).
         Not enforced at schema level; enforced server-side when targeting intersects EU member states.
@@ -2191,6 +2259,7 @@ def register_generated_tools(mcp, _get_client):
                 body=body,
                 image_url=image_url,
                 video=video,
+                creatives=creatives,
                 budget_amount=budget_amount,
                 budget_type=budget_type,
                 currency=currency,
@@ -2202,6 +2271,9 @@ def register_generated_tools(mcp, _get_client):
                 audience_id=audience_id,
                 advantage_audience=advantage_audience,
                 objective=objective,
+                bid_strategy=bid_strategy,
+                bid_amount=bid_amount,
+                roas_average_floor=roas_average_floor,
                 dsa_beneficiary=dsa_beneficiary,
                 dsa_payor=dsa_payor,
             )

@@ -205,8 +205,10 @@ Both `from zernio import ...` and `from late import ...` work identically. The `
 | `accounts.get_tik_tok_creator_info()` | Get TikTok creator info |
 | `accounts.update_account()` | Update account |
 | `accounts.delete_account()` | Disconnect account |
+| `accounts.delete_google_business_review_reply()` | Delete a review reply |
 | `accounts.batch_get_google_business_reviews()` | Batch get reviews |
 | `accounts.move_account_to_profile()` | Move account to a different profile |
+| `accounts.reply_to_google_business_review()` | Reply to a review |
 
 ### Profiles
 | Method | Description |
@@ -392,7 +394,7 @@ Both `from zernio import ...` and `from late import ...` work identically. The `
 | `ads.list_conversion_associations()` | List campaigns associated with a conversion destination |
 | `ads.list_conversion_destinations()` | List destinations for the Conversions API |
 | `ads.create_conversion_destination()` | Create a conversion destination (LinkedIn) |
-| `ads.create_ctwa_ad()` | Create Click-to-WhatsApp ad |
+| `ads.create_ctwa_ad()` | Create Click-to-WhatsApp ad(s) |
 | `ads.create_standalone_ad()` | Create standalone ad |
 | `ads.get_ad()` | Get ad details |
 | `ads.get_ad_analytics()` | Get ad analytics |
