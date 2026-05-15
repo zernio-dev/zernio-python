@@ -1364,8 +1364,9 @@ def register_generated_tools(mcp, _get_client):
     def ads_get_ad(ad_id: str) -> str:
         """Get ad details
 
-        Args:
-            ad_id: (required)"""
+           Args:
+               ad_id: Zernio `_id` (hex), Meta `platformAdId` (numeric), or one of the creative's effective story/media IDs. See description for details.
+        (required)"""
         client = _get_client()
         try:
             response = client.ads.get_ad(ad_id=ad_id)
