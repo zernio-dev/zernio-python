@@ -4082,14 +4082,17 @@ def register_generated_tools(mcp, _get_client):
             return f"Error: {e}"
 
     @mcp.tool()
-    def connect_get_facebook_pages(account_id: str) -> str:
+    def connect_get_facebook_pages(account_id: str, refresh: bool | None = None) -> str:
         """List Facebook pages
 
         Args:
-            account_id: (required)"""
+            account_id: (required)
+            refresh: When true, bypasses the page cache and fetches fresh pages from Meta. Rate-limited server-side to 1 refresh per 60s. Pages no longer accessible to the connected account will be removed from the list on refresh."""
         client = _get_client()
         try:
-            response = client.connect.get_facebook_pages(account_id=account_id)
+            response = client.connect.get_facebook_pages(
+                account_id=account_id, refresh=refresh
+            )
             return _format_response(response)
         except Exception as e:
             return f"Error: {e}"

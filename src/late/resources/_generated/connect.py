@@ -373,9 +373,16 @@ class ConnectResource:
         )
         return self._client._patch("/v1/connect/telegram", params=params)
 
-    def get_facebook_pages(self, account_id: str) -> dict[str, Any]:
+    def get_facebook_pages(
+        self, account_id: str, *, refresh: bool | None = None
+    ) -> dict[str, Any]:
         """List Facebook pages"""
-        return self._client._get(f"/v1/accounts/{account_id}/facebook-page")
+        params = self._build_params(
+            refresh=refresh,
+        )
+        return self._client._get(
+            f"/v1/accounts/{account_id}/facebook-page", params=params
+        )
 
     def update_facebook_page(
         self, account_id: str, selected_page_id: str
@@ -828,9 +835,16 @@ class ConnectResource:
         )
         return await self._client._apatch("/v1/connect/telegram", params=params)
 
-    async def aget_facebook_pages(self, account_id: str) -> dict[str, Any]:
+    async def aget_facebook_pages(
+        self, account_id: str, *, refresh: bool | None = None
+    ) -> dict[str, Any]:
         """List Facebook pages (async)"""
-        return await self._client._aget(f"/v1/accounts/{account_id}/facebook-page")
+        params = self._build_params(
+            refresh=refresh,
+        )
+        return await self._client._aget(
+            f"/v1/accounts/{account_id}/facebook-page", params=params
+        )
 
     async def aupdate_facebook_page(
         self, account_id: str, selected_page_id: str
