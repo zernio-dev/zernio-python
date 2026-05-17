@@ -1256,7 +1256,7 @@ def register_generated_tools(mcp, _get_client):
             profile_id: Profile ID
             from_date: Start of metrics date range (YYYY-MM-DD). Defaults to 90 days ago.
             to_date: End of metrics date range (YYYY-MM-DD). Defaults to today. Max 730-day range.
-            sort: Campaign-level sort order. `newest` (default) and `oldest` order by the campaign's newest-ad createdAt. `spend_desc` / `spend_asc` are accepted for forward compatibility but currently fall back to an adSetCount-based ordering (spend ranking via Tinybird is pending)."""
+            sort: Campaign-level sort order. `newest` (default) / `oldest` order by the campaign's newest-ad createdAt. `spend_desc` / `spend_asc` order by aggregated spend in the requested date range; campaigns with no spend land at the end."""
         client = _get_client()
         try:
             response = client.ad_campaigns.get_ad_tree(

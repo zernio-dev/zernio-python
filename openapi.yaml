@@ -21318,7 +21318,7 @@ paths:
         - { name: profileId, in: query, schema: { type: string }, description: Profile ID }
         - { name: fromDate, in: query, schema: { type: string, format: date }, description: "Start of metrics date range (YYYY-MM-DD). Defaults to 90 days ago." }
         - { name: toDate, in: query, schema: { type: string, format: date }, description: "End of metrics date range (YYYY-MM-DD). Defaults to today. Max 730-day range." }
-        - { name: sort, in: query, schema: { type: string, enum: [newest, oldest, spend_desc, spend_asc], default: newest }, description: "Campaign-level sort order. `newest` (default) and `oldest` order by the campaign's newest-ad createdAt. `spend_desc` / `spend_asc` are accepted for forward compatibility but currently fall back to an adSetCount-based ordering (spend ranking via Tinybird is pending)." }
+        - { name: sort, in: query, schema: { type: string, enum: [newest, oldest, spend_desc, spend_asc], default: newest }, description: "Campaign-level sort order. `newest` (default) / `oldest` order by the campaign's newest-ad createdAt. `spend_desc` / `spend_asc` order by aggregated spend in the requested date range; campaigns with no spend land at the end." }
       responses:
         '200':
           description: Nested campaign tree with pagination
