@@ -1241,6 +1241,7 @@ def register_generated_tools(mcp, _get_client):
         profile_id: str | None = None,
         from_date: str | None = None,
         to_date: str | None = None,
+        sort: str = "newest",
     ) -> str:
         """Get campaign tree
 
@@ -1254,7 +1255,8 @@ def register_generated_tools(mcp, _get_client):
             account_id: Social account ID
             profile_id: Profile ID
             from_date: Start of metrics date range (YYYY-MM-DD). Defaults to 90 days ago.
-            to_date: End of metrics date range (YYYY-MM-DD). Defaults to today. Max 730-day range."""
+            to_date: End of metrics date range (YYYY-MM-DD). Defaults to today. Max 730-day range.
+            sort: Campaign-level sort order. `newest` (default) and `oldest` order by the campaign's newest-ad createdAt. `spend_desc` / `spend_asc` are accepted for forward compatibility but currently fall back to an adSetCount-based ordering (spend ranking via Tinybird is pending)."""
         client = _get_client()
         try:
             response = client.ad_campaigns.get_ad_tree(
@@ -1268,6 +1270,7 @@ def register_generated_tools(mcp, _get_client):
                 profile_id=profile_id,
                 from_date=from_date,
                 to_date=to_date,
+                sort=sort,
             )
             return _format_response(response)
         except Exception as e:

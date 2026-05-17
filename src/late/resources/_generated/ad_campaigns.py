@@ -202,6 +202,7 @@ class AdCampaignsResource:
         profile_id: str | None = None,
         from_date: str | None = None,
         to_date: str | None = None,
+        sort: str | None = "newest",
     ) -> dict[str, Any]:
         """Get campaign tree"""
         params = self._build_params(
@@ -215,6 +216,7 @@ class AdCampaignsResource:
             profile_id=profile_id,
             from_date=from_date,
             to_date=to_date,
+            sort=sort,
         )
         return self._client._get("/v1/ads/tree", params=params)
 
@@ -389,6 +391,7 @@ class AdCampaignsResource:
         profile_id: str | None = None,
         from_date: str | None = None,
         to_date: str | None = None,
+        sort: str | None = "newest",
     ) -> dict[str, Any]:
         """Get campaign tree (async)"""
         params = self._build_params(
@@ -402,6 +405,7 @@ class AdCampaignsResource:
             profile_id=profile_id,
             from_date=from_date,
             to_date=to_date,
+            sort=sort,
         )
         return await self._client._aget("/v1/ads/tree", params=params)
 
