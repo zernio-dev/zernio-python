@@ -20260,6 +20260,7 @@ paths:
                         status: { type: string, enum: [pending, sent, delivered, read, failed] }
                         messageId: { type: string }
                         error: { type: string }
+                        errorCode: { type: integer, nullable: true, description: 'Meta WhatsApp error code (e.g. 131049 for antispam, 131021 for invalid phone, 131026 for re-engagement required). Only populated for status=failed.' }
                         sentAt: { type: string, format: date-time }
                         deliveredAt: { type: string, format: date-time }
                         readAt: { type: string, format: date-time }
