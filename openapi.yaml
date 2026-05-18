@@ -14092,6 +14092,122 @@ paths:
                 orgNotFound:
                   value: { error: "Organization not found. Check the LinkedIn company URL is correct." }
 
+  /v1/accounts/{accountId}/instagram/stories:
+    get:
+      operationId: listInstagramStories
+      tags: [Instagram]
+      summary: List active Instagram stories
+      description: |
+        Returns the IG Business/Creator account's currently-active stories.
+        Meta keeps stories live for 24h; expired stories are not returned.
+
+        Limitations propagated from Meta (these are NOT bugs):
+        - 24h window only
+        - Live videos excluded
+        - Reshared stories not returned
+        - `mediaUrl` may be null if Meta flagged the story for copyright
+        - `caption`, `likeCount`, `commentsCount` do not apply to story media
+      parameters:
+        - name: accountId
+          in: path
+          required: true
+          description: The Instagram account ID
+          schema: { type: string }
+      responses:
+        '200':
+          description: Active stories
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data]
+                properties:
+                  data:
+                    type: array
+                    items:
+                      type: object
+                      required: [id]
+                      properties:
+                        id: { type: string, description: Instagram media ID of the story. }
+                        mediaType: { type: string, nullable: true, description: "IMAGE / VIDEO / CAROUSEL_ALBUM" }
+                        mediaProductType: { type: string, nullable: true, description: Always 'STORY' for this endpoint. }
+                        mediaUrl: { type: string, nullable: true, description: Direct media URL. Null if Meta flagged the story for copyright. URL expires when the story expires. }
+                        permalink: { type: string, nullable: true, description: Public Instagram permalink to the story (only viewable while live). }
+                        thumbnailUrl: { type: string, nullable: true, description: Thumbnail URL for video stories. }
+                        timestamp: { type: string, nullable: true, format: date-time, description: When the story was posted. }
+        '400': { description: Invalid request. }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404': { description: Instagram account not found. }
+
+  /v1/accounts/{accountId}/instagram/stories/{storyId}/insights:
+    get:
+      operationId: getInstagramStoryInsights
+      tags: [Instagram]
+      summary: Get Instagram story insights
+      description: |
+        Returns metrics for a single story. The `source` field discriminates
+        between three states:
+
+        - `live` — fetched from Meta in real time (story is still active)
+        - `cached` — fetched from a persisted `story_insights` webhook payload
+          (story has expired but we received its final-state metrics from Meta)
+        - `unavailable` — story has expired and we never received its webhook
+          payload (for example, the account connected after the story expired)
+
+        Field semantics follow Meta's API. Counts below 5 may be returned as 0
+        due to Meta's privacy floor on small audiences. The `navigation` field
+        is the sum of `tapsForward + tapsBack + exits + swipesForward`.
+      parameters:
+        - name: accountId
+          in: path
+          required: true
+          description: The Instagram account ID
+          schema: { type: string }
+        - name: storyId
+          in: path
+          required: true
+          description: The Instagram media ID of the story.
+          schema: { type: string }
+      responses:
+        '200':
+          description: Story insights
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data]
+                properties:
+                  data:
+                    type: object
+                    required: [source, metrics]
+                    properties:
+                      source:
+                        type: string
+                        enum: [live, cached, unavailable]
+                      metrics:
+                        type: object
+                        required:
+                          [views, reach, replies, shares, navigation, tapsForward,
+                           tapsBack, exits, swipesForward, profileVisits, follows,
+                           reposts, totalInteractions]
+                        properties:
+                          views: { type: integer, description: "Total story plays. Replaces deprecated 'impressions' for media created after 2024-07-02." }
+                          reach: { type: integer, description: Unique accounts that saw the story. }
+                          replies: { type: integer, description: DMs sent in reply to the story. }
+                          shares: { type: integer }
+                          navigation: { type: integer, description: Total nav actions (tapsForward + tapsBack + exits + swipesForward). }
+                          tapsForward: { type: integer, description: Tapped right to next slide of SAME story. }
+                          tapsBack: { type: integer, description: Tapped left to previous slide. }
+                          exits: { type: integer, description: Closed Stories interface entirely. }
+                          swipesForward: { type: integer, description: "Swiped left to next account's story." }
+                          profileVisits: { type: integer }
+                          follows: { type: integer }
+                          reposts: { type: integer }
+                          totalInteractions: { type: integer }
+        '400': { description: Invalid request. }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404': { description: Instagram account not found. }
+
   /v1/accounts/{accountId}/pinterest-boards:
     get:
       operationId: getPinterestBoards

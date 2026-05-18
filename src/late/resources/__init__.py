@@ -20,6 +20,7 @@ from ._generated.contacts import ContactsResource
 from ._generated.custom_fields import CustomFieldsResource
 from ._generated.discord import DiscordResource
 from ._generated.gmb_services import GmbServicesResource
+from ._generated.instagram import InstagramResource
 from ._generated.invites import InvitesResource
 from ._generated.logs import LogsResource
 from ._generated.messages import MessagesResource
@@ -60,6 +61,7 @@ __all__ = [
     "CustomFieldsResource",
     "DiscordResource",
     "GmbServicesResource",
+    "InstagramResource",
     "InvitesResource",
     "LogsResource",
     "MediaResource",

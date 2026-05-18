@@ -4692,6 +4692,37 @@ def register_generated_tools(mcp, _get_client):
         except Exception as e:
             return f"Error: {e}"
 
+    # INSTAGRAM
+
+    @mcp.tool()
+    def instagram_list_instagram_stories(account_id: str) -> str:
+        """List active Instagram stories
+
+        Args:
+            account_id: The Instagram account ID (required)"""
+        client = _get_client()
+        try:
+            response = client.instagram.list_instagram_stories(account_id=account_id)
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool()
+    def instagram_get_instagram_story_insights(account_id: str, story_id: str) -> str:
+        """Get Instagram story insights
+
+        Args:
+            account_id: The Instagram account ID (required)
+            story_id: The Instagram media ID of the story. (required)"""
+        client = _get_client()
+        try:
+            response = client.instagram.get_instagram_story_insights(
+                account_id=account_id, story_id=story_id
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
     # INVITES
 
     @mcp.tool()

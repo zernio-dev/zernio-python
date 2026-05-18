@@ -25,6 +25,7 @@ from ..resources import (
     CustomFieldsResource,
     DiscordResource,
     GmbServicesResource,
+    InstagramResource,
     InvitesResource,
     LogsResource,
     MediaResource,
@@ -133,6 +134,7 @@ class Zernio(BaseClient):
         self.custom_fields = CustomFieldsResource(self)
         self.discord = DiscordResource(self)
         self.gmb_services = GmbServicesResource(self)
+        self.instagram = InstagramResource(self)
         self.invites = InvitesResource(self)
         self.logs = LogsResource(self)
         self.media = MediaResource(self)

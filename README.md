@@ -516,6 +516,12 @@ Both `from zernio import ...` and `from late import ...` work identically. The `
 | `gmb_services.get_google_business_services()` | Get services |
 | `gmb_services.update_google_business_services()` | Replace services |
 
+### Instagram
+| Method | Description |
+|--------|-------------|
+| `instagram.list_instagram_stories()` | List active Instagram stories |
+| `instagram.get_instagram_story_insights()` | Get Instagram story insights |
+
 ### Messages (Inbox)
 | Method | Description |
 |--------|-------------|
