@@ -104,9 +104,25 @@ class BroadcastsResource:
         """Get broadcast details"""
         return self._client._get(f"/v1/broadcasts/{broadcast_id}")
 
-    def update_broadcast(self, broadcast_id: str) -> dict[str, Any]:
+    def update_broadcast(
+        self,
+        broadcast_id: str,
+        *,
+        name: str | None = None,
+        description: str | None = None,
+        message: dict[str, Any] | None = None,
+        template: dict[str, Any] | None = None,
+        segment_filters: dict[str, Any] | None = None,
+    ) -> dict[str, Any]:
         """Update broadcast"""
-        return self._client._patch(f"/v1/broadcasts/{broadcast_id}")
+        payload = self._build_payload(
+            name=name,
+            description=description,
+            message=message,
+            template=template,
+            segment_filters=segment_filters,
+        )
+        return self._client._patch(f"/v1/broadcasts/{broadcast_id}", data=payload)
 
     def delete_broadcast(self, broadcast_id: str) -> dict[str, Any]:
         """Delete broadcast"""
@@ -215,9 +231,27 @@ class BroadcastsResource:
         """Get broadcast details (async)"""
         return await self._client._aget(f"/v1/broadcasts/{broadcast_id}")
 
-    async def aupdate_broadcast(self, broadcast_id: str) -> dict[str, Any]:
+    async def aupdate_broadcast(
+        self,
+        broadcast_id: str,
+        *,
+        name: str | None = None,
+        description: str | None = None,
+        message: dict[str, Any] | None = None,
+        template: dict[str, Any] | None = None,
+        segment_filters: dict[str, Any] | None = None,
+    ) -> dict[str, Any]:
         """Update broadcast (async)"""
-        return await self._client._apatch(f"/v1/broadcasts/{broadcast_id}")
+        payload = self._build_payload(
+            name=name,
+            description=description,
+            message=message,
+            template=template,
+            segment_filters=segment_filters,
+        )
+        return await self._client._apatch(
+            f"/v1/broadcasts/{broadcast_id}", data=payload
+        )
 
     async def adelete_broadcast(self, broadcast_id: str) -> dict[str, Any]:
         """Delete broadcast (async)"""

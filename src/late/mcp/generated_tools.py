@@ -3057,14 +3057,33 @@ def register_generated_tools(mcp, _get_client):
             return f"Error: {e}"
 
     @mcp.tool()
-    def broadcasts_update_broadcast(broadcast_id: str) -> str:
+    def broadcasts_update_broadcast(
+        broadcast_id: str,
+        name: str | None = None,
+        description: str | None = None,
+        message: dict[str, Any] | None = None,
+        template: dict[str, Any] | None = None,
+        segment_filters: dict[str, Any] | None = None,
+    ) -> str:
         """Update broadcast
 
         Args:
-            broadcast_id: (required)"""
+            broadcast_id: (required)
+            name
+            description
+            message: Generic message payload (used for non-WhatsApp platforms).
+            template: WhatsApp template payload (used when platform is `whatsapp`).
+            segment_filters: Recipient segment filters (tags, channels, subscription state)."""
         client = _get_client()
         try:
-            response = client.broadcasts.update_broadcast(broadcast_id=broadcast_id)
+            response = client.broadcasts.update_broadcast(
+                broadcast_id=broadcast_id,
+                name=name,
+                description=description,
+                message=message,
+                template=template,
+                segment_filters=segment_filters,
+            )
             return _format_response(response)
         except Exception as e:
             return f"Error: {e}"
@@ -5856,14 +5875,33 @@ def register_generated_tools(mcp, _get_client):
             return f"Error: {e}"
 
     @mcp.tool()
-    def sequences_update_sequence(sequence_id: str) -> str:
+    def sequences_update_sequence(
+        sequence_id: str,
+        name: str | None = None,
+        description: str | None = None,
+        steps: list[dict[str, Any]] | None = None,
+        exit_on_reply: bool | None = None,
+        exit_on_unsubscribe: bool | None = None,
+    ) -> str:
         """Update sequence
 
         Args:
-            sequence_id: (required)"""
+            sequence_id: (required)
+            name
+            description
+            steps: Replace the full step list. Only allowed while the sequence is draft or paused.
+            exit_on_reply
+            exit_on_unsubscribe"""
         client = _get_client()
         try:
-            response = client.sequences.update_sequence(sequence_id=sequence_id)
+            response = client.sequences.update_sequence(
+                sequence_id=sequence_id,
+                name=name,
+                description=description,
+                steps=steps,
+                exit_on_reply=exit_on_reply,
+                exit_on_unsubscribe=exit_on_unsubscribe,
+            )
             return _format_response(response)
         except Exception as e:
             return f"Error: {e}"
