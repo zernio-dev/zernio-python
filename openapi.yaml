@@ -7882,6 +7882,18 @@ paths:
             aggregate is still emitted for back-compat but excludes the
             $0.200 URL tier and any future tiers — new clients should
             consume `xApiCallsByOperation` only.
+      parameters:
+        - name: reconcile
+          in: query
+          required: false
+          schema:
+            type: boolean
+          description: |
+            For Stripe subscription users, `true` forces a subscription
+            reconciliation pass even when cached plan data looks complete.
+            Omit the parameter, or pass `false`, to use the default
+            first-time-only reconciliation behavior. Invalid boolean values are
+            rejected.
       responses:
         '200':
           description: Usage stats
@@ -7941,6 +7953,7 @@ paths:
                     hasAccess: true
                     isInvitedUser: false
                     autoUpgradeEnabled: false
+        '400': { description: Invalid query parameter }
         '401': { $ref: '#/components/responses/Unauthorized' }
         '404': { $ref: '#/components/responses/NotFound' }
   /v1/posts:

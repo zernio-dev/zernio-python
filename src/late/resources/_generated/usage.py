@@ -58,14 +58,22 @@ class UsageResource:
         """Get X/Twitter API pricing table"""
         return self._client._get("/v1/billing/x-pricing")
 
-    def get_usage_stats(self) -> dict[str, Any]:
+    def get_usage_stats(self, *, reconcile: bool | None = None) -> dict[str, Any]:
         """Get plan and usage stats"""
-        return self._client._get("/v1/usage-stats")
+        params = self._build_params(
+            reconcile=reconcile,
+        )
+        return self._client._get("/v1/usage-stats", params=params)
 
     async def aget_x_api_pricing(self) -> dict[str, Any]:
         """Get X/Twitter API pricing table (async)"""
         return await self._client._aget("/v1/billing/x-pricing")
 
-    async def aget_usage_stats(self) -> dict[str, Any]:
+    async def aget_usage_stats(
+        self, *, reconcile: bool | None = None
+    ) -> dict[str, Any]:
         """Get plan and usage stats (async)"""
-        return await self._client._aget("/v1/usage-stats")
+        params = self._build_params(
+            reconcile=reconcile,
+        )
+        return await self._client._aget("/v1/usage-stats", params=params)

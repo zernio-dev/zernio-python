@@ -6293,11 +6293,18 @@ def register_generated_tools(mcp, _get_client):
             return f"Error: {e}"
 
     @mcp.tool()
-    def usage_get_usage_stats() -> str:
-        """Get plan and usage stats"""
+    def usage_get_usage_stats(reconcile: bool | None = None) -> str:
+        """Get plan and usage stats
+
+            Args:
+                reconcile: For Stripe subscription users, `true` forces a subscription
+        reconciliation pass even when cached plan data looks complete.
+        Omit the parameter, or pass `false`, to use the default
+        first-time-only reconciliation behavior. Invalid boolean values are
+        rejected."""
         client = _get_client()
         try:
-            response = client.usage.get_usage_stats()
+            response = client.usage.get_usage_stats(reconcile=reconcile)
             return _format_response(response)
         except Exception as e:
             return f"Error: {e}"
