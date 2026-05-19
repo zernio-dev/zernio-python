@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.4.49]
+
+### Fixed
+- **1.4.48 was a regression: PATCH methods broke again.** The auto-regen workflow runs on `develop`, but the `_patch` / `_apatch` fix from 1.4.47 only landed on `main`. When `develop`'s next regen built 1.4.48 (against an updated OpenAPI spec that added `requestBody` blocks for `updateSequence` / `updateBroadcast`), it picked up `develop`'s **old** `base.py` without `_patch`, so any 1.4.48 customer who upgraded got `AttributeError` on every PATCH call again. 1.4.49 merges `develop` into `main` (keeping `main`'s `_patch` / `_apatch`) so the published wheel carries **both** fixes: the missing PATCH method **and** the new body kwargs on `update_sequence(...)` / `update_broadcast(...)`. Skip 1.4.48 — upgrade straight from 1.4.47 to 1.4.49.
+
+## [1.4.47]
+
+### Fixed
+- **Every PATCH endpoint was broken end-to-end.** `BaseClient` exposed `_get`, `_post`, `_put`, `_delete` but never defined `_patch` (or its async counterpart `_apatch`), while the resource generator happily emitted `self._client._patch(...)` calls. Any call into a PATCH endpoint raised `AttributeError: 'Zernio' object has no attribute '_patch'` before a request was sent. Hit in practice on `contacts.update_contact` (caught when a customer tried to add a tag from the MCP), but the same bug took down `update_comment_automation`, `update_custom_field`, `update_lead_form`, `update_whats_app_template`, `update_whats_app_flow`, `update_discord_settings`, `update_google_business_place_action`, `edit_inbox_message`, `configure_tik_tok_ads_brand_identity`, `complete_telegram_connect`, `update_sequence`, and `update_broadcast` (sync + async = 26 methods total). `BaseClient` now defines `_patch` / `_apatch` mirroring `_put` / `_aput`, with a `params=` kwarg so the one query-only PATCH (`complete_telegram_connect`) keeps working. Regression test in `tests/test_patch_methods.py` exercises body-bearing and query-only PATCH through the resource layer against a mocked HTTP client, so future codegen drifts can't silently reintroduce this. (Originally targeted 1.4.6 on `main`; that tag had already been taken by an auto-regen on `develop`, so this fix ships as 1.4.47 after merging `develop` into `main`.)
+
 ## [1.4.5]
 
 ### Fixed
