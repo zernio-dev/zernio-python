@@ -18,6 +18,7 @@ from .contacts import ContactsResource
 from .custom_fields import CustomFieldsResource
 from .discord import DiscordResource
 from .gmb_services import GmbServicesResource
+from .instagram import InstagramResource
 from .invites import InvitesResource
 from .logs import LogsResource
 from .media import MediaResource
@@ -28,6 +29,7 @@ from .queue import QueueResource
 from .reddit import RedditResource
 from .reviews import ReviewsResource
 from .sequences import SequencesResource
+from .tracking_tags import TrackingTagsResource
 from .twitter_engagement import TwitterEngagementResource
 from .usage import UsageResource
 from .users import UsersResource
@@ -54,6 +56,7 @@ __all__ = [
     "CustomFieldsResource",
     "DiscordResource",
     "GmbServicesResource",
+    "InstagramResource",
     "InvitesResource",
     "LogsResource",
     "MediaResource",
@@ -64,6 +67,7 @@ __all__ = [
     "RedditResource",
     "ReviewsResource",
     "SequencesResource",
+    "TrackingTagsResource",
     "TwitterEngagementResource",
     "UsageResource",
     "UsersResource",

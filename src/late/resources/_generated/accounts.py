@@ -108,6 +108,15 @@ class AccountsResource:
         )
         return self._client._put(f"/v1/accounts/{account_id}", data=payload)
 
+    def move_account_to_profile(
+        self, account_id: str, profile_id: str
+    ) -> dict[str, Any]:
+        """Move account to a different profile"""
+        payload = self._build_payload(
+            profile_id=profile_id,
+        )
+        return self._client._patch(f"/v1/accounts/{account_id}", data=payload)
+
     def delete_account(self, account_id: str) -> dict[str, Any]:
         """Disconnect account"""
         return self._client._delete(f"/v1/accounts/{account_id}")
@@ -392,6 +401,25 @@ class AccountsResource:
             f"/v1/accounts/{account_id}/gmb-reviews/batch", data=payload
         )
 
+    def reply_to_google_business_review(
+        self, account_id: str, review_id: str, comment: str
+    ) -> dict[str, Any]:
+        """Reply to a review"""
+        payload = self._build_payload(
+            comment=comment,
+        )
+        return self._client._post(
+            f"/v1/accounts/{account_id}/gmb-reviews/{review_id}/reply", data=payload
+        )
+
+    def delete_google_business_review_reply(
+        self, account_id: str, review_id: str
+    ) -> dict[str, Any]:
+        """Delete a review reply"""
+        return self._client._delete(
+            f"/v1/accounts/{account_id}/gmb-reviews/{review_id}/reply"
+        )
+
     def get_linked_in_mentions(
         self, account_id: str, url: str, *, display_name: str | None = None
     ) -> dict[str, Any]:
@@ -457,6 +485,15 @@ class AccountsResource:
             x_capabilities=x_capabilities,
         )
         return await self._client._aput(f"/v1/accounts/{account_id}", data=payload)
+
+    async def amove_account_to_profile(
+        self, account_id: str, profile_id: str
+    ) -> dict[str, Any]:
+        """Move account to a different profile (async)"""
+        payload = self._build_payload(
+            profile_id=profile_id,
+        )
+        return await self._client._apatch(f"/v1/accounts/{account_id}", data=payload)
 
     async def adelete_account(self, account_id: str) -> dict[str, Any]:
         """Disconnect account (async)"""
@@ -744,6 +781,25 @@ class AccountsResource:
         )
         return await self._client._apost(
             f"/v1/accounts/{account_id}/gmb-reviews/batch", data=payload
+        )
+
+    async def areply_to_google_business_review(
+        self, account_id: str, review_id: str, comment: str
+    ) -> dict[str, Any]:
+        """Reply to a review (async)"""
+        payload = self._build_payload(
+            comment=comment,
+        )
+        return await self._client._apost(
+            f"/v1/accounts/{account_id}/gmb-reviews/{review_id}/reply", data=payload
+        )
+
+    async def adelete_google_business_review_reply(
+        self, account_id: str, review_id: str
+    ) -> dict[str, Any]:
+        """Delete a review reply (async)"""
+        return await self._client._adelete(
+            f"/v1/accounts/{account_id}/gmb-reviews/{review_id}/reply"
         )
 
     async def aget_linked_in_mentions(

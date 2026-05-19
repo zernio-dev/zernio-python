@@ -20,12 +20,14 @@ from ._generated.contacts import ContactsResource
 from ._generated.custom_fields import CustomFieldsResource
 from ._generated.discord import DiscordResource
 from ._generated.gmb_services import GmbServicesResource
+from ._generated.instagram import InstagramResource
 from ._generated.invites import InvitesResource
 from ._generated.logs import LogsResource
 from ._generated.messages import MessagesResource
 from ._generated.reddit import RedditResource
 from ._generated.reviews import ReviewsResource
 from ._generated.sequences import SequencesResource
+from ._generated.tracking_tags import TrackingTagsResource
 from ._generated.twitter_engagement import TwitterEngagementResource
 from ._generated.usage import UsageResource
 from ._generated.validate import ValidateResource
@@ -59,6 +61,7 @@ __all__ = [
     "CustomFieldsResource",
     "DiscordResource",
     "GmbServicesResource",
+    "InstagramResource",
     "InvitesResource",
     "LogsResource",
     "MediaResource",
@@ -70,6 +73,7 @@ __all__ = [
     "ReviewsResource",
     "SequencesResource",
     "ToolsResource",
+    "TrackingTagsResource",
     "TwitterEngagementResource",
     "UsageResource",
     "UsersResource",

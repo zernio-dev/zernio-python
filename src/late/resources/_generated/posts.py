@@ -92,6 +92,7 @@ class PostsResource:
     def create_post(
         self,
         *,
+        x_request_id: str | None = None,
         title: str | None = None,
         content: str | None = None,
         media_items: list[dict[str, Any]] | None = None,
@@ -258,6 +259,7 @@ class PostsResource:
     async def acreate_post(
         self,
         *,
+        x_request_id: str | None = None,
         title: str | None = None,
         content: str | None = None,
         media_items: list[dict[str, Any]] | None = None,

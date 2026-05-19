@@ -25,6 +25,7 @@ from ..resources import (
     CustomFieldsResource,
     DiscordResource,
     GmbServicesResource,
+    InstagramResource,
     InvitesResource,
     LogsResource,
     MediaResource,
@@ -36,6 +37,7 @@ from ..resources import (
     ReviewsResource,
     SequencesResource,
     ToolsResource,
+    TrackingTagsResource,
     TwitterEngagementResource,
     UsageResource,
     UsersResource,
@@ -132,6 +134,7 @@ class Zernio(BaseClient):
         self.custom_fields = CustomFieldsResource(self)
         self.discord = DiscordResource(self)
         self.gmb_services = GmbServicesResource(self)
+        self.instagram = InstagramResource(self)
         self.invites = InvitesResource(self)
         self.logs = LogsResource(self)
         self.media = MediaResource(self)
@@ -143,6 +146,7 @@ class Zernio(BaseClient):
         self.reviews = ReviewsResource(self)
         self.sequences = SequencesResource(self)
         self.tools = ToolsResource(self)
+        self.tracking_tags = TrackingTagsResource(self)
         self.twitter_engagement = TwitterEngagementResource(self)
         self.usage = UsageResource(self)
         self.users = UsersResource(self)

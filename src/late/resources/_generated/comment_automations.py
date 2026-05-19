@@ -75,6 +75,7 @@ class CommentAutomationsResource:
         post_title: str | None = None,
         keywords: list[str] | None = None,
         match_mode: str | None = "contains",
+        buttons: list[Any] | None = None,
         comment_reply: str | None = None,
     ) -> dict[str, Any]:
         """Create comment-to-DM automation"""
@@ -88,6 +89,7 @@ class CommentAutomationsResource:
             keywords=keywords,
             match_mode=match_mode,
             dm_message=dm_message,
+            buttons=buttons,
             comment_reply=comment_reply,
         )
         return self._client._post("/v1/comment-automations", data=payload)
@@ -104,6 +106,7 @@ class CommentAutomationsResource:
         keywords: list[str] | None = None,
         match_mode: str | None = None,
         dm_message: str | None = None,
+        buttons: list[Any] | None = None,
         comment_reply: str | None = None,
         is_active: bool | None = None,
     ) -> dict[str, Any]:
@@ -113,6 +116,7 @@ class CommentAutomationsResource:
             keywords=keywords,
             match_mode=match_mode,
             dm_message=dm_message,
+            buttons=buttons,
             comment_reply=comment_reply,
             is_active=is_active,
         )
@@ -163,6 +167,7 @@ class CommentAutomationsResource:
         post_title: str | None = None,
         keywords: list[str] | None = None,
         match_mode: str | None = "contains",
+        buttons: list[Any] | None = None,
         comment_reply: str | None = None,
     ) -> dict[str, Any]:
         """Create comment-to-DM automation (async)"""
@@ -176,6 +181,7 @@ class CommentAutomationsResource:
             keywords=keywords,
             match_mode=match_mode,
             dm_message=dm_message,
+            buttons=buttons,
             comment_reply=comment_reply,
         )
         return await self._client._apost("/v1/comment-automations", data=payload)
@@ -192,6 +198,7 @@ class CommentAutomationsResource:
         keywords: list[str] | None = None,
         match_mode: str | None = None,
         dm_message: str | None = None,
+        buttons: list[Any] | None = None,
         comment_reply: str | None = None,
         is_active: bool | None = None,
     ) -> dict[str, Any]:
@@ -201,6 +208,7 @@ class CommentAutomationsResource:
             keywords=keywords,
             match_mode=match_mode,
             dm_message=dm_message,
+            buttons=buttons,
             comment_reply=comment_reply,
             is_active=is_active,
         )
