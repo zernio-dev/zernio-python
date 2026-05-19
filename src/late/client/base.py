@@ -230,6 +230,23 @@ class BaseClient:
         with self._sync_client() as client:
             return self._request_with_retry(client, "PUT", path, json=data)
 
+    def _patch(
+        self,
+        path: str,
+        data: dict[str, Any] | None = None,
+        params: dict[str, Any] | None = None,
+    ) -> dict[str, Any]:
+        """Make a sync PATCH request.
+
+        Accepts both ``data`` (JSON body) and ``params`` (query string).
+        Most PATCH endpoints use a body, but a few (e.g. the Telegram
+        connect poll) use query params only — both must work.
+        """
+        with self._sync_client() as client:
+            return self._request_with_retry(
+                client, "PATCH", path, json=data, params=params
+            )
+
     def _delete(
         self,
         path: str,
@@ -339,6 +356,23 @@ class BaseClient:
         """Make an async PUT request."""
         async with self._async_client() as client:
             return await self._arequest_with_retry(client, "PUT", path, json=data)
+
+    async def _apatch(
+        self,
+        path: str,
+        data: dict[str, Any] | None = None,
+        params: dict[str, Any] | None = None,
+    ) -> dict[str, Any]:
+        """Make an async PATCH request.
+
+        Accepts both ``data`` (JSON body) and ``params`` (query string).
+        Most PATCH endpoints use a body, but a few (e.g. the Telegram
+        connect poll) use query params only — both must work.
+        """
+        async with self._async_client() as client:
+            return await self._arequest_with_retry(
+                client, "PATCH", path, json=data, params=params
+            )
 
     async def _adelete(
         self,
