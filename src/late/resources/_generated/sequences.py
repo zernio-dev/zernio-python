@@ -100,9 +100,25 @@ class SequencesResource:
         """Get sequence with steps"""
         return self._client._get(f"/v1/sequences/{sequence_id}")
 
-    def update_sequence(self, sequence_id: str) -> dict[str, Any]:
+    def update_sequence(
+        self,
+        sequence_id: str,
+        *,
+        name: str | None = None,
+        description: str | None = None,
+        steps: list[dict[str, Any]] | None = None,
+        exit_on_reply: bool | None = None,
+        exit_on_unsubscribe: bool | None = None,
+    ) -> dict[str, Any]:
         """Update sequence"""
-        return self._client._patch(f"/v1/sequences/{sequence_id}")
+        payload = self._build_payload(
+            name=name,
+            description=description,
+            steps=steps,
+            exit_on_reply=exit_on_reply,
+            exit_on_unsubscribe=exit_on_unsubscribe,
+        )
+        return self._client._patch(f"/v1/sequences/{sequence_id}", data=payload)
 
     def delete_sequence(self, sequence_id: str) -> dict[str, Any]:
         """Delete sequence"""
@@ -198,9 +214,25 @@ class SequencesResource:
         """Get sequence with steps (async)"""
         return await self._client._aget(f"/v1/sequences/{sequence_id}")
 
-    async def aupdate_sequence(self, sequence_id: str) -> dict[str, Any]:
+    async def aupdate_sequence(
+        self,
+        sequence_id: str,
+        *,
+        name: str | None = None,
+        description: str | None = None,
+        steps: list[dict[str, Any]] | None = None,
+        exit_on_reply: bool | None = None,
+        exit_on_unsubscribe: bool | None = None,
+    ) -> dict[str, Any]:
         """Update sequence (async)"""
-        return await self._client._apatch(f"/v1/sequences/{sequence_id}")
+        payload = self._build_payload(
+            name=name,
+            description=description,
+            steps=steps,
+            exit_on_reply=exit_on_reply,
+            exit_on_unsubscribe=exit_on_unsubscribe,
+        )
+        return await self._client._apatch(f"/v1/sequences/{sequence_id}", data=payload)
 
     async def adelete_sequence(self, sequence_id: str) -> dict[str, Any]:
         """Delete sequence (async)"""

@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.4.49]
+
+### Fixed
+- **1.4.48 was a regression: PATCH methods broke again.** The auto-regen workflow runs on `develop`, but the `_patch` / `_apatch` fix from 1.4.47 only landed on `main`. When `develop`'s next regen built 1.4.48 (against an updated OpenAPI spec that added `requestBody` blocks for `updateSequence` / `updateBroadcast`), it picked up `develop`'s **old** `base.py` without `_patch`, so any 1.4.48 customer who upgraded got `AttributeError` on every PATCH call again. 1.4.49 merges `develop` into `main` (keeping `main`'s `_patch` / `_apatch`) so the published wheel carries **both** fixes: the missing PATCH method **and** the new body kwargs on `update_sequence(...)` / `update_broadcast(...)`. Skip 1.4.48 — upgrade straight from 1.4.47 to 1.4.49.
+
 ## [1.4.47]
 
 ### Fixed

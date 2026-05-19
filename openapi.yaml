@@ -20109,6 +20109,36 @@ paths:
       tags: [Broadcasts]
       parameters:
         - { name: broadcastId, in: path, required: true, schema: { type: string } }
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name: { type: string }
+                description: { type: string }
+                message:
+                  type: object
+                  description: Generic message payload (used for non-WhatsApp platforms).
+                  properties:
+                    text: { type: string }
+                template:
+                  type: object
+                  description: WhatsApp template payload (used when platform is `whatsapp`).
+                  properties:
+                    name: { type: string }
+                    language: { type: string }
+                    variableMapping:
+                      type: object
+                      description: Maps template variable positions to contact fields. Keys are position strings ("1", "2"); values are { field, customValue }.
+                      additionalProperties:
+                        type: object
+                        properties:
+                          field: { type: string, enum: [name, phone, email, company, custom] }
+                          customValue: { type: string }
+                segmentFilters:
+                  type: object
+                  description: Recipient segment filters (tags, channels, subscription state).
       responses:
         '200':
           description: Broadcast updated
@@ -20464,10 +20494,45 @@ paths:
     patch:
       operationId: updateSequence
       summary: Update sequence
-      description: Update a sequence's name, steps, or exit conditions. Active sequences can be updated without pausing.
+      description: Update a sequence's name, steps, or exit conditions. Steps can only be modified while the sequence is draft or paused.
       tags: [Sequences]
       parameters:
         - { name: sequenceId, in: path, required: true, schema: { type: string } }
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name: { type: string }
+                description: { type: string }
+                steps:
+                  type: array
+                  description: Replace the full step list. Only allowed while the sequence is draft or paused.
+                  items:
+                    type: object
+                    required: [order, delayMinutes]
+                    properties:
+                      order: { type: integer }
+                      delayMinutes: { type: integer }
+                      message:
+                        type: object
+                        properties:
+                          text: { type: string }
+                      template:
+                        type: object
+                        properties:
+                          name: { type: string }
+                          language: { type: string }
+                          variableMapping:
+                            type: object
+                            additionalProperties:
+                              type: object
+                              properties:
+                                field: { type: string, enum: [name, phone, email, company, custom] }
+                                customValue: { type: string }
+                exitOnReply: { type: boolean }
+                exitOnUnsubscribe: { type: boolean }
       responses:
         '200':
           description: Sequence updated
