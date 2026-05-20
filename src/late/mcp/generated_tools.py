@@ -5088,6 +5088,22 @@ def register_generated_tools(mcp, _get_client):
             return f"Error: {e}"
 
     @mcp.tool()
+    def messages_mark_conversation_read(conversation_id: str, account_id: str) -> str:
+        """Mark a conversation as read
+
+        Args:
+            conversation_id: The conversation ID (required)
+            account_id: Social account ID (required)"""
+        client = _get_client()
+        try:
+            response = client.messages.mark_conversation_read(
+                conversation_id=conversation_id, account_id=account_id
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool()
     def messages_add_message_reaction(
         conversation_id: str, message_id: str, account_id: str, emoji: str
     ) -> str:

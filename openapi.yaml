@@ -15953,6 +15953,10 @@ paths:
         Reddit platform limitation.
 
         Twitter/X limitation: X's encrypted "X Chat" messages are not accessible via the API. Conversations where the other participant uses encrypted X Chat may only show your outgoing messages. See the list conversations endpoint for more details.
+
+        This endpoint is read-only and does NOT mark messages as read or send
+        read receipts. To mark a conversation read (and send WhatsApp blue ticks
+        on eligible accounts), call `POST /v1/inbox/conversations/{conversationId}/read`.
       tags: [Messages]
       security: [{ bearerAuth: [] }]
       parameters:
@@ -16537,6 +16541,55 @@ paths:
                 type: object
                 properties:
                   success: { type: boolean }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403':
+          description: Inbox addon required
+        '404':
+          description: Account or conversation not found
+
+  /v1/inbox/conversations/{conversationId}/read:
+    post:
+      operationId: markConversationRead
+      summary: Mark a conversation as read
+      description: |
+        Marks all unread incoming messages in the conversation as read.
+
+        For WhatsApp, this also sends read receipts (blue ticks) to the contact,
+        EXCEPT on coexistence accounts (where the WhatsApp Business app on the
+        customer's phone owns read state and we never override it).
+
+        This is the explicit, human-driven counterpart to `GET .../messages`,
+        which is side-effect-free and does NOT mark anything read. Call this when
+        a user actually views the conversation.
+      tags: [Messages]
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - name: conversationId
+          in: path
+          required: true
+          schema: { type: string }
+          description: The conversation ID
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [accountId]
+              properties:
+                accountId: { type: string, description: Social account ID }
+      responses:
+        '200':
+          description: Conversation marked read
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success: { type: boolean }
+                  markedCount:
+                    type: integer
+                    description: Number of messages marked read by this call
         '401': { $ref: '#/components/responses/Unauthorized' }
         '403':
           description: Inbox addon required

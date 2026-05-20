@@ -533,6 +533,7 @@ Both `from zernio import ...` and `from late import ...` work identically. The `
 | `messages.delete_inbox_message()` | Delete message |
 | `messages.add_message_reaction()` | Add reaction |
 | `messages.edit_inbox_message()` | Edit message |
+| `messages.mark_conversation_read()` | Mark a conversation as read |
 | `messages.remove_message_reaction()` | Remove reaction |
 | `messages.send_inbox_message()` | Send message |
 | `messages.send_typing_indicator()` | Send typing indicator |
