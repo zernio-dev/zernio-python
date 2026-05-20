@@ -22620,13 +22620,13 @@ paths:
       operationId: listAdAudiences
       tags: [Ad Audiences]
       summary: List custom audiences
-      description: Returns custom audiences for the given ad account. Supports Meta, Google, TikTok, and Pinterest.
+      description: Returns custom audiences for the given ad account. Supports Meta, Google, TikTok, Pinterest, LinkedIn, and X (Twitter).
       security:
         - bearerAuth: []
       parameters:
         - { name: accountId, in: query, required: true, schema: { type: string }, description: Social account ID }
         - { name: adAccountId, in: query, required: true, schema: { type: string }, description: Platform ad account ID }
-        - { name: platform, in: query, schema: { type: string, enum: [facebook, instagram, googleads, tiktok, pinterest] } }
+        - { name: platform, in: query, schema: { type: string, enum: [facebook, instagram, googleads, tiktok, tiktokads, pinterest, linkedin, linkedinads, twitter, xads] } }
       responses:
         '200':
           description: Audiences
