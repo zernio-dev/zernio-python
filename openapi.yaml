@@ -475,6 +475,51 @@ components:
                     effective_account_limit: 2000
                     current_account_count: 2000
   schemas:
+    BulkUploadResult:
+      type: object
+      description: |
+        Result of a CSV bulk upload. The same shape is returned for `200` (all rows
+        succeeded or all failed) and `207` (mixed). Per-row outcomes live in `results`;
+        the row's success is `ok`, and failures carry machine-readable codes in `errors`.
+      properties:
+        total: { type: integer, description: "Number of data rows processed from the CSV" }
+        valid: { type: integer, description: "Count of rows that succeeded (results[].ok === true)" }
+        invalid: { type: integer, description: "Count of rows that failed (total - valid)" }
+        results:
+          type: array
+          description: One entry per CSV data row, in row order.
+          items:
+            type: object
+            properties:
+              rowIndex: { type: integer, description: "1-based index of the CSV data row (header excluded)" }
+              ok: { type: boolean, description: Whether the row was created successfully }
+              createdPostId:
+                type: string
+                description: ID of the created post. Present only when `ok` is true and not a dry run.
+              errors:
+                type: array
+                description: |
+                  Machine-readable failure codes for this row. Present only when `ok` is false.
+                  Examples: `unknown_profile:<id>`, `no_account_for_platform:<platform>`,
+                  `schedule_time_missing`, `rate_limited:<platform>:@<username>:<remaining>`.
+                items: { type: string }
+        warnings:
+          type: array
+          description: "Top-level advisory warnings (e.g. `rows_exceed_advisory_limit:500`). Empty when none."
+          items: { type: string }
+        rateLimitedAccounts:
+          type: array
+          description: |
+            Present only when one or more rows targeted an account currently in cooldown.
+            Lets callers map `rate_limited:*` row errors back to structured metadata without
+            parsing the error strings.
+          items:
+            type: object
+            properties:
+              accountId: { type: string }
+              platform: { type: string }
+              username: { type: string }
+              rateLimitedUntil: { type: string, format: date-time }
     RedditPost:
       type: object
       description: A normalized Reddit post returned by the feed and search endpoints
@@ -8725,43 +8770,42 @@ paths:
                   format: binary
       responses:
         '200':
-          description: Bulk upload results
+          description: |
+            Bulk upload results. Returned when every row succeeded (or every row failed).
+            A mix of successes and failures returns `207` instead, with the same body shape.
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  success: { type: boolean }
-                  totalRows: { type: integer }
-                  created: { type: integer }
-                  failed: { type: integer }
-                  errors:
-                    type: array
-                    items:
-                      type: object
-                      properties:
-                        row: { type: integer }
-                        error: { type: string }
-                  posts:
-                    type: array
-                    items: { $ref: '#/components/schemas/Post' }
+                $ref: '#/components/schemas/BulkUploadResult'
               example:
-                success: true
-                totalRows: 10
-                created: 8
-                failed: 2
-                errors:
-                  - row: 3
-                    error: "Invalid date format"
-                  - row: 7
-                    error: "Account not found"
-                posts:
-                  - _id: "65f1c0a9e2b5af0012ab34cd"
-                    content: "First bulk post"
-                    status: "scheduled"
-                    scheduledFor: "2024-11-01T10:00:00Z"
+                total: 1
+                valid: 1
+                invalid: 0
+                results:
+                  - rowIndex: 1
+                    ok: true
+                    createdPostId: "69df8c12f102e11169c53cd3"
+                warnings: []
         '207':
-          description: Partial success
+          description: |
+            Partial success: some rows were created and some failed. Body is identical in
+            shape to the `200` response. Inspect each entry in `results` (`ok` plus `errors`)
+            to see which rows failed and why.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BulkUploadResult'
+              example:
+                total: 1
+                valid: 0
+                invalid: 1
+                results:
+                  - rowIndex: 1
+                    ok: false
+                    errors:
+                      - "unknown_profile:693ae023a552465131f3bdca1"
+                      - "no_account_for_platform:tiktok"
+                warnings: []
         '400':
           description: Invalid CSV or validation errors
         '401': { $ref: '#/components/responses/Unauthorized' }
