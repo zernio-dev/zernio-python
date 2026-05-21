@@ -385,6 +385,8 @@ def generate_tool_handler(
     sdk_method: str,
     summary: str,
     params: list[dict[str, Any]],
+    read_only: bool,
+    title: str,
 ) -> str:
     """Generate a complete tool handler function."""
     lines = []
@@ -421,9 +423,16 @@ def generate_tool_handler(
     # Strip trailing whitespace from all docstring lines
     docstring = "\n    ".join(line.rstrip() for line in doc_lines)
 
+    # Tool annotation (Anthropic Connectors Directory requirement). title is
+    # rendered via repr() so quotes/specials in the summary are escaped safely.
+    annotation = (
+        f"annotations=ToolAnnotations(title={title!r}, "
+        f"readOnlyHint={read_only}, destructiveHint={not read_only})"
+    )
+
     lines.append("")
     lines.append("")
-    lines.append("@mcp.tool()")
+    lines.append(f"@mcp.tool({annotation})")
     lines.append(f"def {tool_name}({sig}) -> str:")
     lines.append(f'    """{docstring}"""')
     lines.append("    client = _get_client()")
@@ -434,11 +443,11 @@ def generate_tool_handler(
         sdk_name = p.get("sdk_name", p["name"])
         sdk_args.append(f"{sdk_name}={p['name']}")
 
-    lines.append(f"    try:")
+    lines.append("    try:")
     lines.append(f"        response = client.{resource}.{sdk_method}({', '.join(sdk_args)})")
-    lines.append(f"        return _format_response(response)")
-    lines.append(f"    except Exception as e:")
-    lines.append(f"        return f'Error: {{e}}'")
+    lines.append("        return _format_response(response)")
+    lines.append("    except Exception as e:")
+    lines.append("        return f'Error: {e}'")
 
     return "\n".join(lines)
 
@@ -492,11 +501,21 @@ def main() -> int:
                 continue
             seen_tool_names.add(tool_name)
 
+            summary = operation.get("summary", operation_id)
             operations.append({
                 "tool_name": tool_name,
                 "resource": resource,
                 "sdk_method": sdk_method,
-                "summary": operation.get("summary", operation_id),
+                "summary": summary,
+                # HTTP method drives the tool annotation: GET is read-only,
+                # everything else (POST/PUT/PATCH/DELETE) is treated as a
+                # destructive write. Required by Anthropic's Connectors
+                # Directory (every tool must carry readOnlyHint or
+                # destructiveHint).
+                "read_only": method == "get",
+                # Human-readable title for the annotation. First line of the
+                # OpenAPI summary, capped so it stays a short label.
+                "title": summary.split("\n")[0].strip()[:80],
                 "params": extract_parameters(operation, spec),
             })
 
@@ -511,6 +530,8 @@ def main() -> int:
         "from __future__ import annotations",
         "",
         "from typing import Any",
+        "",
+        "from mcp.types import ToolAnnotations",
         "",
         "",
         "def _enum_str(value: Any) -> str:",
@@ -581,7 +602,7 @@ def main() -> int:
 
     # Generate handlers inside register function
     for resource, ops in sorted(by_resource.items()):
-        lines.append(f"")
+        lines.append("")
         lines.append(f"    # {resource.upper()}")
 
         for op in ops:
@@ -591,6 +612,8 @@ def main() -> int:
                 op["sdk_method"],
                 op["summary"],
                 op["params"],
+                op["read_only"],
+                op["title"],
             )
             # Indent for being inside register function
             handler_lines = handler.split("\n")
@@ -606,7 +629,7 @@ def main() -> int:
 
     print(f"Generated {output_file}")
     print(f"Total tools: {len(operations)}")
-    print(f"\nTo use: import and call register_generated_tools(mcp, _get_client) in server.py")
+    print("\nTo use: import and call register_generated_tools(mcp, _get_client) in server.py")
 
     return 0
 

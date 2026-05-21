@@ -8,7 +8,7 @@ from starlette.requests import Request
 from starlette.responses import JSONResponse, Response
 from starlette.types import Receive, Scope, Send
 
-from late.mcp.auth import extract_late_api_key, verify_late_api_key
+from late.mcp.auth import extract_late_api_key, is_allowed_origin, verify_late_api_key
 from late.mcp.constants import (
     DOCS_URL,
     ENDPOINT_HEALTH,
@@ -98,6 +98,11 @@ def create_sse_handler(mcp_server, sse_transport: SseServerTransport, debug: boo
 
     async def handle_sse(request: Request) -> Response:
         """Handle SSE connection with authentication."""
+        # DNS-rebinding protection: reject browser requests from un-allowlisted
+        # origins before doing anything else.
+        if not is_allowed_origin(request):
+            return JSONResponse({"error": "Origin not allowed"}, status_code=403)
+
         # 401 responses carry the shared bearer challenge (WWW_AUTHENTICATE_BEARER)
         # whose `resource_metadata` parameter points clients at our OAuth
         # protected-resource document — see the docstring on `_send_json_error`
@@ -213,6 +218,12 @@ class StreamableHTTPAuthHandler:
         # Build a Request just to extract headers — we don't consume the body
         # here (the session manager will do that downstream).
         request = Request(scope, receive)
+
+        # DNS-rebinding protection: reject browser requests from un-allowlisted
+        # origins before auth or body handling.
+        if not is_allowed_origin(request):
+            await _send_json_error(scope, receive, send, 403, "Origin not allowed")
+            return
 
         api_key = extract_late_api_key(request)
         if not api_key:

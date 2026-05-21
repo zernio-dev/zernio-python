@@ -31,10 +31,11 @@ from typing import Any
 
 import httpx
 from mcp.server.fastmcp import FastMCP
+from mcp.types import ToolAnnotations
 
 from late import Late, MediaType, PostStatus
 
-from .tool_definitions import use_tool_def
+from .tool_definitions import TOOL_DEFINITIONS
 
 # Context variable to store the Zernio API key for the current connection
 _zernio_api_key: ContextVar[str | None] = ContextVar("zernio_api_key", default=None)
@@ -72,6 +73,51 @@ account, and retry with account_id set. Never guess. The legacy behaviour
 of silently picking the first matching account has been removed.
 """,
 )
+
+
+# Hand-written tools that only read data. Everything else is treated as a
+# destructive write for annotation purposes. Drives readOnlyHint/destructiveHint
+# below; the Anthropic Connectors Directory requires every tool to carry one of
+# those hints. (Generated tools get the same treatment from their HTTP method
+# in scripts/generate_mcp_tools.py.)
+_READ_ONLY_TOOLS = {
+    "accounts_list",
+    "accounts_get",
+    "profiles_list",
+    "profiles_get",
+    "posts_list",
+    "posts_get",
+    "posts_list_failed",
+    "media_check_upload_status",
+    "docs_search",
+}
+
+
+def tool_def(name: str):
+    """Register a hand-written MCP tool from its TOOL_DEFINITIONS entry.
+
+    Pulls the docstring + parameter docs from TOOL_DEFINITIONS (the single
+    source of truth) and attaches a tool annotation (human-readable title plus
+    readOnlyHint/destructiveHint). Replaces the old `@mcp.tool()` +
+    `@use_tool_def(...)` decorator pair so the docstring and the annotation
+    stay defined in one place.
+    """
+
+    def decorator(func):
+        td = TOOL_DEFINITIONS.get(name)
+        if td:
+            func.__doc__ = td.get_docstring()
+        read_only = name in _READ_ONLY_TOOLS
+        title = td.summary.rstrip(".") if td else name
+        return mcp.tool(
+            annotations=ToolAnnotations(
+                title=title,
+                readOnlyHint=read_only,
+                destructiveHint=not read_only,
+            )
+        )(func)
+
+    return decorator
 
 
 def set_late_api_key(api_key: str) -> None:
@@ -216,8 +262,7 @@ def _resolve_account(
 # ============================================================================
 
 
-@mcp.tool()
-@use_tool_def("accounts_list")
+@tool_def("accounts_list")
 def accounts_list() -> str:
     client = _get_client()
     response = client.accounts.list()
@@ -234,8 +279,7 @@ def accounts_list() -> str:
     return "\n".join(lines)
 
 
-@mcp.tool()
-@use_tool_def("accounts_get")
+@tool_def("accounts_get")
 def accounts_get(platform: str) -> str:
     client = _get_client()
     try:
@@ -257,8 +301,7 @@ def accounts_get(platform: str) -> str:
 # ============================================================================
 
 
-@mcp.tool()
-@use_tool_def("profiles_list")
+@tool_def("profiles_list")
 def profiles_list() -> str:
     client = _get_client()
     response = client.profiles.list()
@@ -278,8 +321,7 @@ def profiles_list() -> str:
     return "\n".join(lines)
 
 
-@mcp.tool()
-@use_tool_def("profiles_get")
+@tool_def("profiles_get")
 def profiles_get(profile_id: str) -> str:
     client = _get_client()
     response = client.profiles.get(profile_id)
@@ -300,8 +342,7 @@ def profiles_get(profile_id: str) -> str:
     return "\n".join(lines)
 
 
-@mcp.tool()
-@use_tool_def("profiles_create")
+@tool_def("profiles_create")
 def profiles_create(name: str, description: str = "", color: str = "") -> str:
     client = _get_client()
 
@@ -317,8 +358,7 @@ def profiles_create(name: str, description: str = "", color: str = "") -> str:
     return f"\u2705 Profile created!\nName: {profile.name if profile else 'N/A'}\nID: {profile.field_id if profile else 'N/A'}"
 
 
-@mcp.tool()
-@use_tool_def("profiles_update")
+@tool_def("profiles_update")
 def profiles_update(
     profile_id: str,
     name: str = "",
@@ -347,8 +387,7 @@ def profiles_update(
     return f"\u2705 Profile updated!\nName: {profile.name if profile else 'N/A'}\nID: {profile.field_id if profile else 'N/A'}"
 
 
-@mcp.tool()
-@use_tool_def("profiles_delete")
+@tool_def("profiles_delete")
 def profiles_delete(profile_id: str) -> str:
     client = _get_client()
     client.profiles.delete(profile_id)
@@ -360,8 +399,7 @@ def profiles_delete(profile_id: str) -> str:
 # ============================================================================
 
 
-@mcp.tool()
-@use_tool_def("posts_list")
+@tool_def("posts_list")
 def posts_list(status: str = "", limit: int = 10) -> str:
     client = _get_client()
     params: dict[str, str | int] = {"limit": limit}
@@ -388,8 +426,7 @@ def posts_list(status: str = "", limit: int = 10) -> str:
     return "\n".join(lines)
 
 
-@mcp.tool()
-@use_tool_def("posts_get")
+@tool_def("posts_get")
 def posts_get(post_id: str) -> str:
     client = _get_client()
     response = client.posts.get(post_id)
@@ -421,8 +458,7 @@ def posts_get(post_id: str) -> str:
     return "\n".join(lines)
 
 
-@mcp.tool()
-@use_tool_def("posts_create")
+@tool_def("posts_create")
 def posts_create(
     content: str,
     platform: str,
@@ -502,8 +538,7 @@ def posts_create(
         return f"\u2705 Scheduled for {platform} (@{username}){media_info}\nPost ID: {post_id}\nScheduled: {scheduled}"
 
 
-@mcp.tool()
-@use_tool_def("posts_publish_now")
+@tool_def("posts_publish_now")
 def posts_publish_now(
     content: str,
     platform: str,
@@ -521,8 +556,7 @@ def posts_publish_now(
     )
 
 
-@mcp.tool()
-@use_tool_def("posts_cross_post")
+@tool_def("posts_cross_post")
 def posts_cross_post(
     content: str,
     platforms: str,
@@ -614,8 +648,7 @@ def posts_cross_post(
     return result
 
 
-@mcp.tool()
-@use_tool_def("posts_update")
+@tool_def("posts_update")
 def posts_update(
     post_id: str,
     content: str = "",
@@ -643,16 +676,14 @@ def posts_update(
     return f"\u2705 Post updated!\nID: {post_id_str}\nStatus: {status}"
 
 
-@mcp.tool()
-@use_tool_def("posts_delete")
+@tool_def("posts_delete")
 def posts_delete(post_id: str) -> str:
     client = _get_client()
     client.posts.delete(post_id)
     return f"\u2705 Post {post_id} deleted"
 
 
-@mcp.tool()
-@use_tool_def("posts_retry")
+@tool_def("posts_retry")
 def posts_retry(post_id: str) -> str:
     client = _get_client()
 
@@ -673,8 +704,7 @@ def posts_retry(post_id: str) -> str:
         return f"\u274c Failed to retry post: {e}"
 
 
-@mcp.tool()
-@use_tool_def("posts_list_failed")
+@tool_def("posts_list_failed")
 def posts_list_failed(limit: int = 10) -> str:
     client = _get_client()
     response = client.posts.list(status=PostStatus.FAILED, limit=limit)
@@ -697,8 +727,7 @@ def posts_list_failed(limit: int = 10) -> str:
     return "\n".join(lines)
 
 
-@mcp.tool()
-@use_tool_def("posts_retry_all_failed")
+@tool_def("posts_retry_all_failed")
 def posts_retry_all_failed() -> str:
     client = _get_client()
     response = client.posts.list(status=PostStatus.FAILED, limit=50)
@@ -732,8 +761,7 @@ def posts_retry_all_failed() -> str:
 # ============================================================================
 
 
-@mcp.tool()
-@use_tool_def("media_generate_upload_link")
+@tool_def("media_generate_upload_link")
 def media_generate_upload_link() -> str:
     client = _get_client()
 
@@ -758,8 +786,7 @@ Once you've uploaded your files, let me know and I'll check the status to get th
         return f"\u274c Failed to generate upload link: {e}"
 
 
-@mcp.tool()
-@use_tool_def("media_check_upload_status")
+@tool_def("media_check_upload_status")
 def media_check_upload_status(token: str) -> str:
     client = _get_client()
 
@@ -896,8 +923,7 @@ def _search_docs(content: str, query: str, max_results: int = 5) -> list[dict[st
     return results
 
 
-@mcp.tool()
-@use_tool_def("docs_search")
+@tool_def("docs_search")
 def docs_search(query: str) -> str:
     try:
         content = _get_docs_content()
