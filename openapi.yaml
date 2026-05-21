@@ -152,6 +152,7 @@ x-documentation:
     - `message.delivered` - An outgoing message was delivered (WhatsApp, Messenger)
     - `message.read` - An outgoing message was read by the recipient (WhatsApp, Messenger, Instagram)
     - `message.failed` - An outgoing message failed delivery (WhatsApp)
+    - `reaction.received` - A participant added or removed an emoji reaction on a message (WhatsApp, Telegram)
     - `comment.received` - New comment received on a post
     - `review.new` - New review posted on a connected account (Google Business Profile)
     - `review.updated` - Review updated or reply added (Google Business Profile, or via reply API)
@@ -280,7 +281,7 @@ tags:
   - name: Webhooks
     description: |
       Configure webhooks for real-time notifications. Webhooks can be created from the dashboard (Settings → Webhooks) or via this API.
-      Events: post.scheduled, post.published, post.failed, post.partial, post.cancelled, post.recycled, post.platform.published, post.platform.failed, account.connected, account.disconnected, account.ads.initial_sync_completed, message.received, message.sent, message.edited, message.deleted, message.delivered, message.read, message.failed, comment.received, review.new, review.updated, ad.status_changed, whatsapp.template.status_updated, webhook.test.
+      Events: post.scheduled, post.published, post.failed, post.partial, post.cancelled, post.recycled, post.platform.published, post.platform.failed, account.connected, account.disconnected, account.ads.initial_sync_completed, message.received, message.sent, message.edited, message.deleted, message.delivered, message.read, message.failed, reaction.received, comment.received, review.new, review.updated, ad.status_changed, whatsapp.template.status_updated, webhook.test.
       Security: optional HMAC-SHA256 signature in X-Zernio-Signature header. Configure a secret key to enable verification. Custom headers supported.
   - name: Webhook Events
     description: |
@@ -1021,7 +1022,7 @@ components:
           type: array
           items:
             type: string
-            enum: [post.scheduled, post.published, post.failed, post.partial, post.cancelled, post.recycled, post.platform.published, post.platform.failed, account.connected, account.disconnected, account.ads.initial_sync_completed, message.received, message.sent, message.edited, message.deleted, message.delivered, message.read, message.failed, comment.received, review.new, review.updated, ad.status_changed, whatsapp.template.status_updated]
+            enum: [post.scheduled, post.published, post.failed, post.partial, post.cancelled, post.recycled, post.platform.published, post.platform.failed, account.connected, account.disconnected, account.ads.initial_sync_completed, message.received, message.sent, message.edited, message.deleted, message.delivered, message.read, message.failed, reaction.received, comment.received, review.new, review.updated, ad.status_changed, whatsapp.template.status_updated]
           description: Events subscribed to
         isActive:
           type: boolean
@@ -1663,6 +1664,80 @@ components:
         platform: { type: string }
         username: { type: string }
         displayName: { type: string }
+    # ────────────────────────────────────────────────────────────────────────
+    WebhookPayloadReaction:
+      type: object
+      description: Webhook payload for reaction received events (WhatsApp, Telegram)
+      required: [id, event, reaction, conversation, account, timestamp]
+      properties:
+        id:
+          type: string
+          description: Stable webhook event ID
+        event:
+          type: string
+          enum: [reaction.received]
+        reaction:
+          type: object
+          required: [emoji, action, platformMessageId, sender, reactedAt]
+          properties:
+            emoji:
+              type: string
+              description: |
+                The emoji reacted with. May be an empty string when `action` is
+                `removed` on WhatsApp (Meta does not report which emoji was removed).
+            action:
+              type: string
+              enum: [added, removed]
+            messageId:
+              type: string
+              description: Internal Zernio message ID of the reacted-to message, when resolvable from the platform ID.
+            platformMessageId:
+              type: string
+              description: Platform-native ID of the reacted-to message (e.g. WhatsApp wamid).
+            sender:
+              type: object
+              required: [id]
+              description: The participant who added or removed the reaction.
+              properties:
+                id:
+                  type: string
+                name:
+                  type: string
+                username:
+                  type: string
+                picture:
+                  type: string
+                phoneNumber:
+                  type: string
+                  nullable: true
+                  description: WhatsApp only. Sender's phone number in E.164 format (with leading `+`), when available.
+            reactedAt:
+              type: string
+              format: date-time
+        conversation:
+          type: object
+          required: [id, platformConversationId, status]
+          properties:
+            id: { type: string }
+            platformConversationId: { type: string }
+            participantId: { type: string }
+            participantName: { type: string }
+            participantUsername: { type: string }
+            participantPicture: { type: string }
+            status:
+              type: string
+              enum: [active, archived]
+        account:
+          type: object
+          required: [id, platform, username]
+          properties:
+            id: { type: string, description: Social account ID }
+            platform: { type: string }
+            username: { type: string }
+            displayName: { type: string }
+        timestamp:
+          type: string
+          format: date-time
     # ────────────────────────────────────────────────────────────────────────
     WebhookPayloadMessage:
       type: object
@@ -5122,6 +5197,27 @@ webhooks:
           application/json:
             schema:
               $ref: '#/components/schemas/WebhookPayloadMessageDeliveryStatus'
+      responses:
+        '200':
+          description: Webhook received successfully
+  reaction.received:
+    post:
+      operationId: onReactionReceived
+      summary: Reaction received event
+      description: |
+        Fired when a participant adds or removes an emoji reaction on a message.
+        Supported on WhatsApp and Telegram. Distinct from message.received so a
+        reaction (e.g. a thumbs-up) is not mistaken for an inbound message.
+        The `reaction.action` field is `added` or `removed`. On WhatsApp removals
+        the platform does not report which emoji was removed, so `reaction.emoji`
+        may be an empty string. Requires the Inbox add-on.
+      tags: [Webhook Events]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/WebhookPayloadReaction'
       responses:
         '200':
           description: Webhook received successfully
@@ -15241,7 +15337,7 @@ paths:
                   minItems: 1
                   items:
                     type: string
-                    enum: [post.scheduled, post.published, post.failed, post.partial, post.cancelled, post.recycled, post.platform.published, post.platform.failed, account.connected, account.disconnected, account.ads.initial_sync_completed, message.received, message.sent, message.edited, message.deleted, message.delivered, message.read, message.failed, comment.received, review.new, review.updated, ad.status_changed, whatsapp.template.status_updated]
+                    enum: [post.scheduled, post.published, post.failed, post.partial, post.cancelled, post.recycled, post.platform.published, post.platform.failed, account.connected, account.disconnected, account.ads.initial_sync_completed, message.received, message.sent, message.edited, message.deleted, message.delivered, message.read, message.failed, reaction.received, comment.received, review.new, review.updated, ad.status_changed, whatsapp.template.status_updated]
                   description: Events to subscribe to (at least one required)
                 isActive:
                   type: boolean
@@ -15315,7 +15411,7 @@ paths:
                   minItems: 1
                   items:
                     type: string
-                    enum: [post.scheduled, post.published, post.failed, post.partial, post.cancelled, post.recycled, post.platform.published, post.platform.failed, account.connected, account.disconnected, account.ads.initial_sync_completed, message.received, message.sent, message.edited, message.deleted, message.delivered, message.read, message.failed, comment.received, review.new, review.updated, ad.status_changed, whatsapp.template.status_updated]
+                    enum: [post.scheduled, post.published, post.failed, post.partial, post.cancelled, post.recycled, post.platform.published, post.platform.failed, account.connected, account.disconnected, account.ads.initial_sync_completed, message.received, message.sent, message.edited, message.deleted, message.delivered, message.read, message.failed, reaction.received, comment.received, review.new, review.updated, ad.status_changed, whatsapp.template.status_updated]
                   description: Events to subscribe to. Must contain at least one event if provided.
                 isActive:
                   type: boolean
