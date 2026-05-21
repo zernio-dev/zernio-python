@@ -54,8 +54,20 @@ MCP_PUBLIC_URL = os.getenv("MCP_PUBLIC_URL", "https://mcp.zernio.com")
 OAUTH_AUTHORIZATION_SERVER = "https://zernio.com"
 
 # OAuth scopes advertised in protected-resource metadata. Mirrors the set the
-# authorization server defines at zernio.com/.well-known/oauth-authorization-server.
-OAUTH_SCOPES = ["posts:read", "posts:write", "accounts:read", "analytics:read"]
+# authorization server defines at zernio.com/.well-known/oauth-authorization-server
+# (kept in sync with libs/oauth/scopes.ts in the main app). Informational only:
+# the client requests scopes from the authorization-server metadata, not from
+# here, and scopes are not enforced per-endpoint today.
+OAUTH_SCOPES = [
+    "posts:read",
+    "posts:write",
+    "accounts:read",
+    "accounts:write",
+    "analytics:read",
+    "ads:write",
+    "messaging:write",
+    "automations:write",
+]
 
 # Single source of truth for the 401 WWW-Authenticate challenge (used by both
 # transports). The `resource_metadata` parameter (RFC 9728 §5.1) points clients
