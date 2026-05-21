@@ -15,9 +15,13 @@ from late.mcp.constants import (
     ENDPOINT_MCP,
     ENDPOINT_MESSAGES,
     ENDPOINT_SSE,
+    MCP_PUBLIC_URL,
+    OAUTH_AUTHORIZATION_SERVER,
+    OAUTH_SCOPES,
     SERVICE_NAME,
     SERVICE_VERSION,
     TRANSPORT_TYPE,
+    WWW_AUTHENTICATE_BEARER,
 )
 
 
@@ -55,6 +59,30 @@ async def handle_health(_request: Request) -> JSONResponse:
     )
 
 
+async def handle_oauth_protected_resource(_request: Request) -> JSONResponse:
+    """
+    OAuth 2.0 Protected Resource Metadata (RFC 9728) — public, no auth required.
+
+    Served from this MCP server's own origin so a client given only the `/mcp`
+    endpoint URL can discover the Zernio authorization server and run the OAuth
+    flow (this is what Claude's connector needs; without it, it can't find our
+    OAuth and reports "couldn't reach the server"). `resource` is THIS server's
+    canonical URL, not zernio.com's: RFC 8707/9728 require it to identify the
+    resource the client is actually talking to, and strict clients reject a
+    mismatch. The authorization server itself (token/authorize/register +
+    its own metadata) lives at zernio.com — we only point clients to it here.
+    """
+    return JSONResponse(
+        {
+            "resource": MCP_PUBLIC_URL,
+            "authorization_servers": [OAUTH_AUTHORIZATION_SERVER],
+            "scopes_supported": OAUTH_SCOPES,
+            "bearer_methods_supported": ["header"],
+        },
+        headers={"Cache-Control": "public, max-age=3600"},
+    )
+
+
 def create_sse_handler(mcp_server, sse_transport: SseServerTransport, debug: bool = False):
     """
     Create SSE connection handler.
@@ -70,12 +98,11 @@ def create_sse_handler(mcp_server, sse_transport: SseServerTransport, debug: boo
 
     async def handle_sse(request: Request) -> Response:
         """Handle SSE connection with authentication."""
-        # Extract API key from request
-        # 401 responses include `WWW-Authenticate: Bearer realm="zernio-mcp"` per
-        # RFC 6750 so spec-compliant MCP clients (mcp-remote, etc.) know this is
-        # static Bearer auth and don't fall back to OAuth discovery — see the
-        # docstring on `_send_json_error` below for the full rationale.
-        bearer_challenge = {"WWW-Authenticate": 'Bearer realm="zernio-mcp"'}
+        # 401 responses carry the shared bearer challenge (WWW_AUTHENTICATE_BEARER)
+        # whose `resource_metadata` parameter points clients at our OAuth
+        # protected-resource document — see the docstring on `_send_json_error`
+        # below for the full rationale.
+        bearer_challenge = {"WWW-Authenticate": WWW_AUTHENTICATE_BEARER}
         api_key = extract_late_api_key(request)
         if not api_key:
             return JSONResponse(
@@ -132,15 +159,19 @@ async def _send_json_error(scope: Scope, receive: Receive, send: Send, status: i
     a raw ASGI callable, not a Starlette endpoint — so we can't just `return
     JSONResponse(...)` from the wrapper.
 
-    On 401 we add `WWW-Authenticate: Bearer realm="zernio-mcp"` per RFC 6750.
-    Without this header, MCP clients like `mcp-remote` interpret the 401 as
-    "OAuth required" and probe `/.well-known/oauth-authorization-server`,
-    which 404s here (we use static API-key auth, not OAuth) and surfaces to
-    the user as a confusing JSON parse error. Advertising the bearer scheme
-    tells spec-compliant clients to send the static Bearer token they
-    already have and skip OAuth discovery entirely.
+    On 401 we add the shared bearer challenge (WWW_AUTHENTICATE_BEARER), which
+    carries a `resource_metadata` parameter (RFC 9728 §5.1) pointing at our
+    /.well-known/oauth-protected-resource document. This supports two kinds of
+    client without conflict:
+      - clients that already hold a static Zernio API key (mcp-remote with
+        --header, Claude Code) just send it on the retry and skip discovery;
+      - clients with no pre-supplied token (Claude's GUI connector) follow
+        `resource_metadata` to discover the zernio.com authorization server and
+        run the OAuth flow. The token they obtain is accepted here because
+        verify_late_api_key validates any bearer against the Zernio API, which
+        recognises both API keys and OAuth access tokens.
     """
-    headers = {"WWW-Authenticate": 'Bearer realm="zernio-mcp"'} if status == 401 else None
+    headers = {"WWW-Authenticate": WWW_AUTHENTICATE_BEARER} if status == 401 else None
     response = JSONResponse({"error": message}, status_code=status, headers=headers)
     await response(scope, receive, send)
 
