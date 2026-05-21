@@ -16,6 +16,7 @@ from late.mcp.constants import (
     ENDPOINT_HEALTH,
     ENDPOINT_MCP,
     ENDPOINT_MESSAGES,
+    ENDPOINT_OAUTH_PROTECTED_RESOURCE,
     ENDPOINT_ROOT,
     ENDPOINT_SSE,
 )
@@ -23,6 +24,7 @@ from late.mcp.routes import (
     create_sse_handler,
     create_streamable_http_handler,
     handle_health,
+    handle_oauth_protected_resource,
     handle_root,
 )
 
@@ -77,6 +79,14 @@ def create_app(mcp_server, debug: bool = False) -> Starlette:
         routes=[
             Route(ENDPOINT_ROOT, endpoint=handle_root, methods=["GET"]),
             Route(ENDPOINT_HEALTH, endpoint=handle_health, methods=["GET"]),
+            # OAuth 2.0 protected-resource metadata (RFC 9728). Public, no auth.
+            # Lets clients given only the /mcp URL discover the zernio.com
+            # authorization server and run the OAuth flow.
+            Route(
+                ENDPOINT_OAUTH_PROTECTED_RESOURCE,
+                endpoint=handle_oauth_protected_resource,
+                methods=["GET"],
+            ),
             # Streamable HTTP — single endpoint, modern transport.
             # We use Route (not Mount) because Mount on "/mcp" forces a 307
             # redirect to "/mcp/", and most HTTP clients drop the request

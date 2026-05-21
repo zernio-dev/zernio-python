@@ -3,6 +3,8 @@
     "zernio": {
       "command": "uvx",
       "args": [
+        "--from",
+        "zernio-sdk[mcp]",
         "zernio-mcp"
       ],
       "env": {
