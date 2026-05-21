@@ -10968,6 +10968,287 @@ paths:
             application/json:
               schema: { $ref: '#/components/schemas/ErrorResponse' }
 
+  /v1/accounts/{accountId}/gmb-verifications:
+    get:
+      operationId: getGoogleBusinessVerifications
+      tags: [GMB Verifications]
+      summary: Get verification state
+      description: >-
+        Returns the location's Voice of Merchant state plus its verification
+        history. `voiceOfMerchantState.hasVoiceOfMerchant` tells you whether the
+        listing is verified and published; when it is false, `verify` reports
+        whether a verification is already pending. Each entry in `verifications`
+        has a `state` of PENDING, COMPLETED, or FAILED.
+      parameters:
+        - name: accountId
+          in: path
+          required: true
+          schema: { type: string }
+          description: The Zernio account ID (from /v1/accounts)
+        - name: locationId
+          in: query
+          schema: { type: string }
+          description: Override which location to query. If omitted, uses the account's selected location. Use GET /gmb-locations to list valid IDs.
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Verification state fetched successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success: { type: boolean }
+                  accountId: { type: string }
+                  locationId: { type: string }
+                  voiceOfMerchantState:
+                    type: object
+                    description: Raw Voice of Merchant state from Google.
+                    properties:
+                      hasVoiceOfMerchant: { type: boolean, description: True when the listing is verified and published (eligible to surface reviews, edits, etc.). }
+                      hasBusinessAuthority: { type: boolean, description: True when the authenticated user has owner/manager authority over the listing. }
+                      verify:
+                        type: object
+                        description: Present when verification is the path to Voice of Merchant.
+                        properties:
+                          hasPendingVerification: { type: boolean, description: True when a verification is already in progress. }
+                  verifications:
+                    type: array
+                    description: Verification history, newest first. Empty when none exist.
+                    items:
+                      type: object
+                      properties:
+                        name: { type: string, description: 'Resource name, e.g. "locations/123/verifications/0T1776879124712". The last segment is the verificationId.' }
+                        method: { type: string, enum: [ADDRESS, EMAIL, PHONE_CALL, SMS, AUTO, VETTED_PARTNER], description: Method used (omitted on some entries). }
+                        state: { type: string, enum: [PENDING, COMPLETED, FAILED] }
+                        createTime: { type: string, format: date-time }
+              example:
+                success: true
+                accountId: "64e1f0a9e2b5af0012ab34cd"
+                locationId: "16699729527667179850"
+                voiceOfMerchantState:
+                  hasVoiceOfMerchant: false
+                  hasBusinessAuthority: true
+                  verify:
+                    hasPendingVerification: false
+                verifications:
+                  - name: "locations/16699729527667179850/verifications/4T1775504407480"
+                    method: "SMS"
+                    state: "FAILED"
+                    createTime: "2026-04-06T19:40:07.480Z"
+        '400':
+          description: Not a Google Business account or missing location
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ErrorResponse' }
+        '401':
+          description: Unauthorized or token invalid
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ErrorResponse' }
+        '404': { $ref: '#/components/responses/NotFound' }
+    post:
+      operationId: startGoogleBusinessVerification
+      tags: [GMB Verifications]
+      summary: Start a verification
+      description: >-
+        Starts a verification for the location. This is a mutating action:
+        depending on `method`, Google mails a postcard, places a call, or sends
+        an SMS/email to the business. Submit the resulting code with POST
+        /gmb-verifications/{verificationId}/complete. Use POST
+        /gmb-verifications/options first to discover which methods are eligible.
+      parameters:
+        - name: accountId
+          in: path
+          required: true
+          schema: { type: string }
+          description: The Zernio account ID (from /v1/accounts)
+        - name: locationId
+          in: query
+          schema: { type: string }
+          description: Override which location to target. If omitted, uses the account's selected location.
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [method]
+              properties:
+                method: { type: string, enum: [ADDRESS, EMAIL, PHONE_CALL, SMS, AUTO, VETTED_PARTNER], description: The verification method. Selects which method-specific field below is required. }
+                languageCode: { type: string, example: "en-US" }
+                phoneNumber: { type: string, description: For PHONE_CALL / SMS. }
+                emailAddress: { type: string, description: For EMAIL. }
+                mailerContact: { type: object, description: For ADDRESS (postcard) verification. }
+                context: { type: object, description: ServiceBusinessContext (e.g. service address). Required for service-area businesses. }
+            example:
+              method: "SMS"
+              languageCode: "en-US"
+              phoneNumber: "+14155550123"
+      responses:
+        '200':
+          description: Verification started
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success: { type: boolean }
+                  accountId: { type: string }
+                  locationId: { type: string }
+                  verification:
+                    type: object
+                    properties:
+                      name: { type: string }
+                      method: { type: string, enum: [ADDRESS, EMAIL, PHONE_CALL, SMS, AUTO, VETTED_PARTNER] }
+                      state: { type: string, enum: [PENDING, COMPLETED, FAILED] }
+                      createTime: { type: string, format: date-time }
+        '400':
+          description: Invalid request (e.g. wrong field for the chosen method, or Google rejected it)
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ErrorResponse' }
+        '401':
+          description: Unauthorized or token invalid
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ErrorResponse' }
+        '404': { $ref: '#/components/responses/NotFound' }
+
+  /v1/accounts/{accountId}/gmb-verifications/options:
+    post:
+      operationId: fetchGoogleBusinessVerificationOptions
+      tags: [GMB Verifications]
+      summary: Fetch verification options
+      description: >-
+        Reports the verification methods Google currently offers for the
+        location. Non-mutating (nothing is sent to the business). `languageCode`
+        is required; service-area ("CUSTOMER_LOCATION_ONLY") businesses also
+        require `context.address`, otherwise Google returns 400.
+      parameters:
+        - name: accountId
+          in: path
+          required: true
+          schema: { type: string }
+          description: The Zernio account ID (from /v1/accounts)
+        - name: locationId
+          in: query
+          schema: { type: string }
+          description: Override which location to query. If omitted, uses the account's selected location.
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [languageCode]
+              properties:
+                languageCode: { type: string, example: "en-US" }
+                context: { type: object, description: ServiceBusinessContext. Required for service-area businesses (must include the service address). }
+            example:
+              languageCode: "en-US"
+      responses:
+        '200':
+          description: Verification options fetched
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success: { type: boolean }
+                  accountId: { type: string }
+                  locationId: { type: string }
+                  options:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        verificationMethod: { type: string, enum: [ADDRESS, EMAIL, PHONE_CALL, SMS, AUTO, VETTED_PARTNER] }
+                        phoneNumber: { type: string, description: Present for PHONE_CALL / SMS. }
+        '400':
+          description: Invalid request (e.g. missing service business context, or missing languageCode)
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ErrorResponse' }
+        '401':
+          description: Unauthorized or token invalid
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ErrorResponse' }
+        '404': { $ref: '#/components/responses/NotFound' }
+
+  /v1/accounts/{accountId}/gmb-verifications/{verificationId}/complete:
+    post:
+      operationId: completeGoogleBusinessVerification
+      tags: [GMB Verifications]
+      summary: Complete a verification
+      description: >-
+        Completes a PENDING verification by submitting the PIN/code Google sent
+        the business (postcard code, SMS PIN, etc.). On success the verification
+        moves to COMPLETED.
+      parameters:
+        - name: accountId
+          in: path
+          required: true
+          schema: { type: string }
+          description: The Zernio account ID (from /v1/accounts)
+        - name: verificationId
+          in: path
+          required: true
+          schema: { type: string }
+          description: The last segment of a verification `name` from GET /gmb-verifications.
+        - name: locationId
+          in: query
+          schema: { type: string }
+          description: Override which location to target. If omitted, uses the account's selected location.
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [pin]
+              properties:
+                pin: { type: string, description: The code Google sent to the business. }
+            example:
+              pin: "123456"
+      responses:
+        '200':
+          description: Verification completed
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success: { type: boolean }
+                  accountId: { type: string }
+                  locationId: { type: string }
+                  verification:
+                    type: object
+                    properties:
+                      name: { type: string }
+                      method: { type: string, enum: [ADDRESS, EMAIL, PHONE_CALL, SMS, AUTO, VETTED_PARTNER] }
+                      state: { type: string, enum: [PENDING, COMPLETED, FAILED] }
+                      createTime: { type: string, format: date-time }
+        '400':
+          description: Invalid request (e.g. wrong PIN or verification not pending)
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ErrorResponse' }
+        '401':
+          description: Unauthorized or token invalid
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ErrorResponse' }
+        '404': { $ref: '#/components/responses/NotFound' }
+
   /v1/accounts/{accountId}/gmb-food-menus:
     get:
       operationId: getGoogleBusinessFoodMenus
@@ -22751,7 +23032,11 @@ paths:
       operationId: createAdAudience
       tags: [Ad Audiences]
       summary: Create custom audience
-      description: Create a customer list, website retargeting, or lookalike audience on Meta (Facebook/Instagram).
+      description: |
+        Create a custom audience. `customer_list` is supported on Meta, Google, X, LinkedIn, TikTok, and Pinterest;
+        `website` and `lookalike` are Meta-only. The audience is created empty — add members via
+        `POST /v1/ads/audiences/{audienceId}/users`. On TikTok and Pinterest the audience is provisioned lazily on the
+        first member upload (until then its status is `pending`). Create is not idempotent — never auto-retry.
       security:
         - bearerAuth: []
       requestBody:
@@ -22763,7 +23048,7 @@ paths:
               required: [accountId, adAccountId, name, type]
               properties:
                 accountId: { type: string }
-                adAccountId: { type: string, description: "Must start with act_" }
+                adAccountId: { type: string, description: "Platform ad account ID. Must start with act_ for Meta; bare platform id for others (Google customer id, X/TikTok/LinkedIn/Pinterest account id)." }
                 name: { type: string, maxLength: 255 }
                 description: { type: string }
                 type: { type: string, enum: [customer_list, website, lookalike] }
@@ -22842,7 +23127,10 @@ paths:
       operationId: addUsersToAdAudience
       tags: [Ad Audiences]
       summary: Add users to audience
-      description: Upload user data (emails and/or phone numbers) to a customer_list audience. Data is SHA256-hashed server-side before sending to Meta. Max 10,000 users per request.
+      description: |
+        Upload user data to a customer_list audience. Data is SHA256-hashed server-side before sending to the platform.
+        Email is used on every platform; phone is used on Meta only (other platforms ignore it). On TikTok and Pinterest,
+        the first upload also provisions the audience (deferred create). LinkedIn uploads are full-replace. Max 10,000 users per request.
       security:
         - bearerAuth: []
       parameters:

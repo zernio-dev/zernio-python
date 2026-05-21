@@ -516,6 +516,14 @@ Both `from zernio import ...` and `from late import ...` work identically. The `
 | `gmb_services.get_google_business_services()` | Get services |
 | `gmb_services.update_google_business_services()` | Replace services |
 
+### GMB Verifications
+| Method | Description |
+|--------|-------------|
+| `gmb_verifications.get_google_business_verifications()` | Get verification state |
+| `gmb_verifications.complete_google_business_verification()` | Complete a verification |
+| `gmb_verifications.fetch_google_business_verification_options()` | Fetch verification options |
+| `gmb_verifications.start_google_business_verification()` | Start a verification |
+
 ### Instagram
 | Method | Description |
 |--------|-------------|
