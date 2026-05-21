@@ -114,6 +114,9 @@ def tool_def(name: str):
                 title=title,
                 readOnlyHint=read_only,
                 destructiveHint=not read_only,
+                # Write tools act on external social platforms; reads do not
+                # change external state. Required explicitly for ChatGPT Apps.
+                openWorldHint=not read_only,
             )
         )(func)
 

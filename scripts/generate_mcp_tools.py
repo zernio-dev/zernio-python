@@ -423,11 +423,16 @@ def generate_tool_handler(
     # Strip trailing whitespace from all docstring lines
     docstring = "\n    ".join(line.rstrip() for line in doc_lines)
 
-    # Tool annotation (Anthropic Connectors Directory requirement). title is
-    # rendered via repr() so quotes/specials in the summary are escaped safely.
+    # Tool annotation (required by the Anthropic Connectors Directory AND the
+    # ChatGPT Apps submission, which needs all three hints set explicitly).
+    # title is rendered via repr() so quotes/specials in the summary are
+    # escaped safely. openWorldHint mirrors read_only: write tools act on
+    # external social platforms (publish/send/etc.) so they touch the open
+    # world; GET tools only read, so they don't change external state.
     annotation = (
         f"annotations=ToolAnnotations(title={title!r}, "
-        f"readOnlyHint={read_only}, destructiveHint={not read_only})"
+        f"readOnlyHint={read_only}, destructiveHint={not read_only}, "
+        f"openWorldHint={not read_only})"
     )
 
     lines.append("")

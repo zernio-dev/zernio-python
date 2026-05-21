@@ -71,7 +71,7 @@ def register_generated_tools(mcp, _get_client):
     # ACCOUNT_GROUPS
 
 
-    @mcp.tool(annotations=ToolAnnotations(title='List groups', readOnlyHint=True, destructiveHint=False))
+    @mcp.tool(annotations=ToolAnnotations(title='List groups', readOnlyHint=True, destructiveHint=False, openWorldHint=False))
     def account_groups_list_account_groups() -> str:
         """List groups"""
         client = _get_client()
@@ -82,7 +82,7 @@ def register_generated_tools(mcp, _get_client):
             return f'Error: {e}'
 
 
-    @mcp.tool(annotations=ToolAnnotations(title='Create group', readOnlyHint=False, destructiveHint=True))
+    @mcp.tool(annotations=ToolAnnotations(title='Create group', readOnlyHint=False, destructiveHint=True, openWorldHint=True))
     def account_groups_create_account_group(name: str, account_ids: list[str] | None, profile_id: str | None = None) -> str:
         """Create group
 
@@ -99,7 +99,7 @@ def register_generated_tools(mcp, _get_client):
             return f'Error: {e}'
 
 
-    @mcp.tool(annotations=ToolAnnotations(title='Update group', readOnlyHint=False, destructiveHint=True))
+    @mcp.tool(annotations=ToolAnnotations(title='Update group', readOnlyHint=False, destructiveHint=True, openWorldHint=True))
     def account_groups_update_account_group(group_id: str, name: str | None = None, account_ids: list[str] | None = None) -> str:
         """Update group
 
@@ -115,7 +115,7 @@ def register_generated_tools(mcp, _get_client):
             return f'Error: {e}'
 
 
-    @mcp.tool(annotations=ToolAnnotations(title='Delete group', readOnlyHint=False, destructiveHint=True))
+    @mcp.tool(annotations=ToolAnnotations(title='Delete group', readOnlyHint=False, destructiveHint=True, openWorldHint=True))
     def account_groups_delete_account_group(group_id: str) -> str:
         """Delete group
 
@@ -131,7 +131,7 @@ def register_generated_tools(mcp, _get_client):
     # ACCOUNT_SETTINGS
 
 
-    @mcp.tool(annotations=ToolAnnotations(title='Get FB persistent menu', readOnlyHint=True, destructiveHint=False))
+    @mcp.tool(annotations=ToolAnnotations(title='Get FB persistent menu', readOnlyHint=True, destructiveHint=False, openWorldHint=False))
     def account_settings_get_messenger_menu(account_id: str) -> str:
         """Get FB persistent menu
 
@@ -145,7 +145,7 @@ def register_generated_tools(mcp, _get_client):
             return f'Error: {e}'
 
 
-    @mcp.tool(annotations=ToolAnnotations(title='Set FB persistent menu', readOnlyHint=False, destructiveHint=True))
+    @mcp.tool(annotations=ToolAnnotations(title='Set FB persistent menu', readOnlyHint=False, destructiveHint=True, openWorldHint=True))
     def account_settings_set_messenger_menu(account_id: str, persistent_menu: list[dict[str, Any]] | None) -> str:
         """Set FB persistent menu
 
@@ -160,7 +160,7 @@ def register_generated_tools(mcp, _get_client):
             return f'Error: {e}'
 
 
-    @mcp.tool(annotations=ToolAnnotations(title='Delete FB persistent menu', readOnlyHint=False, destructiveHint=True))
+    @mcp.tool(annotations=ToolAnnotations(title='Delete FB persistent menu', readOnlyHint=False, destructiveHint=True, openWorldHint=True))
     def account_settings_delete_messenger_menu(account_id: str) -> str:
         """Delete FB persistent menu
 
@@ -174,7 +174,7 @@ def register_generated_tools(mcp, _get_client):
             return f'Error: {e}'
 
 
-    @mcp.tool(annotations=ToolAnnotations(title='Get IG ice breakers', readOnlyHint=True, destructiveHint=False))
+    @mcp.tool(annotations=ToolAnnotations(title='Get IG ice breakers', readOnlyHint=True, destructiveHint=False, openWorldHint=False))
     def account_settings_get_instagram_ice_breakers(account_id: str) -> str:
         """Get IG ice breakers
 
@@ -188,7 +188,7 @@ def register_generated_tools(mcp, _get_client):
             return f'Error: {e}'
 
 
-    @mcp.tool(annotations=ToolAnnotations(title='Set IG ice breakers', readOnlyHint=False, destructiveHint=True))
+    @mcp.tool(annotations=ToolAnnotations(title='Set IG ice breakers', readOnlyHint=False, destructiveHint=True, openWorldHint=True))
     def account_settings_set_instagram_ice_breakers(account_id: str, ice_breakers: list[dict[str, Any]] | None) -> str:
         """Set IG ice breakers
 
@@ -203,7 +203,7 @@ def register_generated_tools(mcp, _get_client):
             return f'Error: {e}'
 
 
-    @mcp.tool(annotations=ToolAnnotations(title='Delete IG ice breakers', readOnlyHint=False, destructiveHint=True))
+    @mcp.tool(annotations=ToolAnnotations(title='Delete IG ice breakers', readOnlyHint=False, destructiveHint=True, openWorldHint=True))
     def account_settings_delete_instagram_ice_breakers(account_id: str) -> str:
         """Delete IG ice breakers
 
@@ -217,7 +217,7 @@ def register_generated_tools(mcp, _get_client):
             return f'Error: {e}'
 
 
-    @mcp.tool(annotations=ToolAnnotations(title='Get TG bot commands', readOnlyHint=True, destructiveHint=False))
+    @mcp.tool(annotations=ToolAnnotations(title='Get TG bot commands', readOnlyHint=True, destructiveHint=False, openWorldHint=False))
     def account_settings_get_telegram_commands(account_id: str) -> str:
         """Get TG bot commands
 
@@ -231,7 +231,7 @@ def register_generated_tools(mcp, _get_client):
             return f'Error: {e}'
 
 
-    @mcp.tool(annotations=ToolAnnotations(title='Set TG bot commands', readOnlyHint=False, destructiveHint=True))
+    @mcp.tool(annotations=ToolAnnotations(title='Set TG bot commands', readOnlyHint=False, destructiveHint=True, openWorldHint=True))
     def account_settings_set_telegram_commands(account_id: str, commands: list[dict[str, Any]] | None) -> str:
         """Set TG bot commands
 
@@ -246,7 +246,7 @@ def register_generated_tools(mcp, _get_client):
             return f'Error: {e}'
 
 
-    @mcp.tool(annotations=ToolAnnotations(title='Delete TG bot commands', readOnlyHint=False, destructiveHint=True))
+    @mcp.tool(annotations=ToolAnnotations(title='Delete TG bot commands', readOnlyHint=False, destructiveHint=True, openWorldHint=True))
     def account_settings_delete_telegram_commands(account_id: str) -> str:
         """Delete TG bot commands
 
@@ -262,7 +262,7 @@ def register_generated_tools(mcp, _get_client):
     # ACCOUNTS
 
 
-    @mcp.tool(annotations=ToolAnnotations(title='List accounts', readOnlyHint=True, destructiveHint=False))
+    @mcp.tool(annotations=ToolAnnotations(title='List accounts', readOnlyHint=True, destructiveHint=False, openWorldHint=False))
     def accounts_list_accounts(profile_id: str | None = None, platform: str | None = None, include_over_limit: bool = False, page: int | None = None, limit: int | None = None) -> str:
         """List accounts
 
@@ -280,7 +280,7 @@ def register_generated_tools(mcp, _get_client):
             return f'Error: {e}'
 
 
-    @mcp.tool(annotations=ToolAnnotations(title='Get follower stats', readOnlyHint=True, destructiveHint=False))
+    @mcp.tool(annotations=ToolAnnotations(title='Get follower stats', readOnlyHint=True, destructiveHint=False, openWorldHint=False))
     def accounts_get_follower_stats(account_ids: str | None = None, profile_id: str | None = None, from_date: str | None = None, to_date: str | None = None, granularity: str = "daily") -> str:
         """Get follower stats
 
@@ -298,7 +298,7 @@ def register_generated_tools(mcp, _get_client):
             return f'Error: {e}'
 
 
-    @mcp.tool(annotations=ToolAnnotations(title='Update account', readOnlyHint=False, destructiveHint=True))
+    @mcp.tool(annotations=ToolAnnotations(title='Update account', readOnlyHint=False, destructiveHint=True, openWorldHint=True))
     def accounts_update_account(account_id: str, username: str | None = None, display_name: str | None = None, x_capabilities: dict[str, Any] | None = None) -> str:
         """Update account
 
@@ -318,7 +318,7 @@ def register_generated_tools(mcp, _get_client):
             return f'Error: {e}'
 
 
-    @mcp.tool(annotations=ToolAnnotations(title='Move account to a different profile', readOnlyHint=False, destructiveHint=True))
+    @mcp.tool(annotations=ToolAnnotations(title='Move account to a different profile', readOnlyHint=False, destructiveHint=True, openWorldHint=True))
     def accounts_move_account_to_profile(account_id: str, profile_id: str) -> str:
         """Move account to a different profile
 
@@ -333,7 +333,7 @@ def register_generated_tools(mcp, _get_client):
             return f'Error: {e}'
 
 
-    @mcp.tool(annotations=ToolAnnotations(title='Disconnect account', readOnlyHint=False, destructiveHint=True))
+    @mcp.tool(annotations=ToolAnnotations(title='Disconnect account', readOnlyHint=False, destructiveHint=True, openWorldHint=True))
     def accounts_delete_account(account_id: str) -> str:
         """Disconnect account
 
@@ -347,7 +347,7 @@ def register_generated_tools(mcp, _get_client):
             return f'Error: {e}'
 
 
-    @mcp.tool(annotations=ToolAnnotations(title='Check accounts health', readOnlyHint=True, destructiveHint=False))
+    @mcp.tool(annotations=ToolAnnotations(title='Check accounts health', readOnlyHint=True, destructiveHint=False, openWorldHint=False))
     def accounts_get_all_accounts_health(profile_id: str | None = None, platform: str | None = None, status: str | None = None) -> str:
         """Check accounts health
 
@@ -363,7 +363,7 @@ def register_generated_tools(mcp, _get_client):
             return f'Error: {e}'
 
 
-    @mcp.tool(annotations=ToolAnnotations(title='Check account health', readOnlyHint=True, destructiveHint=False))
+    @mcp.tool(annotations=ToolAnnotations(title='Check account health', readOnlyHint=True, destructiveHint=False, openWorldHint=False))
     def accounts_get_account_health(account_id: str) -> str:
         """Check account health
 
@@ -377,7 +377,7 @@ def register_generated_tools(mcp, _get_client):
             return f'Error: {e}'
 
 
-    @mcp.tool(annotations=ToolAnnotations(title='Get TikTok creator info', readOnlyHint=True, destructiveHint=False))
+    @mcp.tool(annotations=ToolAnnotations(title='Get TikTok creator info', readOnlyHint=True, destructiveHint=False, openWorldHint=False))
     def accounts_get_tik_tok_creator_info(account_id: str, media_type: str = "video") -> str:
         """Get TikTok creator info
 
@@ -392,7 +392,7 @@ def register_generated_tools(mcp, _get_client):
             return f'Error: {e}'
 
 
-    @mcp.tool(annotations=ToolAnnotations(title='Get reviews', readOnlyHint=True, destructiveHint=False))
+    @mcp.tool(annotations=ToolAnnotations(title='Get reviews', readOnlyHint=True, destructiveHint=False, openWorldHint=False))
     def accounts_get_google_business_reviews(account_id: str, location_id: str | None = None, page_size: int = 50, page_token: str | None = None) -> str:
         """Get reviews
 
@@ -409,7 +409,7 @@ def register_generated_tools(mcp, _get_client):
             return f'Error: {e}'
 
 
-    @mcp.tool(annotations=ToolAnnotations(title='Get food menus', readOnlyHint=True, destructiveHint=False))
+    @mcp.tool(annotations=ToolAnnotations(title='Get food menus', readOnlyHint=True, destructiveHint=False, openWorldHint=False))
     def accounts_get_google_business_food_menus(account_id: str, location_id: str | None = None) -> str:
         """Get food menus
 
@@ -424,7 +424,7 @@ def register_generated_tools(mcp, _get_client):
             return f'Error: {e}'
 
 
-    @mcp.tool(annotations=ToolAnnotations(title='Update food menus', readOnlyHint=False, destructiveHint=True))
+    @mcp.tool(annotations=ToolAnnotations(title='Update food menus', readOnlyHint=False, destructiveHint=True, openWorldHint=True))
     def accounts_update_google_business_food_menus(account_id: str, menus: list[dict[str, Any]] | None, location_id: str | None = None, update_mask: str | None = None) -> str:
         """Update food menus
 
@@ -441,7 +441,7 @@ def register_generated_tools(mcp, _get_client):
             return f'Error: {e}'
 
 
-    @mcp.tool(annotations=ToolAnnotations(title='Get location details', readOnlyHint=True, destructiveHint=False))
+    @mcp.tool(annotations=ToolAnnotations(title='Get location details', readOnlyHint=True, destructiveHint=False, openWorldHint=False))
     def accounts_get_google_business_location_details(account_id: str, location_id: str | None = None, read_mask: str | None = None) -> str:
         """Get location details
 
@@ -459,7 +459,7 @@ def register_generated_tools(mcp, _get_client):
             return f'Error: {e}'
 
 
-    @mcp.tool(annotations=ToolAnnotations(title='Update location details', readOnlyHint=False, destructiveHint=True))
+    @mcp.tool(annotations=ToolAnnotations(title='Update location details', readOnlyHint=False, destructiveHint=True, openWorldHint=True))
     def accounts_update_google_business_location_details(account_id: str, update_mask: str, location_id: str | None = None, regular_hours: dict[str, Any] | None = None, special_hours: dict[str, Any] | None = None, profile: dict[str, Any] | None = None, website_uri: str | None = None, phone_numbers: dict[str, Any] | None = None, categories: dict[str, Any] | None = None, service_items: list[dict[str, Any]] | None = None) -> str:
         """Update location details
 
@@ -482,7 +482,7 @@ def register_generated_tools(mcp, _get_client):
             return f'Error: {e}'
 
 
-    @mcp.tool(annotations=ToolAnnotations(title='List media', readOnlyHint=True, destructiveHint=False))
+    @mcp.tool(annotations=ToolAnnotations(title='List media', readOnlyHint=True, destructiveHint=False, openWorldHint=False))
     def accounts_list_google_business_media(account_id: str, location_id: str | None = None, page_size: int = 100, page_token: str | None = None) -> str:
         """List media
 
@@ -499,7 +499,7 @@ def register_generated_tools(mcp, _get_client):
             return f'Error: {e}'
 
 
-    @mcp.tool(annotations=ToolAnnotations(title='Upload photo', readOnlyHint=False, destructiveHint=True))
+    @mcp.tool(annotations=ToolAnnotations(title='Upload photo', readOnlyHint=False, destructiveHint=True, openWorldHint=True))
     def accounts_create_google_business_media(account_id: str, source_url: str, location_id: str | None = None, media_format: str = "PHOTO", description: str | None = None, category: str | None = None) -> str:
         """Upload photo
 
@@ -518,7 +518,7 @@ def register_generated_tools(mcp, _get_client):
             return f'Error: {e}'
 
 
-    @mcp.tool(annotations=ToolAnnotations(title='Delete photo', readOnlyHint=False, destructiveHint=True))
+    @mcp.tool(annotations=ToolAnnotations(title='Delete photo', readOnlyHint=False, destructiveHint=True, openWorldHint=True))
     def accounts_delete_google_business_media(account_id: str, media_id: str, location_id: str | None = None) -> str:
         """Delete photo
 
@@ -534,7 +534,7 @@ def register_generated_tools(mcp, _get_client):
             return f'Error: {e}'
 
 
-    @mcp.tool(annotations=ToolAnnotations(title='Get attributes', readOnlyHint=True, destructiveHint=False))
+    @mcp.tool(annotations=ToolAnnotations(title='Get attributes', readOnlyHint=True, destructiveHint=False, openWorldHint=False))
     def accounts_get_google_business_attributes(account_id: str, location_id: str | None = None) -> str:
         """Get attributes
 
@@ -549,7 +549,7 @@ def register_generated_tools(mcp, _get_client):
             return f'Error: {e}'
 
 
-    @mcp.tool(annotations=ToolAnnotations(title='Update attributes', readOnlyHint=False, destructiveHint=True))
+    @mcp.tool(annotations=ToolAnnotations(title='Update attributes', readOnlyHint=False, destructiveHint=True, openWorldHint=True))
     def accounts_update_google_business_attributes(account_id: str, attributes: list[dict[str, Any]] | None, attribute_mask: str, location_id: str | None = None) -> str:
         """Update attributes
 
@@ -566,7 +566,7 @@ def register_generated_tools(mcp, _get_client):
             return f'Error: {e}'
 
 
-    @mcp.tool(annotations=ToolAnnotations(title='List action links', readOnlyHint=True, destructiveHint=False))
+    @mcp.tool(annotations=ToolAnnotations(title='List action links', readOnlyHint=True, destructiveHint=False, openWorldHint=False))
     def accounts_list_google_business_place_actions(account_id: str, location_id: str | None = None, page_size: int = 100, page_token: str | None = None) -> str:
         """List action links
 
@@ -583,7 +583,7 @@ def register_generated_tools(mcp, _get_client):
             return f'Error: {e}'
 
 
-    @mcp.tool(annotations=ToolAnnotations(title='Create action link', readOnlyHint=False, destructiveHint=True))
+    @mcp.tool(annotations=ToolAnnotations(title='Create action link', readOnlyHint=False, destructiveHint=True, openWorldHint=True))
     def accounts_create_google_business_place_action(account_id: str, uri: str, place_action_type: str, location_id: str | None = None) -> str:
         """Create action link
 
@@ -600,7 +600,7 @@ def register_generated_tools(mcp, _get_client):
             return f'Error: {e}'
 
 
-    @mcp.tool(annotations=ToolAnnotations(title='Delete action link', readOnlyHint=False, destructiveHint=True))
+    @mcp.tool(annotations=ToolAnnotations(title='Delete action link', readOnlyHint=False, destructiveHint=True, openWorldHint=True))
     def accounts_delete_google_business_place_action(account_id: str, name: str, location_id: str | None = None) -> str:
         """Delete action link
 
@@ -616,7 +616,7 @@ def register_generated_tools(mcp, _get_client):
             return f'Error: {e}'
 
 
-    @mcp.tool(annotations=ToolAnnotations(title='Update action link', readOnlyHint=False, destructiveHint=True))
+    @mcp.tool(annotations=ToolAnnotations(title='Update action link', readOnlyHint=False, destructiveHint=True, openWorldHint=True))
     def accounts_update_google_business_place_action(account_id: str, name: str, location_id: str | None = None, uri: str | None = None, place_action_type: str | None = None) -> str:
         """Update action link
 
@@ -634,7 +634,7 @@ def register_generated_tools(mcp, _get_client):
             return f'Error: {e}'
 
 
-    @mcp.tool(annotations=ToolAnnotations(title='Batch get reviews', readOnlyHint=False, destructiveHint=True))
+    @mcp.tool(annotations=ToolAnnotations(title='Batch get reviews', readOnlyHint=False, destructiveHint=True, openWorldHint=True))
     def accounts_batch_get_google_business_reviews(account_id: str, location_names: list[str] | None, page_size: int = 50, page_token: str | None = None) -> str:
         """Batch get reviews
 
@@ -651,7 +651,7 @@ def register_generated_tools(mcp, _get_client):
             return f'Error: {e}'
 
 
-    @mcp.tool(annotations=ToolAnnotations(title='Reply to a review', readOnlyHint=False, destructiveHint=True))
+    @mcp.tool(annotations=ToolAnnotations(title='Reply to a review', readOnlyHint=False, destructiveHint=True, openWorldHint=True))
     def accounts_reply_to_google_business_review(account_id: str, review_id: str, comment: str) -> str:
         """Reply to a review
 
@@ -667,7 +667,7 @@ def register_generated_tools(mcp, _get_client):
             return f'Error: {e}'
 
 
-    @mcp.tool(annotations=ToolAnnotations(title='Delete a review reply', readOnlyHint=False, destructiveHint=True))
+    @mcp.tool(annotations=ToolAnnotations(title='Delete a review reply', readOnlyHint=False, destructiveHint=True, openWorldHint=True))
     def accounts_delete_google_business_review_reply(account_id: str, review_id: str) -> str:
         """Delete a review reply
 
@@ -682,7 +682,7 @@ def register_generated_tools(mcp, _get_client):
             return f'Error: {e}'
 
 
-    @mcp.tool(annotations=ToolAnnotations(title='Resolve LinkedIn mention', readOnlyHint=True, destructiveHint=False))
+    @mcp.tool(annotations=ToolAnnotations(title='Resolve LinkedIn mention', readOnlyHint=True, destructiveHint=False, openWorldHint=False))
     def accounts_get_linked_in_mentions(account_id: str, url: str, display_name: str | None = None) -> str:
         """Resolve LinkedIn mention
 
@@ -700,7 +700,7 @@ def register_generated_tools(mcp, _get_client):
     # AD_AUDIENCES
 
 
-    @mcp.tool(annotations=ToolAnnotations(title='List custom audiences', readOnlyHint=True, destructiveHint=False))
+    @mcp.tool(annotations=ToolAnnotations(title='List custom audiences', readOnlyHint=True, destructiveHint=False, openWorldHint=False))
     def ad_audiences_list_ad_audiences(account_id: str, ad_account_id: str, platform: str | None = None) -> str:
         """List custom audiences
 
@@ -716,7 +716,7 @@ def register_generated_tools(mcp, _get_client):
             return f'Error: {e}'
 
 
-    @mcp.tool(annotations=ToolAnnotations(title='Create custom audience', readOnlyHint=False, destructiveHint=True))
+    @mcp.tool(annotations=ToolAnnotations(title='Create custom audience', readOnlyHint=False, destructiveHint=True, openWorldHint=True))
     def ad_audiences_create_ad_audience(account_id: str, ad_account_id: str, name: str, type: str, description: str | None = None, pixel_id: str | None = None, retention_days: int | None = None, source_audience_id: str | None = None, country: str | None = None, ratio: float | None = None, rule: dict[str, Any] | None = None, customer_file_source: str | None = None) -> str:
         """Create custom audience
 
@@ -741,7 +741,7 @@ def register_generated_tools(mcp, _get_client):
             return f'Error: {e}'
 
 
-    @mcp.tool(annotations=ToolAnnotations(title='Get audience details', readOnlyHint=True, destructiveHint=False))
+    @mcp.tool(annotations=ToolAnnotations(title='Get audience details', readOnlyHint=True, destructiveHint=False, openWorldHint=False))
     def ad_audiences_get_ad_audience(audience_id: str) -> str:
         """Get audience details
 
@@ -755,7 +755,7 @@ def register_generated_tools(mcp, _get_client):
             return f'Error: {e}'
 
 
-    @mcp.tool(annotations=ToolAnnotations(title='Delete custom audience', readOnlyHint=False, destructiveHint=True))
+    @mcp.tool(annotations=ToolAnnotations(title='Delete custom audience', readOnlyHint=False, destructiveHint=True, openWorldHint=True))
     def ad_audiences_delete_ad_audience(audience_id: str) -> str:
         """Delete custom audience
 
@@ -769,7 +769,7 @@ def register_generated_tools(mcp, _get_client):
             return f'Error: {e}'
 
 
-    @mcp.tool(annotations=ToolAnnotations(title='Add users to audience', readOnlyHint=False, destructiveHint=True))
+    @mcp.tool(annotations=ToolAnnotations(title='Add users to audience', readOnlyHint=False, destructiveHint=True, openWorldHint=True))
     def ad_audiences_add_users_to_ad_audience(audience_id: str, users: list[dict[str, Any]] | None) -> str:
         """Add users to audience
 
@@ -786,7 +786,7 @@ def register_generated_tools(mcp, _get_client):
     # AD_CAMPAIGNS
 
 
-    @mcp.tool(annotations=ToolAnnotations(title='List campaigns', readOnlyHint=True, destructiveHint=False))
+    @mcp.tool(annotations=ToolAnnotations(title='List campaigns', readOnlyHint=True, destructiveHint=False, openWorldHint=False))
     def ad_campaigns_list_ad_campaigns(page: int = 1, limit: int = 20, source: str = "all", platform: str | None = None, status: str | None = None, ad_account_id: str | None = None, account_id: str | None = None, profile_id: str | None = None, from_date: str | None = None, to_date: str | None = None) -> str:
         """List campaigns
 
@@ -809,7 +809,7 @@ def register_generated_tools(mcp, _get_client):
             return f'Error: {e}'
 
 
-    @mcp.tool(annotations=ToolAnnotations(title='Pause or resume a campaign', readOnlyHint=False, destructiveHint=True))
+    @mcp.tool(annotations=ToolAnnotations(title='Pause or resume a campaign', readOnlyHint=False, destructiveHint=True, openWorldHint=True))
     def ad_campaigns_update_ad_campaign_status(campaign_id: str, status: str, platform: str) -> str:
         """Pause or resume a campaign
 
@@ -825,7 +825,7 @@ def register_generated_tools(mcp, _get_client):
             return f'Error: {e}'
 
 
-    @mcp.tool(annotations=ToolAnnotations(title='Update a campaign (budget and/or bid strategy)', readOnlyHint=False, destructiveHint=True))
+    @mcp.tool(annotations=ToolAnnotations(title='Update a campaign (budget and/or bid strategy)', readOnlyHint=False, destructiveHint=True, openWorldHint=True))
     def ad_campaigns_update_ad_campaign(campaign_id: str, platform: str, budget: dict[str, Any] | None = None, bid_strategy: str | None = None) -> str:
         """Update a campaign (budget and/or bid strategy)
 
@@ -842,7 +842,7 @@ def register_generated_tools(mcp, _get_client):
             return f'Error: {e}'
 
 
-    @mcp.tool(annotations=ToolAnnotations(title='Delete a campaign', readOnlyHint=False, destructiveHint=True))
+    @mcp.tool(annotations=ToolAnnotations(title='Delete a campaign', readOnlyHint=False, destructiveHint=True, openWorldHint=True))
     def ad_campaigns_delete_ad_campaign(campaign_id: str, platform: str) -> str:
         """Delete a campaign
 
@@ -857,7 +857,7 @@ def register_generated_tools(mcp, _get_client):
             return f'Error: {e}'
 
 
-    @mcp.tool(annotations=ToolAnnotations(title='Pause or resume many campaigns', readOnlyHint=False, destructiveHint=True))
+    @mcp.tool(annotations=ToolAnnotations(title='Pause or resume many campaigns', readOnlyHint=False, destructiveHint=True, openWorldHint=True))
     def ad_campaigns_bulk_update_ad_campaign_status(status: str, campaigns: list[dict[str, Any]] | None) -> str:
         """Pause or resume many campaigns
 
@@ -872,7 +872,7 @@ def register_generated_tools(mcp, _get_client):
             return f'Error: {e}'
 
 
-    @mcp.tool(annotations=ToolAnnotations(title='Duplicate a campaign', readOnlyHint=False, destructiveHint=True))
+    @mcp.tool(annotations=ToolAnnotations(title='Duplicate a campaign', readOnlyHint=False, destructiveHint=True, openWorldHint=True))
     def ad_campaigns_duplicate_ad_campaign(campaign_id: str, platform: str, deep_copy: bool = True, status_option: str = "PAUSED", start_time: str | None = None, end_time: str | None = None, rename_strategy: str | None = None, rename_prefix: str | None = None, rename_suffix: str | None = None, sync_after: bool = True) -> str:
         """Duplicate a campaign
 
@@ -895,7 +895,7 @@ def register_generated_tools(mcp, _get_client):
             return f'Error: {e}'
 
 
-    @mcp.tool(annotations=ToolAnnotations(title='Update an ad set (budget, status, and/or bid strategy)', readOnlyHint=False, destructiveHint=True))
+    @mcp.tool(annotations=ToolAnnotations(title='Update an ad set (budget, status, and/or bid strategy)', readOnlyHint=False, destructiveHint=True, openWorldHint=True))
     def ad_campaigns_update_ad_set(ad_set_id: str, platform: str, budget: dict[str, Any] | None = None, status: str | None = None, bid_strategy: str | None = None, bid_amount: float | None = None, roas_average_floor: float | None = None) -> str:
         """Update an ad set (budget, status, and/or bid strategy)
 
@@ -922,7 +922,7 @@ def register_generated_tools(mcp, _get_client):
             return f'Error: {e}'
 
 
-    @mcp.tool(annotations=ToolAnnotations(title='Pause or resume a single ad set', readOnlyHint=False, destructiveHint=True))
+    @mcp.tool(annotations=ToolAnnotations(title='Pause or resume a single ad set', readOnlyHint=False, destructiveHint=True, openWorldHint=True))
     def ad_campaigns_update_ad_set_status(ad_set_id: str, status: str, platform: str) -> str:
         """Pause or resume a single ad set
 
@@ -938,7 +938,7 @@ def register_generated_tools(mcp, _get_client):
             return f'Error: {e}'
 
 
-    @mcp.tool(annotations=ToolAnnotations(title='Get campaign tree', readOnlyHint=True, destructiveHint=False))
+    @mcp.tool(annotations=ToolAnnotations(title='Get campaign tree', readOnlyHint=True, destructiveHint=False, openWorldHint=False))
     def ad_campaigns_get_ad_tree(page: int = 1, limit: int = 20, source: str = "all", platform: str | None = None, status: str | None = None, ad_account_id: str | None = None, account_id: str | None = None, profile_id: str | None = None, from_date: str | None = None, to_date: str | None = None, sort: str = "newest") -> str:
         """Get campaign tree
 
@@ -962,7 +962,7 @@ def register_generated_tools(mcp, _get_client):
             return f'Error: {e}'
 
 
-    @mcp.tool(annotations=ToolAnnotations(title='Get daily aggregate ad metrics for an account', readOnlyHint=True, destructiveHint=False))
+    @mcp.tool(annotations=ToolAnnotations(title='Get daily aggregate ad metrics for an account', readOnlyHint=True, destructiveHint=False, openWorldHint=False))
     def ad_campaigns_get_ads_timeline(account_id: str, ad_account_id: str | None = None, from_date: str | None = None, to_date: str | None = None, platform: str | None = None) -> str:
         """Get daily aggregate ad metrics for an account
 
@@ -982,7 +982,7 @@ def register_generated_tools(mcp, _get_client):
     # ADS
 
 
-    @mcp.tool(annotations=ToolAnnotations(title='List ads', readOnlyHint=True, destructiveHint=False))
+    @mcp.tool(annotations=ToolAnnotations(title='List ads', readOnlyHint=True, destructiveHint=False, openWorldHint=False))
     def ads_list_ads(page: int = 1, limit: int = 50, source: str = "all", status: str | None = None, platform: str | None = None, account_id: str | None = None, ad_account_id: str | None = None, profile_id: str | None = None, campaign_id: str | None = None, platform_ad_id: str | None = None, effective_object_story_id: str | None = None, effective_instagram_media_id: str | None = None, from_date: str | None = None, to_date: str | None = None) -> str:
         """List ads
 
@@ -1009,7 +1009,7 @@ def register_generated_tools(mcp, _get_client):
             return f'Error: {e}'
 
 
-    @mcp.tool(annotations=ToolAnnotations(title='Get ad details', readOnlyHint=True, destructiveHint=False))
+    @mcp.tool(annotations=ToolAnnotations(title='Get ad details', readOnlyHint=True, destructiveHint=False, openWorldHint=False))
     def ads_get_ad(ad_id: str) -> str:
         """Get ad details
 
@@ -1024,7 +1024,7 @@ def register_generated_tools(mcp, _get_client):
             return f'Error: {e}'
 
 
-    @mcp.tool(annotations=ToolAnnotations(title='Update ad', readOnlyHint=False, destructiveHint=True))
+    @mcp.tool(annotations=ToolAnnotations(title='Update ad', readOnlyHint=False, destructiveHint=True, openWorldHint=True))
     def ads_update_ad(ad_id: str, status: str | None = None, budget: dict[str, Any] | None = None, targeting: dict[str, Any] | None = None, creative: dict[str, Any] | None = None, name: str | None = None) -> str:
         """Update ad
 
@@ -1050,7 +1050,7 @@ def register_generated_tools(mcp, _get_client):
             return f'Error: {e}'
 
 
-    @mcp.tool(annotations=ToolAnnotations(title='Cancel an ad', readOnlyHint=False, destructiveHint=True))
+    @mcp.tool(annotations=ToolAnnotations(title='Cancel an ad', readOnlyHint=False, destructiveHint=True, openWorldHint=True))
     def ads_delete_ad(ad_id: str) -> str:
         """Cancel an ad
 
@@ -1064,7 +1064,7 @@ def register_generated_tools(mcp, _get_client):
             return f'Error: {e}'
 
 
-    @mcp.tool(annotations=ToolAnnotations(title='Get ad analytics', readOnlyHint=True, destructiveHint=False))
+    @mcp.tool(annotations=ToolAnnotations(title='Get ad analytics', readOnlyHint=True, destructiveHint=False, openWorldHint=False))
     def ads_get_ad_analytics(ad_id: str, from_date: str | None = None, to_date: str | None = None, breakdowns: str | None = None) -> str:
         """Get ad analytics
 
@@ -1081,7 +1081,7 @@ def register_generated_tools(mcp, _get_client):
             return f'Error: {e}'
 
 
-    @mcp.tool(annotations=ToolAnnotations(title='List comments on an ad', readOnlyHint=True, destructiveHint=False))
+    @mcp.tool(annotations=ToolAnnotations(title='List comments on an ad', readOnlyHint=True, destructiveHint=False, openWorldHint=False))
     def ads_get_ad_comments(ad_id: str, placement: str | None = None, limit: int = 25, cursor: str | None = None) -> str:
         """List comments on an ad
 
@@ -1098,7 +1098,7 @@ def register_generated_tools(mcp, _get_client):
             return f'Error: {e}'
 
 
-    @mcp.tool(annotations=ToolAnnotations(title='List TikTok Business Centers', readOnlyHint=True, destructiveHint=False))
+    @mcp.tool(annotations=ToolAnnotations(title='List TikTok Business Centers', readOnlyHint=True, destructiveHint=False, openWorldHint=False))
     def ads_list_ads_business_centers(account_id: str) -> str:
         """List TikTok Business Centers
 
@@ -1112,7 +1112,7 @@ def register_generated_tools(mcp, _get_client):
             return f'Error: {e}'
 
 
-    @mcp.tool(annotations=ToolAnnotations(title='List ad accounts', readOnlyHint=True, destructiveHint=False))
+    @mcp.tool(annotations=ToolAnnotations(title='List ad accounts', readOnlyHint=True, destructiveHint=False, openWorldHint=False))
     def ads_list_ad_accounts(account_id: str, ad_account_id: str | None = None, limit: int | None = None) -> str:
         """List ad accounts
 
@@ -1128,7 +1128,7 @@ def register_generated_tools(mcp, _get_client):
             return f'Error: {e}'
 
 
-    @mcp.tool(annotations=ToolAnnotations(title='Boost post as ad', readOnlyHint=False, destructiveHint=True))
+    @mcp.tool(annotations=ToolAnnotations(title='Boost post as ad', readOnlyHint=False, destructiveHint=True, openWorldHint=True))
     def ads_boost_post(account_id: str, ad_account_id: str, name: str, goal: str, budget: dict[str, Any] | None, post_id: str | None = None, platform_post_id: str | None = None, currency: str | None = None, schedule: dict[str, Any] | None = None, targeting: dict[str, Any] | None = None, bid_strategy: str | None = None, bid_amount: float | None = None, roas_average_floor: float | None = None, tracking: dict[str, Any] | None = None, special_ad_categories: list[str] | None = None, link_url: str | None = None, call_to_action: str | None = None, spark_auth_code: str | None = None, dsa_beneficiary: str | None = None, dsa_payor: str | None = None) -> str:
         """Boost post as ad
 
@@ -1183,7 +1183,7 @@ def register_generated_tools(mcp, _get_client):
             return f'Error: {e}'
 
 
-    @mcp.tool(annotations=ToolAnnotations(title='Create standalone ad', readOnlyHint=False, destructiveHint=True))
+    @mcp.tool(annotations=ToolAnnotations(title='Create standalone ad', readOnlyHint=False, destructiveHint=True, openWorldHint=True))
     def ads_create_standalone_ad(account_id: str, ad_account_id: str, name: str, goal: str | None = None, budget_amount: float | None = None, budget_type: str | None = None, currency: str | None = None, headline: str | None = None, long_headline: str | None = None, body: str | None = None, call_to_action: str | None = None, link_url: str | None = None, image_url: str | None = None, images: dict[str, Any] | None = None, video: dict[str, Any] | None = None, creatives: list[dict[str, Any]] | None = None, ad_set_id: str | None = None, business_name: str | None = None, board_id: str | None = None, organization_id: str | None = None, countries: list[str] | None = None, cities: list[dict[str, Any]] | None = None, regions: list[dict[str, Any]] | None = None, age_min: int | None = None, age_max: int | None = None, interests: list[dict[str, Any]] | None = None, end_date: str | None = None, audience_id: str | None = None, campaign_type: str = "display", keywords: list[str] | None = None, additional_headlines: list[str] | None = None, additional_descriptions: list[str] | None = None, advantage_audience: int | None = None, attribution_spec: list[dict[str, Any]] | None = None, gender: str = "all", bid_strategy: str | None = None, bid_amount: float | None = None, roas_average_floor: float | None = None, dsa_beneficiary: str | None = None, dsa_payor: str | None = None, brand_identity: dict[str, Any] | None = None, identity_type: str | None = None, promoted_object: dict[str, Any] | None = None) -> str:
         """Create standalone ad
 
@@ -1312,7 +1312,7 @@ def register_generated_tools(mcp, _get_client):
             return f'Error: {e}'
 
 
-    @mcp.tool(annotations=ToolAnnotations(title='Search targeting interests', readOnlyHint=True, destructiveHint=False))
+    @mcp.tool(annotations=ToolAnnotations(title='Search targeting interests', readOnlyHint=True, destructiveHint=False, openWorldHint=False))
     def ads_search_ad_interests(q: str, account_id: str) -> str:
         """Search targeting interests
 
@@ -1327,7 +1327,7 @@ def register_generated_tools(mcp, _get_client):
             return f'Error: {e}'
 
 
-    @mcp.tool(annotations=ToolAnnotations(title='Search geo targeting locations (Meta)', readOnlyHint=True, destructiveHint=False))
+    @mcp.tool(annotations=ToolAnnotations(title='Search geo targeting locations (Meta)', readOnlyHint=True, destructiveHint=False, openWorldHint=False))
     def ads_search_ad_targeting_locations(account_id: str, q: str, type: str = "city", country_code: str | None = None, limit: int = 25) -> str:
         """Search geo targeting locations (Meta)
 
@@ -1345,7 +1345,7 @@ def register_generated_tools(mcp, _get_client):
             return f'Error: {e}'
 
 
-    @mcp.tool(annotations=ToolAnnotations(title='Send conversion events to an ad platform', readOnlyHint=False, destructiveHint=True))
+    @mcp.tool(annotations=ToolAnnotations(title='Send conversion events to an ad platform', readOnlyHint=False, destructiveHint=True, openWorldHint=True))
     def ads_send_conversions(account_id: str, destination_id: str, events: list[dict[str, Any]] | None, test_code: str | None = None, consent: dict[str, Any] | None = None) -> str:
         """Send conversion events to an ad platform
 
@@ -1369,7 +1369,7 @@ def register_generated_tools(mcp, _get_client):
             return f'Error: {e}'
 
 
-    @mcp.tool(annotations=ToolAnnotations(title='List destinations for the Conversions API', readOnlyHint=True, destructiveHint=False))
+    @mcp.tool(annotations=ToolAnnotations(title='List destinations for the Conversions API', readOnlyHint=True, destructiveHint=False, openWorldHint=False))
     def ads_list_conversion_destinations(account_id: str) -> str:
         """List destinations for the Conversions API
 
@@ -1383,7 +1383,7 @@ def register_generated_tools(mcp, _get_client):
             return f'Error: {e}'
 
 
-    @mcp.tool(annotations=ToolAnnotations(title='Create a conversion destination (LinkedIn)', readOnlyHint=False, destructiveHint=True))
+    @mcp.tool(annotations=ToolAnnotations(title='Create a conversion destination (LinkedIn)', readOnlyHint=False, destructiveHint=True, openWorldHint=True))
     def ads_create_conversion_destination(account_id: str, ad_account_id: str, name: str, type: str, attribution_type: str | None = None, post_click_attribution_window_size: int | None = None, view_through_attribution_window_size: int | None = None, value_type: str | None = None, value: dict[str, Any] | None = None, auto_association_type: str = "ALL_CAMPAIGNS") -> str:
         """Create a conversion destination (LinkedIn)
 
@@ -1427,7 +1427,7 @@ def register_generated_tools(mcp, _get_client):
             return f'Error: {e}'
 
 
-    @mcp.tool(annotations=ToolAnnotations(title='Fetch a single conversion destination', readOnlyHint=True, destructiveHint=False))
+    @mcp.tool(annotations=ToolAnnotations(title='Fetch a single conversion destination', readOnlyHint=True, destructiveHint=False, openWorldHint=False))
     def ads_get_conversion_destination(account_id: str, destination_id: str, ad_account_id: str) -> str:
         """Fetch a single conversion destination
 
@@ -1443,7 +1443,7 @@ def register_generated_tools(mcp, _get_client):
             return f'Error: {e}'
 
 
-    @mcp.tool(annotations=ToolAnnotations(title='Update a conversion destination', readOnlyHint=False, destructiveHint=True))
+    @mcp.tool(annotations=ToolAnnotations(title='Update a conversion destination', readOnlyHint=False, destructiveHint=True, openWorldHint=True))
     def ads_update_conversion_destination(account_id: str, destination_id: str, ad_account_id: str, name: str | None = None, enabled: bool | None = None, attribution_type: str | None = None, post_click_attribution_window_size: int | None = None, view_through_attribution_window_size: int | None = None, value_type: str | None = None, value: dict[str, Any] | None = None) -> str:
         """Update a conversion destination
 
@@ -1469,7 +1469,7 @@ def register_generated_tools(mcp, _get_client):
             return f'Error: {e}'
 
 
-    @mcp.tool(annotations=ToolAnnotations(title='Soft-delete a conversion destination', readOnlyHint=False, destructiveHint=True))
+    @mcp.tool(annotations=ToolAnnotations(title='Soft-delete a conversion destination', readOnlyHint=False, destructiveHint=True, openWorldHint=True))
     def ads_delete_conversion_destination(account_id: str, destination_id: str, ad_account_id: str | None = None) -> str:
         """Soft-delete a conversion destination
 
@@ -1485,7 +1485,7 @@ def register_generated_tools(mcp, _get_client):
             return f'Error: {e}'
 
 
-    @mcp.tool(annotations=ToolAnnotations(title='List campaigns associated with a conversion destination', readOnlyHint=True, destructiveHint=False))
+    @mcp.tool(annotations=ToolAnnotations(title='List campaigns associated with a conversion destination', readOnlyHint=True, destructiveHint=False, openWorldHint=False))
     def ads_list_conversion_associations(account_id: str, destination_id: str, ad_account_id: str) -> str:
         """List campaigns associated with a conversion destination
 
@@ -1501,7 +1501,7 @@ def register_generated_tools(mcp, _get_client):
             return f'Error: {e}'
 
 
-    @mcp.tool(annotations=ToolAnnotations(title='Associate campaigns with a conversion destination', readOnlyHint=False, destructiveHint=True))
+    @mcp.tool(annotations=ToolAnnotations(title='Associate campaigns with a conversion destination', readOnlyHint=False, destructiveHint=True, openWorldHint=True))
     def ads_add_conversion_associations(account_id: str, destination_id: str, ad_account_id: str, campaign_ids: list[str] | None) -> str:
         """Associate campaigns with a conversion destination
 
@@ -1518,7 +1518,7 @@ def register_generated_tools(mcp, _get_client):
             return f'Error: {e}'
 
 
-    @mcp.tool(annotations=ToolAnnotations(title='Remove campaign↔conversion associations', readOnlyHint=False, destructiveHint=True))
+    @mcp.tool(annotations=ToolAnnotations(title='Remove campaign↔conversion associations', readOnlyHint=False, destructiveHint=True, openWorldHint=True))
     def ads_remove_conversion_associations(account_id: str, destination_id: str, ad_account_id: str, campaign_ids: str) -> str:
         """Remove campaign↔conversion associations
 
@@ -1535,7 +1535,7 @@ def register_generated_tools(mcp, _get_client):
             return f'Error: {e}'
 
 
-    @mcp.tool(annotations=ToolAnnotations(title='Fetch attribution metrics for a conversion destination', readOnlyHint=True, destructiveHint=False))
+    @mcp.tool(annotations=ToolAnnotations(title='Fetch attribution metrics for a conversion destination', readOnlyHint=True, destructiveHint=False, openWorldHint=False))
     def ads_get_conversion_metrics(account_id: str, destination_id: str, ad_account_id: str, start_date: str, end_date: str | None = None, granularity: str = "DAILY") -> str:
         """Fetch attribution metrics for a conversion destination
 
@@ -1554,7 +1554,7 @@ def register_generated_tools(mcp, _get_client):
             return f'Error: {e}'
 
 
-    @mcp.tool(annotations=ToolAnnotations(title='Create Click-to-WhatsApp ad(s)', readOnlyHint=False, destructiveHint=True))
+    @mcp.tool(annotations=ToolAnnotations(title='Create Click-to-WhatsApp ad(s)', readOnlyHint=False, destructiveHint=True, openWorldHint=True))
     def ads_create_ctwa_ad(account_id: str, ad_account_id: str, name: str, budget_amount: float, budget_type: str, headline: str | None = None, body: str | None = None, image_url: str | None = None, video: dict[str, Any] | None = None, creatives: list[dict[str, Any]] | None = None, currency: str | None = None, end_date: str | None = None, countries: list[str] | None = None, age_min: int | None = None, age_max: int | None = None, interests: list[dict[str, Any]] | None = None, audience_id: str | None = None, advantage_audience: int | None = None, objective: str | None = None, bid_strategy: str | None = None, bid_amount: float | None = None, roas_average_floor: float | None = None, dsa_beneficiary: str | None = None, dsa_payor: str | None = None) -> str:
         """Create Click-to-WhatsApp ad(s)
 
@@ -1632,7 +1632,7 @@ def register_generated_tools(mcp, _get_client):
     # ANALYTICS
 
 
-    @mcp.tool(annotations=ToolAnnotations(title='Get post analytics', readOnlyHint=True, destructiveHint=False))
+    @mcp.tool(annotations=ToolAnnotations(title='Get post analytics', readOnlyHint=True, destructiveHint=False, openWorldHint=False))
     def analytics_get_analytics(post_id: str | None = None, platform: str | None = None, profile_id: str | None = None, account_id: str | None = None, source: str = "all", from_date: str | None = None, to_date: str | None = None, limit: int = 50, page: int = 1, sort_by: str = "date", order: str = "desc") -> str:
         """Get post analytics
 
@@ -1656,7 +1656,7 @@ def register_generated_tools(mcp, _get_client):
             return f'Error: {e}'
 
 
-    @mcp.tool(annotations=ToolAnnotations(title='Get YouTube channel-level insights', readOnlyHint=True, destructiveHint=False))
+    @mcp.tool(annotations=ToolAnnotations(title='Get YouTube channel-level insights', readOnlyHint=True, destructiveHint=False, openWorldHint=False))
     def analytics_get_you_tube_channel_insights(account_id: str, metrics: str | None = None, since: str | None = None, until: str | None = None, metric_type: str = "total_value") -> str:
         """Get YouTube channel-level insights
 
@@ -1689,7 +1689,7 @@ def register_generated_tools(mcp, _get_client):
             return f'Error: {e}'
 
 
-    @mcp.tool(annotations=ToolAnnotations(title='Get LinkedIn organization page aggregate analytics', readOnlyHint=True, destructiveHint=False))
+    @mcp.tool(annotations=ToolAnnotations(title='Get LinkedIn organization page aggregate analytics', readOnlyHint=True, destructiveHint=False, openWorldHint=False))
     def analytics_get_linked_in_org_aggregate_analytics(account_id: str, metrics: str | None = None, since: str | None = None, until: str | None = None, metric_type: str = "total_value") -> str:
         """Get LinkedIn organization page aggregate analytics
 
@@ -1732,7 +1732,7 @@ def register_generated_tools(mcp, _get_client):
             return f'Error: {e}'
 
 
-    @mcp.tool(annotations=ToolAnnotations(title='Get TikTok account-level insights', readOnlyHint=True, destructiveHint=False))
+    @mcp.tool(annotations=ToolAnnotations(title='Get TikTok account-level insights', readOnlyHint=True, destructiveHint=False, openWorldHint=False))
     def analytics_get_tik_tok_account_insights(account_id: str, metrics: str | None = None, since: str | None = None, until: str | None = None, metric_type: str = "total_value") -> str:
         """Get TikTok account-level insights
 
@@ -1762,7 +1762,7 @@ def register_generated_tools(mcp, _get_client):
             return f'Error: {e}'
 
 
-    @mcp.tool(annotations=ToolAnnotations(title='Get YouTube daily views', readOnlyHint=True, destructiveHint=False))
+    @mcp.tool(annotations=ToolAnnotations(title='Get YouTube daily views', readOnlyHint=True, destructiveHint=False, openWorldHint=False))
     def analytics_get_you_tube_daily_views(video_id: str, account_id: str, start_date: str | None = None, end_date: str | None = None) -> str:
         """Get YouTube daily views
 
@@ -1779,7 +1779,7 @@ def register_generated_tools(mcp, _get_client):
             return f'Error: {e}'
 
 
-    @mcp.tool(annotations=ToolAnnotations(title='Get Facebook Page insights', readOnlyHint=True, destructiveHint=False))
+    @mcp.tool(annotations=ToolAnnotations(title='Get Facebook Page insights', readOnlyHint=True, destructiveHint=False, openWorldHint=False))
     def analytics_get_facebook_page_insights(account_id: str, metrics: str | None = None, since: str | None = None, until: str | None = None, metric_type: str = "total_value") -> str:
         """Get Facebook Page insights
 
@@ -1812,7 +1812,7 @@ def register_generated_tools(mcp, _get_client):
             return f'Error: {e}'
 
 
-    @mcp.tool(annotations=ToolAnnotations(title='Get Instagram insights', readOnlyHint=True, destructiveHint=False))
+    @mcp.tool(annotations=ToolAnnotations(title='Get Instagram insights', readOnlyHint=True, destructiveHint=False, openWorldHint=False))
     def analytics_get_instagram_account_insights(account_id: str, metrics: str | None = None, since: str | None = None, until: str | None = None, metric_type: str = "total_value", breakdown: str | None = None) -> str:
         """Get Instagram insights
 
@@ -1839,7 +1839,7 @@ def register_generated_tools(mcp, _get_client):
             return f'Error: {e}'
 
 
-    @mcp.tool(annotations=ToolAnnotations(title='Get Instagram follower history', readOnlyHint=True, destructiveHint=False))
+    @mcp.tool(annotations=ToolAnnotations(title='Get Instagram follower history', readOnlyHint=True, destructiveHint=False, openWorldHint=False))
     def analytics_get_instagram_follower_history(account_id: str, metrics: str | None = None, since: str | None = None, until: str | None = None, metric_type: str = "total_value") -> str:
         """Get Instagram follower history
 
@@ -1861,7 +1861,7 @@ def register_generated_tools(mcp, _get_client):
             return f'Error: {e}'
 
 
-    @mcp.tool(annotations=ToolAnnotations(title='Get Instagram demographics', readOnlyHint=True, destructiveHint=False))
+    @mcp.tool(annotations=ToolAnnotations(title='Get Instagram demographics', readOnlyHint=True, destructiveHint=False, openWorldHint=False))
     def analytics_get_instagram_demographics(account_id: str, metric: str = "follower_demographics", breakdown: str | None = None, timeframe: str = "this_month") -> str:
         """Get Instagram demographics
 
@@ -1879,7 +1879,7 @@ def register_generated_tools(mcp, _get_client):
             return f'Error: {e}'
 
 
-    @mcp.tool(annotations=ToolAnnotations(title='Get YouTube demographics', readOnlyHint=True, destructiveHint=False))
+    @mcp.tool(annotations=ToolAnnotations(title='Get YouTube demographics', readOnlyHint=True, destructiveHint=False, openWorldHint=False))
     def analytics_get_you_tube_demographics(account_id: str, breakdown: str | None = None, start_date: str | None = None, end_date: str | None = None) -> str:
         """Get YouTube demographics
 
@@ -1897,7 +1897,7 @@ def register_generated_tools(mcp, _get_client):
             return f'Error: {e}'
 
 
-    @mcp.tool(annotations=ToolAnnotations(title='Get daily aggregated metrics', readOnlyHint=True, destructiveHint=False))
+    @mcp.tool(annotations=ToolAnnotations(title='Get daily aggregated metrics', readOnlyHint=True, destructiveHint=False, openWorldHint=False))
     def analytics_get_daily_metrics(platform: str | None = None, profile_id: str | None = None, account_id: str | None = None, from_date: str | None = None, to_date: str | None = None, source: str = "all") -> str:
         """Get daily aggregated metrics
 
@@ -1916,7 +1916,7 @@ def register_generated_tools(mcp, _get_client):
             return f'Error: {e}'
 
 
-    @mcp.tool(annotations=ToolAnnotations(title='Get best times to post', readOnlyHint=True, destructiveHint=False))
+    @mcp.tool(annotations=ToolAnnotations(title='Get best times to post', readOnlyHint=True, destructiveHint=False, openWorldHint=False))
     def analytics_get_best_time_to_post(platform: str | None = None, profile_id: str | None = None, account_id: str | None = None, source: str = "all") -> str:
         """Get best times to post
 
@@ -1933,7 +1933,7 @@ def register_generated_tools(mcp, _get_client):
             return f'Error: {e}'
 
 
-    @mcp.tool(annotations=ToolAnnotations(title='Get content performance decay', readOnlyHint=True, destructiveHint=False))
+    @mcp.tool(annotations=ToolAnnotations(title='Get content performance decay', readOnlyHint=True, destructiveHint=False, openWorldHint=False))
     def analytics_get_content_decay(platform: str | None = None, profile_id: str | None = None, account_id: str | None = None, source: str = "all") -> str:
         """Get content performance decay
 
@@ -1950,7 +1950,7 @@ def register_generated_tools(mcp, _get_client):
             return f'Error: {e}'
 
 
-    @mcp.tool(annotations=ToolAnnotations(title='Get frequency vs engagement', readOnlyHint=True, destructiveHint=False))
+    @mcp.tool(annotations=ToolAnnotations(title='Get frequency vs engagement', readOnlyHint=True, destructiveHint=False, openWorldHint=False))
     def analytics_get_posting_frequency(platform: str | None = None, profile_id: str | None = None, account_id: str | None = None, source: str = "all") -> str:
         """Get frequency vs engagement
 
@@ -1967,7 +1967,7 @@ def register_generated_tools(mcp, _get_client):
             return f'Error: {e}'
 
 
-    @mcp.tool(annotations=ToolAnnotations(title='Get post analytics timeline', readOnlyHint=True, destructiveHint=False))
+    @mcp.tool(annotations=ToolAnnotations(title='Get post analytics timeline', readOnlyHint=True, destructiveHint=False, openWorldHint=False))
     def analytics_get_post_timeline(post_id: str, from_date: str | None = None, to_date: str | None = None) -> str:
         """Get post analytics timeline
 
@@ -1984,7 +1984,7 @@ def register_generated_tools(mcp, _get_client):
             return f'Error: {e}'
 
 
-    @mcp.tool(annotations=ToolAnnotations(title='Get GBP performance metrics', readOnlyHint=True, destructiveHint=False))
+    @mcp.tool(annotations=ToolAnnotations(title='Get GBP performance metrics', readOnlyHint=True, destructiveHint=False, openWorldHint=False))
     def analytics_get_google_business_performance(account_id: str, metrics: str | None = None, start_date: str | None = None, end_date: str | None = None) -> str:
         """Get GBP performance metrics
 
@@ -2005,7 +2005,7 @@ def register_generated_tools(mcp, _get_client):
             return f'Error: {e}'
 
 
-    @mcp.tool(annotations=ToolAnnotations(title='Get GBP search keywords', readOnlyHint=True, destructiveHint=False))
+    @mcp.tool(annotations=ToolAnnotations(title='Get GBP search keywords', readOnlyHint=True, destructiveHint=False, openWorldHint=False))
     def analytics_get_google_business_search_keywords(account_id: str, start_month: str | None = None, end_month: str | None = None) -> str:
         """Get GBP search keywords
 
@@ -2021,7 +2021,7 @@ def register_generated_tools(mcp, _get_client):
             return f'Error: {e}'
 
 
-    @mcp.tool(annotations=ToolAnnotations(title='Get LinkedIn aggregate stats', readOnlyHint=True, destructiveHint=False))
+    @mcp.tool(annotations=ToolAnnotations(title='Get LinkedIn aggregate stats', readOnlyHint=True, destructiveHint=False, openWorldHint=False))
     def analytics_get_linked_in_aggregate_analytics(account_id: str, aggregation: str = "TOTAL", start_date: str | None = None, end_date: str | None = None, metrics: str | None = None) -> str:
         """Get LinkedIn aggregate stats
 
@@ -2039,7 +2039,7 @@ def register_generated_tools(mcp, _get_client):
             return f'Error: {e}'
 
 
-    @mcp.tool(annotations=ToolAnnotations(title='Get LinkedIn post stats', readOnlyHint=True, destructiveHint=False))
+    @mcp.tool(annotations=ToolAnnotations(title='Get LinkedIn post stats', readOnlyHint=True, destructiveHint=False, openWorldHint=False))
     def analytics_get_linked_in_post_analytics(account_id: str, urn: str) -> str:
         """Get LinkedIn post stats
 
@@ -2054,7 +2054,7 @@ def register_generated_tools(mcp, _get_client):
             return f'Error: {e}'
 
 
-    @mcp.tool(annotations=ToolAnnotations(title='Get LinkedIn post reactions', readOnlyHint=True, destructiveHint=False))
+    @mcp.tool(annotations=ToolAnnotations(title='Get LinkedIn post reactions', readOnlyHint=True, destructiveHint=False, openWorldHint=False))
     def analytics_get_linked_in_post_reactions(account_id: str, urn: str, limit: int = 25, cursor: str | None = None) -> str:
         """Get LinkedIn post reactions
 
@@ -2073,7 +2073,7 @@ def register_generated_tools(mcp, _get_client):
     # API_KEYS
 
 
-    @mcp.tool(annotations=ToolAnnotations(title='List keys', readOnlyHint=True, destructiveHint=False))
+    @mcp.tool(annotations=ToolAnnotations(title='List keys', readOnlyHint=True, destructiveHint=False, openWorldHint=False))
     def api_keys_list_api_keys() -> str:
         """List keys"""
         client = _get_client()
@@ -2084,7 +2084,7 @@ def register_generated_tools(mcp, _get_client):
             return f'Error: {e}'
 
 
-    @mcp.tool(annotations=ToolAnnotations(title='Create key', readOnlyHint=False, destructiveHint=True))
+    @mcp.tool(annotations=ToolAnnotations(title='Create key', readOnlyHint=False, destructiveHint=True, openWorldHint=True))
     def api_keys_create_api_key(name: str, expires_in: int | None = None, scope: str = "full", profile_ids: list[str] | None = None, permission: str = "read-write") -> str:
         """Create key
 
@@ -2102,7 +2102,7 @@ def register_generated_tools(mcp, _get_client):
             return f'Error: {e}'
 
 
-    @mcp.tool(annotations=ToolAnnotations(title='Delete key', readOnlyHint=False, destructiveHint=True))
+    @mcp.tool(annotations=ToolAnnotations(title='Delete key', readOnlyHint=False, destructiveHint=True, openWorldHint=True))
     def api_keys_delete_api_key(key_id: str) -> str:
         """Delete key
 
@@ -2118,7 +2118,7 @@ def register_generated_tools(mcp, _get_client):
     # BROADCASTS
 
 
-    @mcp.tool(annotations=ToolAnnotations(title='List broadcasts', readOnlyHint=True, destructiveHint=False))
+    @mcp.tool(annotations=ToolAnnotations(title='List broadcasts', readOnlyHint=True, destructiveHint=False, openWorldHint=False))
     def broadcasts_list_broadcasts(profile_id: str | None = None, status: str | None = None, platform: str | None = None, limit: int = 50, skip: int = 0) -> str:
         """List broadcasts
 
@@ -2136,7 +2136,7 @@ def register_generated_tools(mcp, _get_client):
             return f'Error: {e}'
 
 
-    @mcp.tool(annotations=ToolAnnotations(title='Create broadcast draft', readOnlyHint=False, destructiveHint=True))
+    @mcp.tool(annotations=ToolAnnotations(title='Create broadcast draft', readOnlyHint=False, destructiveHint=True, openWorldHint=True))
     def broadcasts_create_broadcast(profile_id: str, account_id: str, platform: str, name: str, description: str | None = None, message: dict[str, Any] | None = None, template: dict[str, Any] | None = None, segment_filters: dict[str, Any] | None = None) -> str:
         """Create broadcast draft
 
@@ -2157,7 +2157,7 @@ def register_generated_tools(mcp, _get_client):
             return f'Error: {e}'
 
 
-    @mcp.tool(annotations=ToolAnnotations(title='Get broadcast details', readOnlyHint=True, destructiveHint=False))
+    @mcp.tool(annotations=ToolAnnotations(title='Get broadcast details', readOnlyHint=True, destructiveHint=False, openWorldHint=False))
     def broadcasts_get_broadcast(broadcast_id: str) -> str:
         """Get broadcast details
 
@@ -2171,7 +2171,7 @@ def register_generated_tools(mcp, _get_client):
             return f'Error: {e}'
 
 
-    @mcp.tool(annotations=ToolAnnotations(title='Update broadcast', readOnlyHint=False, destructiveHint=True))
+    @mcp.tool(annotations=ToolAnnotations(title='Update broadcast', readOnlyHint=False, destructiveHint=True, openWorldHint=True))
     def broadcasts_update_broadcast(broadcast_id: str, name: str | None = None, description: str | None = None, message: dict[str, Any] | None = None, template: dict[str, Any] | None = None, segment_filters: dict[str, Any] | None = None) -> str:
         """Update broadcast
 
@@ -2190,7 +2190,7 @@ def register_generated_tools(mcp, _get_client):
             return f'Error: {e}'
 
 
-    @mcp.tool(annotations=ToolAnnotations(title='Delete broadcast', readOnlyHint=False, destructiveHint=True))
+    @mcp.tool(annotations=ToolAnnotations(title='Delete broadcast', readOnlyHint=False, destructiveHint=True, openWorldHint=True))
     def broadcasts_delete_broadcast(broadcast_id: str) -> str:
         """Delete broadcast
 
@@ -2204,7 +2204,7 @@ def register_generated_tools(mcp, _get_client):
             return f'Error: {e}'
 
 
-    @mcp.tool(annotations=ToolAnnotations(title='Send broadcast now', readOnlyHint=False, destructiveHint=True))
+    @mcp.tool(annotations=ToolAnnotations(title='Send broadcast now', readOnlyHint=False, destructiveHint=True, openWorldHint=True))
     def broadcasts_send_broadcast(broadcast_id: str) -> str:
         """Send broadcast now
 
@@ -2218,7 +2218,7 @@ def register_generated_tools(mcp, _get_client):
             return f'Error: {e}'
 
 
-    @mcp.tool(annotations=ToolAnnotations(title='Schedule broadcast for later', readOnlyHint=False, destructiveHint=True))
+    @mcp.tool(annotations=ToolAnnotations(title='Schedule broadcast for later', readOnlyHint=False, destructiveHint=True, openWorldHint=True))
     def broadcasts_schedule_broadcast(broadcast_id: str, scheduled_at: str) -> str:
         """Schedule broadcast for later
 
@@ -2233,7 +2233,7 @@ def register_generated_tools(mcp, _get_client):
             return f'Error: {e}'
 
 
-    @mcp.tool(annotations=ToolAnnotations(title='Cancel broadcast', readOnlyHint=False, destructiveHint=True))
+    @mcp.tool(annotations=ToolAnnotations(title='Cancel broadcast', readOnlyHint=False, destructiveHint=True, openWorldHint=True))
     def broadcasts_cancel_broadcast(broadcast_id: str) -> str:
         """Cancel broadcast
 
@@ -2247,7 +2247,7 @@ def register_generated_tools(mcp, _get_client):
             return f'Error: {e}'
 
 
-    @mcp.tool(annotations=ToolAnnotations(title='List broadcast recipients', readOnlyHint=True, destructiveHint=False))
+    @mcp.tool(annotations=ToolAnnotations(title='List broadcast recipients', readOnlyHint=True, destructiveHint=False, openWorldHint=False))
     def broadcasts_list_broadcast_recipients(broadcast_id: str, status: str | None = None, limit: int = 50, skip: int = 0) -> str:
         """List broadcast recipients
 
@@ -2264,7 +2264,7 @@ def register_generated_tools(mcp, _get_client):
             return f'Error: {e}'
 
 
-    @mcp.tool(annotations=ToolAnnotations(title='Add recipients to a broadcast', readOnlyHint=False, destructiveHint=True))
+    @mcp.tool(annotations=ToolAnnotations(title='Add recipients to a broadcast', readOnlyHint=False, destructiveHint=True, openWorldHint=True))
     def broadcasts_add_broadcast_recipients(broadcast_id: str, contact_ids: list[str] | None = None, phones: list[str] | None = None, use_segment: bool | None = None) -> str:
         """Add recipients to a broadcast
 
@@ -2283,7 +2283,7 @@ def register_generated_tools(mcp, _get_client):
     # COMMENT_AUTOMATIONS
 
 
-    @mcp.tool(annotations=ToolAnnotations(title='List comment-to-DM automations', readOnlyHint=True, destructiveHint=False))
+    @mcp.tool(annotations=ToolAnnotations(title='List comment-to-DM automations', readOnlyHint=True, destructiveHint=False, openWorldHint=False))
     def comment_automations_list_comment_automations(profile_id: str | None = None) -> str:
         """List comment-to-DM automations
 
@@ -2297,7 +2297,7 @@ def register_generated_tools(mcp, _get_client):
             return f'Error: {e}'
 
 
-    @mcp.tool(annotations=ToolAnnotations(title='Create comment-to-DM automation', readOnlyHint=False, destructiveHint=True))
+    @mcp.tool(annotations=ToolAnnotations(title='Create comment-to-DM automation', readOnlyHint=False, destructiveHint=True, openWorldHint=True))
     def comment_automations_create_comment_automation(profile_id: str, account_id: str, name: str, dm_message: str, platform_post_id: str | None = None, post_id: str | None = None, post_title: str | None = None, keywords: list[str] | None = None, match_mode: str = "contains", buttons: list[dict[str, Any]] | None = None, comment_reply: str | None = None) -> str:
         """Create comment-to-DM automation
 
@@ -2321,7 +2321,7 @@ def register_generated_tools(mcp, _get_client):
             return f'Error: {e}'
 
 
-    @mcp.tool(annotations=ToolAnnotations(title='Get automation details', readOnlyHint=True, destructiveHint=False))
+    @mcp.tool(annotations=ToolAnnotations(title='Get automation details', readOnlyHint=True, destructiveHint=False, openWorldHint=False))
     def comment_automations_get_comment_automation(automation_id: str) -> str:
         """Get automation details
 
@@ -2335,7 +2335,7 @@ def register_generated_tools(mcp, _get_client):
             return f'Error: {e}'
 
 
-    @mcp.tool(annotations=ToolAnnotations(title='Update automation settings', readOnlyHint=False, destructiveHint=True))
+    @mcp.tool(annotations=ToolAnnotations(title='Update automation settings', readOnlyHint=False, destructiveHint=True, openWorldHint=True))
     def comment_automations_update_comment_automation(automation_id: str, name: str | None = None, keywords: list[str] | None = None, match_mode: str | None = None, dm_message: str | None = None, buttons: list[dict[str, Any]] | None = None, comment_reply: str | None = None, is_active: bool | None = None) -> str:
         """Update automation settings
 
@@ -2356,7 +2356,7 @@ def register_generated_tools(mcp, _get_client):
             return f'Error: {e}'
 
 
-    @mcp.tool(annotations=ToolAnnotations(title='Delete automation', readOnlyHint=False, destructiveHint=True))
+    @mcp.tool(annotations=ToolAnnotations(title='Delete automation', readOnlyHint=False, destructiveHint=True, openWorldHint=True))
     def comment_automations_delete_comment_automation(automation_id: str) -> str:
         """Delete automation
 
@@ -2370,7 +2370,7 @@ def register_generated_tools(mcp, _get_client):
             return f'Error: {e}'
 
 
-    @mcp.tool(annotations=ToolAnnotations(title='List automation logs', readOnlyHint=True, destructiveHint=False))
+    @mcp.tool(annotations=ToolAnnotations(title='List automation logs', readOnlyHint=True, destructiveHint=False, openWorldHint=False))
     def comment_automations_list_comment_automation_logs(automation_id: str, status: str | None = None, limit: int = 50, skip: int = 0) -> str:
         """List automation logs
 
@@ -2389,7 +2389,7 @@ def register_generated_tools(mcp, _get_client):
     # COMMENTS
 
 
-    @mcp.tool(annotations=ToolAnnotations(title='List commented posts', readOnlyHint=True, destructiveHint=False))
+    @mcp.tool(annotations=ToolAnnotations(title='List commented posts', readOnlyHint=True, destructiveHint=False, openWorldHint=False))
     def comments_list_inbox_comments(profile_id: str | None = None, platform: str | None = None, min_comments: int | None = None, since: str | None = None, sort_by: str = "date", sort_order: str = "desc", limit: int = 50, cursor: str | None = None, account_id: str | None = None) -> str:
         """List commented posts
 
@@ -2411,7 +2411,7 @@ def register_generated_tools(mcp, _get_client):
             return f'Error: {e}'
 
 
-    @mcp.tool(annotations=ToolAnnotations(title='Get post comments', readOnlyHint=True, destructiveHint=False))
+    @mcp.tool(annotations=ToolAnnotations(title='Get post comments', readOnlyHint=True, destructiveHint=False, openWorldHint=False))
     def comments_get_inbox_post_comments(post_id: str, account_id: str, subreddit: str | None = None, limit: int = 25, cursor: str | None = None, comment_id: str | None = None) -> str:
         """Get post comments
 
@@ -2430,7 +2430,7 @@ def register_generated_tools(mcp, _get_client):
             return f'Error: {e}'
 
 
-    @mcp.tool(annotations=ToolAnnotations(title='Reply to comment', readOnlyHint=False, destructiveHint=True))
+    @mcp.tool(annotations=ToolAnnotations(title='Reply to comment', readOnlyHint=False, destructiveHint=True, openWorldHint=True))
     def comments_reply_to_inbox_post(post_id: str, account_id: str, message: str, comment_id: str | None = None, parent_cid: str | None = None, root_uri: str | None = None, root_cid: str | None = None) -> str:
         """Reply to comment
 
@@ -2450,7 +2450,7 @@ def register_generated_tools(mcp, _get_client):
             return f'Error: {e}'
 
 
-    @mcp.tool(annotations=ToolAnnotations(title='Delete comment', readOnlyHint=False, destructiveHint=True))
+    @mcp.tool(annotations=ToolAnnotations(title='Delete comment', readOnlyHint=False, destructiveHint=True, openWorldHint=True))
     def comments_delete_inbox_comment(post_id: str, account_id: str, comment_id: str) -> str:
         """Delete comment
 
@@ -2466,7 +2466,7 @@ def register_generated_tools(mcp, _get_client):
             return f'Error: {e}'
 
 
-    @mcp.tool(annotations=ToolAnnotations(title='Hide comment', readOnlyHint=False, destructiveHint=True))
+    @mcp.tool(annotations=ToolAnnotations(title='Hide comment', readOnlyHint=False, destructiveHint=True, openWorldHint=True))
     def comments_hide_inbox_comment(post_id: str, comment_id: str, account_id: str) -> str:
         """Hide comment
 
@@ -2482,7 +2482,7 @@ def register_generated_tools(mcp, _get_client):
             return f'Error: {e}'
 
 
-    @mcp.tool(annotations=ToolAnnotations(title='Unhide comment', readOnlyHint=False, destructiveHint=True))
+    @mcp.tool(annotations=ToolAnnotations(title='Unhide comment', readOnlyHint=False, destructiveHint=True, openWorldHint=True))
     def comments_unhide_inbox_comment(post_id: str, comment_id: str, account_id: str) -> str:
         """Unhide comment
 
@@ -2498,7 +2498,7 @@ def register_generated_tools(mcp, _get_client):
             return f'Error: {e}'
 
 
-    @mcp.tool(annotations=ToolAnnotations(title='Like comment', readOnlyHint=False, destructiveHint=True))
+    @mcp.tool(annotations=ToolAnnotations(title='Like comment', readOnlyHint=False, destructiveHint=True, openWorldHint=True))
     def comments_like_inbox_comment(post_id: str, comment_id: str, account_id: str, cid: str | None = None) -> str:
         """Like comment
 
@@ -2515,7 +2515,7 @@ def register_generated_tools(mcp, _get_client):
             return f'Error: {e}'
 
 
-    @mcp.tool(annotations=ToolAnnotations(title='Unlike comment', readOnlyHint=False, destructiveHint=True))
+    @mcp.tool(annotations=ToolAnnotations(title='Unlike comment', readOnlyHint=False, destructiveHint=True, openWorldHint=True))
     def comments_unlike_inbox_comment(post_id: str, comment_id: str, account_id: str, like_uri: str | None = None) -> str:
         """Unlike comment
 
@@ -2532,7 +2532,7 @@ def register_generated_tools(mcp, _get_client):
             return f'Error: {e}'
 
 
-    @mcp.tool(annotations=ToolAnnotations(title='Send private reply', readOnlyHint=False, destructiveHint=True))
+    @mcp.tool(annotations=ToolAnnotations(title='Send private reply', readOnlyHint=False, destructiveHint=True, openWorldHint=True))
     def comments_send_private_reply_to_comment(post_id: str, comment_id: str, account_id: str, message: str, quick_replies: list[dict[str, Any]] | None = None, buttons: list[dict[str, Any]] | None = None) -> str:
         """Send private reply
 
@@ -2559,7 +2559,7 @@ def register_generated_tools(mcp, _get_client):
     # CONNECT
 
 
-    @mcp.tool(annotations=ToolAnnotations(title='Get OAuth connect URL', readOnlyHint=True, destructiveHint=False))
+    @mcp.tool(annotations=ToolAnnotations(title='Get OAuth connect URL', readOnlyHint=True, destructiveHint=False, openWorldHint=False))
     def connect_get_connect_url(platform: str, profile_id: str, redirect_url: str | None = None, headless: bool = False) -> str:
         """Get OAuth connect URL
 
@@ -2576,7 +2576,7 @@ def register_generated_tools(mcp, _get_client):
             return f'Error: {e}'
 
 
-    @mcp.tool(annotations=ToolAnnotations(title='Complete OAuth callback', readOnlyHint=False, destructiveHint=True))
+    @mcp.tool(annotations=ToolAnnotations(title='Complete OAuth callback', readOnlyHint=False, destructiveHint=True, openWorldHint=True))
     def connect_handle_o_auth_callback(platform: str, code: str, state: str, profile_id: str) -> str:
         """Complete OAuth callback
 
@@ -2593,7 +2593,7 @@ def register_generated_tools(mcp, _get_client):
             return f'Error: {e}'
 
 
-    @mcp.tool(annotations=ToolAnnotations(title='Connect ads for a platform', readOnlyHint=True, destructiveHint=False))
+    @mcp.tool(annotations=ToolAnnotations(title='Connect ads for a platform', readOnlyHint=True, destructiveHint=False, openWorldHint=False))
     def connect_ads(platform: str, profile_id: str, account_id: str | None = None, redirect_url: str | None = None, headless: bool = False, ad_account_id: str | None = None, ad_account_ids: list[str] | None = None) -> str:
         """Connect ads for a platform
 
@@ -2625,7 +2625,7 @@ def register_generated_tools(mcp, _get_client):
             return f'Error: {e}'
 
 
-    @mcp.tool(annotations=ToolAnnotations(title='Configure TikTok Ads Brand Identity', readOnlyHint=False, destructiveHint=True))
+    @mcp.tool(annotations=ToolAnnotations(title='Configure TikTok Ads Brand Identity', readOnlyHint=False, destructiveHint=True, openWorldHint=True))
     def connect_configure_tik_tok_ads_brand_identity(account_id: str, display_name: str, image_url: str) -> str:
         """Configure TikTok Ads Brand Identity
 
@@ -2641,7 +2641,7 @@ def register_generated_tools(mcp, _get_client):
             return f'Error: {e}'
 
 
-    @mcp.tool(annotations=ToolAnnotations(title='List Facebook pages', readOnlyHint=True, destructiveHint=False))
+    @mcp.tool(annotations=ToolAnnotations(title='List Facebook pages', readOnlyHint=True, destructiveHint=False, openWorldHint=False))
     def connect_list_facebook_pages(profile_id: str, temp_token: str) -> str:
         """List Facebook pages
 
@@ -2656,7 +2656,7 @@ def register_generated_tools(mcp, _get_client):
             return f'Error: {e}'
 
 
-    @mcp.tool(annotations=ToolAnnotations(title='Select Facebook page', readOnlyHint=False, destructiveHint=True))
+    @mcp.tool(annotations=ToolAnnotations(title='Select Facebook page', readOnlyHint=False, destructiveHint=True, openWorldHint=True))
     def connect_select_facebook_page(profile_id: str, page_id: str, temp_token: str, user_profile: dict[str, Any] | None, redirect_url: str | None = None) -> str:
         """Select Facebook page
 
@@ -2674,7 +2674,7 @@ def register_generated_tools(mcp, _get_client):
             return f'Error: {e}'
 
 
-    @mcp.tool(annotations=ToolAnnotations(title='List GBP locations', readOnlyHint=True, destructiveHint=False))
+    @mcp.tool(annotations=ToolAnnotations(title='List GBP locations', readOnlyHint=True, destructiveHint=False, openWorldHint=False))
     def connect_list_google_business_locations(profile_id: str | None = None, pending_data_token: str | None = None, temp_token: str | None = None) -> str:
         """List GBP locations
 
@@ -2690,7 +2690,7 @@ def register_generated_tools(mcp, _get_client):
             return f'Error: {e}'
 
 
-    @mcp.tool(annotations=ToolAnnotations(title='Select GBP location', readOnlyHint=False, destructiveHint=True))
+    @mcp.tool(annotations=ToolAnnotations(title='Select GBP location', readOnlyHint=False, destructiveHint=True, openWorldHint=True))
     def connect_select_google_business_location(profile_id: str, location_id: str, pending_data_token: str, redirect_url: str | None = None) -> str:
         """Select GBP location
 
@@ -2707,7 +2707,7 @@ def register_generated_tools(mcp, _get_client):
             return f'Error: {e}'
 
 
-    @mcp.tool(annotations=ToolAnnotations(title='Get pending OAuth data', readOnlyHint=True, destructiveHint=False))
+    @mcp.tool(annotations=ToolAnnotations(title='Get pending OAuth data', readOnlyHint=True, destructiveHint=False, openWorldHint=False))
     def connect_get_pending_o_auth_data(token: str) -> str:
         """Get pending OAuth data
 
@@ -2721,7 +2721,7 @@ def register_generated_tools(mcp, _get_client):
             return f'Error: {e}'
 
 
-    @mcp.tool(annotations=ToolAnnotations(title='List LinkedIn orgs', readOnlyHint=True, destructiveHint=False))
+    @mcp.tool(annotations=ToolAnnotations(title='List LinkedIn orgs', readOnlyHint=True, destructiveHint=False, openWorldHint=False))
     def connect_list_linked_in_organizations(temp_token: str, org_ids: str) -> str:
         """List LinkedIn orgs
 
@@ -2736,7 +2736,7 @@ def register_generated_tools(mcp, _get_client):
             return f'Error: {e}'
 
 
-    @mcp.tool(annotations=ToolAnnotations(title='Select LinkedIn org', readOnlyHint=False, destructiveHint=True))
+    @mcp.tool(annotations=ToolAnnotations(title='Select LinkedIn org', readOnlyHint=False, destructiveHint=True, openWorldHint=True))
     def connect_select_linked_in_organization(profile_id: str, temp_token: str, user_profile: dict[str, Any] | None, account_type: str, selected_organization: dict[str, Any] | None = None, redirect_url: str | None = None) -> str:
         """Select LinkedIn org
 
@@ -2755,7 +2755,7 @@ def register_generated_tools(mcp, _get_client):
             return f'Error: {e}'
 
 
-    @mcp.tool(annotations=ToolAnnotations(title='List Pinterest boards', readOnlyHint=True, destructiveHint=False))
+    @mcp.tool(annotations=ToolAnnotations(title='List Pinterest boards', readOnlyHint=True, destructiveHint=False, openWorldHint=False))
     def connect_list_pinterest_boards_for_selection(profile_id: str, temp_token: str) -> str:
         """List Pinterest boards
 
@@ -2770,7 +2770,7 @@ def register_generated_tools(mcp, _get_client):
             return f'Error: {e}'
 
 
-    @mcp.tool(annotations=ToolAnnotations(title='Select Pinterest board', readOnlyHint=False, destructiveHint=True))
+    @mcp.tool(annotations=ToolAnnotations(title='Select Pinterest board', readOnlyHint=False, destructiveHint=True, openWorldHint=True))
     def connect_select_pinterest_board(profile_id: str, board_id: str, temp_token: str, board_name: str | None = None, user_profile: dict[str, Any] | None = None, refresh_token: str | None = None, expires_in: int | None = None, redirect_url: str | None = None) -> str:
         """Select Pinterest board
 
@@ -2791,7 +2791,7 @@ def register_generated_tools(mcp, _get_client):
             return f'Error: {e}'
 
 
-    @mcp.tool(annotations=ToolAnnotations(title='List Snapchat profiles', readOnlyHint=True, destructiveHint=False))
+    @mcp.tool(annotations=ToolAnnotations(title='List Snapchat profiles', readOnlyHint=True, destructiveHint=False, openWorldHint=False))
     def connect_list_snapchat_profiles(profile_id: str, temp_token: str) -> str:
         """List Snapchat profiles
 
@@ -2806,7 +2806,7 @@ def register_generated_tools(mcp, _get_client):
             return f'Error: {e}'
 
 
-    @mcp.tool(annotations=ToolAnnotations(title='Select Snapchat profile', readOnlyHint=False, destructiveHint=True))
+    @mcp.tool(annotations=ToolAnnotations(title='Select Snapchat profile', readOnlyHint=False, destructiveHint=True, openWorldHint=True))
     def connect_select_snapchat_profile(profile_id: str, selected_public_profile: dict[str, Any] | None, temp_token: str, user_profile: dict[str, Any] | None, refresh_token: str | None = None, expires_in: int | None = None, redirect_url: str | None = None) -> str:
         """Select Snapchat profile
 
@@ -2826,7 +2826,7 @@ def register_generated_tools(mcp, _get_client):
             return f'Error: {e}'
 
 
-    @mcp.tool(annotations=ToolAnnotations(title='Connect Bluesky account', readOnlyHint=False, destructiveHint=True))
+    @mcp.tool(annotations=ToolAnnotations(title='Connect Bluesky account', readOnlyHint=False, destructiveHint=True, openWorldHint=True))
     def connect_bluesky_credentials(identifier: str, app_password: str, state: str, redirect_uri: str | None = None) -> str:
         """Connect Bluesky account
 
@@ -2843,7 +2843,7 @@ def register_generated_tools(mcp, _get_client):
             return f'Error: {e}'
 
 
-    @mcp.tool(annotations=ToolAnnotations(title='Connect WhatsApp via credentials', readOnlyHint=False, destructiveHint=True))
+    @mcp.tool(annotations=ToolAnnotations(title='Connect WhatsApp via credentials', readOnlyHint=False, destructiveHint=True, openWorldHint=True))
     def connect_whats_app_credentials(profile_id: str, access_token: str, waba_id: str, phone_number_id: str) -> str:
         """Connect WhatsApp via credentials
 
@@ -2860,7 +2860,7 @@ def register_generated_tools(mcp, _get_client):
             return f'Error: {e}'
 
 
-    @mcp.tool(annotations=ToolAnnotations(title='List WhatsApp phone numbers for selection', readOnlyHint=True, destructiveHint=False))
+    @mcp.tool(annotations=ToolAnnotations(title='List WhatsApp phone numbers for selection', readOnlyHint=True, destructiveHint=False, openWorldHint=False))
     def connect_list_whats_app_phone_numbers(profile_id: str, temp_token: str) -> str:
         """List WhatsApp phone numbers for selection
 
@@ -2875,7 +2875,7 @@ def register_generated_tools(mcp, _get_client):
             return f'Error: {e}'
 
 
-    @mcp.tool(annotations=ToolAnnotations(title='Complete WhatsApp phone number selection', readOnlyHint=False, destructiveHint=True))
+    @mcp.tool(annotations=ToolAnnotations(title='Complete WhatsApp phone number selection', readOnlyHint=False, destructiveHint=True, openWorldHint=True))
     def connect_complete_whats_app_phone_selection(profile_id: str, phone_number_id: str, waba_id: str, temp_token: str, user_profile: dict[str, Any] | None = None, redirect_url: str | None = None) -> str:
         """Complete WhatsApp phone number selection
 
@@ -2894,7 +2894,7 @@ def register_generated_tools(mcp, _get_client):
             return f'Error: {e}'
 
 
-    @mcp.tool(annotations=ToolAnnotations(title='Generate Telegram code', readOnlyHint=True, destructiveHint=False))
+    @mcp.tool(annotations=ToolAnnotations(title='Generate Telegram code', readOnlyHint=True, destructiveHint=False, openWorldHint=False))
     def connect_get_telegram_connect_status(profile_id: str) -> str:
         """Generate Telegram code
 
@@ -2908,7 +2908,7 @@ def register_generated_tools(mcp, _get_client):
             return f'Error: {e}'
 
 
-    @mcp.tool(annotations=ToolAnnotations(title='Connect Telegram directly', readOnlyHint=False, destructiveHint=True))
+    @mcp.tool(annotations=ToolAnnotations(title='Connect Telegram directly', readOnlyHint=False, destructiveHint=True, openWorldHint=True))
     def connect_initiate_telegram_connect(chat_id: str, profile_id: str) -> str:
         """Connect Telegram directly
 
@@ -2923,7 +2923,7 @@ def register_generated_tools(mcp, _get_client):
             return f'Error: {e}'
 
 
-    @mcp.tool(annotations=ToolAnnotations(title='Check Telegram status', readOnlyHint=False, destructiveHint=True))
+    @mcp.tool(annotations=ToolAnnotations(title='Check Telegram status', readOnlyHint=False, destructiveHint=True, openWorldHint=True))
     def connect_complete_telegram_connect(code: str) -> str:
         """Check Telegram status
 
@@ -2937,7 +2937,7 @@ def register_generated_tools(mcp, _get_client):
             return f'Error: {e}'
 
 
-    @mcp.tool(annotations=ToolAnnotations(title='List Facebook pages', readOnlyHint=True, destructiveHint=False))
+    @mcp.tool(annotations=ToolAnnotations(title='List Facebook pages', readOnlyHint=True, destructiveHint=False, openWorldHint=False))
     def connect_get_facebook_pages(account_id: str, refresh: bool | None = None) -> str:
         """List Facebook pages
 
@@ -2952,7 +2952,7 @@ def register_generated_tools(mcp, _get_client):
             return f'Error: {e}'
 
 
-    @mcp.tool(annotations=ToolAnnotations(title='Update Facebook page', readOnlyHint=False, destructiveHint=True))
+    @mcp.tool(annotations=ToolAnnotations(title='Update Facebook page', readOnlyHint=False, destructiveHint=True, openWorldHint=True))
     def connect_update_facebook_page(account_id: str, selected_page_id: str) -> str:
         """Update Facebook page
 
@@ -2967,7 +2967,7 @@ def register_generated_tools(mcp, _get_client):
             return f'Error: {e}'
 
 
-    @mcp.tool(annotations=ToolAnnotations(title='List LinkedIn orgs', readOnlyHint=True, destructiveHint=False))
+    @mcp.tool(annotations=ToolAnnotations(title='List LinkedIn orgs', readOnlyHint=True, destructiveHint=False, openWorldHint=False))
     def connect_get_linked_in_organizations(account_id: str) -> str:
         """List LinkedIn orgs
 
@@ -2981,7 +2981,7 @@ def register_generated_tools(mcp, _get_client):
             return f'Error: {e}'
 
 
-    @mcp.tool(annotations=ToolAnnotations(title='Switch LinkedIn account type', readOnlyHint=False, destructiveHint=True))
+    @mcp.tool(annotations=ToolAnnotations(title='Switch LinkedIn account type', readOnlyHint=False, destructiveHint=True, openWorldHint=True))
     def connect_update_linked_in_organization(account_id: str, account_type: str, selected_organization: dict[str, Any] | None = None) -> str:
         """Switch LinkedIn account type
 
@@ -2997,7 +2997,7 @@ def register_generated_tools(mcp, _get_client):
             return f'Error: {e}'
 
 
-    @mcp.tool(annotations=ToolAnnotations(title='List Pinterest boards', readOnlyHint=True, destructiveHint=False))
+    @mcp.tool(annotations=ToolAnnotations(title='List Pinterest boards', readOnlyHint=True, destructiveHint=False, openWorldHint=False))
     def connect_get_pinterest_boards(account_id: str) -> str:
         """List Pinterest boards
 
@@ -3011,7 +3011,7 @@ def register_generated_tools(mcp, _get_client):
             return f'Error: {e}'
 
 
-    @mcp.tool(annotations=ToolAnnotations(title='Set default Pinterest board', readOnlyHint=False, destructiveHint=True))
+    @mcp.tool(annotations=ToolAnnotations(title='Set default Pinterest board', readOnlyHint=False, destructiveHint=True, openWorldHint=True))
     def connect_update_pinterest_boards(account_id: str, default_board_id: str, default_board_name: str | None = None) -> str:
         """Set default Pinterest board
 
@@ -3027,7 +3027,7 @@ def register_generated_tools(mcp, _get_client):
             return f'Error: {e}'
 
 
-    @mcp.tool(annotations=ToolAnnotations(title='List YouTube playlists', readOnlyHint=True, destructiveHint=False))
+    @mcp.tool(annotations=ToolAnnotations(title='List YouTube playlists', readOnlyHint=True, destructiveHint=False, openWorldHint=False))
     def connect_get_youtube_playlists(account_id: str) -> str:
         """List YouTube playlists
 
@@ -3041,7 +3041,7 @@ def register_generated_tools(mcp, _get_client):
             return f'Error: {e}'
 
 
-    @mcp.tool(annotations=ToolAnnotations(title='Set default YouTube playlist', readOnlyHint=False, destructiveHint=True))
+    @mcp.tool(annotations=ToolAnnotations(title='Set default YouTube playlist', readOnlyHint=False, destructiveHint=True, openWorldHint=True))
     def connect_update_youtube_default_playlist(account_id: str, default_playlist_id: str, default_playlist_name: str | None = None) -> str:
         """Set default YouTube playlist
 
@@ -3057,7 +3057,7 @@ def register_generated_tools(mcp, _get_client):
             return f'Error: {e}'
 
 
-    @mcp.tool(annotations=ToolAnnotations(title='List GBP locations', readOnlyHint=True, destructiveHint=False))
+    @mcp.tool(annotations=ToolAnnotations(title='List GBP locations', readOnlyHint=True, destructiveHint=False, openWorldHint=False))
     def connect_get_gmb_locations(account_id: str) -> str:
         """List GBP locations
 
@@ -3071,7 +3071,7 @@ def register_generated_tools(mcp, _get_client):
             return f'Error: {e}'
 
 
-    @mcp.tool(annotations=ToolAnnotations(title='Update GBP location', readOnlyHint=False, destructiveHint=True))
+    @mcp.tool(annotations=ToolAnnotations(title='Update GBP location', readOnlyHint=False, destructiveHint=True, openWorldHint=True))
     def connect_update_gmb_location(account_id: str, selected_location_id: str) -> str:
         """Update GBP location
 
@@ -3086,7 +3086,7 @@ def register_generated_tools(mcp, _get_client):
             return f'Error: {e}'
 
 
-    @mcp.tool(annotations=ToolAnnotations(title='List Reddit subreddits', readOnlyHint=True, destructiveHint=False))
+    @mcp.tool(annotations=ToolAnnotations(title='List Reddit subreddits', readOnlyHint=True, destructiveHint=False, openWorldHint=False))
     def connect_get_reddit_subreddits(account_id: str) -> str:
         """List Reddit subreddits
 
@@ -3100,7 +3100,7 @@ def register_generated_tools(mcp, _get_client):
             return f'Error: {e}'
 
 
-    @mcp.tool(annotations=ToolAnnotations(title='Set default subreddit', readOnlyHint=False, destructiveHint=True))
+    @mcp.tool(annotations=ToolAnnotations(title='Set default subreddit', readOnlyHint=False, destructiveHint=True, openWorldHint=True))
     def connect_update_reddit_subreddits(account_id: str, default_subreddit: str) -> str:
         """Set default subreddit
 
@@ -3115,7 +3115,7 @@ def register_generated_tools(mcp, _get_client):
             return f'Error: {e}'
 
 
-    @mcp.tool(annotations=ToolAnnotations(title='List subreddit flairs', readOnlyHint=True, destructiveHint=False))
+    @mcp.tool(annotations=ToolAnnotations(title='List subreddit flairs', readOnlyHint=True, destructiveHint=False, openWorldHint=False))
     def connect_get_reddit_flairs(account_id: str, subreddit: str) -> str:
         """List subreddit flairs
 
@@ -3132,7 +3132,7 @@ def register_generated_tools(mcp, _get_client):
     # CONTACTS
 
 
-    @mcp.tool(annotations=ToolAnnotations(title='List contacts', readOnlyHint=True, destructiveHint=False))
+    @mcp.tool(annotations=ToolAnnotations(title='List contacts', readOnlyHint=True, destructiveHint=False, openWorldHint=False))
     def contacts_list_contacts(profile_id: str | None = None, search: str | None = None, tag: str | None = None, platform: str | None = None, is_subscribed: str | None = None, limit: int = 50, skip: int = 0) -> str:
         """List contacts
 
@@ -3152,7 +3152,7 @@ def register_generated_tools(mcp, _get_client):
             return f'Error: {e}'
 
 
-    @mcp.tool(annotations=ToolAnnotations(title='Create contact', readOnlyHint=False, destructiveHint=True))
+    @mcp.tool(annotations=ToolAnnotations(title='Create contact', readOnlyHint=False, destructiveHint=True, openWorldHint=True))
     def contacts_create_contact(profile_id: str, name: str, email: str | None = None, company: str | None = None, tags: list[str] | None = None, is_subscribed: bool = True, notes: str | None = None, account_id: str | None = None, platform: str | None = None, platform_identifier: str | None = None, display_identifier: str | None = None) -> str:
         """Create contact
 
@@ -3176,7 +3176,7 @@ def register_generated_tools(mcp, _get_client):
             return f'Error: {e}'
 
 
-    @mcp.tool(annotations=ToolAnnotations(title='Get contact', readOnlyHint=True, destructiveHint=False))
+    @mcp.tool(annotations=ToolAnnotations(title='Get contact', readOnlyHint=True, destructiveHint=False, openWorldHint=False))
     def contacts_get_contact(contact_id: str) -> str:
         """Get contact
 
@@ -3190,7 +3190,7 @@ def register_generated_tools(mcp, _get_client):
             return f'Error: {e}'
 
 
-    @mcp.tool(annotations=ToolAnnotations(title='Update contact', readOnlyHint=False, destructiveHint=True))
+    @mcp.tool(annotations=ToolAnnotations(title='Update contact', readOnlyHint=False, destructiveHint=True, openWorldHint=True))
     def contacts_update_contact(contact_id: str, name: str | None = None, email: str | None = None, company: str | None = None, avatar_url: str | None = None, tags: list[str] | None = None, is_subscribed: bool | None = None, is_blocked: bool | None = None, notes: str | None = None) -> str:
         """Update contact
 
@@ -3212,7 +3212,7 @@ def register_generated_tools(mcp, _get_client):
             return f'Error: {e}'
 
 
-    @mcp.tool(annotations=ToolAnnotations(title='Delete contact', readOnlyHint=False, destructiveHint=True))
+    @mcp.tool(annotations=ToolAnnotations(title='Delete contact', readOnlyHint=False, destructiveHint=True, openWorldHint=True))
     def contacts_delete_contact(contact_id: str) -> str:
         """Delete contact
 
@@ -3226,7 +3226,7 @@ def register_generated_tools(mcp, _get_client):
             return f'Error: {e}'
 
 
-    @mcp.tool(annotations=ToolAnnotations(title='List channels for a contact', readOnlyHint=True, destructiveHint=False))
+    @mcp.tool(annotations=ToolAnnotations(title='List channels for a contact', readOnlyHint=True, destructiveHint=False, openWorldHint=False))
     def contacts_get_contact_channels(contact_id: str) -> str:
         """List channels for a contact
 
@@ -3240,7 +3240,7 @@ def register_generated_tools(mcp, _get_client):
             return f'Error: {e}'
 
 
-    @mcp.tool(annotations=ToolAnnotations(title='Bulk create contacts', readOnlyHint=False, destructiveHint=True))
+    @mcp.tool(annotations=ToolAnnotations(title='Bulk create contacts', readOnlyHint=False, destructiveHint=True, openWorldHint=True))
     def contacts_bulk_create_contacts(profile_id: str, account_id: str, platform: str, contacts: list[dict[str, Any]] | None) -> str:
         """Bulk create contacts
 
@@ -3259,7 +3259,7 @@ def register_generated_tools(mcp, _get_client):
     # CUSTOM_FIELDS
 
 
-    @mcp.tool(annotations=ToolAnnotations(title='Set custom field value', readOnlyHint=False, destructiveHint=True))
+    @mcp.tool(annotations=ToolAnnotations(title='Set custom field value', readOnlyHint=False, destructiveHint=True, openWorldHint=True))
     def custom_fields_set_contact_field_value(contact_id: str, slug: str, value: str) -> str:
         """Set custom field value
 
@@ -3275,7 +3275,7 @@ def register_generated_tools(mcp, _get_client):
             return f'Error: {e}'
 
 
-    @mcp.tool(annotations=ToolAnnotations(title='Clear custom field value', readOnlyHint=False, destructiveHint=True))
+    @mcp.tool(annotations=ToolAnnotations(title='Clear custom field value', readOnlyHint=False, destructiveHint=True, openWorldHint=True))
     def custom_fields_clear_contact_field_value(contact_id: str, slug: str) -> str:
         """Clear custom field value
 
@@ -3290,7 +3290,7 @@ def register_generated_tools(mcp, _get_client):
             return f'Error: {e}'
 
 
-    @mcp.tool(annotations=ToolAnnotations(title='List custom field definitions', readOnlyHint=True, destructiveHint=False))
+    @mcp.tool(annotations=ToolAnnotations(title='List custom field definitions', readOnlyHint=True, destructiveHint=False, openWorldHint=False))
     def custom_fields_list_custom_fields(profile_id: str | None = None) -> str:
         """List custom field definitions
 
@@ -3304,7 +3304,7 @@ def register_generated_tools(mcp, _get_client):
             return f'Error: {e}'
 
 
-    @mcp.tool(annotations=ToolAnnotations(title='Create custom field', readOnlyHint=False, destructiveHint=True))
+    @mcp.tool(annotations=ToolAnnotations(title='Create custom field', readOnlyHint=False, destructiveHint=True, openWorldHint=True))
     def custom_fields_create_custom_field(profile_id: str, name: str, type: str, slug: str | None = None, options: list[str] | None = None) -> str:
         """Create custom field
 
@@ -3322,7 +3322,7 @@ def register_generated_tools(mcp, _get_client):
             return f'Error: {e}'
 
 
-    @mcp.tool(annotations=ToolAnnotations(title='Update custom field', readOnlyHint=False, destructiveHint=True))
+    @mcp.tool(annotations=ToolAnnotations(title='Update custom field', readOnlyHint=False, destructiveHint=True, openWorldHint=True))
     def custom_fields_update_custom_field(field_id: str, name: str | None = None, options: list[str] | None = None) -> str:
         """Update custom field
 
@@ -3338,7 +3338,7 @@ def register_generated_tools(mcp, _get_client):
             return f'Error: {e}'
 
 
-    @mcp.tool(annotations=ToolAnnotations(title='Delete custom field', readOnlyHint=False, destructiveHint=True))
+    @mcp.tool(annotations=ToolAnnotations(title='Delete custom field', readOnlyHint=False, destructiveHint=True, openWorldHint=True))
     def custom_fields_delete_custom_field(field_id: str) -> str:
         """Delete custom field
 
@@ -3354,7 +3354,7 @@ def register_generated_tools(mcp, _get_client):
     # DISCORD
 
 
-    @mcp.tool(annotations=ToolAnnotations(title='Get Discord account settings', readOnlyHint=True, destructiveHint=False))
+    @mcp.tool(annotations=ToolAnnotations(title='Get Discord account settings', readOnlyHint=True, destructiveHint=False, openWorldHint=False))
     def discord_get_discord_settings(account_id: str) -> str:
         """Get Discord account settings
 
@@ -3368,7 +3368,7 @@ def register_generated_tools(mcp, _get_client):
             return f'Error: {e}'
 
 
-    @mcp.tool(annotations=ToolAnnotations(title='Update Discord settings', readOnlyHint=False, destructiveHint=True))
+    @mcp.tool(annotations=ToolAnnotations(title='Update Discord settings', readOnlyHint=False, destructiveHint=True, openWorldHint=True))
     def discord_update_discord_settings(account_id: str, webhook_username: str | None = None, webhook_avatar_url: str | None = None, channel_id: str | None = None) -> str:
         """Update Discord settings
 
@@ -3385,7 +3385,7 @@ def register_generated_tools(mcp, _get_client):
             return f'Error: {e}'
 
 
-    @mcp.tool(annotations=ToolAnnotations(title='List Discord guild channels', readOnlyHint=True, destructiveHint=False))
+    @mcp.tool(annotations=ToolAnnotations(title='List Discord guild channels', readOnlyHint=True, destructiveHint=False, openWorldHint=False))
     def discord_get_discord_channels(account_id: str) -> str:
         """List Discord guild channels
 
@@ -3401,7 +3401,7 @@ def register_generated_tools(mcp, _get_client):
     # GMB_SERVICES
 
 
-    @mcp.tool(annotations=ToolAnnotations(title='Get services', readOnlyHint=True, destructiveHint=False))
+    @mcp.tool(annotations=ToolAnnotations(title='Get services', readOnlyHint=True, destructiveHint=False, openWorldHint=False))
     def gmb_services_get_google_business_services(account_id: str, location_id: str | None = None) -> str:
         """Get services
 
@@ -3416,7 +3416,7 @@ def register_generated_tools(mcp, _get_client):
             return f'Error: {e}'
 
 
-    @mcp.tool(annotations=ToolAnnotations(title='Replace services', readOnlyHint=False, destructiveHint=True))
+    @mcp.tool(annotations=ToolAnnotations(title='Replace services', readOnlyHint=False, destructiveHint=True, openWorldHint=True))
     def gmb_services_update_google_business_services(account_id: str, service_items: list[dict[str, Any]] | None, location_id: str | None = None) -> str:
         """Replace services
 
@@ -3434,7 +3434,7 @@ def register_generated_tools(mcp, _get_client):
     # INSTAGRAM
 
 
-    @mcp.tool(annotations=ToolAnnotations(title='List active Instagram stories', readOnlyHint=True, destructiveHint=False))
+    @mcp.tool(annotations=ToolAnnotations(title='List active Instagram stories', readOnlyHint=True, destructiveHint=False, openWorldHint=False))
     def instagram_list_instagram_stories(account_id: str) -> str:
         """List active Instagram stories
 
@@ -3448,7 +3448,7 @@ def register_generated_tools(mcp, _get_client):
             return f'Error: {e}'
 
 
-    @mcp.tool(annotations=ToolAnnotations(title='Get Instagram story insights', readOnlyHint=True, destructiveHint=False))
+    @mcp.tool(annotations=ToolAnnotations(title='Get Instagram story insights', readOnlyHint=True, destructiveHint=False, openWorldHint=False))
     def instagram_get_instagram_story_insights(account_id: str, story_id: str) -> str:
         """Get Instagram story insights
 
@@ -3465,7 +3465,7 @@ def register_generated_tools(mcp, _get_client):
     # INVITES
 
 
-    @mcp.tool(annotations=ToolAnnotations(title='Create invite token', readOnlyHint=False, destructiveHint=True))
+    @mcp.tool(annotations=ToolAnnotations(title='Create invite token', readOnlyHint=False, destructiveHint=True, openWorldHint=True))
     def invites_create_invite_token(scope: str, profile_ids: list[str] | None = None) -> str:
         """Create invite token
 
@@ -3482,7 +3482,7 @@ def register_generated_tools(mcp, _get_client):
     # LOGS
 
 
-    @mcp.tool(annotations=ToolAnnotations(title='List activity logs', readOnlyHint=True, destructiveHint=False))
+    @mcp.tool(annotations=ToolAnnotations(title='List activity logs', readOnlyHint=True, destructiveHint=False, openWorldHint=False))
     def logs_list_logs(type: str = "publishing", status: str | None = None, platform: str | None = None, action: str | None = None, search: str | None = None, days: int = 90, limit: int = 50, skip: int = 0) -> str:
         """List activity logs
 
@@ -3505,7 +3505,7 @@ def register_generated_tools(mcp, _get_client):
     # MEDIA
 
 
-    @mcp.tool(annotations=ToolAnnotations(title='Get upload URL', readOnlyHint=False, destructiveHint=True))
+    @mcp.tool(annotations=ToolAnnotations(title='Get upload URL', readOnlyHint=False, destructiveHint=True, openWorldHint=True))
     def media_get_media_presigned_url(filename: str, content_type: str, size: int | None = None) -> str:
         """Get upload URL
 
@@ -3523,7 +3523,7 @@ def register_generated_tools(mcp, _get_client):
     # MESSAGES
 
 
-    @mcp.tool(annotations=ToolAnnotations(title='List conversations', readOnlyHint=True, destructiveHint=False))
+    @mcp.tool(annotations=ToolAnnotations(title='List conversations', readOnlyHint=True, destructiveHint=False, openWorldHint=False))
     def messages_list_inbox_conversations(profile_id: str | None = None, platform: str | None = None, status: str | None = None, sort_order: str = "desc", limit: int = 50, cursor: str | None = None, account_id: str | None = None) -> str:
         """List conversations
 
@@ -3543,7 +3543,7 @@ def register_generated_tools(mcp, _get_client):
             return f'Error: {e}'
 
 
-    @mcp.tool(annotations=ToolAnnotations(title='Create conversation', readOnlyHint=False, destructiveHint=True))
+    @mcp.tool(annotations=ToolAnnotations(title='Create conversation', readOnlyHint=False, destructiveHint=True, openWorldHint=True))
     def messages_create_inbox_conversation(account_id: str, participant_id: str | None = None, participant_username: str | None = None, message: str | None = None, skip_dm_check: bool = False) -> str:
         """Create conversation
 
@@ -3561,7 +3561,7 @@ def register_generated_tools(mcp, _get_client):
             return f'Error: {e}'
 
 
-    @mcp.tool(annotations=ToolAnnotations(title='Get conversation', readOnlyHint=True, destructiveHint=False))
+    @mcp.tool(annotations=ToolAnnotations(title='Get conversation', readOnlyHint=True, destructiveHint=False, openWorldHint=False))
     def messages_get_inbox_conversation(conversation_id: str, account_id: str) -> str:
         """Get conversation
 
@@ -3576,7 +3576,7 @@ def register_generated_tools(mcp, _get_client):
             return f'Error: {e}'
 
 
-    @mcp.tool(annotations=ToolAnnotations(title='Update conversation status', readOnlyHint=False, destructiveHint=True))
+    @mcp.tool(annotations=ToolAnnotations(title='Update conversation status', readOnlyHint=False, destructiveHint=True, openWorldHint=True))
     def messages_update_inbox_conversation(conversation_id: str, account_id: str, status: str) -> str:
         """Update conversation status
 
@@ -3592,7 +3592,7 @@ def register_generated_tools(mcp, _get_client):
             return f'Error: {e}'
 
 
-    @mcp.tool(annotations=ToolAnnotations(title='List messages', readOnlyHint=True, destructiveHint=False))
+    @mcp.tool(annotations=ToolAnnotations(title='List messages', readOnlyHint=True, destructiveHint=False, openWorldHint=False))
     def messages_get_inbox_conversation_messages(conversation_id: str, account_id: str, limit: int = 100, cursor: str | None = None, sort_order: str = "asc") -> str:
         """List messages
 
@@ -3613,7 +3613,7 @@ def register_generated_tools(mcp, _get_client):
             return f'Error: {e}'
 
 
-    @mcp.tool(annotations=ToolAnnotations(title='Send message', readOnlyHint=False, destructiveHint=True))
+    @mcp.tool(annotations=ToolAnnotations(title='Send message', readOnlyHint=False, destructiveHint=True, openWorldHint=True))
     def messages_send_inbox_message(conversation_id: str, account_id: str, message: str | None = None, attachment_url: str | None = None, attachment_type: str | None = None, quick_replies: list[dict[str, Any]] | None = None, buttons: list[dict[str, Any]] | None = None, template: dict[str, Any] | None = None, interactive: dict[str, Any] | None = None, reply_markup: dict[str, Any] | None = None, messaging_type: str | None = None, message_tag: str | None = None, reply_to: str | None = None) -> str:
         """Send message
 
@@ -3651,7 +3651,7 @@ def register_generated_tools(mcp, _get_client):
             return f'Error: {e}'
 
 
-    @mcp.tool(annotations=ToolAnnotations(title='Edit message', readOnlyHint=False, destructiveHint=True))
+    @mcp.tool(annotations=ToolAnnotations(title='Edit message', readOnlyHint=False, destructiveHint=True, openWorldHint=True))
     def messages_edit_inbox_message(conversation_id: str, message_id: str, account_id: str, text: str | None = None, reply_markup: dict[str, Any] | None = None) -> str:
         """Edit message
 
@@ -3669,7 +3669,7 @@ def register_generated_tools(mcp, _get_client):
             return f'Error: {e}'
 
 
-    @mcp.tool(annotations=ToolAnnotations(title='Delete message', readOnlyHint=False, destructiveHint=True))
+    @mcp.tool(annotations=ToolAnnotations(title='Delete message', readOnlyHint=False, destructiveHint=True, openWorldHint=True))
     def messages_delete_inbox_message(conversation_id: str, message_id: str, account_id: str) -> str:
         """Delete message
 
@@ -3685,7 +3685,7 @@ def register_generated_tools(mcp, _get_client):
             return f'Error: {e}'
 
 
-    @mcp.tool(annotations=ToolAnnotations(title='Send typing indicator', readOnlyHint=False, destructiveHint=True))
+    @mcp.tool(annotations=ToolAnnotations(title='Send typing indicator', readOnlyHint=False, destructiveHint=True, openWorldHint=True))
     def messages_send_typing_indicator(conversation_id: str, account_id: str) -> str:
         """Send typing indicator
 
@@ -3700,7 +3700,7 @@ def register_generated_tools(mcp, _get_client):
             return f'Error: {e}'
 
 
-    @mcp.tool(annotations=ToolAnnotations(title='Mark a conversation as read', readOnlyHint=False, destructiveHint=True))
+    @mcp.tool(annotations=ToolAnnotations(title='Mark a conversation as read', readOnlyHint=False, destructiveHint=True, openWorldHint=True))
     def messages_mark_conversation_read(conversation_id: str, account_id: str) -> str:
         """Mark a conversation as read
 
@@ -3715,7 +3715,7 @@ def register_generated_tools(mcp, _get_client):
             return f'Error: {e}'
 
 
-    @mcp.tool(annotations=ToolAnnotations(title='Add reaction', readOnlyHint=False, destructiveHint=True))
+    @mcp.tool(annotations=ToolAnnotations(title='Add reaction', readOnlyHint=False, destructiveHint=True, openWorldHint=True))
     def messages_add_message_reaction(conversation_id: str, message_id: str, account_id: str, emoji: str) -> str:
         """Add reaction
 
@@ -3732,7 +3732,7 @@ def register_generated_tools(mcp, _get_client):
             return f'Error: {e}'
 
 
-    @mcp.tool(annotations=ToolAnnotations(title='Remove reaction', readOnlyHint=False, destructiveHint=True))
+    @mcp.tool(annotations=ToolAnnotations(title='Remove reaction', readOnlyHint=False, destructiveHint=True, openWorldHint=True))
     def messages_remove_message_reaction(conversation_id: str, message_id: str, account_id: str) -> str:
         """Remove reaction
 
@@ -3748,7 +3748,7 @@ def register_generated_tools(mcp, _get_client):
             return f'Error: {e}'
 
 
-    @mcp.tool(annotations=ToolAnnotations(title='Upload media file', readOnlyHint=False, destructiveHint=True))
+    @mcp.tool(annotations=ToolAnnotations(title='Upload media file', readOnlyHint=False, destructiveHint=True, openWorldHint=True))
     def messages_upload_media_direct() -> str:
         """Upload media file"""
         client = _get_client()
@@ -3761,7 +3761,7 @@ def register_generated_tools(mcp, _get_client):
     # POSTS
 
 
-    @mcp.tool(annotations=ToolAnnotations(title='List posts', readOnlyHint=True, destructiveHint=False))
+    @mcp.tool(annotations=ToolAnnotations(title='List posts', readOnlyHint=True, destructiveHint=False, openWorldHint=False))
     def posts_list_posts(page: int = 1, limit: int = 10, status: str | None = None, platform: str | None = None, profile_id: str | None = None, created_by: str | None = None, date_from: str | None = None, date_to: str | None = None, include_hidden: bool = False, search: str | None = None, sort_by: str = "scheduled-desc", account_id: str | None = None) -> str:
         """List posts
 
@@ -3786,7 +3786,7 @@ def register_generated_tools(mcp, _get_client):
             return f'Error: {e}'
 
 
-    @mcp.tool(annotations=ToolAnnotations(title='Create post', readOnlyHint=False, destructiveHint=True))
+    @mcp.tool(annotations=ToolAnnotations(title='Create post', readOnlyHint=False, destructiveHint=True, openWorldHint=True))
     def posts_create_post(title: str | None = None, content: str | None = None, media_items: list[dict[str, Any]] | None = None, platforms: list[dict[str, Any]] | None = None, scheduled_for: str | None = None, publish_now: bool = False, is_draft: bool = False, timezone: str = "UTC", tags: list[str] | None = None, hashtags: list[str] | None = None, mentions: list[str] | None = None, crossposting_enabled: bool = True, metadata: dict[str, Any] | None = None, tiktok_settings: dict[str, Any] | None = None, facebook_settings: dict[str, Any] | None = None, recycling: dict[str, Any] | None = None, queued_from_profile: str | None = None, queue_id: str | None = None) -> str:
         """Create post
 
@@ -3819,7 +3819,7 @@ def register_generated_tools(mcp, _get_client):
             return f'Error: {e}'
 
 
-    @mcp.tool(annotations=ToolAnnotations(title='Get post', readOnlyHint=True, destructiveHint=False))
+    @mcp.tool(annotations=ToolAnnotations(title='Get post', readOnlyHint=True, destructiveHint=False, openWorldHint=False))
     def posts_get_post(post_id: str) -> str:
         """Get post
 
@@ -3833,7 +3833,7 @@ def register_generated_tools(mcp, _get_client):
             return f'Error: {e}'
 
 
-    @mcp.tool(annotations=ToolAnnotations(title='Update post', readOnlyHint=False, destructiveHint=True))
+    @mcp.tool(annotations=ToolAnnotations(title='Update post', readOnlyHint=False, destructiveHint=True, openWorldHint=True))
     def posts_update_post(post_id: str, content: str | None = None, scheduled_for: str | None = None, tiktok_settings: dict[str, Any] | None = None, facebook_settings: dict[str, Any] | None = None, recycling: dict[str, Any] | None = None) -> str:
         """Update post
 
@@ -3852,7 +3852,7 @@ def register_generated_tools(mcp, _get_client):
             return f'Error: {e}'
 
 
-    @mcp.tool(annotations=ToolAnnotations(title='Delete post', readOnlyHint=False, destructiveHint=True))
+    @mcp.tool(annotations=ToolAnnotations(title='Delete post', readOnlyHint=False, destructiveHint=True, openWorldHint=True))
     def posts_delete_post(post_id: str) -> str:
         """Delete post
 
@@ -3866,7 +3866,7 @@ def register_generated_tools(mcp, _get_client):
             return f'Error: {e}'
 
 
-    @mcp.tool(annotations=ToolAnnotations(title='Bulk upload from CSV', readOnlyHint=False, destructiveHint=True))
+    @mcp.tool(annotations=ToolAnnotations(title='Bulk upload from CSV', readOnlyHint=False, destructiveHint=True, openWorldHint=True))
     def posts_bulk_upload_posts(dry_run: bool = False) -> str:
         """Bulk upload from CSV
 
@@ -3880,7 +3880,7 @@ def register_generated_tools(mcp, _get_client):
             return f'Error: {e}'
 
 
-    @mcp.tool(annotations=ToolAnnotations(title='Unpublish post', readOnlyHint=False, destructiveHint=True))
+    @mcp.tool(annotations=ToolAnnotations(title='Unpublish post', readOnlyHint=False, destructiveHint=True, openWorldHint=True))
     def posts_unpublish_post(post_id: str, platform: str) -> str:
         """Unpublish post
 
@@ -3895,7 +3895,7 @@ def register_generated_tools(mcp, _get_client):
             return f'Error: {e}'
 
 
-    @mcp.tool(annotations=ToolAnnotations(title='Edit published post', readOnlyHint=False, destructiveHint=True))
+    @mcp.tool(annotations=ToolAnnotations(title='Edit published post', readOnlyHint=False, destructiveHint=True, openWorldHint=True))
     def posts_edit_post(post_id: str, platform: str, content: str) -> str:
         """Edit published post
 
@@ -3911,7 +3911,7 @@ def register_generated_tools(mcp, _get_client):
             return f'Error: {e}'
 
 
-    @mcp.tool(annotations=ToolAnnotations(title='Update post metadata', readOnlyHint=False, destructiveHint=True))
+    @mcp.tool(annotations=ToolAnnotations(title='Update post metadata', readOnlyHint=False, destructiveHint=True, openWorldHint=True))
     def posts_update_post_metadata(post_id: str, platform: str, video_id: str | None = None, account_id: str | None = None, title: str | None = None, description: str | None = None, tags: list[str] | None = None, category_id: str | None = None, privacy_status: str | None = None, thumbnail_url: str | None = None, made_for_kids: bool | None = None, contains_synthetic_media: bool | None = None, playlist_id: str | None = None) -> str:
         """Update post metadata
 
@@ -3939,7 +3939,7 @@ def register_generated_tools(mcp, _get_client):
     # PROFILES
 
 
-    @mcp.tool(annotations=ToolAnnotations(title='List profiles', readOnlyHint=True, destructiveHint=False))
+    @mcp.tool(annotations=ToolAnnotations(title='List profiles', readOnlyHint=True, destructiveHint=False, openWorldHint=False))
     def profiles_list_profiles(include_over_limit: bool = False) -> str:
         """List profiles
 
@@ -3953,7 +3953,7 @@ def register_generated_tools(mcp, _get_client):
             return f'Error: {e}'
 
 
-    @mcp.tool(annotations=ToolAnnotations(title='Create profile', readOnlyHint=False, destructiveHint=True))
+    @mcp.tool(annotations=ToolAnnotations(title='Create profile', readOnlyHint=False, destructiveHint=True, openWorldHint=True))
     def profiles_create_profile(name: str, description: str | None = None, color: str | None = None) -> str:
         """Create profile
 
@@ -3969,7 +3969,7 @@ def register_generated_tools(mcp, _get_client):
             return f'Error: {e}'
 
 
-    @mcp.tool(annotations=ToolAnnotations(title='Get profile', readOnlyHint=True, destructiveHint=False))
+    @mcp.tool(annotations=ToolAnnotations(title='Get profile', readOnlyHint=True, destructiveHint=False, openWorldHint=False))
     def profiles_get_profile(profile_id: str) -> str:
         """Get profile
 
@@ -3983,7 +3983,7 @@ def register_generated_tools(mcp, _get_client):
             return f'Error: {e}'
 
 
-    @mcp.tool(annotations=ToolAnnotations(title='Update profile', readOnlyHint=False, destructiveHint=True))
+    @mcp.tool(annotations=ToolAnnotations(title='Update profile', readOnlyHint=False, destructiveHint=True, openWorldHint=True))
     def profiles_update_profile(profile_id: str, name: str | None = None, description: str | None = None, color: str | None = None, is_default: bool | None = None) -> str:
         """Update profile
 
@@ -4001,7 +4001,7 @@ def register_generated_tools(mcp, _get_client):
             return f'Error: {e}'
 
 
-    @mcp.tool(annotations=ToolAnnotations(title='Delete profile', readOnlyHint=False, destructiveHint=True))
+    @mcp.tool(annotations=ToolAnnotations(title='Delete profile', readOnlyHint=False, destructiveHint=True, openWorldHint=True))
     def profiles_delete_profile(profile_id: str) -> str:
         """Delete profile
 
@@ -4017,7 +4017,7 @@ def register_generated_tools(mcp, _get_client):
     # QUEUE
 
 
-    @mcp.tool(annotations=ToolAnnotations(title='List schedules', readOnlyHint=True, destructiveHint=False))
+    @mcp.tool(annotations=ToolAnnotations(title='List schedules', readOnlyHint=True, destructiveHint=False, openWorldHint=False))
     def queue_list_queue_slots(profile_id: str, queue_id: str | None = None, all: str | None = None) -> str:
         """List schedules
 
@@ -4033,7 +4033,7 @@ def register_generated_tools(mcp, _get_client):
             return f'Error: {e}'
 
 
-    @mcp.tool(annotations=ToolAnnotations(title='Create schedule', readOnlyHint=False, destructiveHint=True))
+    @mcp.tool(annotations=ToolAnnotations(title='Create schedule', readOnlyHint=False, destructiveHint=True, openWorldHint=True))
     def queue_create_queue_slot(profile_id: str, name: str, timezone: str, slots: list[dict[str, Any]] | None, active: bool = True) -> str:
         """Create schedule
 
@@ -4051,7 +4051,7 @@ def register_generated_tools(mcp, _get_client):
             return f'Error: {e}'
 
 
-    @mcp.tool(annotations=ToolAnnotations(title='Update schedule', readOnlyHint=False, destructiveHint=True))
+    @mcp.tool(annotations=ToolAnnotations(title='Update schedule', readOnlyHint=False, destructiveHint=True, openWorldHint=True))
     def queue_update_queue_slot(profile_id: str, timezone: str, slots: list[dict[str, Any]] | None, queue_id: str | None = None, name: str | None = None, active: bool = True, set_as_default: bool | None = None, reshuffle_existing: bool = False) -> str:
         """Update schedule
 
@@ -4072,7 +4072,7 @@ def register_generated_tools(mcp, _get_client):
             return f'Error: {e}'
 
 
-    @mcp.tool(annotations=ToolAnnotations(title='Delete schedule', readOnlyHint=False, destructiveHint=True))
+    @mcp.tool(annotations=ToolAnnotations(title='Delete schedule', readOnlyHint=False, destructiveHint=True, openWorldHint=True))
     def queue_delete_queue_slot(profile_id: str, queue_id: str) -> str:
         """Delete schedule
 
@@ -4087,7 +4087,7 @@ def register_generated_tools(mcp, _get_client):
             return f'Error: {e}'
 
 
-    @mcp.tool(annotations=ToolAnnotations(title='Preview upcoming slots', readOnlyHint=True, destructiveHint=False))
+    @mcp.tool(annotations=ToolAnnotations(title='Preview upcoming slots', readOnlyHint=True, destructiveHint=False, openWorldHint=False))
     def queue_preview_queue(profile_id: str, queue_id: str | None = None, count: int = 20) -> str:
         """Preview upcoming slots
 
@@ -4103,7 +4103,7 @@ def register_generated_tools(mcp, _get_client):
             return f'Error: {e}'
 
 
-    @mcp.tool(annotations=ToolAnnotations(title='Get next available slot', readOnlyHint=True, destructiveHint=False))
+    @mcp.tool(annotations=ToolAnnotations(title='Get next available slot', readOnlyHint=True, destructiveHint=False, openWorldHint=False))
     def queue_get_next_queue_slot(profile_id: str, queue_id: str | None = None) -> str:
         """Get next available slot
 
@@ -4120,7 +4120,7 @@ def register_generated_tools(mcp, _get_client):
     # REDDIT
 
 
-    @mcp.tool(annotations=ToolAnnotations(title='Search posts', readOnlyHint=True, destructiveHint=False))
+    @mcp.tool(annotations=ToolAnnotations(title='Search posts', readOnlyHint=True, destructiveHint=False, openWorldHint=False))
     def reddit_search_reddit(account_id: str, q: str, subreddit: str | None = None, restrict_sr: str | None = None, sort: str = "new", limit: int = 25, after: str | None = None) -> str:
         """Search posts
 
@@ -4140,7 +4140,7 @@ def register_generated_tools(mcp, _get_client):
             return f'Error: {e}'
 
 
-    @mcp.tool(annotations=ToolAnnotations(title='Get subreddit feed', readOnlyHint=True, destructiveHint=False))
+    @mcp.tool(annotations=ToolAnnotations(title='Get subreddit feed', readOnlyHint=True, destructiveHint=False, openWorldHint=False))
     def reddit_get_reddit_feed(account_id: str, subreddit: str | None = None, sort: str = "hot", limit: int = 25, after: str | None = None, t: str | None = None) -> str:
         """Get subreddit feed
 
@@ -4161,7 +4161,7 @@ def register_generated_tools(mcp, _get_client):
     # REVIEWS
 
 
-    @mcp.tool(annotations=ToolAnnotations(title='List reviews', readOnlyHint=True, destructiveHint=False))
+    @mcp.tool(annotations=ToolAnnotations(title='List reviews', readOnlyHint=True, destructiveHint=False, openWorldHint=False))
     def reviews_list_inbox_reviews(profile_id: str | None = None, platform: str | None = None, min_rating: int | None = None, max_rating: int | None = None, has_reply: bool | None = None, sort_by: str = "date", sort_order: str = "desc", limit: int = 25, cursor: str | None = None, account_id: str | None = None) -> str:
         """List reviews
 
@@ -4184,7 +4184,7 @@ def register_generated_tools(mcp, _get_client):
             return f'Error: {e}'
 
 
-    @mcp.tool(annotations=ToolAnnotations(title='Reply to review', readOnlyHint=False, destructiveHint=True))
+    @mcp.tool(annotations=ToolAnnotations(title='Reply to review', readOnlyHint=False, destructiveHint=True, openWorldHint=True))
     def reviews_reply_to_inbox_review(review_id: str, account_id: str, message: str) -> str:
         """Reply to review
 
@@ -4200,7 +4200,7 @@ def register_generated_tools(mcp, _get_client):
             return f'Error: {e}'
 
 
-    @mcp.tool(annotations=ToolAnnotations(title='Delete review reply', readOnlyHint=False, destructiveHint=True))
+    @mcp.tool(annotations=ToolAnnotations(title='Delete review reply', readOnlyHint=False, destructiveHint=True, openWorldHint=True))
     def reviews_delete_inbox_review_reply(review_id: str, account_id: str) -> str:
         """Delete review reply
 
@@ -4217,7 +4217,7 @@ def register_generated_tools(mcp, _get_client):
     # SEQUENCES
 
 
-    @mcp.tool(annotations=ToolAnnotations(title='List sequences', readOnlyHint=True, destructiveHint=False))
+    @mcp.tool(annotations=ToolAnnotations(title='List sequences', readOnlyHint=True, destructiveHint=False, openWorldHint=False))
     def sequences_list_sequences(profile_id: str | None = None, status: str | None = None, limit: int = 50, skip: int = 0) -> str:
         """List sequences
 
@@ -4234,7 +4234,7 @@ def register_generated_tools(mcp, _get_client):
             return f'Error: {e}'
 
 
-    @mcp.tool(annotations=ToolAnnotations(title='Create sequence', readOnlyHint=False, destructiveHint=True))
+    @mcp.tool(annotations=ToolAnnotations(title='Create sequence', readOnlyHint=False, destructiveHint=True, openWorldHint=True))
     def sequences_create_sequence(profile_id: str, account_id: str, platform: str, name: str, description: str | None = None, steps: list[dict[str, Any]] | None = None, exit_on_reply: bool = True, exit_on_unsubscribe: bool = True) -> str:
         """Create sequence
 
@@ -4255,7 +4255,7 @@ def register_generated_tools(mcp, _get_client):
             return f'Error: {e}'
 
 
-    @mcp.tool(annotations=ToolAnnotations(title='Get sequence with steps', readOnlyHint=True, destructiveHint=False))
+    @mcp.tool(annotations=ToolAnnotations(title='Get sequence with steps', readOnlyHint=True, destructiveHint=False, openWorldHint=False))
     def sequences_get_sequence(sequence_id: str) -> str:
         """Get sequence with steps
 
@@ -4269,7 +4269,7 @@ def register_generated_tools(mcp, _get_client):
             return f'Error: {e}'
 
 
-    @mcp.tool(annotations=ToolAnnotations(title='Update sequence', readOnlyHint=False, destructiveHint=True))
+    @mcp.tool(annotations=ToolAnnotations(title='Update sequence', readOnlyHint=False, destructiveHint=True, openWorldHint=True))
     def sequences_update_sequence(sequence_id: str, name: str | None = None, description: str | None = None, steps: list[dict[str, Any]] | None = None, exit_on_reply: bool | None = None, exit_on_unsubscribe: bool | None = None) -> str:
         """Update sequence
 
@@ -4288,7 +4288,7 @@ def register_generated_tools(mcp, _get_client):
             return f'Error: {e}'
 
 
-    @mcp.tool(annotations=ToolAnnotations(title='Delete sequence', readOnlyHint=False, destructiveHint=True))
+    @mcp.tool(annotations=ToolAnnotations(title='Delete sequence', readOnlyHint=False, destructiveHint=True, openWorldHint=True))
     def sequences_delete_sequence(sequence_id: str) -> str:
         """Delete sequence
 
@@ -4302,7 +4302,7 @@ def register_generated_tools(mcp, _get_client):
             return f'Error: {e}'
 
 
-    @mcp.tool(annotations=ToolAnnotations(title='Activate sequence', readOnlyHint=False, destructiveHint=True))
+    @mcp.tool(annotations=ToolAnnotations(title='Activate sequence', readOnlyHint=False, destructiveHint=True, openWorldHint=True))
     def sequences_activate_sequence(sequence_id: str) -> str:
         """Activate sequence
 
@@ -4316,7 +4316,7 @@ def register_generated_tools(mcp, _get_client):
             return f'Error: {e}'
 
 
-    @mcp.tool(annotations=ToolAnnotations(title='Pause sequence', readOnlyHint=False, destructiveHint=True))
+    @mcp.tool(annotations=ToolAnnotations(title='Pause sequence', readOnlyHint=False, destructiveHint=True, openWorldHint=True))
     def sequences_pause_sequence(sequence_id: str) -> str:
         """Pause sequence
 
@@ -4330,7 +4330,7 @@ def register_generated_tools(mcp, _get_client):
             return f'Error: {e}'
 
 
-    @mcp.tool(annotations=ToolAnnotations(title='Enroll contacts in a sequence', readOnlyHint=False, destructiveHint=True))
+    @mcp.tool(annotations=ToolAnnotations(title='Enroll contacts in a sequence', readOnlyHint=False, destructiveHint=True, openWorldHint=True))
     def sequences_enroll_contacts(sequence_id: str, contact_ids: list[str] | None, channel_ids: list[str] | None = None) -> str:
         """Enroll contacts in a sequence
 
@@ -4346,7 +4346,7 @@ def register_generated_tools(mcp, _get_client):
             return f'Error: {e}'
 
 
-    @mcp.tool(annotations=ToolAnnotations(title='Unenroll contact', readOnlyHint=False, destructiveHint=True))
+    @mcp.tool(annotations=ToolAnnotations(title='Unenroll contact', readOnlyHint=False, destructiveHint=True, openWorldHint=True))
     def sequences_unenroll_contact(sequence_id: str, contact_id: str) -> str:
         """Unenroll contact
 
@@ -4361,7 +4361,7 @@ def register_generated_tools(mcp, _get_client):
             return f'Error: {e}'
 
 
-    @mcp.tool(annotations=ToolAnnotations(title='List enrollments for a sequence', readOnlyHint=True, destructiveHint=False))
+    @mcp.tool(annotations=ToolAnnotations(title='List enrollments for a sequence', readOnlyHint=True, destructiveHint=False, openWorldHint=False))
     def sequences_list_sequence_enrollments(sequence_id: str, status: str | None = None, limit: int = 50, skip: int = 0) -> str:
         """List enrollments for a sequence
 
@@ -4380,7 +4380,7 @@ def register_generated_tools(mcp, _get_client):
     # TRACKING_TAGS
 
 
-    @mcp.tool(annotations=ToolAnnotations(title='List tracking tags (Meta Pixels)', readOnlyHint=True, destructiveHint=False))
+    @mcp.tool(annotations=ToolAnnotations(title='List tracking tags (Meta Pixels)', readOnlyHint=True, destructiveHint=False, openWorldHint=False))
     def tracking_tags_list_tracking_tags(account_id: str, ad_account_id: str | None = None) -> str:
         """List tracking tags (Meta Pixels)
 
@@ -4395,7 +4395,7 @@ def register_generated_tools(mcp, _get_client):
             return f'Error: {e}'
 
 
-    @mcp.tool(annotations=ToolAnnotations(title='Create a tracking tag (Meta Pixel)', readOnlyHint=False, destructiveHint=True))
+    @mcp.tool(annotations=ToolAnnotations(title='Create a tracking tag (Meta Pixel)', readOnlyHint=False, destructiveHint=True, openWorldHint=True))
     def tracking_tags_create_tracking_tag(account_id: str, ad_account_id: str, name: str) -> str:
         """Create a tracking tag (Meta Pixel)
 
@@ -4411,7 +4411,7 @@ def register_generated_tools(mcp, _get_client):
             return f'Error: {e}'
 
 
-    @mcp.tool(annotations=ToolAnnotations(title='Fetch a single tracking tag (Meta Pixel)', readOnlyHint=True, destructiveHint=False))
+    @mcp.tool(annotations=ToolAnnotations(title='Fetch a single tracking tag (Meta Pixel)', readOnlyHint=True, destructiveHint=False, openWorldHint=False))
     def tracking_tags_get_tracking_tag(account_id: str, tag_id: str) -> str:
         """Fetch a single tracking tag (Meta Pixel)
 
@@ -4426,7 +4426,7 @@ def register_generated_tools(mcp, _get_client):
             return f'Error: {e}'
 
 
-    @mcp.tool(annotations=ToolAnnotations(title='Update a tracking tag (Meta Pixel)', readOnlyHint=False, destructiveHint=True))
+    @mcp.tool(annotations=ToolAnnotations(title='Update a tracking tag (Meta Pixel)', readOnlyHint=False, destructiveHint=True, openWorldHint=True))
     def tracking_tags_update_tracking_tag(account_id: str, tag_id: str, name: str | None = None, enable_automatic_matching: bool | None = None, automatic_matching_fields: list[str] | None = None, first_party_cookie_status: str | None = None, data_use_setting: str | None = None) -> str:
         """Update a tracking tag (Meta Pixel)
 
@@ -4449,7 +4449,7 @@ def register_generated_tools(mcp, _get_client):
             return f'Error: {e}'
 
 
-    @mcp.tool(annotations=ToolAnnotations(title='List ad accounts a tracking tag is shared with', readOnlyHint=True, destructiveHint=False))
+    @mcp.tool(annotations=ToolAnnotations(title='List ad accounts a tracking tag is shared with', readOnlyHint=True, destructiveHint=False, openWorldHint=False))
     def tracking_tags_list_tracking_tag_shared_accounts(account_id: str, tag_id: str) -> str:
         """List ad accounts a tracking tag is shared with
 
@@ -4464,7 +4464,7 @@ def register_generated_tools(mcp, _get_client):
             return f'Error: {e}'
 
 
-    @mcp.tool(annotations=ToolAnnotations(title='Share a tracking tag with an ad account', readOnlyHint=False, destructiveHint=True))
+    @mcp.tool(annotations=ToolAnnotations(title='Share a tracking tag with an ad account', readOnlyHint=False, destructiveHint=True, openWorldHint=True))
     def tracking_tags_add_tracking_tag_shared_account(account_id: str, tag_id: str, ad_account_id: str) -> str:
         """Share a tracking tag with an ad account
 
@@ -4480,7 +4480,7 @@ def register_generated_tools(mcp, _get_client):
             return f'Error: {e}'
 
 
-    @mcp.tool(annotations=ToolAnnotations(title='Stop sharing a tracking tag with an ad account', readOnlyHint=False, destructiveHint=True))
+    @mcp.tool(annotations=ToolAnnotations(title='Stop sharing a tracking tag with an ad account', readOnlyHint=False, destructiveHint=True, openWorldHint=True))
     def tracking_tags_remove_tracking_tag_shared_account(account_id: str, tag_id: str, ad_account_id: str | None = None) -> str:
         """Stop sharing a tracking tag with an ad account
 
@@ -4496,7 +4496,7 @@ def register_generated_tools(mcp, _get_client):
             return f'Error: {e}'
 
 
-    @mcp.tool(annotations=ToolAnnotations(title='Aggregated event stats for a tracking tag (Meta Pixel)', readOnlyHint=True, destructiveHint=False))
+    @mcp.tool(annotations=ToolAnnotations(title='Aggregated event stats for a tracking tag (Meta Pixel)', readOnlyHint=True, destructiveHint=False, openWorldHint=False))
     def tracking_tags_get_tracking_tag_stats(account_id: str, tag_id: str, aggregation: str = "event", start_time: int | None = None, end_time: int | None = None) -> str:
         """Aggregated event stats for a tracking tag (Meta Pixel)
 
@@ -4516,7 +4516,7 @@ def register_generated_tools(mcp, _get_client):
     # TWITTER_ENGAGEMENT
 
 
-    @mcp.tool(annotations=ToolAnnotations(title='Retweet a post', readOnlyHint=False, destructiveHint=True))
+    @mcp.tool(annotations=ToolAnnotations(title='Retweet a post', readOnlyHint=False, destructiveHint=True, openWorldHint=True))
     def twitter_engagement_retweet_post(account_id: str, tweet_id: str) -> str:
         """Retweet a post
 
@@ -4531,7 +4531,7 @@ def register_generated_tools(mcp, _get_client):
             return f'Error: {e}'
 
 
-    @mcp.tool(annotations=ToolAnnotations(title='Undo retweet', readOnlyHint=False, destructiveHint=True))
+    @mcp.tool(annotations=ToolAnnotations(title='Undo retweet', readOnlyHint=False, destructiveHint=True, openWorldHint=True))
     def twitter_engagement_undo_retweet(account_id: str, tweet_id: str) -> str:
         """Undo retweet
 
@@ -4546,7 +4546,7 @@ def register_generated_tools(mcp, _get_client):
             return f'Error: {e}'
 
 
-    @mcp.tool(annotations=ToolAnnotations(title='Bookmark a tweet', readOnlyHint=False, destructiveHint=True))
+    @mcp.tool(annotations=ToolAnnotations(title='Bookmark a tweet', readOnlyHint=False, destructiveHint=True, openWorldHint=True))
     def twitter_engagement_bookmark_post(account_id: str, tweet_id: str) -> str:
         """Bookmark a tweet
 
@@ -4561,7 +4561,7 @@ def register_generated_tools(mcp, _get_client):
             return f'Error: {e}'
 
 
-    @mcp.tool(annotations=ToolAnnotations(title='Remove bookmark', readOnlyHint=False, destructiveHint=True))
+    @mcp.tool(annotations=ToolAnnotations(title='Remove bookmark', readOnlyHint=False, destructiveHint=True, openWorldHint=True))
     def twitter_engagement_remove_bookmark(account_id: str, tweet_id: str) -> str:
         """Remove bookmark
 
@@ -4576,7 +4576,7 @@ def register_generated_tools(mcp, _get_client):
             return f'Error: {e}'
 
 
-    @mcp.tool(annotations=ToolAnnotations(title='Follow a user', readOnlyHint=False, destructiveHint=True))
+    @mcp.tool(annotations=ToolAnnotations(title='Follow a user', readOnlyHint=False, destructiveHint=True, openWorldHint=True))
     def twitter_engagement_follow_user(account_id: str, target_user_id: str) -> str:
         """Follow a user
 
@@ -4591,7 +4591,7 @@ def register_generated_tools(mcp, _get_client):
             return f'Error: {e}'
 
 
-    @mcp.tool(annotations=ToolAnnotations(title='Unfollow a user', readOnlyHint=False, destructiveHint=True))
+    @mcp.tool(annotations=ToolAnnotations(title='Unfollow a user', readOnlyHint=False, destructiveHint=True, openWorldHint=True))
     def twitter_engagement_unfollow_user(account_id: str, target_user_id: str) -> str:
         """Unfollow a user
 
@@ -4608,7 +4608,7 @@ def register_generated_tools(mcp, _get_client):
     # USAGE
 
 
-    @mcp.tool(annotations=ToolAnnotations(title='Get X/Twitter API pricing table', readOnlyHint=True, destructiveHint=False))
+    @mcp.tool(annotations=ToolAnnotations(title='Get X/Twitter API pricing table', readOnlyHint=True, destructiveHint=False, openWorldHint=False))
     def usage_get_x_api_pricing() -> str:
         """Get X/Twitter API pricing table"""
         client = _get_client()
@@ -4619,7 +4619,7 @@ def register_generated_tools(mcp, _get_client):
             return f'Error: {e}'
 
 
-    @mcp.tool(annotations=ToolAnnotations(title='Get plan and usage stats', readOnlyHint=True, destructiveHint=False))
+    @mcp.tool(annotations=ToolAnnotations(title='Get plan and usage stats', readOnlyHint=True, destructiveHint=False, openWorldHint=False))
     def usage_get_usage_stats(reconcile: bool | None = None) -> str:
         """Get plan and usage stats
 
@@ -4639,7 +4639,7 @@ def register_generated_tools(mcp, _get_client):
     # USERS
 
 
-    @mcp.tool(annotations=ToolAnnotations(title='List users', readOnlyHint=True, destructiveHint=False))
+    @mcp.tool(annotations=ToolAnnotations(title='List users', readOnlyHint=True, destructiveHint=False, openWorldHint=False))
     def users_list_users() -> str:
         """List users"""
         client = _get_client()
@@ -4650,7 +4650,7 @@ def register_generated_tools(mcp, _get_client):
             return f'Error: {e}'
 
 
-    @mcp.tool(annotations=ToolAnnotations(title='Get user', readOnlyHint=True, destructiveHint=False))
+    @mcp.tool(annotations=ToolAnnotations(title='Get user', readOnlyHint=True, destructiveHint=False, openWorldHint=False))
     def users_get_user(user_id: str) -> str:
         """Get user
 
@@ -4666,7 +4666,7 @@ def register_generated_tools(mcp, _get_client):
     # VALIDATE
 
 
-    @mcp.tool(annotations=ToolAnnotations(title='Validate character count', readOnlyHint=False, destructiveHint=True))
+    @mcp.tool(annotations=ToolAnnotations(title='Validate character count', readOnlyHint=False, destructiveHint=True, openWorldHint=True))
     def validate_post_length(text: str) -> str:
         """Validate character count
 
@@ -4680,7 +4680,7 @@ def register_generated_tools(mcp, _get_client):
             return f'Error: {e}'
 
 
-    @mcp.tool(annotations=ToolAnnotations(title='Validate post content', readOnlyHint=False, destructiveHint=True))
+    @mcp.tool(annotations=ToolAnnotations(title='Validate post content', readOnlyHint=False, destructiveHint=True, openWorldHint=True))
     def validate_post(platforms: list[dict[str, Any]] | None, content: str | None = None, media_items: list[dict[str, Any]] | None = None) -> str:
         """Validate post content
 
@@ -4696,7 +4696,7 @@ def register_generated_tools(mcp, _get_client):
             return f'Error: {e}'
 
 
-    @mcp.tool(annotations=ToolAnnotations(title='Validate media URL', readOnlyHint=False, destructiveHint=True))
+    @mcp.tool(annotations=ToolAnnotations(title='Validate media URL', readOnlyHint=False, destructiveHint=True, openWorldHint=True))
     def validate_media(url: str) -> str:
         """Validate media URL
 
@@ -4710,7 +4710,7 @@ def register_generated_tools(mcp, _get_client):
             return f'Error: {e}'
 
 
-    @mcp.tool(annotations=ToolAnnotations(title='Check subreddit existence', readOnlyHint=True, destructiveHint=False))
+    @mcp.tool(annotations=ToolAnnotations(title='Check subreddit existence', readOnlyHint=True, destructiveHint=False, openWorldHint=False))
     def validate_subreddit(name: str, account_id: str | None = None) -> str:
         """Check subreddit existence
 
@@ -4727,7 +4727,7 @@ def register_generated_tools(mcp, _get_client):
     # WEBHOOKS
 
 
-    @mcp.tool(annotations=ToolAnnotations(title='List webhooks', readOnlyHint=True, destructiveHint=False))
+    @mcp.tool(annotations=ToolAnnotations(title='List webhooks', readOnlyHint=True, destructiveHint=False, openWorldHint=False))
     def webhooks_get_webhook_settings() -> str:
         """List webhooks"""
         client = _get_client()
@@ -4738,7 +4738,7 @@ def register_generated_tools(mcp, _get_client):
             return f'Error: {e}'
 
 
-    @mcp.tool(annotations=ToolAnnotations(title='Create webhook', readOnlyHint=False, destructiveHint=True))
+    @mcp.tool(annotations=ToolAnnotations(title='Create webhook', readOnlyHint=False, destructiveHint=True, openWorldHint=True))
     def webhooks_create_webhook_settings(name: str, url: str, events: list[str] | None, secret: str | None = None, is_active: bool = True, custom_headers: dict[str, Any] | None = None) -> str:
         """Create webhook
 
@@ -4757,7 +4757,7 @@ def register_generated_tools(mcp, _get_client):
             return f'Error: {e}'
 
 
-    @mcp.tool(annotations=ToolAnnotations(title='Update webhook', readOnlyHint=False, destructiveHint=True))
+    @mcp.tool(annotations=ToolAnnotations(title='Update webhook', readOnlyHint=False, destructiveHint=True, openWorldHint=True))
     def webhooks_update_webhook_settings(id: str, name: str | None = None, url: str | None = None, secret: str | None = None, events: list[str] | None = None, is_active: bool | None = None, custom_headers: dict[str, Any] | None = None) -> str:
         """Update webhook
 
@@ -4777,7 +4777,7 @@ def register_generated_tools(mcp, _get_client):
             return f'Error: {e}'
 
 
-    @mcp.tool(annotations=ToolAnnotations(title='Delete webhook', readOnlyHint=False, destructiveHint=True))
+    @mcp.tool(annotations=ToolAnnotations(title='Delete webhook', readOnlyHint=False, destructiveHint=True, openWorldHint=True))
     def webhooks_delete_webhook_settings(id: str) -> str:
         """Delete webhook
 
@@ -4791,7 +4791,7 @@ def register_generated_tools(mcp, _get_client):
             return f'Error: {e}'
 
 
-    @mcp.tool(annotations=ToolAnnotations(title='Send test webhook', readOnlyHint=False, destructiveHint=True))
+    @mcp.tool(annotations=ToolAnnotations(title='Send test webhook', readOnlyHint=False, destructiveHint=True, openWorldHint=True))
     def webhooks_test_webhook(webhook_id: str) -> str:
         """Send test webhook
 
@@ -4807,7 +4807,7 @@ def register_generated_tools(mcp, _get_client):
     # WHATSAPP
 
 
-    @mcp.tool(annotations=ToolAnnotations(title='List templates', readOnlyHint=True, destructiveHint=False))
+    @mcp.tool(annotations=ToolAnnotations(title='List templates', readOnlyHint=True, destructiveHint=False, openWorldHint=False))
     def whatsapp_get_whats_app_templates(account_id: str) -> str:
         """List templates
 
@@ -4821,7 +4821,7 @@ def register_generated_tools(mcp, _get_client):
             return f'Error: {e}'
 
 
-    @mcp.tool(annotations=ToolAnnotations(title='Create template', readOnlyHint=False, destructiveHint=True))
+    @mcp.tool(annotations=ToolAnnotations(title='Create template', readOnlyHint=False, destructiveHint=True, openWorldHint=True))
     def whatsapp_create_whats_app_template(account_id: str, name: str, category: str, language: str, components: list[dict[str, Any]] | None = None, library_template_name: str | None = None, library_template_body_inputs: dict[str, Any] | None = None, library_template_button_inputs: list[dict[str, Any]] | None = None) -> str:
         """Create template
 
@@ -4847,7 +4847,7 @@ def register_generated_tools(mcp, _get_client):
             return f'Error: {e}'
 
 
-    @mcp.tool(annotations=ToolAnnotations(title='Get template', readOnlyHint=True, destructiveHint=False))
+    @mcp.tool(annotations=ToolAnnotations(title='Get template', readOnlyHint=True, destructiveHint=False, openWorldHint=False))
     def whatsapp_get_whats_app_template(template_name: str, account_id: str) -> str:
         """Get template
 
@@ -4862,7 +4862,7 @@ def register_generated_tools(mcp, _get_client):
             return f'Error: {e}'
 
 
-    @mcp.tool(annotations=ToolAnnotations(title='Update template', readOnlyHint=False, destructiveHint=True))
+    @mcp.tool(annotations=ToolAnnotations(title='Update template', readOnlyHint=False, destructiveHint=True, openWorldHint=True))
     def whatsapp_update_whats_app_template(template_name: str, account_id: str, components: list[dict[str, Any]] | None) -> str:
         """Update template
 
@@ -4878,7 +4878,7 @@ def register_generated_tools(mcp, _get_client):
             return f'Error: {e}'
 
 
-    @mcp.tool(annotations=ToolAnnotations(title='Delete template', readOnlyHint=False, destructiveHint=True))
+    @mcp.tool(annotations=ToolAnnotations(title='Delete template', readOnlyHint=False, destructiveHint=True, openWorldHint=True))
     def whatsapp_delete_whats_app_template(template_name: str, account_id: str) -> str:
         """Delete template
 
@@ -4893,7 +4893,7 @@ def register_generated_tools(mcp, _get_client):
             return f'Error: {e}'
 
 
-    @mcp.tool(annotations=ToolAnnotations(title='Get business profile', readOnlyHint=True, destructiveHint=False))
+    @mcp.tool(annotations=ToolAnnotations(title='Get business profile', readOnlyHint=True, destructiveHint=False, openWorldHint=False))
     def whatsapp_get_whats_app_business_profile(account_id: str) -> str:
         """Get business profile
 
@@ -4907,7 +4907,7 @@ def register_generated_tools(mcp, _get_client):
             return f'Error: {e}'
 
 
-    @mcp.tool(annotations=ToolAnnotations(title='Update business profile', readOnlyHint=False, destructiveHint=True))
+    @mcp.tool(annotations=ToolAnnotations(title='Update business profile', readOnlyHint=False, destructiveHint=True, openWorldHint=True))
     def whatsapp_update_whats_app_business_profile(account_id: str, about: str | None = None, address: str | None = None, description: str | None = None, email: str | None = None, websites: list[str] | None = None, vertical: str | None = None, profile_picture_handle: str | None = None) -> str:
         """Update business profile
 
@@ -4928,7 +4928,7 @@ def register_generated_tools(mcp, _get_client):
             return f'Error: {e}'
 
 
-    @mcp.tool(annotations=ToolAnnotations(title='Upload profile picture', readOnlyHint=False, destructiveHint=True))
+    @mcp.tool(annotations=ToolAnnotations(title='Upload profile picture', readOnlyHint=False, destructiveHint=True, openWorldHint=True))
     def whatsapp_upload_whats_app_profile_photo() -> str:
         """Upload profile picture"""
         client = _get_client()
@@ -4939,7 +4939,7 @@ def register_generated_tools(mcp, _get_client):
             return f'Error: {e}'
 
 
-    @mcp.tool(annotations=ToolAnnotations(title='Get display name status', readOnlyHint=True, destructiveHint=False))
+    @mcp.tool(annotations=ToolAnnotations(title='Get display name status', readOnlyHint=True, destructiveHint=False, openWorldHint=False))
     def whatsapp_get_whats_app_display_name(account_id: str) -> str:
         """Get display name status
 
@@ -4953,7 +4953,7 @@ def register_generated_tools(mcp, _get_client):
             return f'Error: {e}'
 
 
-    @mcp.tool(annotations=ToolAnnotations(title='Request display name change', readOnlyHint=False, destructiveHint=True))
+    @mcp.tool(annotations=ToolAnnotations(title='Request display name change', readOnlyHint=False, destructiveHint=True, openWorldHint=True))
     def whatsapp_update_whats_app_display_name(account_id: str, display_name: str) -> str:
         """Request display name change
 
@@ -4968,7 +4968,7 @@ def register_generated_tools(mcp, _get_client):
             return f'Error: {e}'
 
 
-    @mcp.tool(annotations=ToolAnnotations(title='List active groups', readOnlyHint=True, destructiveHint=False))
+    @mcp.tool(annotations=ToolAnnotations(title='List active groups', readOnlyHint=True, destructiveHint=False, openWorldHint=False))
     def whatsapp_list_whats_app_group_chats(account_id: str, limit: int = 25, after: str | None = None) -> str:
         """List active groups
 
@@ -4984,7 +4984,7 @@ def register_generated_tools(mcp, _get_client):
             return f'Error: {e}'
 
 
-    @mcp.tool(annotations=ToolAnnotations(title='Create group', readOnlyHint=False, destructiveHint=True))
+    @mcp.tool(annotations=ToolAnnotations(title='Create group', readOnlyHint=False, destructiveHint=True, openWorldHint=True))
     def whatsapp_create_whats_app_group_chat(account_id: str, subject: str, description: str | None = None, join_approval_mode: str | None = None) -> str:
         """Create group
 
@@ -5001,7 +5001,7 @@ def register_generated_tools(mcp, _get_client):
             return f'Error: {e}'
 
 
-    @mcp.tool(annotations=ToolAnnotations(title='Get group info', readOnlyHint=True, destructiveHint=False))
+    @mcp.tool(annotations=ToolAnnotations(title='Get group info', readOnlyHint=True, destructiveHint=False, openWorldHint=False))
     def whatsapp_get_whats_app_group_chat(group_id: str, account_id: str) -> str:
         """Get group info
 
@@ -5016,7 +5016,7 @@ def register_generated_tools(mcp, _get_client):
             return f'Error: {e}'
 
 
-    @mcp.tool(annotations=ToolAnnotations(title='Update group settings', readOnlyHint=False, destructiveHint=True))
+    @mcp.tool(annotations=ToolAnnotations(title='Update group settings', readOnlyHint=False, destructiveHint=True, openWorldHint=True))
     def whatsapp_update_whats_app_group_chat(group_id: str, account_id: str, subject: str | None = None, description: str | None = None, join_approval_mode: str | None = None) -> str:
         """Update group settings
 
@@ -5034,7 +5034,7 @@ def register_generated_tools(mcp, _get_client):
             return f'Error: {e}'
 
 
-    @mcp.tool(annotations=ToolAnnotations(title='Delete group', readOnlyHint=False, destructiveHint=True))
+    @mcp.tool(annotations=ToolAnnotations(title='Delete group', readOnlyHint=False, destructiveHint=True, openWorldHint=True))
     def whatsapp_delete_whats_app_group_chat(group_id: str, account_id: str) -> str:
         """Delete group
 
@@ -5049,7 +5049,7 @@ def register_generated_tools(mcp, _get_client):
             return f'Error: {e}'
 
 
-    @mcp.tool(annotations=ToolAnnotations(title='Add participants', readOnlyHint=False, destructiveHint=True))
+    @mcp.tool(annotations=ToolAnnotations(title='Add participants', readOnlyHint=False, destructiveHint=True, openWorldHint=True))
     def whatsapp_add_whats_app_group_participants(group_id: str, account_id: str, phone_numbers: list[str] | None) -> str:
         """Add participants
 
@@ -5065,7 +5065,7 @@ def register_generated_tools(mcp, _get_client):
             return f'Error: {e}'
 
 
-    @mcp.tool(annotations=ToolAnnotations(title='Remove participants', readOnlyHint=False, destructiveHint=True))
+    @mcp.tool(annotations=ToolAnnotations(title='Remove participants', readOnlyHint=False, destructiveHint=True, openWorldHint=True))
     def whatsapp_remove_whats_app_group_participants(group_id: str, account_id: str, phone_numbers: list[str] | None) -> str:
         """Remove participants
 
@@ -5081,7 +5081,7 @@ def register_generated_tools(mcp, _get_client):
             return f'Error: {e}'
 
 
-    @mcp.tool(annotations=ToolAnnotations(title='Create invite link', readOnlyHint=False, destructiveHint=True))
+    @mcp.tool(annotations=ToolAnnotations(title='Create invite link', readOnlyHint=False, destructiveHint=True, openWorldHint=True))
     def whatsapp_create_whats_app_group_invite_link(group_id: str, account_id: str) -> str:
         """Create invite link
 
@@ -5096,7 +5096,7 @@ def register_generated_tools(mcp, _get_client):
             return f'Error: {e}'
 
 
-    @mcp.tool(annotations=ToolAnnotations(title='List join requests', readOnlyHint=True, destructiveHint=False))
+    @mcp.tool(annotations=ToolAnnotations(title='List join requests', readOnlyHint=True, destructiveHint=False, openWorldHint=False))
     def whatsapp_list_whats_app_group_join_requests(group_id: str, account_id: str) -> str:
         """List join requests
 
@@ -5111,7 +5111,7 @@ def register_generated_tools(mcp, _get_client):
             return f'Error: {e}'
 
 
-    @mcp.tool(annotations=ToolAnnotations(title='Approve join requests', readOnlyHint=False, destructiveHint=True))
+    @mcp.tool(annotations=ToolAnnotations(title='Approve join requests', readOnlyHint=False, destructiveHint=True, openWorldHint=True))
     def whatsapp_approve_whats_app_group_join_requests(group_id: str, account_id: str, phone_numbers: list[str] | None) -> str:
         """Approve join requests
 
@@ -5127,7 +5127,7 @@ def register_generated_tools(mcp, _get_client):
             return f'Error: {e}'
 
 
-    @mcp.tool(annotations=ToolAnnotations(title='Reject join requests', readOnlyHint=False, destructiveHint=True))
+    @mcp.tool(annotations=ToolAnnotations(title='Reject join requests', readOnlyHint=False, destructiveHint=True, openWorldHint=True))
     def whatsapp_reject_whats_app_group_join_requests(group_id: str, account_id: str, phone_numbers: list[str] | None) -> str:
         """Reject join requests
 
@@ -5143,7 +5143,7 @@ def register_generated_tools(mcp, _get_client):
             return f'Error: {e}'
 
 
-    @mcp.tool(annotations=ToolAnnotations(title='Send WhatsApp conversion event', readOnlyHint=False, destructiveHint=True))
+    @mcp.tool(annotations=ToolAnnotations(title='Send WhatsApp conversion event', readOnlyHint=False, destructiveHint=True, openWorldHint=True))
     def whatsapp_send_whats_app_conversion(account_id: str, event_name: str, event_id: str, event_time: float | None = None, conversation_id: str | None = None, phone_e164: str | None = None, value: float | None = None, currency: str | None = None, content_ids: list[str] | None = None, email: str | None = None, external_id: str | None = None, test_code: str | None = None) -> str:
         """Send WhatsApp conversion event
 
@@ -5194,7 +5194,7 @@ def register_generated_tools(mcp, _get_client):
     # WHATSAPP_FLOWS
 
 
-    @mcp.tool(annotations=ToolAnnotations(title='List flows', readOnlyHint=True, destructiveHint=False))
+    @mcp.tool(annotations=ToolAnnotations(title='List flows', readOnlyHint=True, destructiveHint=False, openWorldHint=False))
     def whatsapp_flows_list_whats_app_flows(account_id: str) -> str:
         """List flows
 
@@ -5208,7 +5208,7 @@ def register_generated_tools(mcp, _get_client):
             return f'Error: {e}'
 
 
-    @mcp.tool(annotations=ToolAnnotations(title='Create flow', readOnlyHint=False, destructiveHint=True))
+    @mcp.tool(annotations=ToolAnnotations(title='Create flow', readOnlyHint=False, destructiveHint=True, openWorldHint=True))
     def whatsapp_flows_create_whats_app_flow(account_id: str, name: str, categories: list[str] | None, clone_flow_id: str | None = None) -> str:
         """Create flow
 
@@ -5225,7 +5225,7 @@ def register_generated_tools(mcp, _get_client):
             return f'Error: {e}'
 
 
-    @mcp.tool(annotations=ToolAnnotations(title='Get flow', readOnlyHint=True, destructiveHint=False))
+    @mcp.tool(annotations=ToolAnnotations(title='Get flow', readOnlyHint=True, destructiveHint=False, openWorldHint=False))
     def whatsapp_flows_get_whats_app_flow(flow_id: str, account_id: str, fields: str | None = None) -> str:
         """Get flow
 
@@ -5241,7 +5241,7 @@ def register_generated_tools(mcp, _get_client):
             return f'Error: {e}'
 
 
-    @mcp.tool(annotations=ToolAnnotations(title='Update flow', readOnlyHint=False, destructiveHint=True))
+    @mcp.tool(annotations=ToolAnnotations(title='Update flow', readOnlyHint=False, destructiveHint=True, openWorldHint=True))
     def whatsapp_flows_update_whats_app_flow(flow_id: str, account_id: str, name: str | None = None, categories: list[str] | None = None) -> str:
         """Update flow
 
@@ -5258,7 +5258,7 @@ def register_generated_tools(mcp, _get_client):
             return f'Error: {e}'
 
 
-    @mcp.tool(annotations=ToolAnnotations(title='Delete flow', readOnlyHint=False, destructiveHint=True))
+    @mcp.tool(annotations=ToolAnnotations(title='Delete flow', readOnlyHint=False, destructiveHint=True, openWorldHint=True))
     def whatsapp_flows_delete_whats_app_flow(flow_id: str, account_id: str) -> str:
         """Delete flow
 
@@ -5273,7 +5273,7 @@ def register_generated_tools(mcp, _get_client):
             return f'Error: {e}'
 
 
-    @mcp.tool(annotations=ToolAnnotations(title='Get flow JSON asset', readOnlyHint=True, destructiveHint=False))
+    @mcp.tool(annotations=ToolAnnotations(title='Get flow JSON asset', readOnlyHint=True, destructiveHint=False, openWorldHint=False))
     def whatsapp_flows_get_whats_app_flow_json(flow_id: str, account_id: str) -> str:
         """Get flow JSON asset
 
@@ -5288,7 +5288,7 @@ def register_generated_tools(mcp, _get_client):
             return f'Error: {e}'
 
 
-    @mcp.tool(annotations=ToolAnnotations(title='Upload flow JSON', readOnlyHint=False, destructiveHint=True))
+    @mcp.tool(annotations=ToolAnnotations(title='Upload flow JSON', readOnlyHint=False, destructiveHint=True, openWorldHint=True))
     def whatsapp_flows_upload_whats_app_flow_json(flow_id: str, account_id: str, flow_json: str) -> str:
         """Upload flow JSON
 
@@ -5304,7 +5304,7 @@ def register_generated_tools(mcp, _get_client):
             return f'Error: {e}'
 
 
-    @mcp.tool(annotations=ToolAnnotations(title='Publish flow', readOnlyHint=False, destructiveHint=True))
+    @mcp.tool(annotations=ToolAnnotations(title='Publish flow', readOnlyHint=False, destructiveHint=True, openWorldHint=True))
     def whatsapp_flows_publish_whats_app_flow(flow_id: str, account_id: str) -> str:
         """Publish flow
 
@@ -5319,7 +5319,7 @@ def register_generated_tools(mcp, _get_client):
             return f'Error: {e}'
 
 
-    @mcp.tool(annotations=ToolAnnotations(title='Deprecate flow', readOnlyHint=False, destructiveHint=True))
+    @mcp.tool(annotations=ToolAnnotations(title='Deprecate flow', readOnlyHint=False, destructiveHint=True, openWorldHint=True))
     def whatsapp_flows_deprecate_whats_app_flow(flow_id: str, account_id: str) -> str:
         """Deprecate flow
 
@@ -5334,7 +5334,7 @@ def register_generated_tools(mcp, _get_client):
             return f'Error: {e}'
 
 
-    @mcp.tool(annotations=ToolAnnotations(title='Send flow message', readOnlyHint=False, destructiveHint=True))
+    @mcp.tool(annotations=ToolAnnotations(title='Send flow message', readOnlyHint=False, destructiveHint=True, openWorldHint=True))
     def whatsapp_flows_send_whats_app_flow_message(account_id: str, to: str, flow_id: str, flow_cta: str, body: str, flow_action: str = "navigate", flow_token: str | None = None, flow_action_payload: dict[str, Any] | None = None, header: dict[str, Any] | None = None, footer: str | None = None, draft: bool | None = None) -> str:
         """Send flow message
 
@@ -5360,7 +5360,7 @@ def register_generated_tools(mcp, _get_client):
     # WHATSAPP_PHONE_NUMBERS
 
 
-    @mcp.tool(annotations=ToolAnnotations(title='List phone numbers', readOnlyHint=True, destructiveHint=False))
+    @mcp.tool(annotations=ToolAnnotations(title='List phone numbers', readOnlyHint=True, destructiveHint=False, openWorldHint=False))
     def whatsapp_phone_numbers_get_whats_app_phone_numbers(status: str | None = None, profile_id: str | None = None) -> str:
         """List phone numbers
 
@@ -5375,7 +5375,7 @@ def register_generated_tools(mcp, _get_client):
             return f'Error: {e}'
 
 
-    @mcp.tool(annotations=ToolAnnotations(title='Purchase phone number', readOnlyHint=False, destructiveHint=True))
+    @mcp.tool(annotations=ToolAnnotations(title='Purchase phone number', readOnlyHint=False, destructiveHint=True, openWorldHint=True))
     def whatsapp_phone_numbers_purchase_whats_app_phone_number(profile_id: str) -> str:
         """Purchase phone number
 
@@ -5389,7 +5389,7 @@ def register_generated_tools(mcp, _get_client):
             return f'Error: {e}'
 
 
-    @mcp.tool(annotations=ToolAnnotations(title='Get phone number', readOnlyHint=True, destructiveHint=False))
+    @mcp.tool(annotations=ToolAnnotations(title='Get phone number', readOnlyHint=True, destructiveHint=False, openWorldHint=False))
     def whatsapp_phone_numbers_get_whats_app_phone_number(phone_number_id: str) -> str:
         """Get phone number
 
@@ -5403,7 +5403,7 @@ def register_generated_tools(mcp, _get_client):
             return f'Error: {e}'
 
 
-    @mcp.tool(annotations=ToolAnnotations(title='Release phone number', readOnlyHint=False, destructiveHint=True))
+    @mcp.tool(annotations=ToolAnnotations(title='Release phone number', readOnlyHint=False, destructiveHint=True, openWorldHint=True))
     def whatsapp_phone_numbers_release_whats_app_phone_number(phone_number_id: str) -> str:
         """Release phone number
 
