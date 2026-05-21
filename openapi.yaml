@@ -20522,6 +20522,14 @@ paths:
                     name: { type: string }
                     language: { type: string }
                     components: { type: array }
+                    variableMapping:
+                      type: object
+                      description: Maps template variable positions ("1", "2") to contact fields or static values. Resolved per recipient at send time.
+                      additionalProperties:
+                        type: object
+                        properties:
+                          field: { type: string, enum: [name, phone, email, company, custom] }
+                          customValue: { type: string, description: Static value used when field is "custom" }
                 segmentFilters:
                   type: object
                   properties:
