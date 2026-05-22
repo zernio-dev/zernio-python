@@ -17511,6 +17511,30 @@ paths:
                         parentId: { type: string, nullable: true, description: Parent comment ID for nested replies }
                         rootUri: { type: string, nullable: true, description: Bluesky root post URI }
                         rootCid: { type: string, nullable: true, description: Bluesky root post CID }
+                  post:
+                    type: object
+                    nullable: true
+                    description: |
+                      (Reddit only) Metadata for the target post, returned alongside the comments in Reddit's
+                      single round-trip. Lets integrators render a preview of the post the user is commenting on
+                      without an additional request. Absent for non-Reddit platforms and when the upstream
+                      response is missing the post listing (deleted post, malformed response).
+                    properties:
+                      id: { type: string, description: Reddit post base36 id (e.g. "1tjtj26") }
+                      fullname: { type: string, description: Fullname with type prefix (e.g. "t3_1tjtj26") }
+                      title: { type: string }
+                      selftext: { type: string, description: Body text for self-posts (empty for link posts) }
+                      author: { type: string, description: Reddit username, without the u/ prefix }
+                      subreddit: { type: string, description: Subreddit name, without the r/ prefix }
+                      permalink: { type: string, description: Absolute URL to the post on reddit.com }
+                      url: { type: string, description: For link posts, the external URL; for self-posts, the Reddit permalink }
+                      score: { type: integer, description: Net upvotes (upvotes minus downvotes) }
+                      numComments: { type: integer }
+                      createdUtc: { type: integer, description: Unix timestamp in seconds }
+                      over18: { type: boolean }
+                      stickied: { type: boolean }
+                      flairText: { type: string, nullable: true, description: Link flair text if any }
+                      isGallery: { type: boolean, description: True if the post is a Reddit gallery (multiple images) }
                   pagination:
                     type: object
                     properties:
