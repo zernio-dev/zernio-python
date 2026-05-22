@@ -55,48 +55,25 @@ class AdAudiencesResource:
         return result
 
     def list_ad_audiences(
-        self, account_id: str, ad_account_id: str, *, platform: str | None = None
+        self,
+        account_id: str,
+        ad_account_id: str,
+        *,
+        platform: str | None = None,
+        type: str | None = None,
     ) -> dict[str, Any]:
         """List custom audiences"""
         params = self._build_params(
             account_id=account_id,
             ad_account_id=ad_account_id,
             platform=platform,
+            type=type,
         )
         return self._client._get("/v1/ads/audiences", params=params)
 
-    def create_ad_audience(
-        self,
-        account_id: str,
-        ad_account_id: str,
-        name: str,
-        type: str,
-        *,
-        description: str | None = None,
-        pixel_id: str | None = None,
-        retention_days: int | None = None,
-        source_audience_id: str | None = None,
-        country: str | None = None,
-        ratio: float | None = None,
-        rule: dict[str, Any] | None = None,
-        customer_file_source: str | None = None,
-    ) -> dict[str, Any]:
+    def create_ad_audience(self) -> dict[str, Any]:
         """Create custom audience"""
-        payload = self._build_payload(
-            account_id=account_id,
-            ad_account_id=ad_account_id,
-            name=name,
-            description=description,
-            type=type,
-            pixel_id=pixel_id,
-            retention_days=retention_days,
-            source_audience_id=source_audience_id,
-            country=country,
-            ratio=ratio,
-            rule=rule,
-            customer_file_source=customer_file_source,
-        )
-        return self._client._post("/v1/ads/audiences", data=payload)
+        return self._client._post("/v1/ads/audiences")
 
     def get_ad_audience(self, audience_id: str) -> dict[str, Any]:
         """Get audience details"""
@@ -118,48 +95,25 @@ class AdAudiencesResource:
         )
 
     async def alist_ad_audiences(
-        self, account_id: str, ad_account_id: str, *, platform: str | None = None
+        self,
+        account_id: str,
+        ad_account_id: str,
+        *,
+        platform: str | None = None,
+        type: str | None = None,
     ) -> dict[str, Any]:
         """List custom audiences (async)"""
         params = self._build_params(
             account_id=account_id,
             ad_account_id=ad_account_id,
             platform=platform,
+            type=type,
         )
         return await self._client._aget("/v1/ads/audiences", params=params)
 
-    async def acreate_ad_audience(
-        self,
-        account_id: str,
-        ad_account_id: str,
-        name: str,
-        type: str,
-        *,
-        description: str | None = None,
-        pixel_id: str | None = None,
-        retention_days: int | None = None,
-        source_audience_id: str | None = None,
-        country: str | None = None,
-        ratio: float | None = None,
-        rule: dict[str, Any] | None = None,
-        customer_file_source: str | None = None,
-    ) -> dict[str, Any]:
+    async def acreate_ad_audience(self) -> dict[str, Any]:
         """Create custom audience (async)"""
-        payload = self._build_payload(
-            account_id=account_id,
-            ad_account_id=ad_account_id,
-            name=name,
-            description=description,
-            type=type,
-            pixel_id=pixel_id,
-            retention_days=retention_days,
-            source_audience_id=source_audience_id,
-            country=country,
-            ratio=ratio,
-            rule=rule,
-            customer_file_source=customer_file_source,
-        )
-        return await self._client._apost("/v1/ads/audiences", data=payload)
+        return await self._client._apost("/v1/ads/audiences")
 
     async def aget_ad_audience(self, audience_id: str) -> dict[str, Any]:
         """Get audience details (async)"""

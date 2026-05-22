@@ -407,9 +407,10 @@ Both `from zernio import ...` and `from late import ...` work identically. The `
 | `ads.delete_conversion_destination()` | Soft-delete a conversion destination |
 | `ads.add_conversion_associations()` | Associate campaigns with a conversion destination |
 | `ads.boost_post()` | Boost post as ad |
+| `ads.estimate_ad_reach()` | Estimate audience reach |
 | `ads.remove_conversion_associations()` | Remove campaign↔conversion associations |
-| `ads.search_ad_interests()` | Search targeting interests |
-| `ads.search_ad_targeting_locations()` | Search geo targeting locations (Meta) |
+| `ads.search_ad_interests()` | Search targeting interests (deprecated) |
+| `ads.search_ad_targeting()` | Search targeting options |
 | `ads.send_conversions()` | Send conversion events to an ad platform |
 
 ### Broadcasts

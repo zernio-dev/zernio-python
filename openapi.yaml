@@ -4328,6 +4328,141 @@ components:
       properties:
         amount: { type: number }
         type: { type: string, enum: [daily, lifetime] }
+    TargetingSpec:
+      type: object
+      description: |
+        Normalized, platform-agnostic ad-targeting spec. Every field is optional, an
+        empty object targets the platform's default broadest audience. Field names are
+        camelCase and identical across `POST /v1/ads/create` (the `targeting` object),
+        `POST /v1/ads/targeting/reach-estimate`, and `saved_targeting` audiences, so a
+        spec resolved once can be reused verbatim.
+
+        Entity ids (`regions[].key`, `cities[].key`, `zips[].key`, `metros[].key`,
+        `interests[].id`, `behaviors[].id`) are the platform's opaque identifiers
+        resolved via `GET /v1/ads/targeting/search`. A spec is therefore meaningful only
+        for the platform it was built against, except the portable fields (`countries`,
+        `ageMin`/`ageMax`, `gender`, `incomeTier`, `languages`) which carry across
+        platforms. Fields a platform cannot honour are rejected at create time with
+        `INVALID_FIELD_VALUE` naming the offending field (not silently dropped).
+      properties:
+        countries: { type: array, items: { type: string }, description: "ISO 3166-1 alpha-2 country codes (e.g. ['US'])." }
+        regions:
+          type: array
+          description: "Region/state targeting. `key` is the platform location ID from /v1/ads/targeting/search?dimension=geo&geoType=region."
+          items:
+            type: object
+            required: [key]
+            properties:
+              key: { type: string }
+              name: { type: string }
+        cities:
+          type: array
+          description: "City targeting. Optional `radius` + `distanceUnit` extend beyond the city limits; both must be set together or both omitted. `radius` is only honoured on platforms whose capability map allows city radius (Meta)."
+          items:
+            type: object
+            required: [key]
+            properties:
+              key: { type: string }
+              name: { type: string }
+              radius: { type: number, description: "Radius around the city. Requires distanceUnit." }
+              distanceUnit: { type: string, enum: [mile, kilometer], description: "Required if radius is set." }
+        zips:
+          type: array
+          description: "Postal/ZIP targeting. `key` is the platform's postal location ID (e.g. Meta `US:94304`). Supported on Meta, Google, TikTok, Pinterest, X."
+          items:
+            type: object
+            required: [key]
+            properties:
+              key: { type: string }
+              name: { type: string }
+        metros:
+          type: array
+          description: "DMA / metro-area targeting. `key` is the platform's metro ID (e.g. Meta `DMA:807`)."
+          items:
+            type: object
+            required: [key]
+            properties:
+              key: { type: string }
+              name: { type: string }
+        customLocations:
+          type: array
+          description: "Point-radius (lat/lng) targeting (Meta custom_locations / Google proximity). Honoured only where the capability map allows radius (Meta)."
+          items:
+            type: object
+            required: [latitude, longitude, radius, distanceUnit]
+            properties:
+              latitude: { type: number, minimum: -90, maximum: 90 }
+              longitude: { type: number, minimum: -180, maximum: 180 }
+              radius: { type: number, description: "Positive radius around the point." }
+              distanceUnit: { type: string, enum: [mile, kilometer] }
+              name: { type: string }
+              address: { type: string }
+        excludedLocations:
+          type: object
+          description: "Geo to exclude from the audience. A subset of the inclusion geo shape."
+          properties:
+            countries: { type: array, items: { type: string } }
+            regions:
+              type: array
+              items:
+                type: object
+                required: [key]
+                properties:
+                  key: { type: string }
+                  name: { type: string }
+            cities:
+              type: array
+              items:
+                type: object
+                required: [key]
+                properties:
+                  key: { type: string }
+                  name: { type: string }
+            zips:
+              type: array
+              items:
+                type: object
+                required: [key]
+                properties:
+                  key: { type: string }
+                  name: { type: string }
+        ageMin: { type: integer, minimum: 13, maximum: 100 }
+        ageMax: { type: integer, minimum: 13, maximum: 100 }
+        gender: { type: string, enum: [all, male, female], description: "Restrict by gender. 'all' (default) targets everyone." }
+        incomeTier:
+          type: string
+          enum: [top_5, top_10, top_10_25, top_25_50]
+          description: |
+            Normalized household-income tier (ZIP/percentile based). Meta and TikTok
+            express all four. Google maps only `top_10` (its INCOME_RANGE_90_UP); other
+            tiers on Google, and any income tier on LinkedIn / X / Pinterest, are rejected.
+            On Meta, income/zip targeting requires the relevant `specialAdCategories` to be
+            unset (housing/employment/credit ads cannot use it).
+        languages: { type: array, items: { type: string }, description: "Language codes (e.g. ['en'])." }
+        interests:
+          type: array
+          description: "Interest entities from /v1/ads/targeting/search?dimension=interest. Each carries the platform's opaque id."
+          items:
+            type: object
+            required: [id]
+            properties:
+              id: { type: string }
+              name: { type: string }
+        behaviors:
+          type: array
+          description: "Behaviour entities from /v1/ads/targeting/search?dimension=behavior. Supported on Meta and TikTok."
+          items:
+            type: object
+            required: [id]
+            properties:
+              id: { type: string }
+              name: { type: string }
+        industries: { type: array, items: { type: string }, description: "LinkedIn B2B only. Industry URN id fragments." }
+        companySizes: { type: array, items: { type: string }, description: "LinkedIn B2B only." }
+        seniorities: { type: array, items: { type: string }, description: "LinkedIn B2B only." }
+        jobFunctions: { type: array, items: { type: string }, description: "LinkedIn B2B only." }
+        audienceInclude: { type: array, items: { type: string }, description: "Platform audience IDs to include." }
+        audienceExclude: { type: array, items: { type: string }, description: "Platform audience IDs to exclude." }
     Ad:
       type: object
       properties:
@@ -22729,6 +22864,67 @@ paths:
                     properties:
                       id: { type: string }
                       name: { type: string }
+                zips:
+                  type: array
+                  description: "Postal/ZIP geo targeting. `key` is the platform's postal location ID from /v1/ads/targeting/search?dimension=geo&geoType=zip. Supported on Meta, Google, TikTok, Pinterest, X."
+                  items:
+                    type: object
+                    required: [key]
+                    properties:
+                      key: { type: string }
+                      name: { type: string }
+                metros:
+                  type: array
+                  description: "DMA / metro-area geo targeting. `key` is the platform's metro ID from /v1/ads/targeting/search?dimension=geo&geoType=metro."
+                  items:
+                    type: object
+                    required: [key]
+                    properties:
+                      key: { type: string }
+                      name: { type: string }
+                customLocations:
+                  type: array
+                  description: "Point-radius (lat/lng) geo targeting. Meta only (custom_locations). Rejected on platforms without radius support."
+                  items:
+                    type: object
+                    required: [latitude, longitude, radius, distanceUnit]
+                    properties:
+                      latitude: { type: number, minimum: -90, maximum: 90 }
+                      longitude: { type: number, minimum: -180, maximum: 180 }
+                      radius: { type: number }
+                      distanceUnit: { type: string, enum: [mile, kilometer] }
+                      name: { type: string }
+                      address: { type: string }
+                behaviors:
+                  type: array
+                  description: "Behaviour entities from /v1/ads/targeting/search?dimension=behavior. Supported on Meta and TikTok. Each must include id."
+                  items:
+                    type: object
+                    required: [id]
+                    properties:
+                      id: { type: string }
+                      name: { type: string }
+                incomeTier:
+                  type: string
+                  enum: [top_5, top_10, top_10_25, top_25_50]
+                  description: |
+                    Normalized household-income tier. Meta and TikTok express all four; Google maps only
+                    `top_10`; rejected on LinkedIn, X, and Pinterest. On Meta, income targeting is incompatible
+                    with housing/employment/credit `specialAdCategories`.
+                languages: { type: array, items: { type: string }, description: "Language codes (e.g. ['en']). Restricts the audience by language." }
+                savedTargetingId:
+                  type: string
+                  description: |
+                    ID of a `saved_targeting` audience (created via POST /v1/ads/audiences). When set, its stored
+                    TargetingSpec is expanded as the base targeting; inline fields on this body merge on top. Lets you
+                    reuse a named targeting preset without re-sending every field.
+                specialAdCategories:
+                  type: array
+                  description: |
+                    Meta only. Declares the ad's special category, required for housing, employment, credit, or
+                    political/social-issue ads (Meta enforces restricted targeting for these). Note: setting a special
+                    category disables income/zip targeting on Meta.
+                  items: { type: string, enum: [HOUSING, EMPLOYMENT, CREDIT, ISSUES_ELECTIONS_POLITICS] }
                 endDate: { type: string, format: date-time, description: Required for lifetime budgets }
                 audienceId: { type: string, description: Custom audience ID for targeting }
                 campaignType: { type: string, enum: [display, search], default: display, description: Google only }
@@ -22926,9 +23122,14 @@ paths:
   /v1/ads/interests:
     get:
       operationId: searchAdInterests
+      deprecated: true
       tags: [Ads]
-      summary: Search targeting interests
-      description: Search for interest-based targeting options available on the platform.
+      summary: Search targeting interests (deprecated)
+      description: |
+        Deprecated alias for `GET /v1/ads/targeting/search?dimension=interest`. Kept for
+        backward compatibility, it returns the legacy `{ interests: [...] }` shape rather
+        than the normalized `{ results: [...] }`. New integrations should use
+        `GET /v1/ads/targeting/search` with `dimension=interest`.
       security:
         - bearerAuth: []
       parameters:
@@ -22956,33 +23157,35 @@ paths:
 
   /v1/ads/targeting/search:
     get:
-      operationId: searchAdTargetingLocations
+      operationId: searchAdTargeting
       tags: [Ads]
-      summary: Search geo targeting locations (Meta)
+      summary: Search targeting options
       description: |
-        Resolve a human-readable location name into Meta's opaque `key` used in
-        `targeting.cities[]` / `targeting.regions[]` on `POST /v1/ads/create`
-        (and the same fields under `targeting.geo_locations` on
-        `POST /v1/ads/boost`). Wraps Meta's `/search?type=adgeolocation`
-        endpoint.
+        Resolve a human-readable query into the platform's opaque targeting ids used in
+        the `TargetingSpec` (`countries`/`regions`/`cities`/`zips`/`metros` geo keys, and
+        `interests`/`behaviors` entity ids) on `POST /v1/ads/create`,
+        `POST /v1/ads/targeting/reach-estimate`, and `saved_targeting` audiences.
 
-        Meta-only for now. Other platforms have their own location id systems
-        and are not exposed here.
+        The `dimension` param selects what is searched, `geo` (locations, further scoped
+        by `geoType`), `interest`, `behavior`, or `income`. Availability of each dimension
+        varies by platform (e.g. behaviours are Meta/TikTok only). Results are normalized
+        across platforms into a single shape, so the same client code consumes Meta,
+        TikTok, LinkedIn, X, Pinterest, and Google results.
 
-        Per Meta's docs, `q` must contain only the locality name (e.g.
-        `"Amsterdam"`, not `"Amsterdam, NL"`). Use `countryCode` to
-        disambiguate when the same name exists in multiple countries.
+        For geo queries, `q` should contain only the locality name (e.g. `"Amsterdam"`,
+        not `"Amsterdam, NL"`). Use `countryCode` to disambiguate.
       security:
         - bearerAuth: []
       parameters:
-        - { name: accountId, in: query, required: true, schema: { type: string }, description: "Social account ID (must be a connected Facebook or Instagram account)." }
-        - { name: q, in: query, required: true, schema: { type: string }, description: "Location name. Locality only — no region/country suffix." }
-        - { name: type, in: query, required: false, schema: { type: string, enum: [country, region, city, subcity, neighborhood, zip, metro_area, geo_market], default: city }, description: "Type of location to search. Defaults to city." }
-        - { name: countryCode, in: query, required: false, schema: { type: string, minLength: 2, maxLength: 2 }, description: "ISO 3166-1 alpha-2 country code (e.g. NL) to scope the search." }
+        - { name: accountId, in: query, required: true, schema: { type: string }, description: "Social account ID (a connected account on the target ad platform)." }
+        - { name: q, in: query, required: true, schema: { type: string }, description: "Search query. For geo, the locality name only (no region/country suffix)." }
+        - { name: dimension, in: query, required: false, schema: { type: string, enum: [geo, interest, behavior, income], default: interest }, description: "What to search. `geo` resolves locations (scope further with `geoType`), `interest`/`behavior` resolve audience entities, `income` resolves income-tier options. Defaults to `interest` for backward compatibility with the deprecated /v1/ads/interests alias." }
+        - { name: geoType, in: query, required: false, schema: { type: string, enum: [country, region, city, zip, metro], default: city }, description: "Only used when `dimension=geo`. The kind of location to resolve. Defaults to `city`." }
+        - { name: countryCode, in: query, required: false, schema: { type: string, minLength: 2, maxLength: 2 }, description: "ISO 3166-1 alpha-2 country code (e.g. NL) to scope a geo search." }
         - { name: limit, in: query, required: false, schema: { type: integer, minimum: 1, maximum: 100, default: 25 }, description: "Maximum results to return." }
       responses:
         '200':
-          description: Matching locations
+          description: Matching targeting options (normalized)
           content:
             application/json:
               schema:
@@ -22992,24 +23195,76 @@ paths:
                     type: array
                     items:
                       type: object
-                      required: [key, name, type]
+                      required: [id, name, type]
                       properties:
-                        key: { type: string, description: "Meta's opaque location ID. Use this in targeting.cities[].key / regions[].key." }
-                        name: { type: string }
-                        type: { type: string, description: "Location type as returned by Meta (city, region, country, etc.)." }
-                        countryCode: { type: string }
-                        countryName: { type: string }
-                        region: { type: string, description: "Parent region/state name (cities only)." }
-                        regionId: { oneOf: [{ type: string }, { type: integer }], description: "Parent region ID (cities only)." }
-                        supportsRegion: { type: boolean }
-                        supportsCity: { type: boolean }
+                        id: { type: string, description: "The platform's opaque id. Use as a geo `key` (regions/cities/zips/metros) or an entity `id` (interests/behaviors) in TargetingSpec." }
+                        name: { type: string, description: "Human-readable label." }
+                        type: { type: string, description: "What the result is (e.g. city, region, country, zip, metro, interest, behavior, income)." }
+                        path: { type: array, items: { type: string }, description: "Optional breadcrumb of parent labels (e.g. ['United States', 'California', 'Los Angeles']). Disambiguates same-named results." }
+                        audienceSize: { type: integer, nullable: true, description: "Optional estimated reachable users for this option, when the platform returns it." }
         '400':
           description: Missing or invalid query parameters
         '401': { $ref: '#/components/responses/Unauthorized' }
         '403':
           description: Ads access required. Legacy plans need the Ads add-on; included by default on usage-based plans.
         '404':
-          description: Account not found, or platform does not support targeting search (Meta only)
+          description: Account not found, or the platform does not support the requested dimension
+
+  /v1/ads/targeting/reach-estimate:
+    post:
+      operationId: estimateAdReach
+      tags: [Ads]
+      summary: Estimate audience reach
+      description: |
+        Returns a normalized pre-flight audience-size estimate for a targeting spec,
+        before any campaign is created. Backed by each platform's native reach API
+        (Meta `delivery_estimate`, LinkedIn `audienceCounts`, X `audience_summary`,
+        Pinterest `audience_sizing`).
+
+        Platforms without a usable pre-flight reach API (Google Search/Display, TikTok)
+        return `available: false` with no bounds, so clients can hide or grey out the
+        estimate rather than treat the absence as an error.
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [accountId, spec]
+              properties:
+                accountId: { type: string, description: "Social account ID on the target ad platform." }
+                spec:
+                  allOf: [{ $ref: '#/components/schemas/TargetingSpec' }]
+                  description: "The targeting spec to estimate. Same shape used by POST /v1/ads/create."
+                optimizationGoal:
+                  type: string
+                  description: |
+                    Optional. The optimization goal the estimate should assume (platform's
+                    own vocabulary, e.g. Meta `REACH`, `LINK_CLICKS`, `OFFSITE_CONVERSIONS`).
+                    Some platforms vary the estimate by goal; omit to use the platform default.
+      responses:
+        '200':
+          description: Normalized reach estimate
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [available]
+                properties:
+                  available: { type: boolean, description: "Whether a pre-flight estimate is available on this platform. False for Google and TikTok." }
+                  lower: { type: integer, nullable: true, description: "Lower bound of the estimated reachable audience. Present only when available." }
+                  upper: { type: integer, nullable: true, description: "Upper bound of the estimated reachable audience. Present only when available." }
+                  daily: { type: integer, nullable: true, description: "Optional estimated daily reach/results at the given budget, when the platform returns it." }
+                  currency: { type: string, nullable: true, description: "Currency of any monetary fields in the estimate, when applicable." }
+                  estimateReady: { type: boolean, nullable: true, description: "Meta only. False when Meta is still computing the estimate (the audience is too new); retry shortly." }
+        '400':
+          description: Missing required fields or a targeting field the platform cannot honour
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403':
+          description: Ads access required. Legacy plans need the Ads add-on; included by default on usage-based plans.
+        '404': { $ref: '#/components/responses/NotFound' }
 
   /v1/ads/audiences:
     get:
@@ -23023,6 +23278,7 @@ paths:
         - { name: accountId, in: query, required: true, schema: { type: string }, description: Social account ID }
         - { name: adAccountId, in: query, required: true, schema: { type: string }, description: Platform ad account ID }
         - { name: platform, in: query, schema: { type: string, enum: [facebook, instagram, googleads, tiktok, tiktokads, pinterest, linkedin, linkedinads, twitter, xads] } }
+        - { name: type, in: query, required: false, schema: { type: string, enum: [customer_list, website, lookalike, saved_targeting] }, description: "Filter to one audience type. `saved_targeting` returns stored TargetingSpec audiences (each item carries a `spec`); the other types return uploaded/derived audiences." }
       responses:
         '200':
           description: Audiences
@@ -23040,7 +23296,11 @@ paths:
                         platformAudienceId: { type: string }
                         name: { type: string }
                         description: { type: string }
-                        type: { type: string, enum: [customer_list, website, lookalike] }
+                        type: { type: string, enum: [customer_list, website, lookalike, saved_targeting] }
+                        spec:
+                          allOf: [{ $ref: '#/components/schemas/TargetingSpec' }]
+                          nullable: true
+                          description: "Present (and the only meaningful payload) when `type` is `saved_targeting`. Null for uploaded/derived audience types."
                         platform: { type: string }
                         size: { type: integer }
                         status: { type: string }
@@ -23053,9 +23313,11 @@ paths:
       summary: Create custom audience
       description: |
         Create a custom audience. `customer_list` is supported on Meta, Google, X, LinkedIn, TikTok, and Pinterest;
-        `website` and `lookalike` are Meta-only. The audience is created empty — add members via
-        `POST /v1/ads/audiences/{audienceId}/users`. On TikTok and Pinterest the audience is provisioned lazily on the
-        first member upload (until then its status is `pending`). Create is not idempotent — never auto-retry.
+        `website` and `lookalike` are Meta-only. `saved_targeting` stores a reusable TargetingSpec (no member upload,
+        no adAccountId) that you reference later via `savedTargetingId` on `POST /v1/ads/create`. Upload-backed audiences
+        are created empty, add members via `POST /v1/ads/audiences/{audienceId}/users`. On TikTok and Pinterest the
+        audience is provisioned lazily on the first member upload (until then its status is `pending`). Create is not
+        idempotent, never auto-retry.
       security:
         - bearerAuth: []
       requestBody:
@@ -23063,21 +23325,36 @@ paths:
         content:
           application/json:
             schema:
-              type: object
-              required: [accountId, adAccountId, name, type]
-              properties:
-                accountId: { type: string }
-                adAccountId: { type: string, description: "Platform ad account ID. Must start with act_ for Meta; bare platform id for others (Google customer id, X/TikTok/LinkedIn/Pinterest account id)." }
-                name: { type: string, maxLength: 255 }
-                description: { type: string }
-                type: { type: string, enum: [customer_list, website, lookalike] }
-                pixelId: { type: string, description: Required for website audiences }
-                retentionDays: { type: integer, minimum: 1, maximum: 180, description: Required for website audiences }
-                sourceAudienceId: { type: string, description: Required for lookalike audiences }
-                country: { type: string, description: "2-letter code, required for lookalike audiences" }
-                ratio: { type: number, minimum: 0.01, maximum: 0.20, description: Required for lookalike audiences }
-                rule: { type: object, description: "Pixel event rule for website audiences (optional)" }
-                customerFileSource: { type: string, description: "Data source declaration for GDPR compliance (customer_list only)" }
+              oneOf:
+                - type: object
+                  title: UploadedOrDerivedAudience
+                  description: "customer_list, website, or lookalike audience (uploaded or derived from a source)."
+                  required: [accountId, adAccountId, name, type]
+                  properties:
+                    accountId: { type: string }
+                    adAccountId: { type: string, description: "Platform ad account ID. Must start with act_ for Meta; bare platform id for others (Google customer id, X/TikTok/LinkedIn/Pinterest account id)." }
+                    name: { type: string, maxLength: 255 }
+                    description: { type: string }
+                    type: { type: string, enum: [customer_list, website, lookalike] }
+                    pixelId: { type: string, description: Required for website audiences }
+                    retentionDays: { type: integer, minimum: 1, maximum: 180, description: Required for website audiences }
+                    sourceAudienceId: { type: string, description: Required for lookalike audiences }
+                    country: { type: string, description: "2-letter code, required for lookalike audiences" }
+                    ratio: { type: number, minimum: 0.01, maximum: 0.20, description: Required for lookalike audiences }
+                    rule: { type: object, description: "Pixel event rule for website audiences (optional)" }
+                    customerFileSource: { type: string, description: "Data source declaration for GDPR compliance (customer_list only)" }
+                - type: object
+                  title: SavedTargetingAudience
+                  description: "A reusable, stored TargetingSpec. No member upload step, no adAccountId, the spec is the audience. Reference it later via `savedTargetingId` on POST /v1/ads/create."
+                  required: [type, accountId, name, spec]
+                  properties:
+                    type: { type: string, enum: [saved_targeting] }
+                    accountId: { type: string, description: "Social account ID on the target ad platform." }
+                    name: { type: string, maxLength: 255 }
+                    description: { type: string }
+                    spec:
+                      allOf: [{ $ref: '#/components/schemas/TargetingSpec' }]
+                      description: "The targeting spec to store."
       responses:
         '201':
           description: Audience created

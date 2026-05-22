@@ -253,6 +253,14 @@ class AdsResource:
         age_min: int | None = None,
         age_max: int | None = None,
         interests: list[dict[str, Any]] | None = None,
+        zips: list[dict[str, Any]] | None = None,
+        metros: list[dict[str, Any]] | None = None,
+        custom_locations: list[dict[str, Any]] | None = None,
+        behaviors: list[dict[str, Any]] | None = None,
+        income_tier: str | None = None,
+        languages: list[str] | None = None,
+        saved_targeting_id: str | None = None,
+        special_ad_categories: list[str] | None = None,
         end_date: datetime | str | None = None,
         audience_id: str | None = None,
         campaign_type: str | None = "display",
@@ -299,6 +307,14 @@ class AdsResource:
             age_min=age_min,
             age_max=age_max,
             interests=interests,
+            zips=zips,
+            metros=metros,
+            custom_locations=custom_locations,
+            behaviors=behaviors,
+            income_tier=income_tier,
+            languages=languages,
+            saved_targeting_id=saved_targeting_id,
+            special_ad_categories=special_ad_categories,
             end_date=end_date,
             audience_id=audience_id,
             campaign_type=campaign_type,
@@ -320,31 +336,44 @@ class AdsResource:
         return self._client._post("/v1/ads/create", data=payload)
 
     def search_ad_interests(self, q: str, account_id: str) -> dict[str, Any]:
-        """Search targeting interests"""
+        """Search targeting interests (deprecated)"""
         params = self._build_params(
             q=q,
             account_id=account_id,
         )
         return self._client._get("/v1/ads/interests", params=params)
 
-    def search_ad_targeting_locations(
+    def search_ad_targeting(
         self,
         account_id: str,
         q: str,
         *,
-        type: str | None = "city",
+        dimension: str | None = "interest",
+        geo_type: str | None = "city",
         country_code: str | None = None,
         limit: int | None = 25,
     ) -> dict[str, Any]:
-        """Search geo targeting locations (Meta)"""
+        """Search targeting options"""
         params = self._build_params(
             account_id=account_id,
             q=q,
-            type=type,
+            dimension=dimension,
+            geo_type=geo_type,
             country_code=country_code,
             limit=limit,
         )
         return self._client._get("/v1/ads/targeting/search", params=params)
+
+    def estimate_ad_reach(
+        self, account_id: str, spec: Any, *, optimization_goal: str | None = None
+    ) -> dict[str, Any]:
+        """Estimate audience reach"""
+        payload = self._build_payload(
+            account_id=account_id,
+            spec=spec,
+            optimization_goal=optimization_goal,
+        )
+        return self._client._post("/v1/ads/targeting/reach-estimate", data=payload)
 
     def send_conversions(
         self,
@@ -775,6 +804,14 @@ class AdsResource:
         age_min: int | None = None,
         age_max: int | None = None,
         interests: list[dict[str, Any]] | None = None,
+        zips: list[dict[str, Any]] | None = None,
+        metros: list[dict[str, Any]] | None = None,
+        custom_locations: list[dict[str, Any]] | None = None,
+        behaviors: list[dict[str, Any]] | None = None,
+        income_tier: str | None = None,
+        languages: list[str] | None = None,
+        saved_targeting_id: str | None = None,
+        special_ad_categories: list[str] | None = None,
         end_date: datetime | str | None = None,
         audience_id: str | None = None,
         campaign_type: str | None = "display",
@@ -821,6 +858,14 @@ class AdsResource:
             age_min=age_min,
             age_max=age_max,
             interests=interests,
+            zips=zips,
+            metros=metros,
+            custom_locations=custom_locations,
+            behaviors=behaviors,
+            income_tier=income_tier,
+            languages=languages,
+            saved_targeting_id=saved_targeting_id,
+            special_ad_categories=special_ad_categories,
             end_date=end_date,
             audience_id=audience_id,
             campaign_type=campaign_type,
@@ -842,31 +887,46 @@ class AdsResource:
         return await self._client._apost("/v1/ads/create", data=payload)
 
     async def asearch_ad_interests(self, q: str, account_id: str) -> dict[str, Any]:
-        """Search targeting interests (async)"""
+        """Search targeting interests (deprecated) (async)"""
         params = self._build_params(
             q=q,
             account_id=account_id,
         )
         return await self._client._aget("/v1/ads/interests", params=params)
 
-    async def asearch_ad_targeting_locations(
+    async def asearch_ad_targeting(
         self,
         account_id: str,
         q: str,
         *,
-        type: str | None = "city",
+        dimension: str | None = "interest",
+        geo_type: str | None = "city",
         country_code: str | None = None,
         limit: int | None = 25,
     ) -> dict[str, Any]:
-        """Search geo targeting locations (Meta) (async)"""
+        """Search targeting options (async)"""
         params = self._build_params(
             account_id=account_id,
             q=q,
-            type=type,
+            dimension=dimension,
+            geo_type=geo_type,
             country_code=country_code,
             limit=limit,
         )
         return await self._client._aget("/v1/ads/targeting/search", params=params)
+
+    async def aestimate_ad_reach(
+        self, account_id: str, spec: Any, *, optimization_goal: str | None = None
+    ) -> dict[str, Any]:
+        """Estimate audience reach (async)"""
+        payload = self._build_payload(
+            account_id=account_id,
+            spec=spec,
+            optimization_goal=optimization_goal,
+        )
+        return await self._client._apost(
+            "/v1/ads/targeting/reach-estimate", data=payload
+        )
 
     async def asend_conversions(
         self,

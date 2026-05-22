@@ -1170,18 +1170,25 @@ def register_generated_tools(mcp, _get_client):
         )
     )
     def ad_audiences_list_ad_audiences(
-        account_id: str, ad_account_id: str, platform: str | None = None
+        account_id: str,
+        ad_account_id: str,
+        platform: str | None = None,
+        type: str | None = None,
     ) -> str:
         """List custom audiences
 
         Args:
             account_id: Social account ID (required)
             ad_account_id: Platform ad account ID (required)
-            platform"""
+            platform
+            type: Filter to one audience type. `saved_targeting` returns stored TargetingSpec audiences (each item carries a `spec`); the other types return uploaded/derived audiences."""
         client = _get_client()
         try:
             response = client.ad_audiences.list_ad_audiences(
-                account_id=account_id, ad_account_id=ad_account_id, platform=platform
+                account_id=account_id,
+                ad_account_id=ad_account_id,
+                platform=platform,
+                type=type,
             )
             return _format_response(response)
         except Exception as e:
@@ -1195,51 +1202,11 @@ def register_generated_tools(mcp, _get_client):
             openWorldHint=True,
         )
     )
-    def ad_audiences_create_ad_audience(
-        account_id: str,
-        ad_account_id: str,
-        name: str,
-        type: str,
-        description: str | None = None,
-        pixel_id: str | None = None,
-        retention_days: int | None = None,
-        source_audience_id: str | None = None,
-        country: str | None = None,
-        ratio: float | None = None,
-        rule: dict[str, Any] | None = None,
-        customer_file_source: str | None = None,
-    ) -> str:
-        """Create custom audience
-
-        Args:
-            account_id: (required)
-            ad_account_id: Platform ad account ID. Must start with act_ for Meta; bare platform id for others (Google customer id, X/TikTok/LinkedIn/Pinterest account id). (required)
-            name: (required)
-            description
-            type: (required)
-            pixel_id: Required for website audiences
-            retention_days: Required for website audiences
-            source_audience_id: Required for lookalike audiences
-            country: 2-letter code, required for lookalike audiences
-            ratio: Required for lookalike audiences
-            rule: Pixel event rule for website audiences (optional)
-            customer_file_source: Data source declaration for GDPR compliance (customer_list only)"""
+    def ad_audiences_create_ad_audience() -> str:
+        """Create custom audience"""
         client = _get_client()
         try:
-            response = client.ad_audiences.create_ad_audience(
-                account_id=account_id,
-                ad_account_id=ad_account_id,
-                name=name,
-                description=description,
-                type=type,
-                pixel_id=pixel_id,
-                retention_days=retention_days,
-                source_audience_id=source_audience_id,
-                country=country,
-                ratio=ratio,
-                rule=rule,
-                customer_file_source=customer_file_source,
-            )
+            response = client.ad_audiences.create_ad_audience()
             return _format_response(response)
         except Exception as e:
             return f"Error: {e}"
@@ -2081,6 +2048,14 @@ def register_generated_tools(mcp, _get_client):
         age_min: int | None = None,
         age_max: int | None = None,
         interests: list[dict[str, Any]] | None = None,
+        zips: list[dict[str, Any]] | None = None,
+        metros: list[dict[str, Any]] | None = None,
+        custom_locations: list[dict[str, Any]] | None = None,
+        behaviors: list[dict[str, Any]] | None = None,
+        income_tier: str | None = None,
+        languages: list[str] | None = None,
+        saved_targeting_id: str | None = None,
+        special_ad_categories: list[str] | None = None,
         end_date: str | None = None,
         audience_id: str | None = None,
         campaign_type: str = "display",
@@ -2143,6 +2118,20 @@ def register_generated_tools(mcp, _get_client):
                 age_min
                 age_max
                 interests: Interest objects from /v1/ads/interests. Each must include id and name.
+                zips: Postal/ZIP geo targeting. `key` is the platform's postal location ID from /v1/ads/targeting/search?dimension=geo&geoType=zip. Supported on Meta, Google, TikTok, Pinterest, X.
+                metros: DMA / metro-area geo targeting. `key` is the platform's metro ID from /v1/ads/targeting/search?dimension=geo&geoType=metro.
+                custom_locations: Point-radius (lat/lng) geo targeting. Meta only (custom_locations). Rejected on platforms without radius support.
+                behaviors: Behaviour entities from /v1/ads/targeting/search?dimension=behavior. Supported on Meta and TikTok. Each must include id.
+                income_tier: Normalized household-income tier. Meta and TikTok express all four; Google maps only
+        `top_10`; rejected on LinkedIn, X, and Pinterest. On Meta, income targeting is incompatible
+        with housing/employment/credit `specialAdCategories`.
+                languages: Language codes (e.g. ['en']). Restricts the audience by language.
+                saved_targeting_id: ID of a `saved_targeting` audience (created via POST /v1/ads/audiences). When set, its stored
+        TargetingSpec is expanded as the base targeting; inline fields on this body merge on top. Lets you
+        reuse a named targeting preset without re-sending every field.
+                special_ad_categories: Meta only. Declares the ad's special category, required for housing, employment, credit, or
+        political/social-issue ads (Meta enforces restricted targeting for these). Note: setting a special
+        category disables income/zip targeting on Meta.
                 end_date: Required for lifetime budgets
                 audience_id: Custom audience ID for targeting
                 campaign_type: Google only
@@ -2247,6 +2236,14 @@ def register_generated_tools(mcp, _get_client):
                 age_min=age_min,
                 age_max=age_max,
                 interests=interests,
+                zips=zips,
+                metros=metros,
+                custom_locations=custom_locations,
+                behaviors=behaviors,
+                income_tier=income_tier,
+                languages=languages,
+                saved_targeting_id=saved_targeting_id,
+                special_ad_categories=special_ad_categories,
                 end_date=end_date,
                 audience_id=audience_id,
                 campaign_type=campaign_type,
@@ -2271,14 +2268,14 @@ def register_generated_tools(mcp, _get_client):
 
     @mcp.tool(
         annotations=ToolAnnotations(
-            title="Search targeting interests",
+            title="Search targeting interests (deprecated)",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
         )
     )
     def ads_search_ad_interests(q: str, account_id: str) -> str:
-        """Search targeting interests
+        """Search targeting interests (deprecated)
 
         Args:
             q: Search query (required)
@@ -2292,35 +2289,68 @@ def register_generated_tools(mcp, _get_client):
 
     @mcp.tool(
         annotations=ToolAnnotations(
-            title="Search geo targeting locations (Meta)",
+            title="Search targeting options",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
         )
     )
-    def ads_search_ad_targeting_locations(
+    def ads_search_ad_targeting(
         account_id: str,
         q: str,
-        type: str = "city",
+        dimension: str = "interest",
+        geo_type: str = "city",
         country_code: str | None = None,
         limit: int = 25,
     ) -> str:
-        """Search geo targeting locations (Meta)
+        """Search targeting options
 
         Args:
-            account_id: Social account ID (must be a connected Facebook or Instagram account). (required)
-            q: Location name. Locality only — no region/country suffix. (required)
-            type: Type of location to search. Defaults to city.
-            country_code: ISO 3166-1 alpha-2 country code (e.g. NL) to scope the search.
+            account_id: Social account ID (a connected account on the target ad platform). (required)
+            q: Search query. For geo, the locality name only (no region/country suffix). (required)
+            dimension: What to search. `geo` resolves locations (scope further with `geoType`), `interest`/`behavior` resolve audience entities, `income` resolves income-tier options. Defaults to `interest` for backward compatibility with the deprecated /v1/ads/interests alias.
+            geo_type: Only used when `dimension=geo`. The kind of location to resolve. Defaults to `city`.
+            country_code: ISO 3166-1 alpha-2 country code (e.g. NL) to scope a geo search.
             limit: Maximum results to return."""
         client = _get_client()
         try:
-            response = client.ads.search_ad_targeting_locations(
+            response = client.ads.search_ad_targeting(
                 account_id=account_id,
                 q=q,
-                type=type,
+                dimension=dimension,
+                geo_type=geo_type,
                 country_code=country_code,
                 limit=limit,
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Estimate audience reach",
+            readOnlyHint=False,
+            destructiveHint=True,
+            openWorldHint=True,
+        )
+    )
+    def ads_estimate_ad_reach(
+        account_id: str,
+        spec: dict[str, Any] | None,
+        optimization_goal: str | None = None,
+    ) -> str:
+        """Estimate audience reach
+
+            Args:
+                account_id: Social account ID on the target ad platform. (required)
+                spec: The targeting spec to estimate. Same shape used by POST /v1/ads/create. (required)
+                optimization_goal: Optional. The optimization goal the estimate should assume (platform's
+        own vocabulary, e.g. Meta `REACH`, `LINK_CLICKS`, `OFFSITE_CONVERSIONS`).
+        Some platforms vary the estimate by goal; omit to use the platform default."""
+        client = _get_client()
+        try:
+            response = client.ads.estimate_ad_reach(
+                account_id=account_id, spec=spec, optimization_goal=optimization_goal
             )
             return _format_response(response)
         except Exception as e:
