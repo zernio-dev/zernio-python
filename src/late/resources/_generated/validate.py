@@ -66,7 +66,7 @@ class ValidateResource:
         platforms: list[dict[str, Any]],
         *,
         content: str | None = None,
-        media_items: list[dict[str, Any]] | None = None,
+        media_items: list[Any] | None = None,
     ) -> dict[str, Any]:
         """Validate post content"""
         payload = self._build_payload(
@@ -105,7 +105,7 @@ class ValidateResource:
         platforms: list[dict[str, Any]],
         *,
         content: str | None = None,
-        media_items: list[dict[str, Any]] | None = None,
+        media_items: list[Any] | None = None,
     ) -> dict[str, Any]:
         """Validate post content (async)"""
         payload = self._build_payload(

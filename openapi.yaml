@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.0.3"
+  version: "1.0.4"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -5506,22 +5506,14 @@ paths:
                       platformSpecificData: { type: object }
                       customMedia:
                         type: array
-                        items:
-                          type: object
-                          properties:
-                            url: { type: string }
-                            type: { type: string, enum: [image, video] }
+                        items: { $ref: '#/components/schemas/MediaItem' }
                   example:
                     - platform: youtube
                     - platform: twitter
                 mediaItems:
                   type: array
                   description: Root media items shared across platforms
-                  items:
-                    type: object
-                    properties:
-                      url: { type: string, format: uri }
-                      type: { type: string, enum: [image, video] }
+                  items: { $ref: '#/components/schemas/MediaItem' }
       responses:
         "200":
           description: Validation result
