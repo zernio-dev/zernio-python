@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.0.2"
+  version: "1.0.3"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -8267,11 +8267,7 @@ paths:
                   description: Post caption/text. Optional when media is attached or all platforms have customContent. Required for text-only posts.
                 mediaItems:
                   type: array
-                  items:
-                    type: object
-                    properties:
-                      type: { type: string, enum: [image, video, gif, document] }
-                      url: { type: string, format: uri }
+                  items: { $ref: '#/components/schemas/MediaItem' }
                 platforms:
                   type: array
                   description: Target platforms and accounts for this post. Required for non-draft posts (returns 400 if empty). Drafts can omit platforms.
@@ -8285,11 +8281,7 @@ paths:
                         description: Platform-specific text override. When set, this content is used instead of the top-level post content for this platform. Useful for tailoring captions per platform (e.g. keeping tweets under 280 characters).
                       customMedia:
                         type: array
-                        items:
-                          type: object
-                          properties:
-                            type: { type: string, enum: [image, video, gif, document] }
-                            url: { type: string, format: uri }
+                        items: { $ref: '#/components/schemas/MediaItem' }
                       scheduledFor:
                         type: string
                         format: date-time
