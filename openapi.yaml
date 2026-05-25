@@ -1432,6 +1432,71 @@ components:
         timestamp:
           type: string
           format: date-time
+    WebhookPayloadLead:
+      type: object
+      description: Webhook payload for lead.received events (Meta Lead Gen / Instant Forms).
+      required: [id, event, lead, account, timestamp]
+      properties:
+        id:
+          type: string
+          description: Stable webhook event ID
+        event:
+          type: string
+          enum: [lead.received]
+        lead:
+          type: object
+          required: [id, leadgenId, formId, fields, isOrganic, createdAt]
+          properties:
+            id:
+              type: string
+              description: Zernio lead ID (AdLead document ID)
+            leadgenId:
+              type: string
+              description: Meta lead ID (the platform's leadgen_id)
+            formId:
+              type: string
+              description: Lead Gen form ID the lead was submitted against
+            formName:
+              type: string
+              nullable: true
+              description: Human-readable form name (best-effort; may be null)
+            adId:
+              type: string
+              nullable: true
+              description: Meta ad ID that drove the lead (null for organic/test leads)
+            adsetId:
+              type: string
+              nullable: true
+            campaignId:
+              type: string
+              nullable: true
+            fields:
+              type: object
+              additionalProperties:
+                type: string
+              description: >
+                Flattened question key -> answer map. For multiple-choice questions
+                the value is the option key (e.g. "k1"), not the display label.
+            isOrganic:
+              type: boolean
+              description: True when the lead came from an organic post rather than a paid ad
+            createdAt:
+              type: string
+              format: date-time
+              description: Meta's lead creation time (ISO 8601)
+        account:
+          type: object
+          required: [id, platform]
+          properties:
+            id:
+              type: string
+              description: Social account ID (the facebook account owning the Page)
+            platform:
+              type: string
+              enum: [facebook]
+        timestamp:
+          type: string
+          format: date-time
     ReviewWebhookReview:
       type: object
       description: Review data shared by review.new and review.updated payloads.
@@ -5407,6 +5472,25 @@ webhooks:
           application/json:
             schema:
               $ref: '#/components/schemas/WebhookPayloadReviewUpdated'
+      responses:
+        '200':
+          description: Webhook received successfully
+  lead.received:
+    post:
+      operationId: onLeadReceived
+      summary: Lead received event
+      description: |
+        Fired when a new lead is submitted against a Meta Lead Gen (Instant) Form
+        and ingested via the Page `leadgen` webhook. `lead.fields` is the
+        question-key to answer map; `lead.formId` / `lead.adId` give provenance.
+        Requires the Ads add-on.
+      tags: [Webhook Events]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/WebhookPayloadLead'
       responses:
         '200':
           description: Webhook received successfully
