@@ -393,19 +393,26 @@ Both `from zernio import ...` and `from late import ...` work identically. The `
 | `ads.list_ads_business_centers()` | List TikTok Business Centers |
 | `ads.list_conversion_associations()` | List campaigns associated with a conversion destination |
 | `ads.list_conversion_destinations()` | List destinations for the Conversions API |
+| `ads.list_form_leads()` | List leads for a single form |
+| `ads.list_lead_forms()` | List Lead Gen (Instant) forms |
+| `ads.list_leads()` | List submitted leads (cross-form CRM view) |
 | `ads.create_conversion_destination()` | Create a conversion destination (LinkedIn) |
 | `ads.create_ctwa_ad()` | Create Click-to-WhatsApp ad(s) |
+| `ads.create_lead_form()` | Create a Lead Gen (Instant) form |
 | `ads.create_standalone_ad()` | Create standalone ad |
+| `ads.create_test_lead()` | Create a synthetic test lead |
 | `ads.get_ad()` | Get ad details |
 | `ads.get_ad_analytics()` | Get ad analytics |
 | `ads.get_ad_comments()` | List comments on an ad |
 | `ads.get_conversion_destination()` | Fetch a single conversion destination |
 | `ads.get_conversion_metrics()` | Fetch attribution metrics for a conversion destination |
+| `ads.get_lead_form()` | Get a single Lead Gen form |
 | `ads.update_ad()` | Update ad |
 | `ads.update_conversion_destination()` | Update a conversion destination |
 | `ads.delete_ad()` | Cancel an ad |
 | `ads.delete_conversion_destination()` | Soft-delete a conversion destination |
 | `ads.add_conversion_associations()` | Associate campaigns with a conversion destination |
+| `ads.archive_lead_form()` | Archive a Lead Gen form |
 | `ads.boost_post()` | Boost post as ad |
 | `ads.estimate_ad_reach()` | Estimate audience reach |
 | `ads.remove_conversion_associations()` | Remove campaign↔conversion associations |

@@ -239,6 +239,7 @@ class AdsResource:
         body: str | None = None,
         call_to_action: str | None = None,
         link_url: str | None = None,
+        lead_gen_form_id: str | None = None,
         image_url: str | None = None,
         images: dict[str, Any] | None = None,
         video: dict[str, Any] | None = None,
@@ -293,6 +294,7 @@ class AdsResource:
             body=body,
             call_to_action=call_to_action,
             link_url=link_url,
+            lead_gen_form_id=lead_gen_form_id,
             image_url=image_url,
             images=images,
             video=video,
@@ -334,6 +336,115 @@ class AdsResource:
             promoted_object=promoted_object,
         )
         return self._client._post("/v1/ads/create", data=payload)
+
+    def list_leads(
+        self,
+        *,
+        form_id: str | None = None,
+        account_id: str | None = None,
+        limit: int | None = 25,
+        since: int | None = None,
+        cursor: str | None = None,
+    ) -> dict[str, Any]:
+        """List submitted leads (cross-form CRM view)"""
+        params = self._build_params(
+            form_id=form_id,
+            account_id=account_id,
+            limit=limit,
+            since=since,
+            cursor=cursor,
+        )
+        return self._client._get("/v1/ads/leads", params=params)
+
+    def list_lead_forms(
+        self, account_id: str, *, limit: int | None = 25, cursor: str | None = None
+    ) -> dict[str, Any]:
+        """List Lead Gen (Instant) forms"""
+        params = self._build_params(
+            account_id=account_id,
+            limit=limit,
+            cursor=cursor,
+        )
+        return self._client._get("/v1/ads/lead-forms", params=params)
+
+    def create_lead_form(
+        self,
+        account_id: str,
+        name: str,
+        questions: list[dict[str, Any]],
+        privacy_policy_url: str,
+        *,
+        privacy_policy_link_text: str | None = None,
+        follow_up_action_url: str | None = None,
+        locale: str | None = None,
+        thank_you_title: str | None = None,
+        thank_you_body: str | None = None,
+        thank_you_button_text: str | None = None,
+        thank_you_button_type: str | None = None,
+        thank_you_website_url: str | None = None,
+        is_optimized_for_quality: bool | None = None,
+    ) -> dict[str, Any]:
+        """Create a Lead Gen (Instant) form"""
+        payload = self._build_payload(
+            account_id=account_id,
+            name=name,
+            questions=questions,
+            privacy_policy_url=privacy_policy_url,
+            privacy_policy_link_text=privacy_policy_link_text,
+            follow_up_action_url=follow_up_action_url,
+            locale=locale,
+            thank_you_title=thank_you_title,
+            thank_you_body=thank_you_body,
+            thank_you_button_text=thank_you_button_text,
+            thank_you_button_type=thank_you_button_type,
+            thank_you_website_url=thank_you_website_url,
+            is_optimized_for_quality=is_optimized_for_quality,
+        )
+        return self._client._post("/v1/ads/lead-forms", data=payload)
+
+    def get_lead_form(self, form_id: str, account_id: str) -> dict[str, Any]:
+        """Get a single Lead Gen form"""
+        params = self._build_params(
+            account_id=account_id,
+        )
+        return self._client._get(f"/v1/ads/lead-forms/{form_id}", params=params)
+
+    def archive_lead_form(self, form_id: str, account_id: str) -> dict[str, Any]:
+        """Archive a Lead Gen form"""
+        params = self._build_params(
+            account_id=account_id,
+        )
+        return self._client._delete(f"/v1/ads/lead-forms/{form_id}", params=params)
+
+    def list_form_leads(
+        self,
+        form_id: str,
+        account_id: str,
+        *,
+        limit: int | None = 25,
+        cursor: str | None = None,
+        since: int | None = None,
+    ) -> dict[str, Any]:
+        """List leads for a single form"""
+        params = self._build_params(
+            account_id=account_id,
+            limit=limit,
+            cursor=cursor,
+            since=since,
+        )
+        return self._client._get(f"/v1/ads/lead-forms/{form_id}/leads", params=params)
+
+    def create_test_lead(
+        self, form_id: str, account_id: str, field_data: list[dict[str, Any]]
+    ) -> dict[str, Any]:
+        """Create a synthetic test lead"""
+        payload = self._build_payload(
+            account_id=account_id,
+            field_data=field_data,
+        )
+        return self._client._post(
+            f"/v1/ads/lead-forms/{form_id}/test-leads", data=payload
+        )
 
     def search_ad_interests(self, q: str, account_id: str) -> dict[str, Any]:
         """Search targeting interests (deprecated)"""
@@ -790,6 +901,7 @@ class AdsResource:
         body: str | None = None,
         call_to_action: str | None = None,
         link_url: str | None = None,
+        lead_gen_form_id: str | None = None,
         image_url: str | None = None,
         images: dict[str, Any] | None = None,
         video: dict[str, Any] | None = None,
@@ -844,6 +956,7 @@ class AdsResource:
             body=body,
             call_to_action=call_to_action,
             link_url=link_url,
+            lead_gen_form_id=lead_gen_form_id,
             image_url=image_url,
             images=images,
             video=video,
@@ -885,6 +998,119 @@ class AdsResource:
             promoted_object=promoted_object,
         )
         return await self._client._apost("/v1/ads/create", data=payload)
+
+    async def alist_leads(
+        self,
+        *,
+        form_id: str | None = None,
+        account_id: str | None = None,
+        limit: int | None = 25,
+        since: int | None = None,
+        cursor: str | None = None,
+    ) -> dict[str, Any]:
+        """List submitted leads (cross-form CRM view) (async)"""
+        params = self._build_params(
+            form_id=form_id,
+            account_id=account_id,
+            limit=limit,
+            since=since,
+            cursor=cursor,
+        )
+        return await self._client._aget("/v1/ads/leads", params=params)
+
+    async def alist_lead_forms(
+        self, account_id: str, *, limit: int | None = 25, cursor: str | None = None
+    ) -> dict[str, Any]:
+        """List Lead Gen (Instant) forms (async)"""
+        params = self._build_params(
+            account_id=account_id,
+            limit=limit,
+            cursor=cursor,
+        )
+        return await self._client._aget("/v1/ads/lead-forms", params=params)
+
+    async def acreate_lead_form(
+        self,
+        account_id: str,
+        name: str,
+        questions: list[dict[str, Any]],
+        privacy_policy_url: str,
+        *,
+        privacy_policy_link_text: str | None = None,
+        follow_up_action_url: str | None = None,
+        locale: str | None = None,
+        thank_you_title: str | None = None,
+        thank_you_body: str | None = None,
+        thank_you_button_text: str | None = None,
+        thank_you_button_type: str | None = None,
+        thank_you_website_url: str | None = None,
+        is_optimized_for_quality: bool | None = None,
+    ) -> dict[str, Any]:
+        """Create a Lead Gen (Instant) form (async)"""
+        payload = self._build_payload(
+            account_id=account_id,
+            name=name,
+            questions=questions,
+            privacy_policy_url=privacy_policy_url,
+            privacy_policy_link_text=privacy_policy_link_text,
+            follow_up_action_url=follow_up_action_url,
+            locale=locale,
+            thank_you_title=thank_you_title,
+            thank_you_body=thank_you_body,
+            thank_you_button_text=thank_you_button_text,
+            thank_you_button_type=thank_you_button_type,
+            thank_you_website_url=thank_you_website_url,
+            is_optimized_for_quality=is_optimized_for_quality,
+        )
+        return await self._client._apost("/v1/ads/lead-forms", data=payload)
+
+    async def aget_lead_form(self, form_id: str, account_id: str) -> dict[str, Any]:
+        """Get a single Lead Gen form (async)"""
+        params = self._build_params(
+            account_id=account_id,
+        )
+        return await self._client._aget(f"/v1/ads/lead-forms/{form_id}", params=params)
+
+    async def aarchive_lead_form(self, form_id: str, account_id: str) -> dict[str, Any]:
+        """Archive a Lead Gen form (async)"""
+        params = self._build_params(
+            account_id=account_id,
+        )
+        return await self._client._adelete(
+            f"/v1/ads/lead-forms/{form_id}", params=params
+        )
+
+    async def alist_form_leads(
+        self,
+        form_id: str,
+        account_id: str,
+        *,
+        limit: int | None = 25,
+        cursor: str | None = None,
+        since: int | None = None,
+    ) -> dict[str, Any]:
+        """List leads for a single form (async)"""
+        params = self._build_params(
+            account_id=account_id,
+            limit=limit,
+            cursor=cursor,
+            since=since,
+        )
+        return await self._client._aget(
+            f"/v1/ads/lead-forms/{form_id}/leads", params=params
+        )
+
+    async def acreate_test_lead(
+        self, form_id: str, account_id: str, field_data: list[dict[str, Any]]
+    ) -> dict[str, Any]:
+        """Create a synthetic test lead (async)"""
+        payload = self._build_payload(
+            account_id=account_id,
+            field_data=field_data,
+        )
+        return await self._client._apost(
+            f"/v1/ads/lead-forms/{form_id}/test-leads", data=payload
+        )
 
     async def asearch_ad_interests(self, q: str, account_id: str) -> dict[str, Any]:
         """Search targeting interests (deprecated) (async)"""

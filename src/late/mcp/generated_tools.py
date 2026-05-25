@@ -2034,6 +2034,7 @@ def register_generated_tools(mcp, _get_client):
         body: str | None = None,
         call_to_action: str | None = None,
         link_url: str | None = None,
+        lead_gen_form_id: str | None = None,
         image_url: str | None = None,
         images: dict[str, Any] | None = None,
         video: dict[str, Any] | None = None,
@@ -2088,7 +2089,8 @@ def register_generated_tools(mcp, _get_client):
                 long_headline: Google Display only — defaults to `headline` if omitted. On LinkedIn, reused as the optional secondary description text on traffic (link) ads; omitted if not provided.
                 body: Required on legacy + attach shapes. For X/Twitter this is the tweet text (max 280 chars including a ~24-char URL when `linkUrl` is set). On LinkedIn this is the post commentary (the intro text shown above the ad). Max: Google=90, Pinterest=500.
                 call_to_action: Required on legacy + attach shapes for Meta. Honoured on TikTok (passes through to the Spark Ad creative's `call_to_action`) and on LinkedIn (the CTA button on the ad; defaults to LEARN_MORE when `linkUrl` is set). LinkedIn accepts: LEARN_MORE, SIGN_UP, DOWNLOAD, SUBSCRIBE, REGISTER, JOIN, ATTEND, REQUEST_DEMO, VIEW_QUOTE, APPLY, SEE_MORE, SHOP_NOW, BUY_NOW. Ignored by Google, Pinterest, and X/Twitter.
-                link_url: Required on legacy + attach shapes (skip for multi-creative). On LinkedIn it's the ad's destination URL; required for `traffic` ads, optional for `engagement` / `awareness`.
+                link_url: Required on legacy + attach shapes (skip for multi-creative). On LinkedIn it's the ad's destination URL; required for `traffic` ads, optional for `engagement` / `awareness`. NOT required when `goal` is `lead_generation` (the ad opens a Lead Gen form instead of a destination).
+                lead_gen_form_id: Meta Lead Gen forms only (facebook/instagram). The leadgen_forms ID to attach to the ad's creative — create one via POST /v1/ads/lead-forms. REQUIRED when `goal` is `lead_generation`; ignored otherwise. The ad set's promoted_object.page_id + LEAD_GENERATION optimization are derived automatically from the goal.
                 image_url: Image creative for Meta/Google/Pinterest/LinkedIn on legacy + attach shapes (mutually exclusive with `video`). Required for LinkedIn ads unless `video` is set. Not required for Google Search campaigns. For TikTok, this field carries the VIDEO URL (the TikTok ads endpoint is video-only; the field retains the `imageUrl` name for cross-platform consistency). Ignored for X/Twitter. For Google Display, treated as the landscape image (alias of `images.landscape`); supply `images.square` alongside or the request is rejected. For LinkedIn the image is uploaded to LinkedIn under the authoring Company Page (see `organizationId`); recommended ratio 1.91:1 (e.g. 1200×627).
                 images: Google Display (Responsive Display Ads) only. Google RDA requires both a landscape (1.91:1) and a square (1:1) marketing image; sending only one is rejected upstream as 'Too few.' (NOT_ENOUGH_*_MARKETING_IMAGE_ASSET). Supply both URLs here. Either this field or the legacy `imageUrl` can provide the landscape, but `square` has no legacy counterpart so it must be set here for Display.
                 video: Meta (facebook, instagram) and LinkedIn. When set, creates a VIDEO ad on the legacy (or, for Meta, attach) shape. Mutually exclusive with `imageUrl`. For Meta multi-creative, set `video` per entry inside `creatives[]` instead. For LinkedIn the video is uploaded to LinkedIn under the authoring Company Page (see `organizationId`) and the campaign format is set to SINGLE_VIDEO; LinkedIn ignores `thumbnailUrl` (it auto-generates the poster frame) — supply MP4 H.264/AAC, 3s-30min, 75KB-500MB.
@@ -2222,6 +2224,7 @@ def register_generated_tools(mcp, _get_client):
                 body=body,
                 call_to_action=call_to_action,
                 link_url=link_url,
+                lead_gen_form_id=lead_gen_form_id,
                 image_url=image_url,
                 images=images,
                 video=video,
@@ -2261,6 +2264,234 @@ def register_generated_tools(mcp, _get_client):
                 brand_identity=brand_identity,
                 identity_type=identity_type,
                 promoted_object=promoted_object,
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="List submitted leads (cross-form CRM view)",
+            readOnlyHint=True,
+            destructiveHint=False,
+            openWorldHint=False,
+        )
+    )
+    def ads_list_leads(
+        form_id: str | None = None,
+        account_id: str | None = None,
+        limit: int = 25,
+        since: int | None = None,
+        cursor: str | None = None,
+    ) -> str:
+        """List submitted leads (cross-form CRM view)
+
+        Args:
+            form_id: Filter to a single lead form.
+            account_id: Filter to a single connected account.
+            limit
+            since: Unix seconds; only leads created at/after this Meta timestamp.
+            cursor: Keyset cursor from a previous response's pagination.cursor."""
+        client = _get_client()
+        try:
+            response = client.ads.list_leads(
+                form_id=form_id,
+                account_id=account_id,
+                limit=limit,
+                since=since,
+                cursor=cursor,
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="List Lead Gen (Instant) forms",
+            readOnlyHint=True,
+            destructiveHint=False,
+            openWorldHint=False,
+        )
+    )
+    def ads_list_lead_forms(
+        account_id: str, limit: int = 25, cursor: str | None = None
+    ) -> str:
+        """List Lead Gen (Instant) forms
+
+        Args:
+            account_id: Connected facebook account id. (required)
+            limit
+            cursor"""
+        client = _get_client()
+        try:
+            response = client.ads.list_lead_forms(
+                account_id=account_id, limit=limit, cursor=cursor
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Create a Lead Gen (Instant) form",
+            readOnlyHint=False,
+            destructiveHint=True,
+            openWorldHint=True,
+        )
+    )
+    def ads_create_lead_form(
+        account_id: str,
+        name: str,
+        questions: list[dict[str, Any]] | None,
+        privacy_policy_url: str,
+        privacy_policy_link_text: str | None = None,
+        follow_up_action_url: str | None = None,
+        locale: str | None = None,
+        thank_you_title: str | None = None,
+        thank_you_body: str | None = None,
+        thank_you_button_text: str | None = None,
+        thank_you_button_type: str | None = None,
+        thank_you_website_url: str | None = None,
+        is_optimized_for_quality: bool | None = None,
+    ) -> str:
+        """Create a Lead Gen (Instant) form
+
+        Args:
+            account_id: (required)
+            name: (required)
+            questions: (required)
+            privacy_policy_url: (required)
+            privacy_policy_link_text
+            follow_up_action_url
+            locale
+            thank_you_title
+            thank_you_body
+            thank_you_button_text
+            thank_you_button_type
+            thank_you_website_url
+            is_optimized_for_quality"""
+        client = _get_client()
+        try:
+            response = client.ads.create_lead_form(
+                account_id=account_id,
+                name=name,
+                questions=questions,
+                privacy_policy_url=privacy_policy_url,
+                privacy_policy_link_text=privacy_policy_link_text,
+                follow_up_action_url=follow_up_action_url,
+                locale=locale,
+                thank_you_title=thank_you_title,
+                thank_you_body=thank_you_body,
+                thank_you_button_text=thank_you_button_text,
+                thank_you_button_type=thank_you_button_type,
+                thank_you_website_url=thank_you_website_url,
+                is_optimized_for_quality=is_optimized_for_quality,
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Get a single Lead Gen form",
+            readOnlyHint=True,
+            destructiveHint=False,
+            openWorldHint=False,
+        )
+    )
+    def ads_get_lead_form(form_id: str, account_id: str) -> str:
+        """Get a single Lead Gen form
+
+        Args:
+            form_id: (required)
+            account_id: (required)"""
+        client = _get_client()
+        try:
+            response = client.ads.get_lead_form(form_id=form_id, account_id=account_id)
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Archive a Lead Gen form",
+            readOnlyHint=False,
+            destructiveHint=True,
+            openWorldHint=True,
+        )
+    )
+    def ads_archive_lead_form(form_id: str, account_id: str) -> str:
+        """Archive a Lead Gen form
+
+        Args:
+            form_id: (required)
+            account_id: (required)"""
+        client = _get_client()
+        try:
+            response = client.ads.archive_lead_form(
+                form_id=form_id, account_id=account_id
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="List leads for a single form",
+            readOnlyHint=True,
+            destructiveHint=False,
+            openWorldHint=False,
+        )
+    )
+    def ads_list_form_leads(
+        form_id: str,
+        account_id: str,
+        limit: int = 25,
+        cursor: str | None = None,
+        since: int | None = None,
+    ) -> str:
+        """List leads for a single form
+
+        Args:
+            form_id: (required)
+            account_id: (required)
+            limit
+            cursor
+            since: Unix seconds."""
+        client = _get_client()
+        try:
+            response = client.ads.list_form_leads(
+                form_id=form_id,
+                account_id=account_id,
+                limit=limit,
+                cursor=cursor,
+                since=since,
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Create a synthetic test lead",
+            readOnlyHint=False,
+            destructiveHint=True,
+            openWorldHint=True,
+        )
+    )
+    def ads_create_test_lead(
+        form_id: str, account_id: str, field_data: list[dict[str, Any]] | None
+    ) -> str:
+        """Create a synthetic test lead
+
+        Args:
+            form_id: (required)
+            account_id: (required)
+            field_data: (required)"""
+        client = _get_client()
+        try:
+            response = client.ads.create_test_lead(
+                form_id=form_id, account_id=account_id, field_data=field_data
             )
             return _format_response(response)
         except Exception as e:

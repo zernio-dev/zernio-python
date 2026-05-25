@@ -156,6 +156,7 @@ x-documentation:
     - `comment.received` - New comment received on a post
     - `review.new` - New review posted on a connected account (Google Business Profile)
     - `review.updated` - Review updated or reply added (Google Business Profile, or via reply API)
+    - `lead.received` - New lead submitted against a Meta Lead Gen (Instant) Form. `lead.fields` is the question-key → answer map; `lead.formId`/`lead.adId` give provenance.
     - `ad.status_changed` - Ad, ad set, or campaign changed status on the ad platform (Meta: `in_process_ad_objects` entry/exit and `with_issues_ad_objects` violations)
     - `whatsapp.template.status_updated` - WhatsApp Business template completed (re)review by Meta. `template.status` carries the new state (APPROVED, REJECTED, PENDING, PAUSED, DISABLED, IN_APPEAL, PENDING_DELETION); `template.reason` is Meta's free-form reason or "NONE".
     - `webhook.test` - Test event sent when verifying a webhook endpoint
@@ -281,7 +282,7 @@ tags:
   - name: Webhooks
     description: |
       Configure webhooks for real-time notifications. Webhooks can be created from the dashboard (Settings → Webhooks) or via this API.
-      Events: post.scheduled, post.published, post.failed, post.partial, post.cancelled, post.recycled, post.platform.published, post.platform.failed, account.connected, account.disconnected, account.ads.initial_sync_completed, message.received, message.sent, message.edited, message.deleted, message.delivered, message.read, message.failed, reaction.received, comment.received, review.new, review.updated, ad.status_changed, whatsapp.template.status_updated, webhook.test.
+      Events: post.scheduled, post.published, post.failed, post.partial, post.cancelled, post.recycled, post.platform.published, post.platform.failed, account.connected, account.disconnected, account.ads.initial_sync_completed, message.received, message.sent, message.edited, message.deleted, message.delivered, message.read, message.failed, reaction.received, comment.received, review.new, review.updated, lead.received, ad.status_changed, whatsapp.template.status_updated, webhook.test.
       Security: optional HMAC-SHA256 signature in X-Zernio-Signature header. Configure a secret key to enable verification. Custom headers supported.
   - name: Webhook Events
     description: |
@@ -22773,7 +22774,8 @@ paths:
                 longHeadline: { type: string, maxLength: 90, description: "Google Display only — defaults to `headline` if omitted. On LinkedIn, reused as the optional secondary description text on traffic (link) ads; omitted if not provided." }
                 body: { type: string, description: "Required on legacy + attach shapes. For X/Twitter this is the tweet text (max 280 chars including a ~24-char URL when `linkUrl` is set). On LinkedIn this is the post commentary (the intro text shown above the ad). Max: Google=90, Pinterest=500." }
                 callToAction: { type: string, enum: [LEARN_MORE, SHOP_NOW, SIGN_UP, BOOK_TRAVEL, CONTACT_US, DOWNLOAD, GET_OFFER, GET_QUOTE, SUBSCRIBE, WATCH_MORE, REGISTER, JOIN, ATTEND, REQUEST_DEMO, VIEW_QUOTE, APPLY, SEE_MORE, BUY_NOW], description: "Required on legacy + attach shapes for Meta. Honoured on TikTok (passes through to the Spark Ad creative's `call_to_action`) and on LinkedIn (the CTA button on the ad; defaults to LEARN_MORE when `linkUrl` is set). LinkedIn accepts: LEARN_MORE, SIGN_UP, DOWNLOAD, SUBSCRIBE, REGISTER, JOIN, ATTEND, REQUEST_DEMO, VIEW_QUOTE, APPLY, SEE_MORE, SHOP_NOW, BUY_NOW. Ignored by Google, Pinterest, and X/Twitter." }
-                linkUrl: { type: string, format: uri, description: "Required on legacy + attach shapes (skip for multi-creative). On LinkedIn it's the ad's destination URL; required for `traffic` ads, optional for `engagement` / `awareness`." }
+                linkUrl: { type: string, format: uri, description: "Required on legacy + attach shapes (skip for multi-creative). On LinkedIn it's the ad's destination URL; required for `traffic` ads, optional for `engagement` / `awareness`. NOT required when `goal` is `lead_generation` (the ad opens a Lead Gen form instead of a destination)." }
+                leadGenFormId: { type: string, description: "Meta Lead Gen forms only (facebook/instagram). The leadgen_forms ID to attach to the ad's creative — create one via POST /v1/ads/lead-forms. REQUIRED when `goal` is `lead_generation`; ignored otherwise. The ad set's promoted_object.page_id + LEAD_GENERATION optimization are derived automatically from the goal." }
                 imageUrl: { type: string, format: uri, description: "Image creative for Meta/Google/Pinterest/LinkedIn on legacy + attach shapes (mutually exclusive with `video`). Required for LinkedIn ads unless `video` is set. Not required for Google Search campaigns. For TikTok, this field carries the VIDEO URL (the TikTok ads endpoint is video-only; the field retains the `imageUrl` name for cross-platform consistency). Ignored for X/Twitter. For Google Display, treated as the landscape image (alias of `images.landscape`); supply `images.square` alongside or the request is rejected. For LinkedIn the image is uploaded to LinkedIn under the authoring Company Page (see `organizationId`); recommended ratio 1.91:1 (e.g. 1200×627)." }
                 images:
                   type: object
@@ -23118,6 +23120,237 @@ paths:
           description: Ads access required. Legacy plans need the Ads add-on; included by default on usage-based plans.
         '422':
           description: Platform ads connection required (TikTok Ads, X Ads) or missing linked account
+
+  /v1/ads/leads:
+    get:
+      operationId: listLeads
+      tags: [Ads]
+      summary: List submitted leads (cross-form CRM view)
+      description: >
+        Returns persisted Meta Lead Gen leads for your team, newest-first, with
+        keyset pagination on `cursor`. Leads are ingested in real time from the
+        `leadgen` webhook. Requires the Ads add-on.
+      parameters:
+        - { name: formId, in: query, schema: { type: string }, description: Filter to a single lead form. }
+        - { name: accountId, in: query, schema: { type: string }, description: Filter to a single connected account. }
+        - { name: limit, in: query, schema: { type: integer, minimum: 1, maximum: 100, default: 25 } }
+        - { name: since, in: query, schema: { type: integer }, description: Unix seconds; only leads created at/after this Meta timestamp. }
+        - { name: cursor, in: query, schema: { type: string }, description: Keyset cursor from a previous response's pagination.cursor. }
+      responses:
+        '200':
+          description: Lead list.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status: { type: string, example: success }
+                  leads:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id: { type: string, description: Zernio lead id. }
+                        leadgenId: { type: string, description: Meta lead id. }
+                        formId: { type: string }
+                        formName: { type: string, nullable: true }
+                        accountId: { type: string }
+                        adId: { type: string, nullable: true }
+                        adsetId: { type: string, nullable: true }
+                        campaignId: { type: string, nullable: true }
+                        isOrganic: { type: boolean }
+                        createdTime: { type: string, nullable: true, description: ISO 8601. }
+                        fields: { type: object, additionalProperties: { type: string }, description: "Question key → answer." }
+                        fieldData: { type: array, items: { type: object }, description: "Raw Meta field_data." }
+                  pagination:
+                    type: object
+                    properties:
+                      hasMore: { type: boolean }
+                      cursor: { type: string, nullable: true }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { description: Ads add-on required. }
+
+  /v1/ads/lead-forms:
+    get:
+      operationId: listLeadForms
+      tags: [Ads]
+      summary: List Lead Gen (Instant) forms
+      description: Lists the Lead Gen forms owned by the connected Facebook Page. Requires the Ads add-on.
+      parameters:
+        - { name: accountId, in: query, required: true, schema: { type: string }, description: Connected facebook account id. }
+        - { name: limit, in: query, schema: { type: integer, minimum: 1, maximum: 100, default: 25 } }
+        - { name: cursor, in: query, schema: { type: string } }
+      responses:
+        '200':
+          description: Forms list.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status: { type: string, example: success }
+                  forms: { type: array, items: { type: object } }
+                  pagination: { type: object, properties: { hasMore: { type: boolean }, cursor: { type: string, nullable: true } } }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { description: Ads add-on required. }
+    post:
+      operationId: createLeadForm
+      tags: [Ads]
+      summary: Create a Lead Gen (Instant) form
+      description: >
+        Creates a Lead Gen form on the connected Facebook Page (POST
+        /{page-id}/leadgen_forms). NOT idempotent — a retry creates a second
+        form. Prefilled question types (EMAIL, PHONE, FULL_NAME, …) must omit
+        label/key; CUSTOM questions require both. Requires the Ads add-on.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [accountId, name, questions, privacyPolicyUrl]
+              properties:
+                accountId: { type: string }
+                name: { type: string, maxLength: 200 }
+                questions:
+                  type: array
+                  minItems: 1
+                  items:
+                    type: object
+                    required: [type]
+                    properties:
+                      type: { type: string, description: "EMAIL, PHONE, FULL_NAME, FIRST_NAME, LAST_NAME, CUSTOM, …" }
+                      key: { type: string, description: "CUSTOM questions only." }
+                      label: { type: string, description: "CUSTOM questions only." }
+                      options: { type: array, items: { type: object, properties: { key: { type: string }, value: { type: string } } } }
+                      inline_context: { type: string }
+                privacyPolicyUrl: { type: string, format: uri }
+                privacyPolicyLinkText: { type: string, maxLength: 70 }
+                followUpActionUrl: { type: string, format: uri }
+                locale: { type: string, example: EN_US }
+                thankYouTitle: { type: string }
+                thankYouBody: { type: string }
+                thankYouButtonText: { type: string }
+                thankYouButtonType: { type: string, example: VIEW_WEBSITE }
+                thankYouWebsiteUrl: { type: string, format: uri }
+                isOptimizedForQuality: { type: boolean }
+      responses:
+        '200':
+          description: Created form.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status: { type: string, example: success }
+                  form: { type: object, properties: { id: { type: string }, name: { type: string } } }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { description: Ads add-on required. }
+
+  /v1/ads/lead-forms/{formId}:
+    get:
+      operationId: getLeadForm
+      tags: [Ads]
+      summary: Get a single Lead Gen form
+      parameters:
+        - { name: formId, in: path, required: true, schema: { type: string } }
+        - { name: accountId, in: query, required: true, schema: { type: string } }
+      responses:
+        '200':
+          description: Form metadata.
+          content:
+            application/json:
+              schema: { type: object, properties: { status: { type: string }, form: { type: object } } }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+    delete:
+      operationId: archiveLeadForm
+      tags: [Ads]
+      summary: Archive a Lead Gen form
+      description: Meta has no hard delete for forms; this archives the form (status=ARCHIVED).
+      parameters:
+        - { name: formId, in: path, required: true, schema: { type: string } }
+        - { name: accountId, in: query, required: true, schema: { type: string } }
+      responses:
+        '200':
+          description: Archived.
+          content:
+            application/json:
+              schema: { type: object, properties: { status: { type: string }, formId: { type: string }, archived: { type: boolean } } }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+
+  /v1/ads/lead-forms/{formId}/leads:
+    get:
+      operationId: listFormLeads
+      tags: [Ads]
+      summary: List leads for a single form
+      description: >
+        Returns leads for one form. Serves persisted leads (ingested via the
+        leadgen webhook) when available, falling back to a live Graph read.
+      parameters:
+        - { name: formId, in: path, required: true, schema: { type: string } }
+        - { name: accountId, in: query, required: true, schema: { type: string } }
+        - { name: limit, in: query, schema: { type: integer, minimum: 1, maximum: 100, default: 25 } }
+        - { name: cursor, in: query, schema: { type: string } }
+        - { name: since, in: query, schema: { type: integer }, description: Unix seconds. }
+      responses:
+        '200':
+          description: Leads for the form.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status: { type: string, example: success }
+                  leads:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id: { type: string }
+                        createdTime: { type: string, nullable: true }
+                        adId: { type: string, nullable: true }
+                        formId: { type: string }
+                        fields: { type: object, additionalProperties: { type: string } }
+                        fieldData: { type: array, items: { type: object } }
+                  pagination: { type: object, properties: { hasMore: { type: boolean }, cursor: { type: string, nullable: true } } }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+
+  /v1/ads/lead-forms/{formId}/test-leads:
+    post:
+      operationId: createTestLead
+      tags: [Ads]
+      summary: Create a synthetic test lead
+      description: >
+        Submits a test lead against the form (POST /{form-id}/test_leads) to
+        exercise retrieval without waiting for real ad impressions. Meta allows
+        one test lead per form at a time.
+      parameters:
+        - { name: formId, in: path, required: true, schema: { type: string } }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [accountId, fieldData]
+              properties:
+                accountId: { type: string }
+                fieldData:
+                  type: array
+                  minItems: 1
+                  items:
+                    type: object
+                    required: [name, values]
+                    properties:
+                      name: { type: string }
+                      values: { type: array, items: { type: string }, minItems: 1 }
+      responses:
+        '200':
+          description: Test lead created.
+          content:
+            application/json:
+              schema: { type: object, properties: { status: { type: string }, testLead: { type: object, properties: { id: { type: string } } } } }
+        '401': { $ref: '#/components/responses/Unauthorized' }
 
   /v1/ads/interests:
     get:
