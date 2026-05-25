@@ -3852,6 +3852,8 @@ components:
         saves: { type: integer, example: 0, description: 'Number of saves/bookmarks (Instagram, Pinterest)' }
         clicks: { type: integer, example: 0 }
         views: { type: integer, example: 0 }
+        igReelsAvgWatchTime: { type: integer, example: 0, description: 'Instagram Reels only: average watch time per play, in milliseconds. 0 for non-Reels media and other platforms.' }
+        igReelsVideoViewTotalTime: { type: integer, example: 0, description: 'Instagram Reels only: total watch time including replays, in milliseconds. 0 for non-Reels media and other platforms.' }
         engagementRate: { type: number, example: 0 }
         lastUpdated: { type: string, format: date-time }
     PlatformAnalytics:
