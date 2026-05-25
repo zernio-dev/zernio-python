@@ -1,0 +1,17 @@
+{
+  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+  "name": "com.zernio/zernio",
+  "title": "Zernio",
+  "description": "Schedule, publish, and analyze social media across 15+ platforms, plus inbox, ads, and analytics.",
+  "version": "1.0.0",
+  "repository": {
+    "url": "https://github.com/zernio-dev/zernio-python",
+    "source": "github"
+  },
+  "remotes": [
+    {
+      "type": "streamable-http",
+      "url": "https://mcp.zernio.com/mcp"
+    }
+  ]
+}
