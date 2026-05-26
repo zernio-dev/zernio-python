@@ -16273,9 +16273,9 @@ paths:
       description: |
         Initiate a new direct message conversation with a specified user. If a conversation already exists with the recipient, the message is added to the existing thread.
 
-        Currently supported platforms: Twitter/X only. Other platforms will return PLATFORM_NOT_SUPPORTED.
+        Supported platforms: X/Twitter, Bluesky, Reddit, and WhatsApp. Other platforms return PLATFORM_NOT_SUPPORTED. For WhatsApp, a conversation can only be started with an approved template (provide templateName, templateLanguage, and any templateParams) — freeform initial messages are not permitted by WhatsApp; a missing template returns TEMPLATE_REQUIRED.
 
-        DM eligibility: Before sending, the endpoint checks if the recipient accepts DMs from your account (via the receives_your_dm field). If not, a 422 error with code DM_NOT_ALLOWED is returned. You can skip this check with skipDmCheck: true if you have already verified eligibility.
+        DM eligibility (X/Twitter): Before sending, the endpoint checks if the recipient accepts DMs from your account (via the receives_your_dm field). If not, a 422 error with code DM_NOT_ALLOWED is returned. You can skip this check with skipDmCheck: true if you have already verified eligibility.
 
         X API tier requirement: DM write endpoints require X API Pro tier ($5,000/month) or Enterprise access. This applies to BYOK (Bring Your Own Key) users who provide their own X API credentials.
 
@@ -16295,17 +16295,27 @@ paths:
                   description: The social account ID to send from
                 participantId:
                   type: string
-                  description: Twitter numeric user ID of the recipient. Provide either this or participantUsername.
+                  description: Recipient identifier. For X this is the numeric user ID; for WhatsApp, the recipient phone number in international format (digits, country code included). Provide either this or participantUsername.
                 participantUsername:
                   type: string
-                  description: Twitter username (with or without @) of the recipient. Resolved to a user ID via lookup. Provide either this or participantId.
+                  description: Recipient handle/username — an X or Bluesky handle (with or without @) or a Reddit username (with or without u/). Resolved via lookup. Provide either this or participantId.
                 message:
                   type: string
-                  description: Text content of the message. At least one of message or attachment is required.
+                  description: Text content of the message. At least one of message, attachment, or (for WhatsApp) templateName is required.
                 skipDmCheck:
                   type: boolean
                   default: false
-                  description: Skip the receives_your_dm eligibility check before sending. Use if you have already verified the recipient accepts DMs.
+                  description: X/Twitter only. Skip the receives_your_dm eligibility check before sending. Use if you have already verified the recipient accepts DMs.
+                templateName:
+                  type: string
+                  description: WhatsApp only. Name of the approved template to start the conversation with (required for WhatsApp).
+                templateLanguage:
+                  type: string
+                  description: WhatsApp only. Template language code (e.g. en_US).
+                templateParams:
+                  type: array
+                  items: { type: string }
+                  description: WhatsApp only. Body variable values, in order, substituted into the template body ({{1}}, {{2}}, ...).
           multipart/form-data:
             schema:
               type: object

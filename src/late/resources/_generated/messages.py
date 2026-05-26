@@ -85,6 +85,9 @@ class MessagesResource:
         participant_username: str | None = None,
         message: str | None = None,
         skip_dm_check: bool | None = False,
+        template_name: str | None = None,
+        template_language: str | None = None,
+        template_params: list[str] | None = None,
     ) -> dict[str, Any]:
         """Create conversation"""
         payload = self._build_payload(
@@ -93,6 +96,9 @@ class MessagesResource:
             participant_username=participant_username,
             message=message,
             skip_dm_check=skip_dm_check,
+            template_name=template_name,
+            template_language=template_language,
+            template_params=template_params,
         )
         return self._client._post("/v1/inbox/conversations", data=payload)
 
@@ -289,6 +295,9 @@ class MessagesResource:
         participant_username: str | None = None,
         message: str | None = None,
         skip_dm_check: bool | None = False,
+        template_name: str | None = None,
+        template_language: str | None = None,
+        template_params: list[str] | None = None,
     ) -> dict[str, Any]:
         """Create conversation (async)"""
         payload = self._build_payload(
@@ -297,6 +306,9 @@ class MessagesResource:
             participant_username=participant_username,
             message=message,
             skip_dm_check=skip_dm_check,
+            template_name=template_name,
+            template_language=template_language,
+            template_params=template_params,
         )
         return await self._client._apost("/v1/inbox/conversations", data=payload)
 

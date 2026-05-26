@@ -6562,15 +6562,21 @@ def register_generated_tools(mcp, _get_client):
         participant_username: str | None = None,
         message: str | None = None,
         skip_dm_check: bool = False,
+        template_name: str | None = None,
+        template_language: str | None = None,
+        template_params: list[str] | None = None,
     ) -> str:
         """Create conversation
 
         Args:
             account_id: The social account ID to send from (required)
-            participant_id: Twitter numeric user ID of the recipient. Provide either this or participantUsername.
-            participant_username: Twitter username (with or without @) of the recipient. Resolved to a user ID via lookup. Provide either this or participantId.
-            message: Text content of the message. At least one of message or attachment is required.
-            skip_dm_check: Skip the receives_your_dm eligibility check before sending. Use if you have already verified the recipient accepts DMs."""
+            participant_id: Recipient identifier. For X this is the numeric user ID; for WhatsApp, the recipient phone number in international format (digits, country code included). Provide either this or participantUsername.
+            participant_username: Recipient handle/username — an X or Bluesky handle (with or without @) or a Reddit username (with or without u/). Resolved via lookup. Provide either this or participantId.
+            message: Text content of the message. At least one of message, attachment, or (for WhatsApp) templateName is required.
+            skip_dm_check: X/Twitter only. Skip the receives_your_dm eligibility check before sending. Use if you have already verified the recipient accepts DMs.
+            template_name: WhatsApp only. Name of the approved template to start the conversation with (required for WhatsApp).
+            template_language: WhatsApp only. Template language code (e.g. en_US).
+            template_params: WhatsApp only. Body variable values, in order, substituted into the template body ({{1}}, {{2}}, ...)."""
         client = _get_client()
         try:
             response = client.messages.create_inbox_conversation(
@@ -6579,6 +6585,9 @@ def register_generated_tools(mcp, _get_client):
                 participant_username=participant_username,
                 message=message,
                 skip_dm_check=skip_dm_check,
+                template_name=template_name,
+                template_language=template_language,
+                template_params=template_params,
             )
             return _format_response(response)
         except Exception as e:
