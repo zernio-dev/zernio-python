@@ -16709,6 +16709,15 @@ paths:
                             code: { type: integer }
                             title: { type: string }
                             message: { type: string }
+                        reactions:
+                          type: array
+                          description: Emoji reactions on this message (WhatsApp / Telegram). At most one per party in a 1:1 thread.
+                          items:
+                            type: object
+                            properties:
+                              emoji: { type: string }
+                              fromMe: { type: boolean, description: true if the connected account reacted, false if the contact did. }
+                              reactedAt: { type: string, format: date-time }
                   lastUpdated: { type: string, format: date-time }
         '401': { $ref: '#/components/responses/Unauthorized' }
         '403':
@@ -16928,6 +16937,43 @@ paths:
                 replyTo:
                   type: string
                   description: Platform message ID to quote-reply to. For WhatsApp, pass the wamid (available in message.platformMessageId from webhooks). For Telegram, pass the Telegram message ID.
+                location:
+                  type: object
+                  description: WhatsApp-only. Send a location pin.
+                  required: [latitude, longitude]
+                  properties:
+                    latitude: { type: number, description: Latitude in decimal degrees. }
+                    longitude: { type: number, description: Longitude in decimal degrees. }
+                    name: { type: string, description: Optional location name. }
+                    address: { type: string, description: Optional street address. }
+                contacts:
+                  type: array
+                  description: WhatsApp-only. Send one or more contact cards.
+                  items:
+                    type: object
+                    required: [name]
+                    properties:
+                      name:
+                        type: object
+                        required: [formatted_name]
+                        properties:
+                          formatted_name: { type: string, description: Full display name. }
+                          first_name: { type: string }
+                          last_name: { type: string }
+                      phones:
+                        type: array
+                        items:
+                          type: object
+                          properties:
+                            phone: { type: string }
+                            type: { type: string, description: "e.g. CELL, WORK, HOME." }
+                      emails:
+                        type: array
+                        items:
+                          type: object
+                          properties:
+                            email: { type: string }
+                            type: { type: string }
           multipart/form-data:
             schema:
               type: object

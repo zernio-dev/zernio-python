@@ -6703,6 +6703,8 @@ def register_generated_tools(mcp, _get_client):
         messaging_type: str | None = None,
         message_tag: str | None = None,
         reply_to: str | None = None,
+        location: dict[str, Any] | None = None,
+        contacts: list[dict[str, Any]] | None = None,
     ) -> str:
         """Send message
 
@@ -6731,7 +6733,9 @@ def register_generated_tools(mcp, _get_client):
                 reply_markup: Telegram-native keyboard markup. Ignored on other platforms.
                 messaging_type: Facebook messaging type. Required when using messageTag.
                 message_tag: Facebook message tag for messaging outside 24h window. Requires messagingType MESSAGE_TAG. Instagram only supports HUMAN_AGENT.
-                reply_to: Platform message ID to quote-reply to. For WhatsApp, pass the wamid (available in message.platformMessageId from webhooks). For Telegram, pass the Telegram message ID."""
+                reply_to: Platform message ID to quote-reply to. For WhatsApp, pass the wamid (available in message.platformMessageId from webhooks). For Telegram, pass the Telegram message ID.
+                location: WhatsApp-only. Send a location pin.
+                contacts: WhatsApp-only. Send one or more contact cards."""
         client = _get_client()
         try:
             response = client.messages.send_inbox_message(
@@ -6748,6 +6752,8 @@ def register_generated_tools(mcp, _get_client):
                 messaging_type=messaging_type,
                 message_tag=message_tag,
                 reply_to=reply_to,
+                location=location,
+                contacts=contacts,
             )
             return _format_response(response)
         except Exception as e:

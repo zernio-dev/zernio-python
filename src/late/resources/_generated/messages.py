@@ -161,6 +161,8 @@ class MessagesResource:
         messaging_type: str | None = None,
         message_tag: str | None = None,
         reply_to: str | None = None,
+        location: dict[str, Any] | None = None,
+        contacts: list[dict[str, Any]] | None = None,
     ) -> dict[str, Any]:
         """Send message"""
         payload = self._build_payload(
@@ -176,6 +178,8 @@ class MessagesResource:
             messaging_type=messaging_type,
             message_tag=message_tag,
             reply_to=reply_to,
+            location=location,
+            contacts=contacts,
         )
         return self._client._post(
             f"/v1/inbox/conversations/{conversation_id}/messages", data=payload
@@ -371,6 +375,8 @@ class MessagesResource:
         messaging_type: str | None = None,
         message_tag: str | None = None,
         reply_to: str | None = None,
+        location: dict[str, Any] | None = None,
+        contacts: list[dict[str, Any]] | None = None,
     ) -> dict[str, Any]:
         """Send message (async)"""
         payload = self._build_payload(
@@ -386,6 +392,8 @@ class MessagesResource:
             messaging_type=messaging_type,
             message_tag=message_tag,
             reply_to=reply_to,
+            location=location,
+            contacts=contacts,
         )
         return await self._client._apost(
             f"/v1/inbox/conversations/{conversation_id}/messages", data=payload
