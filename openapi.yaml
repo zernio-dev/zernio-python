@@ -16718,6 +16718,15 @@ paths:
                               emoji: { type: string }
                               fromMe: { type: boolean, description: true if the connected account reacted, false if the contact did. }
                               reactedAt: { type: string, format: date-time }
+                        metadata:
+                          type: object
+                          description: |
+                            Platform-specific extras. Free-form, but commonly includes:
+                            `quotedMessageId` (platformMessageId this message replies to),
+                            `waInteractive` (a compact descriptor of WhatsApp interactive
+                            content sent: buttons / list / cta_url / flow), and for inbound
+                            interactive taps `interactiveType` / `interactiveId`.
+                          additionalProperties: true
                   lastUpdated: { type: string, format: date-time }
         '401': { $ref: '#/components/responses/Unauthorized' }
         '403':
@@ -17006,6 +17015,10 @@ paths:
                 replyTo:
                   type: string
                   description: Platform message ID to quote-reply to. For WhatsApp, pass the wamid (available in message.platformMessageId from webhooks). For Telegram, pass the Telegram message ID.
+                voiceNote:
+                  type: string
+                  enum: ['true']
+                  description: WhatsApp-only. Set to "true" when the audio attachment is an in-browser voice recording; the server transcodes it to a WhatsApp-native container (ogg/Opus). Omit for regular audio file uploads.
       responses:
         '200':
           description: Message sent
