@@ -6,6 +6,7 @@ from __future__ import annotations
 
 import time
 from contextlib import asynccontextmanager, contextmanager
+from importlib.metadata import PackageNotFoundError, version
 from typing import TYPE_CHECKING, Any
 
 import httpx
@@ -25,6 +26,15 @@ if TYPE_CHECKING:
     from collections.abc import AsyncIterator, Iterator
 
 
+def _resolve_sdk_version() -> str:
+    for dist_name in ("zernio-sdk", "late-sdk"):
+        try:
+            return version(dist_name)
+        except PackageNotFoundError:
+            continue
+    return "0.0.0+unknown"
+
+
 class BaseClient:
     """
     Base HTTP client supporting both sync and async operations.
@@ -36,7 +46,7 @@ class BaseClient:
     DEFAULT_BASE_URL = "https://zernio.com/api"
     DEFAULT_TIMEOUT = 30.0
     DEFAULT_MAX_RETRIES = 3
-    SDK_VERSION = "1.0.0"
+    SDK_VERSION = _resolve_sdk_version()
 
     def __init__(
         self,

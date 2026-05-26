@@ -1,8 +1,12 @@
 """Tests for Late client."""
 
+from importlib.metadata import PackageNotFoundError, version
+
 import pytest
 
 from late import Late
+from late.client import base as base_module
+from late.client.base import BaseClient
 
 
 class TestLateClient:
@@ -35,6 +39,38 @@ class TestLateClient:
         assert hasattr(client, "analytics")
         assert hasattr(client, "tools")
         assert hasattr(client, "queue")
+
+
+class TestUserAgent:
+    """User-Agent must reflect the installed package version, not a hardcoded value."""
+
+    def _installed_version(self) -> str:
+        for dist_name in ("zernio-sdk", "late-sdk"):
+            try:
+                return version(dist_name)
+            except PackageNotFoundError:
+                continue
+        pytest.fail("Neither zernio-sdk nor late-sdk is installed")
+
+    def test_sdk_version_matches_installed_distribution(self) -> None:
+        assert self._installed_version() == BaseClient.SDK_VERSION
+
+    def test_sdk_version_is_not_the_old_hardcoded_value(self) -> None:
+        # Regression guard: User-Agent used to be pinned at 1.0.0 forever.
+        assert BaseClient.SDK_VERSION != "1.0.0"
+
+    def test_user_agent_header_uses_resolved_version(self, api_key: str) -> None:
+        client = BaseClient(api_key=api_key)
+        assert client._headers["User-Agent"] == f"late-python-sdk/{self._installed_version()}"
+
+    def test_resolve_sdk_version_falls_back_when_no_distribution_installed(
+        self, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        def _always_missing(_name: str) -> str:
+            raise PackageNotFoundError
+
+        monkeypatch.setattr(base_module, "version", _always_missing)
+        assert base_module._resolve_sdk_version() == "0.0.0+unknown"
 
 
 class TestModels:
