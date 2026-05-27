@@ -20320,7 +20320,7 @@ paths:
                   enum: [navigate, data_exchange]
                   default: navigate
                   description: "Action type: navigate opens a screen directly, data_exchange hits your endpoint first"
-                flow_token: { type: string, maxLength: 200, description: "Unique token to correlate responses. Auto-generated UUID if omitted." }
+                flow_token: { type: string, maxLength: 200, description: "Unique token to correlate responses. If omitted, auto-generated as '<flowId>:<uuid>' so the response can be attributed to this flow in the Flow Responses view." }
                 flow_action_payload:
                   type: object
                   properties:
@@ -20359,6 +20359,47 @@ paths:
                   success: { type: boolean }
                   messageId: { type: string, description: WhatsApp message ID (WAMID) }
         '400': { description: Validation error or missing phone number ID }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404': { description: WhatsApp account not found }
+
+  /v1/whatsapp/flow-responses:
+    get:
+      operationId: listWhatsAppFlowResponses
+      tags: [WhatsApp Flows]
+      summary: List flow responses
+      description: |
+        List the responses customers submitted when completing a flow (parsed from the
+        nfm_reply messages received via webhook), newest first. Scope to a single flow
+        with `flowId` — this matches responses whose flow_token carries the `<flowId>:`
+        prefix that Zernio stamps on auto-generated tokens at send time. Responses sent
+        with a custom integrator-supplied flow_token are not attributed to a flow.
+      security:
+        - bearerAuth: []
+      parameters:
+        - { name: accountId, in: query, required: true, schema: { type: string }, description: WhatsApp social account ID }
+        - { name: flowId, in: query, required: false, schema: { type: string }, description: Scope to responses for this flow }
+        - { name: limit, in: query, required: false, schema: { type: integer, maximum: 200, default: 50 }, description: Max responses to return }
+      responses:
+        '200':
+          description: Flow responses
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  responses:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id: { type: string, description: Message ID }
+                        receivedAt: { type: string, format: date-time }
+                        from: { type: string, nullable: true, description: Sender wa_id / phone }
+                        senderName: { type: string, nullable: true }
+                        conversationId: { type: string, nullable: true }
+                        flowToken: { type: string, nullable: true }
+                        data: { type: object, description: Submitted field values (flow_token removed) }
+                        raw: { type: string, nullable: true, description: Raw response_json string }
         '401': { $ref: '#/components/responses/Unauthorized' }
         '404': { description: WhatsApp account not found }
 

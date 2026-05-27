@@ -198,6 +198,17 @@ class WhatsappFlowsResource:
         )
         return self._client._post("/v1/whatsapp/flows/send", data=payload)
 
+    def list_whats_app_flow_responses(
+        self, account_id: str, *, flow_id: str | None = None, limit: int | None = 50
+    ) -> dict[str, Any]:
+        """List flow responses"""
+        params = self._build_params(
+            account_id=account_id,
+            flow_id=flow_id,
+            limit=limit,
+        )
+        return self._client._get("/v1/whatsapp/flow-responses", params=params)
+
     async def alist_whats_app_flows(self, account_id: str) -> dict[str, Any]:
         """List flows (async)"""
         params = self._build_params(
@@ -359,3 +370,14 @@ class WhatsappFlowsResource:
             draft=draft,
         )
         return await self._client._apost("/v1/whatsapp/flows/send", data=payload)
+
+    async def alist_whats_app_flow_responses(
+        self, account_id: str, *, flow_id: str | None = None, limit: int | None = 50
+    ) -> dict[str, Any]:
+        """List flow responses (async)"""
+        params = self._build_params(
+            account_id=account_id,
+            flow_id=flow_id,
+            limit=limit,
+        )
+        return await self._client._aget("/v1/whatsapp/flow-responses", params=params)

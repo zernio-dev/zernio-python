@@ -635,6 +635,7 @@ Both `from zernio import ...` and `from late import ...` work identically. The `
 ### WhatsApp Flows
 | Method | Description |
 |--------|-------------|
+| `whatsapp_flows.list_whats_app_flow_responses()` | List flow responses |
 | `whatsapp_flows.list_whats_app_flow_versions()` | List flow versions |
 | `whatsapp_flows.list_whats_app_flows()` | List flows |
 | `whatsapp_flows.create_whats_app_flow()` | Create flow |

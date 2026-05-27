@@ -9705,7 +9705,7 @@ def register_generated_tools(mcp, _get_client):
             flow_id: Published flow ID (required)
             flow_cta: CTA button text (e.g. 'Book Now', 'Sign Up') (required)
             flow_action: Action type: navigate opens a screen directly, data_exchange hits your endpoint first
-            flow_token: Unique token to correlate responses. Auto-generated UUID if omitted.
+            flow_token: Unique token to correlate responses. If omitted, auto-generated as '<flowId>:<uuid>' so the response can be attributed to this flow in the Flow Responses view.
             flow_action_payload
             body: Message body text (required)
             header
@@ -9725,6 +9725,32 @@ def register_generated_tools(mcp, _get_client):
                 header=header,
                 footer=footer,
                 draft=draft,
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="List flow responses",
+            readOnlyHint=True,
+            destructiveHint=False,
+            openWorldHint=False,
+        )
+    )
+    def whatsapp_flows_list_whats_app_flow_responses(
+        account_id: str, flow_id: str | None = None, limit: int = 50
+    ) -> str:
+        """List flow responses
+
+        Args:
+            account_id: WhatsApp social account ID (required)
+            flow_id: Scope to responses for this flow
+            limit: Max responses to return"""
+        client = _get_client()
+        try:
+            response = client.whatsapp_flows.list_whats_app_flow_responses(
+                account_id=account_id, flow_id=flow_id, limit=limit
             )
             return _format_response(response)
         except Exception as e:
