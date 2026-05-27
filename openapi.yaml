@@ -19870,6 +19870,12 @@ paths:
                         validation_errors:
                           type: array
                           items: { type: object }
+                        version:
+                          type: integer
+                          description: 1-based version within the flow's clone lineage (Zernio-tracked; Meta has no native versioning). Standalone flows are version 1.
+                        lineageId:
+                          type: string
+                          description: Stable group key for the flow's version lineage (the root flow's ID).
         '400': { description: WABA ID not found on account }
         '401': { $ref: '#/components/responses/Unauthorized' }
         '404': { description: WhatsApp account not found }
@@ -19899,7 +19905,8 @@ paths:
                     type: string
                     enum: [SIGN_UP, SIGN_IN, APPOINTMENT_BOOKING, LEAD_GENERATION, CONTACT_US, CUSTOMER_SUPPORT, SURVEY, OTHER]
                   description: Flow categories
-                cloneFlowId: { type: string, description: "Optional: ID of an existing flow to clone" }
+                cloneFlowId: { type: string, description: "Optional: ID of an existing flow to clone the Flow JSON from" }
+                asVersion: { type: boolean, description: "When cloning, true keeps the clone in cloneFlowId's version lineage (auto-numbered next version); false/absent creates an independent flow. Ignored without cloneFlowId." }
             examples:
               basic:
                 summary: Create a lead generation flow
@@ -19925,6 +19932,8 @@ paths:
                       categories:
                         type: array
                         items: { type: string }
+                      version: { type: integer, description: Version within the clone lineage }
+                      lineageId: { type: string, description: Version-lineage group key }
         '400': { description: Validation error }
         '401': { $ref: '#/components/responses/Unauthorized' }
         '404': { description: WhatsApp account not found }
@@ -20149,6 +20158,70 @@ paths:
         '400': { description: Invalid JSON or flow is not in DRAFT status }
         '401': { $ref: '#/components/responses/Unauthorized' }
         '404': { description: WhatsApp account not found }
+
+  /v1/whatsapp/flows/{flowId}/preview:
+    get:
+      operationId: getWhatsAppFlowPreview
+      tags: [WhatsApp Flows]
+      summary: Get flow preview URL
+      description: |
+        Get Meta's public web-preview URL for a flow (drafts included), embeddable as an
+        interactive iframe. The link is reused across calls (valid ~30 days); pass
+        invalidate=true to mint a fresh one (the previous link stops working).
+      security:
+        - bearerAuth: []
+      parameters:
+        - { name: flowId, in: path, required: true, schema: { type: string }, description: Flow ID }
+        - { name: accountId, in: query, required: true, schema: { type: string }, description: WhatsApp social account ID }
+        - { name: invalidate, in: query, required: false, schema: { type: boolean }, description: Mint a fresh preview link (default false) }
+      responses:
+        '200':
+          description: Preview URL
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  preview_url: { type: string, nullable: true }
+                  expires_at: { type: string, nullable: true }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404': { description: Flow or account not found }
+
+  /v1/whatsapp/flows/{flowId}/versions:
+    get:
+      operationId: listWhatsAppFlowVersions
+      tags: [WhatsApp Flows]
+      summary: List flow versions
+      description: |
+        List the flow's version history (the clone lineage Zernio tracks, since Meta has no
+        native versioning), newest version first. Each entry is enriched with the version's
+        live name and status from Meta. A flow with no lineage returns just itself as version 1.
+      security:
+        - bearerAuth: []
+      parameters:
+        - { name: flowId, in: path, required: true, schema: { type: string }, description: Flow ID }
+        - { name: accountId, in: query, required: true, schema: { type: string }, description: WhatsApp social account ID }
+      responses:
+        '200':
+          description: Version history
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  versions:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        flowId: { type: string }
+                        version: { type: integer }
+                        parentFlowId: { type: string, nullable: true }
+                        name: { type: string, nullable: true }
+                        status: { type: string, nullable: true }
+                        missing: { type: boolean, description: True when Meta no longer has this flow }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404': { description: Flow or account not found }
 
   /v1/whatsapp/flows/{flowId}/publish:
     post:

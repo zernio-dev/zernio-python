@@ -9428,6 +9428,7 @@ def register_generated_tools(mcp, _get_client):
         name: str,
         categories: list[str] | None,
         clone_flow_id: str | None = None,
+        as_version: bool | None = None,
     ) -> str:
         """Create flow
 
@@ -9435,7 +9436,8 @@ def register_generated_tools(mcp, _get_client):
             account_id: WhatsApp social account ID (required)
             name: Flow display name (required)
             categories: Flow categories (required)
-            clone_flow_id: Optional: ID of an existing flow to clone"""
+            clone_flow_id: Optional: ID of an existing flow to clone the Flow JSON from
+            as_version: When cloning, true keeps the clone in cloneFlowId's version lineage (auto-numbered next version); false/absent creates an independent flow. Ignored without cloneFlowId."""
         client = _get_client()
         try:
             response = client.whatsapp_flows.create_whats_app_flow(
@@ -9443,6 +9445,7 @@ def register_generated_tools(mcp, _get_client):
                 name=name,
                 categories=categories,
                 clone_flow_id=clone_flow_id,
+                as_version=as_version,
             )
             return _format_response(response)
         except Exception as e:
@@ -9571,6 +9574,57 @@ def register_generated_tools(mcp, _get_client):
         try:
             response = client.whatsapp_flows.upload_whats_app_flow_json(
                 flow_id=flow_id, account_id=account_id, flow_json=flow_json
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Get flow preview URL",
+            readOnlyHint=True,
+            destructiveHint=False,
+            openWorldHint=False,
+        )
+    )
+    def whatsapp_flows_get_whats_app_flow_preview(
+        flow_id: str, account_id: str, invalidate: bool | None = None
+    ) -> str:
+        """Get flow preview URL
+
+        Args:
+            flow_id: Flow ID (required)
+            account_id: WhatsApp social account ID (required)
+            invalidate: Mint a fresh preview link (default false)"""
+        client = _get_client()
+        try:
+            response = client.whatsapp_flows.get_whats_app_flow_preview(
+                flow_id=flow_id, account_id=account_id, invalidate=invalidate
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="List flow versions",
+            readOnlyHint=True,
+            destructiveHint=False,
+            openWorldHint=False,
+        )
+    )
+    def whatsapp_flows_list_whats_app_flow_versions(
+        flow_id: str, account_id: str
+    ) -> str:
+        """List flow versions
+
+        Args:
+            flow_id: Flow ID (required)
+            account_id: WhatsApp social account ID (required)"""
+        client = _get_client()
+        try:
+            response = client.whatsapp_flows.list_whats_app_flow_versions(
+                flow_id=flow_id, account_id=account_id
             )
             return _format_response(response)
         except Exception as e:

@@ -68,6 +68,7 @@ class WhatsappFlowsResource:
         categories: list[str],
         *,
         clone_flow_id: str | None = None,
+        as_version: bool | None = None,
     ) -> dict[str, Any]:
         """Create flow"""
         payload = self._build_payload(
@@ -75,6 +76,7 @@ class WhatsappFlowsResource:
             name=name,
             categories=categories,
             clone_flow_id=clone_flow_id,
+            as_version=as_version,
         )
         return self._client._post("/v1/whatsapp/flows", data=payload)
 
@@ -127,6 +129,27 @@ class WhatsappFlowsResource:
             flow_json=flow_json,
         )
         return self._client._put(f"/v1/whatsapp/flows/{flow_id}/json", data=payload)
+
+    def get_whats_app_flow_preview(
+        self, flow_id: str, account_id: str, *, invalidate: bool | None = None
+    ) -> dict[str, Any]:
+        """Get flow preview URL"""
+        params = self._build_params(
+            account_id=account_id,
+            invalidate=invalidate,
+        )
+        return self._client._get(f"/v1/whatsapp/flows/{flow_id}/preview", params=params)
+
+    def list_whats_app_flow_versions(
+        self, flow_id: str, account_id: str
+    ) -> dict[str, Any]:
+        """List flow versions"""
+        params = self._build_params(
+            account_id=account_id,
+        )
+        return self._client._get(
+            f"/v1/whatsapp/flows/{flow_id}/versions", params=params
+        )
 
     def publish_whats_app_flow(self, flow_id: str, account_id: str) -> dict[str, Any]:
         """Publish flow"""
@@ -189,6 +212,7 @@ class WhatsappFlowsResource:
         categories: list[str],
         *,
         clone_flow_id: str | None = None,
+        as_version: bool | None = None,
     ) -> dict[str, Any]:
         """Create flow (async)"""
         payload = self._build_payload(
@@ -196,6 +220,7 @@ class WhatsappFlowsResource:
             name=name,
             categories=categories,
             clone_flow_id=clone_flow_id,
+            as_version=as_version,
         )
         return await self._client._apost("/v1/whatsapp/flows", data=payload)
 
@@ -257,6 +282,29 @@ class WhatsappFlowsResource:
         )
         return await self._client._aput(
             f"/v1/whatsapp/flows/{flow_id}/json", data=payload
+        )
+
+    async def aget_whats_app_flow_preview(
+        self, flow_id: str, account_id: str, *, invalidate: bool | None = None
+    ) -> dict[str, Any]:
+        """Get flow preview URL (async)"""
+        params = self._build_params(
+            account_id=account_id,
+            invalidate=invalidate,
+        )
+        return await self._client._aget(
+            f"/v1/whatsapp/flows/{flow_id}/preview", params=params
+        )
+
+    async def alist_whats_app_flow_versions(
+        self, flow_id: str, account_id: str
+    ) -> dict[str, Any]:
+        """List flow versions (async)"""
+        params = self._build_params(
+            account_id=account_id,
+        )
+        return await self._client._aget(
+            f"/v1/whatsapp/flows/{flow_id}/versions", params=params
         )
 
     async def apublish_whats_app_flow(
