@@ -9850,3 +9850,30 @@ def register_generated_tools(mcp, _get_client):
             return _format_response(response)
         except Exception as e:
             return f"Error: {e}"
+
+    # WHATSAPP_TEMPLATES
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Look up a library template",
+            readOnlyHint=True,
+            destructiveHint=False,
+            openWorldHint=False,
+        )
+    )
+    def whatsapp_templates_get_whats_app_library_template(
+        account_id: str, name: str
+    ) -> str:
+        """Look up a library template
+
+        Args:
+            account_id: WhatsApp social account ID (required)
+            name: Exact library template name (required)"""
+        client = _get_client()
+        try:
+            response = client.whatsapp_templates.get_whats_app_library_template(
+                account_id=account_id, name=name
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"

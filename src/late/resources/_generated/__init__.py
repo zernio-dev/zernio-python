@@ -39,6 +39,7 @@ from .webhooks import WebhooksResource
 from .whatsapp import WhatsappResource
 from .whatsapp_flows import WhatsappFlowsResource
 from .whatsapp_phone_numbers import WhatsappPhoneNumbersResource
+from .whatsapp_templates import WhatsappTemplatesResource
 
 __all__ = [
     "AccountGroupsResource",
@@ -78,4 +79,5 @@ __all__ = [
     "WhatsappResource",
     "WhatsappFlowsResource",
     "WhatsappPhoneNumbersResource",
+    "WhatsappTemplatesResource",
 ]

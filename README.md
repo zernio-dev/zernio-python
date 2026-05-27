@@ -657,6 +657,11 @@ Both `from zernio import ...` and `from late import ...` work identically. The `
 | `whatsapp_phone_numbers.purchase_whats_app_phone_number()` | Purchase phone number |
 | `whatsapp_phone_numbers.release_whats_app_phone_number()` | Release phone number |
 
+### WhatsApp Templates
+| Method | Description |
+|--------|-------------|
+| `whatsapp_templates.get_whats_app_library_template()` | Look up a library template |
+
 ### Invites
 | Method | Description |
 |--------|-------------|

@@ -19015,6 +19015,50 @@ paths:
         '401': { $ref: '#/components/responses/Unauthorized' }
         '404': { $ref: '#/components/responses/NotFound' }
 
+  /v1/whatsapp/template-library:
+    get:
+      operationId: getWhatsAppLibraryTemplate
+      tags: [WhatsApp Templates]
+      summary: Look up a library template
+      description: |
+        Look up a single pre-approved Template Library template by its exact name, to
+        introspect its structure before importing it. Most importantly it returns the
+        template's `buttons`: a library template with `URL` / `PHONE_NUMBER` buttons
+        must be created with a matching `library_template_button_inputs` array (see
+        Create Template), or Meta rejects it. Use this to discover which inputs to collect.
+      security:
+        - bearerAuth: []
+      parameters:
+        - { name: accountId, in: query, required: true, schema: { type: string }, description: WhatsApp social account ID }
+        - { name: name, in: query, required: true, schema: { type: string }, description: Exact library template name }
+      responses:
+        '200':
+          description: Library template (or null if no exact match)
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  template:
+                    type: object
+                    nullable: true
+                    properties:
+                      name: { type: string }
+                      language: { type: string }
+                      category: { type: string }
+                      body: { type: string }
+                      body_params: { type: array, items: { type: string } }
+                      buttons:
+                        type: array
+                        items:
+                          type: object
+                          properties:
+                            type: { type: string, description: "QUICK_REPLY, URL, PHONE_NUMBER, OTP, FLOW, ..." }
+                            text: { type: string }
+        '400': { description: Missing or invalid query params }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404': { description: WhatsApp account not found }
+
   # ──────────────────────────────────────────────────────────────────────────
   # BUSINESS PROFILE
   # ──────────────────────────────────────────────────────────────────────────
