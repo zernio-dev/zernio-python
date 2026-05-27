@@ -6665,9 +6665,10 @@ def register_generated_tools(mcp, _get_client):
                 limit: Number of messages to return per page. Default 100, max 100.
                 cursor: Opaque pagination cursor. Pass `pagination.nextCursor` from a prior response.
                 sort_order: Order of returned messages. Default `asc` (oldest first, chat style).
-        For Twitter, Facebook and Bluesky, only intra-page ordering is
-        affected — pages always walk newest→oldest. See `sortOrderApplied`
-        in the response."""
+        Twitter, Instagram, Telegram, WhatsApp and Reddit honor this order
+        across cursor pages. For Facebook and Bluesky, only intra-page
+        ordering is affected — pages always walk newest→oldest. See
+        `sortOrderApplied` in the response."""
         client = _get_client()
         try:
             response = client.messages.get_inbox_conversation_messages(
