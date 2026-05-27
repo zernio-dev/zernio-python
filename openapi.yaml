@@ -19299,6 +19299,55 @@ paths:
         '401': { $ref: '#/components/responses/Unauthorized' }
         '404': { description: WhatsApp account not found }
 
+  /v1/whatsapp/number-info:
+    get:
+      operationId: getWhatsAppNumberInfo
+      tags: [WhatsApp Phone Numbers]
+      summary: Get number status
+      description: |
+        Live snapshot of a connected number straight from Meta: the phone-number node
+        (display number, display name + approval, quality rating, messaging-limit tier,
+        throughput, official-business badge, connection status, health_status) and its
+        owning WhatsApp Business Account (name, business verification, timezone,
+        health_status). Fetched live because Meta updates quality/tier/name/health over
+        time; the call also refreshes the cached values shown on the connection card.
+      security:
+        - bearerAuth: []
+      parameters:
+        - { name: accountId, in: query, required: true, schema: { type: string }, description: WhatsApp social account ID }
+      responses:
+        '200':
+          description: Number + WABA status
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  phone:
+                    type: object
+                    properties:
+                      display_phone_number: { type: string }
+                      verified_name: { type: string }
+                      name_status: { type: string, description: "APPROVED, AVAILABLE_WITHOUT_REVIEW, PENDING_REVIEW, DECLINED, EXPIRED, NONE" }
+                      quality_rating: { type: string, description: "GREEN, YELLOW, RED, UNKNOWN" }
+                      messaging_limit_tier: { type: string, description: "e.g. TIER_250, TIER_1K, TIER_UNLIMITED" }
+                      throughput: { type: object, properties: { level: { type: string, description: "STANDARD or HIGH" } } }
+                      status: { type: string, description: "e.g. CONNECTED" }
+                      is_official_business_account: { type: boolean }
+                      platform_type: { type: string, description: "e.g. CLOUD_API" }
+                      health_status: { type: object, description: Meta's can_send_message health object (messaging + calling signals) }
+                  waba:
+                    type: object
+                    nullable: true
+                    properties:
+                      name: { type: string }
+                      business_verification_status: { type: string, description: "verified, not_verified, pending, ..." }
+                      timezone_id: { type: string, description: Meta integer timezone-enum id }
+                      health_status: { type: object }
+        '400': { description: Phone number ID not found on account }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404': { description: WhatsApp account not found }
+
   # ──────────────────────────────────────────────────────────────────────────
   # PHONE NUMBERS
   # ──────────────────────────────────────────────────────────────────────────

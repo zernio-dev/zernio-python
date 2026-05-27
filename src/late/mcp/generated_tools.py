@@ -9760,6 +9760,28 @@ def register_generated_tools(mcp, _get_client):
 
     @mcp.tool(
         annotations=ToolAnnotations(
+            title="Get number status",
+            readOnlyHint=True,
+            destructiveHint=False,
+            openWorldHint=False,
+        )
+    )
+    def whatsapp_phone_numbers_get_whats_app_number_info(account_id: str) -> str:
+        """Get number status
+
+        Args:
+            account_id: WhatsApp social account ID (required)"""
+        client = _get_client()
+        try:
+            response = client.whatsapp_phone_numbers.get_whats_app_number_info(
+                account_id=account_id
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
             title="List phone numbers",
             readOnlyHint=True,
             destructiveHint=False,

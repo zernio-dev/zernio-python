@@ -652,6 +652,7 @@ Both `from zernio import ...` and `from late import ...` work identically. The `
 ### WhatsApp Phone Numbers
 | Method | Description |
 |--------|-------------|
+| `whatsapp_phone_numbers.get_whats_app_number_info()` | Get number status |
 | `whatsapp_phone_numbers.get_whats_app_phone_number()` | Get phone number |
 | `whatsapp_phone_numbers.get_whats_app_phone_numbers()` | List phone numbers |
 | `whatsapp_phone_numbers.purchase_whats_app_phone_number()` | Purchase phone number |

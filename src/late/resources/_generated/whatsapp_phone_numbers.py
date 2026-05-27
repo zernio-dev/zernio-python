@@ -54,6 +54,13 @@ class WhatsappPhoneNumbersResource:
                 result[to_camel(k)] = v
         return result
 
+    def get_whats_app_number_info(self, account_id: str) -> dict[str, Any]:
+        """Get number status"""
+        params = self._build_params(
+            account_id=account_id,
+        )
+        return self._client._get("/v1/whatsapp/number-info", params=params)
+
     def get_whats_app_phone_numbers(
         self, *, status: str | None = None, profile_id: str | None = None
     ) -> dict[str, Any]:
@@ -78,6 +85,13 @@ class WhatsappPhoneNumbersResource:
     def release_whats_app_phone_number(self, phone_number_id: str) -> dict[str, Any]:
         """Release phone number"""
         return self._client._delete(f"/v1/whatsapp/phone-numbers/{phone_number_id}")
+
+    async def aget_whats_app_number_info(self, account_id: str) -> dict[str, Any]:
+        """Get number status (async)"""
+        params = self._build_params(
+            account_id=account_id,
+        )
+        return await self._client._aget("/v1/whatsapp/number-info", params=params)
 
     async def aget_whats_app_phone_numbers(
         self, *, status: str | None = None, profile_id: str | None = None
