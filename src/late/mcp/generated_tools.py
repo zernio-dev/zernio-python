@@ -9354,6 +9354,29 @@ def register_generated_tools(mcp, _get_client):
 
     @mcp.tool(
         annotations=ToolAnnotations(
+            title="List recent WhatsApp conversion events",
+            readOnlyHint=True,
+            destructiveHint=False,
+            openWorldHint=False,
+        )
+    )
+    def whatsapp_list_whats_app_conversions(account_id: str, limit: int = 50) -> str:
+        """List recent WhatsApp conversion events
+
+        Args:
+            account_id: WhatsApp social account ID (required)
+            limit: Max events to return (1-200, default 50)."""
+        client = _get_client()
+        try:
+            response = client.whatsapp.list_whats_app_conversions(
+                account_id=account_id, limit=limit
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
             title="Send WhatsApp conversion event",
             readOnlyHint=False,
             destructiveHint=True,

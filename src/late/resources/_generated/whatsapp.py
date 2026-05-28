@@ -320,6 +320,16 @@ class WhatsappResource:
             f"/v1/whatsapp/wa-groups/{group_id}/join-requests", params=params
         )
 
+    def list_whats_app_conversions(
+        self, account_id: str, *, limit: int | None = 50
+    ) -> dict[str, Any]:
+        """List recent WhatsApp conversion events"""
+        params = self._build_params(
+            account_id=account_id,
+            limit=limit,
+        )
+        return self._client._get("/v1/whatsapp/conversions", params=params)
+
     def send_whats_app_conversion(
         self,
         account_id: str,
@@ -624,6 +634,16 @@ class WhatsappResource:
         return await self._client._adelete(
             f"/v1/whatsapp/wa-groups/{group_id}/join-requests", params=params
         )
+
+    async def alist_whats_app_conversions(
+        self, account_id: str, *, limit: int | None = 50
+    ) -> dict[str, Any]:
+        """List recent WhatsApp conversion events (async)"""
+        params = self._build_params(
+            account_id=account_id,
+            limit=limit,
+        )
+        return await self._client._aget("/v1/whatsapp/conversions", params=params)
 
     async def asend_whats_app_conversion(
         self,

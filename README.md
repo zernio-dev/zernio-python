@@ -609,6 +609,7 @@ Both `from zernio import ...` and `from late import ...` work identically. The `
 ### WhatsApp
 | Method | Description |
 |--------|-------------|
+| `whatsapp.list_whats_app_conversions()` | List recent WhatsApp conversion events |
 | `whatsapp.list_whats_app_group_chats()` | List active groups |
 | `whatsapp.list_whats_app_group_join_requests()` | List join requests |
 | `whatsapp.create_whats_app_dataset()` | Provision CTWA conversions dataset |

@@ -24833,6 +24833,75 @@ paths:
         '429': { description: LinkedIn analytics rate limit hit. }
 
   /v1/whatsapp/conversions:
+    get:
+      operationId: listWhatsAppConversions
+      tags: [WhatsApp, Ads]
+      summary: List recent WhatsApp conversion events
+      description: |
+        Returns the most recent conversion events sent through
+        `POST /v1/whatsapp/conversions` for the given WhatsApp account.
+        Sourced from delivery logs (Axiom `late` dataset), so the visible
+        window is bounded by log retention (about 30 days). Useful for
+        rendering a "recent activity" panel on the conversions setup tab
+        without standing up a parallel persistence layer.
+
+        Per-event payload mirrors the structured log we write on every
+        successful send: `eventName`, `conversationId`, `eventsReceived`,
+        `eventsFailed`, `traceId`, `durationMs`, and the wall-clock
+        `timestamp`.
+      security:
+        - bearerAuth: []
+      parameters:
+        - { name: accountId, in: query, required: true, schema: { type: string }, description: WhatsApp social account ID }
+        - name: limit
+          in: query
+          required: false
+          description: Max events to return (1-200, default 50).
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 200
+            default: 50
+      responses:
+        '200':
+          description: Recent conversion events
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  events:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        timestamp:
+                          type: string
+                          format: date-time
+                          description: When the event was sent to Meta.
+                        eventName:
+                          type: string
+                          description: One of LeadSubmitted, Purchase, AddToCart, InitiateCheckout, ViewContent.
+                        conversationId:
+                          type: string
+                          nullable: true
+                        eventsReceived:
+                          type: integer
+                          nullable: true
+                          description: Number of events Meta accepted on this send (usually 1).
+                        eventsFailed:
+                          type: integer
+                          nullable: true
+                          description: Number of events Meta rejected (usually 0).
+                        traceId:
+                          type: string
+                          nullable: true
+                          description: Meta fbtrace_id for cross-referencing in Events Manager.
+                        durationMs:
+                          type: integer
+                          nullable: true
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404': { description: WhatsApp account not found }
     post:
       operationId: sendWhatsAppConversion
       tags: [WhatsApp, Ads]
