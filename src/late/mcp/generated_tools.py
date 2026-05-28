@@ -9489,6 +9489,293 @@ def register_generated_tools(mcp, _get_client):
         except Exception as e:
             return f"Error: {e}"
 
+    # WHATSAPP_CALLING
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Get calling config for an account",
+            readOnlyHint=True,
+            destructiveHint=False,
+            openWorldHint=False,
+        )
+    )
+    def whatsapp_calling_get_whats_app_calling_config(account_id: str) -> str:
+        """Get calling config for an account
+
+        Args:
+            account_id: WhatsApp social account ID (required)"""
+        client = _get_client()
+        try:
+            response = client.whatsapp_calling.get_whats_app_calling_config(
+                account_id=account_id
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Enable calling on a number",
+            readOnlyHint=False,
+            destructiveHint=True,
+            openWorldHint=True,
+        )
+    )
+    def whatsapp_calling_enable_whats_app_calling(
+        id: str,
+        account_id: str,
+        forward_to: str,
+        sip_auth_username: str | None = None,
+        sip_auth_password: str | None = None,
+        recording_enabled: bool = False,
+        call_icon_countries: list[str] | None = None,
+    ) -> str:
+        """Enable calling on a number
+
+        Args:
+            id: WhatsAppPhoneNumber Mongo ID (required)
+            account_id: (required)
+            forward_to: tel:+E164 / sip:... / wss://... destination (required)
+            sip_auth_username
+            sip_auth_password: Stored encrypted
+            recording_enabled
+            call_icon_countries"""
+        client = _get_client()
+        try:
+            response = client.whatsapp_calling.enable_whats_app_calling(
+                id=id,
+                account_id=account_id,
+                forward_to=forward_to,
+                sip_auth_username=sip_auth_username,
+                sip_auth_password=sip_auth_password,
+                recording_enabled=recording_enabled,
+                call_icon_countries=call_icon_countries,
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Update calling config",
+            readOnlyHint=False,
+            destructiveHint=True,
+            openWorldHint=True,
+        )
+    )
+    def whatsapp_calling_update_whats_app_calling(
+        id: str,
+        account_id: str,
+        forward_to: str | None = None,
+        sip_auth_username: str | None = None,
+        sip_auth_password: str | None = None,
+        recording_enabled: bool | None = None,
+        call_icon_countries: list[str] | None = None,
+    ) -> str:
+        """Update calling config
+
+        Args:
+            id: (required)
+            account_id: (required)
+            forward_to
+            sip_auth_username
+            sip_auth_password
+            recording_enabled
+            call_icon_countries"""
+        client = _get_client()
+        try:
+            response = client.whatsapp_calling.update_whats_app_calling(
+                id=id,
+                account_id=account_id,
+                forward_to=forward_to,
+                sip_auth_username=sip_auth_username,
+                sip_auth_password=sip_auth_password,
+                recording_enabled=recording_enabled,
+                call_icon_countries=call_icon_countries,
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Disable calling on a number",
+            readOnlyHint=False,
+            destructiveHint=True,
+            openWorldHint=True,
+        )
+    )
+    def whatsapp_calling_disable_whats_app_calling(id: str, account_id: str) -> str:
+        """Disable calling on a number
+
+        Args:
+            id: (required)
+            account_id: (required)"""
+        client = _get_client()
+        try:
+            response = client.whatsapp_calling.disable_whats_app_calling(
+                id=id, account_id=account_id
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Check call permission for a consumer",
+            readOnlyHint=True,
+            destructiveHint=False,
+            openWorldHint=False,
+        )
+    )
+    def whatsapp_calling_get_whats_app_call_permissions(
+        account_id: str, to: str
+    ) -> str:
+        """Check call permission for a consumer
+
+        Args:
+            account_id: (required)
+            to: Consumer wa_id (E.164 (required)"""
+        client = _get_client()
+        try:
+            response = client.whatsapp_calling.get_whats_app_call_permissions(
+                account_id=account_id, to=to
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Initiate outbound call",
+            readOnlyHint=False,
+            destructiveHint=True,
+            openWorldHint=True,
+        )
+    )
+    def whatsapp_calling_initiate_whats_app_call(
+        account_id: str,
+        to: str,
+        forward_to: str | None = None,
+        record_override: bool | None = None,
+        biz_opaque_callback_data: str | None = None,
+    ) -> str:
+        """Initiate outbound call
+
+            Args:
+                account_id: (required)
+                to: Consumer wa_id (E.164 (required)
+                forward_to: Per-call destination override. Same accepted shape as the
+        number's stored forwardTo (tel:+E164, sip:..., wss://...).
+                record_override
+                biz_opaque_callback_data: Accepted for forward compatibility. Not currently echoed
+        back in webhook payloads (SIP-first flow does not pass
+        through Meta's Graph API where Meta would echo this)."""
+        client = _get_client()
+        try:
+            response = client.whatsapp_calling.initiate_whats_app_call(
+                account_id=account_id,
+                to=to,
+                forward_to=forward_to,
+                record_override=record_override,
+                biz_opaque_callback_data=biz_opaque_callback_data,
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="List call history for an account",
+            readOnlyHint=True,
+            destructiveHint=False,
+            openWorldHint=False,
+        )
+    )
+    def whatsapp_calling_list_whats_app_calls(
+        account_id: str,
+        status: str | None = None,
+        direction: str | None = None,
+        since: str | None = None,
+        until: str | None = None,
+        limit: int | None = None,
+    ) -> str:
+        """List call history for an account
+
+        Args:
+            account_id: (required)
+            status
+            direction
+            since
+            until
+            limit"""
+        client = _get_client()
+        try:
+            response = client.whatsapp_calling.list_whats_app_calls(
+                account_id=account_id,
+                status=status,
+                direction=direction,
+                since=since,
+                until=until,
+                limit=limit,
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Get a single call",
+            readOnlyHint=True,
+            destructiveHint=False,
+            openWorldHint=False,
+        )
+    )
+    def whatsapp_calling_get_whats_app_call(call_id: str, account_id: str) -> str:
+        """Get a single call
+
+        Args:
+            call_id: (required)
+            account_id: (required)"""
+        client = _get_client()
+        try:
+            response = client.whatsapp_calling.get_whats_app_call(
+                call_id=call_id, account_id=account_id
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Estimate per-minute cost for a destination",
+            readOnlyHint=True,
+            destructiveHint=False,
+            openWorldHint=False,
+        )
+    )
+    def whatsapp_calling_get_whats_app_call_estimate(
+        account_id: str,
+        to: str,
+        minutes: int | None = None,
+        recording: bool | None = None,
+    ) -> str:
+        """Estimate per-minute cost for a destination
+
+        Args:
+            account_id: (required)
+            to: (required)
+            minutes
+            recording"""
+        client = _get_client()
+        try:
+            response = client.whatsapp_calling.get_whats_app_call_estimate(
+                account_id=account_id, to=to, minutes=minutes, recording=recording
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
     # WHATSAPP_FLOWS
 
     @mcp.tool(

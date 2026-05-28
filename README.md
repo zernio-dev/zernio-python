@@ -635,6 +635,19 @@ Both `from zernio import ...` and `from late import ...` work identically. The `
 | `whatsapp.send_whats_app_conversion()` | Send WhatsApp conversion event |
 | `whatsapp.upload_whats_app_profile_photo()` | Upload profile picture |
 
+### WhatsApp Calling
+| Method | Description |
+|--------|-------------|
+| `whatsapp_calling.list_whats_app_calls()` | List call history for an account |
+| `whatsapp_calling.get_whats_app_call()` | Get a single call |
+| `whatsapp_calling.get_whats_app_call_estimate()` | Estimate per-minute cost for a destination |
+| `whatsapp_calling.get_whats_app_call_permissions()` | Check call permission for a consumer |
+| `whatsapp_calling.get_whats_app_calling_config()` | Get calling config for an account |
+| `whatsapp_calling.update_whats_app_calling()` | Update calling config |
+| `whatsapp_calling.disable_whats_app_calling()` | Disable calling on a number |
+| `whatsapp_calling.enable_whats_app_calling()` | Enable calling on a number |
+| `whatsapp_calling.initiate_whats_app_call()` | Initiate outbound call |
+
 ### WhatsApp Flows
 | Method | Description |
 |--------|-------------|

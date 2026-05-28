@@ -34,6 +34,7 @@ from ._generated.usage import UsageResource
 from ._generated.validate import ValidateResource
 from ._generated.webhooks import WebhooksResource
 from ._generated.whatsapp import WhatsappResource
+from ._generated.whatsapp_calling import WhatsappCallingResource
 from ._generated.whatsapp_flows import WhatsappFlowsResource
 from ._generated.whatsapp_phone_numbers import WhatsappPhoneNumbersResource
 from ._generated.whatsapp_templates import WhatsappTemplatesResource
@@ -83,6 +84,7 @@ __all__ = [
     "ValidateResource",
     "WebhooksResource",
     "WhatsappResource",
+    "WhatsappCallingResource",
     "WhatsappFlowsResource",
     "WhatsappPhoneNumbersResource",
     "WhatsappTemplatesResource",

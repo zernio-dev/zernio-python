@@ -44,6 +44,7 @@ from ..resources import (
     UsersResource,
     ValidateResource,
     WebhooksResource,
+    WhatsappCallingResource,
     WhatsappFlowsResource,
     WhatsappPhoneNumbersResource,
     WhatsappResource,
@@ -156,6 +157,7 @@ class Zernio(BaseClient):
         self.validate = ValidateResource(self)
         self.webhooks = WebhooksResource(self)
         self.whatsapp = WhatsappResource(self)
+        self.whatsapp_calling = WhatsappCallingResource(self)
         self.whatsapp_flows = WhatsappFlowsResource(self)
         self.whatsapp_phone_numbers = WhatsappPhoneNumbersResource(self)
         self.whatsapp_templates = WhatsappTemplatesResource(self)
