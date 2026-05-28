@@ -8871,6 +8871,9 @@ paths:
             X-RateLimit-Remaining:
               description: Requests remaining in current window
               schema: { type: integer }
+            X-RateLimit-Reset:
+              description: Unix timestamp (seconds since epoch) when the next slot frees up in the sliding window
+              schema: { type: integer }
   /v1/posts/{postId}:
     get:
       operationId: getPost
