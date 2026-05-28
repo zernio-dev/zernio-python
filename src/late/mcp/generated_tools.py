@@ -6696,6 +6696,7 @@ def register_generated_tools(mcp, _get_client):
         message: str | None = None,
         attachment_url: str | None = None,
         attachment_type: str | None = None,
+        voice_note: bool | None = None,
         quick_replies: list[dict[str, Any]] | None = None,
         buttons: list[dict[str, Any]] | None = None,
         template: dict[str, Any] | None = None,
@@ -6715,6 +6716,11 @@ def register_generated_tools(mcp, _get_client):
                 message: Message text
                 attachment_url: URL of the attachment to send (image, video, audio, or file). The URL must be publicly accessible. For binary file uploads, use multipart/form-data instead.
                 attachment_type: Type of attachment. Defaults to file if not specified.
+                voice_note: WhatsApp only. When `true` on an audio attachment, the message is sent
+        as a voice message (PTT) — the recipient sees the waveform + voice-note
+        UI instead of a basic audio attachment. The audio file MUST be `.ogg`
+        encoded with the OPUS codec (mono) per Meta's voice-message contract;
+        other formats are rejected by WhatsApp. Ignored for non-audio attachments.
                 quick_replies: Quick reply buttons. Mutually exclusive with buttons. Max 13 items.
                 buttons: Action buttons. Mutually exclusive with quickReplies. Max 3 items.
                 template: Generic template for carousels (Instagram/Facebook only, ignored on Telegram).
@@ -6745,6 +6751,7 @@ def register_generated_tools(mcp, _get_client):
                 message=message,
                 attachment_url=attachment_url,
                 attachment_type=attachment_type,
+                voice_note=voice_note,
                 quick_replies=quick_replies,
                 buttons=buttons,
                 template=template,
