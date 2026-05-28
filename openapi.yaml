@@ -1728,6 +1728,15 @@ components:
         status:
           type: string
           enum: [active, archived]
+        contactId:
+          type: string
+          description: |
+            Zernio CRM Contact ID for the participant, when one exists. Resolved by
+            joining `participantId` to the ContactChannel collection. Best-effort:
+            omitted when no channel matches or `participantId` is absent. Lets
+            integrators join any inbox webhook back to the CRM Contact without
+            needing to look at the sender — which matters for outgoing and
+            delivery-status events whose sender is the business.
     InboxWebhookAccount:
       type: object
       description: The account context included in inbox webhook payloads.
@@ -1793,26 +1802,9 @@ components:
               type: string
               format: date-time
         conversation:
-          type: object
-          required: [id, platformConversationId, status]
-          properties:
-            id: { type: string }
-            platformConversationId: { type: string }
-            participantId: { type: string }
-            participantName: { type: string }
-            participantUsername: { type: string }
-            participantPicture: { type: string }
-            status:
-              type: string
-              enum: [active, archived]
+          $ref: '#/components/schemas/InboxWebhookConversation'
         account:
-          type: object
-          required: [id, platform, username]
-          properties:
-            id: { type: string, description: Social account ID }
-            platform: { type: string }
-            username: { type: string }
-            displayName: { type: string }
+          $ref: '#/components/schemas/InboxWebhookAccount'
         timestamp:
           type: string
           format: date-time
@@ -1942,37 +1934,9 @@ components:
             isRead:
               type: boolean
         conversation:
-          type: object
-          required: [id, platformConversationId, status]
-          properties:
-            id:
-              type: string
-            platformConversationId:
-              type: string
-            participantId:
-              type: string
-            participantName:
-              type: string
-            participantUsername:
-              type: string
-            participantPicture:
-              type: string
-            status:
-              type: string
-              enum: [active, archived]
+          $ref: '#/components/schemas/InboxWebhookConversation'
         account:
-          type: object
-          required: [id, platform, username]
-          properties:
-            id:
-              type: string
-              description: Social account ID
-            platform:
-              type: string
-            username:
-              type: string
-            displayName:
-              type: string
+          $ref: '#/components/schemas/InboxWebhookAccount'
         metadata:
           type: object
           nullable: true
@@ -2192,37 +2156,9 @@ components:
             isRead:
               type: boolean
         conversation:
-          type: object
-          required: [id, platformConversationId, status]
-          properties:
-            id:
-              type: string
-            platformConversationId:
-              type: string
-            participantId:
-              type: string
-            participantName:
-              type: string
-            participantUsername:
-              type: string
-            participantPicture:
-              type: string
-            status:
-              type: string
-              enum: [active, archived]
+          $ref: '#/components/schemas/InboxWebhookConversation'
         account:
-          type: object
-          required: [id, platform, username]
-          properties:
-            id:
-              type: string
-              description: Social account ID
-            platform:
-              type: string
-            username:
-              type: string
-            displayName:
-              type: string
+          $ref: '#/components/schemas/InboxWebhookAccount'
         timestamp:
           type: string
           format: date-time
@@ -2366,6 +2302,15 @@ components:
             status:
               type: string
               enum: [active, archived]
+            contactId:
+              type: string
+              description: |
+                Zernio CRM Contact ID for the participant, when one exists. Resolved by
+                joining `participantId` to the ContactChannel collection (same join
+                used by message.*, reaction.received, and call.* webhooks). Best-effort:
+                omitted when no channel matches or `participantId` is absent. Lets
+                integrators seed the CRM straight from `conversation.started` without
+                waiting for the first `message.*` event.
         account:
           $ref: '#/components/schemas/InboxWebhookAccount'
         startedAt:
