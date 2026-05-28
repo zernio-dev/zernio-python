@@ -2983,6 +2983,11 @@ def register_generated_tools(mcp, _get_client):
         currency: str | None = None,
         end_date: str | None = None,
         countries: list[str] | None = None,
+        cities: list[dict[str, Any]] | None = None,
+        regions: list[dict[str, Any]] | None = None,
+        zips: list[dict[str, Any]] | None = None,
+        metros: list[dict[str, Any]] | None = None,
+        custom_locations: list[dict[str, Any]] | None = None,
         age_min: int | None = None,
         age_max: int | None = None,
         interests: list[dict[str, Any]] | None = None,
@@ -3029,7 +3034,23 @@ def register_generated_tools(mcp, _get_client):
         (e.g. `USD`). Optional; Meta infers from the ad account
         when omitted.
                 end_date: ISO 8601 datetime. Required when `budgetType` is `lifetime`.
-                countries: ISO 3166-1 alpha-2 country codes. Defaults to `["US"]`.
+                countries: ISO 3166-1 alpha-2 country codes. Defaults to `["US"]` only
+        when no other geo (`cities`, `regions`, `zips`, `metros`,
+        `customLocations`) is supplied.
+                cities: City-level geo targeting for local CTWA campaigns (e.g.
+        25km radius around Milan). Each entry maps to Meta's
+        TargetingGeoLocationCity. `key` is Meta's city ID
+        (lookupable via GET /v1/ads/targeting/search). `radius`
+        and `distance_unit` are coupled: set both or neither.
+                regions: Region / state-level geo targeting. `key` is Meta's region
+        ID (lookupable via GET /v1/ads/targeting/search?type=region).
+                zips: ZIP / postal-code geo targeting. `key` is the platform's
+        postal id resolved via /v1/ads/targeting/search.
+                metros: DMA / metro-area geo targeting. `key` is Meta's metro id
+        (e.g. `DMA:807`).
+                custom_locations: Point-radius geo (Meta `geo_locations.custom_locations`).
+        Use for targeting a radius around a specific lat/long when
+        no Meta city/region key fits. `distanceUnit` is required.
                 age_min
                 age_max
                 interests
@@ -3077,6 +3098,11 @@ def register_generated_tools(mcp, _get_client):
                 currency=currency,
                 end_date=end_date,
                 countries=countries,
+                cities=cities,
+                regions=regions,
+                zips=zips,
+                metros=metros,
+                custom_locations=custom_locations,
                 age_min=age_min,
                 age_max=age_max,
                 interests=interests,
