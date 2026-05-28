@@ -2337,6 +2337,42 @@ components:
         account:
           $ref: '#/components/schemas/InboxWebhookAccount'
         timestamp: { type: string, format: date-time }
+    WebhookPayloadConversationStarted:
+      type: object
+      description: |
+        Fired once when a new conversation begins, in either direction. A conversation
+        starts the first time an account and a contact exchange a message on any DM
+        platform (Instagram, Messenger/Facebook, Telegram, WhatsApp, Twitter, Reddit,
+        Bluesky). Platform-agnostic — one subscription covers every DM platform.
+      required: [id, event, conversation, account, startedAt, timestamp]
+      properties:
+        id: { type: string, description: Stable webhook event ID }
+        event:
+          type: string
+          enum: [conversation.started]
+        conversation:
+          type: object
+          required: [id, platform, platformConversationId, participantName, status]
+          properties:
+            id: { type: string, description: Internal conversation ID }
+            platform:
+              type: string
+              enum: [instagram, facebook, telegram, whatsapp, twitter, reddit, bluesky]
+            platformConversationId: { type: string }
+            participantId: { type: string, description: Contact's platform identifier (IGSID, PSID, wa_id, etc.) }
+            participantName: { type: string }
+            participantUsername: { type: string, description: Contact's handle when the platform exposes one }
+            participantPicture: { type: string }
+            status:
+              type: string
+              enum: [active, archived]
+        account:
+          $ref: '#/components/schemas/InboxWebhookAccount'
+        startedAt:
+          type: string
+          format: date-time
+          description: When the conversation document was created.
+        timestamp: { type: string, format: date-time }
     WebhookPayloadAdStatusChanged:
       type: object
       description: |
@@ -5315,6 +5351,25 @@ webhooks:
           application/json:
             schema:
               $ref: '#/components/schemas/WebhookPayloadMessage'
+      responses:
+        '200':
+          description: Webhook received successfully
+  conversation.started:
+    post:
+      operationId: onConversationStarted
+      summary: Conversation started event
+      description: |
+        Fired once when a new conversation begins between one of your connected accounts and a
+        contact, in either direction. Works across every DM platform (Instagram, Messenger/Facebook,
+        Telegram, WhatsApp, Twitter, Reddit, Bluesky). Naturally deduped — a given conversation
+        only fires this event the very first time it appears.
+      tags: [Webhook Events]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/WebhookPayloadConversationStarted'
       responses:
         '200':
           description: Webhook received successfully
