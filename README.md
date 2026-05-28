@@ -611,10 +611,12 @@ Both `from zernio import ...` and `from late import ...` work identically. The `
 |--------|-------------|
 | `whatsapp.list_whats_app_group_chats()` | List active groups |
 | `whatsapp.list_whats_app_group_join_requests()` | List join requests |
+| `whatsapp.create_whats_app_dataset()` | Provision CTWA conversions dataset |
 | `whatsapp.create_whats_app_group_chat()` | Create group |
 | `whatsapp.create_whats_app_group_invite_link()` | Create invite link |
 | `whatsapp.create_whats_app_template()` | Create template |
 | `whatsapp.get_whats_app_business_profile()` | Get business profile |
+| `whatsapp.get_whats_app_dataset()` | Get CTWA conversions dataset |
 | `whatsapp.get_whats_app_display_name()` | Get display name status |
 | `whatsapp.get_whats_app_group_chat()` | Get group info |
 | `whatsapp.get_whats_app_template()` | Get template |

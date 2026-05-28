@@ -177,6 +177,20 @@ class WhatsappResource:
             "/v1/whatsapp/business-profile/display-name", data=payload
         )
 
+    def get_whats_app_dataset(self, account_id: str) -> dict[str, Any]:
+        """Get CTWA conversions dataset"""
+        params = self._build_params(
+            account_id=account_id,
+        )
+        return self._client._get("/v1/whatsapp/dataset", params=params)
+
+    def create_whats_app_dataset(self, account_id: str) -> dict[str, Any]:
+        """Provision CTWA conversions dataset"""
+        payload = self._build_payload(
+            account_id=account_id,
+        )
+        return self._client._post("/v1/whatsapp/dataset", data=payload)
+
     def list_whats_app_group_chats(
         self, account_id: str, *, limit: int | None = 25, after: str | None = None
     ) -> dict[str, Any]:
@@ -461,6 +475,20 @@ class WhatsappResource:
         return await self._client._apost(
             "/v1/whatsapp/business-profile/display-name", data=payload
         )
+
+    async def aget_whats_app_dataset(self, account_id: str) -> dict[str, Any]:
+        """Get CTWA conversions dataset (async)"""
+        params = self._build_params(
+            account_id=account_id,
+        )
+        return await self._client._aget("/v1/whatsapp/dataset", params=params)
+
+    async def acreate_whats_app_dataset(self, account_id: str) -> dict[str, Any]:
+        """Provision CTWA conversions dataset (async)"""
+        payload = self._build_payload(
+            account_id=account_id,
+        )
+        return await self._client._apost("/v1/whatsapp/dataset", data=payload)
 
     async def alist_whats_app_group_chats(
         self, account_id: str, *, limit: int | None = 25, after: str | None = None

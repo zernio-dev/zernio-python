@@ -9019,6 +9019,46 @@ def register_generated_tools(mcp, _get_client):
 
     @mcp.tool(
         annotations=ToolAnnotations(
+            title="Get CTWA conversions dataset",
+            readOnlyHint=True,
+            destructiveHint=False,
+            openWorldHint=False,
+        )
+    )
+    def whatsapp_get_whats_app_dataset(account_id: str) -> str:
+        """Get CTWA conversions dataset
+
+        Args:
+            account_id: WhatsApp social account ID (required)"""
+        client = _get_client()
+        try:
+            response = client.whatsapp.get_whats_app_dataset(account_id=account_id)
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Provision CTWA conversions dataset",
+            readOnlyHint=False,
+            destructiveHint=True,
+            openWorldHint=True,
+        )
+    )
+    def whatsapp_create_whats_app_dataset(account_id: str) -> str:
+        """Provision CTWA conversions dataset
+
+        Args:
+            account_id: WhatsApp social account ID (required)"""
+        client = _get_client()
+        try:
+            response = client.whatsapp.create_whats_app_dataset(account_id=account_id)
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
             title="List active groups",
             readOnlyHint=True,
             destructiveHint=False,
