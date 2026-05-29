@@ -21540,6 +21540,10 @@ paths:
                       tags: { type: array, items: { type: string } }
                       isSubscribed: { type: boolean }
                       isBlocked: { type: boolean }
+                      messagesSentCount: { type: integer, description: 'Messages sent to the contact, derived live from message history across all linked conversations.' }
+                      messagesReceivedCount: { type: integer, description: 'Messages received from the contact, derived live from message history across all linked conversations.' }
+                      lastMessageSentAt: { type: string, format: date-time, nullable: true, description: 'Timestamp of the most recent outgoing message, or null if none.' }
+                      lastMessageReceivedAt: { type: string, format: date-time, nullable: true, description: 'Timestamp of the most recent incoming message, or null if none.' }
                       customFields: { type: object }
                       notes: { type: string }
                       conversationIds: { type: array, items: { type: string } }
@@ -21557,6 +21561,7 @@ paths:
                         displayIdentifier: { type: string }
                         isSubscribed: { type: boolean }
                         conversationId: { type: string }
+                        lastActiveAt: { type: string, format: date-time, nullable: true, description: 'Most recent message (either direction) in this channel''s conversation, or null if none.' }
                         createdAt: { type: string, format: date-time }
         '401': { $ref: '#/components/responses/Unauthorized' }
         '404': { $ref: '#/components/responses/NotFound' }
