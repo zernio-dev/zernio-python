@@ -48,6 +48,7 @@ from ..resources import (
     WhatsappFlowsResource,
     WhatsappPhoneNumbersResource,
     WhatsappResource,
+    WhatsappSandboxResource,
     WhatsappTemplatesResource,
 )
 from .base import BaseClient
@@ -160,6 +161,7 @@ class Zernio(BaseClient):
         self.whatsapp_calling = WhatsappCallingResource(self)
         self.whatsapp_flows = WhatsappFlowsResource(self)
         self.whatsapp_phone_numbers = WhatsappPhoneNumbersResource(self)
+        self.whatsapp_sandbox = WhatsappSandboxResource(self)
         self.whatsapp_templates = WhatsappTemplatesResource(self)
         # --- end auto-registered resources ---
 

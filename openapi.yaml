@@ -304,6 +304,12 @@ tags:
     description: |
       Manage WhatsApp phone numbers: purchase, verify, and release numbers for your WhatsApp Business account.
       Requires a paid plan.
+  - name: WhatsApp Sandbox
+    description: |
+      Shared WhatsApp sandbox: a Zernio-owned WhatsApp number every user can test against
+      without provisioning their own. Send the verified sandbox template to phones you
+      activate via a reply-based verification flow. Designed for testing message flows,
+      bot replies, and webhook payloads end-to-end with zero number-purchase overhead.
 components:
   securitySchemes:
     bearerAuth:
@@ -696,6 +702,43 @@ components:
           minItems: 1
           items:
             $ref: '#/components/schemas/WhatsAppTemplateButton'
+    WhatsAppSandboxSession:
+      type: object
+      description: |
+        A per-user activation session against the shared WhatsApp sandbox number.
+        Transitions `pending → active` when the inbound webhook receives a reply
+        from the matching phone (the reply itself proves ownership).
+      required: [id, phoneE164, status, expiresAt]
+      properties:
+        id:
+          type: string
+          description: Session id. Use this to revoke via DELETE.
+        phoneE164:
+          type: string
+          description: Digits-only E.164 form (no +, spaces, or dashes).
+          example: "34688246216"
+        status:
+          type: string
+          enum: [pending, active]
+          description: |
+            `pending` until the phone replies to the activation template, then
+            `active`. Expired sessions are pruned by TTL and never appear in
+            list responses.
+        expiresAt:
+          type: string
+          format: date-time
+          description: |
+            UTC timestamp at which the session becomes invalid. Pending sessions
+            get a 24h window; activated sessions get 7 days.
+        activatedAt:
+          type: string
+          format: date-time
+          nullable: true
+          description: When the session transitioned `pending → active`, or null.
+        createdAt:
+          type: string
+          format: date-time
+          nullable: true
     FoodMenuLabel:
       type: object
       required: [displayName]
@@ -20039,6 +20082,23 @@ paths:
                         metaPreverifiedId: { type: string }
                         metaVerificationStatus: { type: string }
                         createdAt: { type: string, format: date-time }
+                  sandbox:
+                    type: object
+                    nullable: true
+                    description: |
+                      The shared WhatsApp sandbox (one Zernio-owned number, all users test
+                      against it). Present when the sandbox is configured; null otherwise.
+                      The `accountId` lets you address the sandbox in compose endpoints.
+                      `template` is the only template a sandbox send is allowed to use.
+                    properties:
+                      phoneNumber: { type: string, example: "+12029087457" }
+                      accountId: { type: string, nullable: true }
+                      template:
+                        type: object
+                        properties:
+                          name: { type: string, example: "sandbox_start" }
+                          language: { type: string, example: "en" }
+                      isSandbox: { type: boolean, enum: [true] }
         '401': { $ref: '#/components/responses/Unauthorized' }
 
   /v1/whatsapp/phone-numbers/purchase:
@@ -20174,6 +20234,136 @@ paths:
         '400': { description: Phone number is already released or being released }
         '401': { $ref: '#/components/responses/Unauthorized' }
         '404': { $ref: '#/components/responses/NotFound' }
+
+  # ─── WhatsApp Sandbox (shared test number) ──────────────────────
+  #
+  # The sandbox is one Zernio-owned WhatsApp number every user can test
+  # against without owning their own number. To prevent abuse of the
+  # verified WABA, each user must activate the recipient phone first:
+  # we send a verified template TO their phone; they reply (any text);
+  # the inbound webhook flips the session to `active`. Only then can
+  # the user fire the locked sandbox template at that phone via the
+  # standard inbox compose endpoints.
+  #
+  # Limits per user: 50 messages / 24h, 5 distinct recipients / 24h
+  # (effectively 1 — one phone per user). Pending sessions expire after
+  # 24h; activated sessions after 7 days.
+
+  /v1/whatsapp/sandbox/sessions:
+    get:
+      operationId: listWhatsAppSandboxSessions
+      tags: [WhatsApp Sandbox]
+      summary: List your sandbox sessions
+      description: |
+        Returns all of the authenticated user's non-expired sandbox sessions
+        (pending + active) plus the sandbox phone number. In practice there
+        is at most one session per user since the sandbox is one-phone-per-user;
+        the array shape is preserved for forward compatibility.
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Sessions retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  sessions:
+                    type: array
+                    items: { $ref: '#/components/schemas/WhatsAppSandboxSession' }
+                  sandboxNumber:
+                    type: string
+                    nullable: true
+                    description: The shared sandbox phone number in E.164 form.
+                    example: "+12029087457"
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { description: Inbox addon required }
+    post:
+      operationId: createWhatsAppSandboxSession
+      tags: [WhatsApp Sandbox]
+      summary: Start a sandbox activation for a phone
+      description: |
+        Creates (or refreshes) a pending sandbox session for the given phone and
+        immediately fires the verified sandbox template from the shared sandbox
+        number to that phone. The session activates when the phone owner replies
+        to that WhatsApp message — the reply itself is proof of ownership.
+
+        One phone per user: if the caller already has a non-expired session for
+        a DIFFERENT phone, the request is rejected with `invalid_field_value`
+        (the message names the existing phone so it can be revoked first).
+        Re-creating a session for the SAME phone is idempotent and refreshes
+        the verification template.
+
+        If Meta rejects the template send (not a WhatsApp number, paused WABA,
+        token issue), the pending row is rolled back and the Meta error message
+        is returned in `error` so the caller knows why.
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [phone]
+              properties:
+                phone:
+                  type: string
+                  description: Recipient phone in international format. Digits, spaces, dashes and a leading `+` are all accepted; the server normalizes to E.164 digits-only.
+                  example: "+34688246216"
+      responses:
+        '200':
+          description: Session created or refreshed; verification template sent
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  session: { $ref: '#/components/schemas/WhatsAppSandboxSession' }
+                  sandboxNumber: { type: string, example: "+12029087457" }
+        '400':
+          description: |
+            Returned when (a) phone format is invalid, (b) phone equals the sandbox
+            number itself, (c) the user already has a session for a different phone,
+            or (d) Meta rejected the template send. The `error` field contains the
+            specific reason; `param` is set when a field is at fault.
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { description: Inbox addon required }
+
+  /v1/whatsapp/sandbox/sessions/{sessionId}:
+    delete:
+      operationId: deleteWhatsAppSandboxSession
+      tags: [WhatsApp Sandbox]
+      summary: Revoke a sandbox session
+      description: |
+        Hard-deletes the session. The user loses the ability to send to that
+        phone via the sandbox until they re-activate it. Existing conversations
+        and messages already exchanged with that phone are untouched —
+        revocation only blocks FUTURE sends.
+
+        Sessions belonging to other users cannot be revoked; the response is
+        the same 400 as "session not found" so existence isn't leaked.
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: sessionId
+          in: path
+          required: true
+          description: The session id returned by POST /v1/whatsapp/sandbox/sessions.
+          schema: { type: string }
+      responses:
+        '200':
+          description: Session revoked
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success: { type: boolean, enum: [true] }
+        '400': { description: Invalid or unknown session id }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { description: Inbox addon required }
 
   # ─── WhatsApp Group Chats (platform groups, not contact groups) ──
 

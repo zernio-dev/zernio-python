@@ -10256,6 +10256,69 @@ def register_generated_tools(mcp, _get_client):
         except Exception as e:
             return f"Error: {e}"
 
+    # WHATSAPP_SANDBOX
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="List your sandbox sessions",
+            readOnlyHint=True,
+            destructiveHint=False,
+            openWorldHint=False,
+        )
+    )
+    def whatsapp_sandbox_list_whats_app_sandbox_sessions() -> str:
+        """List your sandbox sessions"""
+        client = _get_client()
+        try:
+            response = client.whatsapp_sandbox.list_whats_app_sandbox_sessions()
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Start a sandbox activation for a phone",
+            readOnlyHint=False,
+            destructiveHint=True,
+            openWorldHint=True,
+        )
+    )
+    def whatsapp_sandbox_create_whats_app_sandbox_session(phone: str) -> str:
+        """Start a sandbox activation for a phone
+
+        Args:
+            phone: Recipient phone in international format. Digits, spaces, dashes and a leading `+` are all accepted; the server normalizes to E.164 digits-only. (required)"""
+        client = _get_client()
+        try:
+            response = client.whatsapp_sandbox.create_whats_app_sandbox_session(
+                phone=phone
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Revoke a sandbox session",
+            readOnlyHint=False,
+            destructiveHint=True,
+            openWorldHint=True,
+        )
+    )
+    def whatsapp_sandbox_delete_whats_app_sandbox_session(session_id: str) -> str:
+        """Revoke a sandbox session
+
+        Args:
+            session_id: The session id returned by POST /v1/whatsapp/sandbox/sessions. (required)"""
+        client = _get_client()
+        try:
+            response = client.whatsapp_sandbox.delete_whats_app_sandbox_session(
+                session_id=session_id
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
     # WHATSAPP_TEMPLATES
 
     @mcp.tool(

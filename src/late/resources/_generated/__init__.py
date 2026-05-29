@@ -40,6 +40,7 @@ from .whatsapp import WhatsappResource
 from .whatsapp_calling import WhatsappCallingResource
 from .whatsapp_flows import WhatsappFlowsResource
 from .whatsapp_phone_numbers import WhatsappPhoneNumbersResource
+from .whatsapp_sandbox import WhatsappSandboxResource
 from .whatsapp_templates import WhatsappTemplatesResource
 
 __all__ = [
@@ -81,5 +82,6 @@ __all__ = [
     "WhatsappCallingResource",
     "WhatsappFlowsResource",
     "WhatsappPhoneNumbersResource",
+    "WhatsappSandboxResource",
     "WhatsappTemplatesResource",
 ]

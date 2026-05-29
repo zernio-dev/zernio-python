@@ -674,6 +674,13 @@ Both `from zernio import ...` and `from late import ...` work identically. The `
 | `whatsapp_phone_numbers.purchase_whats_app_phone_number()` | Purchase phone number |
 | `whatsapp_phone_numbers.release_whats_app_phone_number()` | Release phone number |
 
+### WhatsApp Sandbox
+| Method | Description |
+|--------|-------------|
+| `whatsapp_sandbox.list_whats_app_sandbox_sessions()` | List your sandbox sessions |
+| `whatsapp_sandbox.create_whats_app_sandbox_session()` | Start a sandbox activation for a phone |
+| `whatsapp_sandbox.delete_whats_app_sandbox_session()` | Revoke a sandbox session |
+
 ### WhatsApp Templates
 | Method | Description |
 |--------|-------------|
