@@ -2486,10 +2486,11 @@ components:
             billing:
               type: object
               properties:
-                metaCostUSD: { type: number }
+                metaCostUSD: { type: number, description: 'Meta per-minute charge. Billed by Meta DIRECTLY to your WhatsApp Business Account payment method (your separate Meta invoice). Zernio does NOT charge this. Display only.' }
                 telnyxCostUSD: { type: number }
                 recordingCostUSD: { type: number }
-                totalCostUSD: { type: number }
+                billableCostUSD: { type: number, description: 'The amount Zernio bills you = Telnyx leg + recording. Excludes Meta (billed by Meta directly).' }
+                totalCostUSD: { type: number, description: 'Full economic cost incl. the Meta portion you pay directly (Meta + Telnyx + recording). Display only, not the Zernio-billed amount.' }
         account: { $ref: '#/components/schemas/InboxWebhookAccount' }
         timestamp: { type: string, format: date-time }
     WebhookPayloadCallFailed:
@@ -19622,10 +19623,11 @@ paths:
                         billing:
                           type: object
                           properties:
-                            metaCostUSD: { type: number }
+                            metaCostUSD: { type: number, description: 'Meta per-minute charge, billed by Meta directly to your WABA. Display only; not billed by Zernio.' }
                             telnyxCostUSD: { type: number }
                             recordingCostUSD: { type: number }
-                            totalCostUSD: { type: number }
+                            billableCostUSD: { type: number, description: 'Amount Zernio bills you = Telnyx leg + recording (excludes Meta).' }
+                            totalCostUSD: { type: number, description: 'Full cost incl. the Meta portion you pay directly. Display only.' }
                             currency: { type: string }
         '401': { $ref: '#/components/responses/Unauthorized' }
 
@@ -19682,10 +19684,11 @@ paths:
                     type: object
                     properties:
                       metaMinutes: { type: integer }
-                      metaCostUSD: { type: number }
+                      metaCostUSD: { type: number, description: 'Estimated Meta per-minute charge, billed by Meta directly to your WABA. Display only; not billed by Zernio.' }
                       telnyxCostUSD: { type: number }
                       recordingCostUSD: { type: number }
-                      totalCostUSD: { type: number }
+                      billableCostUSD: { type: number, description: 'Estimated amount Zernio bills you = Telnyx leg + recording (excludes Meta).' }
+                      totalCostUSD: { type: number, description: 'Estimated full cost incl. the Meta portion you pay directly. Display only.' }
         '401': { $ref: '#/components/responses/Unauthorized' }
 
   /v1/whatsapp/template-library:
