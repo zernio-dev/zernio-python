@@ -201,6 +201,11 @@ tags:
   - name: LinkedIn Mentions
   - name: Pinterest
   - name: TikTok
+  - name: Instagram
+    description: |
+      Instagram-specific read endpoints: list a connected account's Stories and fetch
+      per-Story insights. All endpoints require an accountId parameter identifying the
+      Instagram-connected social account.
   - name: Queue
   - name: Analytics
   - name: Inbox Access
@@ -293,6 +298,16 @@ tags:
   - name: WhatsApp
     description: |
       WhatsApp Business API. Template, business profile, and phone number endpoints.
+      All endpoints require an accountId parameter identifying the WhatsApp-connected social account.
+  - name: WhatsApp Calling
+    description: |
+      Voice calling over the WhatsApp Business API: enable/disable calling on a number,
+      configure call hours and permissions, and place or list calls.
+      All endpoints require an accountId parameter identifying the WhatsApp-connected social account.
+  - name: WhatsApp Templates
+    description: |
+      Browse Meta's pre-approved WhatsApp template library. Use these read-only lookups to
+      discover library templates you can import as your own message templates.
       All endpoints require an accountId parameter identifying the WhatsApp-connected social account.
   - name: WhatsApp Flows
     description: |
