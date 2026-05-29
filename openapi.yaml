@@ -253,6 +253,13 @@ tags:
     description: |
       Drip campaign sequences. Send a series of messages to enrolled contacts with configurable delays
       between steps. Supports auto-exit on reply or unsubscribe.
+  - name: Workflows
+    description: |
+      Branching conversation automations. An inbound message matches a workflow's trigger and walks a
+      directed graph of nodes (send message, wait for reply, condition, set variable, delay, webhook,
+      handoff, end). Unlike Sequences (linear, time-based drips), Workflows are event-driven and
+      interactive. Fully supported on WhatsApp, Instagram, and Messenger; `send_message` template and
+      interactive modes are WhatsApp-only.
   - name: Comment Automations
     description: |
       Comment-to-DM growth automations. Set up keyword triggers on Instagram/Facebook so
@@ -498,6 +505,51 @@ components:
                     effective_account_limit: 2000
                     current_account_count: 2000
   schemas:
+    WorkflowNode:
+      type: object
+      required: [id, type]
+      description: A node in a workflow graph. `config` shape depends on `type`.
+      properties:
+        id: { type: string, description: Stable node id referenced by edges }
+        type:
+          type: string
+          enum: [trigger, send_message, wait_for_reply, condition, set_variable, delay, webhook, handoff, end]
+        config:
+          type: object
+          additionalProperties: true
+          description: >
+            Type-specific settings.
+            trigger: { keywords:[string], matchType: any|contains|exact|regex, onlyFirstMessage:boolean }.
+            send_message: { messageType: text|template|media|interactive, text, template:{name,language,variableMapping}, media:{mediaType,url,caption}, interactive }
+            (template/interactive are WhatsApp-only).
+            wait_for_reply: { timeoutMinutes:int, saveAs:string }.
+            condition: { rules:[{ id, variable, operator: equals|not_equals|contains|not_contains|starts_with|ends_with|exists|not_exists|matches, value }] }.
+            set_variable: { assignments:[{ name, value }] }.
+            delay: { delayMinutes:int }.
+            webhook: { url, method, headers, bodyTemplate, saveAs }.
+            handoff: { note, assignTo }.
+            String fields support {{variable}} interpolation.
+        position:
+          type: object
+          description: Canvas coordinates (ignored by the executor; used by the future visual builder).
+          properties:
+            x: { type: number }
+            y: { type: number }
+    WorkflowEdge:
+      type: object
+      required: [id, source, target]
+      description: A directed edge between two nodes.
+      properties:
+        id: { type: string }
+        source: { type: string, description: Source node id }
+        target: { type: string, description: Target node id }
+        sourceHandle:
+          type: string
+          nullable: true
+          description: >
+            Selects a branch output of a multi-output node: a condition rule id or 'default';
+            'reply' or 'timeout' for wait_for_reply; 'success' or 'error' for webhook. Null = the
+            node's single/default output.
     BulkUploadResult:
       type: object
       description: |
@@ -22187,6 +22239,335 @@ paths:
         '404': { $ref: '#/components/responses/NotFound' }
 
   # ─── Sequences ────────────────────────────────────────────────────
+
+  /v1/workflows:
+    get:
+      operationId: listWorkflows
+      summary: List workflows
+      description: Returns workflows with run stats. Filter by status or profile.
+      tags: [Workflows]
+      parameters:
+        - { name: profileId, in: query, schema: { type: string }, description: Filter by profile. Omit to list across all profiles }
+        - { name: status, in: query, schema: { type: string, enum: [draft, active, paused] } }
+        - { name: limit, in: query, schema: { type: integer, default: 50 } }
+        - { name: skip, in: query, schema: { type: integer, default: 0 } }
+      responses:
+        '200':
+          description: Workflows list
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success: { type: boolean }
+                  workflows:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id: { type: string }
+                        name: { type: string }
+                        description: { type: string }
+                        platform: { type: string }
+                        accountId: { type: string }
+                        accountName: { type: string }
+                        status: { type: string, enum: [draft, active, paused] }
+                        nodeCount: { type: integer }
+                        totalStarted: { type: integer }
+                        totalCompleted: { type: integer }
+                        totalExited: { type: integer }
+                        createdAt: { type: string, format: date-time }
+                  pagination:
+                    type: object
+                    properties:
+                      total: { type: integer }
+                      limit: { type: integer }
+                      skip: { type: integer }
+                      hasMore: { type: boolean }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+    post:
+      operationId: createWorkflow
+      summary: Create workflow
+      description: >
+        Create a branching conversation workflow (draft) from a node/edge graph. Created in `draft`
+        status; activate it to start matching inbound messages. The graph is validated structurally;
+        completeness (a trigger node + reachable entry) is required at activation.
+      tags: [Workflows]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [profileId, accountId, name]
+              properties:
+                profileId: { type: string }
+                accountId: { type: string }
+                platform: { type: string, enum: [whatsapp, instagram, facebook, telegram, twitter, bluesky, reddit], default: whatsapp }
+                name: { type: string }
+                description: { type: string }
+                nodes: { type: array, items: { $ref: '#/components/schemas/WorkflowNode' } }
+                edges: { type: array, items: { $ref: '#/components/schemas/WorkflowEdge' } }
+                entryNodeId: { type: string, description: The trigger node id; derived from the single trigger node if omitted }
+      responses:
+        '200':
+          description: Workflow created
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success: { type: boolean }
+                  workflow:
+                    type: object
+                    properties:
+                      id: { type: string }
+                      name: { type: string }
+                      description: { type: string }
+                      platform: { type: string }
+                      status: { type: string }
+                      nodeCount: { type: integer }
+                      entryNodeId: { type: string }
+                      createdAt: { type: string, format: date-time }
+        '400': { description: Invalid graph (duplicate node ids, edges referencing missing nodes, or a WhatsApp-only node on another platform) }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+
+  /v1/workflows/{workflowId}:
+    get:
+      operationId: getWorkflow
+      summary: Get workflow with graph
+      description: Returns a workflow including its full node/edge graph and run stats.
+      tags: [Workflows]
+      parameters:
+        - { name: workflowId, in: path, required: true, schema: { type: string } }
+      responses:
+        '200':
+          description: Workflow details
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success: { type: boolean }
+                  workflow:
+                    type: object
+                    properties:
+                      id: { type: string }
+                      name: { type: string }
+                      description: { type: string }
+                      platform: { type: string }
+                      accountId: { type: string }
+                      profileId: { type: string }
+                      status: { type: string, enum: [draft, active, paused] }
+                      entryNodeId: { type: string }
+                      nodes: { type: array, items: { $ref: '#/components/schemas/WorkflowNode' } }
+                      edges: { type: array, items: { $ref: '#/components/schemas/WorkflowEdge' } }
+                      totalStarted: { type: integer }
+                      totalCompleted: { type: integer }
+                      totalExited: { type: integer }
+                      createdAt: { type: string, format: date-time }
+                      updatedAt: { type: string, format: date-time }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404': { $ref: '#/components/responses/NotFound' }
+    patch:
+      operationId: updateWorkflow
+      summary: Update workflow
+      description: Update name, description, or the graph. The graph can only be modified while the workflow is draft or paused.
+      tags: [Workflows]
+      parameters:
+        - { name: workflowId, in: path, required: true, schema: { type: string } }
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name: { type: string }
+                description: { type: string }
+                nodes: { type: array, items: { $ref: '#/components/schemas/WorkflowNode' } }
+                edges: { type: array, items: { $ref: '#/components/schemas/WorkflowEdge' } }
+                entryNodeId: { type: string, nullable: true }
+      responses:
+        '200':
+          description: Workflow updated
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success: { type: boolean }
+                  workflow:
+                    type: object
+                    properties:
+                      id: { type: string }
+                      name: { type: string }
+                      description: { type: string }
+                      status: { type: string }
+                      entryNodeId: { type: string }
+                      nodeCount: { type: integer }
+                      updatedAt: { type: string, format: date-time }
+        '400': { description: Invalid graph, or a graph edit attempted while the workflow is active }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404': { $ref: '#/components/responses/NotFound' }
+    delete:
+      operationId: deleteWorkflow
+      summary: Delete workflow
+      description: Permanently delete a workflow and all of its executions.
+      tags: [Workflows]
+      parameters:
+        - { name: workflowId, in: path, required: true, schema: { type: string } }
+      responses:
+        '200': { description: Workflow deleted }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404': { $ref: '#/components/responses/NotFound' }
+
+  /v1/workflows/{workflowId}/activate:
+    post:
+      operationId: activateWorkflow
+      summary: Activate workflow
+      description: Validate the graph is runnable and set the workflow live. Once active, matching inbound messages start executions. Idempotent.
+      tags: [Workflows]
+      parameters:
+        - { name: workflowId, in: path, required: true, schema: { type: string } }
+      responses:
+        '200':
+          description: Workflow activated
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success: { type: boolean }
+                  workflow:
+                    type: object
+                    properties:
+                      id: { type: string }
+                      status: { type: string }
+                      entryNodeId: { type: string }
+        '400': { description: Incomplete or invalid graph }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404': { $ref: '#/components/responses/NotFound' }
+
+  /v1/workflows/{workflowId}/pause:
+    post:
+      operationId: pauseWorkflow
+      summary: Pause workflow
+      description: Stop matching new inbound messages. In-flight executions continue to completion. Idempotent.
+      tags: [Workflows]
+      parameters:
+        - { name: workflowId, in: path, required: true, schema: { type: string } }
+      responses:
+        '200':
+          description: Workflow paused
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success: { type: boolean }
+                  workflow:
+                    type: object
+                    properties:
+                      id: { type: string }
+                      status: { type: string }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404': { $ref: '#/components/responses/NotFound' }
+
+  /v1/workflows/{workflowId}/executions:
+    get:
+      operationId: listWorkflowExecutions
+      summary: List workflow runs
+      description: Returns recent executions (runs) with their status, current node, and accumulated variables.
+      tags: [Workflows]
+      parameters:
+        - { name: workflowId, in: path, required: true, schema: { type: string } }
+        - { name: status, in: query, schema: { type: string, enum: [running, waiting, completed, exited, failed] } }
+        - { name: limit, in: query, schema: { type: integer, default: 25 } }
+        - { name: skip, in: query, schema: { type: integer, default: 0 } }
+      responses:
+        '200':
+          description: Executions list
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success: { type: boolean }
+                  executions:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id: { type: string }
+                        status: { type: string, enum: [running, waiting, completed, exited, failed] }
+                        currentNodeId: { type: string }
+                        waitingFor:
+                          type: object
+                          nullable: true
+                          properties:
+                            kind: { type: string, enum: [timer, reply] }
+                            nodeId: { type: string }
+                        variables: { type: object, additionalProperties: true }
+                        platformIdentifier: { type: string }
+                        conversationId: { type: string }
+                        stepCount: { type: integer }
+                        lastError: { type: string, nullable: true }
+                        resumeAt: { type: string, format: date-time, nullable: true }
+                        createdAt: { type: string, format: date-time }
+                        updatedAt: { type: string, format: date-time }
+                        completedAt: { type: string, format: date-time, nullable: true }
+                  pagination:
+                    type: object
+                    properties:
+                      total: { type: integer }
+                      limit: { type: integer }
+                      skip: { type: integer }
+                      hasMore: { type: boolean }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404': { $ref: '#/components/responses/NotFound' }
+    post:
+      operationId: triggerWorkflow
+      summary: Manually start a workflow run
+      description: >
+        Kick off a run without waiting for an inbound message (useful for testing). Target an existing
+        conversation by `conversationId`, or — WhatsApp only — a phone number via `to` (a conversation is
+        found or created). `text` seeds the run's `lastMessage` variable. The graph must be runnable.
+      tags: [Workflows]
+      parameters:
+        - { name: workflowId, in: path, required: true, schema: { type: string } }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              description: Provide either `to` (WhatsApp phone) or `conversationId`.
+              properties:
+                to: { type: string, description: Recipient phone (WhatsApp only) }
+                conversationId: { type: string, description: An existing conversation to run in (required for non-WhatsApp workflows) }
+                text: { type: string, description: Simulated inbound text, seeded as the run's lastMessage variable }
+      responses:
+        '200':
+          description: Run started
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success: { type: boolean }
+                  execution:
+                    type: object
+                    nullable: true
+                    properties:
+                      id: { type: string }
+                      status: { type: string }
+                      currentNodeId: { type: string }
+                      waitingFor: { type: object, nullable: true }
+                      variables: { type: object, additionalProperties: true }
+                      conversationId: { type: string }
+        '400': { description: Missing target, invalid graph, or `to` used on a non-WhatsApp workflow }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404': { $ref: '#/components/responses/NotFound' }
 
   /v1/sequences:
     get:

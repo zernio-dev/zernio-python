@@ -686,6 +686,19 @@ Both `from zernio import ...` and `from late import ...` work identically. The `
 |--------|-------------|
 | `whatsapp_templates.get_whats_app_library_template()` | Look up a library template |
 
+### Workflows
+| Method | Description |
+|--------|-------------|
+| `workflows.list_workflow_executions()` | List workflow runs |
+| `workflows.list_workflows()` | List workflows |
+| `workflows.create_workflow()` | Create workflow |
+| `workflows.get_workflow()` | Get workflow with graph |
+| `workflows.update_workflow()` | Update workflow |
+| `workflows.delete_workflow()` | Delete workflow |
+| `workflows.activate_workflow()` | Activate workflow |
+| `workflows.pause_workflow()` | Pause workflow |
+| `workflows.trigger_workflow()` | Manually start a workflow run |
+
 ### Invites
 | Method | Description |
 |--------|-------------|

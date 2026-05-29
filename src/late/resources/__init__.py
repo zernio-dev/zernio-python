@@ -39,6 +39,7 @@ from ._generated.whatsapp_flows import WhatsappFlowsResource
 from ._generated.whatsapp_phone_numbers import WhatsappPhoneNumbersResource
 from ._generated.whatsapp_sandbox import WhatsappSandboxResource
 from ._generated.whatsapp_templates import WhatsappTemplatesResource
+from ._generated.workflows import WorkflowsResource
 from .accounts import AccountsResource
 from .analytics import AnalyticsResource
 from .media import MediaResource
@@ -90,4 +91,5 @@ __all__ = [
     "WhatsappPhoneNumbersResource",
     "WhatsappSandboxResource",
     "WhatsappTemplatesResource",
+    "WorkflowsResource",
 ]

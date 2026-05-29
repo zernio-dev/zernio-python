@@ -10345,3 +10345,259 @@ def register_generated_tools(mcp, _get_client):
             return _format_response(response)
         except Exception as e:
             return f"Error: {e}"
+
+    # WORKFLOWS
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="List workflows",
+            readOnlyHint=True,
+            destructiveHint=False,
+            openWorldHint=False,
+        )
+    )
+    def workflows_list_workflows(
+        profile_id: str | None = None,
+        status: str | None = None,
+        limit: int = 50,
+        skip: int = 0,
+    ) -> str:
+        """List workflows
+
+        Args:
+            profile_id: Filter by profile. Omit to list across all profiles
+            status
+            limit
+            skip"""
+        client = _get_client()
+        try:
+            response = client.workflows.list_workflows(
+                profile_id=profile_id, status=status, limit=limit, skip=skip
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Create workflow",
+            readOnlyHint=False,
+            destructiveHint=True,
+            openWorldHint=True,
+        )
+    )
+    def workflows_create_workflow(
+        profile_id: str,
+        account_id: str,
+        name: str,
+        platform: str = "whatsapp",
+        description: str | None = None,
+        nodes: list[dict[str, Any]] | None = None,
+        edges: list[dict[str, Any]] | None = None,
+        entry_node_id: str | None = None,
+    ) -> str:
+        """Create workflow
+
+        Args:
+            profile_id: (required)
+            account_id: (required)
+            platform
+            name: (required)
+            description
+            nodes
+            edges
+            entry_node_id: The trigger node id; derived from the single trigger node if omitted"""
+        client = _get_client()
+        try:
+            response = client.workflows.create_workflow(
+                profile_id=profile_id,
+                account_id=account_id,
+                platform=platform,
+                name=name,
+                description=description,
+                nodes=nodes,
+                edges=edges,
+                entry_node_id=entry_node_id,
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Get workflow with graph",
+            readOnlyHint=True,
+            destructiveHint=False,
+            openWorldHint=False,
+        )
+    )
+    def workflows_get_workflow(workflow_id: str) -> str:
+        """Get workflow with graph
+
+        Args:
+            workflow_id: (required)"""
+        client = _get_client()
+        try:
+            response = client.workflows.get_workflow(workflow_id=workflow_id)
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Update workflow",
+            readOnlyHint=False,
+            destructiveHint=True,
+            openWorldHint=True,
+        )
+    )
+    def workflows_update_workflow(
+        workflow_id: str,
+        name: str | None = None,
+        description: str | None = None,
+        nodes: list[dict[str, Any]] | None = None,
+        edges: list[dict[str, Any]] | None = None,
+        entry_node_id: str | None = None,
+    ) -> str:
+        """Update workflow
+
+        Args:
+            workflow_id: (required)
+            name
+            description
+            nodes
+            edges
+            entry_node_id"""
+        client = _get_client()
+        try:
+            response = client.workflows.update_workflow(
+                workflow_id=workflow_id,
+                name=name,
+                description=description,
+                nodes=nodes,
+                edges=edges,
+                entry_node_id=entry_node_id,
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Delete workflow",
+            readOnlyHint=False,
+            destructiveHint=True,
+            openWorldHint=True,
+        )
+    )
+    def workflows_delete_workflow(workflow_id: str) -> str:
+        """Delete workflow
+
+        Args:
+            workflow_id: (required)"""
+        client = _get_client()
+        try:
+            response = client.workflows.delete_workflow(workflow_id=workflow_id)
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Activate workflow",
+            readOnlyHint=False,
+            destructiveHint=True,
+            openWorldHint=True,
+        )
+    )
+    def workflows_activate_workflow(workflow_id: str) -> str:
+        """Activate workflow
+
+        Args:
+            workflow_id: (required)"""
+        client = _get_client()
+        try:
+            response = client.workflows.activate_workflow(workflow_id=workflow_id)
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Pause workflow",
+            readOnlyHint=False,
+            destructiveHint=True,
+            openWorldHint=True,
+        )
+    )
+    def workflows_pause_workflow(workflow_id: str) -> str:
+        """Pause workflow
+
+        Args:
+            workflow_id: (required)"""
+        client = _get_client()
+        try:
+            response = client.workflows.pause_workflow(workflow_id=workflow_id)
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="List workflow runs",
+            readOnlyHint=True,
+            destructiveHint=False,
+            openWorldHint=False,
+        )
+    )
+    def workflows_list_workflow_executions(
+        workflow_id: str, status: str | None = None, limit: int = 25, skip: int = 0
+    ) -> str:
+        """List workflow runs
+
+        Args:
+            workflow_id: (required)
+            status
+            limit
+            skip"""
+        client = _get_client()
+        try:
+            response = client.workflows.list_workflow_executions(
+                workflow_id=workflow_id, status=status, limit=limit, skip=skip
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Manually start a workflow run",
+            readOnlyHint=False,
+            destructiveHint=True,
+            openWorldHint=True,
+        )
+    )
+    def workflows_trigger_workflow(
+        workflow_id: str,
+        to: str | None = None,
+        conversation_id: str | None = None,
+        text: str | None = None,
+    ) -> str:
+        """Manually start a workflow run
+
+        Args:
+            workflow_id: (required)
+            to: Recipient phone (WhatsApp only)
+            conversation_id: An existing conversation to run in (required for non-WhatsApp workflows)
+            text: Simulated inbound text"""
+        client = _get_client()
+        try:
+            response = client.workflows.trigger_workflow(
+                workflow_id=workflow_id,
+                to=to,
+                conversation_id=conversation_id,
+                text=text,
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
