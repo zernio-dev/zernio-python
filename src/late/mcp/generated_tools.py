@@ -10196,15 +10196,144 @@ def register_generated_tools(mcp, _get_client):
             openWorldHint=True,
         )
     )
-    def whatsapp_phone_numbers_purchase_whats_app_phone_number(profile_id: str) -> str:
+    def whatsapp_phone_numbers_purchase_whats_app_phone_number(
+        profile_id: str, country: str = "US"
+    ) -> str:
         """Purchase phone number
 
         Args:
-            profile_id: Profile to associate the number with (required)"""
+            profile_id: Profile to associate the number with (required)
+            country: ISO 3166-1 alpha-2 country for the number (default US). International numbers require usage-based billing. Tier 3/4 countries return 202 { status: "kyc_required", kycUrl } — the customer must complete KYC at that URL before the number is ordered. See GET /v1/whatsapp/phone-numbers/countries."""
         client = _get_client()
         try:
             response = client.whatsapp_phone_numbers.purchase_whats_app_phone_number(
-                profile_id=profile_id
+                profile_id=profile_id, country=country
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="List offerable number countries",
+            readOnlyHint=True,
+            destructiveHint=False,
+            openWorldHint=False,
+        )
+    )
+    def whatsapp_phone_numbers_list_whats_app_number_countries() -> str:
+        """List offerable number countries"""
+        client = _get_client()
+        try:
+            response = client.whatsapp_phone_numbers.list_whats_app_number_countries()
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Search available numbers to purchase",
+            readOnlyHint=True,
+            destructiveHint=False,
+            openWorldHint=False,
+        )
+    )
+    def whatsapp_phone_numbers_search_available_whats_app_numbers(
+        country: str = "US",
+        type: str | None = None,
+        prefix: str | None = None,
+        locality: str | None = None,
+        contains: str | None = None,
+        limit: int = 20,
+    ) -> str:
+        """Search available numbers to purchase
+
+        Args:
+            country
+            type: Number type; defaults to the country's WhatsApp-safe type
+            prefix: Area code
+            locality: City
+            contains: Pattern to match within the number
+            limit"""
+        client = _get_client()
+        try:
+            response = client.whatsapp_phone_numbers.search_available_whats_app_numbers(
+                country=country,
+                type=type,
+                prefix=prefix,
+                locality=locality,
+                contains=contains,
+                limit=limit,
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Get regulated-number KYC form spec",
+            readOnlyHint=True,
+            destructiveHint=False,
+            openWorldHint=False,
+        )
+    )
+    def whatsapp_phone_numbers_get_whats_app_number_kyc_form(
+        country: str, profile_id: str
+    ) -> str:
+        """Get regulated-number KYC form spec
+
+        Args:
+            country: (required)
+            profile_id: (required)"""
+        client = _get_client()
+        try:
+            response = client.whatsapp_phone_numbers.get_whats_app_number_kyc_form(
+                country=country, profile_id=profile_id
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Submit regulated-number KYC",
+            readOnlyHint=False,
+            destructiveHint=True,
+            openWorldHint=True,
+        )
+    )
+    def whatsapp_phone_numbers_submit_whats_app_number_kyc(
+        profile_id: str,
+        country: str,
+        reuse: bool | None = None,
+        end_user_first_name: str | None = None,
+        end_user_last_name: str | None = None,
+        values: dict[str, Any] | None = None,
+        documents: list[dict[str, Any]] | None = None,
+        address: dict[str, Any] | None = None,
+    ) -> str:
+        """Submit regulated-number KYC
+
+        Args:
+            profile_id: (required)
+            country: (required)
+            reuse: Reuse a prior approved verification for this country (skips document/field collection; places the order immediately).
+            end_user_first_name: End user's legal first name. Required when the country has an action/ID-verification (Onfido) requirement.
+            end_user_last_name: End user's legal last name. Same condition as endUserFirstName.
+            values: requirementId → textual value
+            documents
+            address"""
+        client = _get_client()
+        try:
+            response = client.whatsapp_phone_numbers.submit_whats_app_number_kyc(
+                profile_id=profile_id,
+                country=country,
+                reuse=reuse,
+                end_user_first_name=end_user_first_name,
+                end_user_last_name=end_user_last_name,
+                values=values,
+                documents=documents,
+                address=address,
             )
             return _format_response(response)
         except Exception as e:

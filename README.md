@@ -668,11 +668,15 @@ Both `from zernio import ...` and `from late import ...` work identically. The `
 ### WhatsApp Phone Numbers
 | Method | Description |
 |--------|-------------|
+| `whatsapp_phone_numbers.list_whats_app_number_countries()` | List offerable number countries |
 | `whatsapp_phone_numbers.get_whats_app_number_info()` | Get number status |
+| `whatsapp_phone_numbers.get_whats_app_number_kyc_form()` | Get regulated-number KYC form spec |
 | `whatsapp_phone_numbers.get_whats_app_phone_number()` | Get phone number |
 | `whatsapp_phone_numbers.get_whats_app_phone_numbers()` | List phone numbers |
 | `whatsapp_phone_numbers.purchase_whats_app_phone_number()` | Purchase phone number |
 | `whatsapp_phone_numbers.release_whats_app_phone_number()` | Release phone number |
+| `whatsapp_phone_numbers.search_available_whats_app_numbers()` | Search available numbers to purchase |
+| `whatsapp_phone_numbers.submit_whats_app_number_kyc()` | Submit regulated-number KYC |
 
 ### WhatsApp Sandbox
 | Method | Description |

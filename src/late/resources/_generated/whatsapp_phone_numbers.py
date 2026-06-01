@@ -71,12 +71,75 @@ class WhatsappPhoneNumbersResource:
         )
         return self._client._get("/v1/whatsapp/phone-numbers", params=params)
 
-    def purchase_whats_app_phone_number(self, profile_id: str) -> dict[str, Any]:
+    def purchase_whats_app_phone_number(
+        self, profile_id: str, *, country: str | None = "US"
+    ) -> dict[str, Any]:
         """Purchase phone number"""
         payload = self._build_payload(
             profile_id=profile_id,
+            country=country,
         )
         return self._client._post("/v1/whatsapp/phone-numbers/purchase", data=payload)
+
+    def list_whats_app_number_countries(self) -> dict[str, Any]:
+        """List offerable number countries"""
+        return self._client._get("/v1/whatsapp/phone-numbers/countries")
+
+    def search_available_whats_app_numbers(
+        self,
+        *,
+        country: str | None = "US",
+        type: str | None = None,
+        prefix: str | None = None,
+        locality: str | None = None,
+        contains: str | None = None,
+        limit: int | None = 20,
+    ) -> dict[str, Any]:
+        """Search available numbers to purchase"""
+        params = self._build_params(
+            country=country,
+            type=type,
+            prefix=prefix,
+            locality=locality,
+            contains=contains,
+            limit=limit,
+        )
+        return self._client._get("/v1/whatsapp/phone-numbers/available", params=params)
+
+    def get_whats_app_number_kyc_form(
+        self, country: str, profile_id: str
+    ) -> dict[str, Any]:
+        """Get regulated-number KYC form spec"""
+        params = self._build_params(
+            country=country,
+            profile_id=profile_id,
+        )
+        return self._client._get("/v1/whatsapp/phone-numbers/kyc", params=params)
+
+    def submit_whats_app_number_kyc(
+        self,
+        profile_id: str,
+        country: str,
+        *,
+        reuse: bool | None = None,
+        end_user_first_name: str | None = None,
+        end_user_last_name: str | None = None,
+        values: dict[str, Any] | None = None,
+        documents: list[dict[str, Any]] | None = None,
+        address: dict[str, Any] | None = None,
+    ) -> dict[str, Any]:
+        """Submit regulated-number KYC"""
+        payload = self._build_payload(
+            profile_id=profile_id,
+            country=country,
+            reuse=reuse,
+            end_user_first_name=end_user_first_name,
+            end_user_last_name=end_user_last_name,
+            values=values,
+            documents=documents,
+            address=address,
+        )
+        return self._client._post("/v1/whatsapp/phone-numbers/kyc", data=payload)
 
     def get_whats_app_phone_number(self, phone_number_id: str) -> dict[str, Any]:
         """Get phone number"""
@@ -103,14 +166,79 @@ class WhatsappPhoneNumbersResource:
         )
         return await self._client._aget("/v1/whatsapp/phone-numbers", params=params)
 
-    async def apurchase_whats_app_phone_number(self, profile_id: str) -> dict[str, Any]:
+    async def apurchase_whats_app_phone_number(
+        self, profile_id: str, *, country: str | None = "US"
+    ) -> dict[str, Any]:
         """Purchase phone number (async)"""
         payload = self._build_payload(
             profile_id=profile_id,
+            country=country,
         )
         return await self._client._apost(
             "/v1/whatsapp/phone-numbers/purchase", data=payload
         )
+
+    async def alist_whats_app_number_countries(self) -> dict[str, Any]:
+        """List offerable number countries (async)"""
+        return await self._client._aget("/v1/whatsapp/phone-numbers/countries")
+
+    async def asearch_available_whats_app_numbers(
+        self,
+        *,
+        country: str | None = "US",
+        type: str | None = None,
+        prefix: str | None = None,
+        locality: str | None = None,
+        contains: str | None = None,
+        limit: int | None = 20,
+    ) -> dict[str, Any]:
+        """Search available numbers to purchase (async)"""
+        params = self._build_params(
+            country=country,
+            type=type,
+            prefix=prefix,
+            locality=locality,
+            contains=contains,
+            limit=limit,
+        )
+        return await self._client._aget(
+            "/v1/whatsapp/phone-numbers/available", params=params
+        )
+
+    async def aget_whats_app_number_kyc_form(
+        self, country: str, profile_id: str
+    ) -> dict[str, Any]:
+        """Get regulated-number KYC form spec (async)"""
+        params = self._build_params(
+            country=country,
+            profile_id=profile_id,
+        )
+        return await self._client._aget("/v1/whatsapp/phone-numbers/kyc", params=params)
+
+    async def asubmit_whats_app_number_kyc(
+        self,
+        profile_id: str,
+        country: str,
+        *,
+        reuse: bool | None = None,
+        end_user_first_name: str | None = None,
+        end_user_last_name: str | None = None,
+        values: dict[str, Any] | None = None,
+        documents: list[dict[str, Any]] | None = None,
+        address: dict[str, Any] | None = None,
+    ) -> dict[str, Any]:
+        """Submit regulated-number KYC (async)"""
+        payload = self._build_payload(
+            profile_id=profile_id,
+            country=country,
+            reuse=reuse,
+            end_user_first_name=end_user_first_name,
+            end_user_last_name=end_user_last_name,
+            values=values,
+            documents=documents,
+            address=address,
+        )
+        return await self._client._apost("/v1/whatsapp/phone-numbers/kyc", data=payload)
 
     async def aget_whats_app_phone_number(self, phone_number_id: str) -> dict[str, Any]:
         """Get phone number (async)"""

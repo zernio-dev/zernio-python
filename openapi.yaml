@@ -294,7 +294,7 @@ tags:
   - name: Webhooks
     description: |
       Configure webhooks for real-time notifications. Webhooks can be created from the dashboard (Settings → Webhooks) or via this API.
-      Events: post.scheduled, post.published, post.failed, post.partial, post.cancelled, post.recycled, post.platform.published, post.platform.failed, account.connected, account.disconnected, account.ads.initial_sync_completed, message.received, message.sent, message.edited, message.deleted, message.delivered, message.read, message.failed, reaction.received, comment.received, review.new, review.updated, lead.received, ad.status_changed, whatsapp.template.status_updated, webhook.test.
+      Events: post.scheduled, post.published, post.failed, post.partial, post.cancelled, post.recycled, post.platform.published, post.platform.failed, account.connected, account.disconnected, account.ads.initial_sync_completed, message.received, message.sent, message.edited, message.deleted, message.delivered, message.read, message.failed, reaction.received, comment.received, review.new, review.updated, lead.received, ad.status_changed, whatsapp.template.status_updated, whatsapp.number.activated, whatsapp.number.declined, whatsapp.number.verification_required, webhook.test.
       Security: optional HMAC-SHA256 signature in X-Zernio-Signature header. Configure a secret key to enable verification. Custom headers supported.
   - name: Webhook Events
     description: |
@@ -1133,7 +1133,7 @@ components:
           type: array
           items:
             type: string
-            enum: [post.scheduled, post.published, post.failed, post.partial, post.cancelled, post.recycled, post.platform.published, post.platform.failed, account.connected, account.disconnected, account.ads.initial_sync_completed, message.received, message.sent, message.edited, message.deleted, message.delivered, message.read, message.failed, reaction.received, comment.received, review.new, review.updated, ad.status_changed, whatsapp.template.status_updated]
+            enum: [post.scheduled, post.published, post.failed, post.partial, post.cancelled, post.recycled, post.platform.published, post.platform.failed, account.connected, account.disconnected, account.ads.initial_sync_completed, message.received, message.sent, message.edited, message.deleted, message.delivered, message.read, message.failed, reaction.received, comment.received, review.new, review.updated, ad.status_changed, whatsapp.template.status_updated, whatsapp.number.activated, whatsapp.number.declined, whatsapp.number.verification_required]
           description: Events subscribed to
         isActive:
           type: boolean
@@ -5936,6 +5936,96 @@ webhooks:
           application/json:
             schema:
               $ref: '#/components/schemas/WebhookPayloadWhatsAppTemplateStatusUpdated'
+      responses:
+        '200':
+          description: Webhook received successfully
+  whatsapp.number.activated:
+    post:
+      operationId: onWhatsAppNumberActivated
+      summary: WhatsApp number activated event
+      description: |
+        Fired when a purchased WhatsApp number becomes active and usable — both
+        the synchronous (Tier 1/2) path and the asynchronous regulated (Tier
+        3/4) path land here. Lets integrators react without polling
+        GET /v1/whatsapp/phone-numbers.
+      tags: [Webhook Events]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                id: { type: string }
+                event: { type: string, enum: [whatsapp.number.activated] }
+                timestamp: { type: string, format: date-time }
+                number:
+                  type: object
+                  properties:
+                    id: { type: string }
+                    phoneNumber: { type: string }
+                    country: { type: string }
+                    profileId: { type: string }
+      responses:
+        '200':
+          description: Webhook received successfully
+  whatsapp.number.declined:
+    post:
+      operationId: onWhatsAppNumberDeclined
+      summary: WhatsApp number declined event
+      description: |
+        Fired when a regulated (Tier 3/4) number order is declined or fails
+        review. The number is never billed. `reason` carries the reviewer's
+        rejection reason when available.
+      tags: [Webhook Events]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                id: { type: string }
+                event: { type: string, enum: [whatsapp.number.declined] }
+                timestamp: { type: string, format: date-time }
+                number:
+                  type: object
+                  properties:
+                    id: { type: string }
+                    phoneNumber: { type: string }
+                    country: { type: string }
+                    profileId: { type: string }
+                reason: { type: string, nullable: true }
+      responses:
+        '200':
+          description: Webhook received successfully
+  whatsapp.number.verification_required:
+    post:
+      operationId: onWhatsAppNumberVerificationRequired
+      summary: WhatsApp number verification-required event
+      description: |
+        Fired when a regulated number has an out-of-band identity-verification
+        step (e.g. Onfido). `verificationUrl` is the link to forward to the
+        number's end user; the order completes once they pass.
+      tags: [Webhook Events]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                id: { type: string }
+                event: { type: string, enum: [whatsapp.number.verification_required] }
+                timestamp: { type: string, format: date-time }
+                number:
+                  type: object
+                  properties:
+                    id: { type: string }
+                    phoneNumber: { type: string }
+                    country: { type: string }
+                    profileId: { type: string }
+                verificationUrl: { type: string }
       responses:
         '200':
           description: Webhook received successfully
@@ -16152,7 +16242,7 @@ paths:
                   minItems: 1
                   items:
                     type: string
-                    enum: [post.scheduled, post.published, post.failed, post.partial, post.cancelled, post.recycled, post.platform.published, post.platform.failed, account.connected, account.disconnected, account.ads.initial_sync_completed, message.received, message.sent, message.edited, message.deleted, message.delivered, message.read, message.failed, reaction.received, comment.received, review.new, review.updated, ad.status_changed, whatsapp.template.status_updated]
+                    enum: [post.scheduled, post.published, post.failed, post.partial, post.cancelled, post.recycled, post.platform.published, post.platform.failed, account.connected, account.disconnected, account.ads.initial_sync_completed, message.received, message.sent, message.edited, message.deleted, message.delivered, message.read, message.failed, reaction.received, comment.received, review.new, review.updated, ad.status_changed, whatsapp.template.status_updated, whatsapp.number.activated, whatsapp.number.declined, whatsapp.number.verification_required]
                   description: Events to subscribe to (at least one required)
                 isActive:
                   type: boolean
@@ -16226,7 +16316,7 @@ paths:
                   minItems: 1
                   items:
                     type: string
-                    enum: [post.scheduled, post.published, post.failed, post.partial, post.cancelled, post.recycled, post.platform.published, post.platform.failed, account.connected, account.disconnected, account.ads.initial_sync_completed, message.received, message.sent, message.edited, message.deleted, message.delivered, message.read, message.failed, reaction.received, comment.received, review.new, review.updated, ad.status_changed, whatsapp.template.status_updated]
+                    enum: [post.scheduled, post.published, post.failed, post.partial, post.cancelled, post.recycled, post.platform.published, post.platform.failed, account.connected, account.disconnected, account.ads.initial_sync_completed, message.received, message.sent, message.edited, message.deleted, message.delivered, message.read, message.failed, reaction.received, comment.received, review.new, review.updated, ad.status_changed, whatsapp.template.status_updated, whatsapp.number.activated, whatsapp.number.declined, whatsapp.number.verification_required]
                   description: Events to subscribe to. Must contain at least one event if provided.
                 isActive:
                   type: boolean
@@ -20126,7 +20216,7 @@ paths:
           description: Filter by status (by default excludes released numbers)
           schema:
             type: string
-            enum: [provisioning, active, suspended, releasing, released]
+            enum: [provisioning, pending_payment, pending_regulatory, regulatory_declined, active, suspended, releasing, released]
         - name: profileId
           in: query
           required: false
@@ -20149,11 +20239,16 @@ paths:
                         _id: { type: string }
                         phoneNumber: { type: string }
                         country: { type: string }
-                        status: { type: string, enum: [pending_payment, provisioning, active, suspended, releasing, released] }
+                        status: { type: string, enum: [pending_payment, pending_regulatory, regulatory_declined, provisioning, active, suspended, releasing, released] }
+                        monthlyCents: { type: integer, description: Per-country monthly price in cents ($2..$25). }
                         profileId: { type: object }
                         provisionedAt: { type: string, format: date-time }
                         metaPreverifiedId: { type: string }
                         metaVerificationStatus: { type: string }
+                        onfidoVerificationUrl: { type: string, nullable: true, description: For regulated (Tier 3/4) numbers with an Onfido ID-verification step — the link to forward to the end user. Set once the order is placed; null otherwise. Poll this field after submitting KYC. }
+                        endUserFirstName: { type: string, nullable: true }
+                        endUserLastName: { type: string, nullable: true }
+                        regulatoryDeclineReason: { type: string, nullable: true, description: Reviewer rejection reason when status is regulatory_declined. }
                         createdAt: { type: string, format: date-time }
                   sandbox:
                     type: object
@@ -20199,8 +20294,18 @@ paths:
                 profileId:
                   type: string
                   description: Profile to associate the number with
+                country:
+                  type: string
+                  description: >
+                    ISO 3166-1 alpha-2 country for the number (default US).
+                    International numbers require usage-based billing. Tier 3/4
+                    countries return 202 { status: "kyc_required", kycUrl } —
+                    the customer must complete KYC at that URL before the number
+                    is ordered. See GET /v1/whatsapp/phone-numbers/countries.
+                  default: US
             example:
               profileId: "507f1f77bcf86cd799439011"
+              country: "DE"
       responses:
         '200':
           description: |
@@ -20228,9 +20333,202 @@ paths:
                           provisionedAt: { type: string, format: date-time }
                           metaPreverifiedId: { type: string }
                           metaVerificationStatus: { type: string }
-        '400': { description: Plan limit reached or profileId required }
+        '400': { description: Plan limit reached, profileId required, or country not available }
         '401': { $ref: '#/components/responses/Unauthorized' }
         '403': { description: A paid plan is required }
+        '202':
+          description: Country requires end-user KYC before the number can be ordered.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status: { type: string, enum: [kyc_required] }
+                  country: { type: string }
+                  kycUrl: { type: string }
+        '402': { description: 'Payment method required (Metronome user with no card on file). Response body carries code: PAYMENT_REQUIRED; add a card, then retry.' }
+        '422': { description: 'International numbers require usage-based billing (legacy Stripe users are US-only). Response body code: USAGE_BILLING_REQUIRED.' }
+
+  /v1/whatsapp/phone-numbers/countries:
+    get:
+      operationId: listWhatsAppNumberCountries
+      tags: [WhatsApp Phone Numbers]
+      summary: List offerable number countries
+      description: |
+        The WhatsApp number countries available to purchase, each with its flat
+        monthly price (cents), regulatory tier, whether it needs end-user KYC
+        (Tier 3/4), and whether outbound calling is available (not BIC-blocked).
+        Drives the country picker. Tier-4 countries appear only when enabled.
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Offerable countries, cheapest first.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  countries:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        code: { type: string, description: ISO 3166-1 alpha-2 }
+                        tier: { type: integer, enum: [1, 2, 3, 4] }
+                        monthlyCents: { type: integer }
+                        needsKyc: { type: boolean }
+                        outboundCallingAvailable: { type: boolean }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+
+  /v1/whatsapp/phone-numbers/available:
+    get:
+      operationId: searchAvailableWhatsAppNumbers
+      tags: [WhatsApp Phone Numbers]
+      summary: Search available numbers to purchase
+      description: |
+        Search the provider's inventory for numbers available to purchase in a
+        country (default US). Optional filters narrow the results. The country
+        must be offerable (see GET /v1/whatsapp/phone-numbers/countries).
+      security:
+        - bearerAuth: []
+      parameters:
+        - { name: country, in: query, required: false, schema: { type: string, default: US } }
+        - { name: type, in: query, required: false, description: "Number type; defaults to the country's WhatsApp-safe type", schema: { type: string } }
+        - { name: prefix, in: query, required: false, description: Area code, schema: { type: string } }
+        - { name: locality, in: query, required: false, description: City, schema: { type: string } }
+        - { name: contains, in: query, required: false, description: Pattern to match within the number, schema: { type: string } }
+        - { name: limit, in: query, required: false, schema: { type: integer, default: 20, maximum: 100 } }
+      responses:
+        '200':
+          description: Available numbers.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  country: { type: string }
+                  numberType: { type: string }
+                  numbers:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        phoneNumber: { type: string }
+        '400': { description: Country not available }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+  /v1/whatsapp/phone-numbers/kyc:
+    get:
+      operationId: getWhatsAppNumberKycForm
+      tags: [WhatsApp Phone Numbers]
+      summary: Get regulated-number KYC form spec
+      description: |
+        For a Tier 3/4 country, the fields the end customer must provide (Telnyx
+        regulatory requirements) before a number can be ordered: text, date,
+        address, or file (document) per requirement.
+      security:
+        - bearerAuth: []
+      parameters:
+        - { name: country, in: query, required: true, schema: { type: string } }
+        - { name: profileId, in: query, required: true, schema: { type: string } }
+      responses:
+        '200':
+          description: The KYC form spec.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  country: { type: string }
+                  numberType: { type: string }
+                  fields:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        requirementId: { type: string }
+                        label: { type: string }
+                        kind: { type: string, enum: [text, date, address, file, action], description: '"action" = an out-of-band verification (e.g. Onfido); not filled here, fulfilled after the order via a link.' }
+                        description: { type: string, nullable: true, description: Plain-English explanation of what to provide. }
+                        example: { type: string, nullable: true, description: Concrete example value. }
+                        localTo: { type: string, nullable: true, description: ISO country the value must be local to }
+                  reusable:
+                    type: object
+                    nullable: true
+                    description: Present when this account already has an approved verification for the country that can be reused (skip the form).
+                    properties:
+                      available: { type: boolean }
+                      fromPhoneNumber: { type: string }
+        '400': { description: Country not available }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+    post:
+      operationId: submitWhatsAppNumberKyc
+      tags: [WhatsApp Phone Numbers]
+      summary: Submit regulated-number KYC
+      description: |
+        Submit the end customer's KYC (textual values, uploaded documents,
+        address) for a Tier 3/4 country. Documents are streamed straight to the
+        number provider and are not stored by Zernio. Builds + submits a
+        regulatory requirement group and claims a pending_regulatory slot; the
+        number is ordered + activated once the provider approves (asynchronous).
+        Idempotent per (owner, country).
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [profileId, country]
+              properties:
+                profileId: { type: string }
+                country: { type: string }
+                reuse: { type: boolean, description: Reuse a prior approved verification for this country (skips document/field collection; places the order immediately). }
+                endUserFirstName: { type: string, description: End user's legal first name. Required when the country has an action/ID-verification (Onfido) requirement. }
+                endUserLastName: { type: string, description: End user's legal last name. Same condition as endUserFirstName. }
+                values:
+                  type: object
+                  additionalProperties: { type: string }
+                  description: requirementId → textual value
+                documents:
+                  type: array
+                  items:
+                    type: object
+                    properties:
+                      requirementId: { type: string }
+                      filename: { type: string }
+                      base64: { type: string }
+                address:
+                  type: object
+                  properties:
+                    requirementId: { type: string }
+                    country_code: { type: string }
+                    business_name: { type: string }
+                    first_name: { type: string }
+                    last_name: { type: string }
+                    street_address: { type: string }
+                    locality: { type: string }
+                    administrative_area: { type: string }
+                    postal_code: { type: string }
+      responses:
+        '200':
+          description: KYC submitted (or already submitted); number pending review.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status: { type: string, enum: [kyc_submitted, kyc_reused, kyc_already_submitted] }
+                  phoneNumber:
+                    type: object
+                    properties:
+                      id: { type: string }
+                      status: { type: string }
+                      country: { type: string }
+        '400': { description: Validation error (e.g. address not in-country, file too large) }
+        '409': { description: reuse requested but no prior approved verification exists for this country }
+        '401': { $ref: '#/components/responses/Unauthorized' }
 
   /v1/whatsapp/phone-numbers/{phoneNumberId}:
     get:
@@ -20238,8 +20536,13 @@ paths:
       tags: [WhatsApp Phone Numbers]
       summary: Get phone number
       description: |
-        Retrieve the current status of a purchased phone number. Used to poll for
-        Meta pre-verification completion after purchase.
+        Retrieve the current status of a purchased phone number. Poll this to
+        track Meta pre-verification (US sync path) and, for regulated (Tier 3/4)
+        numbers, the async lifecycle: pending_regulatory → active (or
+        regulatory_declined). When a regulated number has an Onfido ID step,
+        `onfidoVerificationUrl` appears here once the order is placed — forward
+        it to the end user. (Or subscribe to the whatsapp.number.* webhooks
+        instead of polling.)
       security:
         - bearerAuth: []
       parameters:
@@ -20262,10 +20565,14 @@ paths:
                     properties:
                       id: { type: string }
                       phoneNumber: { type: string }
-                      status: { type: string, enum: [pending_payment, provisioning, active, suspended, releasing, released] }
+                      status: { type: string, enum: [pending_payment, pending_regulatory, regulatory_declined, provisioning, active, suspended, releasing, released] }
                       country: { type: string }
                       metaPreverifiedId: { type: string }
                       metaVerificationStatus: { type: string }
+                      onfidoVerificationUrl: { type: string, nullable: true, description: For a regulated number with an Onfido ID step — the link to forward to the end user. Appears once the order is placed; null otherwise. }
+                      endUserFirstName: { type: string, nullable: true }
+                      endUserLastName: { type: string, nullable: true }
+                      regulatoryDeclineReason: { type: string, nullable: true, description: Reviewer rejection reason when status is regulatory_declined. }
                       provisionedAt: { type: string, format: date-time }
         '401': { $ref: '#/components/responses/Unauthorized' }
         '404': { $ref: '#/components/responses/NotFound' }
