@@ -4295,6 +4295,7 @@ def register_generated_tools(mcp, _get_client):
         buttons: list[dict[str, Any]] | None = None,
         comment_reply: str | None = None,
         link_tracking: bool = True,
+        click_tag: str | None = None,
     ) -> str:
         """Create comment-to-DM automation
 
@@ -4310,7 +4311,8 @@ def register_generated_tools(mcp, _get_client):
             dm_message: DM text to send to commenter. Max 640 chars when buttons are set, otherwise ~1000. (required)
             buttons: Optional inline DM buttons (1-3). Phone buttons are Facebook-only. Omit or pass [] for a plain-text DM.
             comment_reply: Optional public reply to the comment
-            link_tracking: Wrap link buttons in the DM in a tracked redirect so clicks are counted (Link Clicks / CTR). Pass false to send links exactly as written. Defaults to on."""
+            link_tracking: Wrap link buttons in the DM in a tracked redirect so clicks are counted (Link Clicks / CTR). Pass false to send links exactly as written. Defaults to on.
+            click_tag: Optional tag applied to a contact when they click a tracked link (requires linkTracking). Lets you segment clickers for broadcasts/sequences."""
         client = _get_client()
         try:
             response = client.comment_automations.create_comment_automation(
@@ -4326,6 +4328,7 @@ def register_generated_tools(mcp, _get_client):
                 buttons=buttons,
                 comment_reply=comment_reply,
                 link_tracking=link_tracking,
+                click_tag=click_tag,
             )
             return _format_response(response)
         except Exception as e:
@@ -4370,6 +4373,7 @@ def register_generated_tools(mcp, _get_client):
         buttons: list[dict[str, Any]] | None = None,
         comment_reply: str | None = None,
         link_tracking: bool | None = None,
+        click_tag: str | None = None,
         is_active: bool | None = None,
     ) -> str:
         """Update automation settings
@@ -4383,6 +4387,7 @@ def register_generated_tools(mcp, _get_client):
             buttons: Inline DM buttons (1-3). Pass [] to clear all buttons.
             comment_reply
             link_tracking: Wrap link buttons in a tracked redirect to count clicks. Pass false to send links untouched.
+            click_tag: Tag applied to a contact when they click a tracked link (requires linkTracking). Empty string clears it.
             is_active"""
         client = _get_client()
         try:
@@ -4395,6 +4400,7 @@ def register_generated_tools(mcp, _get_client):
                 buttons=buttons,
                 comment_reply=comment_reply,
                 link_tracking=link_tracking,
+                click_tag=click_tag,
                 is_active=is_active,
             )
             return _format_response(response)
