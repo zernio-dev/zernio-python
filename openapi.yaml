@@ -25931,6 +25931,69 @@ paths:
                       enum: [SINGLE_IMAGE, CAROUSEL_IMAGE]
                       default: SINGLE_IMAGE
                       description: "Asset-feed ad format. Defaults to SINGLE_IMAGE."
+                placementAssets:
+                  type: object
+                  description: |
+                    Meta only. Placement asset customization: pin a SPECIFIC image to each placement
+                    group on a SINGLE ad (e.g. a 9:16 image on Stories/Reels and a 4:5 on Feed). This
+                    is the same thing Meta Ads Manager produces with "different creative per placement",
+                    mapped to the creative's `asset_feed_spec` + `asset_customization_rules`. It is
+                    deterministic pinning, NOT the auto-optimizing pool of `dynamicCreative` (the two are
+                    mutually exclusive, and it cannot be combined with `creatives[]` or `adSetId`). The
+                    shared copy (headline, body, link, CTA) comes from the top-level single-creative
+                    fields (`headline`, `body`, `linkUrl`, `callToAction`) since only the image varies by
+                    placement. Each rule's `placements` accepts the same fields as the top-level
+                    `placements` object; Meta enforces co-selection rules and returns an actionable error.
+                  required: [defaultImageUrl, rules]
+                  properties:
+                    defaultImageUrl:
+                      type: string
+                      format: uri
+                      description: |
+                        Catch-all image for any placement not matched by a rule. REQUIRED — Meta mandates
+                        a default asset customization rule (empty placement spec, lowest priority) on every
+                        placement-customized creative.
+                    rules:
+                      type: array
+                      minItems: 1
+                      maxItems: 10
+                      description: "One entry per placement group you want to pin a specific image to."
+                      items:
+                        type: object
+                        required: [imageUrl, placements]
+                        properties:
+                          imageUrl:
+                            type: string
+                            format: uri
+                            description: "The image to deliver for this rule's placements."
+                          placements:
+                            type: object
+                            description: "Placements this image is pinned to. At least one field must be set (an empty rule is invalid — that role is served by defaultImageUrl). Same enums as the top-level `placements` object."
+                            properties:
+                              publisherPlatforms:
+                                type: array
+                                items: { type: string, enum: [facebook, instagram, threads, messenger, audience_network] }
+                              facebookPositions:
+                                type: array
+                                items: { type: string, enum: [feed, right_hand_column, marketplace, video_feeds, story, search, instream_video, facebook_reels, facebook_reels_overlay, profile_feed, notification] }
+                              instagramPositions:
+                                type: array
+                                items: { type: string, enum: [stream, story, explore, explore_home, reels, profile_feed, ig_search, profile_reels] }
+                              messengerPositions:
+                                type: array
+                                items: { type: string, enum: [messenger_home, sponsored_messages, story] }
+                              audienceNetworkPositions:
+                                type: array
+                                items: { type: string, enum: [classic, rewarded_video] }
+                              threadsPositions:
+                                type: array
+                                items: { type: string, enum: [threads_stream] }
+                              whatsappPositions:
+                                type: array
+                                items: { type: string, enum: [status] }
+                              devicePlatforms:
+                                type: array
+                                items: { type: string, enum: [mobile, desktop] }
                 audienceId: { type: string, description: Custom audience ID for targeting }
                 campaignType: { type: string, enum: [display, search], default: display, description: Google only }
                 keywords: { type: array, items: { type: string }, description: Google Search only }

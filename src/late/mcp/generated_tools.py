@@ -2063,6 +2063,7 @@ def register_generated_tools(mcp, _get_client):
         start_date: str | None = None,
         instagram_account_id: str | None = None,
         dynamic_creative: dict[str, Any] | None = None,
+        placement_assets: dict[str, Any] | None = None,
         audience_id: str | None = None,
         campaign_type: str = "display",
         keywords: list[str] | None = None,
@@ -2171,6 +2172,16 @@ def register_generated_tools(mcp, _get_client):
         (`imageUrl`, `headline`, `body`, `linkUrl`, `callToAction`) are ignored. Mutually
         exclusive with the `creatives[]` multi-creative shape. Meta limits: ≤10 images,
         ≤5 bodies / titles / descriptions.
+                placement_assets: Meta only. Placement asset customization: pin a SPECIFIC image to each placement
+        group on a SINGLE ad (e.g. a 9:16 image on Stories/Reels and a 4:5 on Feed). This
+        is the same thing Meta Ads Manager produces with "different creative per placement",
+        mapped to the creative's `asset_feed_spec` + `asset_customization_rules`. It is
+        deterministic pinning, NOT the auto-optimizing pool of `dynamicCreative` (the two are
+        mutually exclusive, and it cannot be combined with `creatives[]` or `adSetId`). The
+        shared copy (headline, body, link, CTA) comes from the top-level single-creative
+        fields (`headline`, `body`, `linkUrl`, `callToAction`) since only the image varies by
+        placement. Each rule's `placements` accepts the same fields as the top-level
+        `placements` object; Meta enforces co-selection rules and returns an actionable error.
                 audience_id: Custom audience ID for targeting
                 campaign_type: Google only
                 keywords: Google Search only
@@ -2289,6 +2300,7 @@ def register_generated_tools(mcp, _get_client):
                 start_date=start_date,
                 instagram_account_id=instagram_account_id,
                 dynamic_creative=dynamic_creative,
+                placement_assets=placement_assets,
                 audience_id=audience_id,
                 campaign_type=campaign_type,
                 keywords=keywords,
