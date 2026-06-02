@@ -2028,6 +2028,7 @@ def register_generated_tools(mcp, _get_client):
         goal: str | None = None,
         budget_amount: float | None = None,
         budget_type: str | None = None,
+        budget_level: str = "adset",
         currency: str | None = None,
         headline: str | None = None,
         long_headline: str | None = None,
@@ -2055,9 +2056,13 @@ def register_generated_tools(mcp, _get_client):
         behaviors: list[dict[str, Any]] | None = None,
         income_tier: str | None = None,
         languages: list[str] | None = None,
+        placements: dict[str, Any] | None = None,
         saved_targeting_id: str | None = None,
         special_ad_categories: list[str] | None = None,
         end_date: str | None = None,
+        start_date: str | None = None,
+        instagram_account_id: str | None = None,
+        dynamic_creative: dict[str, Any] | None = None,
         audience_id: str | None = None,
         campaign_type: str = "display",
         keywords: list[str] | None = None,
@@ -2084,6 +2089,14 @@ def register_generated_tools(mcp, _get_client):
                 goal: Required on legacy + multi-creative shapes. Inherited from the ad set on the attach shape. Available goals vary by platform. Meta-specific: `conversions` requires `promotedObject.pixelId` + `promotedObject.customEventType`; `app_promotion` requires `promotedObject.applicationId` + `promotedObject.objectStoreUrl`; `lead_generation` accepts an optional `promotedObject.pageId` (auto-filled from the connected Page when omitted). TikTok-specific: `conversions` (website-conversion ad group) requires `promotedObject.pixelId` (your TikTok Pixel ID) and accepts an optional `promotedObject.customEventType` (a TikTok `optimization_event` code like `ON_WEB_ORDER`, `INITIATE_ORDER`, `ON_WEB_REGISTER`, `FORM`); to inherit a pixel + event from an existing ad group, pass `adSetId` instead. LinkedIn-specific: `engagement`, `traffic`, `awareness`, and `video_views` are supported for standalone ads (creates a Direct Sponsored Content single image or single video ad). `traffic` requires `linkUrl`; `video_views` requires the `video` field. For `lead_generation` / `conversions` on LinkedIn — or to promote an existing post — use `POST /v1/ads/boost`.
                 budget_amount: Required on legacy + multi-creative shapes. Inherited on attach.
                 budget_type: Required on legacy + multi-creative shapes. Inherited on attach.
+                budget_level: Meta only. Where the budget lives, which selects the Meta budget model:
+          - `adset` (default): ABO (Ad-set Budget Optimization). The budget is set on the
+            ad set. This is the back-compatible behaviour — omit this field to keep it.
+          - `campaign`: CBO (Campaign Budget Optimization / Advantage Campaign Budget). The
+            budget AND `bidStrategy` are set on the CAMPAIGN, and Meta distributes spend
+            across ad sets automatically.
+        Meta requires the budget at exactly one level, never both. Non-Meta platforms ignore
+        this field. Ignored on the attach shape (`adSetId`), which inherits the existing budget.
                 currency
                 headline: Required for Meta, Google, Pinterest, and LinkedIn on legacy + attach shapes (skip for multi-creative — use `creatives[].headline`). Ignored for TikTok and X/Twitter. Max: Meta=255, Google=30, Pinterest=100, LinkedIn=400. On LinkedIn this is the ad's headline (the bold text on the creative); for traffic ads it's the link card title.
                 long_headline: Google Display only — defaults to `headline` if omitted. On LinkedIn, reused as the optional secondary description text on traffic (link) ads; omitted if not provided.
@@ -2128,6 +2141,15 @@ def register_generated_tools(mcp, _get_client):
         `top_10`; rejected on LinkedIn, X, and Pinterest. On Meta, income targeting is incompatible
         with housing/employment/credit `specialAdCategories`.
                 languages: Language codes (e.g. ['en']). Restricts the audience by language.
+                placements: Meta only. Manual ad placements. Omit for automatic placements (Meta's default,
+        recommended for most cases — Meta optimises delivery across all eligible surfaces).
+        When set, restricts delivery to the chosen surfaces, mapped onto the ad set's
+        `targeting.{publisher_platforms, facebook_positions, instagram_positions,
+        messenger_positions, audience_network_positions, threads_positions,
+        whatsapp_positions, device_platforms}`. Enum membership is validated here; Meta
+        additionally enforces co-selection rules (e.g. some positions require their parent
+        publisher platform) and returns an actionable error which we surface. Non-Meta
+        platforms reject this field.
                 saved_targeting_id: ID of a `saved_targeting` audience (created via POST /v1/ads/audiences). When set, its stored
         TargetingSpec is expanded as the base targeting; inline fields on this body merge on top. Lets you
         reuse a named targeting preset without re-sending every field.
@@ -2135,6 +2157,20 @@ def register_generated_tools(mcp, _get_client):
         political/social-issue ads (Meta enforces restricted targeting for these). Note: setting a special
         category disables income/zip targeting on Meta.
                 end_date: Required for lifetime budgets
+                start_date: Meta only. Ad-set start time (ISO 8601, e.g. "2026-06-10T09:00:00Z"), mapped to the
+        ad set's `start_time`. When omitted the ad starts delivering immediately. For lifetime
+        budgets Meta also requires `endDate`. (Same `schedule.startDate` semantics already
+        available on `POST /v1/ads/boost`.)
+                instagram_account_id: Meta only. Override the Instagram account the ad is delivered as — pass an Instagram
+        Business Account ID (e.g. 17841...), mapped to the creative's `instagram_user_id`.
+        When omitted we auto-resolve the IG account linked to the connected Facebook Page
+        (the existing default). Useful when a Page has more than one eligible IG account.
+                dynamic_creative: Meta only. Dynamic Creative: supply a POOL of assets and Meta auto-combines and
+        optimises them into the best-performing variations within a single ad (mapped to the
+        creative's `asset_feed_spec`). When set, the top-level single-creative fields
+        (`imageUrl`, `headline`, `body`, `linkUrl`, `callToAction`) are ignored. Mutually
+        exclusive with the `creatives[]` multi-creative shape. Meta limits: ≤10 images,
+        ≤5 bodies / titles / descriptions.
                 audience_id: Custom audience ID for targeting
                 campaign_type: Google only
                 keywords: Google Search only
@@ -2218,6 +2254,7 @@ def register_generated_tools(mcp, _get_client):
                 goal=goal,
                 budget_amount=budget_amount,
                 budget_type=budget_type,
+                budget_level=budget_level,
                 currency=currency,
                 headline=headline,
                 long_headline=long_headline,
@@ -2245,9 +2282,13 @@ def register_generated_tools(mcp, _get_client):
                 behaviors=behaviors,
                 income_tier=income_tier,
                 languages=languages,
+                placements=placements,
                 saved_targeting_id=saved_targeting_id,
                 special_ad_categories=special_ad_categories,
                 end_date=end_date,
+                start_date=start_date,
+                instagram_account_id=instagram_account_id,
+                dynamic_creative=dynamic_creative,
                 audience_id=audience_id,
                 campaign_type=campaign_type,
                 keywords=keywords,
