@@ -4294,6 +4294,7 @@ def register_generated_tools(mcp, _get_client):
         match_mode: str = "contains",
         buttons: list[dict[str, Any]] | None = None,
         comment_reply: str | None = None,
+        link_tracking: bool = True,
     ) -> str:
         """Create comment-to-DM automation
 
@@ -4308,7 +4309,8 @@ def register_generated_tools(mcp, _get_client):
             match_mode
             dm_message: DM text to send to commenter. Max 640 chars when buttons are set, otherwise ~1000. (required)
             buttons: Optional inline DM buttons (1-3). Phone buttons are Facebook-only. Omit or pass [] for a plain-text DM.
-            comment_reply: Optional public reply to the comment"""
+            comment_reply: Optional public reply to the comment
+            link_tracking: Wrap link buttons in the DM in a tracked redirect so clicks are counted (Link Clicks / CTR). Pass false to send links exactly as written. Defaults to on."""
         client = _get_client()
         try:
             response = client.comment_automations.create_comment_automation(
@@ -4323,6 +4325,7 @@ def register_generated_tools(mcp, _get_client):
                 dm_message=dm_message,
                 buttons=buttons,
                 comment_reply=comment_reply,
+                link_tracking=link_tracking,
             )
             return _format_response(response)
         except Exception as e:
@@ -4366,6 +4369,7 @@ def register_generated_tools(mcp, _get_client):
         dm_message: str | None = None,
         buttons: list[dict[str, Any]] | None = None,
         comment_reply: str | None = None,
+        link_tracking: bool | None = None,
         is_active: bool | None = None,
     ) -> str:
         """Update automation settings
@@ -4378,6 +4382,7 @@ def register_generated_tools(mcp, _get_client):
             dm_message
             buttons: Inline DM buttons (1-3). Pass [] to clear all buttons.
             comment_reply
+            link_tracking: Wrap link buttons in a tracked redirect to count clicks. Pass false to send links untouched.
             is_active"""
         client = _get_client()
         try:
@@ -4389,6 +4394,7 @@ def register_generated_tools(mcp, _get_client):
                 dm_message=dm_message,
                 buttons=buttons,
                 comment_reply=comment_reply,
+                link_tracking=link_tracking,
                 is_active=is_active,
             )
             return _format_response(response)

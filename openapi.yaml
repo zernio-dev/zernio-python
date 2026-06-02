@@ -23305,6 +23305,7 @@ paths:
                           items: { $ref: '#/components/schemas/DmButton' }
                           description: Inline DM buttons (up to 3). Omitted when none are set.
                         commentReply: { type: string }
+                        linkTracking: { type: boolean, description: "Whether link buttons in the DM are wrapped in a tracked redirect to count clicks." }
                         isActive: { type: boolean }
                         stats:
                           type: object
@@ -23313,6 +23314,8 @@ paths:
                             dmsSent: { type: integer }
                             dmsFailed: { type: integer }
                             uniqueContacts: { type: integer }
+                            linkClicks: { type: integer, description: "Total clicks on tracked links (bots/prefetch excluded)." }
+                            uniqueClicks: { type: integer, description: "Distinct people who clicked a tracked link." }
                         createdAt: { type: string, format: date-time }
         '401': { $ref: '#/components/responses/Unauthorized' }
     post:
@@ -23358,6 +23361,7 @@ paths:
                   items: { $ref: '#/components/schemas/DmButton' }
                   description: "Optional inline DM buttons (1-3). Phone buttons are Facebook-only. Omit or pass [] for a plain-text DM."
                 commentReply: { type: string, description: Optional public reply to the comment }
+                linkTracking: { type: boolean, default: true, description: "Wrap link buttons in the DM in a tracked redirect so clicks are counted (Link Clicks / CTR). Pass false to send links exactly as written. Defaults to on." }
       responses:
         '200':
           description: Automation created
@@ -23382,6 +23386,7 @@ paths:
                         items: { $ref: '#/components/schemas/DmButton' }
                         description: Inline DM buttons (up to 3). Omitted when none are set.
                       commentReply: { type: string }
+                      linkTracking: { type: boolean }
                       isActive: { type: boolean }
                       stats: { type: object, properties: { totalTriggered: { type: integer }, totalSent: { type: integer }, totalFailed: { type: integer } } }
                       createdAt: { type: string, format: date-time }
@@ -23426,6 +23431,7 @@ paths:
                         items: { $ref: '#/components/schemas/DmButton' }
                         description: Inline DM buttons (up to 3). Omitted when none are set.
                       commentReply: { type: string }
+                      linkTracking: { type: boolean }
                       isActive: { type: boolean }
                       stats: { type: object, properties: { totalTriggered: { type: integer }, totalSent: { type: integer }, totalFailed: { type: integer } } }
                       createdAt: { type: string, format: date-time }
@@ -23475,6 +23481,7 @@ paths:
                   items: { $ref: '#/components/schemas/DmButton' }
                   description: "Inline DM buttons (1-3). Pass [] to clear all buttons."
                 commentReply: { type: string }
+                linkTracking: { type: boolean, description: "Wrap link buttons in a tracked redirect to count clicks. Pass false to send links untouched." }
                 isActive: { type: boolean }
       responses:
         '200':
