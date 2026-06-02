@@ -23294,6 +23294,7 @@ paths:
                         id: { type: string }
                         name: { type: string }
                         platform: { type: string, enum: [instagram, facebook] }
+                        trigger: { type: string, enum: [comment, story_reply] }
                         accountId: { type: string }
                         platformPostId: { type: string }
                         postTitle: { type: string }
@@ -23348,7 +23349,8 @@ paths:
               properties:
                 profileId: { type: string }
                 accountId: { type: string, description: Instagram or Facebook account ID }
-                platformPostId: { type: string, description: "Platform media/post ID. Omit for an account-wide (any-post) automation." }
+                trigger: { type: string, enum: [comment, story_reply], default: comment, description: "What fires the automation. 'comment' (keyword comment on a post) or 'story_reply' (keyword reply to an Instagram story). For 'story_reply', platformPostId is the story media id (omit for any story)." }
+                platformPostId: { type: string, description: "Platform media/post ID (or story media id when trigger=story_reply). Omit for an account-wide (any-post / any-story) automation." }
                 postId: { type: string, description: "Zernio post ID. Required only when also targeting a specific post via platformPostId." }
                 postTitle: { type: string, description: Post content snippet for display }
                 name: { type: string, description: Automation label }
@@ -23381,6 +23383,7 @@ paths:
                       id: { type: string }
                       name: { type: string }
                       platform: { type: string }
+                      trigger: { type: string, enum: [comment, story_reply] }
                       platformPostId: { type: string }
                       keywords: { type: array, items: { type: string } }
                       matchMode: { type: string, enum: [exact, contains] }
@@ -23424,6 +23427,7 @@ paths:
                       id: { type: string }
                       name: { type: string }
                       platform: { type: string }
+                      trigger: { type: string, enum: [comment, story_reply] }
                       accountId: { type: string }
                       platformPostId: { type: string }
                       postId: { type: string }
@@ -24318,6 +24322,7 @@ paths:
                       id: { type: string }
                       name: { type: string }
                       platform: { type: string }
+                      trigger: { type: string, enum: [comment, story_reply] }
                       status: { type: string }
                       currency:
                         type: string

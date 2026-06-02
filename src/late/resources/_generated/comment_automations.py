@@ -70,6 +70,7 @@ class CommentAutomationsResource:
         name: str,
         dm_message: str,
         *,
+        trigger: str | None = "comment",
         platform_post_id: str | None = None,
         post_id: str | None = None,
         post_title: str | None = None,
@@ -84,6 +85,7 @@ class CommentAutomationsResource:
         payload = self._build_payload(
             profile_id=profile_id,
             account_id=account_id,
+            trigger=trigger,
             platform_post_id=platform_post_id,
             post_id=post_id,
             post_title=post_title,
@@ -170,6 +172,7 @@ class CommentAutomationsResource:
         name: str,
         dm_message: str,
         *,
+        trigger: str | None = "comment",
         platform_post_id: str | None = None,
         post_id: str | None = None,
         post_title: str | None = None,
@@ -184,6 +187,7 @@ class CommentAutomationsResource:
         payload = self._build_payload(
             profile_id=profile_id,
             account_id=account_id,
+            trigger=trigger,
             platform_post_id=platform_post_id,
             post_id=post_id,
             post_title=post_title,
