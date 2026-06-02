@@ -10,6 +10,8 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Any
 
 if TYPE_CHECKING:
+    from datetime import datetime
+
     from ..client.base import BaseClient
 
 
@@ -80,6 +82,194 @@ class DiscordResource:
         """List Discord guild channels"""
         return self._client._get(f"/v1/accounts/{account_id}/discord-channels")
 
+    def send_discord_direct_message(
+        self,
+        account_id: str,
+        user_id: str,
+        *,
+        content: str | None = None,
+        embeds: list[dict[str, Any]] | None = None,
+        attachments: list[dict[str, Any]] | None = None,
+        tts: bool | None = None,
+    ) -> dict[str, Any]:
+        """Send a Discord Direct Message"""
+        payload = self._build_payload(
+            account_id=account_id,
+            user_id=user_id,
+            content=content,
+            embeds=embeds,
+            attachments=attachments,
+            tts=tts,
+        )
+        return self._client._post("/v1/discord/dms", data=payload)
+
+    def list_discord_guild_roles(
+        self, guild_id: str, account_id: str
+    ) -> dict[str, Any]:
+        """List Discord guild roles"""
+        params = self._build_params(
+            account_id=account_id,
+        )
+        return self._client._get(f"/v1/discord/guilds/{guild_id}/roles", params=params)
+
+    def list_discord_guild_members(
+        self,
+        guild_id: str,
+        account_id: str,
+        *,
+        limit: int | None = 100,
+        after: str | None = None,
+    ) -> dict[str, Any]:
+        """List Discord guild members"""
+        params = self._build_params(
+            account_id=account_id,
+            limit=limit,
+            after=after,
+        )
+        return self._client._get(
+            f"/v1/discord/guilds/{guild_id}/members", params=params
+        )
+
+    def add_discord_member_role(
+        self, guild_id: str, user_id: str, role_id: str, account_id: str
+    ) -> dict[str, Any]:
+        """Assign a role to a guild member"""
+        params = self._build_params(
+            account_id=account_id,
+        )
+        return self._client._put(
+            f"/v1/discord/guilds/{guild_id}/members/{user_id}/roles/{role_id}",
+            params=params,
+        )
+
+    def remove_discord_member_role(
+        self, guild_id: str, user_id: str, role_id: str, account_id: str
+    ) -> dict[str, Any]:
+        """Remove a role from a guild member"""
+        params = self._build_params(
+            account_id=account_id,
+        )
+        return self._client._delete(
+            f"/v1/discord/guilds/{guild_id}/members/{user_id}/roles/{role_id}",
+            params=params,
+        )
+
+    def list_discord_pinned_messages(
+        self, channel_id: str, account_id: str
+    ) -> dict[str, Any]:
+        """List pinned messages in a Discord channel"""
+        params = self._build_params(
+            account_id=account_id,
+        )
+        return self._client._get(
+            f"/v1/discord/channels/{channel_id}/pins", params=params
+        )
+
+    def pin_discord_message(
+        self, channel_id: str, message_id: str, account_id: str
+    ) -> dict[str, Any]:
+        """Pin a Discord message"""
+        params = self._build_params(
+            account_id=account_id,
+        )
+        return self._client._put(
+            f"/v1/discord/channels/{channel_id}/pins/{message_id}", params=params
+        )
+
+    def unpin_discord_message(
+        self, channel_id: str, message_id: str, account_id: str
+    ) -> dict[str, Any]:
+        """Unpin a Discord message"""
+        params = self._build_params(
+            account_id=account_id,
+        )
+        return self._client._delete(
+            f"/v1/discord/channels/{channel_id}/pins/{message_id}", params=params
+        )
+
+    def list_discord_scheduled_events(
+        self, guild_id: str, account_id: str, *, with_user_count: bool | None = None
+    ) -> dict[str, Any]:
+        """List Discord scheduled events"""
+        params = self._build_params(
+            account_id=account_id,
+            with_user_count=with_user_count,
+        )
+        return self._client._get(f"/v1/discord/guilds/{guild_id}/events", params=params)
+
+    def create_discord_scheduled_event(
+        self,
+        guild_id: str,
+        account_id: str,
+        name: str,
+        starts_at: datetime | str,
+        entity: Any,
+        *,
+        description: str | None = None,
+        image_data_uri: str | None = None,
+    ) -> dict[str, Any]:
+        """Create a Discord scheduled event"""
+        payload = self._build_payload(
+            account_id=account_id,
+            name=name,
+            description=description,
+            starts_at=starts_at,
+            entity=entity,
+            image_data_uri=image_data_uri,
+        )
+        return self._client._post(f"/v1/discord/guilds/{guild_id}/events", data=payload)
+
+    def get_discord_scheduled_event(
+        self, guild_id: str, event_id: str, account_id: str
+    ) -> dict[str, Any]:
+        """Get a Discord scheduled event"""
+        params = self._build_params(
+            account_id=account_id,
+        )
+        return self._client._get(
+            f"/v1/discord/guilds/{guild_id}/events/{event_id}", params=params
+        )
+
+    def update_discord_scheduled_event(
+        self,
+        guild_id: str,
+        event_id: str,
+        account_id: str,
+        *,
+        name: str | None = None,
+        description: str | None = None,
+        starts_at: datetime | str | None = None,
+        ends_at: datetime | str | None = None,
+        location: str | None = None,
+        status: str | None = None,
+        image_data_uri: str | None = None,
+    ) -> dict[str, Any]:
+        """Update a Discord scheduled event"""
+        payload = self._build_payload(
+            account_id=account_id,
+            name=name,
+            description=description,
+            starts_at=starts_at,
+            ends_at=ends_at,
+            location=location,
+            status=status,
+            image_data_uri=image_data_uri,
+        )
+        return self._client._patch(
+            f"/v1/discord/guilds/{guild_id}/events/{event_id}", data=payload
+        )
+
+    def delete_discord_scheduled_event(
+        self, guild_id: str, event_id: str, account_id: str
+    ) -> dict[str, Any]:
+        """Delete a Discord scheduled event"""
+        params = self._build_params(
+            account_id=account_id,
+        )
+        return self._client._delete(
+            f"/v1/discord/guilds/{guild_id}/events/{event_id}", params=params
+        )
+
     async def aget_discord_settings(self, account_id: str) -> dict[str, Any]:
         """Get Discord account settings (async)"""
         return await self._client._aget(f"/v1/accounts/{account_id}/discord-settings")
@@ -105,3 +295,197 @@ class DiscordResource:
     async def aget_discord_channels(self, account_id: str) -> dict[str, Any]:
         """List Discord guild channels (async)"""
         return await self._client._aget(f"/v1/accounts/{account_id}/discord-channels")
+
+    async def asend_discord_direct_message(
+        self,
+        account_id: str,
+        user_id: str,
+        *,
+        content: str | None = None,
+        embeds: list[dict[str, Any]] | None = None,
+        attachments: list[dict[str, Any]] | None = None,
+        tts: bool | None = None,
+    ) -> dict[str, Any]:
+        """Send a Discord Direct Message (async)"""
+        payload = self._build_payload(
+            account_id=account_id,
+            user_id=user_id,
+            content=content,
+            embeds=embeds,
+            attachments=attachments,
+            tts=tts,
+        )
+        return await self._client._apost("/v1/discord/dms", data=payload)
+
+    async def alist_discord_guild_roles(
+        self, guild_id: str, account_id: str
+    ) -> dict[str, Any]:
+        """List Discord guild roles (async)"""
+        params = self._build_params(
+            account_id=account_id,
+        )
+        return await self._client._aget(
+            f"/v1/discord/guilds/{guild_id}/roles", params=params
+        )
+
+    async def alist_discord_guild_members(
+        self,
+        guild_id: str,
+        account_id: str,
+        *,
+        limit: int | None = 100,
+        after: str | None = None,
+    ) -> dict[str, Any]:
+        """List Discord guild members (async)"""
+        params = self._build_params(
+            account_id=account_id,
+            limit=limit,
+            after=after,
+        )
+        return await self._client._aget(
+            f"/v1/discord/guilds/{guild_id}/members", params=params
+        )
+
+    async def aadd_discord_member_role(
+        self, guild_id: str, user_id: str, role_id: str, account_id: str
+    ) -> dict[str, Any]:
+        """Assign a role to a guild member (async)"""
+        params = self._build_params(
+            account_id=account_id,
+        )
+        return await self._client._aput(
+            f"/v1/discord/guilds/{guild_id}/members/{user_id}/roles/{role_id}",
+            params=params,
+        )
+
+    async def aremove_discord_member_role(
+        self, guild_id: str, user_id: str, role_id: str, account_id: str
+    ) -> dict[str, Any]:
+        """Remove a role from a guild member (async)"""
+        params = self._build_params(
+            account_id=account_id,
+        )
+        return await self._client._adelete(
+            f"/v1/discord/guilds/{guild_id}/members/{user_id}/roles/{role_id}",
+            params=params,
+        )
+
+    async def alist_discord_pinned_messages(
+        self, channel_id: str, account_id: str
+    ) -> dict[str, Any]:
+        """List pinned messages in a Discord channel (async)"""
+        params = self._build_params(
+            account_id=account_id,
+        )
+        return await self._client._aget(
+            f"/v1/discord/channels/{channel_id}/pins", params=params
+        )
+
+    async def apin_discord_message(
+        self, channel_id: str, message_id: str, account_id: str
+    ) -> dict[str, Any]:
+        """Pin a Discord message (async)"""
+        params = self._build_params(
+            account_id=account_id,
+        )
+        return await self._client._aput(
+            f"/v1/discord/channels/{channel_id}/pins/{message_id}", params=params
+        )
+
+    async def aunpin_discord_message(
+        self, channel_id: str, message_id: str, account_id: str
+    ) -> dict[str, Any]:
+        """Unpin a Discord message (async)"""
+        params = self._build_params(
+            account_id=account_id,
+        )
+        return await self._client._adelete(
+            f"/v1/discord/channels/{channel_id}/pins/{message_id}", params=params
+        )
+
+    async def alist_discord_scheduled_events(
+        self, guild_id: str, account_id: str, *, with_user_count: bool | None = None
+    ) -> dict[str, Any]:
+        """List Discord scheduled events (async)"""
+        params = self._build_params(
+            account_id=account_id,
+            with_user_count=with_user_count,
+        )
+        return await self._client._aget(
+            f"/v1/discord/guilds/{guild_id}/events", params=params
+        )
+
+    async def acreate_discord_scheduled_event(
+        self,
+        guild_id: str,
+        account_id: str,
+        name: str,
+        starts_at: datetime | str,
+        entity: Any,
+        *,
+        description: str | None = None,
+        image_data_uri: str | None = None,
+    ) -> dict[str, Any]:
+        """Create a Discord scheduled event (async)"""
+        payload = self._build_payload(
+            account_id=account_id,
+            name=name,
+            description=description,
+            starts_at=starts_at,
+            entity=entity,
+            image_data_uri=image_data_uri,
+        )
+        return await self._client._apost(
+            f"/v1/discord/guilds/{guild_id}/events", data=payload
+        )
+
+    async def aget_discord_scheduled_event(
+        self, guild_id: str, event_id: str, account_id: str
+    ) -> dict[str, Any]:
+        """Get a Discord scheduled event (async)"""
+        params = self._build_params(
+            account_id=account_id,
+        )
+        return await self._client._aget(
+            f"/v1/discord/guilds/{guild_id}/events/{event_id}", params=params
+        )
+
+    async def aupdate_discord_scheduled_event(
+        self,
+        guild_id: str,
+        event_id: str,
+        account_id: str,
+        *,
+        name: str | None = None,
+        description: str | None = None,
+        starts_at: datetime | str | None = None,
+        ends_at: datetime | str | None = None,
+        location: str | None = None,
+        status: str | None = None,
+        image_data_uri: str | None = None,
+    ) -> dict[str, Any]:
+        """Update a Discord scheduled event (async)"""
+        payload = self._build_payload(
+            account_id=account_id,
+            name=name,
+            description=description,
+            starts_at=starts_at,
+            ends_at=ends_at,
+            location=location,
+            status=status,
+            image_data_uri=image_data_uri,
+        )
+        return await self._client._apatch(
+            f"/v1/discord/guilds/{guild_id}/events/{event_id}", data=payload
+        )
+
+    async def adelete_discord_scheduled_event(
+        self, guild_id: str, event_id: str, account_id: str
+    ) -> dict[str, Any]:
+        """Delete a Discord scheduled event (async)"""
+        params = self._build_params(
+            account_id=account_id,
+        )
+        return await self._client._adelete(
+            f"/v1/discord/guilds/{guild_id}/events/{event_id}", params=params
+        )

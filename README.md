@@ -481,9 +481,22 @@ Both `from zernio import ...` and `from late import ...` work identically. The `
 ### Discord
 | Method | Description |
 |--------|-------------|
+| `discord.list_discord_guild_members()` | List Discord guild members |
+| `discord.list_discord_guild_roles()` | List Discord guild roles |
+| `discord.list_discord_pinned_messages()` | List pinned messages in a Discord channel |
+| `discord.list_discord_scheduled_events()` | List Discord scheduled events |
+| `discord.create_discord_scheduled_event()` | Create a Discord scheduled event |
 | `discord.get_discord_channels()` | List Discord guild channels |
+| `discord.get_discord_scheduled_event()` | Get a Discord scheduled event |
 | `discord.get_discord_settings()` | Get Discord account settings |
+| `discord.update_discord_scheduled_event()` | Update a Discord scheduled event |
 | `discord.update_discord_settings()` | Update Discord settings |
+| `discord.delete_discord_scheduled_event()` | Delete a Discord scheduled event |
+| `discord.add_discord_member_role()` | Assign a role to a guild member |
+| `discord.pin_discord_message()` | Pin a Discord message |
+| `discord.remove_discord_member_role()` | Remove a role from a guild member |
+| `discord.send_discord_direct_message()` | Send a Discord Direct Message |
+| `discord.unpin_discord_message()` | Unpin a Discord message |
 
 ### GMB Attributes
 | Method | Description |

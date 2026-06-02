@@ -6204,6 +6204,403 @@ def register_generated_tools(mcp, _get_client):
         except Exception as e:
             return f"Error: {e}"
 
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Send a Discord Direct Message",
+            readOnlyHint=False,
+            destructiveHint=True,
+            openWorldHint=True,
+        )
+    )
+    def discord_send_discord_direct_message(
+        account_id: str,
+        user_id: str,
+        content: str | None = None,
+        embeds: list[dict[str, Any]] | None = None,
+        attachments: list[dict[str, Any]] | None = None,
+        tts: bool | None = None,
+    ) -> str:
+        """Send a Discord Direct Message
+
+        Args:
+            account_id: SocialAccount _id of the connected Discord account the bot speaks as. Caller must own the account (directly or via team membership). (required)
+            user_id: Discord snowflake ID of the recipient (15-21 digits). (required)
+            content: Message text, up to 2,000 characters.
+            embeds: Up to 10 Discord embeds. Same shape as channel-post embeds (title, description, color, fields, etc.). See DiscordPlatformData.embeds for the embed object schema.
+            attachments: Up to 10 media attachments. Each is `{ type: image|video|gif|document, url, filename?, mimeType?, size? }`.
+            tts: Send as text-to-speech message."""
+        client = _get_client()
+        try:
+            response = client.discord.send_discord_direct_message(
+                account_id=account_id,
+                user_id=user_id,
+                content=content,
+                embeds=embeds,
+                attachments=attachments,
+                tts=tts,
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="List Discord guild roles",
+            readOnlyHint=True,
+            destructiveHint=False,
+            openWorldHint=False,
+        )
+    )
+    def discord_list_discord_guild_roles(guild_id: str, account_id: str) -> str:
+        """List Discord guild roles
+
+        Args:
+            guild_id: Discord guild snowflake ID (required)
+            account_id: SocialAccount _id of the Discord account bound to this guild (required)"""
+        client = _get_client()
+        try:
+            response = client.discord.list_discord_guild_roles(
+                guild_id=guild_id, account_id=account_id
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="List Discord guild members",
+            readOnlyHint=True,
+            destructiveHint=False,
+            openWorldHint=False,
+        )
+    )
+    def discord_list_discord_guild_members(
+        guild_id: str, account_id: str, limit: int = 100, after: str | None = None
+    ) -> str:
+        """List Discord guild members
+
+        Args:
+            guild_id: (required)
+            account_id: (required)
+            limit: Page size (1-1000).
+            after: Snowflake of the last member from the previous page."""
+        client = _get_client()
+        try:
+            response = client.discord.list_discord_guild_members(
+                guild_id=guild_id, account_id=account_id, limit=limit, after=after
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Assign a role to a guild member",
+            readOnlyHint=False,
+            destructiveHint=True,
+            openWorldHint=True,
+        )
+    )
+    def discord_add_discord_member_role(
+        guild_id: str, user_id: str, role_id: str, account_id: str
+    ) -> str:
+        """Assign a role to a guild member
+
+        Args:
+            guild_id: (required)
+            user_id: Discord user snowflake to assign the role to. (required)
+            role_id: (required)
+            account_id: (required)"""
+        client = _get_client()
+        try:
+            response = client.discord.add_discord_member_role(
+                guild_id=guild_id,
+                user_id=user_id,
+                role_id=role_id,
+                account_id=account_id,
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Remove a role from a guild member",
+            readOnlyHint=False,
+            destructiveHint=True,
+            openWorldHint=True,
+        )
+    )
+    def discord_remove_discord_member_role(
+        guild_id: str, user_id: str, role_id: str, account_id: str
+    ) -> str:
+        """Remove a role from a guild member
+
+        Args:
+            guild_id: (required)
+            user_id: (required)
+            role_id: (required)
+            account_id: (required)"""
+        client = _get_client()
+        try:
+            response = client.discord.remove_discord_member_role(
+                guild_id=guild_id,
+                user_id=user_id,
+                role_id=role_id,
+                account_id=account_id,
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="List pinned messages in a Discord channel",
+            readOnlyHint=True,
+            destructiveHint=False,
+            openWorldHint=False,
+        )
+    )
+    def discord_list_discord_pinned_messages(channel_id: str, account_id: str) -> str:
+        """List pinned messages in a Discord channel
+
+        Args:
+            channel_id: Discord channel snowflake. (required)
+            account_id: SocialAccount _id of any Discord account in the same guild. (required)"""
+        client = _get_client()
+        try:
+            response = client.discord.list_discord_pinned_messages(
+                channel_id=channel_id, account_id=account_id
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Pin a Discord message",
+            readOnlyHint=False,
+            destructiveHint=True,
+            openWorldHint=True,
+        )
+    )
+    def discord_pin_discord_message(
+        channel_id: str, message_id: str, account_id: str
+    ) -> str:
+        """Pin a Discord message
+
+        Args:
+            channel_id: (required)
+            message_id: (required)
+            account_id: (required)"""
+        client = _get_client()
+        try:
+            response = client.discord.pin_discord_message(
+                channel_id=channel_id, message_id=message_id, account_id=account_id
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Unpin a Discord message",
+            readOnlyHint=False,
+            destructiveHint=True,
+            openWorldHint=True,
+        )
+    )
+    def discord_unpin_discord_message(
+        channel_id: str, message_id: str, account_id: str
+    ) -> str:
+        """Unpin a Discord message
+
+        Args:
+            channel_id: (required)
+            message_id: (required)
+            account_id: (required)"""
+        client = _get_client()
+        try:
+            response = client.discord.unpin_discord_message(
+                channel_id=channel_id, message_id=message_id, account_id=account_id
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="List Discord scheduled events",
+            readOnlyHint=True,
+            destructiveHint=False,
+            openWorldHint=False,
+        )
+    )
+    def discord_list_discord_scheduled_events(
+        guild_id: str, account_id: str, with_user_count: bool | None = None
+    ) -> str:
+        """List Discord scheduled events
+
+        Args:
+            guild_id: (required)
+            account_id: (required)
+            with_user_count: Include user_count on each event."""
+        client = _get_client()
+        try:
+            response = client.discord.list_discord_scheduled_events(
+                guild_id=guild_id,
+                account_id=account_id,
+                with_user_count=with_user_count,
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Create a Discord scheduled event",
+            readOnlyHint=False,
+            destructiveHint=True,
+            openWorldHint=True,
+        )
+    )
+    def discord_create_discord_scheduled_event(
+        guild_id: str,
+        account_id: str,
+        name: str,
+        starts_at: str,
+        entity: dict[str, Any] | None,
+        description: str | None = None,
+        image_data_uri: str | None = None,
+    ) -> str:
+        """Create a Discord scheduled event
+
+        Args:
+            guild_id: (required)
+            account_id: (required)
+            name: (required)
+            description
+            starts_at: ISO 8601 start time. Must be in the future. (required)
+            entity: (required)
+            image_data_uri: Optional cover image as a base64 data URI."""
+        client = _get_client()
+        try:
+            response = client.discord.create_discord_scheduled_event(
+                guild_id=guild_id,
+                account_id=account_id,
+                name=name,
+                description=description,
+                starts_at=starts_at,
+                entity=entity,
+                image_data_uri=image_data_uri,
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Get a Discord scheduled event",
+            readOnlyHint=True,
+            destructiveHint=False,
+            openWorldHint=False,
+        )
+    )
+    def discord_get_discord_scheduled_event(
+        guild_id: str, event_id: str, account_id: str
+    ) -> str:
+        """Get a Discord scheduled event
+
+        Args:
+            guild_id: (required)
+            event_id: (required)
+            account_id: (required)"""
+        client = _get_client()
+        try:
+            response = client.discord.get_discord_scheduled_event(
+                guild_id=guild_id, event_id=event_id, account_id=account_id
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Update a Discord scheduled event",
+            readOnlyHint=False,
+            destructiveHint=True,
+            openWorldHint=True,
+        )
+    )
+    def discord_update_discord_scheduled_event(
+        guild_id: str,
+        event_id: str,
+        account_id: str,
+        name: str | None = None,
+        description: str | None = None,
+        starts_at: str | None = None,
+        ends_at: str | None = None,
+        location: str | None = None,
+        status: str | None = None,
+        image_data_uri: str | None = None,
+    ) -> str:
+        """Update a Discord scheduled event
+
+        Args:
+            guild_id: (required)
+            event_id: (required)
+            account_id: (required)
+            name
+            description
+            starts_at
+            ends_at
+            location: For external events.
+            status: Status transition. Most common: 'cancelled' to cancel an event.
+            image_data_uri"""
+        client = _get_client()
+        try:
+            response = client.discord.update_discord_scheduled_event(
+                guild_id=guild_id,
+                event_id=event_id,
+                account_id=account_id,
+                name=name,
+                description=description,
+                starts_at=starts_at,
+                ends_at=ends_at,
+                location=location,
+                status=status,
+                image_data_uri=image_data_uri,
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Delete a Discord scheduled event",
+            readOnlyHint=False,
+            destructiveHint=True,
+            openWorldHint=True,
+        )
+    )
+    def discord_delete_discord_scheduled_event(
+        guild_id: str, event_id: str, account_id: str
+    ) -> str:
+        """Delete a Discord scheduled event
+
+        Args:
+            guild_id: (required)
+            event_id: (required)
+            account_id: (required)"""
+        client = _get_client()
+        try:
+            response = client.discord.delete_discord_scheduled_event(
+                guild_id=guild_id, event_id=event_id, account_id=account_id
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
     # GMB_SERVICES
 
     @mcp.tool(

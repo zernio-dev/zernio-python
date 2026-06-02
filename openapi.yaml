@@ -3835,6 +3835,39 @@ components:
       description: |
         Discord message settings. Supports plain text (2,000 chars), rich embeds (up to 10), native polls, forum posts, threads, and announcement crossposts. Media attachments support images (JPEG, PNG, GIF, WebP), videos (MP4), and documents (up to 10 files, 25 MB each). Webhook identity (username + avatar) can be customized per-account via PATCH /v1/connect/discord or per-post via webhookUsername/webhookAvatarUrl.
 
+    DiscordScheduledEvent:
+      type: object
+      description: |
+        Discord guild scheduled event. Returned by /v1/discord/guilds/{guildId}/events endpoints.
+        Fields below are the subset Zernio consumes — Discord may return more (e.g. creator,
+        image hash) which we pass through verbatim.
+      properties:
+        id: { type: string, description: Event snowflake ID }
+        guild_id: { type: string }
+        channel_id: { type: string, nullable: true, description: Voice/stage channel ID; null for external events. }
+        creator_id: { type: string, nullable: true }
+        name: { type: string }
+        description: { type: string, nullable: true }
+        scheduled_start_time: { type: string, format: date-time }
+        scheduled_end_time: { type: string, format: date-time, nullable: true, description: Required for external events; optional for voice/stage. }
+        privacy_level: { type: integer, enum: [2], description: Always 2 (GUILD_ONLY) — Discord deprecated PUBLIC events. }
+        status:
+          type: integer
+          enum: [1, 2, 3, 4]
+          description: "1=SCHEDULED, 2=ACTIVE, 3=COMPLETED, 4=CANCELED"
+        entity_type:
+          type: integer
+          enum: [1, 2, 3]
+          description: "1=STAGE_INSTANCE, 2=VOICE, 3=EXTERNAL"
+        entity_id: { type: string, nullable: true }
+        entity_metadata:
+          type: object
+          nullable: true
+          properties:
+            location: { type: string, description: External event location string. }
+        user_count: { type: integer, description: Number of members who RSVP'd. Only present when withUserCount=true on list. }
+        image: { type: string, nullable: true, description: Cover image hash; build URL via cdn.discordapp.com. }
+
     QueueSlot:
       type: object
       properties:
@@ -15954,6 +15987,599 @@ paths:
         '401': { $ref: '#/components/responses/Unauthorized' }
         '404': { description: Account not found }
 
+  /v1/discord/dms:
+    post:
+      operationId: sendDiscordDirectMessage
+      tags: [Discord]
+      summary: Send a Discord Direct Message
+      description: |
+        Send a 1:1 Direct Message from the bot to a Discord user (by snowflake ID).
+        Supports the same payload shape as channel posts — content, embeds, media
+        attachments, and TTS.
+
+        Constraints (Discord platform limits):
+          - The bot can only DM users it shares at least one guild with.
+          - If the recipient has DMs disabled for non-friends, Discord returns 403
+            (surfaces as a 502 platform error).
+          - `content` capped at 2,000 chars.
+          - At least one of `content`, `embeds`, or `attachments` is required.
+          - The recipient must be identified by Discord snowflake ID (not username).
+
+        This is a dedicated endpoint rather than a `POST /v1/posts` variant because
+        DMs are 1:1 operational messages (onboarding, billing reminders, support
+        pings) with a different lifecycle than scheduled channel posts. DMs are
+        not persisted to `Post` / `ExternalPost` and are always sent immediately.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [accountId, userId]
+              properties:
+                accountId:
+                  type: string
+                  description: SocialAccount _id of the connected Discord account the bot speaks as. Caller must own the account (directly or via team membership).
+                  example: "65a1b2c3d4e5f60718293a4b"
+                userId:
+                  type: string
+                  description: Discord snowflake ID of the recipient (15-21 digits).
+                  example: "1234567890123456789"
+                content:
+                  type: string
+                  description: Message text, up to 2,000 characters.
+                  maxLength: 2000
+                embeds:
+                  type: array
+                  description: Up to 10 Discord embeds. Same shape as channel-post embeds (title, description, color, fields, etc.). See DiscordPlatformData.embeds for the embed object schema.
+                  maxItems: 10
+                  items:
+                    type: object
+                attachments:
+                  type: array
+                  description: "Up to 10 media attachments. Each is `{ type: image|video|gif|document, url, filename?, mimeType?, size? }`."
+                  maxItems: 10
+                  items:
+                    type: object
+                    required: [type, url]
+                    properties:
+                      type:
+                        type: string
+                        enum: [image, video, gif, document]
+                      url:
+                        type: string
+                        format: uri
+                      filename: { type: string }
+                      mimeType: { type: string }
+                      size: { type: integer }
+                tts:
+                  type: boolean
+                  description: Send as text-to-speech message.
+            example:
+              accountId: "65a1b2c3d4e5f60718293a4b"
+              userId: "1234567890123456789"
+              content: "Welcome to Acme! Reply STOP to opt out."
+      responses:
+        '200':
+          description: DM sent successfully.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  messageId: { type: string, description: Discord message snowflake ID }
+                  channelId: { type: string, description: DM channel snowflake (Discord auto-creates one per recipient pair) }
+                  url: { type: string, description: "Direct link to the message — uses Discord's @me path for DMs" }
+                  timestamp: { type: string, format: date-time }
+                  recipient:
+                    type: object
+                    properties:
+                      userId: { type: string }
+                      platform: { type: string, example: discord }
+                  account:
+                    type: object
+                    properties:
+                      id: { type: string }
+                      username: { type: string }
+                      displayName: { type: string }
+              example:
+                messageId: "1357924680135792468"
+                channelId: "1357924680135792467"
+                url: "https://discord.com/channels/@me/1357924680135792467/1357924680135792468"
+                timestamp: "2026-06-02T12:34:56.789Z"
+                recipient: { userId: "1234567890123456789", platform: "discord" }
+                account: { id: "65a1b2c3d4e5f60718293a4b", username: "announcements", displayName: "My Server - #announcements" }
+        '400': { description: "Validation error (missing required fields, content > 2000 chars, malformed snowflake, or all of content/embeds/attachments missing)." }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404': { description: Discord account not found or not accessible to this user. }
+        '502': { description: "Discord rejected the message (most commonly: bot doesn't share a guild with the recipient, OR the recipient has DMs disabled). Error body contains Discord's response." }
+
+  /v1/discord/guilds/{guildId}/roles:
+    get:
+      operationId: listDiscordGuildRoles
+      tags: [Discord]
+      summary: List Discord guild roles
+      description: |
+        Returns all roles in a Discord guild. Useful for building role-mention
+        pickers, role-permission UIs, or finding the role ID before calling
+        the role-assign endpoint.
+
+        Roles are returned unordered — sort client-side by `position` if you
+        need Discord's UI ordering.
+
+        Caller must pass `accountId` of a Discord SocialAccount bound to this
+        guild (route verifies team access + guild match).
+      parameters:
+        - { name: guildId, in: path, required: true, schema: { type: string }, description: Discord guild snowflake ID }
+        - { name: accountId, in: query, required: true, schema: { type: string }, description: SocialAccount _id of the Discord account bound to this guild }
+      responses:
+        '200':
+          description: List of guild roles.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id: { type: string, description: Role snowflake ID }
+                        name: { type: string }
+                        color: { type: integer, description: Decimal color (0 = no color). Convert to hex via .toString(16). }
+                        position: { type: integer, description: Position in role hierarchy (higher = more authority) }
+                        permissions: { type: string, description: Permissions bitfield as a stringified integer }
+                        managed: { type: boolean, description: True for integration-managed roles (bot roles) }
+                        mentionable: { type: boolean }
+                        hoist: { type: boolean, description: True if role is displayed separately in member list }
+        '400': { description: Invalid accountId or guildId format. }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404': { description: Discord account not found, not accessible, or not bound to this guild. }
+        '502': { description: Discord rejected the request (bot lacks View Channels permission in the guild). }
+
+  /v1/discord/guilds/{guildId}/members:
+    get:
+      operationId: listDiscordGuildMembers
+      tags: [Discord]
+      summary: List Discord guild members
+      description: |
+        Cursor-paginated list of guild members. Returns Discord's raw member
+        objects so callers can build community-ops automation (e.g. "add role
+        to all members joined in the last 7 days") on the actual platform shape.
+
+        **Important:** this endpoint requires the privileged "Server Members
+        Intent" enabled on the Discord app (Developer Portal → Bot tab → toggle
+        "Server Members Intent" ON, then Save). Without it, Discord returns an
+        empty array with no error. Verify the intent is enabled before relying
+        on this endpoint.
+
+        Pagination: pass `after` = the last `user.id` from the previous page.
+        Omit on the first call. Response includes a `nextCursor` and `hasMore`
+        flag so callers don't need to know Discord's pagination shape.
+      parameters:
+        - { name: guildId, in: path, required: true, schema: { type: string } }
+        - { name: accountId, in: query, required: true, schema: { type: string } }
+        - { name: limit, in: query, required: false, schema: { type: integer, minimum: 1, maximum: 1000, default: 100 }, description: Page size (1-1000). }
+        - { name: after, in: query, required: false, schema: { type: string }, description: Snowflake of the last member from the previous page. }
+      responses:
+        '200':
+          description: List of guild members.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        user:
+                          type: object
+                          properties:
+                            id: { type: string, description: User snowflake }
+                            username: { type: string }
+                            discriminator: { type: string }
+                            avatar: { type: string, nullable: true }
+                            global_name: { type: string, nullable: true, description: User's display name (post-2023 Discord rebrand) }
+                        nick: { type: string, nullable: true, description: Guild-specific nickname }
+                        roles: { type: array, items: { type: string }, description: Snowflake IDs of roles assigned to this member }
+                        joined_at: { type: string, format: date-time }
+                        premium_since: { type: string, format: date-time, nullable: true, description: When the user started boosting the server }
+                  pagination:
+                    type: object
+                    properties:
+                      nextCursor: { type: string, nullable: true, description: Pass as `after` on the next call. Null when there are no more pages. }
+                      hasMore: { type: boolean }
+        '400': { description: Invalid query params. }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404': { description: Discord account not found or not in this guild. }
+
+  /v1/discord/guilds/{guildId}/members/{userId}/roles/{roleId}:
+    put:
+      operationId: addDiscordMemberRole
+      tags: [Discord]
+      summary: Assign a role to a guild member
+      description: |
+        Assign one role to one member. Idempotent on Discord's side — re-running
+        on a member who already has the role is a 204 no-op.
+
+        Path shape mirrors Discord's own API (`PUT /guilds/{guild}/members/{user}/roles/{role}`)
+        for zero-translation mental mapping.
+
+        Bot needs MANAGE_ROLES permission in the guild AND its highest role
+        must be above the target role (Discord hierarchy rule). The
+        `@everyone` role (where roleId == guildId) cannot be assigned.
+      parameters:
+        - { name: guildId, in: path, required: true, schema: { type: string } }
+        - { name: userId, in: path, required: true, schema: { type: string }, description: Discord user snowflake to assign the role to. }
+        - { name: roleId, in: path, required: true, schema: { type: string } }
+        - { name: accountId, in: query, required: true, schema: { type: string } }
+      responses:
+        '200':
+          description: Role assigned (or already present — idempotent).
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success: { type: boolean }
+                  operation: { type: string, enum: [role_assigned] }
+                  guildId: { type: string }
+                  userId: { type: string }
+                  roleId: { type: string }
+        '400': { description: "Validation error (malformed snowflake) or @everyone manipulation attempt." }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404': { description: Discord account not found or not in this guild. }
+        '502': { description: "Discord rejected the request: bot lacks MANAGE_ROLES, or target role is above the bot's highest role." }
+
+    delete:
+      operationId: removeDiscordMemberRole
+      tags: [Discord]
+      summary: Remove a role from a guild member
+      description: |
+        Remove one role from one member. Idempotent — removing a role the
+        member doesn't have returns 204 no-op.
+
+        Same permission + hierarchy constraints as the PUT counterpart.
+      parameters:
+        - { name: guildId, in: path, required: true, schema: { type: string } }
+        - { name: userId, in: path, required: true, schema: { type: string } }
+        - { name: roleId, in: path, required: true, schema: { type: string } }
+        - { name: accountId, in: query, required: true, schema: { type: string } }
+      responses:
+        '200':
+          description: Role removed (or was already absent — idempotent).
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success: { type: boolean }
+                  operation: { type: string, enum: [role_removed] }
+                  guildId: { type: string }
+                  userId: { type: string }
+                  roleId: { type: string }
+        '400': { description: Validation error. }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404': { description: Discord account not found or not in this guild. }
+        '502': { description: Discord rejected the request (permission or hierarchy issue). }
+
+  /v1/discord/channels/{channelId}/pins:
+    get:
+      operationId: listDiscordPinnedMessages
+      tags: [Discord]
+      summary: List pinned messages in a Discord channel
+      description: |
+        Returns the channel's pinned messages, sorted most-recently-pinned
+        first. Discord caps a channel at 50 pinned messages and returns the
+        full list unpaginated.
+
+        Bot needs READ_MESSAGE_HISTORY in the channel (granted by default
+        BOT_PERMISSIONS).
+      parameters:
+        - { name: channelId, in: path, required: true, schema: { type: string }, description: Discord channel snowflake. }
+        - { name: accountId, in: query, required: true, schema: { type: string }, description: SocialAccount _id of any Discord account in the same guild. }
+      responses:
+        '200':
+          description: Pinned messages.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      type: object
+                      description: Raw Discord Message object — see DiscordPlatformData for embed/attachment shapes.
+                      properties:
+                        id: { type: string }
+                        channel_id: { type: string }
+                        content: { type: string }
+                        timestamp: { type: string, format: date-time }
+                        author: { type: object }
+                        attachments: { type: array, items: { type: object } }
+                        embeds: { type: array, items: { type: object } }
+        '400': { description: Invalid channelId or accountId format. }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404': { description: Discord account not found or not accessible. }
+        '502': { description: Bot lacks access to the channel. }
+
+  /v1/discord/channels/{channelId}/pins/{messageId}:
+    put:
+      operationId: pinDiscordMessage
+      tags: [Discord]
+      summary: Pin a Discord message
+      description: |
+        Pin a specific message in a channel. Path shape mirrors Discord's own
+        API (`PUT /channels/{cid}/pins/{mid}`).
+
+        Idempotent — re-pinning an already-pinned message is a 204 no-op.
+
+        Constraints:
+          - Bot needs MANAGE_MESSAGES in the channel.
+          - 50-pin cap per channel — hitting it returns 400 (Discord-side).
+            Caller should unpin one first.
+      parameters:
+        - { name: channelId, in: path, required: true, schema: { type: string } }
+        - { name: messageId, in: path, required: true, schema: { type: string } }
+        - { name: accountId, in: query, required: true, schema: { type: string } }
+      responses:
+        '200':
+          description: Message pinned (or was already pinned — idempotent).
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success: { type: boolean }
+                  operation: { type: string, enum: [message_pinned] }
+                  channelId: { type: string }
+                  messageId: { type: string }
+        '400': { description: Validation error or pin cap (50) reached. }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404': { description: Discord account not found. }
+        '502': { description: Bot lacks MANAGE_MESSAGES in the channel. }
+
+    delete:
+      operationId: unpinDiscordMessage
+      tags: [Discord]
+      summary: Unpin a Discord message
+      description: |
+        Unpin a message. Same MANAGE_MESSAGES permission requirement as pin.
+        Idempotent — unpinning a non-pinned message is a 204 no-op.
+      parameters:
+        - { name: channelId, in: path, required: true, schema: { type: string } }
+        - { name: messageId, in: path, required: true, schema: { type: string } }
+        - { name: accountId, in: query, required: true, schema: { type: string } }
+      responses:
+        '200':
+          description: Message unpinned (or was not pinned — idempotent).
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success: { type: boolean }
+                  operation: { type: string, enum: [message_unpinned] }
+                  channelId: { type: string }
+                  messageId: { type: string }
+        '400': { description: Validation error. }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404': { description: Discord account not found. }
+        '502': { description: Bot lacks MANAGE_MESSAGES in the channel. }
+
+  /v1/discord/guilds/{guildId}/events:
+    get:
+      operationId: listDiscordScheduledEvents
+      tags: [Discord]
+      summary: List Discord scheduled events
+      description: |
+        Return all scheduled events in the guild. Events are distinct from
+        messages — they appear in the server's Events panel and Discord
+        auto-notifies interested members ahead of start time.
+
+        Pass `withUserCount=true` to include `user_count` (number of members
+        who RSVP'd) on each event. Useful for surfacing engagement.
+      parameters:
+        - { name: guildId, in: path, required: true, schema: { type: string } }
+        - { name: accountId, in: query, required: true, schema: { type: string } }
+        - { name: withUserCount, in: query, required: false, schema: { type: boolean }, description: Include user_count on each event. }
+      responses:
+        '200':
+          description: List of scheduled events.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/DiscordScheduledEvent'
+        '400': { description: Invalid params. }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404': { description: Discord account not found or not in this guild. }
+        '502': { description: Bot lacks access to the guild's events. }
+
+    post:
+      operationId: createDiscordScheduledEvent
+      tags: [Discord]
+      summary: Create a Discord scheduled event
+      description: |
+        Create a guild scheduled event. Three event types, selected via the
+        discriminator on `entity.type`:
+
+          - `external` — off-platform (Zoom, in-person, livestream). Requires
+            both `location` and `endsAt`. Most common type for scheduler
+            integrations.
+          - `voice` — hosted in a Discord voice channel. Requires `channelId`.
+          - `stage` — hosted in a Discord stage channel. Requires `channelId`.
+
+        Bot needs MANAGE_EVENTS in the guild. Existing installs (pre-events
+        PR) need a re-invite OR a server admin manually granting the
+        permission — see route header for details.
+      parameters:
+        - { name: guildId, in: path, required: true, schema: { type: string } }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [accountId, name, startsAt, entity]
+              properties:
+                accountId: { type: string }
+                name: { type: string, minLength: 1, maxLength: 100 }
+                description: { type: string, maxLength: 1000 }
+                startsAt: { type: string, format: date-time, description: ISO 8601 start time. Must be in the future. }
+                entity:
+                  oneOf:
+                    - type: object
+                      required: [type, location, endsAt]
+                      properties:
+                        type: { type: string, enum: [external] }
+                        location: { type: string, minLength: 1, maxLength: 100, description: "Where the event takes place (e.g. \"Zoom link\", \"123 Main St\")" }
+                        endsAt: { type: string, format: date-time }
+                    - type: object
+                      required: [type, channelId]
+                      properties:
+                        type: { type: string, enum: [voice] }
+                        channelId: { type: string, description: Voice channel snowflake. }
+                        endsAt: { type: string, format: date-time }
+                    - type: object
+                      required: [type, channelId]
+                      properties:
+                        type: { type: string, enum: [stage] }
+                        channelId: { type: string, description: Stage channel snowflake. }
+                        endsAt: { type: string, format: date-time }
+                imageDataUri:
+                  type: string
+                  pattern: "^data:image/(png|jpeg|gif);base64,"
+                  description: Optional cover image as a base64 data URI.
+            examples:
+              external:
+                value:
+                  accountId: "65a1b2c3d4e5f60718293a4b"
+                  name: "Weekly AMA"
+                  description: "Bring your questions about the roadmap."
+                  startsAt: "2026-06-15T18:00:00Z"
+                  entity: { type: external, location: "https://zoom.us/j/123", endsAt: "2026-06-15T19:00:00Z" }
+              voice:
+                value:
+                  accountId: "65a1b2c3d4e5f60718293a4b"
+                  name: "Game Night"
+                  startsAt: "2026-06-20T20:00:00Z"
+                  entity: { type: voice, channelId: "1234567890123456789" }
+      responses:
+        '200':
+          description: Event created.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data: { $ref: '#/components/schemas/DiscordScheduledEvent' }
+        '400': { description: "Validation error (missing required fields for the chosen entity type, malformed snowflake, past startsAt, etc.)." }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404': { description: Discord account not found. }
+        '502': { description: Bot lacks MANAGE_EVENTS in the guild. }
+
+  /v1/discord/guilds/{guildId}/events/{eventId}:
+    get:
+      operationId: getDiscordScheduledEvent
+      tags: [Discord]
+      summary: Get a Discord scheduled event
+      parameters:
+        - { name: guildId, in: path, required: true, schema: { type: string } }
+        - { name: eventId, in: path, required: true, schema: { type: string } }
+        - { name: accountId, in: query, required: true, schema: { type: string } }
+      responses:
+        '200':
+          description: Event.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data: { $ref: '#/components/schemas/DiscordScheduledEvent' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404': { description: Event or Discord account not found. }
+
+    patch:
+      operationId: updateDiscordScheduledEvent
+      tags: [Discord]
+      summary: Update a Discord scheduled event
+      description: |
+        Patch any subset of fields. Passing `status: 'cancelled'` is how you
+        cancel an event — Discord doesn't have a dedicated cancel endpoint,
+        it's a status transition.
+
+        Most status transitions Discord enforces (you can't go SCHEDULED →
+        COMPLETED directly). The common consumer case is SCHEDULED → CANCELED.
+      parameters:
+        - { name: guildId, in: path, required: true, schema: { type: string } }
+        - { name: eventId, in: path, required: true, schema: { type: string } }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [accountId]
+              properties:
+                accountId: { type: string }
+                name: { type: string, minLength: 1, maxLength: 100 }
+                description: { type: string, maxLength: 1000 }
+                startsAt: { type: string, format: date-time }
+                endsAt: { type: string, format: date-time }
+                location: { type: string, minLength: 1, maxLength: 100, description: For external events. }
+                status: { type: string, enum: [scheduled, active, completed, cancelled], description: "Status transition. Most common: 'cancelled' to cancel an event." }
+                imageDataUri: { type: string, pattern: "^data:image/(png|jpeg|gif);base64," }
+            example:
+              accountId: "65a1b2c3d4e5f60718293a4b"
+              status: "cancelled"
+      responses:
+        '200':
+          description: Event updated.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data: { $ref: '#/components/schemas/DiscordScheduledEvent' }
+        '400': { description: "Validation error, OR no updatable fields beyond accountId provided." }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404': { description: Event or Discord account not found. }
+        '502': { description: Discord rejected the update (invalid status transition, bot permissions, etc.). }
+
+    delete:
+      operationId: deleteDiscordScheduledEvent
+      tags: [Discord]
+      summary: Delete a Discord scheduled event
+      description: |
+        Hard-delete an event. Use PATCH with `status: 'cancelled'` instead
+        if you want the event preserved in the guild's history.
+      parameters:
+        - { name: guildId, in: path, required: true, schema: { type: string } }
+        - { name: eventId, in: path, required: true, schema: { type: string } }
+        - { name: accountId, in: query, required: true, schema: { type: string } }
+      responses:
+        '200':
+          description: Event deleted.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success: { type: boolean }
+                  deleted: { type: string, description: The deleted event's snowflake. }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404': { description: Event or Discord account not found. }
+        '502': { description: Bot lacks MANAGE_EVENTS in the guild. }
+
   /v1/queue/slots:
     get:
       operationId: listQueueSlots
@@ -20397,7 +21023,7 @@ paths:
                         properties:
                           name: { type: string, example: "sandbox_start" }
                           language: { type: string, example: "en" }
-                      isSandbox: { type: boolean, enum: [true] }
+                      isSandbox: { type: boolean }
         '401': { $ref: '#/components/responses/Unauthorized' }
 
   /v1/whatsapp/phone-numbers/purchase:
@@ -20871,7 +21497,7 @@ paths:
               schema:
                 type: object
                 properties:
-                  success: { type: boolean, enum: [true] }
+                  success: { type: boolean }
         '400': { description: Invalid or unknown session id }
         '401': { $ref: '#/components/responses/Unauthorized' }
         '403': { description: Inbox addon required }
@@ -27077,7 +27703,7 @@ paths:
                     required: [key]
                     properties:
                       key: { type: string, minLength: 1 }
-                      radius: { type: number, exclusiveMinimum: 0 }
+                      radius: { type: number, minimum: 0, exclusiveMinimum: true }
                       distance_unit: { type: string, enum: [mile, kilometer] }
                 regions:
                   type: array
@@ -27123,7 +27749,7 @@ paths:
                     properties:
                       latitude: { type: number, minimum: -90, maximum: 90 }
                       longitude: { type: number, minimum: -180, maximum: 180 }
-                      radius: { type: number, exclusiveMinimum: 0 }
+                      radius: { type: number, minimum: 0, exclusiveMinimum: true }
                       distanceUnit: { type: string, enum: [mile, kilometer] }
                       name: { type: string }
                       address: { type: string }
