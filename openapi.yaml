@@ -23317,6 +23317,8 @@ paths:
                             uniqueContacts: { type: integer }
                             linkClicks: { type: integer, description: "Total clicks on tracked links (bots/prefetch excluded)." }
                             uniqueClicks: { type: integer, description: "Distinct people who clicked a tracked link." }
+                            delivered: { type: integer, description: "DMs confirmed delivered (Messenger; IG emits no delivery receipt)." }
+                            read: { type: integer, description: "DMs confirmed read (IG messaging_seen / Messenger message_reads)." }
                         createdAt: { type: string, format: date-time }
         '401': { $ref: '#/components/responses/Unauthorized' }
     post:
