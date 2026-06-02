@@ -109,6 +109,7 @@ class WorkflowsResource:
         nodes: list[Any] | None = None,
         edges: list[Any] | None = None,
         entry_node_id: str | None = None,
+        account_id: str | None = None,
     ) -> dict[str, Any]:
         """Update workflow"""
         payload = self._build_payload(
@@ -117,6 +118,7 @@ class WorkflowsResource:
             nodes=nodes,
             edges=edges,
             entry_node_id=entry_node_id,
+            account_id=account_id,
         )
         return self._client._patch(f"/v1/workflows/{workflow_id}", data=payload)
 
@@ -166,6 +168,34 @@ class WorkflowsResource:
         )
         return self._client._post(
             f"/v1/workflows/{workflow_id}/executions", data=payload
+        )
+
+    def list_workflow_execution_events(
+        self, workflow_id: str, execution_id: str
+    ) -> dict[str, Any]:
+        """Get an execution's timeline"""
+        return self._client._get(
+            f"/v1/workflows/{workflow_id}/executions/{execution_id}/events"
+        )
+
+    def duplicate_workflow(self, workflow_id: str) -> dict[str, Any]:
+        """Duplicate a workflow"""
+        return self._client._post(f"/v1/workflows/{workflow_id}/duplicate")
+
+    def list_workflow_versions(self, workflow_id: str) -> dict[str, Any]:
+        """List a workflow's version history"""
+        return self._client._get(f"/v1/workflows/{workflow_id}/versions")
+
+    def get_workflow_version(self, workflow_id: str, version: int) -> dict[str, Any]:
+        """Get a specific workflow version"""
+        return self._client._get(f"/v1/workflows/{workflow_id}/versions/{version}")
+
+    def restore_workflow_version(
+        self, workflow_id: str, version: int
+    ) -> dict[str, Any]:
+        """Restore a previous workflow version"""
+        return self._client._post(
+            f"/v1/workflows/{workflow_id}/versions/{version}/restore"
         )
 
     async def alist_workflows(
@@ -223,6 +253,7 @@ class WorkflowsResource:
         nodes: list[Any] | None = None,
         edges: list[Any] | None = None,
         entry_node_id: str | None = None,
+        account_id: str | None = None,
     ) -> dict[str, Any]:
         """Update workflow (async)"""
         payload = self._build_payload(
@@ -231,6 +262,7 @@ class WorkflowsResource:
             nodes=nodes,
             edges=edges,
             entry_node_id=entry_node_id,
+            account_id=account_id,
         )
         return await self._client._apatch(f"/v1/workflows/{workflow_id}", data=payload)
 
@@ -280,4 +312,36 @@ class WorkflowsResource:
         )
         return await self._client._apost(
             f"/v1/workflows/{workflow_id}/executions", data=payload
+        )
+
+    async def alist_workflow_execution_events(
+        self, workflow_id: str, execution_id: str
+    ) -> dict[str, Any]:
+        """Get an execution's timeline (async)"""
+        return await self._client._aget(
+            f"/v1/workflows/{workflow_id}/executions/{execution_id}/events"
+        )
+
+    async def aduplicate_workflow(self, workflow_id: str) -> dict[str, Any]:
+        """Duplicate a workflow (async)"""
+        return await self._client._apost(f"/v1/workflows/{workflow_id}/duplicate")
+
+    async def alist_workflow_versions(self, workflow_id: str) -> dict[str, Any]:
+        """List a workflow's version history (async)"""
+        return await self._client._aget(f"/v1/workflows/{workflow_id}/versions")
+
+    async def aget_workflow_version(
+        self, workflow_id: str, version: int
+    ) -> dict[str, Any]:
+        """Get a specific workflow version (async)"""
+        return await self._client._aget(
+            f"/v1/workflows/{workflow_id}/versions/{version}"
+        )
+
+    async def arestore_workflow_version(
+        self, workflow_id: str, version: int
+    ) -> dict[str, Any]:
+        """Restore a previous workflow version (async)"""
+        return await self._client._apost(
+            f"/v1/workflows/{workflow_id}/versions/{version}/restore"
         )

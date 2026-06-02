@@ -10602,6 +10602,7 @@ def register_generated_tools(mcp, _get_client):
         nodes: list[dict[str, Any]] | None = None,
         edges: list[dict[str, Any]] | None = None,
         entry_node_id: str | None = None,
+        account_id: str | None = None,
     ) -> str:
         """Update workflow
 
@@ -10611,7 +10612,8 @@ def register_generated_tools(mcp, _get_client):
             description
             nodes
             edges
-            entry_node_id"""
+            entry_node_id
+            account_id: Reassign the workflow to a different `SocialAccount`. `platform` and `profileId` are derived server-side from the new account (the client never sends them directly). The account must belong to the caller's workspace and be on a workflow-supported platform (whatsapp, instagram, facebook, telegram, twitter, bluesky, reddit). Changing this triggers a graph revalidation against the new platform."""
         client = _get_client()
         try:
             response = client.workflows.update_workflow(
@@ -10621,6 +10623,7 @@ def register_generated_tools(mcp, _get_client):
                 nodes=nodes,
                 edges=edges,
                 entry_node_id=entry_node_id,
+                account_id=account_id,
             )
             return _format_response(response)
         except Exception as e:
@@ -10741,6 +10744,117 @@ def register_generated_tools(mcp, _get_client):
                 to=to,
                 conversation_id=conversation_id,
                 text=text,
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Get an execution's timeline",
+            readOnlyHint=True,
+            destructiveHint=False,
+            openWorldHint=False,
+        )
+    )
+    def workflows_list_workflow_execution_events(
+        workflow_id: str, execution_id: str
+    ) -> str:
+        """Get an execution's timeline
+
+        Args:
+            workflow_id: (required)
+            execution_id: (required)"""
+        client = _get_client()
+        try:
+            response = client.workflows.list_workflow_execution_events(
+                workflow_id=workflow_id, execution_id=execution_id
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Duplicate a workflow",
+            readOnlyHint=False,
+            destructiveHint=True,
+            openWorldHint=True,
+        )
+    )
+    def workflows_duplicate_workflow(workflow_id: str) -> str:
+        """Duplicate a workflow
+
+        Args:
+            workflow_id: (required)"""
+        client = _get_client()
+        try:
+            response = client.workflows.duplicate_workflow(workflow_id=workflow_id)
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="List a workflow's version history",
+            readOnlyHint=True,
+            destructiveHint=False,
+            openWorldHint=False,
+        )
+    )
+    def workflows_list_workflow_versions(workflow_id: str) -> str:
+        """List a workflow's version history
+
+        Args:
+            workflow_id: (required)"""
+        client = _get_client()
+        try:
+            response = client.workflows.list_workflow_versions(workflow_id=workflow_id)
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Get a specific workflow version",
+            readOnlyHint=True,
+            destructiveHint=False,
+            openWorldHint=False,
+        )
+    )
+    def workflows_get_workflow_version(workflow_id: str, version: int) -> str:
+        """Get a specific workflow version
+
+        Args:
+            workflow_id: (required)
+            version: (required)"""
+        client = _get_client()
+        try:
+            response = client.workflows.get_workflow_version(
+                workflow_id=workflow_id, version=version
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Restore a previous workflow version",
+            readOnlyHint=False,
+            destructiveHint=True,
+            openWorldHint=True,
+        )
+    )
+    def workflows_restore_workflow_version(workflow_id: str, version: int) -> str:
+        """Restore a previous workflow version
+
+        Args:
+            workflow_id: (required)
+            version: (required)"""
+        client = _get_client()
+        try:
+            response = client.workflows.restore_workflow_version(
+                workflow_id=workflow_id, version=version
             )
             return _format_response(response)
         except Exception as e:

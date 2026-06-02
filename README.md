@@ -693,14 +693,19 @@ Both `from zernio import ...` and `from late import ...` work identically. The `
 ### Workflows
 | Method | Description |
 |--------|-------------|
+| `workflows.list_workflow_execution_events()` | Get an execution's timeline |
 | `workflows.list_workflow_executions()` | List workflow runs |
+| `workflows.list_workflow_versions()` | List a workflow's version history |
 | `workflows.list_workflows()` | List workflows |
 | `workflows.create_workflow()` | Create workflow |
 | `workflows.get_workflow()` | Get workflow with graph |
+| `workflows.get_workflow_version()` | Get a specific workflow version |
 | `workflows.update_workflow()` | Update workflow |
 | `workflows.delete_workflow()` | Delete workflow |
 | `workflows.activate_workflow()` | Activate workflow |
+| `workflows.duplicate_workflow()` | Duplicate a workflow |
 | `workflows.pause_workflow()` | Pause workflow |
+| `workflows.restore_workflow_version()` | Restore a previous workflow version |
 | `workflows.trigger_workflow()` | Manually start a workflow run |
 
 ### Invites

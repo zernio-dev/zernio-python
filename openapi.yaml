@@ -513,25 +513,108 @@ components:
         id: { type: string, description: Stable node id referenced by edges }
         type:
           type: string
-          enum: [trigger, send_message, wait_for_reply, condition, set_variable, delay, webhook, handoff, end]
+          description: >
+            Node kind. The 16 supported types break into four groups:
+              messaging (send_message),
+              control flow (trigger, condition, delay, wait_for_reply, a_b_split, end),
+              data ops (set_variable, set_field, add_tag, remove_tag, enroll_sequence),
+              integrations (webhook, ai, handoff, start_call).
+          enum:
+            - trigger
+            - send_message
+            - wait_for_reply
+            - condition
+            - set_variable
+            - delay
+            - webhook
+            - ai
+            - handoff
+            - start_call
+            - a_b_split
+            - set_field
+            - enroll_sequence
+            - add_tag
+            - remove_tag
+            - end
         config:
           type: object
           additionalProperties: true
           description: >
-            Type-specific settings.
-            trigger: { keywords:[string], matchType: any|contains|exact|regex, onlyFirstMessage:boolean }.
-            send_message: { messageType: text|template|media|interactive, text, template:{name,language,variableMapping}, media:{mediaType,url,caption}, interactive }
-            (template/interactive are WhatsApp-only).
-            wait_for_reply: { timeoutMinutes:int, saveAs:string }.
-            condition: { rules:[{ id, variable, operator: equals|not_equals|contains|not_contains|starts_with|ends_with|exists|not_exists|matches, value }] }.
-            set_variable: { assignments:[{ name, value }] }.
-            delay: { delayMinutes:int }.
-            webhook: { url, method, headers, bodyTemplate, saveAs }.
-            handoff: { note, assignTo }.
-            String fields support {{variable}} interpolation.
+            Type-specific settings. All string fields support `{{variable}}` interpolation against the
+            run's variable bag (resolved at execution time).
+
+
+            **trigger**: `{ triggerType: inbound_message|api_call|whatsapp_event, keywords:[string],
+            matchType: any|contains|exact|regex, onlyFirstMessage:boolean, eventType:
+            message_sent|message_delivered|message_read|message_failed|reaction }`.
+            Default `triggerType` is `inbound_message` for legacy nodes. `eventType` is only honored
+            when `triggerType` is `whatsapp_event` (WhatsApp-only).
+
+
+            **send_message**: `{ messageType: text|template|media|interactive, text,
+            template:{name,language,variableMapping}, media:{mediaType:image|video|audio|document,
+            url,caption}, interactive }`. `template` and `interactive` are WhatsApp-only.
+
+
+            **wait_for_reply**: `{ timeoutMinutes:int (max 43200), saveAs:string }`. Resume via
+            the `'reply'` edge on inbound, or `'timeout'` edge after `timeoutMinutes` of silence.
+
+
+            **condition**: `{ rules:[{ id, variable, operator:
+            equals|not_equals|contains|not_contains|starts_with|ends_with|exists|not_exists|matches,
+            value }] }`. First matching rule takes its `id` as the sourceHandle; otherwise
+            `'default'`.
+
+
+            **set_variable**: `{ assignments:[{ name, value }] }`. Run-scoped (lives only for this
+            execution; use `set_field` for persistent values).
+
+
+            **delay**: `{ delayMinutes:int (max 43200) }`. Suspends the run, resumes via timer.
+
+
+            **webhook**: `{ url, method: GET|POST|PUT|PATCH|DELETE, headers, bodyTemplate, saveAs }`.
+            SSRF-guarded (private/loopback/metadata IPs rejected). Response saved as
+            `{ status, ok, body }` to `vars[saveAs]`. Edge: `'success'` on 2xx, `'error'` otherwise.
+
+
+            **ai**: `{ provider: anthropic|openai|google|mistral|groq, model, preset:
+            smart|tools|cheap, systemPrompt, userPromptTemplate, saveAs, temperature, maxTokens,
+            outputType: text|json, tools:[{ name, description, parameters }] }`. Set `provider` +
+            `model` for BYOK (uses your stored API key); omit `provider` for the legacy Telnyx
+            path. Edges: `'success'`, `'tool:<name>'` (model picked a tool), `'error'`.
+
+
+            **handoff**: `{ note, assignTo }`. Terminates the run as `exited`, flags the
+            conversation for a human operator.
+
+
+            **start_call**: `{ to, forwardTo, requirePermissionFirst, recordingEnabled, saveAs }`.
+            WhatsApp-only. `forwardTo` can be `tel:+E164`, `sip:user@host`, or `wss://…` (AI voice
+            agent). Edges: `'success'`, `'permission_required'`, `'failed'`.
+
+
+            **a_b_split**: `{ percentage: number 0-100 (default 50) }`. Random branch picker.
+            Edges: `'a'` (with probability `percentage/100`), `'b'`.
+
+
+            **set_field**: `{ field, value }`. Persistent custom field on the Contact (vs
+            `set_variable` which is run-scoped). Field name is sanitized to `[A-Za-z0-9_]`.
+            No-op on `api_call` runs (no contact).
+
+
+            **enroll_sequence**: `{ sequenceId, saveAs }`. Enrolls the run's contact into a
+            Sequence. Edges: `'success'`, `'error'`.
+
+
+            **add_tag** / **remove_tag**: `{ tag }`. Push or pull a tag on the Contact. No-op on
+            `api_call` runs.
+
+
+            **end**: no config. Terminates the run as `completed`.
         position:
           type: object
-          description: Canvas coordinates (ignored by the executor; used by the future visual builder).
+          description: Canvas coordinates (ignored by the executor; used by the visual builder).
           properties:
             x: { type: number }
             y: { type: number }
@@ -547,9 +630,57 @@ components:
           type: string
           nullable: true
           description: >
-            Selects a branch output of a multi-output node: a condition rule id or 'default';
-            'reply' or 'timeout' for wait_for_reply; 'success' or 'error' for webhook. Null = the
-            node's single/default output.
+            Selects a branch output of a multi-output node. Null (or omitted) = the node's
+            single/default output. Known handles per node type:
+
+              - **condition** — a rule's `id`, or `'default'` (no rule matched)
+              - **wait_for_reply** — `'reply'` (contact replied) | `'timeout'` (no reply in window)
+              - **webhook** — `'success'` (2xx) | `'error'` (non-2xx / fetch failed)
+              - **ai** — `'success'` (text/JSON response) | `'tool:<toolName>'` (model invoked
+                that tool) | `'error'` (upstream failure / non-JSON in JSON mode)
+              - **start_call** — `'success'` | `'permission_required'` | `'failed'`
+              - **a_b_split** — `'a'` | `'b'`
+              - **enroll_sequence** — `'success'` | `'error'`
+    WorkflowExecutionEvent:
+      type: object
+      description: >
+        One entry in a workflow execution's timeline. Emitted by the executor on every node
+        visit and lifecycle transition, surfaced by `GET /v1/workflows/{workflowId}/executions/
+        {executionId}/events` for run inspection in the Runs UI.
+      properties:
+        action:
+          type: string
+          enum:
+            - execution_started
+            - execution_completed
+            - execution_exited
+            - execution_paused
+            - execution_resumed
+            - node_started
+            - node_completed
+            - node_failed
+            - node_skipped
+        status: { type: string, enum: [success, failed, pending], nullable: true }
+        nodeId: { type: string, nullable: true, description: Present on `node_*` events }
+        nodeType: { type: string, nullable: true, description: Present on `node_*` events }
+        sourceHandle:
+          type: string
+          nullable: true
+          description: The edge handle the executor followed out of this node (see `WorkflowEdge.sourceHandle`)
+        durationMs: { type: integer, nullable: true, description: Node run time; present on `node_completed` and `node_failed` }
+        errorMessage: { type: string, nullable: true, description: Failure detail; present on `node_failed` and `execution_exited` }
+        meta:
+          type: object
+          additionalProperties: true
+          nullable: true
+          description: >
+            Per-node-type payload. Shape varies — see WorkflowNode `type`. Examples:
+              `send_message` → `{ messageType, text, recipient }`,
+              `webhook` → `{ url, method, statusCode, responseTimeMs, responsePreview }`,
+              `ai` → `{ model, provider, inputTokens, outputTokens, responsePreview }`,
+              `condition` → `{ matchedHandle, rulesEvaluated }`,
+              `a_b_split` → `{ percentage, chosen }`.
+        at: { type: string, format: date-time, description: Event timestamp (UTC) }
     BulkUploadResult:
       type: object
       description: |
@@ -22690,7 +22821,11 @@ paths:
     patch:
       operationId: updateWorkflow
       summary: Update workflow
-      description: Update name, description, or the graph. The graph can only be modified while the workflow is draft or paused.
+      description: >
+        Update name, description, the graph, or reassign to a different account. The graph can only
+        be modified while the workflow is draft or paused. Account swaps re-validate the graph
+        against the new platform (so e.g. moving from WhatsApp to Facebook surfaces a `start_call`
+        node as an error instead of silently saving an unrunnable graph).
       tags: [Workflows]
       parameters:
         - { name: workflowId, in: path, required: true, schema: { type: string } }
@@ -22705,6 +22840,15 @@ paths:
                 nodes: { type: array, items: { $ref: '#/components/schemas/WorkflowNode' } }
                 edges: { type: array, items: { $ref: '#/components/schemas/WorkflowEdge' } }
                 entryNodeId: { type: string, nullable: true }
+                accountId:
+                  type: string
+                  description: >
+                    Reassign the workflow to a different `SocialAccount`. `platform` and `profileId`
+                    are derived server-side from the new account (the client never sends them
+                    directly). The account must belong to the caller's workspace and be on a
+                    workflow-supported platform (whatsapp, instagram, facebook, telegram, twitter,
+                    bluesky, reddit). Changing this triggers a graph revalidation against the new
+                    platform.
       responses:
         '200':
           description: Workflow updated
@@ -22884,6 +23028,188 @@ paths:
                       variables: { type: object, additionalProperties: true }
                       conversationId: { type: string }
         '400': { description: Missing target, invalid graph, or `to` used on a non-WhatsApp workflow }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404': { $ref: '#/components/responses/NotFound' }
+
+  /v1/workflows/{workflowId}/executions/{executionId}/events:
+    get:
+      operationId: listWorkflowExecutionEvents
+      summary: Get an execution's timeline
+      description: >
+        Returns the per-step run-log for a single workflow execution: trigger fired, each node
+        visited, edge handles taken, errors, and durations. Backed by Tinybird (90-day retention).
+        Used by the Runs UI drawer to render the timeline.
+      tags: [Workflows]
+      parameters:
+        - { name: workflowId, in: path, required: true, schema: { type: string } }
+        - { name: executionId, in: path, required: true, schema: { type: string } }
+      responses:
+        '200':
+          description: Timeline events for the execution
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success: { type: boolean }
+                  execution:
+                    type: object
+                    properties:
+                      id: { type: string }
+                      status: { type: string, enum: [running, waiting, completed, exited, failed] }
+                      startedAt: { type: string, format: date-time, nullable: true }
+                      completedAt: { type: string, format: date-time, nullable: true }
+                  events:
+                    type: array
+                    description: Events in chronological order (oldest first).
+                    items: { $ref: '#/components/schemas/WorkflowExecutionEvent' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404': { $ref: '#/components/responses/NotFound' }
+
+  /v1/workflows/{workflowId}/duplicate:
+    post:
+      operationId: duplicateWorkflow
+      summary: Duplicate a workflow
+      description: >
+        Create an independent copy of a workflow's graph, name, description, and account binding.
+        The copy is created in `draft` status with fresh execution counters and a new id —
+        execution history is NOT copied. Useful for branching off a known-good workflow before
+        making experimental edits.
+      tags: [Workflows]
+      parameters:
+        - { name: workflowId, in: path, required: true, schema: { type: string } }
+      responses:
+        '201':
+          description: Workflow duplicated
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success: { type: boolean }
+                  workflow:
+                    type: object
+                    properties:
+                      id: { type: string }
+                      name: { type: string }
+                      description: { type: string }
+                      status: { type: string, enum: [draft] }
+                      platform: { type: string }
+                      accountId: { type: string }
+                      profileId: { type: string }
+                      entryNodeId: { type: string, nullable: true }
+                      nodeCount: { type: integer }
+                      createdAt: { type: string, format: date-time }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404': { $ref: '#/components/responses/NotFound' }
+
+  /v1/workflows/{workflowId}/versions:
+    get:
+      operationId: listWorkflowVersions
+      summary: List a workflow's version history
+      description: >
+        Returns the snapshot history. A new version is recorded automatically before every PATCH
+        to `nodes` / `edges` / `entryNodeId`, and explicitly when a previous version is restored.
+        Lightweight list — call `getWorkflowVersion` for the full snapshot graph.
+      tags: [Workflows]
+      parameters:
+        - { name: workflowId, in: path, required: true, schema: { type: string } }
+      responses:
+        '200':
+          description: Versions list
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success: { type: boolean }
+                  versions:
+                    type: array
+                    description: Versions in reverse chronological order (newest first).
+                    items:
+                      type: object
+                      properties:
+                        version: { type: integer, description: Monotonically increasing version number }
+                        name: { type: string }
+                        description: { type: string, nullable: true }
+                        createdBy: { type: string, nullable: true, description: User id that authored this version }
+                        createdByEmail: { type: string, nullable: true, description: Denormalized email so the history UI can render without a join }
+                        restoredFromVersion: { type: integer, nullable: true, description: When non-null, this snapshot was created by restoring that version }
+                        createdAt: { type: string, format: date-time }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404': { $ref: '#/components/responses/NotFound' }
+
+  /v1/workflows/{workflowId}/versions/{version}:
+    get:
+      operationId: getWorkflowVersion
+      summary: Get a specific workflow version
+      description: Returns the full snapshot for a single historical version, including the graph.
+      tags: [Workflows]
+      parameters:
+        - { name: workflowId, in: path, required: true, schema: { type: string } }
+        - { name: version, in: path, required: true, schema: { type: integer } }
+      responses:
+        '200':
+          description: Version snapshot
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success: { type: boolean }
+                  version:
+                    type: object
+                    properties:
+                      version: { type: integer }
+                      name: { type: string }
+                      description: { type: string, nullable: true }
+                      entryNodeId: { type: string, nullable: true }
+                      nodes: { type: array, items: { $ref: '#/components/schemas/WorkflowNode' } }
+                      edges: { type: array, items: { $ref: '#/components/schemas/WorkflowEdge' } }
+                      platform: { type: string }
+                      accountId: { type: string }
+                      profileId: { type: string }
+                      createdBy: { type: string, nullable: true }
+                      createdByEmail: { type: string, nullable: true }
+                      restoredFromVersion: { type: integer, nullable: true }
+                      createdAt: { type: string, format: date-time }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404': { $ref: '#/components/responses/NotFound' }
+
+  /v1/workflows/{workflowId}/versions/{version}/restore:
+    post:
+      operationId: restoreWorkflowVersion
+      summary: Restore a previous workflow version
+      description: >
+        Replace the current graph with the named version's snapshot. Before the swap, the current
+        graph is itself snapshotted as a new version, so a restore is reversible. The workflow must
+        be in `draft` or `paused` status (same gate as a normal graph edit). The returned workflow
+        carries `restoredFromVersion` so the UI can surface which version was rolled back to.
+      tags: [Workflows]
+      parameters:
+        - { name: workflowId, in: path, required: true, schema: { type: string } }
+        - { name: version, in: path, required: true, schema: { type: integer } }
+      responses:
+        '200':
+          description: Workflow restored to the named version
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success: { type: boolean }
+                  workflow:
+                    type: object
+                    properties:
+                      id: { type: string }
+                      name: { type: string }
+                      description: { type: string }
+                      status: { type: string }
+                      entryNodeId: { type: string, nullable: true }
+                      nodeCount: { type: integer }
+                      updatedAt: { type: string, format: date-time }
+                  restoredFromVersion: { type: integer }
+        '400': { description: Workflow is not draft/paused, or the named version's graph is invalid for the current platform }
         '401': { $ref: '#/components/responses/Unauthorized' }
         '404': { $ref: '#/components/responses/NotFound' }
 
