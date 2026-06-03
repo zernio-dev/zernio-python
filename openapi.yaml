@@ -26674,9 +26674,10 @@ paths:
           application/json:
             schema:
               type: object
-              required: [accountId, spec]
+              required: [accountId, adAccountId, spec]
               properties:
-                accountId: { type: string, description: "Social account ID on the target ad platform." }
+                accountId: { type: string, description: "Zernio social account ID on the target ad platform (the estimate runs against its platform)." }
+                adAccountId: { type: string, description: "Required. The platform ad-account ID the reach call runs against (Meta act_..., LinkedIn numeric sponsoredAccount ID, Pinterest ad-account ID, X account ID) - every backing reach API is scoped to one ad account. Get it from GET /v1/ads/accounts." }
                 spec:
                   allOf: [{ $ref: '#/components/schemas/TargetingSpec' }]
                   description: "The targeting spec to estimate. Same shape used by POST /v1/ads/create."

@@ -514,11 +514,17 @@ class AdsResource:
         return self._client._get("/v1/ads/targeting/search", params=params)
 
     def estimate_ad_reach(
-        self, account_id: str, spec: Any, *, optimization_goal: str | None = None
+        self,
+        account_id: str,
+        ad_account_id: str,
+        spec: Any,
+        *,
+        optimization_goal: str | None = None,
     ) -> dict[str, Any]:
         """Estimate audience reach"""
         payload = self._build_payload(
             account_id=account_id,
+            ad_account_id=ad_account_id,
             spec=spec,
             optimization_goal=optimization_goal,
         )
@@ -1240,11 +1246,17 @@ class AdsResource:
         return await self._client._aget("/v1/ads/targeting/search", params=params)
 
     async def aestimate_ad_reach(
-        self, account_id: str, spec: Any, *, optimization_goal: str | None = None
+        self,
+        account_id: str,
+        ad_account_id: str,
+        spec: Any,
+        *,
+        optimization_goal: str | None = None,
     ) -> dict[str, Any]:
         """Estimate audience reach (async)"""
         payload = self._build_payload(
             account_id=account_id,
+            ad_account_id=ad_account_id,
             spec=spec,
             optimization_goal=optimization_goal,
         )

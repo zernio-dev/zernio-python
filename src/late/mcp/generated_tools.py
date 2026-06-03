@@ -2682,13 +2682,15 @@ def register_generated_tools(mcp, _get_client):
     )
     def ads_estimate_ad_reach(
         account_id: str,
+        ad_account_id: str,
         spec: dict[str, Any] | None,
         optimization_goal: str | None = None,
     ) -> str:
         """Estimate audience reach
 
             Args:
-                account_id: Social account ID on the target ad platform. (required)
+                account_id: Zernio social account ID on the target ad platform (the estimate runs against its platform). (required)
+                ad_account_id: Required. The platform ad-account ID the reach call runs against (Meta act_..., LinkedIn numeric sponsoredAccount ID, Pinterest ad-account ID, X account ID) - every backing reach API is scoped to one ad account. Get it from GET /v1/ads/accounts. (required)
                 spec: The targeting spec to estimate. Same shape used by POST /v1/ads/create. (required)
                 optimization_goal: Optional. The optimization goal the estimate should assume (platform's
         own vocabulary, e.g. Meta `REACH`, `LINK_CLICKS`, `OFFSITE_CONVERSIONS`).
@@ -2696,7 +2698,10 @@ def register_generated_tools(mcp, _get_client):
         client = _get_client()
         try:
             response = client.ads.estimate_ad_reach(
-                account_id=account_id, spec=spec, optimization_goal=optimization_goal
+                account_id=account_id,
+                ad_account_id=ad_account_id,
+                spec=spec,
+                optimization_goal=optimization_goal,
             )
             return _format_response(response)
         except Exception as e:
