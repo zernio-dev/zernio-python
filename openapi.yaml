@@ -3062,12 +3062,14 @@ components:
         expireCount:
           type: integer
           minimum: 1
-          description: Stop recycling after this many copies have been created
+          nullable: true
+          description: Stop recycling after this many copies have been created. Send null on update to clear this limit.
           example: 5
         expireDate:
           type: string
           format: date-time
-          description: Stop recycling after this date, regardless of count
+          nullable: true
+          description: Stop recycling after this date, regardless of count. Send null on update to clear this limit.
         contentVariations:
           type: array
           items:
@@ -9063,6 +9065,7 @@ paths:
                   description: Target platforms and accounts for this post. Required for non-draft posts (returns 400 if empty). Drafts can omit platforms.
                   items:
                     type: object
+                    required: [platform, accountId]
                     properties:
                       platform: { type: string, example: twitter }
                       accountId: { type: string }
@@ -9557,8 +9560,8 @@ paths:
       tags: [Posts]
       summary: Update post
       description: |
-        Update an existing post. Only draft, scheduled, failed, and partial posts can be edited.
-        Published, publishing, and cancelled posts cannot be modified.
+        Update an existing post. Draft, scheduled, failed, partial, and cancelled posts can be edited.
+        Published posts can only have their recycling config updated.
       parameters:
         - name: postId
           in: path
@@ -9571,8 +9574,55 @@ paths:
             schema:
               type: object
               properties:
+                title: { type: string }
                 content: { type: string }
+                mediaItems:
+                  type: array
+                  items: { $ref: '#/components/schemas/MediaItem' }
+                platforms:
+                  type: array
+                  description: Target platforms and accounts for this post. Each item must include platform and accountId.
+                  items:
+                    type: object
+                    required: [platform, accountId]
+                    properties:
+                      platform: { type: string, example: twitter }
+                      accountId: { type: string }
+                      customContent:
+                        type: string
+                        description: Platform-specific text override.
+                      customMedia:
+                        type: array
+                        items: { $ref: '#/components/schemas/MediaItem' }
+                      scheduledFor:
+                        type: string
+                        format: date-time
+                        description: Optional per-platform scheduled time override.
+                      platformSpecificData:
+                        type: object
+                        additionalProperties: true
                 scheduledFor: { type: string, format: date-time }
+                publishNow: { type: boolean, default: false }
+                isDraft: { type: boolean }
+                timezone: { type: string }
+                visibility: { type: string, enum: [public, private, unlisted] }
+                tags:
+                  type: array
+                  items: { type: string }
+                hashtags:
+                  type: array
+                  items: { type: string }
+                mentions:
+                  type: array
+                  items: { type: string }
+                crosspostingEnabled: { type: boolean }
+                metadata: { type: object, additionalProperties: true }
+                queuedFromProfile:
+                  type: string
+                  description: Profile ID to schedule via queue.
+                queueId:
+                  type: string
+                  description: Specific queue ID to use when scheduling via queue.
                 tiktokSettings:
                   $ref: '#/components/schemas/TikTokPlatformData'
                   description: Root-level TikTok settings applied to all TikTok platforms. Merged into each platform's platformSpecificData, with platform-specific settings taking precedence.

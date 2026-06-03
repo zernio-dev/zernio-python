@@ -7609,8 +7609,22 @@ def register_generated_tools(mcp, _get_client):
     )
     def posts_update_post(
         post_id: str,
+        title: str | None = None,
         content: str | None = None,
+        media_items: list[dict[str, Any]] | None = None,
+        platforms: list[dict[str, Any]] | None = None,
         scheduled_for: str | None = None,
+        publish_now: bool = False,
+        is_draft: bool | None = None,
+        timezone: str | None = None,
+        visibility: str | None = None,
+        tags: list[str] | None = None,
+        hashtags: list[str] | None = None,
+        mentions: list[str] | None = None,
+        crossposting_enabled: bool | None = None,
+        metadata: dict[str, Any] | None = None,
+        queued_from_profile: str | None = None,
+        queue_id: str | None = None,
         tiktok_settings: dict[str, Any] | None = None,
         facebook_settings: dict[str, Any] | None = None,
         recycling: dict[str, Any] | None = None,
@@ -7619,8 +7633,22 @@ def register_generated_tools(mcp, _get_client):
 
         Args:
             post_id: (required)
+            title
             content
+            media_items
+            platforms: Target platforms and accounts for this post. Each item must include platform and accountId.
             scheduled_for
+            publish_now
+            is_draft
+            timezone
+            visibility
+            tags
+            hashtags
+            mentions
+            crossposting_enabled
+            metadata
+            queued_from_profile: Profile ID to schedule via queue.
+            queue_id: Specific queue ID to use when scheduling via queue.
             tiktok_settings: Root-level TikTok settings applied to all TikTok platforms. Merged into each platform's platformSpecificData, with platform-specific settings taking precedence.
             facebook_settings: Root-level Facebook settings applied to all Facebook platforms. Merged into each platform's platformSpecificData, with platform-specific settings taking precedence.
             recycling"""
@@ -7628,8 +7656,22 @@ def register_generated_tools(mcp, _get_client):
         try:
             response = client.posts.update_post(
                 post_id=post_id,
+                title=title,
                 content=content,
+                media_items=media_items,
+                platforms=platforms,
                 scheduled_for=scheduled_for,
+                publish_now=publish_now,
+                is_draft=is_draft,
+                timezone=timezone,
+                visibility=visibility,
+                tags=tags,
+                hashtags=hashtags,
+                mentions=mentions,
+                crossposting_enabled=crossposting_enabled,
+                metadata=metadata,
+                queued_from_profile=queued_from_profile,
+                queue_id=queue_id,
                 tiktok_settings=tiktok_settings,
                 facebook_settings=facebook_settings,
                 recycling=recycling,
