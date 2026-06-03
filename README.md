@@ -404,10 +404,13 @@ Both `from zernio import ...` and `from late import ...` work identically. The `
 | `ads.get_ad()` | Get ad details |
 | `ads.get_ad_analytics()` | Get ad analytics |
 | `ads.get_ad_comments()` | List comments on an ad |
+| `ads.get_ad_tracking_tags()` | Read an ad's click-URL tracking tags |
 | `ads.get_conversion_destination()` | Fetch a single conversion destination |
 | `ads.get_conversion_metrics()` | Fetch attribution metrics for a conversion destination |
+| `ads.get_conversions_quality()` | Read Event Match Quality + coverage for a Meta pixel |
 | `ads.get_lead_form()` | Get a single Lead Gen form |
 | `ads.update_ad()` | Update ad |
+| `ads.update_ad_tracking_tags()` | Set/update an ad's click-URL tracking tags |
 | `ads.update_conversion_destination()` | Update a conversion destination |
 | `ads.delete_ad()` | Cancel an ad |
 | `ads.delete_conversion_destination()` | Soft-delete a conversion destination |

@@ -137,6 +137,32 @@ class AdsResource:
         )
         return self._client._get(f"/v1/ads/{ad_id}/analytics", params=params)
 
+    def get_ad_tracking_tags(self, ad_id: str) -> dict[str, Any]:
+        """Read an ad's click-URL tracking tags"""
+        return self._client._get(f"/v1/ads/{ad_id}/tracking-tags")
+
+    def update_ad_tracking_tags(
+        self,
+        ad_id: str,
+        *,
+        url_tags: list[dict[str, Any]] | None = None,
+        creative: dict[str, Any] | None = None,
+        tracking_url_template: str | None = None,
+        final_url_suffix: str | None = None,
+        dynamic_value_parameters: dict[str, Any] | None = None,
+        custom_value_parameters: dict[str, Any] | None = None,
+    ) -> dict[str, Any]:
+        """Set/update an ad's click-URL tracking tags"""
+        payload = self._build_payload(
+            url_tags=url_tags,
+            creative=creative,
+            tracking_url_template=tracking_url_template,
+            final_url_suffix=final_url_suffix,
+            dynamic_value_parameters=dynamic_value_parameters,
+            custom_value_parameters=custom_value_parameters,
+        )
+        return self._client._patch(f"/v1/ads/{ad_id}/tracking-tags", data=payload)
+
     def get_ad_comments(
         self,
         ad_id: str,
@@ -498,6 +524,16 @@ class AdsResource:
         )
         return self._client._post("/v1/ads/targeting/reach-estimate", data=payload)
 
+    def get_conversions_quality(
+        self, account_id: str, destination_id: str
+    ) -> dict[str, Any]:
+        """Read Event Match Quality + coverage for a Meta pixel"""
+        params = self._build_params(
+            account_id=account_id,
+            destination_id=destination_id,
+        )
+        return self._client._get("/v1/ads/conversions/quality", params=params)
+
     def send_conversions(
         self,
         account_id: str,
@@ -820,6 +856,34 @@ class AdsResource:
             breakdowns=breakdowns,
         )
         return await self._client._aget(f"/v1/ads/{ad_id}/analytics", params=params)
+
+    async def aget_ad_tracking_tags(self, ad_id: str) -> dict[str, Any]:
+        """Read an ad's click-URL tracking tags (async)"""
+        return await self._client._aget(f"/v1/ads/{ad_id}/tracking-tags")
+
+    async def aupdate_ad_tracking_tags(
+        self,
+        ad_id: str,
+        *,
+        url_tags: list[dict[str, Any]] | None = None,
+        creative: dict[str, Any] | None = None,
+        tracking_url_template: str | None = None,
+        final_url_suffix: str | None = None,
+        dynamic_value_parameters: dict[str, Any] | None = None,
+        custom_value_parameters: dict[str, Any] | None = None,
+    ) -> dict[str, Any]:
+        """Set/update an ad's click-URL tracking tags (async)"""
+        payload = self._build_payload(
+            url_tags=url_tags,
+            creative=creative,
+            tracking_url_template=tracking_url_template,
+            final_url_suffix=final_url_suffix,
+            dynamic_value_parameters=dynamic_value_parameters,
+            custom_value_parameters=custom_value_parameters,
+        )
+        return await self._client._apatch(
+            f"/v1/ads/{ad_id}/tracking-tags", data=payload
+        )
 
     async def aget_ad_comments(
         self,
@@ -1187,6 +1251,16 @@ class AdsResource:
         return await self._client._apost(
             "/v1/ads/targeting/reach-estimate", data=payload
         )
+
+    async def aget_conversions_quality(
+        self, account_id: str, destination_id: str
+    ) -> dict[str, Any]:
+        """Read Event Match Quality + coverage for a Meta pixel (async)"""
+        params = self._build_params(
+            account_id=account_id,
+            destination_id=destination_id,
+        )
+        return await self._client._aget("/v1/ads/conversions/quality", params=params)
 
     async def asend_conversions(
         self,

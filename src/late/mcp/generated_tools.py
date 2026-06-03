@@ -1836,6 +1836,68 @@ def register_generated_tools(mcp, _get_client):
 
     @mcp.tool(
         annotations=ToolAnnotations(
+            title="Read an ad's click-URL tracking tags",
+            readOnlyHint=True,
+            destructiveHint=False,
+            openWorldHint=False,
+        )
+    )
+    def ads_get_ad_tracking_tags(ad_id: str) -> str:
+        """Read an ad's click-URL tracking tags
+
+        Args:
+            ad_id: Ad id (hex _id, platformAdId, or effective story/media id). (required)"""
+        client = _get_client()
+        try:
+            response = client.ads.get_ad_tracking_tags(ad_id=ad_id)
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Set/update an ad's click-URL tracking tags",
+            readOnlyHint=False,
+            destructiveHint=True,
+            openWorldHint=True,
+        )
+    )
+    def ads_update_ad_tracking_tags(
+        ad_id: str,
+        url_tags: list[dict[str, Any]] | None = None,
+        creative: dict[str, Any] | None = None,
+        tracking_url_template: str | None = None,
+        final_url_suffix: str | None = None,
+        dynamic_value_parameters: dict[str, Any] | None = None,
+        custom_value_parameters: dict[str, Any] | None = None,
+    ) -> str:
+        """Set/update an ad's click-URL tracking tags
+
+        Args:
+            ad_id: (required)
+            url_tags: Meta only. Click-URL params appended to a freshly-rebuilt creative.
+            creative: Meta only. Required to rebuild the immutable creative when setting urlTags.
+            tracking_url_template: Google only. Full tracking template (must contain {lpurl}).
+            final_url_suffix: Google only. Parse-only key=value params.
+            dynamic_value_parameters: LinkedIn only. key -> dynamic value enum (CAMPAIGN_ID, CAMPAIGN_NAME, CREATIVE_ID, ...).
+            custom_value_parameters: LinkedIn only. key -> static value."""
+        client = _get_client()
+        try:
+            response = client.ads.update_ad_tracking_tags(
+                ad_id=ad_id,
+                url_tags=url_tags,
+                creative=creative,
+                tracking_url_template=tracking_url_template,
+                final_url_suffix=final_url_suffix,
+                dynamic_value_parameters=dynamic_value_parameters,
+                custom_value_parameters=custom_value_parameters,
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
             title="List comments on an ad",
             readOnlyHint=True,
             destructiveHint=False,
@@ -2635,6 +2697,29 @@ def register_generated_tools(mcp, _get_client):
         try:
             response = client.ads.estimate_ad_reach(
                 account_id=account_id, spec=spec, optimization_goal=optimization_goal
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Read Event Match Quality + coverage for a Meta pixel",
+            readOnlyHint=True,
+            destructiveHint=False,
+            openWorldHint=False,
+        )
+    )
+    def ads_get_conversions_quality(account_id: str, destination_id: str) -> str:
+        """Read Event Match Quality + coverage for a Meta pixel
+
+        Args:
+            account_id: SocialAccount _id (must be a metaads account). (required)
+            destination_id: Meta pixel/dataset ID. (required)"""
+        client = _get_client()
+        try:
+            response = client.ads.get_conversions_quality(
+                account_id=account_id, destination_id=destination_id
             )
             return _format_response(response)
         except Exception as e:
