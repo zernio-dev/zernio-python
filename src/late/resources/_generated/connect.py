@@ -147,12 +147,16 @@ class ConnectResource:
         profile_id: str | None = None,
         pending_data_token: str | None = None,
         temp_token: str | None = None,
+        search: str | None = None,
+        filter: str | None = None,
     ) -> dict[str, Any]:
         """List GBP locations"""
         params = self._build_params(
             profile_id=profile_id,
             pending_data_token=pending_data_token,
             temp_token=temp_token,
+            search=search,
+            filter=filter,
         )
         return self._client._get("/v1/connect/googlebusiness/locations", params=params)
 
@@ -162,12 +166,14 @@ class ConnectResource:
         location_id: str,
         pending_data_token: str,
         *,
+        account_id: str | None = None,
         redirect_url: str | None = None,
     ) -> dict[str, Any]:
         """Select GBP location"""
         payload = self._build_payload(
             profile_id=profile_id,
             location_id=location_id,
+            account_id=account_id,
             pending_data_token=pending_data_token,
             redirect_url=redirect_url,
         )
@@ -455,16 +461,29 @@ class ConnectResource:
             f"/v1/accounts/{account_id}/youtube-playlists", data=payload
         )
 
-    def get_gmb_locations(self, account_id: str) -> dict[str, Any]:
+    def get_gmb_locations(
+        self, account_id: str, *, search: str | None = None, filter: str | None = None
+    ) -> dict[str, Any]:
         """List GBP locations"""
-        return self._client._get(f"/v1/accounts/{account_id}/gmb-locations")
+        params = self._build_params(
+            search=search,
+            filter=filter,
+        )
+        return self._client._get(
+            f"/v1/accounts/{account_id}/gmb-locations", params=params
+        )
 
     def update_gmb_location(
-        self, account_id: str, selected_location_id: str
+        self,
+        account_id: str,
+        selected_location_id: str,
+        *,
+        google_account_id: str | None = None,
     ) -> dict[str, Any]:
         """Update GBP location"""
         payload = self._build_payload(
             selected_location_id=selected_location_id,
+            google_account_id=google_account_id,
         )
         return self._client._put(
             f"/v1/accounts/{account_id}/gmb-locations", data=payload
@@ -593,12 +612,16 @@ class ConnectResource:
         profile_id: str | None = None,
         pending_data_token: str | None = None,
         temp_token: str | None = None,
+        search: str | None = None,
+        filter: str | None = None,
     ) -> dict[str, Any]:
         """List GBP locations (async)"""
         params = self._build_params(
             profile_id=profile_id,
             pending_data_token=pending_data_token,
             temp_token=temp_token,
+            search=search,
+            filter=filter,
         )
         return await self._client._aget(
             "/v1/connect/googlebusiness/locations", params=params
@@ -610,12 +633,14 @@ class ConnectResource:
         location_id: str,
         pending_data_token: str,
         *,
+        account_id: str | None = None,
         redirect_url: str | None = None,
     ) -> dict[str, Any]:
         """Select GBP location (async)"""
         payload = self._build_payload(
             profile_id=profile_id,
             location_id=location_id,
+            account_id=account_id,
             pending_data_token=pending_data_token,
             redirect_url=redirect_url,
         )
@@ -919,16 +944,29 @@ class ConnectResource:
             f"/v1/accounts/{account_id}/youtube-playlists", data=payload
         )
 
-    async def aget_gmb_locations(self, account_id: str) -> dict[str, Any]:
+    async def aget_gmb_locations(
+        self, account_id: str, *, search: str | None = None, filter: str | None = None
+    ) -> dict[str, Any]:
         """List GBP locations (async)"""
-        return await self._client._aget(f"/v1/accounts/{account_id}/gmb-locations")
+        params = self._build_params(
+            search=search,
+            filter=filter,
+        )
+        return await self._client._aget(
+            f"/v1/accounts/{account_id}/gmb-locations", params=params
+        )
 
     async def aupdate_gmb_location(
-        self, account_id: str, selected_location_id: str
+        self,
+        account_id: str,
+        selected_location_id: str,
+        *,
+        google_account_id: str | None = None,
     ) -> dict[str, Any]:
         """Update GBP location (async)"""
         payload = self._build_payload(
             selected_location_id=selected_location_id,
+            google_account_id=google_account_id,
         )
         return await self._client._aput(
             f"/v1/accounts/{account_id}/gmb-locations", data=payload

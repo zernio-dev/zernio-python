@@ -1368,6 +1368,7 @@ def register_generated_tools(mcp, _get_client):
         platform: str,
         budget: dict[str, Any] | None = None,
         bid_strategy: str | None = None,
+        name: str | None = None,
     ) -> str:
         """Update a campaign (budget and/or bid strategy)
 
@@ -1375,7 +1376,8 @@ def register_generated_tools(mcp, _get_client):
             campaign_id: Platform campaign ID (required)
             platform: (required)
             budget
-            bid_strategy: Campaign-level default. Ad sets inherit this unless they override."""
+            bid_strategy: Campaign-level default. Ad sets inherit this unless they override.
+            name: Rename the campaign (Meta only; other platforms return 501). At least one of budget/bidStrategy/name is required."""
         client = _get_client()
         try:
             response = client.ad_campaigns.update_ad_campaign(
@@ -1383,6 +1385,7 @@ def register_generated_tools(mcp, _get_client):
                 platform=platform,
                 budget=budget,
                 bid_strategy=bid_strategy,
+                name=name,
             )
             return _format_response(response)
         except Exception as e:
@@ -1500,6 +1503,7 @@ def register_generated_tools(mcp, _get_client):
         platform: str,
         budget: dict[str, Any] | None = None,
         status: str | None = None,
+        name: str | None = None,
         bid_strategy: str | None = None,
         bid_amount: float | None = None,
         roas_average_floor: float | None = None,
@@ -1511,6 +1515,7 @@ def register_generated_tools(mcp, _get_client):
                 platform: (required)
                 budget: Omit if not updating budget
                 status: Omit if not toggling delivery state
+                name: Rename the ad set (Meta only; other platforms return 501). At least one of budget/status/bidStrategy/name is required.
                 bid_strategy: Ad-set-level bid strategy. Overrides the campaign-level default.
         Supported on Meta (facebook, instagram) and TikTok. On TikTok the
         Meta-style enum is mapped to bid_type / bid_price / deep_bid_type
@@ -1528,6 +1533,7 @@ def register_generated_tools(mcp, _get_client):
                 platform=platform,
                 budget=budget,
                 status=status,
+                name=name,
                 bid_strategy=bid_strategy,
                 bid_amount=bid_amount,
                 roas_average_floor=roas_average_floor,
@@ -1769,7 +1775,7 @@ def register_generated_tools(mcp, _get_client):
         - **TikTok**: patch-style. Pass any subset; `headline` is ignored (TikTok creatives
           have no headline slot). `body` becomes the in-feed `ad_text`; `linkUrl` becomes
           `landing_page_url`; `videoUrl` triggers a fresh upload.
-                name"""
+                name: Rename the ad. Now propagated to Meta (POST /{ad-id}); non-Meta platforms return 501."""
         client = _get_client()
         try:
             response = client.ads.update_ad(
@@ -2087,6 +2093,8 @@ def register_generated_tools(mcp, _get_client):
         account_id: str,
         ad_account_id: str,
         name: str,
+        campaign_name: str | None = None,
+        ad_set_name: str | None = None,
         goal: str | None = None,
         budget_amount: float | None = None,
         budget_type: str | None = None,
@@ -2120,6 +2128,7 @@ def register_generated_tools(mcp, _get_client):
         languages: list[str] | None = None,
         placements: dict[str, Any] | None = None,
         saved_targeting_id: str | None = None,
+        raw_targeting: dict[str, Any] | None = None,
         special_ad_categories: list[str] | None = None,
         end_date: str | None = None,
         start_date: str | None = None,
@@ -2149,6 +2158,8 @@ def register_generated_tools(mcp, _get_client):
                 account_id: (required)
                 ad_account_id: (required)
                 name: (required)
+                campaign_name: Meta only. Exact campaign name. Overrides the default `<name> - Campaign`.
+                ad_set_name: Meta only. Exact ad set name. Overrides the default `<name> - Ad Set`. (For per-ad names on the multi-creative shape, set `name` on each `creatives[]` entry.)
                 goal: Required on legacy + multi-creative shapes. Inherited from the ad set on the attach shape. Available goals vary by platform. Meta-specific: `conversions` requires `promotedObject.pixelId` + `promotedObject.customEventType`; `app_promotion` requires `promotedObject.applicationId` + `promotedObject.objectStoreUrl`; `lead_generation` accepts an optional `promotedObject.pageId` (auto-filled from the connected Page when omitted). TikTok-specific: `conversions` (website-conversion ad group) requires `promotedObject.pixelId` (your TikTok Pixel ID) and accepts an optional `promotedObject.customEventType` (a TikTok `optimization_event` code like `ON_WEB_ORDER`, `INITIATE_ORDER`, `ON_WEB_REGISTER`, `FORM`); to inherit a pixel + event from an existing ad group, pass `adSetId` instead. LinkedIn-specific: `engagement`, `traffic`, `awareness`, and `video_views` are supported for standalone ads (creates a Direct Sponsored Content single image or single video ad). `traffic` requires `linkUrl`; `video_views` requires the `video` field. For `lead_generation` / `conversions` on LinkedIn — or to promote an existing post — use `POST /v1/ads/boost`.
                 budget_amount: Required on legacy + multi-creative shapes. Inherited on attach.
                 budget_type: Required on legacy + multi-creative shapes. Inherited on attach.
@@ -2216,6 +2227,14 @@ def register_generated_tools(mcp, _get_client):
                 saved_targeting_id: ID of a `saved_targeting` audience (created via POST /v1/ads/audiences). When set, its stored
         TargetingSpec is expanded as the base targeting; inline fields on this body merge on top. Lets you
         reuse a named targeting preset without re-sending every field.
+                raw_targeting: Meta only. A raw Meta-native targeting spec passed to the ad set VERBATIM (snake_case:
+        `geo_locations`, `age_min`, `excluded_custom_audiences`, `flexible_spec`, `targeting_automation`,
+        business places, etc.) — exactly the shape `GET /v1/ads/{adId}` returns for external ads. Use it to
+        clone a campaign's targeting EXACTLY, preserving advanced fields the camelCase targeting fields can't
+        model. Mutually exclusive with the camelCase targeting fields (countries/regions/cities/interests/
+        ageMin/...), `audienceId`, and `savedTargetingId` (sending both → 422). Sent as-is; Meta validates and
+        surfaces any errors. If cloning an EU campaign, also pass `dsaBeneficiary` / `dsaPayor` (those are
+        separate fields, not part of targeting).
                 special_ad_categories: Meta only. Declares the ad's special category, required for housing, employment, credit, or
         political/social-issue ads (Meta enforces restricted targeting for these). Note: setting a special
         category disables income/zip targeting on Meta.
@@ -2328,6 +2347,8 @@ def register_generated_tools(mcp, _get_client):
                 account_id=account_id,
                 ad_account_id=ad_account_id,
                 name=name,
+                campaign_name=campaign_name,
+                ad_set_name=ad_set_name,
                 goal=goal,
                 budget_amount=budget_amount,
                 budget_type=budget_type,
@@ -2361,6 +2382,7 @@ def register_generated_tools(mcp, _get_client):
                 languages=languages,
                 placements=placements,
                 saved_targeting_id=saved_targeting_id,
+                raw_targeting=raw_targeting,
                 special_ad_categories=special_ad_categories,
                 end_date=end_date,
                 start_date=start_date,
@@ -5130,19 +5152,25 @@ def register_generated_tools(mcp, _get_client):
         profile_id: str | None = None,
         pending_data_token: str | None = None,
         temp_token: str | None = None,
+        search: str | None = None,
+        filter: str | None = None,
     ) -> str:
         """List GBP locations
 
         Args:
             profile_id: Profile ID from your connection flow. Required for auth validation when provided.
             pending_data_token: Token from the OAuth callback redirect. Preferred over tempToken because it preserves server-side token storage. One of pendingDataToken or tempToken is required.
-            temp_token: Legacy. Direct Google access token. Use pendingDataToken instead when available."""
+            temp_token: Legacy. Direct Google access token. Use pendingDataToken instead when available.
+            search: Free-text search on the business name, applied server-side by Google. Use this for accounts that own many locations (the response is bounded, see hasMore) so the user can find a specific location without loading the full list.
+            filter: Raw Google Business Information API filter expression (advanced; takes precedence over search). Supports fields such as title, storeCode, storefront_address.postal_code, labels and categories, e.g. storeCode="LH279411". See Google's "Work with location data" guide."""
         client = _get_client()
         try:
             response = client.connect.list_google_business_locations(
                 profile_id=profile_id,
                 pending_data_token=pending_data_token,
                 temp_token=temp_token,
+                search=search,
+                filter=filter,
             )
             return _format_response(response)
         except Exception as e:
@@ -5160,6 +5188,7 @@ def register_generated_tools(mcp, _get_client):
         profile_id: str,
         location_id: str,
         pending_data_token: str,
+        account_id: str | None = None,
         redirect_url: str | None = None,
     ) -> str:
         """Select GBP location
@@ -5167,6 +5196,7 @@ def register_generated_tools(mcp, _get_client):
         Args:
             profile_id: Profile ID from your connection flow (required)
             location_id: The Google Business location ID selected by the user (required)
+            account_id: Optional but recommended. The Google Business Account resource name ("accounts/123") that owns the selected location (returned per-location by GET /v1/connect/googlebusiness/locations). When provided, the location is resolved directly instead of by enumerating the account, which is required for accounts that own many locations. Omit only for small accounts.
             pending_data_token: Token from the OAuth callback redirect (pendingDataToken query param). Tokens and profile data are retrieved server-side from this token. (required)
             redirect_url: Optional custom redirect URL to return to after selection"""
         client = _get_client()
@@ -5174,6 +5204,7 @@ def register_generated_tools(mcp, _get_client):
             response = client.connect.select_google_business_location(
                 profile_id=profile_id,
                 location_id=location_id,
+                account_id=account_id,
                 pending_data_token=pending_data_token,
                 redirect_url=redirect_url,
             )
@@ -5785,14 +5816,20 @@ def register_generated_tools(mcp, _get_client):
             openWorldHint=False,
         )
     )
-    def connect_get_gmb_locations(account_id: str) -> str:
+    def connect_get_gmb_locations(
+        account_id: str, search: str | None = None, filter: str | None = None
+    ) -> str:
         """List GBP locations
 
         Args:
-            account_id: (required)"""
+            account_id: (required)
+            search: Free-text search on the business name, applied server-side by Google. Use for accounts with many locations.
+            filter: Raw Google Business Information API filter expression (advanced; takes precedence over search), e.g. storeCode="LH279411"."""
         client = _get_client()
         try:
-            response = client.connect.get_gmb_locations(account_id=account_id)
+            response = client.connect.get_gmb_locations(
+                account_id=account_id, search=search, filter=filter
+            )
             return _format_response(response)
         except Exception as e:
             return f"Error: {e}"
@@ -5805,16 +5842,21 @@ def register_generated_tools(mcp, _get_client):
             openWorldHint=True,
         )
     )
-    def connect_update_gmb_location(account_id: str, selected_location_id: str) -> str:
+    def connect_update_gmb_location(
+        account_id: str, selected_location_id: str, google_account_id: str | None = None
+    ) -> str:
         """Update GBP location
 
         Args:
             account_id: (required)
-            selected_location_id: (required)"""
+            selected_location_id: (required)
+            google_account_id: Optional but recommended. The Google Business Account resource name ("accounts/123") that owns the new location (from GET gmb-locations). When provided, the location is resolved directly instead of by enumerating the account, which is required for accounts with many locations. Named `googleAccountId` to disambiguate from the path `accountId` (the Zernio account). The legacy field name `accountId` is still accepted for backwards compatibility."""
         client = _get_client()
         try:
             response = client.connect.update_gmb_location(
-                account_id=account_id, selected_location_id=selected_location_id
+                account_id=account_id,
+                selected_location_id=selected_location_id,
+                google_account_id=google_account_id,
             )
             return _format_response(response)
         except Exception as e:
@@ -10777,9 +10819,14 @@ def register_generated_tools(mcp, _get_client):
     ) -> str:
         """List phone numbers
 
-        Args:
-            status: Filter by status (by default excludes released numbers)
-            profile_id: Filter by profile"""
+            Args:
+                status: Filter by status (by default excludes released numbers). NOTE:
+        `status=pending_regulatory` returns the "provisioning" view — numbers
+        still in review PLUS recently-declined (last 30 days) ones, so a
+        failed registration surfaces (with `regulatoryDeclineReason`) instead
+        of silently disappearing. Declined numbers can be re-submitted via
+        POST /v1/whatsapp/phone-numbers/{id}/remediate.
+                profile_id: Filter by profile"""
         client = _get_client()
         try:
             response = client.whatsapp_phone_numbers.get_whats_app_phone_numbers(
@@ -10872,6 +10919,30 @@ def register_generated_tools(mcp, _get_client):
 
     @mcp.tool(
         annotations=ToolAnnotations(
+            title="Check a country's availability + address constraint",
+            readOnlyHint=True,
+            destructiveHint=False,
+            openWorldHint=False,
+        )
+    )
+    def whatsapp_phone_numbers_check_whats_app_number_availability(country: str) -> str:
+        """Check a country's availability + address constraint
+
+        Args:
+            country: ISO-2 country code. (required)"""
+        client = _get_client()
+        try:
+            response = (
+                client.whatsapp_phone_numbers.check_whats_app_number_availability(
+                    country=country
+                )
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
             title="Get regulated-number KYC form spec",
             readOnlyHint=True,
             destructiveHint=False,
@@ -10906,6 +10977,7 @@ def register_generated_tools(mcp, _get_client):
     def whatsapp_phone_numbers_submit_whats_app_number_kyc(
         profile_id: str,
         country: str,
+        submission_id: str | None = None,
         reuse: bool | None = None,
         end_user_first_name: str | None = None,
         end_user_last_name: str | None = None,
@@ -10918,23 +10990,96 @@ def register_generated_tools(mcp, _get_client):
         Args:
             profile_id: (required)
             country: (required)
+            submission_id: Idempotency token for this submission attempt. A retry/double-submit with the same token returns the same number; omit and each call creates a new number.
             reuse: Reuse a prior approved verification for this country (skips document/field collection; places the order immediately).
             end_user_first_name: End user's legal first name. Required when the country has an action/ID-verification (Onfido) requirement.
             end_user_last_name: End user's legal last name. Same condition as endUserFirstName.
             values: requirementId → textual value
-            documents
+            documents: One per document requirement. Each is EITHER inline base64 OR a `documentId` returned by POST /v1/whatsapp/phone-numbers/kyc/upload-document (use the upload endpoint for large files to stay under the request-size limit).
             address"""
         client = _get_client()
         try:
             response = client.whatsapp_phone_numbers.submit_whats_app_number_kyc(
                 profile_id=profile_id,
                 country=country,
+                submission_id=submission_id,
                 reuse=reuse,
                 end_user_first_name=end_user_first_name,
                 end_user_last_name=end_user_last_name,
                 values=values,
                 documents=documents,
                 address=address,
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Upload a single regulated-number KYC document",
+            readOnlyHint=False,
+            destructiveHint=True,
+            openWorldHint=True,
+        )
+    )
+    def whatsapp_phone_numbers_upload_whats_app_number_kyc_document() -> str:
+        """Upload a single regulated-number KYC document"""
+        client = _get_client()
+        try:
+            response = (
+                client.whatsapp_phone_numbers.upload_whats_app_number_kyc_document()
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Get the declined requirements to fix",
+            readOnlyHint=True,
+            destructiveHint=False,
+            openWorldHint=False,
+        )
+    )
+    def whatsapp_phone_numbers_get_whats_app_number_remediation(id: str) -> str:
+        """Get the declined requirements to fix
+
+        Args:
+            id: WhatsAppPhoneNumber id. (required)"""
+        client = _get_client()
+        try:
+            response = client.whatsapp_phone_numbers.get_whats_app_number_remediation(
+                id=id
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Fix a declined number and re-submit",
+            readOnlyHint=False,
+            destructiveHint=True,
+            openWorldHint=True,
+        )
+    )
+    def whatsapp_phone_numbers_remediate_whats_app_number(
+        id: str,
+        values: dict[str, Any] | None = None,
+        documents: list[dict[str, Any]] | None = None,
+        address: dict[str, Any] | None = None,
+    ) -> str:
+        """Fix a declined number and re-submit
+
+        Args:
+            id: (required)
+            values
+            documents
+            address: Same shape as the KYC submit address."""
+        client = _get_client()
+        try:
+            response = client.whatsapp_phone_numbers.remediate_whats_app_number(
+                id=id, values=values, documents=documents, address=address
             )
             return _format_response(response)
         except Exception as e:

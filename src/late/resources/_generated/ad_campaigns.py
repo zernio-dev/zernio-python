@@ -104,12 +104,14 @@ class AdCampaignsResource:
         *,
         budget: dict[str, Any] | None = None,
         bid_strategy: Any | None = None,
+        name: str | None = None,
     ) -> dict[str, Any]:
         """Update a campaign (budget and/or bid strategy)"""
         payload = self._build_payload(
             platform=platform,
             budget=budget,
             bid_strategy=bid_strategy,
+            name=name,
         )
         return self._client._put(f"/v1/ads/campaigns/{campaign_id}", data=payload)
 
@@ -164,6 +166,7 @@ class AdCampaignsResource:
         *,
         budget: dict[str, Any] | None = None,
         status: str | None = None,
+        name: str | None = None,
         bid_strategy: Any | None = None,
         bid_amount: float | None = None,
         roas_average_floor: float | None = None,
@@ -173,6 +176,7 @@ class AdCampaignsResource:
             platform=platform,
             budget=budget,
             status=status,
+            name=name,
             bid_strategy=bid_strategy,
             bid_amount=bid_amount,
             roas_average_floor=roas_average_floor,
@@ -287,12 +291,14 @@ class AdCampaignsResource:
         *,
         budget: dict[str, Any] | None = None,
         bid_strategy: Any | None = None,
+        name: str | None = None,
     ) -> dict[str, Any]:
         """Update a campaign (budget and/or bid strategy) (async)"""
         payload = self._build_payload(
             platform=platform,
             budget=budget,
             bid_strategy=bid_strategy,
+            name=name,
         )
         return await self._client._aput(
             f"/v1/ads/campaigns/{campaign_id}", data=payload
@@ -351,6 +357,7 @@ class AdCampaignsResource:
         *,
         budget: dict[str, Any] | None = None,
         status: str | None = None,
+        name: str | None = None,
         bid_strategy: Any | None = None,
         bid_amount: float | None = None,
         roas_average_floor: float | None = None,
@@ -360,6 +367,7 @@ class AdCampaignsResource:
             platform=platform,
             budget=budget,
             status=status,
+            name=name,
             bid_strategy=bid_strategy,
             bid_amount=bid_amount,
             roas_average_floor=roas_average_floor,

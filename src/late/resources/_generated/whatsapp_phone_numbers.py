@@ -106,6 +106,15 @@ class WhatsappPhoneNumbersResource:
         )
         return self._client._get("/v1/whatsapp/phone-numbers/available", params=params)
 
+    def check_whats_app_number_availability(self, country: str) -> dict[str, Any]:
+        """Check a country's availability + address constraint"""
+        params = self._build_params(
+            country=country,
+        )
+        return self._client._get(
+            "/v1/whatsapp/phone-numbers/availability", params=params
+        )
+
     def get_whats_app_number_kyc_form(
         self, country: str, profile_id: str
     ) -> dict[str, Any]:
@@ -121,17 +130,19 @@ class WhatsappPhoneNumbersResource:
         profile_id: str,
         country: str,
         *,
+        submission_id: str | None = None,
         reuse: bool | None = None,
         end_user_first_name: str | None = None,
         end_user_last_name: str | None = None,
         values: dict[str, Any] | None = None,
-        documents: list[dict[str, Any]] | None = None,
+        documents: list[Any] | None = None,
         address: dict[str, Any] | None = None,
     ) -> dict[str, Any]:
         """Submit regulated-number KYC"""
         payload = self._build_payload(
             profile_id=profile_id,
             country=country,
+            submission_id=submission_id,
             reuse=reuse,
             end_user_first_name=end_user_first_name,
             end_user_last_name=end_user_last_name,
@@ -140,6 +151,32 @@ class WhatsappPhoneNumbersResource:
             address=address,
         )
         return self._client._post("/v1/whatsapp/phone-numbers/kyc", data=payload)
+
+    def upload_whats_app_number_kyc_document(self, x_filename: str) -> dict[str, Any]:
+        """Upload a single regulated-number KYC document"""
+        return self._client._post("/v1/whatsapp/phone-numbers/kyc/upload-document")
+
+    def get_whats_app_number_remediation(self, id: str) -> dict[str, Any]:
+        """Get the declined requirements to fix"""
+        return self._client._get(f"/v1/whatsapp/phone-numbers/{id}/remediate")
+
+    def remediate_whats_app_number(
+        self,
+        id: str,
+        *,
+        values: dict[str, Any] | None = None,
+        documents: list[Any] | None = None,
+        address: dict[str, Any] | None = None,
+    ) -> dict[str, Any]:
+        """Fix a declined number and re-submit"""
+        payload = self._build_payload(
+            values=values,
+            documents=documents,
+            address=address,
+        )
+        return self._client._post(
+            f"/v1/whatsapp/phone-numbers/{id}/remediate", data=payload
+        )
 
     def get_whats_app_phone_number(self, phone_number_id: str) -> dict[str, Any]:
         """Get phone number"""
@@ -205,6 +242,17 @@ class WhatsappPhoneNumbersResource:
             "/v1/whatsapp/phone-numbers/available", params=params
         )
 
+    async def acheck_whats_app_number_availability(
+        self, country: str
+    ) -> dict[str, Any]:
+        """Check a country's availability + address constraint (async)"""
+        params = self._build_params(
+            country=country,
+        )
+        return await self._client._aget(
+            "/v1/whatsapp/phone-numbers/availability", params=params
+        )
+
     async def aget_whats_app_number_kyc_form(
         self, country: str, profile_id: str
     ) -> dict[str, Any]:
@@ -220,17 +268,19 @@ class WhatsappPhoneNumbersResource:
         profile_id: str,
         country: str,
         *,
+        submission_id: str | None = None,
         reuse: bool | None = None,
         end_user_first_name: str | None = None,
         end_user_last_name: str | None = None,
         values: dict[str, Any] | None = None,
-        documents: list[dict[str, Any]] | None = None,
+        documents: list[Any] | None = None,
         address: dict[str, Any] | None = None,
     ) -> dict[str, Any]:
         """Submit regulated-number KYC (async)"""
         payload = self._build_payload(
             profile_id=profile_id,
             country=country,
+            submission_id=submission_id,
             reuse=reuse,
             end_user_first_name=end_user_first_name,
             end_user_last_name=end_user_last_name,
@@ -239,6 +289,36 @@ class WhatsappPhoneNumbersResource:
             address=address,
         )
         return await self._client._apost("/v1/whatsapp/phone-numbers/kyc", data=payload)
+
+    async def aupload_whats_app_number_kyc_document(
+        self, x_filename: str
+    ) -> dict[str, Any]:
+        """Upload a single regulated-number KYC document (async)"""
+        return await self._client._apost(
+            "/v1/whatsapp/phone-numbers/kyc/upload-document"
+        )
+
+    async def aget_whats_app_number_remediation(self, id: str) -> dict[str, Any]:
+        """Get the declined requirements to fix (async)"""
+        return await self._client._aget(f"/v1/whatsapp/phone-numbers/{id}/remediate")
+
+    async def aremediate_whats_app_number(
+        self,
+        id: str,
+        *,
+        values: dict[str, Any] | None = None,
+        documents: list[Any] | None = None,
+        address: dict[str, Any] | None = None,
+    ) -> dict[str, Any]:
+        """Fix a declined number and re-submit (async)"""
+        payload = self._build_payload(
+            values=values,
+            documents=documents,
+            address=address,
+        )
+        return await self._client._apost(
+            f"/v1/whatsapp/phone-numbers/{id}/remediate", data=payload
+        )
 
     async def aget_whats_app_phone_number(self, phone_number_id: str) -> dict[str, Any]:
         """Get phone number (async)"""
