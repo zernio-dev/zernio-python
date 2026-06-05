@@ -2095,6 +2095,8 @@ def register_generated_tools(mcp, _get_client):
         name: str,
         campaign_name: str | None = None,
         ad_set_name: str | None = None,
+        ad_name: str | None = None,
+        tracking: dict[str, Any] | None = None,
         goal: str | None = None,
         budget_amount: float | None = None,
         budget_type: str | None = None,
@@ -2160,6 +2162,8 @@ def register_generated_tools(mcp, _get_client):
                 name: (required)
                 campaign_name: Meta only. Exact campaign name. Overrides the default `<name> - Campaign`.
                 ad_set_name: Meta only. Exact ad set name. Overrides the default `<name> - Ad Set`. (For per-ad names on the multi-creative shape, set `name` on each `creatives[]` entry.)
+                ad_name: Meta only. Exact ad name (the single-creative ad object's name). Overrides the default, which is `name`. (For per-ad names on the multi-creative shape, set `name` on each `creatives[]` entry instead.)
+                tracking: Meta only. Attaches pixel measurement to the ad regardless of the optimization goal (the "Website events" tracking row in Ads Manager). `pixelId` becomes the ad's `tracking_specs` (offsite_conversion + fb_pixel); `urlTags` becomes the ad's `url_tags` (click-tracking query params). Applied to every ad on the legacy single-creative and multi-creative shapes.
                 goal: Required on legacy + multi-creative shapes. Inherited from the ad set on the attach shape. Available goals vary by platform. Meta-specific: `conversions` requires `promotedObject.pixelId` + `promotedObject.customEventType`; `app_promotion` requires `promotedObject.applicationId` + `promotedObject.objectStoreUrl`; `lead_generation` accepts an optional `promotedObject.pageId` (auto-filled from the connected Page when omitted). TikTok-specific: `conversions` (website-conversion ad group) requires `promotedObject.pixelId` (your TikTok Pixel ID) and accepts an optional `promotedObject.customEventType` (a TikTok `optimization_event` code like `ON_WEB_ORDER`, `INITIATE_ORDER`, `ON_WEB_REGISTER`, `FORM`); to inherit a pixel + event from an existing ad group, pass `adSetId` instead. LinkedIn-specific: `engagement`, `traffic`, `awareness`, and `video_views` are supported for standalone ads (creates a Direct Sponsored Content single image or single video ad). `traffic` requires `linkUrl`; `video_views` requires the `video` field. For `lead_generation` / `conversions` on LinkedIn — or to promote an existing post — use `POST /v1/ads/boost`.
                 budget_amount: Required on legacy + multi-creative shapes. Inherited on attach.
                 budget_type: Required on legacy + multi-creative shapes. Inherited on attach.
@@ -2349,6 +2353,8 @@ def register_generated_tools(mcp, _get_client):
                 name=name,
                 campaign_name=campaign_name,
                 ad_set_name=ad_set_name,
+                ad_name=ad_name,
+                tracking=tracking,
                 goal=goal,
                 budget_amount=budget_amount,
                 budget_type=budget_type,
