@@ -294,7 +294,7 @@ tags:
   - name: Webhooks
     description: |
       Configure webhooks for real-time notifications. Webhooks can be created from the dashboard (Settings → Webhooks) or via this API.
-      Events: post.scheduled, post.published, post.failed, post.partial, post.cancelled, post.recycled, post.platform.published, post.platform.failed, account.connected, account.disconnected, account.ads.initial_sync_completed, message.received, message.sent, message.edited, message.deleted, message.delivered, message.read, message.failed, reaction.received, comment.received, review.new, review.updated, lead.received, ad.status_changed, whatsapp.template.status_updated, whatsapp.number.activated, whatsapp.number.declined, whatsapp.number.verification_required, webhook.test.
+      Events: post.scheduled, post.published, post.failed, post.partial, post.cancelled, post.recycled, post.platform.published, post.platform.failed, account.connected, account.disconnected, account.ads.initial_sync_completed, message.received, message.sent, message.edited, message.deleted, message.delivered, message.read, message.failed, reaction.received, comment.received, review.new, review.updated, lead.received, ad.status_changed, whatsapp.template.status_updated, whatsapp.number.activated, whatsapp.number.declined, whatsapp.number.verification_required, whatsapp.number.suspended, whatsapp.number.reactivated, whatsapp.number.released, webhook.test.
       Security: optional HMAC-SHA256 signature in X-Zernio-Signature header. Configure a secret key to enable verification. Custom headers supported.
   - name: Webhook Events
     description: |
@@ -1264,7 +1264,7 @@ components:
           type: array
           items:
             type: string
-            enum: [post.scheduled, post.published, post.failed, post.partial, post.cancelled, post.recycled, post.platform.published, post.platform.failed, account.connected, account.disconnected, account.ads.initial_sync_completed, message.received, message.sent, message.edited, message.deleted, message.delivered, message.read, message.failed, reaction.received, comment.received, review.new, review.updated, ad.status_changed, whatsapp.template.status_updated, whatsapp.number.activated, whatsapp.number.declined, whatsapp.number.verification_required]
+            enum: [post.scheduled, post.published, post.failed, post.partial, post.cancelled, post.recycled, post.platform.published, post.platform.failed, account.connected, account.disconnected, account.ads.initial_sync_completed, message.received, message.sent, message.edited, message.deleted, message.delivered, message.read, message.failed, reaction.received, comment.received, review.new, review.updated, ad.status_changed, whatsapp.template.status_updated, whatsapp.number.activated, whatsapp.number.declined, whatsapp.number.verification_required, whatsapp.number.suspended, whatsapp.number.reactivated, whatsapp.number.released]
           description: Events subscribed to
         isActive:
           type: boolean
@@ -6208,6 +6208,95 @@ webhooks:
       responses:
         '200':
           description: Webhook received successfully
+  whatsapp.number.suspended:
+    post:
+      operationId: onWhatsAppNumberSuspended
+      summary: WhatsApp number suspended event
+      description: |
+        Fired when an active number is suspended (e.g. a failed payment). The
+        number stops working until the issue is resolved, after which a
+        `whatsapp.number.reactivated` event is sent. `reason` carries the cause
+        (e.g. `payment_failed`, `subscription_ended`).
+      tags: [Webhook Events]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                id: { type: string }
+                event: { type: string, enum: [whatsapp.number.suspended] }
+                timestamp: { type: string, format: date-time }
+                number:
+                  type: object
+                  properties:
+                    id: { type: string }
+                    phoneNumber: { type: string }
+                    country: { type: string }
+                    profileId: { type: string }
+                reason: { type: string, nullable: true }
+      responses:
+        '200':
+          description: Webhook received successfully
+  whatsapp.number.reactivated:
+    post:
+      operationId: onWhatsAppNumberReactivated
+      summary: WhatsApp number reactivated event
+      description: |
+        Fired when a suspended number is reactivated (e.g. the payment
+        recovered) and is usable again.
+      tags: [Webhook Events]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                id: { type: string }
+                event: { type: string, enum: [whatsapp.number.reactivated] }
+                timestamp: { type: string, format: date-time }
+                number:
+                  type: object
+                  properties:
+                    id: { type: string }
+                    phoneNumber: { type: string }
+                    country: { type: string }
+                    profileId: { type: string }
+      responses:
+        '200':
+          description: Webhook received successfully
+  whatsapp.number.released:
+    post:
+      operationId: onWhatsAppNumberReleased
+      summary: WhatsApp number released event
+      description: |
+        Fired when a number is released and is no longer usable (by the user, a
+        billing cleanup, or an admin). Terminal. `reason` carries the cause
+        (e.g. `user_requested`, `cleanup_suspended`).
+      tags: [Webhook Events]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                id: { type: string }
+                event: { type: string, enum: [whatsapp.number.released] }
+                timestamp: { type: string, format: date-time }
+                number:
+                  type: object
+                  properties:
+                    id: { type: string }
+                    phoneNumber: { type: string }
+                    country: { type: string }
+                    profileId: { type: string }
+                reason: { type: string, nullable: true }
+      responses:
+        '200':
+          description: Webhook received successfully
   webhook.test:
     post:
       operationId: onWebhookTest
@@ -8342,6 +8431,612 @@ paths:
                 type: object
                 properties:
                   error: { type: string, example: "Access denied to this account" }
+
+  # ─── Inbox analytics ───────────────────────────────────────────────────
+  # Same `[Analytics]` tag as the posting endpoints above so the rendered
+  # docs keep posting + inbox analytics centralized in one group. Every
+  # endpoint here requires `fromDate` (YYYY-MM-DD) and caps the date span
+  # at 365 days.
+  /v1/analytics/inbox/volume:
+    get:
+      operationId: getInboxVolume
+      tags: [Inbox Analytics]
+      summary: Get inbox messaging volume
+      description: |
+        Daily inbox messaging volume + breakdowns. Folds the raw messaging
+        events into three projections so the client can render the volume
+        chart, KPI strip, and per-platform stacked bar from a single call.
+        Max date range is 365 days.
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - name: fromDate
+          in: query
+          required: true
+          schema: { type: string, format: date }
+          description: Inclusive lower bound (YYYY-MM-DD). Required.
+        - name: toDate
+          in: query
+          schema: { type: string, format: date }
+          description: Inclusive upper bound (YYYY-MM-DD). Defaults to today.
+        - name: profileId
+          in: query
+          schema: { type: string }
+        - name: platform
+          in: query
+          schema: { type: string }
+          description: Filter by single platform (facebook, instagram, twitter, etc.).
+        - name: accountId
+          in: query
+          schema: { type: string }
+        - name: source
+          in: query
+          schema: { type: string }
+          description: "Filter by metadata.source lineage (human, workflow, sequence, broadcast, comment_automation, api, contact, platform)."
+      responses:
+        '200':
+          description: Volume breakdown
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success: { type: boolean }
+                  from: { type: string, format: date }
+                  to: { type: string, format: date, nullable: true }
+                  summary:
+                    type: object
+                    properties:
+                      received: { type: integer }
+                      sent: { type: integer }
+                      read: { type: integer }
+                      failed: { type: integer }
+                      uniqueConversations: { type: integer }
+                  timeseries:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        date: { type: string, format: date }
+                        sent: { type: integer }
+                        received: { type: integer }
+                        read: { type: integer }
+                        failed: { type: integer }
+                  byPlatform:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        platform: { type: string }
+                        sent: { type: integer }
+                        received: { type: integer }
+                        read: { type: integer }
+                        failed: { type: integer }
+        '400':
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error: { type: string }
+                  details: { type: object }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /v1/analytics/inbox/heatmap:
+    get:
+      operationId: getInboxHeatmap
+      tags: [Inbox Analytics]
+      summary: Get inbox day-of-week × hour-of-day heatmap
+      description: |
+        Day-of-week × hour-of-day breakdown of inbox messages. Buckets are
+        sparse — only cells with at least one event are returned; clients
+        zero-fill the rest to render the full 7×24 grid. The `dow` field
+        follows ClickHouse's `toDayOfWeek` convention (1 = Monday … 7 =
+        Sunday). Max date range is 365 days.
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - name: fromDate
+          in: query
+          required: true
+          schema: { type: string, format: date }
+        - name: toDate
+          in: query
+          schema: { type: string, format: date }
+        - name: profileId
+          in: query
+          schema: { type: string }
+        - name: platform
+          in: query
+          schema: { type: string }
+        - name: accountId
+          in: query
+          schema: { type: string }
+        - name: source
+          in: query
+          schema: { type: string }
+        - name: action
+          in: query
+          schema: { type: string, enum: [message.received, message.sent, message.read, all] }
+          description: Narrow to a single event type. "all" or omitted means no filter.
+      responses:
+        '200':
+          description: Heatmap buckets
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success: { type: boolean }
+                  from: { type: string, format: date }
+                  to: { type: string, format: date, nullable: true }
+                  buckets:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        dow: { type: integer, minimum: 1, maximum: 7, description: "1 = Monday, 7 = Sunday" }
+                        hour: { type: integer, minimum: 0, maximum: 23 }
+                        received: { type: integer }
+                        sent: { type: integer }
+                        read: { type: integer }
+        '400':
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error: { type: string }
+                  details: { type: object }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /v1/analytics/inbox/source-breakdown:
+    get:
+      operationId: getInboxSourceBreakdown
+      tags: [Inbox Analytics]
+      summary: Get inbox source breakdown
+      description: |
+        Breakdown of inbox messages by their lineage source (the
+        `metadata.source` field set at ingest time: human / workflow /
+        sequence / broadcast / comment_automation / api / contact /
+        platform). Each source row also carries a per-platform sub-split.
+        Max date range is 365 days.
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - name: fromDate
+          in: query
+          required: true
+          schema: { type: string, format: date }
+        - name: toDate
+          in: query
+          schema: { type: string, format: date }
+        - name: profileId
+          in: query
+          schema: { type: string }
+        - name: platform
+          in: query
+          schema: { type: string }
+        - name: accountId
+          in: query
+          schema: { type: string }
+      responses:
+        '200':
+          description: Source breakdown
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success: { type: boolean }
+                  from: { type: string, format: date }
+                  to: { type: string, format: date, nullable: true }
+                  sources:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        source: { type: string }
+                        received: { type: integer }
+                        sent: { type: integer }
+                        read: { type: integer }
+                        byPlatform:
+                          type: array
+                          items:
+                            type: object
+                            properties:
+                              platform: { type: string }
+                              received: { type: integer }
+                              sent: { type: integer }
+                              read: { type: integer }
+        '400':
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error: { type: string }
+                  details: { type: object }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /v1/analytics/inbox/response-time:
+    get:
+      operationId: getInboxResponseTime
+      tags: [Inbox Analytics]
+      summary: Get inbox response-time stats
+      description: |
+        Time-to-first-response stats. Pairs each received message with the
+        next sent message in the same conversation and reports the delta
+        as both summary statistics and a fixed-bucket histogram suited
+        for the analytics page's TTR chart.
+
+        `sampleSize` reflects only conversations that received AND got a
+        reply in the window — received-but-never-answered conversations
+        are excluded. Compare against /v1/analytics/inbox/volume's
+        `summary.received` to compute reply rate.
+
+        Max date range is 365 days.
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - name: fromDate
+          in: query
+          required: true
+          schema: { type: string, format: date }
+        - name: toDate
+          in: query
+          schema: { type: string, format: date }
+        - name: profileId
+          in: query
+          schema: { type: string }
+        - name: platform
+          in: query
+          schema: { type: string }
+        - name: accountId
+          in: query
+          schema: { type: string }
+      responses:
+        '200':
+          description: Response-time summary + histogram
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success: { type: boolean }
+                  from: { type: string, format: date }
+                  to: { type: string, format: date, nullable: true }
+                  summary:
+                    type: object
+                    properties:
+                      sampleSize: { type: integer }
+                      medianSeconds: { type: integer }
+                      p90Seconds: { type: integer }
+                      p99Seconds: { type: integer }
+                      meanSeconds: { type: integer }
+                      fastestSeconds: { type: integer }
+                      slowestSeconds: { type: integer }
+                  histogram:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        bucket: { type: string, description: "Human label (0-1m, 1-5m, 5-15m, 15-60m, 1-4h, 4-24h, 1d+)" }
+                        lowerSeconds: { type: integer }
+                        upperSeconds: { type: integer, nullable: true, description: "null on the open-ended last bucket" }
+                        count: { type: integer }
+        '400':
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error: { type: string }
+                  details: { type: object }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /v1/analytics/inbox/top-accounts:
+    get:
+      operationId: getInboxTopAccounts
+      tags: [Inbox Analytics]
+      summary: Get top accounts by inbox volume
+      description: |
+        Leaderboard of social accounts by inbox message volume. Decorates
+        each row with display labels from the live SocialAccount record
+        (so the UI shows username + displayName, not just an ID). Accounts
+        that no longer map to a SocialAccount surface as "(disconnected)"
+        so the row stays visible. Max date range is 365 days.
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - name: fromDate
+          in: query
+          required: true
+          schema: { type: string, format: date }
+        - name: toDate
+          in: query
+          schema: { type: string, format: date }
+        - name: profileId
+          in: query
+          schema: { type: string }
+        - name: platform
+          in: query
+          schema: { type: string }
+        - name: source
+          in: query
+          schema: { type: string }
+        - name: limit
+          in: query
+          schema: { type: integer, minimum: 1, maximum: 50, default: 10 }
+          description: "Cap on returned rows. Lower than the posting listing's 100 because each row triggers a SocialAccount Mongo lookup."
+      responses:
+        '200':
+          description: Top accounts leaderboard
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success: { type: boolean }
+                  from: { type: string, format: date }
+                  to: { type: string, format: date, nullable: true }
+                  accounts:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        accountId: { type: string }
+                        platform: { type: string }
+                        displayName: { type: string, description: "(disconnected) when the SocialAccount no longer exists" }
+                        username: { type: string }
+                        received: { type: integer }
+                        sent: { type: integer }
+                        total: { type: integer }
+                        conversations: { type: integer }
+                        medianResponseSeconds: { type: integer }
+                        repliedCount: { type: integer, description: "Distinguishes 'instant replies' from 'no replies at all' so a zero medianResponseSeconds with repliedCount=0 renders as '—' instead of '0s'" }
+        '400':
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error: { type: string }
+                  details: { type: object }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /v1/analytics/inbox/conversations:
+    get:
+      operationId: listInboxConversationAnalytics
+      tags: [Inbox Analytics]
+      summary: List conversations with inbox analytics
+      description: |
+        Per-conversation listing with per-row totals + first/last message
+        timestamps. The inbox analog of GET /v1/analytics (posts listing) —
+        same filter shape, same pagination, same sort/order semantics.
+        Use as the entry point for the per-conversation analytics drawer
+        at /v1/analytics/inbox/conversations/{conversationId}.
+
+        Rows are enriched with the conversation's participant info
+        (`participantName`, `participantUsername`, `participantPicture`)
+        and last-message preview by joining the Conversation document
+        scoped to the caller's team. Max date range is 365 days.
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - name: fromDate
+          in: query
+          required: true
+          schema: { type: string, format: date }
+        - name: toDate
+          in: query
+          schema: { type: string, format: date }
+        - name: profileId
+          in: query
+          schema: { type: string }
+        - name: platform
+          in: query
+          schema: { type: string }
+        - name: accountId
+          in: query
+          schema: { type: string }
+        - name: source
+          in: query
+          schema: { type: string }
+        - name: limit
+          in: query
+          schema: { type: integer, minimum: 1, maximum: 100, default: 50 }
+        - name: page
+          in: query
+          schema: { type: integer, minimum: 1, default: 1 }
+        - name: sortBy
+          in: query
+          schema: { type: string, enum: [lastMessageAt, firstMessageAt, totalMessages, received, sent, read, failed], default: lastMessageAt }
+        - name: order
+          in: query
+          schema: { type: string, enum: [asc, desc], default: desc }
+      responses:
+        '200':
+          description: Paginated conversation analytics list
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success: { type: boolean }
+                  from: { type: string, format: date }
+                  to: { type: string, format: date, nullable: true }
+                  items:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        conversationId: { type: string, description: "The platformConversationId (the same identity used by metadata.conversationId)" }
+                        mongoId: { type: string, nullable: true, description: "The Conversation document _id, when a matching doc exists" }
+                        accountId: { type: string }
+                        platform: { type: string }
+                        participantName: { type: string, nullable: true }
+                        participantUsername: { type: string, nullable: true }
+                        participantPicture: { type: string, nullable: true }
+                        lastMessage: { type: string, nullable: true, description: "Cached preview from the Conversation doc" }
+                        totalMessages: { type: integer }
+                        received: { type: integer }
+                        sent: { type: integer }
+                        read: { type: integer }
+                        failed: { type: integer }
+                        firstMessageAt: { type: string, format: date-time }
+                        lastMessageAt: { type: string, format: date-time }
+                  pagination:
+                    type: object
+                    properties:
+                      page: { type: integer }
+                      limit: { type: integer }
+                      total: { type: integer }
+                      totalPages: { type: integer }
+                      hasMore: { type: boolean }
+        '400':
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error: { type: string }
+                  details: { type: object }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /v1/analytics/inbox/conversations/{conversationId}:
+    get:
+      operationId: getInboxConversationAnalytics
+      tags: [Inbox Analytics]
+      summary: Get analytics for a single conversation
+      description: |
+        Per-conversation inbox analytics. The inbox analog of
+        /v1/analytics/post-timeline — one conversation, daily totals,
+        source mix.
+
+        The {conversationId} path param accepts EITHER the Mongo `_id` of
+        the Conversation document OR its `platformConversationId` (the
+        same identity used by metadata.conversationId at ingest time).
+        Ownership is verified in MongoDB against the caller's team
+        before the Tinybird query fires.
+
+        Max date range is 365 days.
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - name: conversationId
+          in: path
+          required: true
+          schema: { type: string }
+          description: Mongo _id or platformConversationId.
+        - name: fromDate
+          in: query
+          required: true
+          schema: { type: string, format: date }
+        - name: toDate
+          in: query
+          schema: { type: string, format: date }
+      responses:
+        '200':
+          description: Per-conversation analytics
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success: { type: boolean }
+                  conversationId: { type: string, description: "The platformConversationId" }
+                  mongoId: { type: string }
+                  platform: { type: string, nullable: true }
+                  from: { type: string, format: date }
+                  to: { type: string, format: date, nullable: true }
+                  summary:
+                    type: object
+                    properties:
+                      received: { type: integer }
+                      sent: { type: integer }
+                      read: { type: integer }
+                      failed: { type: integer }
+                      totalMessages: { type: integer }
+                      firstMessageAt: { type: string, format: date-time, nullable: true }
+                      lastMessageAt: { type: string, format: date-time, nullable: true }
+                  timeseries:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        date: { type: string, format: date }
+                        sent: { type: integer }
+                        received: { type: integer }
+                        read: { type: integer }
+                        failed: { type: integer }
+                  bySource:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        source: { type: string, description: "(unspecified) for legacy rows with no metadata.source" }
+                        count: { type: integer }
+        '400':
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error: { type: string }
+                  details: { type: object }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404':
+          description: Conversation not found or not owned by the caller's team
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error: { type: string, example: "Conversation not found." }
+                  code: { type: string, example: conversation_not_found }
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
 
   /v1/account-groups:
     get:
@@ -17126,7 +17821,7 @@ paths:
                   minItems: 1
                   items:
                     type: string
-                    enum: [post.scheduled, post.published, post.failed, post.partial, post.cancelled, post.recycled, post.platform.published, post.platform.failed, account.connected, account.disconnected, account.ads.initial_sync_completed, message.received, message.sent, message.edited, message.deleted, message.delivered, message.read, message.failed, reaction.received, comment.received, review.new, review.updated, ad.status_changed, whatsapp.template.status_updated, whatsapp.number.activated, whatsapp.number.declined, whatsapp.number.verification_required]
+                    enum: [post.scheduled, post.published, post.failed, post.partial, post.cancelled, post.recycled, post.platform.published, post.platform.failed, account.connected, account.disconnected, account.ads.initial_sync_completed, message.received, message.sent, message.edited, message.deleted, message.delivered, message.read, message.failed, reaction.received, comment.received, review.new, review.updated, ad.status_changed, whatsapp.template.status_updated, whatsapp.number.activated, whatsapp.number.declined, whatsapp.number.verification_required, whatsapp.number.suspended, whatsapp.number.reactivated, whatsapp.number.released]
                   description: Events to subscribe to (at least one required)
                 isActive:
                   type: boolean
@@ -17200,7 +17895,7 @@ paths:
                   minItems: 1
                   items:
                     type: string
-                    enum: [post.scheduled, post.published, post.failed, post.partial, post.cancelled, post.recycled, post.platform.published, post.platform.failed, account.connected, account.disconnected, account.ads.initial_sync_completed, message.received, message.sent, message.edited, message.deleted, message.delivered, message.read, message.failed, reaction.received, comment.received, review.new, review.updated, ad.status_changed, whatsapp.template.status_updated, whatsapp.number.activated, whatsapp.number.declined, whatsapp.number.verification_required]
+                    enum: [post.scheduled, post.published, post.failed, post.partial, post.cancelled, post.recycled, post.platform.published, post.platform.failed, account.connected, account.disconnected, account.ads.initial_sync_completed, message.received, message.sent, message.edited, message.deleted, message.delivered, message.read, message.failed, reaction.received, comment.received, review.new, review.updated, ad.status_changed, whatsapp.template.status_updated, whatsapp.number.activated, whatsapp.number.declined, whatsapp.number.verification_required, whatsapp.number.suspended, whatsapp.number.reactivated, whatsapp.number.released]
                   description: Events to subscribe to. Must contain at least one event if provided.
                 isActive:
                   type: boolean

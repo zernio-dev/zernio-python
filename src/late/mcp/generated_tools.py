@@ -6984,6 +6984,277 @@ def register_generated_tools(mcp, _get_client):
         except Exception as e:
             return f"Error: {e}"
 
+    # INBOX_ANALYTICS
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Get inbox messaging volume",
+            readOnlyHint=True,
+            destructiveHint=False,
+            openWorldHint=False,
+        )
+    )
+    def inbox_analytics_get_inbox_volume(
+        from_date: str,
+        to_date: str | None = None,
+        profile_id: str | None = None,
+        platform: str | None = None,
+        account_id: str | None = None,
+        source: str | None = None,
+    ) -> str:
+        """Get inbox messaging volume
+
+        Args:
+            from_date: Inclusive lower bound (YYYY-MM-DD). Required. (required)
+            to_date: Inclusive upper bound (YYYY-MM-DD). Defaults to today.
+            profile_id
+            platform: Filter by single platform (facebook, instagram, twitter, etc.).
+            account_id
+            source: Filter by metadata.source lineage (human, workflow, sequence, broadcast, comment_automation, api, contact, platform)."""
+        client = _get_client()
+        try:
+            response = client.inbox_analytics.get_inbox_volume(
+                from_date=from_date,
+                to_date=to_date,
+                profile_id=profile_id,
+                platform=platform,
+                account_id=account_id,
+                source=source,
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Get inbox day-of-week × hour-of-day heatmap",
+            readOnlyHint=True,
+            destructiveHint=False,
+            openWorldHint=False,
+        )
+    )
+    def inbox_analytics_get_inbox_heatmap(
+        from_date: str,
+        to_date: str | None = None,
+        profile_id: str | None = None,
+        platform: str | None = None,
+        account_id: str | None = None,
+        source: str | None = None,
+        action: str | None = None,
+    ) -> str:
+        """Get inbox day-of-week × hour-of-day heatmap
+
+        Args:
+            from_date: (required)
+            to_date
+            profile_id
+            platform
+            account_id
+            source
+            action: Narrow to a single event type. "all" or omitted means no filter."""
+        client = _get_client()
+        try:
+            response = client.inbox_analytics.get_inbox_heatmap(
+                from_date=from_date,
+                to_date=to_date,
+                profile_id=profile_id,
+                platform=platform,
+                account_id=account_id,
+                source=source,
+                action=action,
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Get inbox source breakdown",
+            readOnlyHint=True,
+            destructiveHint=False,
+            openWorldHint=False,
+        )
+    )
+    def inbox_analytics_get_inbox_source_breakdown(
+        from_date: str,
+        to_date: str | None = None,
+        profile_id: str | None = None,
+        platform: str | None = None,
+        account_id: str | None = None,
+    ) -> str:
+        """Get inbox source breakdown
+
+        Args:
+            from_date: (required)
+            to_date
+            profile_id
+            platform
+            account_id"""
+        client = _get_client()
+        try:
+            response = client.inbox_analytics.get_inbox_source_breakdown(
+                from_date=from_date,
+                to_date=to_date,
+                profile_id=profile_id,
+                platform=platform,
+                account_id=account_id,
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Get inbox response-time stats",
+            readOnlyHint=True,
+            destructiveHint=False,
+            openWorldHint=False,
+        )
+    )
+    def inbox_analytics_get_inbox_response_time(
+        from_date: str,
+        to_date: str | None = None,
+        profile_id: str | None = None,
+        platform: str | None = None,
+        account_id: str | None = None,
+    ) -> str:
+        """Get inbox response-time stats
+
+        Args:
+            from_date: (required)
+            to_date
+            profile_id
+            platform
+            account_id"""
+        client = _get_client()
+        try:
+            response = client.inbox_analytics.get_inbox_response_time(
+                from_date=from_date,
+                to_date=to_date,
+                profile_id=profile_id,
+                platform=platform,
+                account_id=account_id,
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Get top accounts by inbox volume",
+            readOnlyHint=True,
+            destructiveHint=False,
+            openWorldHint=False,
+        )
+    )
+    def inbox_analytics_get_inbox_top_accounts(
+        from_date: str,
+        to_date: str | None = None,
+        profile_id: str | None = None,
+        platform: str | None = None,
+        source: str | None = None,
+        limit: int = 10,
+    ) -> str:
+        """Get top accounts by inbox volume
+
+        Args:
+            from_date: (required)
+            to_date
+            profile_id
+            platform
+            source
+            limit: Cap on returned rows. Lower than the posting listing's 100 because each row triggers a SocialAccount Mongo lookup."""
+        client = _get_client()
+        try:
+            response = client.inbox_analytics.get_inbox_top_accounts(
+                from_date=from_date,
+                to_date=to_date,
+                profile_id=profile_id,
+                platform=platform,
+                source=source,
+                limit=limit,
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="List conversations with inbox analytics",
+            readOnlyHint=True,
+            destructiveHint=False,
+            openWorldHint=False,
+        )
+    )
+    def inbox_analytics_list_inbox_conversation_analytics(
+        from_date: str,
+        to_date: str | None = None,
+        profile_id: str | None = None,
+        platform: str | None = None,
+        account_id: str | None = None,
+        source: str | None = None,
+        limit: int = 50,
+        page: int = 1,
+        sort_by: str = "lastMessageAt",
+        order: str = "desc",
+    ) -> str:
+        """List conversations with inbox analytics
+
+        Args:
+            from_date: (required)
+            to_date
+            profile_id
+            platform
+            account_id
+            source
+            limit
+            page
+            sort_by
+            order"""
+        client = _get_client()
+        try:
+            response = client.inbox_analytics.list_inbox_conversation_analytics(
+                from_date=from_date,
+                to_date=to_date,
+                profile_id=profile_id,
+                platform=platform,
+                account_id=account_id,
+                source=source,
+                limit=limit,
+                page=page,
+                sort_by=sort_by,
+                order=order,
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Get analytics for a single conversation",
+            readOnlyHint=True,
+            destructiveHint=False,
+            openWorldHint=False,
+        )
+    )
+    def inbox_analytics_get_inbox_conversation_analytics(
+        conversation_id: str, from_date: str, to_date: str | None = None
+    ) -> str:
+        """Get analytics for a single conversation
+
+        Args:
+            conversation_id: Mongo _id or platformConversationId. (required)
+            from_date: (required)
+            to_date"""
+        client = _get_client()
+        try:
+            response = client.inbox_analytics.get_inbox_conversation_analytics(
+                conversation_id=conversation_id, from_date=from_date, to_date=to_date
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
     # INSTAGRAM
 
     @mcp.tool(

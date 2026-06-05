@@ -548,6 +548,17 @@ Both `from zernio import ...` and `from late import ...` work identically. The `
 | `gmb_verifications.fetch_google_business_verification_options()` | Fetch verification options |
 | `gmb_verifications.start_google_business_verification()` | Start a verification |
 
+### Inbox Analytics
+| Method | Description |
+|--------|-------------|
+| `inbox_analytics.list_inbox_conversation_analytics()` | List conversations with inbox analytics |
+| `inbox_analytics.get_inbox_conversation_analytics()` | Get analytics for a single conversation |
+| `inbox_analytics.get_inbox_heatmap()` | Get inbox day-of-week × hour-of-day heatmap |
+| `inbox_analytics.get_inbox_response_time()` | Get inbox response-time stats |
+| `inbox_analytics.get_inbox_source_breakdown()` | Get inbox source breakdown |
+| `inbox_analytics.get_inbox_top_accounts()` | Get top accounts by inbox volume |
+| `inbox_analytics.get_inbox_volume()` | Get inbox messaging volume |
+
 ### Instagram
 | Method | Description |
 |--------|-------------|

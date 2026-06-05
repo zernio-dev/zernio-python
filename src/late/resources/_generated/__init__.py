@@ -19,6 +19,7 @@ from .custom_fields import CustomFieldsResource
 from .discord import DiscordResource
 from .gmb_services import GmbServicesResource
 from .gmb_verifications import GmbVerificationsResource
+from .inbox_analytics import InboxAnalyticsResource
 from .instagram import InstagramResource
 from .invites import InvitesResource
 from .logs import LogsResource
@@ -62,6 +63,7 @@ __all__ = [
     "DiscordResource",
     "GmbServicesResource",
     "GmbVerificationsResource",
+    "InboxAnalyticsResource",
     "InstagramResource",
     "InvitesResource",
     "LogsResource",
