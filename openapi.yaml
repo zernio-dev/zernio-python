@@ -142,6 +142,9 @@ x-documentation:
     - `post.recycled` - Post recycled (cloned and re-scheduled)
     - `post.platform.published` - A single platform target inside a post finished publishing successfully. Fires once per platform-account as it terminates, without waiting for other platforms on the same post. Use this for incremental UIs; use `post.published` for the post-level rollup.
     - `post.platform.failed` - A single platform target inside a post failed permanently. Temporary/retryable failures do NOT fire this event, only permanent ones, so retry loops stay quiet.
+    - `post.external.created` - A native post authored outside Zernio (e.g. a Google Business Profile localPost created in the Google UI) was detected by our sync for the first time. Poll-driven (~hourly), not real-time. Payload carries `post.source: "external"`.
+    - `post.external.updated` - A tracked native post's text or media changed on the platform. Edits are detected by comparing text/media structure and (where the platform exposes it) the platform's own edit timestamp; media-URL-only refreshes do not fire this.
+    - `post.external.deleted` - A tracked native post was detected as removed from the platform. `post.deletedAt` carries the detection time. Coverage is bounded to the most recent posts the platform listing returns.
     - `account.connected` - Social account connected
     - `account.disconnected` - Social account disconnected (token expired)
     - `account.ads.initial_sync_completed` - Initial ads sync (discovery + 90-day backfill) completed for an ads-enabled account
@@ -294,7 +297,7 @@ tags:
   - name: Webhooks
     description: |
       Configure webhooks for real-time notifications. Webhooks can be created from the dashboard (Settings → Webhooks) or via this API.
-      Events: post.scheduled, post.published, post.failed, post.partial, post.cancelled, post.recycled, post.platform.published, post.platform.failed, account.connected, account.disconnected, account.ads.initial_sync_completed, message.received, message.sent, message.edited, message.deleted, message.delivered, message.read, message.failed, reaction.received, comment.received, review.new, review.updated, lead.received, ad.status_changed, whatsapp.template.status_updated, whatsapp.number.activated, whatsapp.number.declined, whatsapp.number.verification_required, whatsapp.number.suspended, whatsapp.number.reactivated, whatsapp.number.released, webhook.test.
+      Events: post.scheduled, post.published, post.failed, post.partial, post.cancelled, post.recycled, post.platform.published, post.platform.failed, post.external.created, post.external.updated, post.external.deleted, account.connected, account.disconnected, account.ads.initial_sync_completed, message.received, message.sent, message.edited, message.deleted, message.delivered, message.read, message.failed, reaction.received, comment.received, review.new, review.updated, lead.received, ad.status_changed, whatsapp.template.status_updated, whatsapp.number.activated, whatsapp.number.declined, whatsapp.number.verification_required, whatsapp.number.suspended, whatsapp.number.reactivated, whatsapp.number.released, webhook.test.
       Security: optional HMAC-SHA256 signature in X-Zernio-Signature header. Configure a secret key to enable verification. Custom headers supported.
   - name: Webhook Events
     description: |
@@ -1264,7 +1267,7 @@ components:
           type: array
           items:
             type: string
-            enum: [post.scheduled, post.published, post.failed, post.partial, post.cancelled, post.recycled, post.platform.published, post.platform.failed, account.connected, account.disconnected, account.ads.initial_sync_completed, message.received, message.sent, message.edited, message.deleted, message.delivered, message.read, message.failed, reaction.received, comment.received, review.new, review.updated, ad.status_changed, whatsapp.template.status_updated, whatsapp.number.activated, whatsapp.number.declined, whatsapp.number.verification_required, whatsapp.number.suspended, whatsapp.number.reactivated, whatsapp.number.released]
+            enum: [post.scheduled, post.published, post.failed, post.partial, post.cancelled, post.recycled, post.platform.published, post.platform.failed, post.external.created, post.external.updated, post.external.deleted, account.connected, account.disconnected, account.ads.initial_sync_completed, message.received, message.sent, message.edited, message.deleted, message.delivered, message.read, message.failed, reaction.received, comment.received, review.new, review.updated, ad.status_changed, whatsapp.template.status_updated, whatsapp.number.activated, whatsapp.number.declined, whatsapp.number.verification_required, whatsapp.number.suspended, whatsapp.number.reactivated, whatsapp.number.released]
           description: Events subscribed to
         isActive:
           type: boolean
@@ -1830,6 +1833,80 @@ components:
           enum: [review.updated]
         review:
           $ref: '#/components/schemas/ReviewWebhookReview'
+        account:
+          type: object
+          required: [id, platform, username]
+          properties:
+            id:
+              type: string
+            platform:
+              type: string
+            username:
+              type: string
+        timestamp:
+          type: string
+          format: date-time
+    ExternalPostWebhookPost:
+      type: object
+      description: Native (external) post data shared by all post.external.* payloads.
+      required: [id, platform, accountId, url, content, mediaType, mediaItems, thumbnailUrl, publishedAt, source]
+      properties:
+        id:
+          type: string
+          description: Platform-native post ID (NOT a Zernio post ID).
+        platform:
+          type: string
+          description: Platform the post lives on (e.g. "googlebusiness").
+        accountId:
+          type: string
+          description: Zernio social account ID the post belongs to.
+        url:
+          type: string
+          nullable: true
+          description: Direct URL to the post on the platform, when available.
+        content:
+          type: string
+          description: Post text. May be empty.
+        mediaType:
+          type: string
+          description: One of image, video, gif, document, text, carousel.
+        mediaItems:
+          type: array
+          items:
+            $ref: '#/components/schemas/ExternalPostMediaItem'
+        thumbnailUrl:
+          type: string
+          nullable: true
+        publishedAt:
+          type: string
+          format: date-time
+        source:
+          type: string
+          enum: [external]
+          description: Always "external" — distinguishes these from Zernio-originated post.* events.
+        deletedAt:
+          type: string
+          format: date-time
+          nullable: true
+          description: Detection time of deletion. Present on post.external.deleted; null/absent otherwise.
+    WebhookPayloadExternalPost:
+      type: object
+      description: |
+        Webhook payload for post.external.created / post.external.updated /
+        post.external.deleted. Fired by Zernio's background sync when it detects a
+        natively-authored post (e.g. a Google Business Profile localPost created in
+        the Google UI), NOT a post published through Zernio. Poll-driven (~hourly),
+        not real-time. On post.external.deleted, post.deletedAt is populated.
+      required: [id, event, post, account, timestamp]
+      properties:
+        id:
+          type: string
+          description: Stable webhook event ID
+        event:
+          type: string
+          enum: [post.external.created, post.external.updated, post.external.deleted]
+        post:
+          $ref: '#/components/schemas/ExternalPostWebhookPost'
         account:
           type: object
           required: [id, platform, username]
@@ -2912,6 +2989,23 @@ components:
         tiktokProcessed:
           type: boolean
           description: Internal flag indicating the image was resized for TikTok
+    ExternalPostMediaItem:
+      type: object
+      description: >
+        A media item on a native (external/synced) post, as carried by post.external.*
+        webhook payloads. Distinct from the richer MediaItem used for Zernio-authored
+        posts: external items are always already-published (url required) and limited to
+        image or video. Kept as a separate schema so the generated SDK model does not
+        collide with MediaItem.
+      required: [type, url]
+      properties:
+        type:
+          type: string
+          enum: [image, video]
+        url:
+          type: string
+        thumbnail:
+          type: string
     PlatformTarget:
       type: object
       properties:
@@ -5975,6 +6069,61 @@ webhooks:
           application/json:
             schema:
               $ref: '#/components/schemas/WebhookPayloadReviewUpdated'
+      responses:
+        '200':
+          description: Webhook received successfully
+  post.external.created:
+    post:
+      operationId: onPostExternalCreated
+      summary: External post created event
+      description: |
+        Fired when Zernio's background sync detects a natively-authored post
+        (created outside Zernio, e.g. a Google Business Profile localPost made in
+        the Google UI) for the first time. Poll-driven (~hourly), not real-time.
+        `post.source` is always "external".
+      tags: [Webhook Events]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/WebhookPayloadExternalPost'
+      responses:
+        '200':
+          description: Webhook received successfully
+  post.external.updated:
+    post:
+      operationId: onPostExternalUpdated
+      summary: External post updated event
+      description: |
+        Fired when a tracked native post's text or media changed on the platform.
+        Detected by comparing text/media structure and, where available, the
+        platform's own edit timestamp; a media-URL-only refresh does not fire this.
+      tags: [Webhook Events]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/WebhookPayloadExternalPost'
+      responses:
+        '200':
+          description: Webhook received successfully
+  post.external.deleted:
+    post:
+      operationId: onPostExternalDeleted
+      summary: External post deleted event
+      description: |
+        Fired when a tracked native post is detected as removed from the platform.
+        `post.deletedAt` carries the detection time. Coverage is bounded to the
+        most recent posts the platform listing returns.
+      tags: [Webhook Events]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/WebhookPayloadExternalPost'
       responses:
         '200':
           description: Webhook received successfully
@@ -17821,7 +17970,7 @@ paths:
                   minItems: 1
                   items:
                     type: string
-                    enum: [post.scheduled, post.published, post.failed, post.partial, post.cancelled, post.recycled, post.platform.published, post.platform.failed, account.connected, account.disconnected, account.ads.initial_sync_completed, message.received, message.sent, message.edited, message.deleted, message.delivered, message.read, message.failed, reaction.received, comment.received, review.new, review.updated, ad.status_changed, whatsapp.template.status_updated, whatsapp.number.activated, whatsapp.number.declined, whatsapp.number.verification_required, whatsapp.number.suspended, whatsapp.number.reactivated, whatsapp.number.released]
+                    enum: [post.scheduled, post.published, post.failed, post.partial, post.cancelled, post.recycled, post.platform.published, post.platform.failed, post.external.created, post.external.updated, post.external.deleted, account.connected, account.disconnected, account.ads.initial_sync_completed, message.received, message.sent, message.edited, message.deleted, message.delivered, message.read, message.failed, reaction.received, comment.received, review.new, review.updated, ad.status_changed, whatsapp.template.status_updated, whatsapp.number.activated, whatsapp.number.declined, whatsapp.number.verification_required, whatsapp.number.suspended, whatsapp.number.reactivated, whatsapp.number.released]
                   description: Events to subscribe to (at least one required)
                 isActive:
                   type: boolean
@@ -17895,7 +18044,7 @@ paths:
                   minItems: 1
                   items:
                     type: string
-                    enum: [post.scheduled, post.published, post.failed, post.partial, post.cancelled, post.recycled, post.platform.published, post.platform.failed, account.connected, account.disconnected, account.ads.initial_sync_completed, message.received, message.sent, message.edited, message.deleted, message.delivered, message.read, message.failed, reaction.received, comment.received, review.new, review.updated, ad.status_changed, whatsapp.template.status_updated, whatsapp.number.activated, whatsapp.number.declined, whatsapp.number.verification_required, whatsapp.number.suspended, whatsapp.number.reactivated, whatsapp.number.released]
+                    enum: [post.scheduled, post.published, post.failed, post.partial, post.cancelled, post.recycled, post.platform.published, post.platform.failed, post.external.created, post.external.updated, post.external.deleted, account.connected, account.disconnected, account.ads.initial_sync_completed, message.received, message.sent, message.edited, message.deleted, message.delivered, message.read, message.failed, reaction.received, comment.received, review.new, review.updated, ad.status_changed, whatsapp.template.status_updated, whatsapp.number.activated, whatsapp.number.declined, whatsapp.number.verification_required, whatsapp.number.suspended, whatsapp.number.reactivated, whatsapp.number.released]
                   description: Events to subscribe to. Must contain at least one event if provided.
                 isActive:
                   type: boolean
@@ -25263,6 +25412,7 @@ paths:
                             dmsSent: { type: integer }
                             dmsFailed: { type: integer }
                             uniqueContacts: { type: integer }
+                            trackedSends: { type: integer, description: "DMs sent with a trackable (wrapped) link. CTR denominator: divide clicks by this, not dmsSent. Lags dmsSent for campaigns that predate click tracking." }
                             linkClicks: { type: integer, description: "Total clicks on tracked links (bots/prefetch excluded)." }
                             uniqueClicks: { type: integer, description: "Distinct people who clicked a tracked link." }
                             delivered: { type: integer, description: "DMs confirmed delivered (Messenger; IG emits no delivery receipt)." }
