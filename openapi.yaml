@@ -14215,7 +14215,9 @@ paths:
       description: |
         Fetches reviews across multiple locations in a single request.
         More efficient than calling GET /gmb-reviews per location for multi-location businesses.
-        Reviews are grouped by location in the response.
+        Returns a flat list of individual reviews, each tagged with its review resource name.
+        Note: this endpoint does not return aggregate metrics (averageRating / totalReviewCount).
+        For those, use the single-location GET /gmb-reviews endpoint.
       parameters:
         - name: accountId
           in: path
@@ -14261,10 +14263,8 @@ paths:
                     items:
                       type: object
                       properties:
-                        locationName: { type: string }
-                        reviews: { type: array, items: { type: object } }
-                        averageRating: { type: number }
-                        totalReviewCount: { type: integer }
+                        name: { type: string, description: Full review resource name (accounts/*/locations/*/reviews/*) }
+                        review: { type: object, description: The review object (reviewId, starRating, comment, reviewer, createTime, updateTime, reviewReply) }
                   nextPageToken: { type: string }
         '400':
           description: Invalid request
