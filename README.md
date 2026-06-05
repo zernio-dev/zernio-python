@@ -415,6 +415,7 @@ Both `from zernio import ...` and `from late import ...` work identically. The `
 | `ads.delete_ad()` | Cancel an ad |
 | `ads.delete_conversion_destination()` | Soft-delete a conversion destination |
 | `ads.add_conversion_associations()` | Associate campaigns with a conversion destination |
+| `ads.adjust_conversions()` | Adjust already-uploaded conversions (Google only) |
 | `ads.archive_lead_form()` | Archive a Lead Gen form |
 | `ads.boost_post()` | Boost post as ad |
 | `ads.estimate_ad_reach()` | Estimate audience reach |

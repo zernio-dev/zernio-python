@@ -5027,7 +5027,7 @@ components:
         platform: { type: string, enum: [facebook, instagram, tiktok, linkedin, pinterest, google, twitter] }
         status: { $ref: '#/components/schemas/AdStatus' }
         adType: { type: string, enum: [boost, standalone] }
-        goal: { type: string, enum: [engagement, traffic, awareness, video_views, lead_generation, conversions, app_promotion], description: "Available goals vary by platform. Meta (Facebook/Instagram) and TikTok support all 7. LinkedIn supports all except app_promotion. Twitter/X supports engagement, traffic, awareness, video_views, app_promotion. Pinterest and Google Ads support only engagement, traffic, awareness, video_views." }
+        goal: { type: string, enum: [engagement, traffic, awareness, video_views, lead_generation, lead_conversion, conversions, app_promotion], description: "Available goals vary by platform. Meta (Facebook/Instagram) supports all 8 (incl. `lead_conversion` = website pixel lead optimization). TikTok supports the 7 non-`lead_conversion` goals. LinkedIn supports all except app_promotion / lead_conversion. Twitter/X supports engagement, traffic, awareness, video_views, app_promotion. Pinterest and Google Ads support only engagement, traffic, awareness, video_views." }
         isExternal: { type: boolean, description: True for ads synced from platform ad managers }
         budget:
           type: object
@@ -26928,7 +26928,7 @@ paths:
                         properties:
                           key: { type: string }
                           value: { type: string }
-                goal: { type: string, enum: [engagement, traffic, awareness, video_views, lead_generation, conversions, app_promotion], description: "Required on legacy + multi-creative shapes. Inherited from the ad set on the attach shape. Available goals vary by platform. Meta-specific: `conversions` requires `promotedObject.pixelId` + `promotedObject.customEventType`; `app_promotion` requires `promotedObject.applicationId` + `promotedObject.objectStoreUrl`; `lead_generation` accepts an optional `promotedObject.pageId` (auto-filled from the connected Page when omitted). TikTok-specific: `conversions` (website-conversion ad group) requires `promotedObject.pixelId` (your TikTok Pixel ID) and accepts an optional `promotedObject.customEventType` (a TikTok `optimization_event` code like `ON_WEB_ORDER`, `INITIATE_ORDER`, `ON_WEB_REGISTER`, `FORM`); to inherit a pixel + event from an existing ad group, pass `adSetId` instead. LinkedIn-specific: `engagement`, `traffic`, `awareness`, and `video_views` are supported for standalone ads (creates a Direct Sponsored Content single image or single video ad). `traffic` requires `linkUrl`; `video_views` requires the `video` field. For `lead_generation` / `conversions` on LinkedIn — or to promote an existing post — use `POST /v1/ads/boost`." }
+                goal: { type: string, enum: [engagement, traffic, awareness, video_views, lead_generation, lead_conversion, conversions, app_promotion], description: "Required on legacy + multi-creative shapes. Inherited from the ad set on the attach shape. Available goals vary by platform. Meta-specific: `conversions` (OUTCOME_SALES) requires `promotedObject.pixelId` + `promotedObject.customEventType` (use a commerce event, e.g. PURCHASE, START_TRIAL); `lead_conversion` (OUTCOME_LEADS, website pixel leads) requires the same pixel + event but with a leads-class event (e.g. LEAD, SUBMIT_APPLICATION, SCHEDULE, CONTACT) — these are rejected under `conversions` because Meta gates conversion events by objective; `lead_generation` is OUTCOME_LEADS with instant forms (`leadGenFormId`), distinct from `lead_conversion`'s website pixel optimization; `app_promotion` requires `promotedObject.applicationId` + `promotedObject.objectStoreUrl`; `lead_generation` accepts an optional `promotedObject.pageId` (auto-filled from the connected Page when omitted). TikTok-specific: `conversions` (website-conversion ad group) requires `promotedObject.pixelId` (your TikTok Pixel ID) and accepts an optional `promotedObject.customEventType` (a TikTok `optimization_event` code like `ON_WEB_ORDER`, `INITIATE_ORDER`, `ON_WEB_REGISTER`, `FORM`); to inherit a pixel + event from an existing ad group, pass `adSetId` instead. LinkedIn-specific: `engagement`, `traffic`, `awareness`, and `video_views` are supported for standalone ads (creates a Direct Sponsored Content single image or single video ad). `traffic` requires `linkUrl`; `video_views` requires the `video` field. For `lead_generation` / `conversions` on LinkedIn — or to promote an existing post — use `POST /v1/ads/boost`." }
                 budgetAmount: { type: number, description: "Required on legacy + multi-creative shapes. Inherited on attach." }
                 budgetType: { type: string, enum: [daily, lifetime], description: "Required on legacy + multi-creative shapes. Inherited on attach." }
                 budgetLevel:
@@ -28233,6 +28233,126 @@ paths:
             LinkedIn token-level rate limit hit (600 requests/min, 300k/day
             per token). Retry with backoff. Meta and Google have their own
             rate-limit semantics surfaced via platform-specific 4xx responses.
+
+  /v1/ads/conversions/adjustments:
+    post:
+      operationId: adjustConversions
+      tags: [Ads]
+      summary: Adjust already-uploaded conversions (Google only)
+      description: |
+        Adjust conversions that were previously uploaded via `POST /v1/ads/conversions` —
+        retract them, restate their value, or enhance them with first-party data. Requires
+        the Ads add-on.
+
+        **Google Ads only.** Google handles adjustments through the classic Google Ads API
+        (`ConversionAdjustmentUploadService`); the Data Manager `ingestEvents` path used for
+        sending conversions is ingest-only. Meta and LinkedIn have no equivalent, so this
+        endpoint returns `405` for those platforms.
+
+        Adjustment types:
+
+        - `RETRACTION` — remove the conversion entirely (refund, chargeback, cancelled order, churn).
+        - `RESTATEMENT` — change the conversion's value (upgrade / downgrade / partial refund). Send the corrected **total** value in `restatementValue` (not a delta).
+        - `ENHANCEMENT` — attach first-party identifiers (hashed email / phone) to an existing conversion (enhanced conversions applied after the fact).
+
+        Identifying the original conversion (per adjustment):
+
+        - `orderId` — the transaction ID you sent as `eventId` on the original conversion. Recommended, and **required** for `ENHANCEMENT`.
+        - or `gclid` + `conversionTime` — the click ID and the original conversion's time (unix seconds). Not available for `ENHANCEMENT`.
+
+        `destinationId` is the conversion action resource name, e.g.
+        `customers/1234567890/conversionActions/987654321` (same value you send to
+        `POST /v1/ads/conversions`). PII in `user` is hashed with SHA-256 server-side
+        (Gmail-specific normalization included). Send plaintext.
+
+        Times are unix seconds; we convert to Google's required
+        `yyyy-MM-dd HH:mm:ss+00:00` format. Up to 2000 adjustments per request; partial
+        failure is supported (inspect `adjustmentsFailed` / `failures[]`).
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [accountId, destinationId, adjustments]
+              properties:
+                accountId:
+                  type: string
+                  description: SocialAccount ID. Must be a `googleads` account.
+                destinationId:
+                  type: string
+                  description: Conversion action resource name, e.g. `customers/1234567890/conversionActions/987654321`.
+                adjustments:
+                  type: array
+                  minItems: 1
+                  maxItems: 2000
+                  items:
+                    type: object
+                    required: [adjustmentType, adjustmentTime]
+                    properties:
+                      adjustmentType:
+                        type: string
+                        enum: [RETRACTION, RESTATEMENT, ENHANCEMENT]
+                      adjustmentTime:
+                        type: number
+                        description: When the adjustment occurred, unix seconds.
+                      orderId:
+                        type: string
+                        description: Transaction ID of the original conversion (the `eventId` you sent). Recommended; required for ENHANCEMENT.
+                      gclid:
+                        type: string
+                        description: Alternative key — the original click ID. Pair with `conversionTime`. Not valid for ENHANCEMENT.
+                      conversionTime:
+                        type: number
+                        description: The original conversion's time, unix seconds. Required when identifying by `gclid`.
+                      restatementValue:
+                        type: number
+                        description: RESTATEMENT only — the corrected TOTAL conversion value.
+                      currency:
+                        type: string
+                        description: RESTATEMENT only — ISO 4217 currency for `restatementValue`.
+                      user:
+                        type: object
+                        description: ENHANCEMENT only — first-party identifiers (hashed server-side). At least one of email/phone required.
+                        properties:
+                          email: { type: string }
+                          phone: { type: string }
+                      userAgent:
+                        type: string
+                        description: ENHANCEMENT only — the original conversion's user agent (improves match quality).
+      responses:
+        '200':
+          description: |
+            Adjustments processed. Inspect `adjustmentsFailed` and `failures[]` for
+            partial failure (Google reports per-row errors via partial failure).
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  platform: { type: string, enum: [googleads] }
+                  adjustmentsReceived: { type: integer, description: Adjustments accepted by Google. }
+                  adjustmentsFailed: { type: integer, description: Adjustments rejected (see failures). }
+                  failures:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        adjustmentIndex: { type: integer, description: Index into the submitted adjustments array. }
+                        message: { type: string }
+                        code: { oneOf: [{ type: string }, { type: integer }] }
+                  traceId: { type: string }
+        '400':
+          description: Invalid body, or a malformed adjustment (missing key, missing restatementValue for RESTATEMENT, missing identifiers for ENHANCEMENT).
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403':
+          description: Ads access required (Ads add-on on legacy plans, included on usage-based plans).
+        '404':
+          description: Account not found or not accessible.
+        '405':
+          description: Conversion adjustments are only available for Google Ads (the account's platform is not `googleads`).
 
   /v1/accounts/{accountId}/conversion-destinations:
     get:
