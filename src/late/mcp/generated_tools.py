@@ -11130,7 +11130,10 @@ def register_generated_tools(mcp, _get_client):
         still in review PLUS recently-declined (last 30 days) ones, so a
         failed registration surfaces (with `regulatoryDeclineReason`) instead
         of silently disappearing. Declined numbers can be re-submitted via
-        POST /v1/whatsapp/phone-numbers/{id}/remediate.
+        POST /v1/whatsapp/phone-numbers/{id}/remediate. `verifying` is the
+        short-lived state after the number is provisioned on our side while
+        WhatsApp confirms the activation code; the number is not billed until
+        it reaches `active`.
                 profile_id: Filter by profile"""
         client = _get_client()
         try:

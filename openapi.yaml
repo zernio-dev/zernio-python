@@ -21947,10 +21947,13 @@ paths:
             still in review PLUS recently-declined (last 30 days) ones, so a
             failed registration surfaces (with `regulatoryDeclineReason`) instead
             of silently disappearing. Declined numbers can be re-submitted via
-            POST /v1/whatsapp/phone-numbers/{id}/remediate.
+            POST /v1/whatsapp/phone-numbers/{id}/remediate. `verifying` is the
+            short-lived state after the number is provisioned on our side while
+            WhatsApp confirms the activation code; the number is not billed until
+            it reaches `active`.
           schema:
             type: string
-            enum: [provisioning, pending_payment, pending_regulatory, regulatory_declined, active, suspended, releasing, released]
+            enum: [provisioning, verifying, pending_payment, pending_regulatory, regulatory_declined, active, suspended, releasing, released]
         - name: profileId
           in: query
           required: false
@@ -21973,7 +21976,7 @@ paths:
                         _id: { type: string }
                         phoneNumber: { type: string }
                         country: { type: string }
-                        status: { type: string, enum: [pending_payment, pending_regulatory, regulatory_declined, provisioning, active, suspended, releasing, released] }
+                        status: { type: string, enum: [pending_payment, pending_regulatory, regulatory_declined, provisioning, verifying, active, suspended, releasing, released] }
                         registrantName: { type: string, nullable: true, description: For regulated numbers, who it's registered for (company or person) — set from the submitted KYC. }
                         telnyxOrderId: { type: string, nullable: true, description: Present once the number order has been placed (i.e. the requirement group was approved). Absent while still in identity review. }
                         monthlyCents: { type: integer, description: Per-country monthly price in cents ($2..$25). }
@@ -22466,7 +22469,7 @@ paths:
                     properties:
                       id: { type: string }
                       phoneNumber: { type: string }
-                      status: { type: string, enum: [pending_payment, pending_regulatory, regulatory_declined, provisioning, active, suspended, releasing, released] }
+                      status: { type: string, enum: [pending_payment, pending_regulatory, regulatory_declined, provisioning, verifying, active, suspended, releasing, released] }
                       country: { type: string }
                       metaPreverifiedId: { type: string }
                       metaVerificationStatus: { type: string }
