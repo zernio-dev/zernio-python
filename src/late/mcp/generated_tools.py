@@ -11343,6 +11343,44 @@ def register_generated_tools(mcp, _get_client):
 
     @mcp.tool(
         annotations=ToolAnnotations(
+            title="Pre-validate a regulated-number KYC address (Tier 4)",
+            readOnlyHint=False,
+            destructiveHint=True,
+            openWorldHint=True,
+        )
+    )
+    def whatsapp_phone_numbers_validate_whats_app_number_kyc_address(
+        country: str,
+        street_address: str,
+        locality: str,
+        postal_code: str,
+        administrative_area: str | None = None,
+    ) -> str:
+        """Pre-validate a regulated-number KYC address (Tier 4)
+
+        Args:
+            country: ISO 3166-1 alpha-2 country code. (required)
+            street_address: (required)
+            locality: City / town. (required)
+            administrative_area: State / province / region. When omitted
+            postal_code: (required)"""
+        client = _get_client()
+        try:
+            response = (
+                client.whatsapp_phone_numbers.validate_whats_app_number_kyc_address(
+                    country=country,
+                    street_address=street_address,
+                    locality=locality,
+                    administrative_area=administrative_area,
+                    postal_code=postal_code,
+                )
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
             title="Get the declined requirements to fix",
             readOnlyHint=True,
             destructiveHint=False,

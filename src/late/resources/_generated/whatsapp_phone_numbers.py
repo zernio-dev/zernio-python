@@ -156,6 +156,27 @@ class WhatsappPhoneNumbersResource:
         """Upload a single regulated-number KYC document"""
         return self._client._post("/v1/whatsapp/phone-numbers/kyc/upload-document")
 
+    def validate_whats_app_number_kyc_address(
+        self,
+        country: str,
+        street_address: str,
+        locality: str,
+        postal_code: str,
+        *,
+        administrative_area: str | None = None,
+    ) -> dict[str, Any]:
+        """Pre-validate a regulated-number KYC address (Tier 4)"""
+        payload = self._build_payload(
+            country=country,
+            street_address=street_address,
+            locality=locality,
+            administrative_area=administrative_area,
+            postal_code=postal_code,
+        )
+        return self._client._post(
+            "/v1/whatsapp/phone-numbers/kyc/validate-address", data=payload
+        )
+
     def get_whats_app_number_remediation(self, id: str) -> dict[str, Any]:
         """Get the declined requirements to fix"""
         return self._client._get(f"/v1/whatsapp/phone-numbers/{id}/remediate")
@@ -296,6 +317,27 @@ class WhatsappPhoneNumbersResource:
         """Upload a single regulated-number KYC document (async)"""
         return await self._client._apost(
             "/v1/whatsapp/phone-numbers/kyc/upload-document"
+        )
+
+    async def avalidate_whats_app_number_kyc_address(
+        self,
+        country: str,
+        street_address: str,
+        locality: str,
+        postal_code: str,
+        *,
+        administrative_area: str | None = None,
+    ) -> dict[str, Any]:
+        """Pre-validate a regulated-number KYC address (Tier 4) (async)"""
+        payload = self._build_payload(
+            country=country,
+            street_address=street_address,
+            locality=locality,
+            administrative_area=administrative_area,
+            postal_code=postal_code,
+        )
+        return await self._client._apost(
+            "/v1/whatsapp/phone-numbers/kyc/validate-address", data=payload
         )
 
     async def aget_whats_app_number_remediation(self, id: str) -> dict[str, Any]:

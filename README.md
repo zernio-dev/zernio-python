@@ -709,6 +709,7 @@ Both `from zernio import ...` and `from late import ...` work identically. The `
 | `whatsapp_phone_numbers.search_available_whats_app_numbers()` | Search available numbers to purchase |
 | `whatsapp_phone_numbers.submit_whats_app_number_kyc()` | Submit regulated-number KYC |
 | `whatsapp_phone_numbers.upload_whats_app_number_kyc_document()` | Upload a single regulated-number KYC document |
+| `whatsapp_phone_numbers.validate_whats_app_number_kyc_address()` | Pre-validate a regulated-number KYC address (Tier 4) |
 
 ### WhatsApp Sandbox
 | Method | Description |

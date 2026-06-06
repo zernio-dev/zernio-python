@@ -22361,6 +22361,75 @@ paths:
         '400': { description: "Missing X-Filename, empty body, or file too large (over 20MB)." }
         '401': { $ref: '#/components/responses/Unauthorized' }
 
+  /v1/whatsapp/phone-numbers/kyc/validate-address:
+    post:
+      operationId: validateWhatsAppNumberKycAddress
+      tags: [WhatsApp Phone Numbers]
+      summary: Pre-validate a regulated-number KYC address (Tier 4)
+      description: |
+        Optional early check for the address step of a Tier 4 (end-user identity)
+        registration: validates a postal address for deliverability BEFORE the full
+        KYC submit, so it can be corrected before any documents are uploaded. The
+        full submit (POST /v1/whatsapp/phone-numbers/kyc) re-validates the address,
+        so this call is purely a fast feedback path and skipping it is safe. Only
+        the postal address is sent (no documents, no gov-ID fields). A region
+        (`administrative_area`) is required by the validator; when it is omitted the
+        pre-check is skipped and `{ ok: true, skipped: true }` is returned (the
+        final submit still validates).
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [country, street_address, locality, postal_code]
+              properties:
+                country: { type: string, minLength: 2, maxLength: 2, description: ISO 3166-1 alpha-2 country code. }
+                street_address: { type: string }
+                locality: { type: string, description: City / town. }
+                administrative_area: { type: string, description: State / province / region. When omitted, the pre-check is skipped (the final submit still validates). }
+                postal_code: { type: string }
+      responses:
+        '200':
+          description: Address is deliverable, or the pre-check was skipped (no region supplied).
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  ok: { type: boolean, example: true }
+                  skipped: { type: boolean, description: "true when no `administrative_area` was supplied, so no pre-check ran." }
+        '400':
+          description: |
+            The country isn't offered, or the address could not be verified. When the
+            provider returned usable corrections, `details.addressSuggestions` carries
+            them per field for a one-click "apply suggestion" card. (Flat error
+            envelope: `error` is the human message; `code`/`param`/`details` are
+            top-level siblings.)
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error: { type: string, description: Human-readable message. }
+                  type: { type: string }
+                  code: { type: string, example: INVALID_FIELD_VALUE }
+                  param: { type: string, example: address }
+                  details:
+                    type: object
+                    properties:
+                      addressSuggestions:
+                        type: array
+                        items:
+                          type: object
+                          properties:
+                            field: { type: string, example: administrative_area }
+                            label: { type: string, example: State / Province }
+                            value: { type: string, example: Dublin }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+
   /v1/whatsapp/phone-numbers/{id}/remediate:
     get:
       operationId: getWhatsAppNumberRemediation
