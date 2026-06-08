@@ -59,6 +59,7 @@ class AccountsResource:
         *,
         profile_id: str | None = None,
         platform: str | None = None,
+        status: str | None = None,
         include_over_limit: bool | None = False,
         page: int | None = None,
         limit: int | None = None,
@@ -67,6 +68,7 @@ class AccountsResource:
         params = self._build_params(
             profile_id=profile_id,
             platform=platform,
+            status=status,
             include_over_limit=include_over_limit,
             page=page,
             limit=limit,
@@ -437,6 +439,7 @@ class AccountsResource:
         *,
         profile_id: str | None = None,
         platform: str | None = None,
+        status: str | None = None,
         include_over_limit: bool | None = False,
         page: int | None = None,
         limit: int | None = None,
@@ -445,6 +448,7 @@ class AccountsResource:
         params = self._build_params(
             profile_id=profile_id,
             platform=platform,
+            status=status,
             include_over_limit=include_over_limit,
             page=page,
             limit=limit,

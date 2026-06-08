@@ -382,6 +382,7 @@ def register_generated_tools(mcp, _get_client):
     def accounts_list_accounts(
         profile_id: str | None = None,
         platform: str | None = None,
+        status: str | None = None,
         include_over_limit: bool = False,
         page: int | None = None,
         limit: int | None = None,
@@ -391,6 +392,7 @@ def register_generated_tools(mcp, _get_client):
         Args:
             profile_id: Filter accounts by profile ID
             platform: Filter accounts by platform (e.g. "instagram", "twitter").
+            status: Filter accounts by connection status. `connected` returns healthy accounts; `disconnected` returns accounts that need reconnection (per the same reconnection check surfaced in the dashboard). Omit to return accounts in any status. When combined with page/limit, pagination totals reflect the filtered result set.
             include_over_limit: When true, includes accounts from over-limit profiles.
             page: Page number (1-based). When provided with limit, enables server-side pagination. Omit for all accounts.
             limit: Page size. Required alongside page for pagination."""
@@ -399,6 +401,7 @@ def register_generated_tools(mcp, _get_client):
             response = client.accounts.list_accounts(
                 profile_id=profile_id,
                 platform=platform,
+                status=status,
                 include_over_limit=include_over_limit,
                 page=page,
                 limit=limit,
