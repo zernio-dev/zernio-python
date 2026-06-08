@@ -1882,7 +1882,7 @@ def register_generated_tools(mcp, _get_client):
         Args:
             ad_id: (required)
             url_tags: Meta only. Click-URL params appended to a freshly-rebuilt creative.
-            creative: Meta only. Required to rebuild the immutable creative when setting urlTags.
+            creative: Meta only. OPTIONAL — omit to preserve the existing creative verbatim (default). Provide it only to rebuild the creative explicitly, or for creatives whose object_story_spec Meta strips.
             tracking_url_template: Google only. Full tracking template (must contain {lpurl}).
             final_url_suffix: Google only. Parse-only key=value params.
             dynamic_value_parameters: LinkedIn only. key -> dynamic value enum (CAMPAIGN_ID, CAMPAIGN_NAME, CREATIVE_ID, ...).
