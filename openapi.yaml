@@ -12027,11 +12027,21 @@ paths:
                   type: array
                   items: { type: string }
                   description: Required if scope is 'profiles'. Array of profile IDs to grant access to.
+                role:
+                  type: string
+                  enum: [member, billing_admin]
+                  default: member
+                  description: Org role granted to the invitee. Defaults to 'member'.
+                readOnly:
+                  type: boolean
+                  default: false
+                  description: When true, the invitee can view everything in their profile scope but cannot perform any content mutation (publish, edit, delete, connect accounts).
             example:
               scope: "profiles"
               profileIds:
                 - "64f0a1b2c3d4e5f6a7b8c9d0"
                 - "64f0a1b2c3d4e5f6a7b8c9d1"
+              readOnly: false
       responses:
         '201':
           description: Invite token created

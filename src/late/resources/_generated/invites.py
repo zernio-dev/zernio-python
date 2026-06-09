@@ -55,21 +55,35 @@ class InvitesResource:
         return result
 
     def create_invite_token(
-        self, scope: str, *, profile_ids: list[str] | None = None
+        self,
+        scope: str,
+        *,
+        profile_ids: list[str] | None = None,
+        role: str | None = "member",
+        read_only: bool | None = False,
     ) -> dict[str, Any]:
         """Create invite token"""
         payload = self._build_payload(
             scope=scope,
             profile_ids=profile_ids,
+            role=role,
+            read_only=read_only,
         )
         return self._client._post("/v1/invite/tokens", data=payload)
 
     async def acreate_invite_token(
-        self, scope: str, *, profile_ids: list[str] | None = None
+        self,
+        scope: str,
+        *,
+        profile_ids: list[str] | None = None,
+        role: str | None = "member",
+        read_only: bool | None = False,
     ) -> dict[str, Any]:
         """Create invite token (async)"""
         payload = self._build_payload(
             scope=scope,
             profile_ids=profile_ids,
+            role=role,
+            read_only=read_only,
         )
         return await self._client._apost("/v1/invite/tokens", data=payload)

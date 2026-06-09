@@ -7351,17 +7351,22 @@ def register_generated_tools(mcp, _get_client):
         )
     )
     def invites_create_invite_token(
-        scope: str, profile_ids: list[str] | None = None
+        scope: str,
+        profile_ids: list[str] | None = None,
+        role: str = "member",
+        read_only: bool = False,
     ) -> str:
         """Create invite token
 
         Args:
             scope: 'all' grants access to all profiles, 'profiles' restricts to specific profiles (required)
-            profile_ids: Required if scope is 'profiles'. Array of profile IDs to grant access to."""
+            profile_ids: Required if scope is 'profiles'. Array of profile IDs to grant access to.
+            role: Org role granted to the invitee. Defaults to 'member'.
+            read_only: When true, the invitee can view everything in their profile scope but cannot perform any content mutation (publish, edit, delete, connect accounts)."""
         client = _get_client()
         try:
             response = client.invites.create_invite_token(
-                scope=scope, profile_ids=profile_ids
+                scope=scope, profile_ids=profile_ids, role=role, read_only=read_only
             )
             return _format_response(response)
         except Exception as e:
