@@ -1284,6 +1284,56 @@ components:
           additionalProperties:
             type: string
           description: Custom headers included in webhook requests
+    WebhookLog:
+      type: object
+      description: A single webhook delivery attempt recorded by Zernio (30-day retention).
+      properties:
+        userId:
+          type: string
+          description: ID of the account owner the webhook belongs to
+        webhookId:
+          type: string
+          description: ID of the webhook configuration that produced this delivery
+        webhookName:
+          type: string
+          description: Name of the webhook configuration at delivery time
+        eventId:
+          type: string
+          description: Stable webhook event ID (correlates to the delivered payload)
+        event:
+          type: string
+          description: Event type that triggered the delivery (e.g. post.published)
+        url:
+          type: string
+          format: uri
+          description: Destination URL the webhook was delivered to
+        status:
+          type: string
+          enum: [success, failed]
+          description: Delivery outcome
+        statusCode:
+          type: integer
+          description: HTTP status code returned by the destination endpoint
+        requestPayload:
+          type: object
+          additionalProperties: true
+          description: The JSON payload sent to the destination endpoint
+        responseBody:
+          type: string
+          description: Response body returned by the destination endpoint
+        errorMessage:
+          type: string
+          description: Error message when delivery failed
+        attemptNumber:
+          type: integer
+          description: Delivery attempt number (increments on retries)
+        responseTime:
+          type: integer
+          description: Time taken by the destination endpoint to respond, in milliseconds
+        createdAt:
+          type: string
+          format: date-time
+          description: Timestamp the delivery was attempted
     WebhookPayloadPost:
       type: object
       description: Webhook payload for post events
@@ -18147,6 +18197,94 @@ paths:
                 properties:
                   success: { type: boolean }
         '400': { description: Webhook ID required }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+
+  /v1/webhooks/logs:
+    get:
+      operationId: getWebhookLogs
+      tags: [Webhooks]
+      summary: List webhook delivery logs
+      description: |
+        Retrieve recorded webhook delivery attempts for the authenticated user, most recent first.
+        Logs are retained for 30 days. Supports filtering by status, event type, webhook ID, and event ID,
+        plus offset-based pagination.
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: limit
+          in: query
+          description: Maximum number of logs to return
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 50
+        - name: skip
+          in: query
+          description: Number of logs to skip (offset-based pagination)
+          schema:
+            type: integer
+            minimum: 0
+            maximum: 10000
+            default: 0
+        - name: status
+          in: query
+          description: Filter by delivery outcome
+          schema:
+            type: string
+            enum: [success, failed]
+        - name: event
+          in: query
+          description: Filter by event type (e.g. post.published)
+          schema:
+            type: string
+            minLength: 1
+            maxLength: 100
+        - name: webhookId
+          in: query
+          description: Filter by webhook configuration ID
+          schema:
+            type: string
+            minLength: 1
+            maxLength: 100
+        - name: eventId
+          in: query
+          description: Filter by stable webhook event ID
+          schema:
+            type: string
+            minLength: 1
+            maxLength: 200
+      responses:
+        '200':
+          description: Webhook logs retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  logs:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/WebhookLog'
+                  pagination:
+                    type: object
+                    properties:
+                      total:
+                        type: integer
+                        description: Total number of matching logs
+                      limit:
+                        type: integer
+                        description: Maximum number of logs returned per page
+                      skip:
+                        type: integer
+                        description: Number of logs skipped
+                      pages:
+                        type: integer
+                        description: Total number of pages
+                      hasMore:
+                        type: boolean
+                        description: Whether more logs are available beyond this page
+        '400': { description: Invalid query parameter }
         '401': { $ref: '#/components/responses/Unauthorized' }
 
   /v1/webhooks/test:

@@ -265,6 +265,7 @@ Both `from zernio import ...` and `from late import ...` work identically. The `
 | Method | Description |
 |--------|-------------|
 | `webhooks.create_webhook_settings()` | Create webhook |
+| `webhooks.get_webhook_logs()` | List webhook delivery logs |
 | `webhooks.get_webhook_settings()` | List webhooks |
 | `webhooks.update_webhook_settings()` | Update webhook |
 | `webhooks.delete_webhook_settings()` | Delete webhook |

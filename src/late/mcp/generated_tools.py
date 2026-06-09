@@ -9711,6 +9711,45 @@ def register_generated_tools(mcp, _get_client):
 
     @mcp.tool(
         annotations=ToolAnnotations(
+            title="List webhook delivery logs",
+            readOnlyHint=True,
+            destructiveHint=False,
+            openWorldHint=False,
+        )
+    )
+    def webhooks_get_webhook_logs(
+        limit: int = 50,
+        skip: int = 0,
+        status: str | None = None,
+        event: str | None = None,
+        webhook_id: str | None = None,
+        event_id: str | None = None,
+    ) -> str:
+        """List webhook delivery logs
+
+        Args:
+            limit: Maximum number of logs to return
+            skip: Number of logs to skip (offset-based pagination)
+            status: Filter by delivery outcome
+            event: Filter by event type (e.g. post.published)
+            webhook_id: Filter by webhook configuration ID
+            event_id: Filter by stable webhook event ID"""
+        client = _get_client()
+        try:
+            response = client.webhooks.get_webhook_logs(
+                limit=limit,
+                skip=skip,
+                status=status,
+                event=event,
+                webhook_id=webhook_id,
+                event_id=event_id,
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
             title="Send test webhook",
             readOnlyHint=False,
             destructiveHint=True,

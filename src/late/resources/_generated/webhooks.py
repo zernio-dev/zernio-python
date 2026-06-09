@@ -109,6 +109,27 @@ class WebhooksResource:
         )
         return self._client._delete("/v1/webhooks/settings", params=params)
 
+    def get_webhook_logs(
+        self,
+        *,
+        limit: int | None = 50,
+        skip: int | None = 0,
+        status: str | None = None,
+        event: str | None = None,
+        webhook_id: str | None = None,
+        event_id: str | None = None,
+    ) -> dict[str, Any]:
+        """List webhook delivery logs"""
+        params = self._build_params(
+            limit=limit,
+            skip=skip,
+            status=status,
+            event=event,
+            webhook_id=webhook_id,
+            event_id=event_id,
+        )
+        return self._client._get("/v1/webhooks/logs", params=params)
+
     def test_webhook(self, webhook_id: str) -> dict[str, Any]:
         """Send test webhook"""
         payload = self._build_payload(
@@ -170,6 +191,27 @@ class WebhooksResource:
             id=id,
         )
         return await self._client._adelete("/v1/webhooks/settings", params=params)
+
+    async def aget_webhook_logs(
+        self,
+        *,
+        limit: int | None = 50,
+        skip: int | None = 0,
+        status: str | None = None,
+        event: str | None = None,
+        webhook_id: str | None = None,
+        event_id: str | None = None,
+    ) -> dict[str, Any]:
+        """List webhook delivery logs (async)"""
+        params = self._build_params(
+            limit=limit,
+            skip=skip,
+            status=status,
+            event=event,
+            webhook_id=webhook_id,
+            event_id=event_id,
+        )
+        return await self._client._aget("/v1/webhooks/logs", params=params)
 
     async def atest_webhook(self, webhook_id: str) -> dict[str, Any]:
         """Send test webhook (async)"""
