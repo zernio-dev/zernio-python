@@ -3267,6 +3267,27 @@ components:
           description: Enable long video uploads (over 140 seconds) using amplify_video media category. Requires the connected X account to have an active X Premium subscription. When true, videos are uploaded with the amplify_video category which supports longer durations (up to 10 minutes via API). When false or omitted, the standard tweet_video category is used (140 second limit). Note that not all Premium accounts have API long-video access, as X may require separate allowlisting.
         geoRestriction:
           $ref: '#/components/schemas/GeoRestriction'
+        paidPartnership:
+          type: boolean
+          default: false
+          description: When true, the post is labeled by X as a paid partnership / paid promotion. For threads, applies to the root tweet only. Field availability may depend on your X API access tier.
+        madeWithAi:
+          type: boolean
+          default: false
+          description: When true, the post is labeled by X as containing AI-generated media. Per X, this label is for AI-generated media, not AI-written text. For threads, applies to the root tweet only.
+        sensitiveMedia:
+          type: object
+          description: Marks attached media with a sensitive-content warning. Applied to every media item in the post (requires media; ignored for text-only tweets). At least one flag must be true for the warning to be sent.
+          properties:
+            adultContent:
+              type: boolean
+              description: Content contains adult material.
+            graphicViolence:
+              type: boolean
+              description: Content depicts graphic violence.
+            other:
+              type: boolean
+              description: Content has other sensitive characteristics.
       description: >
         X (Twitter) geo-restriction applies at the media level. Media in geo-restricted tweets will be
         hidden for users outside the specified countries; the tweet text itself remains visible globally.
@@ -3766,6 +3787,21 @@ components:
           type: string
           description: Flair ID for the post. Required by some subreddits. Use GET /v1/accounts/{id}/reddit-flairs?subreddit=name to list flairs.
           example: "a1b2c3d4-e5f6-7890-abcd-ef1234567890"
+        flairText:
+          type: string
+          description: Custom flair text, for subreddits that allow free-text flair. Ignored when flairId is provided (flairId wins).
+        nsfw:
+          type: boolean
+          default: false
+          description: Mark the post as NSFW (Not Safe For Work / over 18).
+        spoiler:
+          type: boolean
+          default: false
+          description: Mark the post as a spoiler. The subreddit must have spoiler tagging enabled for this to take effect.
+        sendreplies:
+          type: boolean
+          default: true
+          description: Whether to receive inbox replies for comments on this post. Set to false to opt out.
         nativeVideo:
           type: boolean
           description: >
