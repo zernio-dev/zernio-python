@@ -776,21 +776,24 @@ components:
         phone: { type: string, description: "Phone number, e.g. +14155551234 (required when type is phone; Facebook only)" }
     WhatsAppTemplateButton:
       type: object
-      required: [type, text]
+      required: [type]
       properties:
         type:
           type: string
-          enum: [quick_reply, url, phone_number, otp, flow, mpm, catalog]
+          enum: [quick_reply, url, phone_number, otp, copy_code, flow, mpm, catalog]
         text:
           type: string
+          description: Visible button label. Required for all types except copy_code (whose label is fixed by WhatsApp).
         url:
           type: string
           format: uri
           description: Required when type is URL
         example:
-          type: array
-          items: { type: string }
-          description: Example values for URL suffix variables
+          description: "Example value(s). For URL buttons, an array of URL-suffix samples. For copy_code (marketing) buttons, the coupon code as a string."
+          oneOf:
+            - type: string
+            - type: array
+              items: { type: string }
         phone_number:
           type: string
           description: Required when type is phone_number
