@@ -2109,6 +2109,7 @@ def register_generated_tools(mcp, _get_client):
         headline: str | None = None,
         long_headline: str | None = None,
         body: str | None = None,
+        description: str | None = None,
         call_to_action: str | None = None,
         link_url: str | None = None,
         lead_gen_form_id: str | None = None,
@@ -2184,9 +2185,10 @@ def register_generated_tools(mcp, _get_client):
                 headline: Required for Meta, Google, Pinterest, and LinkedIn on legacy + attach shapes (skip for multi-creative — use `creatives[].headline`). Ignored for TikTok and X/Twitter. Max: Meta=255, Google=30, Pinterest=100, LinkedIn=400. On LinkedIn this is the ad's headline (the bold text on the creative); for traffic ads it's the link card title.
                 long_headline: Google Display only — defaults to `headline` if omitted. On LinkedIn, reused as the optional secondary description text on traffic (link) ads; omitted if not provided.
                 body: Required on legacy + attach shapes. For X/Twitter this is the tweet text (max 280 chars including a ~24-char URL when `linkUrl` is set). On LinkedIn this is the post commentary (the intro text shown above the ad). Max: Google=90, Pinterest=500.
+                description: Meta only (facebook/instagram). Link description — the secondary text shown below the headline (Meta's link_data.description; on video creatives mapped to video_data.link_description). When omitted, Meta auto-pulls the destination URL's OpenGraph description. Applies on legacy, attach, and placementAssets shapes; for multi-creative use creatives[].description (this field is the shared fallback). For multi-text variations use dynamicCreative.descriptions instead.
                 call_to_action: Required on legacy + attach shapes for Meta. Honoured on TikTok (passes through to the Spark Ad creative's `call_to_action`) and on LinkedIn (the CTA button on the ad; defaults to LEARN_MORE when `linkUrl` is set). LinkedIn accepts: LEARN_MORE, SIGN_UP, DOWNLOAD, SUBSCRIBE, REGISTER, JOIN, ATTEND, REQUEST_DEMO, VIEW_QUOTE, APPLY, SEE_MORE, SHOP_NOW, BUY_NOW. Ignored by Google, Pinterest, and X/Twitter.
                 link_url: Required on legacy + attach shapes (skip for multi-creative). On LinkedIn it's the ad's destination URL; required for `traffic` ads, optional for `engagement` / `awareness`. NOT required when `goal` is `lead_generation` (the ad opens a Lead Gen form instead of a destination).
-                lead_gen_form_id: Meta Lead Gen forms only (facebook/instagram). The leadgen_forms ID to attach to the ad's creative — create one via POST /v1/ads/lead-forms. REQUIRED when `goal` is `lead_generation`; ignored otherwise. The ad set's promoted_object.page_id + LEAD_GENERATION optimization + destination_type ON_AD are derived automatically from the goal. Both `placementAssets` (per-placement creative) and `dynamicCreative` (multi-text / multi-asset pool, e.g. multiple headlines and primary texts) ARE supported on instant-form lead ads — the form is attached for you, and for `dynamicCreative` the ad set is created as a Dynamic Creative ad set automatically (Meta requires that for any multi-text feed; there is no non-DCO multi-text path). Send a single `imageUrls` entry plus your text variations to get Meta's "Multiple Text Options" behavior on a lead ad.
+                lead_gen_form_id: Meta Lead Gen forms only (facebook/instagram). The leadgen_forms ID to attach to the ad's creative — create one via POST /v1/ads/lead-forms. REQUIRED when `goal` is `lead_generation`, and on every ATTACH (`adSetId`) call that targets a lead ad set (the form attaches per-ad; Meta rejects a formless ad in a lead ad set). Ignored otherwise. The ad set's promoted_object.page_id + LEAD_GENERATION optimization + destination_type ON_AD are derived automatically from the goal. Both `placementAssets` (per-placement creative) and `dynamicCreative` (multi-text / multi-asset pool, e.g. multiple headlines and primary texts) ARE supported on instant-form lead ads — the form is attached for you, and for `dynamicCreative` the ad set is created as a Dynamic Creative ad set automatically (Meta requires that for any multi-text feed; there is no non-DCO multi-text path). Send a single `imageUrls` entry plus your text variations to get Meta's "Multiple Text Options" behavior on a lead ad.
                 image_url: Image creative for Meta/Google/Pinterest/LinkedIn on legacy + attach shapes (mutually exclusive with `video`). Required for LinkedIn ads unless `video` is set. Not required for Google Search campaigns. For TikTok, this field carries the VIDEO URL (the TikTok ads endpoint is video-only; the field retains the `imageUrl` name for cross-platform consistency). Ignored for X/Twitter. For Google Display, treated as the landscape image (alias of `images.landscape`); supply `images.square` alongside or the request is rejected. For LinkedIn the image is uploaded to LinkedIn under the authoring Company Page (see `organizationId`); recommended ratio 1.91:1 (e.g. 1200×627).
                 images: Google Display (Responsive Display Ads) only. Google RDA requires both a landscape (1.91:1) and a square (1:1) marketing image; sending only one is rejected upstream as 'Too few.' (NOT_ENOUGH_*_MARKETING_IMAGE_ASSET). Supply both URLs here. Either this field or the legacy `imageUrl` can provide the landscape, but `square` has no legacy counterpart so it must be set here for Display.
                 video: Meta (facebook, instagram) and LinkedIn. When set, creates a VIDEO ad on the legacy (or, for Meta, attach) shape. Mutually exclusive with `imageUrl`. For Meta multi-creative, set `video` per entry inside `creatives[]` instead. For LinkedIn the video is uploaded to LinkedIn under the authoring Company Page (see `organizationId`) and the campaign format is set to SINGLE_VIDEO; LinkedIn ignores `thumbnailUrl` (it auto-generates the poster frame) — supply MP4 H.264/AAC, 3s-30min, 75KB-500MB.
@@ -2201,6 +2203,16 @@ def register_generated_tools(mcp, _get_client):
         in attach mode returns 400. To change an existing ad set's
         bid, use `PUT /v1/ads/ad-sets/{adSetId}`. Mutually exclusive
         with `creatives[]`.
+
+        The attached ad takes the full single-creative surface:
+        `headline`/`body`/`description`/`callToAction` plus either
+        `imageUrl`/`video` OR `placementAssets` (its own per-placement
+        Feed/Story assets), and `leadGenFormId` when the target is a
+        lead ad set (the parent must be ON_AD — true for ad sets
+        created via goal `lead_generation`; Meta rejects a formless ad
+        there, so pass the form on EVERY attached ad). This is the way
+        to build N full ads sharing one ad set: create the first ad
+        via the normal shape, then attach the rest one call each.
 
         Supported on Meta (facebook, instagram) and TikTok. On TikTok
         the `adSetId` is the ad group ID; the new ad inherits the
@@ -2266,8 +2278,11 @@ def register_generated_tools(mcp, _get_client):
         each placement group on a SINGLE ad (e.g. a 9:16 on Stories/Reels and a 4:5 on Feed).
         The same thing Meta Ads Manager produces with "different creative per placement",
         mapped to the creative's `asset_feed_spec` + `asset_customization_rules`. Deterministic
-        pinning, NOT the auto-optimizing pool of `dynamicCreative` (mutually exclusive, and it
-        cannot be combined with `creatives[]` or `adSetId`). Shared copy (headline, body, link,
+        pinning, NOT the auto-optimizing pool of `dynamicCreative` (mutually exclusive). Works
+        on the legacy single shape AND the attach shape (`adSetId` + placementAssets adds one
+        placement-customized ad to an existing ad set — the way to build N per-placement ads
+        sharing one ad set: create the first normally, attach the rest). Cannot be combined
+        with `creatives[]`. Shared copy (headline, body, link,
         CTA) comes from the top-level single-creative fields since only the asset varies by
         placement. Each rule's `placements` accepts the same fields as the top-level
         `placements` object; Meta enforces co-selection rules and returns an actionable error.
@@ -2369,6 +2384,7 @@ def register_generated_tools(mcp, _get_client):
                 headline=headline,
                 long_headline=long_headline,
                 body=body,
+                description=description,
                 call_to_action=call_to_action,
                 link_url=link_url,
                 lead_gen_form_id=lead_gen_form_id,
