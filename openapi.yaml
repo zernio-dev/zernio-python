@@ -27267,7 +27267,7 @@ paths:
                   required: [url]
                   properties:
                     url: { type: string, format: uri, description: "Public URL of the video. Meta: uploaded via chunked transfer on /act_X/advideos, then the request blocks on Meta's transcoding until status.video_status === 'ready'. LinkedIn: uploaded via the Videos API (multipart), then the request blocks until LinkedIn finishes transcoding (status AVAILABLE) — short clips take ~10-30s." }
-                    thumbnailUrl: { type: string, format: uri, description: "Public URL of a still-image thumbnail for the video. Required by Meta on every video creative (uploaded as an ad image and referenced in object_story_spec.video_data). Ignored by LinkedIn (auto-generated poster frame)." }
+                    thumbnailUrl: { type: string, format: uri, description: "Public URL of a still-image thumbnail for the video. OPTIONAL: when omitted on Meta, the poster is auto-generated from Meta's own preferred video thumbnail (the same candidates Ads Manager shows), so video ads publish without supplying one. Provide it to control the poster frame exactly (uploaded as an ad image and referenced in object_story_spec.video_data). Ignored by LinkedIn (auto-generated poster frame)." }
                 creatives:
                   type: array
                   minItems: 1
@@ -27288,8 +27288,8 @@ paths:
                       imageUrl: { type: string, format: uri, description: "Image creative. Mutually exclusive with `video`." }
                       video:
                         type: object
-                        description: "Video creative for this entry. Mutually exclusive with `imageUrl`."
-                        required: [url, thumbnailUrl]
+                        description: "Video creative for this entry. Mutually exclusive with `imageUrl`. thumbnailUrl is optional — when omitted, the poster is auto-generated from Meta's preferred video thumbnail."
+                        required: [url]
                         properties:
                           url: { type: string, format: uri }
                           thumbnailUrl: { type: string, format: uri }
