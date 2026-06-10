@@ -7354,15 +7354,15 @@ def register_generated_tools(mcp, _get_client):
         scope: str,
         profile_ids: list[str] | None = None,
         role: str = "member",
-        read_only: bool = False,
+        read_only: bool | None = None,
     ) -> str:
         """Create invite token
 
         Args:
             scope: 'all' grants access to all profiles, 'profiles' restricts to specific profiles (required)
             profile_ids: Required if scope is 'profiles'. Array of profile IDs to grant access to.
-            role: Org role granted to the invitee. Defaults to 'member'.
-            read_only: When true, the invitee can view everything in their profile scope but cannot perform any content mutation (publish, edit, delete, connect accounts)."""
+            role: Org role granted to the invitee. Defaults to 'member'. 'viewer' creates a read-only member who can view everything in their profile scope but cannot perform any content mutation (publish, edit, delete, connect accounts).
+            read_only: Deprecated. Use role 'viewer' instead. When true, the invite is created with role 'viewer'. Cannot be combined with role 'billing_admin'."""
         client = _get_client()
         try:
             response = client.invites.create_invite_token(

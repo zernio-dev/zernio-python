@@ -60,7 +60,7 @@ class InvitesResource:
         *,
         profile_ids: list[str] | None = None,
         role: str | None = "member",
-        read_only: bool | None = False,
+        read_only: bool | None = None,
     ) -> dict[str, Any]:
         """Create invite token"""
         payload = self._build_payload(
@@ -77,7 +77,7 @@ class InvitesResource:
         *,
         profile_ids: list[str] | None = None,
         role: str | None = "member",
-        read_only: bool | None = False,
+        read_only: bool | None = None,
     ) -> dict[str, Any]:
         """Create invite token (async)"""
         payload = self._build_payload(

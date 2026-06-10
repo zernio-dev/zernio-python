@@ -12061,19 +12061,19 @@ paths:
                   description: Required if scope is 'profiles'. Array of profile IDs to grant access to.
                 role:
                   type: string
-                  enum: [member, billing_admin]
+                  enum: [member, billing_admin, viewer]
                   default: member
-                  description: Org role granted to the invitee. Defaults to 'member'.
+                  description: Org role granted to the invitee. Defaults to 'member'. 'viewer' creates a read-only member who can view everything in their profile scope but cannot perform any content mutation (publish, edit, delete, connect accounts).
                 readOnly:
                   type: boolean
-                  default: false
-                  description: When true, the invitee can view everything in their profile scope but cannot perform any content mutation (publish, edit, delete, connect accounts).
+                  deprecated: true
+                  description: Deprecated. Use role 'viewer' instead. When true, the invite is created with role 'viewer'. Cannot be combined with role 'billing_admin'.
             example:
               scope: "profiles"
               profileIds:
                 - "64f0a1b2c3d4e5f6a7b8c9d0"
                 - "64f0a1b2c3d4e5f6a7b8c9d1"
-              readOnly: false
+              role: "member"
       responses:
         '201':
           description: Invite token created
