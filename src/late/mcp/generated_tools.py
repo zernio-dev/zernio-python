@@ -7535,7 +7535,7 @@ def register_generated_tools(mcp, _get_client):
             skip_dm_check: X/Twitter only. Skip the receives_your_dm eligibility check before sending. Use if you have already verified the recipient accepts DMs.
             template_name: WhatsApp only. Name of the approved template to start the conversation with (required for WhatsApp).
             template_language: WhatsApp only. Template language code (e.g. en_US).
-            template_params: WhatsApp only. Body variable values, in order, substituted into the template body ({{1}}, {{2}}, ...)."""
+            template_params: WhatsApp only. Body variable values, in order. Works with positional placeholders ({{1}}, {{2}}, ...) and with named placeholders ({{name}}, {{company}} - how Meta Business Manager creates templates), where values fill the named slots in order of appearance."""
         client = _get_client()
         try:
             response = client.messages.create_inbox_conversation(
