@@ -789,11 +789,7 @@ components:
           format: uri
           description: Required when type is URL
         example:
-          description: "Example value(s). For URL buttons, an array of URL-suffix samples. For copy_code (marketing) buttons, the coupon code as a string."
-          oneOf:
-            - type: string
-            - type: array
-              items: { type: string }
+          description: "Example value(s). Accepts either a string or an array of strings. For URL buttons, an array of URL-suffix samples; for copy_code (marketing) buttons, the coupon code as a single string. Left untyped (string | string[]) on purpose: a typed oneOf of string-vs-array breaks several SDK code generators."
         phone_number:
           type: string
           description: Required when type is phone_number
