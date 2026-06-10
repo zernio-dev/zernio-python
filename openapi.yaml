@@ -13833,6 +13833,145 @@ paths:
             application/json:
               schema: { $ref: '#/components/schemas/ErrorResponse' }
 
+  /v1/accounts/{accountId}/gmb-attribute-metadata:
+    get:
+      operationId: getGmbAttributeMetadata
+      tags: [GMB Attributes]
+      summary: Get attribute metadata
+      description: |
+        Returns metadata about which Google Business Profile attributes are available for
+        a location or business category. Use this endpoint to discover valid attribute names,
+        value types, and allowed enum values before reading or writing via gmb-attributes.
+
+        Two mutually exclusive query modes:
+
+        **Location mode**: pass `locationId` (or rely on the account's stored `selectedLocationId`).
+        Google returns attributes valid for that specific location.
+
+        **Category mode**: pass `categoryName` (must start with `categories/`) and `regionCode`.
+        Google returns attributes valid for that category across the given region.
+        `languageCode` is optional in category mode.
+
+        Both modes support `pageSize` and `pageToken` for pagination.
+      parameters:
+        - name: accountId
+          in: path
+          required: true
+          schema: { type: string }
+        - name: locationId
+          in: query
+          schema: { type: string }
+          description: >
+            GBP location ID (e.g. "6257659026299438786"). If omitted, uses the account's
+            stored selectedLocationId. Mutually exclusive with categoryName.
+        - name: categoryName
+          in: query
+          schema: { type: string }
+          description: >
+            Category resource name, must start with "categories/" (e.g.
+            "categories/gcid:plumber"). Required together with regionCode. Mutually
+            exclusive with locationId.
+        - name: regionCode
+          in: query
+          schema: { type: string }
+          description: >
+            BCP-47 region code (e.g. "US", "ES"). Required when categoryName is provided.
+        - name: languageCode
+          in: query
+          schema: { type: string }
+          description: >
+            BCP-47 language code for display names (e.g. "en", "es"). Optional when
+            categoryName is provided. Omitted from the Google call when not supplied.
+        - name: pageSize
+          in: query
+          schema: { type: integer, minimum: 1, maximum: 200 }
+          description: Maximum number of attribute metadata items to return. Google defaults to 200.
+        - name: pageToken
+          in: query
+          schema: { type: string }
+          description: Pagination token from a previous response's nextPageToken field.
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Attribute metadata fetched successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success: { type: boolean }
+                  accountId: { type: string }
+                  locationId:
+                    type: string
+                    description: Only present in location mode.
+                  attributeMetadata:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        parent:
+                          type: string
+                          description: Resource name of the attribute (e.g. "attributes/has_delivery").
+                        valueType:
+                          type: string
+                          description: Value type (e.g. BOOL, ENUM, URL, REPEATED_ENUM).
+                        displayName:
+                          type: string
+                          description: Localized human-readable attribute name.
+                        groupDisplayName:
+                          type: string
+                          description: Display name of the attribute group.
+                        repeatable:
+                          type: boolean
+                          description: True if multiple values can be set simultaneously.
+                        deprecated:
+                          type: boolean
+                          description: True if this attribute should no longer be used.
+                        valueMetadata:
+                          type: array
+                          description: Possible enum values (for ENUM / REPEATED_ENUM types).
+                          items:
+                            type: object
+                            properties:
+                              value: { type: string }
+                              displayName: { type: string }
+                  nextPageToken:
+                    type: string
+                    description: Present when additional pages of results are available.
+              example:
+                success: true
+                accountId: "64f1a2b3c4d5e6f7a8b9c0d1"
+                locationId: "6257659026299438786"
+                attributeMetadata:
+                  - parent: "attributes/has_delivery"
+                    valueType: "BOOL"
+                    displayName: "Delivery"
+                    groupDisplayName: "Service options"
+                  - parent: "attributes/pay_credit_card_types_accepted"
+                    valueType: "REPEATED_ENUM"
+                    displayName: "Credit cards accepted"
+                    valueMetadata:
+                      - value: "visa"
+                        displayName: "Visa"
+                      - value: "mastercard"
+                        displayName: "Mastercard"
+        '400':
+          description: Invalid request (mixed modes, missing required params, wrong platform, or Google returned 4xx)
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ErrorResponse' }
+        '401':
+          description: Access token is invalid or revoked. Reconnect the Google Business Profile account.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ErrorResponse' }
+        '404':
+          description: Account not found
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ErrorResponse' }
+
   /v1/accounts/{accountId}/gmb-attributes:
     get:
       operationId: getGoogleBusinessAttributes

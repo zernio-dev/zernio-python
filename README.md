@@ -506,6 +506,7 @@ Both `from zernio import ...` and `from late import ...` work identically. The `
 ### GMB Attributes
 | Method | Description |
 |--------|-------------|
+| `gmb_attributes.get_gmb_attribute_metadata()` | Get attribute metadata |
 | `gmb_attributes.get_google_business_attributes()` | Get attributes |
 | `gmb_attributes.update_google_business_attributes()` | Update attributes |
 

@@ -291,6 +291,30 @@ class AccountsResource:
             f"/v1/accounts/{account_id}/gmb-media", params=params
         )
 
+    def get_gmb_attribute_metadata(
+        self,
+        account_id: str,
+        *,
+        location_id: str | None = None,
+        category_name: str | None = None,
+        region_code: str | None = None,
+        language_code: str | None = None,
+        page_size: int | None = None,
+        page_token: str | None = None,
+    ) -> dict[str, Any]:
+        """Get attribute metadata"""
+        params = self._build_params(
+            location_id=location_id,
+            category_name=category_name,
+            region_code=region_code,
+            language_code=language_code,
+            page_size=page_size,
+            page_token=page_token,
+        )
+        return self._client._get(
+            f"/v1/accounts/{account_id}/gmb-attribute-metadata", params=params
+        )
+
     def get_google_business_attributes(
         self, account_id: str, *, location_id: str | None = None
     ) -> dict[str, Any]:
@@ -673,6 +697,30 @@ class AccountsResource:
         )
         return await self._client._adelete(
             f"/v1/accounts/{account_id}/gmb-media", params=params
+        )
+
+    async def aget_gmb_attribute_metadata(
+        self,
+        account_id: str,
+        *,
+        location_id: str | None = None,
+        category_name: str | None = None,
+        region_code: str | None = None,
+        language_code: str | None = None,
+        page_size: int | None = None,
+        page_token: str | None = None,
+    ) -> dict[str, Any]:
+        """Get attribute metadata (async)"""
+        params = self._build_params(
+            location_id=location_id,
+            category_name=category_name,
+            region_code=region_code,
+            language_code=language_code,
+            page_size=page_size,
+            page_token=page_token,
+        )
+        return await self._client._aget(
+            f"/v1/accounts/{account_id}/gmb-attribute-metadata", params=params
         )
 
     async def aget_google_business_attributes(

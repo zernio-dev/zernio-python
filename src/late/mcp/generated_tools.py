@@ -868,6 +868,48 @@ def register_generated_tools(mcp, _get_client):
 
     @mcp.tool(
         annotations=ToolAnnotations(
+            title="Get attribute metadata",
+            readOnlyHint=True,
+            destructiveHint=False,
+            openWorldHint=False,
+        )
+    )
+    def accounts_get_gmb_attribute_metadata(
+        account_id: str,
+        location_id: str | None = None,
+        category_name: str | None = None,
+        region_code: str | None = None,
+        language_code: str | None = None,
+        page_size: int | None = None,
+        page_token: str | None = None,
+    ) -> str:
+        """Get attribute metadata
+
+        Args:
+            account_id: (required)
+            location_id: GBP location ID (e.g. "6257659026299438786"). If omitted, uses the account's stored selectedLocationId. Mutually exclusive with categoryName.
+            category_name: Category resource name, must start with "categories/" (e.g. "categories/gcid:plumber"). Required together with regionCode. Mutually exclusive with locationId.
+            region_code: BCP-47 region code (e.g. "US", "ES"). Required when categoryName is provided.
+            language_code: BCP-47 language code for display names (e.g. "en", "es"). Optional when categoryName is provided. Omitted from the Google call when not supplied.
+            page_size: Maximum number of attribute metadata items to return. Google defaults to 200.
+            page_token: Pagination token from a previous response's nextPageToken field."""
+        client = _get_client()
+        try:
+            response = client.accounts.get_gmb_attribute_metadata(
+                account_id=account_id,
+                location_id=location_id,
+                category_name=category_name,
+                region_code=region_code,
+                language_code=language_code,
+                page_size=page_size,
+                page_token=page_token,
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
             title="Get attributes",
             readOnlyHint=True,
             destructiveHint=False,
