@@ -11261,17 +11261,25 @@ def register_generated_tools(mcp, _get_client):
         )
     )
     def whatsapp_phone_numbers_purchase_whats_app_phone_number(
-        profile_id: str, country: str = "US"
+        profile_id: str,
+        country: str = "US",
+        purchase_intent_id: str | None = None,
+        allow_multiple: bool = False,
     ) -> str:
         """Purchase phone number
 
         Args:
             profile_id: Profile to associate the number with (required)
-            country: ISO 3166-1 alpha-2 country for the number (default US). International numbers require usage-based billing. Tier 3/4 countries return 202 { status: "kyc_required", kycUrl } — the customer must complete KYC at that URL before the number is ordered. See GET /v1/whatsapp/phone-numbers/countries."""
+            country: ISO 3166-1 alpha-2 country for the number (default US). International numbers require usage-based billing. Tier 3/4 countries return 202 { status: "kyc_required", kycUrl } — the customer must complete KYC at that URL before the number is ordered. See GET /v1/whatsapp/phone-numbers/countries.
+            purchase_intent_id: Optional idempotency key. Send the same value when retrying a purchase: if a number was already bought under this key, the API returns { status: "already_purchased", numberId, phoneNumber } instead of provisioning a second number. Generate a fresh key for each genuinely new purchase.
+            allow_multiple: Any second purchase within 10 minutes of a previous one is rejected with 409 code PURCHASE_VELOCITY as duplicate protection. Pass true to confirm the additional purchase is intentional (e.g. bulk provisioning)."""
         client = _get_client()
         try:
             response = client.whatsapp_phone_numbers.purchase_whats_app_phone_number(
-                profile_id=profile_id, country=country
+                profile_id=profile_id,
+                country=country,
+                purchase_intent_id=purchase_intent_id,
+                allow_multiple=allow_multiple,
             )
             return _format_response(response)
         except Exception as e:

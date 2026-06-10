@@ -72,12 +72,19 @@ class WhatsappPhoneNumbersResource:
         return self._client._get("/v1/whatsapp/phone-numbers", params=params)
 
     def purchase_whats_app_phone_number(
-        self, profile_id: str, *, country: str | None = "US"
+        self,
+        profile_id: str,
+        *,
+        country: str | None = "US",
+        purchase_intent_id: str | None = None,
+        allow_multiple: bool | None = False,
     ) -> dict[str, Any]:
         """Purchase phone number"""
         payload = self._build_payload(
             profile_id=profile_id,
             country=country,
+            purchase_intent_id=purchase_intent_id,
+            allow_multiple=allow_multiple,
         )
         return self._client._post("/v1/whatsapp/phone-numbers/purchase", data=payload)
 
@@ -225,12 +232,19 @@ class WhatsappPhoneNumbersResource:
         return await self._client._aget("/v1/whatsapp/phone-numbers", params=params)
 
     async def apurchase_whats_app_phone_number(
-        self, profile_id: str, *, country: str | None = "US"
+        self,
+        profile_id: str,
+        *,
+        country: str | None = "US",
+        purchase_intent_id: str | None = None,
+        allow_multiple: bool | None = False,
     ) -> dict[str, Any]:
         """Purchase phone number (async)"""
         payload = self._build_payload(
             profile_id=profile_id,
             country=country,
+            purchase_intent_id=purchase_intent_id,
+            allow_multiple=allow_multiple,
         )
         return await self._client._apost(
             "/v1/whatsapp/phone-numbers/purchase", data=payload

@@ -22403,6 +22403,23 @@ paths:
                     the customer must complete KYC at that URL before the number
                     is ordered. See GET /v1/whatsapp/phone-numbers/countries.
                   default: US
+                purchaseIntentId:
+                  type: string
+                  maxLength: 100
+                  description: >
+                    Optional idempotency key. Send the same value when retrying
+                    a purchase: if a number was already bought under this key,
+                    the API returns { status: "already_purchased", numberId,
+                    phoneNumber } instead of provisioning a second number.
+                    Generate a fresh key for each genuinely new purchase.
+                allowMultiple:
+                  type: boolean
+                  default: false
+                  description: >
+                    Any second purchase within 10 minutes of a previous one is
+                    rejected with 409 code PURCHASE_VELOCITY as duplicate
+                    protection. Pass true to confirm the additional purchase is
+                    intentional (e.g. bulk provisioning).
             example:
               profileId: "507f1f77bcf86cd799439011"
               country: "DE"
@@ -22433,9 +22450,29 @@ paths:
                           provisionedAt: { type: string, format: date-time }
                           metaPreverifiedId: { type: string }
                           metaVerificationStatus: { type: string }
+                  - type: object
+                    description: >
+                      A number was already purchased under the supplied
+                      purchaseIntentId; no new number was provisioned.
+                    properties:
+                      status: { type: string, enum: [already_purchased] }
+                      numberId: { type: string }
+                      phoneNumber: { type: string }
         '400': { description: Plan limit reached, profileId required, or country not available }
         '401': { $ref: '#/components/responses/Unauthorized' }
         '403': { description: A paid plan is required }
+        '409':
+          description: >
+            Duplicate-purchase protection: another number was purchased for
+            this user within the last 10 minutes. Retry with allowMultiple:
+            true to confirm the additional purchase is intentional.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error: { type: string }
+                  code: { type: string, enum: [PURCHASE_VELOCITY] }
         '202':
           description: Country requires end-user KYC before the number can be ordered.
           content:
