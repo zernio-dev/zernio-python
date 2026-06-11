@@ -22332,7 +22332,9 @@ paths:
       summary: List phone numbers
       description: |
         List all WhatsApp phone numbers purchased by the authenticated user.
-        By default, released numbers are excluded.
+        By default, released numbers are excluded. Connected (bring-your-own)
+        numbers are returned in the separate `connected` array — they are not
+        billed and have no provisioning lifecycle.
       security:
         - bearerAuth: []
       parameters:
@@ -22387,6 +22389,22 @@ paths:
                         endUserLastName: { type: string, nullable: true }
                         regulatoryDeclineReason: { type: string, nullable: true, description: Reviewer rejection reason when status is regulatory_declined. }
                         createdAt: { type: string, format: date-time }
+                  connected:
+                    type: array
+                    description: |
+                      Connected (bring-your-own) WhatsApp numbers — your own WABA
+                      numbers linked via Embedded Signup. Not provisioned or billed
+                      by Zernio, so they are not in `numbers`; `accountId` is the
+                      social-account id used by the messaging and inbox endpoints.
+                      Included only on the default and `status=active` views.
+                    items:
+                      type: object
+                      properties:
+                        accountId: { type: string }
+                        phoneNumber: { type: string, nullable: true }
+                        displayName: { type: string, nullable: true }
+                        profileId: { type: string, nullable: true }
+                        connectedAt: { type: string, format: date-time, nullable: true }
                   sandbox:
                     type: object
                     nullable: true
