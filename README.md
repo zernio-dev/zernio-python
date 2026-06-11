@@ -572,7 +572,7 @@ Both `from zernio import ...` and `from late import ...` work identically. The `
 | Method | Description |
 |--------|-------------|
 | `messages.list_inbox_conversations()` | List conversations |
-| `messages.create_inbox_conversation()` | Create conversation |
+| `messages.create_inbox_conversation()` | Create conversation (send a WhatsApp template) |
 | `messages.get_inbox_conversation()` | Get conversation |
 | `messages.get_inbox_conversation_messages()` | List messages |
 | `messages.update_inbox_conversation()` | Update conversation status |

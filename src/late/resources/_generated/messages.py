@@ -89,7 +89,7 @@ class MessagesResource:
         template_language: str | None = None,
         template_params: list[str] | None = None,
     ) -> dict[str, Any]:
-        """Create conversation"""
+        """Create conversation (send a WhatsApp template)"""
         payload = self._build_payload(
             account_id=account_id,
             participant_id=participant_id,
@@ -305,7 +305,7 @@ class MessagesResource:
         template_language: str | None = None,
         template_params: list[str] | None = None,
     ) -> dict[str, Any]:
-        """Create conversation (async)"""
+        """Create conversation (send a WhatsApp template) (async)"""
         payload = self._build_payload(
             account_id=account_id,
             participant_id=participant_id,

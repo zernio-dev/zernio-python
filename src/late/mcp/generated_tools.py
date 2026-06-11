@@ -7551,7 +7551,7 @@ def register_generated_tools(mcp, _get_client):
 
     @mcp.tool(
         annotations=ToolAnnotations(
-            title="Create conversation",
+            title="Create conversation (send a WhatsApp template)",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
@@ -7567,7 +7567,7 @@ def register_generated_tools(mcp, _get_client):
         template_language: str | None = None,
         template_params: list[str] | None = None,
     ) -> str:
-        """Create conversation
+        """Create conversation (send a WhatsApp template)
 
         Args:
             account_id: The social account ID to send from (required)
@@ -7724,7 +7724,25 @@ def register_generated_tools(mcp, _get_client):
         other formats are rejected by WhatsApp. Ignored for non-audio attachments.
                 quick_replies: Quick reply buttons. Mutually exclusive with buttons. Max 13 items.
                 buttons: Action buttons. Mutually exclusive with quickReplies. Max 3 items.
-                template: Generic template for carousels (Instagram/Facebook only, ignored on Telegram).
+                template: Platform-dependent template payload. Ignored on Telegram.
+
+        Instagram / Facebook: a generic template (carousel). Set `type: generic`
+        and provide up to 10 `elements`, each with a `title` (required) and
+        optional `subtitle`, `imageUrl`, and `buttons`.
+
+        WhatsApp: sends an approved WhatsApp template message, the only message
+        type WhatsApp accepts when the 24-hour customer-service window is closed.
+        Provide exactly one element carrying the template reference:
+        `{ "elements": [{ "name": "order_update", "language": "en_US", "components": [...] }] }`
+        (`type` is ignored on WhatsApp). `components` is optional and is forwarded
+        unchanged as the `template.components` array of Meta's Cloud API send
+        payload; use it to fill body/header variables and button parameters, e.g.
+        `[{ "type": "body", "parameters": [{ "type": "text", "text": "John" }] }]`.
+        Templates with media headers (image, video, document) must include the
+        header component with its media link here at send time. To send a template
+        to a phone number with no existing conversation, or to have media headers
+        filled in automatically from the template definition, use the
+        create-conversation endpoint (POST /v1/inbox/conversations) instead.
                 interactive: WhatsApp-only. Rich interactive payload for list messages, CTA URL
         buttons, and Flow prompts. When set, takes priority over `buttons`
         and `quickReplies`. The shape mirrors Meta's Cloud API `interactive`
