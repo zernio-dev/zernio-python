@@ -545,6 +545,25 @@ class AdsResource:
         )
         return self._client._post("/v1/ads/targeting/reach-estimate", data=payload)
 
+    def list_ad_catalogs(self, account_id: str, ad_account_id: str) -> dict[str, Any]:
+        """List Meta product catalogs"""
+        params = self._build_params(
+            account_id=account_id,
+            ad_account_id=ad_account_id,
+        )
+        return self._client._get("/v1/ads/catalogs", params=params)
+
+    def list_ad_catalog_product_sets(
+        self, catalog_id: str, account_id: str
+    ) -> dict[str, Any]:
+        """List a catalog's product sets"""
+        params = self._build_params(
+            account_id=account_id,
+        )
+        return self._client._get(
+            f"/v1/ads/catalogs/{catalog_id}/product-sets", params=params
+        )
+
     def get_conversions_quality(
         self, account_id: str, destination_id: str
     ) -> dict[str, Any]:
@@ -1303,6 +1322,27 @@ class AdsResource:
         )
         return await self._client._apost(
             "/v1/ads/targeting/reach-estimate", data=payload
+        )
+
+    async def alist_ad_catalogs(
+        self, account_id: str, ad_account_id: str
+    ) -> dict[str, Any]:
+        """List Meta product catalogs (async)"""
+        params = self._build_params(
+            account_id=account_id,
+            ad_account_id=ad_account_id,
+        )
+        return await self._client._aget("/v1/ads/catalogs", params=params)
+
+    async def alist_ad_catalog_product_sets(
+        self, catalog_id: str, account_id: str
+    ) -> dict[str, Any]:
+        """List a catalog's product sets (async)"""
+        params = self._build_params(
+            account_id=account_id,
+        )
+        return await self._client._aget(
+            f"/v1/ads/catalogs/{catalog_id}/product-sets", params=params
         )
 
     async def aget_conversions_quality(

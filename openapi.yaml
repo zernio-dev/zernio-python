@@ -5112,7 +5112,7 @@ components:
         platform: { type: string, enum: [facebook, instagram, tiktok, linkedin, pinterest, google, twitter] }
         status: { $ref: '#/components/schemas/AdStatus' }
         adType: { type: string, enum: [boost, standalone] }
-        goal: { type: string, enum: [engagement, traffic, awareness, video_views, lead_generation, lead_conversion, conversions, app_promotion], description: "Available goals vary by platform. Meta (Facebook/Instagram) supports all 8 (incl. `lead_conversion` = website pixel lead optimization). TikTok supports the 7 non-`lead_conversion` goals. LinkedIn supports all except app_promotion / lead_conversion. Twitter/X supports engagement, traffic, awareness, video_views, app_promotion. Pinterest and Google Ads support only engagement, traffic, awareness, video_views." }
+        goal: { type: string, enum: [engagement, traffic, awareness, video_views, lead_generation, lead_conversion, conversions, app_promotion, catalog_sales], description: "Available goals vary by platform. Meta (Facebook/Instagram) supports all 9 (incl. `lead_conversion` = website pixel lead optimization and `catalog_sales` = Advantage+ catalog ads). TikTok supports the 7 non-`lead_conversion` goals. LinkedIn supports all except app_promotion / lead_conversion. Twitter/X supports engagement, traffic, awareness, video_views, app_promotion. Pinterest and Google Ads support only engagement, traffic, awareness, video_views." }
         isExternal: { type: boolean, description: True for ads synced from platform ad managers }
         budget:
           type: object
@@ -27456,7 +27456,7 @@ paths:
                         properties:
                           key: { type: string }
                           value: { type: string }
-                goal: { type: string, enum: [engagement, traffic, awareness, video_views, lead_generation, lead_conversion, conversions, app_promotion], description: "Required on legacy + multi-creative shapes. Inherited from the ad set on the attach shape. Available goals vary by platform. Meta-specific: `conversions` (OUTCOME_SALES) requires `promotedObject.pixelId` + `promotedObject.customEventType` (use a commerce event, e.g. PURCHASE, START_TRIAL); `lead_conversion` (OUTCOME_LEADS, website pixel leads) requires the same pixel + event but with a leads-class event (e.g. LEAD, SUBMIT_APPLICATION, SCHEDULE, CONTACT) — these are rejected under `conversions` because Meta gates conversion events by objective; `lead_generation` is OUTCOME_LEADS with instant forms (`leadGenFormId`), distinct from `lead_conversion`'s website pixel optimization; `app_promotion` requires `promotedObject.applicationId` + `promotedObject.objectStoreUrl`; `lead_generation` accepts an optional `promotedObject.pageId` (auto-filled from the connected Page when omitted). TikTok-specific: `conversions` (website-conversion ad group) requires `promotedObject.pixelId` (your TikTok Pixel ID) and accepts an optional `promotedObject.customEventType` (a TikTok `optimization_event` code like `ON_WEB_ORDER`, `INITIATE_ORDER`, `ON_WEB_REGISTER`, `FORM`); to inherit a pixel + event from an existing ad group, pass `adSetId` instead. LinkedIn-specific: `engagement`, `traffic`, `awareness`, and `video_views` are supported for standalone ads (creates a Direct Sponsored Content single image or single video ad). `traffic` requires `linkUrl`; `video_views` requires the `video` field. For `lead_generation` / `conversions` on LinkedIn — or to promote an existing post — use `POST /v1/ads/boost`." }
+                goal: { type: string, enum: [engagement, traffic, awareness, video_views, lead_generation, lead_conversion, conversions, app_promotion, catalog_sales], description: "Required on legacy + multi-creative shapes. Inherited from the ad set on the attach shape. Available goals vary by platform. Meta-specific: `conversions` (OUTCOME_SALES) requires `promotedObject.pixelId` + `promotedObject.customEventType` (use a commerce event, e.g. PURCHASE, START_TRIAL); `lead_conversion` (OUTCOME_LEADS, website pixel leads) requires the same pixel + event but with a leads-class event (e.g. LEAD, SUBMIT_APPLICATION, SCHEDULE, CONTACT) — these are rejected under `conversions` because Meta gates conversion events by objective; `lead_generation` is OUTCOME_LEADS with instant forms (`leadGenFormId`), distinct from `lead_conversion`'s website pixel optimization; `app_promotion` requires `promotedObject.applicationId` + `promotedObject.objectStoreUrl`; `catalog_sales` (Advantage+ catalog ads, e.g. vehicle inventory) requires `promotedObject.productSetId` + `promotedObject.pixelId` + `promotedObject.customEventType` and builds a catalog TEMPLATE creative from the copy fields (headline/body/description/linkUrl/callToAction, which may carry catalog template tags like {{product.name}} or {{vehicle.make}}) — no imageUrl/video is sent, Meta renders the visuals per catalog item; discover catalogs via GET /v1/ads/catalogs and product sets via GET /v1/ads/catalogs/{catalogId}/product-sets; single shape only (no creatives[]/adSetId/dynamicCreative/placementAssets); `lead_generation` accepts an optional `promotedObject.pageId` (auto-filled from the connected Page when omitted). TikTok-specific: `conversions` (website-conversion ad group) requires `promotedObject.pixelId` (your TikTok Pixel ID) and accepts an optional `promotedObject.customEventType` (a TikTok `optimization_event` code like `ON_WEB_ORDER`, `INITIATE_ORDER`, `ON_WEB_REGISTER`, `FORM`); to inherit a pixel + event from an existing ad group, pass `adSetId` instead. LinkedIn-specific: `engagement`, `traffic`, `awareness`, and `video_views` are supported for standalone ads (creates a Direct Sponsored Content single image or single video ad). `traffic` requires `linkUrl`; `video_views` requires the `video` field. For `lead_generation` / `conversions` on LinkedIn — or to promote an existing post — use `POST /v1/ads/boost`." }
                 optimizationGoal: { type: string, description: "Meta only. Explicit ad-set `optimization_goal` (e.g. `LANDING_PAGE_VIEWS`, `LINK_CLICKS`, `REACH`, `IMPRESSIONS`, `OFFSITE_CONVERSIONS`, `THRUPLAY`, `LEAD_GENERATION`). Overrides the default derived from `goal` (e.g. `traffic` defaults to `LINK_CLICKS`). Forwarded verbatim to Meta, which validates compatibility with the campaign objective and rejects incompatible combinations." }
                 budgetAmount: { type: number, description: "Required on legacy + multi-creative shapes. Inherited on attach." }
                 budgetType: { type: string, enum: [daily, lifetime], description: "Required on legacy + multi-creative shapes. Inherited on attach." }
@@ -28411,6 +28411,61 @@ paths:
           description: Ads access required. Legacy plans need the Ads add-on; included by default on usage-based plans.
         '404': { $ref: '#/components/responses/NotFound' }
 
+  /v1/ads/catalogs:
+    get:
+      operationId: listAdCatalogs
+      tags: [Ads]
+      summary: List Meta product catalogs
+      description: "Lists the Meta product catalogs reachable from an ad account (owned + agency-shared catalogs of the ad account's business), for Advantage+ catalog ads (`goal: catalog_sales` on POST /v1/ads/create — e.g. vehicle inventory catalogs). Read-only; uses scopes customers already granted (no reconnect needed). Catalog contents (items, feeds) are managed in Meta Commerce Manager, not through this API."
+      security:
+        - bearerAuth: []
+      parameters:
+        - { name: accountId, in: query, required: true, schema: { type: string }, description: "A facebook, instagram, or metaads social account ID" }
+        - { name: adAccountId, in: query, required: true, schema: { type: string }, description: "Meta ad account ID (act_...)" }
+      responses:
+        '200':
+          description: Catalogs
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  catalogs:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id: { type: string }
+                        name: { type: string }
+                        vertical: { type: string, nullable: true, description: "Catalog vertical (e.g. commerce, vehicles, hotels)" }
+                        productCount: { type: integer }
+  /v1/ads/catalogs/{catalogId}/product-sets:
+    get:
+      operationId: listAdCatalogProductSets
+      tags: [Ads]
+      summary: List a catalog's product sets
+      description: "Lists a Meta product catalog's product sets — the unit a catalog ad promotes. Pass the chosen set as `promotedObject.productSetId` on POST /v1/ads/create with `goal: catalog_sales`."
+      security:
+        - bearerAuth: []
+      parameters:
+        - { name: catalogId, in: path, required: true, schema: { type: string }, description: "Meta product catalog ID (from GET /v1/ads/catalogs)" }
+        - { name: accountId, in: query, required: true, schema: { type: string }, description: "A facebook, instagram, or metaads social account ID" }
+      responses:
+        '200':
+          description: Product sets
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  productSets:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id: { type: string }
+                        name: { type: string }
+                        productCount: { type: integer }
   /v1/ads/audiences:
     get:
       operationId: listAdAudiences

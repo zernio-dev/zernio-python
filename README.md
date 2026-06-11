@@ -390,6 +390,8 @@ Both `from zernio import ...` and `from late import ...` work identically. The `
 | Method | Description |
 |--------|-------------|
 | `ads.list_ad_accounts()` | List ad accounts |
+| `ads.list_ad_catalog_product_sets()` | List a catalog's product sets |
+| `ads.list_ad_catalogs()` | List Meta product catalogs |
 | `ads.list_ads()` | List ads |
 | `ads.list_ads_business_centers()` | List TikTok Business Centers |
 | `ads.list_conversion_associations()` | List campaigns associated with a conversion destination |
