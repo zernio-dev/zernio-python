@@ -7790,15 +7790,21 @@ def register_generated_tools(mcp, _get_client):
         filled in automatically from the template definition, use the
         create-conversation endpoint (POST /v1/inbox/conversations) instead.
                 interactive: WhatsApp-only. Rich interactive payload for list messages, CTA URL
-        buttons, and Flow prompts. When set, takes priority over `buttons`
-        and `quickReplies`. The shape mirrors Meta's Cloud API `interactive`
-        object verbatim, so any payload that works against Meta directly
-        will also work here.
+        buttons, Flow prompts, and location requests. When set, takes
+        priority over `buttons` and `quickReplies`. The shape mirrors
+        Meta's Cloud API `interactive` object verbatim, so any payload
+        that works against Meta directly will also work here.
 
         Use `buttons` / `quickReplies` for simple button replies
         (WhatsApp's `interactive.type: "button"`) — the abstraction caps at
         3 buttons and handles the auto-conversion for you. Use this field
-        only for `list`, `cta_url`, or `flow` messages.
+        only for `list`, `cta_url`, `flow`, or `location_request_message`
+        messages.
+
+        For `location_request_message`, `action` may be omitted (we default
+        it to `{ "name": "send_location" }`). WhatsApp renders a localized
+        "Send location" button; the user's reply arrives as a regular
+        location message in the conversation.
 
         Tap events come back via the `message.received` webhook with
         `metadata.interactiveType` set to `list_reply` or `nfm_reply`.
@@ -10165,6 +10171,80 @@ def register_generated_tools(mcp, _get_client):
         try:
             response = client.whatsapp.update_whats_app_display_name(
                 account_id=account_id, display_name=display_name
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="List blocked users",
+            readOnlyHint=True,
+            destructiveHint=False,
+            openWorldHint=False,
+        )
+    )
+    def whatsapp_get_whats_app_blocked_users(
+        account_id: str, limit: int | None = None, after: str | None = None
+    ) -> str:
+        """List blocked users
+
+        Args:
+            account_id: WhatsApp social account ID (required)
+            limit: Page size.
+            after: Cursor from a previous response's `nextCursor`."""
+        client = _get_client()
+        try:
+            response = client.whatsapp.get_whats_app_blocked_users(
+                account_id=account_id, limit=limit, after=after
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Block users",
+            readOnlyHint=False,
+            destructiveHint=True,
+            openWorldHint=True,
+        )
+    )
+    def whatsapp_block_whats_app_users(account_id: str, users: list[str] | None) -> str:
+        """Block users
+
+        Args:
+            account_id: WhatsApp social account ID (required)
+            users: Phone numbers (E.164, e.g. "+16505551234") or WhatsApp user IDs to block. (required)"""
+        client = _get_client()
+        try:
+            response = client.whatsapp.block_whats_app_users(
+                account_id=account_id, users=users
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Unblock users",
+            readOnlyHint=False,
+            destructiveHint=True,
+            openWorldHint=True,
+        )
+    )
+    def whatsapp_unblock_whats_app_users(
+        account_id: str, users: list[str] | None
+    ) -> str:
+        """Unblock users
+
+        Args:
+            account_id: WhatsApp social account ID (required)
+            users: Phone numbers (E.164) or WhatsApp user IDs to unblock. (required)"""
+        client = _get_client()
+        try:
+            response = client.whatsapp.unblock_whats_app_users(
+                account_id=account_id, users=users
             )
             return _format_response(response)
         except Exception as e:

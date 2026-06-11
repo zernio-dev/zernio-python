@@ -177,6 +177,33 @@ class WhatsappResource:
             "/v1/whatsapp/business-profile/display-name", data=payload
         )
 
+    def get_whats_app_blocked_users(
+        self, account_id: str, *, limit: int | None = None, after: str | None = None
+    ) -> dict[str, Any]:
+        """List blocked users"""
+        params = self._build_params(
+            account_id=account_id,
+            limit=limit,
+            after=after,
+        )
+        return self._client._get("/v1/whatsapp/block-users", params=params)
+
+    def block_whats_app_users(
+        self, account_id: str, users: list[str]
+    ) -> dict[str, Any]:
+        """Block users"""
+        payload = self._build_payload(
+            account_id=account_id,
+            users=users,
+        )
+        return self._client._post("/v1/whatsapp/block-users", data=payload)
+
+    def unblock_whats_app_users(
+        self, account_id: str, users: list[str]
+    ) -> dict[str, Any]:
+        """Unblock users"""
+        return self._client._delete("/v1/whatsapp/block-users")
+
     def get_whats_app_dataset(self, account_id: str) -> dict[str, Any]:
         """Get CTWA conversions dataset"""
         params = self._build_params(
@@ -485,6 +512,33 @@ class WhatsappResource:
         return await self._client._apost(
             "/v1/whatsapp/business-profile/display-name", data=payload
         )
+
+    async def aget_whats_app_blocked_users(
+        self, account_id: str, *, limit: int | None = None, after: str | None = None
+    ) -> dict[str, Any]:
+        """List blocked users (async)"""
+        params = self._build_params(
+            account_id=account_id,
+            limit=limit,
+            after=after,
+        )
+        return await self._client._aget("/v1/whatsapp/block-users", params=params)
+
+    async def ablock_whats_app_users(
+        self, account_id: str, users: list[str]
+    ) -> dict[str, Any]:
+        """Block users (async)"""
+        payload = self._build_payload(
+            account_id=account_id,
+            users=users,
+        )
+        return await self._client._apost("/v1/whatsapp/block-users", data=payload)
+
+    async def aunblock_whats_app_users(
+        self, account_id: str, users: list[str]
+    ) -> dict[str, Any]:
+        """Unblock users (async)"""
+        return await self._client._adelete("/v1/whatsapp/block-users")
 
     async def aget_whats_app_dataset(self, account_id: str) -> dict[str, Any]:
         """Get CTWA conversions dataset (async)"""
