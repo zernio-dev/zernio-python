@@ -242,6 +242,7 @@ Both `from zernio import ...` and `from late import ...` work identically. The `
 | `analytics.get_you_tube_channel_insights()` | Get YouTube channel-level insights |
 | `analytics.get_you_tube_daily_views()` | Get YouTube daily views |
 | `analytics.get_you_tube_demographics()` | Get YouTube demographics |
+| `analytics.get_you_tube_video_retention()` | Get YouTube video retention curve |
 
 ### Account Groups
 | Method | Description |

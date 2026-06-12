@@ -3683,6 +3683,39 @@ def register_generated_tools(mcp, _get_client):
 
     @mcp.tool(
         annotations=ToolAnnotations(
+            title="Get YouTube video retention curve",
+            readOnlyHint=True,
+            destructiveHint=False,
+            openWorldHint=False,
+        )
+    )
+    def analytics_get_you_tube_video_retention(
+        video_id: str,
+        account_id: str,
+        start_date: str | None = None,
+        end_date: str | None = None,
+    ) -> str:
+        """Get YouTube video retention curve
+
+        Args:
+            video_id: The YouTube video ID (e.g., "dQw4w9WgXcQ") (required)
+            account_id: The Zernio account ID for the YouTube account (required)
+            start_date: Start date (YYYY-MM-DD). Defaults to the video's publish date (lifetime curve).
+            end_date: End date (YYYY-MM-DD). Defaults to 3 days ago (YouTube data latency)."""
+        client = _get_client()
+        try:
+            response = client.analytics.get_you_tube_video_retention(
+                video_id=video_id,
+                account_id=account_id,
+                start_date=start_date,
+                end_date=end_date,
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
             title="Get Facebook Page insights",
             readOnlyHint=True,
             destructiveHint=False,

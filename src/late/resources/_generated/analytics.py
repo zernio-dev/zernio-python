@@ -165,6 +165,23 @@ class AnalyticsResource:
         )
         return self._client._get("/v1/analytics/youtube/daily-views", params=params)
 
+    def get_you_tube_video_retention(
+        self,
+        video_id: str,
+        account_id: str,
+        *,
+        start_date: str | None = None,
+        end_date: str | None = None,
+    ) -> dict[str, Any]:
+        """Get YouTube video retention curve"""
+        params = self._build_params(
+            video_id=video_id,
+            account_id=account_id,
+            start_date=start_date,
+            end_date=end_date,
+        )
+        return self._client._get("/v1/analytics/youtube/video-retention", params=params)
+
     def get_facebook_page_insights(
         self,
         account_id: str,
@@ -545,6 +562,25 @@ class AnalyticsResource:
         )
         return await self._client._aget(
             "/v1/analytics/youtube/daily-views", params=params
+        )
+
+    async def aget_you_tube_video_retention(
+        self,
+        video_id: str,
+        account_id: str,
+        *,
+        start_date: str | None = None,
+        end_date: str | None = None,
+    ) -> dict[str, Any]:
+        """Get YouTube video retention curve (async)"""
+        params = self._build_params(
+            video_id=video_id,
+            account_id=account_id,
+            start_date=start_date,
+            end_date=end_date,
+        )
+        return await self._client._aget(
+            "/v1/analytics/youtube/video-retention", params=params
         )
 
     async def aget_facebook_page_insights(
