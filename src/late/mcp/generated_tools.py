@@ -10856,6 +10856,8 @@ def register_generated_tools(mcp, _get_client):
     def whatsapp_calling_initiate_whats_app_call(
         account_id: str,
         to: str,
+        action: str | None = None,
+        body_text: str | None = None,
         forward_to: str | None = None,
         record_override: bool | None = None,
         biz_opaque_callback_data: str | None = None,
@@ -10865,6 +10867,8 @@ def register_generated_tools(mcp, _get_client):
             Args:
                 account_id: (required)
                 to: Consumer wa_id (E.164 (required)
+                action: Omit to place a call. Set to send the consent prompt instead.
+                body_text: Body text shown with the consent prompt (send_call_permission_request only).
                 forward_to: Per-call destination override. Same accepted shape as the
         number's stored forwardTo (tel:+E164, sip:..., wss://...).
                 record_override
@@ -10876,6 +10880,8 @@ def register_generated_tools(mcp, _get_client):
             response = client.whatsapp_calling.initiate_whats_app_call(
                 account_id=account_id,
                 to=to,
+                action=action,
+                body_text=body_text,
                 forward_to=forward_to,
                 record_override=record_override,
                 biz_opaque_callback_data=biz_opaque_callback_data,

@@ -21765,6 +21765,12 @@ paths:
         Meta directly over TLS:5061 with the SIP digest credentials we
         captured at calling-enablement time). No client-side SDP is
         required; pass only `accountId` and `to`.
+
+        To send the consumer the call-consent prompt instead of placing a
+        call, pass `action: "send_call_permission_request"` (+ optional
+        `bodyText`). The consumer must tap Allow in WhatsApp before
+        `start_call` is permitted; Meta limits the prompt to 1 per consumer
+        per 24h (2 per 7 days) and requires an open 24h service window.
       security:
         - bearerAuth: []
       requestBody:
@@ -21777,6 +21783,14 @@ paths:
               properties:
                 accountId: { type: string }
                 to: { type: string, description: Consumer wa_id (E.164, leading + optional) }
+                action:
+                  type: string
+                  enum: [send_call_permission_request]
+                  description: Omit to place a call. Set to send the consent prompt instead.
+                bodyText:
+                  type: string
+                  maxLength: 1024
+                  description: Body text shown with the consent prompt (send_call_permission_request only).
                 forwardTo:
                   type: string
                   description: |
