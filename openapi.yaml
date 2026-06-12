@@ -23147,6 +23147,14 @@ paths:
                     properties:
                       available: { type: boolean }
                       fromPhoneNumber: { type: string }
+                      details:
+                        type: array
+                        description: Human-readable summary of the verification on file (field labels + values, plus the address as one line). Best-effort — may be empty if the provider lookup fails.
+                        items:
+                          type: object
+                          properties:
+                            label: { type: string }
+                            value: { type: string }
         '400': { description: Country not available }
         '401': { $ref: '#/components/responses/Unauthorized' }
     post:
