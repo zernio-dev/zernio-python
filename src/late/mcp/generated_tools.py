@@ -7836,8 +7836,14 @@ def register_generated_tools(mcp, _get_client):
         Use `buttons` / `quickReplies` for simple button replies
         (WhatsApp's `interactive.type: "button"`) — the abstraction caps at
         3 buttons and handles the auto-conversion for you. Use this field
-        only for `list`, `cta_url`, `flow`, or `location_request_message`
-        messages.
+        only for `list`, `cta_url`, `flow`, `location_request_message`, or
+        `voice_call` messages.
+
+        For `voice_call`, the message renders WhatsApp's native call
+        button; tapping it starts a voice call to your business number.
+        Requires WhatsApp Business Calling to be enabled on the sending
+        number. The optional `parameters.payload` string is echoed back on
+        the `calls` webhook (as `cta_payload`) for attribution.
 
         For `location_request_message`, `action` may be omitted (we default
         it to `{ "name": "send_location" }`). WhatsApp renders a localized

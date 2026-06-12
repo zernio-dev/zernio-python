@@ -19600,8 +19600,14 @@ paths:
                     Use `buttons` / `quickReplies` for simple button replies
                     (WhatsApp's `interactive.type: "button"`) — the abstraction caps at
                     3 buttons and handles the auto-conversion for you. Use this field
-                    only for `list`, `cta_url`, `flow`, or `location_request_message`
-                    messages.
+                    only for `list`, `cta_url`, `flow`, `location_request_message`, or
+                    `voice_call` messages.
+
+                    For `voice_call`, the message renders WhatsApp's native call
+                    button; tapping it starts a voice call to your business number.
+                    Requires WhatsApp Business Calling to be enabled on the sending
+                    number. The optional `parameters.payload` string is echoed back on
+                    the `calls` webhook (as `cta_payload`) for attribution.
 
                     For `location_request_message`, `action` may be omitted (we default
                     it to `{ "name": "send_location" }`). WhatsApp renders a localized
@@ -19614,7 +19620,7 @@ paths:
                   properties:
                     type:
                       type: string
-                      enum: [list, cta_url, flow, location_request_message]
+                      enum: [list, cta_url, flow, location_request_message, voice_call]
                       description: Which interactive layout to render.
                     header:
                       type: object
@@ -19676,6 +19682,18 @@ paths:
                               properties:
                                 display_text: { type: string, description: Button label (max 20 chars). }
                                 url: { type: string, format: uri, description: Target URL opened when the user taps the button. }
+                        - type: object
+                          description: Voice-call action. `type` on the parent must be `voice_call`. Renders WhatsApp's native call button (requires Calling enabled on the sending number).
+                          required: [name]
+                          properties:
+                            name: { type: string, enum: [voice_call] }
+                            parameters:
+                              type: object
+                              description: All optional.
+                              properties:
+                                display_text: { type: string, maxLength: 20, description: Button label. Defaults to "Call Now". }
+                                ttl_minutes: { type: integer, minimum: 1, maximum: 43200, description: How long the button stays tappable. Defaults to 10080 (7 days). }
+                                payload: { type: string, maxLength: 512, description: Arbitrary string echoed back as `cta_payload` on the `calls` webhook (connect/terminate) for attribution. }
                         - type: object
                           description: Flow action. `type` on the parent must be `flow`.
                           required: [name, parameters]
@@ -21828,6 +21846,7 @@ paths:
                   phoneNumberDocId: { type: string, description: "WhatsAppPhoneNumber Mongo ID (use on /v1/whatsapp/phone-numbers/{id}/calling)" }
                   phoneNumber: { type: string }
                   callingEnabled: { type: boolean }
+                  callDeepLink: { type: string, nullable: true, description: "Public calling deep link (https://wa.me/call/<number>). Tapping it on a phone starts a WhatsApp voice call to this number. Embed it on websites, emails, or QR codes. Null while calling is disabled; not supported by WhatsApp desktop clients." }
                   forwardTo: { type: string, nullable: true, description: "tel:+E164 / sip:... / wss://... destination" }
                   recordingEnabled: { type: boolean }
                   sipAuthUsername: { type: string, nullable: true }
