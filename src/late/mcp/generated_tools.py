@@ -10178,6 +10178,29 @@ def register_generated_tools(mcp, _get_client):
 
     @mcp.tool(
         annotations=ToolAnnotations(
+            title="Check if a user is blocked",
+            readOnlyHint=True,
+            destructiveHint=False,
+            openWorldHint=False,
+        )
+    )
+    def whatsapp_get_whats_app_block_status(account_id: str, user: str) -> str:
+        """Check if a user is blocked
+
+        Args:
+            account_id: (required)
+            user: Consumer wa_id or E.164 phone (leading + optional) (required)"""
+        client = _get_client()
+        try:
+            response = client.whatsapp.get_whats_app_block_status(
+                account_id=account_id, user=user
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
             title="List blocked users",
             readOnlyHint=True,
             destructiveHint=False,

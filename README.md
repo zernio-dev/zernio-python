@@ -648,6 +648,7 @@ Both `from zernio import ...` and `from late import ...` work identically. The `
 | `whatsapp.create_whats_app_group_chat()` | Create group |
 | `whatsapp.create_whats_app_group_invite_link()` | Create invite link |
 | `whatsapp.create_whats_app_template()` | Create template |
+| `whatsapp.get_whats_app_block_status()` | Check if a user is blocked |
 | `whatsapp.get_whats_app_blocked_users()` | List blocked users |
 | `whatsapp.get_whats_app_business_profile()` | Get business profile |
 | `whatsapp.get_whats_app_dataset()` | Get CTWA conversions dataset |

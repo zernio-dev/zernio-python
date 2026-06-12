@@ -177,6 +177,14 @@ class WhatsappResource:
             "/v1/whatsapp/business-profile/display-name", data=payload
         )
 
+    def get_whats_app_block_status(self, account_id: str, user: str) -> dict[str, Any]:
+        """Check if a user is blocked"""
+        params = self._build_params(
+            account_id=account_id,
+            user=user,
+        )
+        return self._client._get("/v1/whatsapp/block-users/status", params=params)
+
     def get_whats_app_blocked_users(
         self, account_id: str, *, limit: int | None = None, after: str | None = None
     ) -> dict[str, Any]:
@@ -511,6 +519,18 @@ class WhatsappResource:
         )
         return await self._client._apost(
             "/v1/whatsapp/business-profile/display-name", data=payload
+        )
+
+    async def aget_whats_app_block_status(
+        self, account_id: str, user: str
+    ) -> dict[str, Any]:
+        """Check if a user is blocked (async)"""
+        params = self._build_params(
+            account_id=account_id,
+            user=user,
+        )
+        return await self._client._aget(
+            "/v1/whatsapp/block-users/status", params=params
         )
 
     async def aget_whats_app_blocked_users(

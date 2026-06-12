@@ -22268,6 +22268,34 @@ paths:
         '401': { $ref: '#/components/responses/Unauthorized' }
         '404': { description: WhatsApp account not found }
 
+  /v1/whatsapp/block-users/status:
+    get:
+      operationId: getWhatsAppBlockStatus
+      tags: [WhatsApp]
+      summary: Check if a user is blocked
+      description: |
+        Definitive blocked-state lookup for a single contact. Meta exposes no
+        membership endpoint, so this reads Zernio's blocklist mirror (kept in
+        sync by the block/unblock endpoints; the first call per account
+        backfills the mirror from Meta's full list). Constant-time regardless
+        of blocklist size.
+      security:
+        - bearerAuth: []
+      parameters:
+        - { name: accountId, in: query, required: true, schema: { type: string } }
+        - { name: user, in: query, required: true, schema: { type: string }, description: Consumer wa_id or E.164 phone (leading + optional) }
+      responses:
+        '200':
+          description: Blocked state
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  blocked: { type: boolean }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404': { description: WhatsApp account not found }
+
   /v1/whatsapp/block-users:
     get:
       operationId: getWhatsAppBlockedUsers
