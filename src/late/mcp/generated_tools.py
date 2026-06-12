@@ -11626,6 +11626,7 @@ def register_generated_tools(mcp, _get_client):
         country: str,
         submission_id: str | None = None,
         reuse: bool | None = None,
+        reuse_from: str | None = None,
         end_user_first_name: str | None = None,
         end_user_last_name: str | None = None,
         values: dict[str, Any] | None = None,
@@ -11639,6 +11640,7 @@ def register_generated_tools(mcp, _get_client):
             country: (required)
             submission_id: Idempotency token for this submission attempt. A retry/double-submit with the same token returns the same number; omit and each call creates a new number.
             reuse: Reuse a prior approved verification for this country (skips document/field collection; places the order immediately).
+            reuse_from: Which approved verification to reuse when several exist: the phone number it was originally approved for (GET reusable.options[].fromPhoneNumber). Omitted = newest. No match = 409.
             end_user_first_name: End user's legal first name. Required when the country has an action/ID-verification (Onfido) requirement.
             end_user_last_name: End user's legal last name. Same condition as endUserFirstName.
             values: requirementId → textual value
@@ -11651,6 +11653,7 @@ def register_generated_tools(mcp, _get_client):
                 country=country,
                 submission_id=submission_id,
                 reuse=reuse,
+                reuse_from=reuse_from,
                 end_user_first_name=end_user_first_name,
                 end_user_last_name=end_user_last_name,
                 values=values,

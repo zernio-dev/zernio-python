@@ -23143,7 +23143,7 @@ paths:
                   reusable:
                     type: object
                     nullable: true
-                    description: Present when this account already has an approved verification for the country that can be reused (skip the form).
+                    description: Present when this account already has an approved verification for the country that can be reused (skip the form). `fromPhoneNumber`/`details` mirror the newest option; `options` lists ALL approved verifications (agencies hold one per end client) — pass the chosen option's `fromPhoneNumber` as `reuseFrom` on POST.
                     properties:
                       available: { type: boolean }
                       fromPhoneNumber: { type: string }
@@ -23155,6 +23155,20 @@ paths:
                           properties:
                             label: { type: string }
                             value: { type: string }
+                      options:
+                        type: array
+                        description: One entry per distinct approved verification, newest first.
+                        items:
+                          type: object
+                          properties:
+                            fromPhoneNumber: { type: string }
+                            details:
+                              type: array
+                              items:
+                                type: object
+                                properties:
+                                  label: { type: string }
+                                  value: { type: string }
         '400': { description: Country not available }
         '401': { $ref: '#/components/responses/Unauthorized' }
     post:
@@ -23193,6 +23207,7 @@ paths:
                 country: { type: string }
                 submissionId: { type: string, description: Idempotency token for this submission attempt. A retry/double-submit with the same token returns the same number; omit and each call creates a new number. }
                 reuse: { type: boolean, description: Reuse a prior approved verification for this country (skips document/field collection; places the order immediately). }
+                reuseFrom: { type: string, description: 'Which approved verification to reuse when several exist: the phone number it was originally approved for (GET reusable.options[].fromPhoneNumber). Omitted = newest. No match = 409.' }
                 endUserFirstName: { type: string, description: End user's legal first name. Required when the country has an action/ID-verification (Onfido) requirement. }
                 endUserLastName: { type: string, description: End user's legal last name. Same condition as endUserFirstName. }
                 values:
