@@ -9782,15 +9782,14 @@ paths:
                   key:
                     type: string
                     description: Storage key/path of the file
-                  type:
-                    type: string
-                    enum: [image, video, document]
-                    description: Detected file type based on content type
+                  expiresIn:
+                    type: integer
+                    description: Seconds until the presigned uploadUrl expires (always 3600)
               example:
                 uploadUrl: "<presigned-upload-url>"
                 publicUrl: "https://media.zernio.com/temp/1234567890_abc123_my-video.mp4"
                 key: "temp/1234567890_abc123_my-video.mp4"
-                type: "video"
+                expiresIn: 3600
         '400':
           description: Invalid request (missing filename, contentType, or unsupported content type)
           content:
@@ -9801,7 +9800,7 @@ paths:
                   error: { type: string }
               examples:
                 missing_filename:
-                  value: { error: "filename and contentType are required" }
+                  value: { error: "Missing required fields: filename and contentType" }
                 invalid_type:
                   value: { error: "Content type not allowed: text/plain" }
                 file_too_large:
