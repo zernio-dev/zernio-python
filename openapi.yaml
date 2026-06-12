@@ -5428,6 +5428,10 @@ components:
         platformAdAccountName: { type: string, nullable: true, description: "Human-readable advertiser/account name from the platform. Refreshed on every sync." }
         accountId: { type: string }
         profileId: { type: string }
+        advertisingChannelType:
+          type: string
+          nullable: true
+          description: "Google-only. Raw campaign.advertising_channel_type (SEARCH, PERFORMANCE_MAX, VIDEO, DEMAND_GEN, DISPLAY, SHOPPING, ...). Serving surface, distinct from platformObjective (advertiser intent). Null/absent for non-Google platforms."
         platformObjective: { type: string, nullable: true, description: "Raw Meta campaign objective (e.g. OUTCOME_SALES, OUTCOME_LEADS, OUTCOME_TRAFFIC)" }
         optimizationGoal:
           type: string
@@ -5505,6 +5509,10 @@ components:
         platformAdAccountName: { type: string, nullable: true, description: "Human-readable advertiser/account name from the platform. Refreshed on every sync." }
         accountId: { type: string }
         profileId: { type: string }
+        advertisingChannelType:
+          type: string
+          nullable: true
+          description: "Google-only. Raw campaign.advertising_channel_type. See AdTreeCampaign.advertisingChannelType."
         platformObjective: { type: string, nullable: true, description: "Raw Meta campaign objective (e.g. OUTCOME_SALES, OUTCOME_LEADS, OUTCOME_TRAFFIC)" }
         optimizationGoal:
           type: string
