@@ -271,6 +271,7 @@ class AnalyticsResource:
         from_date: datetime | str | None = None,
         to_date: datetime | str | None = None,
         source: str | None = "all",
+        attribution: str | None = "publish",
     ) -> dict[str, Any]:
         """Get daily aggregated metrics"""
         params = self._build_params(
@@ -280,6 +281,7 @@ class AnalyticsResource:
             from_date=from_date,
             to_date=to_date,
             source=source,
+            attribution=attribution,
         )
         return self._client._get("/v1/analytics/daily-metrics", params=params)
 
@@ -657,6 +659,7 @@ class AnalyticsResource:
         from_date: datetime | str | None = None,
         to_date: datetime | str | None = None,
         source: str | None = "all",
+        attribution: str | None = "publish",
     ) -> dict[str, Any]:
         """Get daily aggregated metrics (async)"""
         params = self._build_params(
@@ -666,6 +669,7 @@ class AnalyticsResource:
             from_date=from_date,
             to_date=to_date,
             source=source,
+            attribution=attribution,
         )
         return await self._client._aget("/v1/analytics/daily-metrics", params=params)
 

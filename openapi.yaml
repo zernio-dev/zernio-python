@@ -8044,6 +8044,16 @@ paths:
             enum: [all, late, external]
             default: all
           description: Filter by post origin. "late" for posts published via Zernio, "external" for posts imported from platforms.
+        - name: attribution
+          in: query
+          schema:
+            type: string
+            enum: [publish, received]
+            default: publish
+          description: |
+            How each post's engagement is attributed to a day.
+            "publish" (default) sums each post's lifetime total on its publish date.
+            "received" buckets the per-day increase in engagement by the day it actually arrived (engagement-over-time), so engagement on older posts appears on the day it was gained rather than the post's publish date.
       responses:
         '200':
           description: Daily metrics and platform breakdown

@@ -3902,16 +3902,20 @@ def register_generated_tools(mcp, _get_client):
         from_date: str | None = None,
         to_date: str | None = None,
         source: str = "all",
+        attribution: str = "publish",
     ) -> str:
         """Get daily aggregated metrics
 
-        Args:
-            platform: Filter by platform (e.g. "instagram", "tiktok"). Omit for all platforms.
-            profile_id: Filter by profile ID. Omit for all profiles.
-            account_id: Filter by social account ID
-            from_date: Inclusive start date (ISO 8601). Defaults to 180 days ago.
-            to_date: Inclusive end date (ISO 8601). Defaults to now.
-            source: Filter by post origin. "late" for posts published via Zernio, "external" for posts imported from platforms."""
+            Args:
+                platform: Filter by platform (e.g. "instagram", "tiktok"). Omit for all platforms.
+                profile_id: Filter by profile ID. Omit for all profiles.
+                account_id: Filter by social account ID
+                from_date: Inclusive start date (ISO 8601). Defaults to 180 days ago.
+                to_date: Inclusive end date (ISO 8601). Defaults to now.
+                source: Filter by post origin. "late" for posts published via Zernio, "external" for posts imported from platforms.
+                attribution: How each post's engagement is attributed to a day.
+        "publish" (default) sums each post's lifetime total on its publish date.
+        "received" buckets the per-day increase in engagement by the day it actually arrived (engagement-over-time), so engagement on older posts appears on the day it was gained rather than the post's publish date."""
         client = _get_client()
         try:
             response = client.analytics.get_daily_metrics(
@@ -3921,6 +3925,7 @@ def register_generated_tools(mcp, _get_client):
                 from_date=from_date,
                 to_date=to_date,
                 source=source,
+                attribution=attribution,
             )
             return _format_response(response)
         except Exception as e:
