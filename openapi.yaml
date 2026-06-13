@@ -29511,12 +29511,16 @@ paths:
     post:
       operationId: createConversionDestination
       tags: [Ads]
-      summary: Create a conversion destination (LinkedIn)
+      summary: Create a conversion destination (LinkedIn, Google Ads)
       description: |
-        Create a new conversion rule on the platform. LinkedIn-only today;
-        other platforms manage destinations in their own UIs and return 405.
+        Create a new conversion destination on the platform. Supported for
+        LinkedIn (conversion rule) and Google Ads (conversion action). Meta
+        manages destinations in its own UI and returns 405.
 
-        For LinkedIn, the rule is created with `conversionMethod=CONVERSIONS_API`
+        **WARNING: creation is NOT idempotent.** A retry creates a second
+        destination. Deduplicate before retrying.
+
+        **LinkedIn:** the rule is created with `conversionMethod=CONVERSIONS_API`
         and (by default) auto-associated with all of the ad account's campaigns
         via `autoAssociationType=ALL_CAMPAIGNS`. Pass `autoAssociationType: NONE`
         to opt out and manage associations explicitly via the associations
@@ -29525,6 +29529,17 @@ paths:
         365-day attribution windows are only valid for `SUBMIT_APPLICATION`,
         `PURCHASE`, `ADD_TO_CART`, `QUALIFIED_LEAD`, and `LEAD` rule types;
         the API rejects other combinations locally.
+
+        **Google Ads:** the conversion action is created with
+        `type=UPLOAD_CLICKS` (required for API-uploaded offline conversions,
+        immutable after creation). The `type` field carries the Google
+        `ConversionActionCategory` enum value, e.g. `PURCHASE`,
+        `SUBSCRIBE_PAID`, `SIGNUP`, `IMPORTED_LEAD`, `BOOK_APPOINTMENT`.
+        Unified standard event names (e.g. `Purchase`, `Subscribe`,
+        `CompleteRegistration`, `Lead`, `Schedule`) are resolved to their
+        Google category equivalents automatically. The action defaults to
+        secondary (non-primary) to avoid immediately steering Smart Bidding;
+        pass `primaryForGoal: true` to opt in.
       security:
         - bearerAuth: []
       parameters:
@@ -29532,7 +29547,7 @@ paths:
           in: path
           required: true
           schema: { type: string }
-          description: SocialAccount ID (linkedinads).
+          description: SocialAccount ID (linkedinads or googleads).
       requestBody:
         required: true
         content:
@@ -29544,45 +29559,53 @@ paths:
                 adAccountId:
                   type: string
                   description: |
-                    Sponsored ad account ID. Numeric (e.g. "5123456") or
-                    full `urn:li:sponsoredAccount:{id}` URN.
+                    Ad account ID. For LinkedIn: numeric (e.g. "5123456") or
+                    full `urn:li:sponsoredAccount:{id}` URN. For Google: numeric
+                    customer ID (e.g. "1234567890") or `customers/{id}` form.
                 name: { type: string, maxLength: 255 }
                 type:
                   type: string
                   description: |
-                    Either a unified standard event name (e.g. "Purchase",
-                    "Lead", "AddToCart") or a LinkedIn rule type enum value
-                    (e.g. "PURCHASE", "QUALIFIED_LEAD"). The API maps
-                    standard names to LinkedIn enum values automatically.
+                    Conversion type. For LinkedIn: a unified standard event name
+                    (e.g. "Purchase", "Lead", "AddToCart") or a LinkedIn rule
+                    type enum (e.g. "PURCHASE", "QUALIFIED_LEAD"). For Google:
+                    a unified standard event name (Purchase, Subscribe,
+                    CompleteRegistration, Lead, Schedule) or a Google
+                    ConversionActionCategory enum value directly (e.g.
+                    "PURCHASE", "SUBSCRIBE_PAID", "SIGNUP", "IMPORTED_LEAD",
+                    "BOOK_APPOINTMENT"). Unknown values pass through to the
+                    platform.
                 attributionType:
                   type: string
                   enum: [LAST_TOUCH_BY_CAMPAIGN, LAST_TOUCH_BY_CONVERSION]
+                  description: LinkedIn only.
                 postClickAttributionWindowSize:
                   type: integer
                   enum: [1, 7, 30, 90, 365]
                   description: |
-                    Default 30. 365 only allowed for LEAD, PURCHASE,
-                    ADD_TO_CART, QUALIFIED_LEAD, SUBMIT_APPLICATION rule
-                    types — the API rejects other combinations locally.
+                    LinkedIn only. Default 30. 365 only allowed for LEAD,
+                    PURCHASE, ADD_TO_CART, QUALIFIED_LEAD, SUBMIT_APPLICATION
+                    rule types; the API rejects other combinations locally.
                 viewThroughAttributionWindowSize:
                   type: integer
                   enum: [1, 7, 30, 90, 365]
                   description: |
-                    Default 7. Same 365-day-window type restriction applies
-                    as `postClickAttributionWindowSize`.
+                    LinkedIn only. Default 7. Same 365-day-window type
+                    restriction applies as `postClickAttributionWindowSize`.
                 valueType:
                   type: string
                   enum: [DYNAMIC, FIXED, NO_VALUE]
                   description: |
-                    DYNAMIC (default) uses the per-event `value` from
-                    `sendConversions`. FIXED uses the rule's `value` field.
+                    LinkedIn only. DYNAMIC (default) uses the per-event `value`
+                    from `sendConversions`. FIXED uses the rule's `value` field.
                     NO_VALUE drops monetary value entirely.
                 value:
                   type: object
                   required: [currencyCode, amount]
                   description: |
-                    Static conversion value. Used when `valueType=FIXED`.
-                    The currency should match the ad account's currency.
+                    LinkedIn only. Static conversion value. Used when
+                    `valueType=FIXED`. The currency should match the ad
+                    account's currency.
                   properties:
                     currencyCode: { type: string, minLength: 3, maxLength: 3, description: ISO 4217 (e.g. "USD"). }
                     amount: { type: string, description: 'Decimal string (e.g. "49.99").' }
@@ -29591,7 +29614,8 @@ paths:
                   enum: [ALL_CAMPAIGNS, OBJECTIVE_BASED, NONE]
                   default: ALL_CAMPAIGNS
                   description: |
-                    Controls campaign association at rule-creation time:
+                    LinkedIn only. Controls campaign association at rule-creation
+                    time:
                     - ALL_CAMPAIGNS: associate the rule with every active,
                       paused, and draft campaign in the ad account
                     - OBJECTIVE_BASED: associate only campaigns whose
@@ -29601,6 +29625,20 @@ paths:
                     Note: auto-association runs once at create time; new
                     campaigns added after the rule still need explicit
                     association.
+                countingType:
+                  type: string
+                  enum: [MANY_PER_CLICK, ONE_PER_CLICK]
+                  description: |
+                    Google Ads only. Whether to count multiple conversions from
+                    the same click (MANY_PER_CLICK) or at most one
+                    (ONE_PER_CLICK). Defaults to MANY_PER_CLICK if omitted.
+                primaryForGoal:
+                  type: boolean
+                  description: |
+                    Google Ads only. When true, the conversion action is marked
+                    as primary and immediately influences Smart Bidding. Defaults
+                    to false (secondary, record-only) to avoid unintentionally
+                    steering the customer's campaigns on creation.
       responses:
         '201':
           description: Destination created
@@ -29609,10 +29647,10 @@ paths:
               schema:
                 type: object
                 properties:
-                  platform: { type: string, enum: [linkedinads] }
+                  platform: { type: string, enum: [linkedinads, googleads] }
                   destination: { $ref: '#/components/schemas/ConversionDestination' }
         '400':
-          description: Invalid body or LinkedIn validation failure.
+          description: Invalid body or platform validation failure.
         '401': { $ref: '#/components/responses/Unauthorized' }
         '403':
           description: |
@@ -29623,7 +29661,7 @@ paths:
         '405':
           description: Platform does not support destination creation.
         '429':
-          description: LinkedIn rate limit hit. Retry with backoff.
+          description: Rate limit hit. Retry with backoff.
 
   /v1/accounts/{accountId}/conversion-destinations/{destinationId}:
     get:

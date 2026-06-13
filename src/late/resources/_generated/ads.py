@@ -621,8 +621,10 @@ class AdsResource:
         value_type: str | None = None,
         value: dict[str, Any] | None = None,
         auto_association_type: str | None = "ALL_CAMPAIGNS",
+        counting_type: str | None = None,
+        primary_for_goal: bool | None = None,
     ) -> dict[str, Any]:
-        """Create a conversion destination (LinkedIn)"""
+        """Create a conversion destination (LinkedIn, Google Ads)"""
         payload = self._build_payload(
             ad_account_id=ad_account_id,
             name=name,
@@ -633,6 +635,8 @@ class AdsResource:
             value_type=value_type,
             value=value,
             auto_association_type=auto_association_type,
+            counting_type=counting_type,
+            primary_for_goal=primary_for_goal,
         )
         return self._client._post(
             f"/v1/accounts/{account_id}/conversion-destinations", data=payload
@@ -1406,8 +1410,10 @@ class AdsResource:
         value_type: str | None = None,
         value: dict[str, Any] | None = None,
         auto_association_type: str | None = "ALL_CAMPAIGNS",
+        counting_type: str | None = None,
+        primary_for_goal: bool | None = None,
     ) -> dict[str, Any]:
-        """Create a conversion destination (LinkedIn) (async)"""
+        """Create a conversion destination (LinkedIn, Google Ads) (async)"""
         payload = self._build_payload(
             ad_account_id=ad_account_id,
             name=name,
@@ -1418,6 +1424,8 @@ class AdsResource:
             value_type=value_type,
             value=value,
             auto_association_type=auto_association_type,
+            counting_type=counting_type,
+            primary_for_goal=primary_for_goal,
         )
         return await self._client._apost(
             f"/v1/accounts/{account_id}/conversion-destinations", data=payload

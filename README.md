@@ -400,7 +400,7 @@ Both `from zernio import ...` and `from late import ...` work identically. The `
 | `ads.list_form_leads()` | List leads for a single form |
 | `ads.list_lead_forms()` | List Lead Gen (Instant) forms |
 | `ads.list_leads()` | List submitted leads (cross-form CRM view) |
-| `ads.create_conversion_destination()` | Create a conversion destination (LinkedIn) |
+| `ads.create_conversion_destination()` | Create a conversion destination (LinkedIn, Google Ads) |
 | `ads.create_ctwa_ad()` | Create Click-to-WhatsApp ad(s) |
 | `ads.create_lead_form()` | Create a Lead Gen (Instant) form |
 | `ads.create_standalone_ad()` | Create standalone ad |

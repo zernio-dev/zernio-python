@@ -2964,7 +2964,7 @@ def register_generated_tools(mcp, _get_client):
 
     @mcp.tool(
         annotations=ToolAnnotations(
-            title="Create a conversion destination (LinkedIn)",
+            title="Create a conversion destination (LinkedIn, Google Ads)",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
@@ -2981,32 +2981,42 @@ def register_generated_tools(mcp, _get_client):
         value_type: str | None = None,
         value: dict[str, Any] | None = None,
         auto_association_type: str = "ALL_CAMPAIGNS",
+        counting_type: str | None = None,
+        primary_for_goal: bool | None = None,
     ) -> str:
-        """Create a conversion destination (LinkedIn)
+        """Create a conversion destination (LinkedIn, Google Ads)
 
             Args:
-                account_id: SocialAccount ID (linkedinads). (required)
-                ad_account_id: Sponsored ad account ID. Numeric (e.g. "5123456") or
-        full `urn:li:sponsoredAccount:{id}` URN.
+                account_id: SocialAccount ID (linkedinads or googleads). (required)
+                ad_account_id: Ad account ID. For LinkedIn: numeric (e.g. "5123456") or
+        full `urn:li:sponsoredAccount:{id}` URN. For Google: numeric
+        customer ID (e.g. "1234567890") or `customers/{id}` form.
          (required)
                 name: (required)
-                type: Either a unified standard event name (e.g. "Purchase",
-        "Lead", "AddToCart") or a LinkedIn rule type enum value
-        (e.g. "PURCHASE", "QUALIFIED_LEAD"). The API maps
-        standard names to LinkedIn enum values automatically.
+                type: Conversion type. For LinkedIn: a unified standard event name
+        (e.g. "Purchase", "Lead", "AddToCart") or a LinkedIn rule
+        type enum (e.g. "PURCHASE", "QUALIFIED_LEAD"). For Google:
+        a unified standard event name (Purchase, Subscribe,
+        CompleteRegistration, Lead, Schedule) or a Google
+        ConversionActionCategory enum value directly (e.g.
+        "PURCHASE", "SUBSCRIBE_PAID", "SIGNUP", "IMPORTED_LEAD",
+        "BOOK_APPOINTMENT"). Unknown values pass through to the
+        platform.
          (required)
-                attribution_type
-                post_click_attribution_window_size: Default 30. 365 only allowed for LEAD, PURCHASE,
-        ADD_TO_CART, QUALIFIED_LEAD, SUBMIT_APPLICATION rule
-        types — the API rejects other combinations locally.
-                view_through_attribution_window_size: Default 7. Same 365-day-window type restriction applies
-        as `postClickAttributionWindowSize`.
-                value_type: DYNAMIC (default) uses the per-event `value` from
-        `sendConversions`. FIXED uses the rule's `value` field.
+                attribution_type: LinkedIn only.
+                post_click_attribution_window_size: LinkedIn only. Default 30. 365 only allowed for LEAD,
+        PURCHASE, ADD_TO_CART, QUALIFIED_LEAD, SUBMIT_APPLICATION
+        rule types; the API rejects other combinations locally.
+                view_through_attribution_window_size: LinkedIn only. Default 7. Same 365-day-window type
+        restriction applies as `postClickAttributionWindowSize`.
+                value_type: LinkedIn only. DYNAMIC (default) uses the per-event `value`
+        from `sendConversions`. FIXED uses the rule's `value` field.
         NO_VALUE drops monetary value entirely.
-                value: Static conversion value. Used when `valueType=FIXED`.
-        The currency should match the ad account's currency.
-                auto_association_type: Controls campaign association at rule-creation time:
+                value: LinkedIn only. Static conversion value. Used when
+        `valueType=FIXED`. The currency should match the ad
+        account's currency.
+                auto_association_type: LinkedIn only. Controls campaign association at rule-creation
+        time:
         - ALL_CAMPAIGNS: associate the rule with every active,
           paused, and draft campaign in the ad account
         - OBJECTIVE_BASED: associate only campaigns whose
@@ -3015,7 +3025,14 @@ def register_generated_tools(mcp, _get_client):
           the `/associations` endpoints below.
         Note: auto-association runs once at create time; new
         campaigns added after the rule still need explicit
-        association."""
+        association.
+                counting_type: Google Ads only. Whether to count multiple conversions from
+        the same click (MANY_PER_CLICK) or at most one
+        (ONE_PER_CLICK). Defaults to MANY_PER_CLICK if omitted.
+                primary_for_goal: Google Ads only. When true, the conversion action is marked
+        as primary and immediately influences Smart Bidding. Defaults
+        to false (secondary, record-only) to avoid unintentionally
+        steering the customer's campaigns on creation."""
         client = _get_client()
         try:
             response = client.ads.create_conversion_destination(
@@ -3029,6 +3046,8 @@ def register_generated_tools(mcp, _get_client):
                 value_type=value_type,
                 value=value,
                 auto_association_type=auto_association_type,
+                counting_type=counting_type,
+                primary_for_goal=primary_for_goal,
             )
             return _format_response(response)
         except Exception as e:
