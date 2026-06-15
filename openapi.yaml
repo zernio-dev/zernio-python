@@ -27183,7 +27183,8 @@ paths:
         - { name: adAccountId, in: query, schema: { type: string }, description: Platform ad account ID }
         - { name: accountId, in: query, schema: { type: string }, description: Social account ID }
         - { name: profileId, in: query, schema: { type: string }, description: Profile ID }
-        - { name: fromDate, in: query, schema: { type: string, format: date }, description: "Start of metrics date range (YYYY-MM-DD). Defaults to 90 days ago." }
+        - { name: campaignId, in: query, schema: { type: string }, description: "Restrict the tree to a single campaign by its platform campaign id (the id the platform assigns, e.g. Meta's numeric campaign id). Filters the campaign set itself, so it works regardless of account size and pagination — pass this when you already hold a campaign id instead of paging the tree to find it. Mirrors the `campaignId` filter on GET /v1/ads." }
+        - { name: fromDate, in: query, schema: { type: string, format: date }, description: "Start of the METRICS date range (YYYY-MM-DD). Affects only the spend/impression numbers overlaid on each node, NOT which campaigns are returned. Defaults to 90 days ago." }
         - { name: toDate, in: query, schema: { type: string, format: date }, description: "End of metrics date range (YYYY-MM-DD). Defaults to today. Max 730-day range." }
         - { name: sort, in: query, schema: { type: string, enum: [newest, oldest, spend_desc, spend_asc], default: newest }, description: "Campaign-level sort order. `newest` (default) / `oldest` order by the campaign's newest-ad createdAt. `spend_desc` / `spend_asc` order by aggregated spend in the requested date range; campaigns with no spend land at the end." }
       responses:
@@ -29203,12 +29204,18 @@ paths:
         - Meta (`metaads`) via Graph API
         - Google Ads (`googleads`) via Data Manager API `ingestEvents`
         - LinkedIn (`linkedinads`) via `/rest/conversionEvents`
+        - TikTok (`tiktokads`) via the Offline Events API `/offline/batch/` — OFFLINE conversions only
 
         `destinationId` semantics differ per platform:
 
         - Meta: pixel (dataset) ID, e.g. `123456789012345`
         - Google: conversion action resource name, e.g. `customers/1234567890/conversionActions/987654321`
         - LinkedIn: conversion rule ID or URN, e.g. `104012` or `urn:lla:llaPartnerConversion:104012`
+        - TikTok: Offline Event Set ID, e.g. `7057103914977558530`
+
+        TikTok notes: this path sends OFFLINE conversions (in-store / CRM / call-center), not web-pixel
+        events. Each event must carry an email or phone (TikTok requires at least one). The connected
+        TikTok ads account must have granted the Offline Events permission; older grants must reconnect.
 
         Callers can list valid destinations via `GET /v1/accounts/{accountId}/conversion-destinations`.
 
@@ -29244,7 +29251,7 @@ paths:
               properties:
                 accountId:
                   type: string
-                  description: SocialAccount ID (metaads, googleads, or linkedinads).
+                  description: SocialAccount ID (metaads, googleads, linkedinads, or tiktokads).
                 destinationId:
                   type: string
                   description: |
@@ -29281,7 +29288,7 @@ paths:
               schema:
                 type: object
                 properties:
-                  platform: { type: string, enum: [metaads, googleads, linkedinads] }
+                  platform: { type: string, enum: [metaads, googleads, linkedinads, tiktokads] }
                   eventsReceived: { type: integer, description: Events accepted by the platform. }
                   eventsFailed: { type: integer, description: Events rejected (see failures). }
                   failures:
@@ -29461,7 +29468,7 @@ paths:
           in: path
           required: true
           schema: { type: string }
-          description: SocialAccount ID (metaads, googleads, or linkedinads).
+          description: SocialAccount ID (metaads, googleads, linkedinads, or tiktokads).
       responses:
         '200':
           description: Destinations listed
@@ -29470,7 +29477,7 @@ paths:
               schema:
                 type: object
                 properties:
-                  platform: { type: string, enum: [metaads, googleads, linkedinads] }
+                  platform: { type: string, enum: [metaads, googleads, linkedinads, tiktokads] }
                   destinations:
                     type: array
                     items:

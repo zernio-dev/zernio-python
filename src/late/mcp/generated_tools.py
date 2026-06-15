@@ -1630,6 +1630,7 @@ def register_generated_tools(mcp, _get_client):
         ad_account_id: str | None = None,
         account_id: str | None = None,
         profile_id: str | None = None,
+        campaign_id: str | None = None,
         from_date: str | None = None,
         to_date: str | None = None,
         sort: str = "newest",
@@ -1645,7 +1646,8 @@ def register_generated_tools(mcp, _get_client):
             ad_account_id: Platform ad account ID
             account_id: Social account ID
             profile_id: Profile ID
-            from_date: Start of metrics date range (YYYY-MM-DD). Defaults to 90 days ago.
+            campaign_id: Restrict the tree to a single campaign by its platform campaign id (the id the platform assigns, e.g. Meta's numeric campaign id). Filters the campaign set itself, so it works regardless of account size and pagination — pass this when you already hold a campaign id instead of paging the tree to find it. Mirrors the `campaignId` filter on GET /v1/ads.
+            from_date: Start of the METRICS date range (YYYY-MM-DD). Affects only the spend/impression numbers overlaid on each node, NOT which campaigns are returned. Defaults to 90 days ago.
             to_date: End of metrics date range (YYYY-MM-DD). Defaults to today. Max 730-day range.
             sort: Campaign-level sort order. `newest` (default) / `oldest` order by the campaign's newest-ad createdAt. `spend_desc` / `spend_asc` order by aggregated spend in the requested date range; campaigns with no spend land at the end."""
         client = _get_client()
@@ -1659,6 +1661,7 @@ def register_generated_tools(mcp, _get_client):
                 ad_account_id=ad_account_id,
                 account_id=account_id,
                 profile_id=profile_id,
+                campaign_id=campaign_id,
                 from_date=from_date,
                 to_date=to_date,
                 sort=sort,
@@ -2890,7 +2893,7 @@ def register_generated_tools(mcp, _get_client):
         """Send conversion events to an ad platform
 
             Args:
-                account_id: SocialAccount ID (metaads, googleads, or linkedinads). (required)
+                account_id: SocialAccount ID (metaads, googleads, linkedinads, or tiktokads). (required)
                 destination_id: Platform destination identifier. For Meta, the pixel/dataset
         ID. For Google, the conversion action resource name. For
         LinkedIn, the conversion rule ID or full
@@ -2954,7 +2957,7 @@ def register_generated_tools(mcp, _get_client):
         """List destinations for the Conversions API
 
         Args:
-            account_id: SocialAccount ID (metaads, googleads, or linkedinads). (required)"""
+            account_id: SocialAccount ID (metaads, googleads, linkedinads, or tiktokads). (required)"""
         client = _get_client()
         try:
             response = client.ads.list_conversion_destinations(account_id=account_id)
