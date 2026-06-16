@@ -3596,6 +3596,9 @@ components:
         disableLinkPreview:
           type: boolean
           description: Set to true to disable automatic link previews for URLs in the post content (default is false)
+        reshareUrl:
+          type: string
+          description: "LinkedIn post link to repost (use the post's \"Copy link to post\" action), or a urn:li:share / urn:li:ugcPost / urn:li:groupPost URN. The published post becomes a quote-reshare: your content is shown as the commentary and the original post is embedded underneath (LinkedIn's \"repost with your thoughts\"). Mutually exclusive with media. Works on personal profiles and organization pages."
         geoRestriction:
           $ref: '#/components/schemas/GeoRestriction'
       description: >
