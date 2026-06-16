@@ -10832,7 +10832,7 @@ def register_generated_tools(mcp, _get_client):
             account_id: (required)
             forward_to: tel:+E164 / sip:... / wss://... destination (required)
             sip_auth_username
-            sip_auth_password: Stored encrypted
+            sip_auth_password: Stored encrypted, never returned by any endpoint.
             recording_enabled
             call_icon_countries"""
         client = _get_client()
@@ -10930,7 +10930,7 @@ def register_generated_tools(mcp, _get_client):
 
         Args:
             account_id: (required)
-            to: Consumer wa_id (E.164 (required)"""
+            to: Consumer wa_id (E.164, leading + optional) (required)"""
         client = _get_client()
         try:
             response = client.whatsapp_calling.get_whats_app_call_permissions(
@@ -10961,7 +10961,7 @@ def register_generated_tools(mcp, _get_client):
 
             Args:
                 account_id: (required)
-                to: Consumer wa_id (E.164 (required)
+                to: Consumer wa_id (E.164, leading + optional) (required)
                 action: Omit to place a call. Set to send the consent prompt instead.
                 body_text: Body text shown with the consent prompt (send_call_permission_request only).
                 forward_to: Per-call destination override. Same accepted shape as the
@@ -11726,7 +11726,7 @@ def register_generated_tools(mcp, _get_client):
             country: ISO 3166-1 alpha-2 country code. (required)
             street_address: (required)
             locality: City / town. (required)
-            administrative_area: State / province / region. When omitted
+            administrative_area: State / province / region. When omitted, the pre-check is skipped (the final submit still validates).
             postal_code: (required)"""
         client = _get_client()
         try:
@@ -12177,7 +12177,7 @@ def register_generated_tools(mcp, _get_client):
             workflow_id: (required)
             to: Recipient phone (WhatsApp only)
             conversation_id: An existing conversation to run in (required for non-WhatsApp workflows)
-            text: Simulated inbound text"""
+            text: Simulated inbound text, seeded as the run's lastMessage variable"""
         client = _get_client()
         try:
             response = client.workflows.trigger_workflow(

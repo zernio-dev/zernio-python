@@ -738,7 +738,7 @@ components:
         title: { type: string }
         author: { type: string }
         subreddit: { type: string }
-        url: { type: string, description: Post URL (may be a gallery URL, external link, or self-post URL) }
+        url: { type: string, description: "Post URL (may be a gallery URL, external link, or self-post URL)" }
         permalink: { type: string, description: Full permalink to the Reddit post }
         selftext: { type: string, description: Self-post body text (empty string for link posts) }
         createdUtc: { type: number, description: Unix timestamp of post creation }
@@ -2743,7 +2743,7 @@ components:
               type: string
               enum: [instagram, facebook, telegram, whatsapp, twitter, reddit, bluesky]
             platformConversationId: { type: string }
-            participantId: { type: string, description: Contact's platform identifier (IGSID, PSID, wa_id, etc.) }
+            participantId: { type: string, description: "Contact's platform identifier (IGSID, PSID, wa_id, etc.)" }
             participantName: { type: string }
             participantUsername: { type: string, description: Contact's handle when the platform exposes one }
             participantPicture: { type: string }
@@ -4010,7 +4010,7 @@ components:
               footer:
                 type: object
                 properties:
-                  text: { type: string, description: Footer text (max 2,048 chars) }
+                  text: { type: string, description: "Footer text (max 2,048 chars)" }
                   icon_url: { type: string }
               author:
                 type: object
@@ -4027,7 +4027,7 @@ components:
                   required: [name, value]
                   properties:
                     name: { type: string, description: Field name (max 256 chars) }
-                    value: { type: string, description: Field value (max 1,024 chars) }
+                    value: { type: string, description: "Field value (max 1,024 chars)" }
                     inline: { type: boolean, description: Display fields side-by-side }
         poll:
           type: object
@@ -4264,7 +4264,7 @@ components:
               properties:
                 followingCount: { type: number, description: Number of accounts being followed }
                 mediaCount: { type: number, description: Total media posts (Instagram) }
-                videoCount: { type: number, description: Total videos (YouTube, TikTok) }
+                videoCount: { type: number, description: "Total videos (YouTube, TikTok)" }
                 tweetCount: { type: number, description: Total tweets (X/Twitter) }
                 postsCount: { type: number, description: Total posts (Bluesky) }
                 pinCount: { type: number, description: Total pins (Pinterest) }
@@ -5778,7 +5778,7 @@ components:
       properties:
         id: { type: string, description: 'Ad account id, in `act_<digits>` form.' }
         name: { type: string }
-        businessId: { type: string, description: Business Manager id that owns the ad account, when reported. }
+        businessId: { type: string, description: "Business Manager id that owns the ad account, when reported." }
 
 webhooks:
   post.scheduled:
@@ -12241,7 +12241,7 @@ paths:
                       name: "Main Brand"
                       color: "#ffeda0"
                   permission: "read"
-        '400': { description: Invalid request (missing name, invalid scope/permission, or missing profileIds when scope is 'profiles') }
+        '400': { description: "Invalid request (missing name, invalid scope/permission, or missing profileIds when scope is 'profiles')" }
         '401': { $ref: '#/components/responses/Unauthorized' }
   /v1/api-keys/{keyId}:
     delete:
@@ -12604,7 +12604,7 @@ paths:
                 type: object
                 properties:
                   success: { type: boolean, example: true }
-                  identityId: { type: string, description: The TikTok-assigned identity_id, cached on the account. }
+                  identityId: { type: string, description: "The TikTok-assigned identity_id, cached on the account." }
                   displayName: { type: string }
         '400':
           description: "Missing fields, invalid lengths, account is in linked mode, or no advertiser found on the account"
@@ -13113,7 +13113,7 @@ paths:
                     type: object
                     description: Raw Voice of Merchant state from Google.
                     properties:
-                      hasVoiceOfMerchant: { type: boolean, description: True when the listing is verified and published (eligible to surface reviews, edits, etc.). }
+                      hasVoiceOfMerchant: { type: boolean, description: "True when the listing is verified and published (eligible to surface reviews, edits, etc.)." }
                       hasBusinessAuthority: { type: boolean, description: True when the authenticated user has owner/manager authority over the listing. }
                       verify:
                         type: object
@@ -14780,7 +14780,7 @@ paths:
                       type: object
                       properties:
                         name: { type: string, description: Full review resource name (accounts/*/locations/*/reviews/*) }
-                        review: { type: object, description: The review object (reviewId, starRating, comment, reviewer, createTime, updateTime, reviewReply) }
+                        review: { type: object, description: "The review object (reviewId, starRating, comment, reviewer, createTime, updateTime, reviewReply)" }
                   nextPageToken: { type: string }
         '400':
           description: Invalid request
@@ -15922,7 +15922,7 @@ paths:
                   displayName: "My Channel"
                   isActive: true
                   chatType: "channel"
-        '400': { description: Chat ID required, bot not admin, or cannot access chat }
+        '400': { description: "Chat ID required, bot not admin, or cannot access chat" }
         '401': { $ref: '#/components/responses/Unauthorized' }
         '403': { description: No access to this profile }
         '404': { description: Profile not found }
@@ -17428,7 +17428,7 @@ paths:
                       guildId: { type: string }
                       webhookUsername: { type: string, nullable: true }
                       webhookAvatarUrl: { type: string, nullable: true }
-        '400': { description: Invalid request (no changes, invalid channel type, or bot cannot access channel) }
+        '400': { description: "Invalid request (no changes, invalid channel type, or bot cannot access channel)" }
         '401': { $ref: '#/components/responses/Unauthorized' }
         '404': { description: Discord account not found }
 
@@ -17622,7 +17622,7 @@ paths:
                         hoist: { type: boolean, description: True if role is displayed separately in member list }
         '400': { description: Invalid accountId or guildId format. }
         '401': { $ref: '#/components/responses/Unauthorized' }
-        '404': { description: Discord account not found, not accessible, or not bound to this guild. }
+        '404': { description: "Discord account not found, not accessible, or not bound to this guild." }
         '502': { description: Discord rejected the request (bot lacks View Channels permission in the guild). }
 
   /v1/discord/guilds/{guildId}/members:
@@ -18040,7 +18040,7 @@ paths:
         '400': { description: "Validation error, OR no updatable fields beyond accountId provided." }
         '401': { $ref: '#/components/responses/Unauthorized' }
         '404': { description: Event or Discord account not found. }
-        '502': { description: Discord rejected the update (invalid status transition, bot permissions, etc.). }
+        '502': { description: "Discord rejected the update (invalid status transition, bot permissions, etc.)." }
 
     delete:
       operationId: deleteDiscordScheduledEvent
@@ -19467,7 +19467,7 @@ paths:
                             type: object
                             properties:
                               emoji: { type: string }
-                              fromMe: { type: boolean, description: true if the connected account reacted, false if the contact did. }
+                              fromMe: { type: boolean, description: "true if the connected account reacted, false if the contact did." }
                               reactedAt: { type: string, format: date-time }
                         metadata:
                           type: object
@@ -19755,7 +19755,7 @@ paths:
                           type: object
                           properties:
                             text: { type: string, description: Button text }
-                            callbackData: { type: string, maxLength: 64, description: Callback data (inline_keyboard only, max 64 bytes) }
+                            callbackData: { type: string, maxLength: 64, description: "Callback data (inline_keyboard only, max 64 bytes)" }
                             url: { type: string, description: URL to open (inline_keyboard only) }
                     oneTime: { type: boolean, default: true, description: Hide keyboard after use (reply_keyboard only) }
                 messagingType:
@@ -20616,8 +20616,8 @@ paths:
                           items: { type: object }
                         canReply: { type: boolean }
                         canDelete: { type: boolean }
-                        canHide: { type: boolean, description: Whether this comment can be hidden (Facebook, Instagram, Threads) }
-                        canLike: { type: boolean, description: Whether this comment can be liked (Facebook, Twitter/X, Bluesky, Reddit) }
+                        canHide: { type: boolean, description: "Whether this comment can be hidden (Facebook, Instagram, Threads)" }
+                        canLike: { type: boolean, description: "Whether this comment can be liked (Facebook, Twitter/X, Bluesky, Reddit)" }
                         isHidden: { type: boolean, description: Whether the comment is currently hidden }
                         isLiked: { type: boolean, description: Whether the current user has liked this comment }
                         likeUri: { type: string, nullable: true, description: Bluesky like URI for unliking }
@@ -20638,10 +20638,10 @@ paths:
                       fullname: { type: string, description: Fullname with type prefix (e.g. "t3_1tjtj26") }
                       title: { type: string }
                       selftext: { type: string, description: Body text for self-posts (empty for link posts) }
-                      author: { type: string, description: Reddit username, without the u/ prefix }
-                      subreddit: { type: string, description: Subreddit name, without the r/ prefix }
+                      author: { type: string, description: "Reddit username, without the u/ prefix" }
+                      subreddit: { type: string, description: "Subreddit name, without the r/ prefix" }
                       permalink: { type: string, description: Absolute URL to the post on reddit.com }
-                      url: { type: string, description: For link posts, the external URL; for self-posts, the Reddit permalink }
+                      url: { type: string, description: "For link posts, the external URL; for self-posts, the Reddit permalink" }
                       score: { type: integer, description: Net upvotes (upvotes minus downvotes) }
                       numComments: { type: integer }
                       createdUtc: { type: integer, description: Unix timestamp in seconds }
@@ -21684,7 +21684,7 @@ paths:
                       status: { type: string, description: "APPROVED for library templates, PENDING for custom" }
                       category: { type: string }
                       language: { type: string }
-        '400': { description: Validation error (invalid name format, missing fields, invalid category) }
+        '400': { description: "Validation error (invalid name format, missing fields, invalid category)" }
         '401': { $ref: '#/components/responses/Unauthorized' }
         '404': { description: WhatsApp account not found }
 
@@ -21904,7 +21904,7 @@ paths:
                 accountId: { type: string }
                 forwardTo: { type: string, description: "tel:+E164 / sip:... / wss://... destination" }
                 sipAuthUsername: { type: string }
-                sipAuthPassword: { type: string, description: Stored encrypted, never returned by any endpoint. }
+                sipAuthPassword: { type: string, description: "Stored encrypted, never returned by any endpoint." }
                 recordingEnabled: { type: boolean, default: false }
                 callIconCountries:
                   type: array
@@ -21992,7 +21992,7 @@ paths:
         - bearerAuth: []
       parameters:
         - { name: accountId, in: query, required: true, schema: { type: string } }
-        - { name: to, in: query, required: true, schema: { type: string }, description: Consumer wa_id (E.164, leading + optional) }
+        - { name: to, in: query, required: true, schema: { type: string }, description: "Consumer wa_id (E.164, leading + optional)" }
       responses:
         '200':
           description: Permission state
@@ -22044,7 +22044,7 @@ paths:
               required: [accountId, to]
               properties:
                 accountId: { type: string }
-                to: { type: string, description: Consumer wa_id (E.164, leading + optional) }
+                to: { type: string, description: "Consumer wa_id (E.164, leading + optional)" }
                 action:
                   type: string
                   enum: [send_call_permission_request]
@@ -22084,7 +22084,7 @@ paths:
                   recordingEnabled: { type: boolean }
         '401': { $ref: '#/components/responses/Unauthorized' }
         '409': { description: No active call permission — send a permission request first. }
-        '422': { description: Calling not enabled, BIC country blocked, or missing Meta SIP credentials }
+        '422': { description: "Calling not enabled, BIC country blocked, or missing Meta SIP credentials" }
         '502': { description: Telnyx-side originate failed; the Call doc has been marked failed. }
     get:
       operationId: listWhatsAppCalls
@@ -22352,7 +22352,7 @@ paths:
               example:
                 success: true
                 message: "Business profile updated successfully"
-        '400': { description: Validation error (field too long, too many websites, etc.) }
+        '400': { description: "Validation error (field too long, too many websites, etc.)" }
         '401': { $ref: '#/components/responses/Unauthorized' }
         '404': { description: WhatsApp account not found }
 
@@ -22392,7 +22392,7 @@ paths:
                 properties:
                   success: { type: boolean }
                   message: { type: string }
-        '400': { description: Invalid file type, file too large, or missing parameters }
+        '400': { description: "Invalid file type, file too large, or missing parameters" }
         '401': { $ref: '#/components/responses/Unauthorized' }
         '404': { description: WhatsApp account not found }
 
@@ -22477,7 +22477,7 @@ paths:
                     properties:
                       name: { type: string }
                       status: { type: string, enum: [PENDING_REVIEW] }
-        '400': { description: Invalid display name (too short, too long, or missing) }
+        '400': { description: "Invalid display name (too short, too long, or missing)" }
         '401': { $ref: '#/components/responses/Unauthorized' }
         '404': { description: WhatsApp account not found }
 
@@ -22834,7 +22834,7 @@ paths:
                         phoneNumber: { type: string }
                         country: { type: string }
                         status: { type: string, enum: [pending_payment, pending_regulatory, regulatory_declined, provisioning, verifying, active, suspended, releasing, released] }
-                        registrantName: { type: string, nullable: true, description: For regulated numbers, who it's registered for (company or person) — set from the submitted KYC. }
+                        registrantName: { type: string, nullable: true, description: "For regulated numbers, who it's registered for (company or person) — set from the submitted KYC." }
                         telnyxOrderId: { type: string, nullable: true, description: Present once the number order has been placed (i.e. the requirement group was approved). Absent while still in identity review. }
                         monthlyCents: { type: integer, description: Per-country monthly price in cents ($2..$25). }
                         profileId: { type: object }
@@ -22970,7 +22970,7 @@ paths:
                       status: { type: string, enum: [already_purchased] }
                       numberId: { type: string }
                       phoneNumber: { type: string }
-        '400': { description: Plan limit reached, profileId required, or country not available }
+        '400': { description: "Plan limit reached, profileId required, or country not available" }
         '401': { $ref: '#/components/responses/Unauthorized' }
         '403': { description: A paid plan is required }
         '409':
@@ -23257,7 +23257,7 @@ paths:
                       id: { type: string }
                       status: { type: string }
                       country: { type: string }
-        '400': { description: Validation error (e.g. address not in-country, file too large) }
+        '400': { description: "Validation error (e.g. address not in-country, file too large)" }
         '409': { description: reuse requested but no prior approved verification exists for this country }
         '401': { $ref: '#/components/responses/Unauthorized' }
 
@@ -23322,7 +23322,7 @@ paths:
                 country: { type: string, minLength: 2, maxLength: 2, description: ISO 3166-1 alpha-2 country code. }
                 street_address: { type: string }
                 locality: { type: string, description: City / town. }
-                administrative_area: { type: string, description: State / province / region. When omitted, the pre-check is skipped (the final submit still validates). }
+                administrative_area: { type: string, description: "State / province / region. When omitted, the pre-check is skipped (the final submit still validates)." }
                 postal_code: { type: string }
       responses:
         '200':
@@ -25554,7 +25554,7 @@ paths:
                       nodeCount: { type: integer }
                       entryNodeId: { type: string }
                       createdAt: { type: string, format: date-time }
-        '400': { description: Invalid graph (duplicate node ids, edges referencing missing nodes, or a WhatsApp-only node on another platform) }
+        '400': { description: "Invalid graph (duplicate node ids, edges referencing missing nodes, or a WhatsApp-only node on another platform)" }
         '401': { $ref: '#/components/responses/Unauthorized' }
 
   /v1/workflows/{workflowId}:
@@ -25644,7 +25644,7 @@ paths:
                       entryNodeId: { type: string }
                       nodeCount: { type: integer }
                       updatedAt: { type: string, format: date-time }
-        '400': { description: Invalid graph, or a graph edit attempted while the workflow is active }
+        '400': { description: "Invalid graph, or a graph edit attempted while the workflow is active" }
         '401': { $ref: '#/components/responses/Unauthorized' }
         '404': { $ref: '#/components/responses/NotFound' }
     delete:
@@ -25783,7 +25783,7 @@ paths:
               properties:
                 to: { type: string, description: Recipient phone (WhatsApp only) }
                 conversationId: { type: string, description: An existing conversation to run in (required for non-WhatsApp workflows) }
-                text: { type: string, description: Simulated inbound text, seeded as the run's lastMessage variable }
+                text: { type: string, description: "Simulated inbound text, seeded as the run's lastMessage variable" }
       responses:
         '200':
           description: Run started
@@ -25803,7 +25803,7 @@ paths:
                       waitingFor: { type: object, nullable: true }
                       variables: { type: object, additionalProperties: true }
                       conversationId: { type: string }
-        '400': { description: Missing target, invalid graph, or `to` used on a non-WhatsApp workflow }
+        '400': { description: "Missing target, invalid graph, or `to` used on a non-WhatsApp workflow" }
         '401': { $ref: '#/components/responses/Unauthorized' }
         '404': { $ref: '#/components/responses/NotFound' }
 
@@ -25910,7 +25910,7 @@ paths:
                         description: { type: string, nullable: true }
                         createdBy: { type: string, nullable: true, description: User id that authored this version }
                         createdByEmail: { type: string, nullable: true, description: Denormalized email so the history UI can render without a join }
-                        restoredFromVersion: { type: integer, nullable: true, description: When non-null, this snapshot was created by restoring that version }
+                        restoredFromVersion: { type: integer, nullable: true, description: "When non-null, this snapshot was created by restoring that version" }
                         createdAt: { type: string, format: date-time }
         '401': { $ref: '#/components/responses/Unauthorized' }
         '404': { $ref: '#/components/responses/NotFound' }
@@ -25985,7 +25985,7 @@ paths:
                       nodeCount: { type: integer }
                       updatedAt: { type: string, format: date-time }
                   restoredFromVersion: { type: integer }
-        '400': { description: Workflow is not draft/paused, or the named version's graph is invalid for the current platform }
+        '400': { description: "Workflow is not draft/paused, or the named version's graph is invalid for the current platform" }
         '401': { $ref: '#/components/responses/Unauthorized' }
         '404': { $ref: '#/components/responses/NotFound' }
 
