@@ -754,12 +754,40 @@ components:
           items: { type: string, format: uri }
     ErrorResponse:
       type: object
+      description: |
+        Canonical error envelope. `error` is the human-readable message; `type`,
+        `code`, `param`, `platform`, and `platformError` are top-level siblings
+        for programmatic handling. For upstream platform failures (`type:
+        platform_error`), `platformError` carries the provider's raw payload
+        verbatim (for Meta: `error_subcode`, `error_user_title`, `error_user_msg`).
       properties:
         error:
           type: string
+          description: Human-readable error message.
+        type:
+          type: string
+          enum: [invalid_request_error, authentication_error, permission_error, not_found, rate_limit_error, platform_error, api_error]
+          description: Error class for programmatic handling.
+        code:
+          type: string
+          description: Stable machine-readable error code.
+        param:
+          type: string
+          description: The request field that caused the error, when applicable.
+        platform:
+          type: string
+          description: "Upstream platform (e.g. meta, google, tiktok) — present when type is platform_error."
+        platformError:
+          type: object
+          additionalProperties: true
+          description: |
+            Raw error payload from the upstream platform, passed through verbatim so
+            integrators can read provider-specific codes. For Meta this includes
+            error_subcode, error_user_title, and error_user_msg.
         details:
           type: object
           additionalProperties: true
+          description: Additional structured context (e.g. field-level validation errors).
     DmButton:
       type: object
       description: |
