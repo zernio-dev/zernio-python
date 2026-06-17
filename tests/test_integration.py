@@ -460,16 +460,10 @@ class TestAccountsResource:
 
     @respx.mock
     def test_get_follower_stats(self, client: Late) -> None:
-        """Test getting follower statistics."""
+        """Test getting follower statistics. account_ids as a list is still
+        accepted for backwards compatibility and joined into a comma string."""
         route = respx.get("https://api.test.com/v1/accounts/follower-stats").mock(
-            return_value=httpx.Response(
-                200,
-                json={
-                    "stats": [
-                        {"accountId": "acc_123", "followersCount": 1000, "change": 50}
-                    ]
-                },
-            )
+            return_value=httpx.Response(200, json={"accounts": []})
         )
 
         client.accounts.get_follower_stats(account_ids=["acc_123", "acc_456"])
@@ -481,6 +475,31 @@ class TestAccountsResource:
         assert "accountIds=" in url_str
         assert "acc_123" in url_str
         assert "acc_456" in url_str
+
+    @respx.mock
+    def test_get_follower_stats_forwards_all_params(self, client: Late) -> None:
+        """Regression for GET-820: the manual override dropped profile_id/
+        from_date/to_date/granularity, raising TypeError. All five params must
+        reach the endpoint as camelCase query params."""
+        route = respx.get("https://api.test.com/v1/accounts/follower-stats").mock(
+            return_value=httpx.Response(200, json={"accounts": []})
+        )
+
+        client.accounts.get_follower_stats(
+            account_ids="acc_123,acc_456",
+            profile_id="prof_1",
+            from_date="2026-01-01",
+            to_date="2026-01-31",
+            granularity="weekly",
+        )
+
+        assert route.called
+        url_str = str(route.calls[0].request.url)
+        assert "accountIds=acc_123" in url_str
+        assert "profileId=prof_1" in url_str
+        assert "fromDate=2026-01-01" in url_str
+        assert "toDate=2026-01-31" in url_str
+        assert "granularity=weekly" in url_str
 
 
 # =============================================================================
