@@ -2149,6 +2149,7 @@ def register_generated_tools(mcp, _get_client):
         optimization_goal: str | None = None,
         budget_amount: float | None = None,
         budget_type: str | None = None,
+        status: str | None = None,
         budget_level: str = "adset",
         currency: str | None = None,
         headline: str | None = None,
@@ -2163,6 +2164,8 @@ def register_generated_tools(mcp, _get_client):
         video: dict[str, Any] | None = None,
         creatives: list[dict[str, Any]] | None = None,
         ad_set_id: str | None = None,
+        existing_campaign_id: str | None = None,
+        existing_creative_id: str | None = None,
         business_name: str | None = None,
         board_id: str | None = None,
         organization_id: str | None = None,
@@ -2218,6 +2221,7 @@ def register_generated_tools(mcp, _get_client):
                 optimization_goal: Meta only. Explicit ad-set `optimization_goal` (e.g. `LANDING_PAGE_VIEWS`, `LINK_CLICKS`, `REACH`, `IMPRESSIONS`, `OFFSITE_CONVERSIONS`, `THRUPLAY`, `LEAD_GENERATION`). Overrides the default derived from `goal` (e.g. `traffic` defaults to `LINK_CLICKS`). Forwarded verbatim to Meta, which validates compatibility with the campaign objective and rejects incompatible combinations.
                 budget_amount: Required on legacy + multi-creative shapes. Inherited on attach.
                 budget_type: Required on legacy + multi-creative shapes. Inherited on attach.
+                status: Meta only. Publish state of the created ad set + ad. Omitted or ACTIVE publishes live (default, back-compat); PAUSED creates them paused and skips activation, so you can review before they spend.
                 budget_level: Meta only. Where the budget lives, which selects the Meta budget model:
           - `adset` (default): ABO (Ad-set Budget Optimization). The budget is set on the
             ad set. This is the back-compatible behaviour — omit this field to keep it.
@@ -2262,6 +2266,22 @@ def register_generated_tools(mcp, _get_client):
         Supported on Meta (facebook, instagram) and TikTok. On TikTok
         the `adSetId` is the ad group ID; the new ad inherits the
         ad group's bid + budget + targeting.
+                existing_campaign_id: Meta only. Add the new ad set under this EXISTING campaign
+        instead of creating a new one (multi-ad-set audience testing).
+        The new ad set's budget is matched to the campaign's mode
+        automatically: for a CBO campaign (campaign-level budget) omit
+        `budgetAmount`/`budgetType` — the campaign owns the budget; for
+        an ABO campaign pass them (they go on the new ad set). On
+        failure only the new ad set is cleaned up; the existing campaign
+        is left untouched and is never (re)activated. Mutually exclusive
+        with `adSetId` and `creatives[]`.
+                existing_creative_id: Meta only. Reuse an EXISTING ad creative by id instead of
+        building a new one from the copy/media fields (which are then
+        ignored). Combine with `existingCampaignId` to build a
+        multi-ad-set campaign that shares one creative. Mutually
+        exclusive with `creatives[]`, `dynamicCreative`, and
+        `placementAssets`. The creative id used is returned as
+        `creativeId` on the create response.
                 business_name: Google Display only
                 board_id: Pinterest only. Board ID (auto-creates if not provided).
                 organization_id: LinkedIn only. The Company Page that authors the Direct Sponsored Content ("dark") post backing the ad — accepts a numeric organization ID or a full `urn:li:organization:N` URN. Required unless the resolved `accountId` is a connected LinkedIn Company-Page account (defaults to that page) or the LinkedIn ad account is org-owned (defaults to the account's owning organization). The authenticated member must be an ADMINISTRATOR or DIRECT_SPONSORED_CONTENT_POSTER of this page (and the page must be associated with the ad account), or LinkedIn returns 403. Ignored by every other platform.
@@ -2424,6 +2444,7 @@ def register_generated_tools(mcp, _get_client):
                 optimization_goal=optimization_goal,
                 budget_amount=budget_amount,
                 budget_type=budget_type,
+                status=status,
                 budget_level=budget_level,
                 currency=currency,
                 headline=headline,
@@ -2438,6 +2459,8 @@ def register_generated_tools(mcp, _get_client):
                 video=video,
                 creatives=creatives,
                 ad_set_id=ad_set_id,
+                existing_campaign_id=existing_campaign_id,
+                existing_creative_id=existing_creative_id,
                 business_name=business_name,
                 board_id=board_id,
                 organization_id=organization_id,
