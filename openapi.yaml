@@ -27976,7 +27976,20 @@ paths:
                 status:
                   type: string
                   enum: [ACTIVE, PAUSED]
-                  description: "Meta only. Publish state of the created ad set + ad. Omitted or ACTIVE publishes live (default, back-compat); PAUSED creates them paused and skips activation, so you can review before they spend."
+                  description: |
+                    Meta only. Desired publish state of the ad (and, on the legacy/multi-ad-set shapes, the ad set too).
+                    Omitted or `ACTIVE` publishes live immediately (default). `PAUSED` creates the objects paused and skips
+                    activation — useful to stage ads before they spend. On the attach shape (`adSetId`), only the new ad is
+                    affected; the existing ad set and campaign are already live and are not touched.
+                campaignStatus:
+                  type: string
+                  enum: [ACTIVE, PAUSED]
+                  description: |
+                    Meta only. Independent publish state for the CAMPAIGN when the create makes both a new campaign and a
+                    new ad set (legacy shape). When omitted, the campaign follows `status`. Use this to stage a paused
+                    campaign with an active ad set (`status: ACTIVE, campaignStatus: PAUSED`) — the ad set will start
+                    delivering as soon as the campaign is activated later. Ignored when `existingCampaignId` is set (the
+                    campaign is already live and its status is not changed).
                 budgetLevel:
                   type: string
                   enum: [adset, campaign]
@@ -28080,11 +28093,16 @@ paths:
                   description: |
                     Meta only. Reuse an EXISTING ad creative by id instead of
                     building a new one from the copy/media fields (which are then
-                    ignored). Combine with `existingCampaignId` to build a
-                    multi-ad-set campaign that shares one creative. Mutually
-                    exclusive with `creatives[]`, `dynamicCreative`, and
-                    `placementAssets`. The creative id used is returned as
-                    `creativeId` on the create response.
+                    ignored). Works on both shapes:
+                    - Legacy/multi-ad-set (`existingCampaignId`): combine with
+                      `existingCampaignId` to build a multi-ad-set campaign that
+                      shares one creative across audiences.
+                    - Attach (`adSetId`): combine with `adSetId` to add a second
+                      (or Nth) ad to an existing ad set reusing the same creative —
+                      no `headline`/`body`/`imageUrl` required on the body.
+                    Mutually exclusive with `creatives[]`, `dynamicCreative`, and
+                    `placementAssets`. The creative id is returned as `creativeId`
+                    on the create response.
                 businessName: { type: string, maxLength: 25, description: "Google Display only" }
                 boardId: { type: string, description: "Pinterest only. Board ID (auto-creates if not provided)." }
                 organizationId: { type: string, description: "LinkedIn only. The Company Page that authors the Direct Sponsored Content (\"dark\") post backing the ad — accepts a numeric organization ID or a full `urn:li:organization:N` URN. Required unless the resolved `accountId` is a connected LinkedIn Company-Page account (defaults to that page) or the LinkedIn ad account is org-owned (defaults to the account's owning organization). The authenticated member must be an ADMINISTRATOR or DIRECT_SPONSORED_CONTENT_POSTER of this page (and the page must be associated with the ad account), or LinkedIn returns 403. Ignored by every other platform." }

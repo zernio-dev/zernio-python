@@ -2150,6 +2150,7 @@ def register_generated_tools(mcp, _get_client):
         budget_amount: float | None = None,
         budget_type: str | None = None,
         status: str | None = None,
+        campaign_status: str | None = None,
         budget_level: str = "adset",
         currency: str | None = None,
         headline: str | None = None,
@@ -2221,7 +2222,15 @@ def register_generated_tools(mcp, _get_client):
                 optimization_goal: Meta only. Explicit ad-set `optimization_goal` (e.g. `LANDING_PAGE_VIEWS`, `LINK_CLICKS`, `REACH`, `IMPRESSIONS`, `OFFSITE_CONVERSIONS`, `THRUPLAY`, `LEAD_GENERATION`). Overrides the default derived from `goal` (e.g. `traffic` defaults to `LINK_CLICKS`). Forwarded verbatim to Meta, which validates compatibility with the campaign objective and rejects incompatible combinations.
                 budget_amount: Required on legacy + multi-creative shapes. Inherited on attach.
                 budget_type: Required on legacy + multi-creative shapes. Inherited on attach.
-                status: Meta only. Publish state of the created ad set + ad. Omitted or ACTIVE publishes live (default, back-compat); PAUSED creates them paused and skips activation, so you can review before they spend.
+                status: Meta only. Desired publish state of the ad (and, on the legacy/multi-ad-set shapes, the ad set too).
+        Omitted or `ACTIVE` publishes live immediately (default). `PAUSED` creates the objects paused and skips
+        activation — useful to stage ads before they spend. On the attach shape (`adSetId`), only the new ad is
+        affected; the existing ad set and campaign are already live and are not touched.
+                campaign_status: Meta only. Independent publish state for the CAMPAIGN when the create makes both a new campaign and a
+        new ad set (legacy shape). When omitted, the campaign follows `status`. Use this to stage a paused
+        campaign with an active ad set (`status: ACTIVE, campaignStatus: PAUSED`) — the ad set will start
+        delivering as soon as the campaign is activated later. Ignored when `existingCampaignId` is set (the
+        campaign is already live and its status is not changed).
                 budget_level: Meta only. Where the budget lives, which selects the Meta budget model:
           - `adset` (default): ABO (Ad-set Budget Optimization). The budget is set on the
             ad set. This is the back-compatible behaviour — omit this field to keep it.
@@ -2277,11 +2286,16 @@ def register_generated_tools(mcp, _get_client):
         with `adSetId` and `creatives[]`.
                 existing_creative_id: Meta only. Reuse an EXISTING ad creative by id instead of
         building a new one from the copy/media fields (which are then
-        ignored). Combine with `existingCampaignId` to build a
-        multi-ad-set campaign that shares one creative. Mutually
-        exclusive with `creatives[]`, `dynamicCreative`, and
-        `placementAssets`. The creative id used is returned as
-        `creativeId` on the create response.
+        ignored). Works on both shapes:
+        - Legacy/multi-ad-set (`existingCampaignId`): combine with
+          `existingCampaignId` to build a multi-ad-set campaign that
+          shares one creative across audiences.
+        - Attach (`adSetId`): combine with `adSetId` to add a second
+          (or Nth) ad to an existing ad set reusing the same creative —
+          no `headline`/`body`/`imageUrl` required on the body.
+        Mutually exclusive with `creatives[]`, `dynamicCreative`, and
+        `placementAssets`. The creative id is returned as `creativeId`
+        on the create response.
                 business_name: Google Display only
                 board_id: Pinterest only. Board ID (auto-creates if not provided).
                 organization_id: LinkedIn only. The Company Page that authors the Direct Sponsored Content ("dark") post backing the ad — accepts a numeric organization ID or a full `urn:li:organization:N` URN. Required unless the resolved `accountId` is a connected LinkedIn Company-Page account (defaults to that page) or the LinkedIn ad account is org-owned (defaults to the account's owning organization). The authenticated member must be an ADMINISTRATOR or DIRECT_SPONSORED_CONTENT_POSTER of this page (and the page must be associated with the ad account), or LinkedIn returns 403. Ignored by every other platform.
@@ -2450,6 +2464,7 @@ def register_generated_tools(mcp, _get_client):
                 budget_amount=budget_amount,
                 budget_type=budget_type,
                 status=status,
+                campaign_status=campaign_status,
                 budget_level=budget_level,
                 currency=currency,
                 headline=headline,
