@@ -2048,6 +2048,7 @@ def register_generated_tools(mcp, _get_client):
         bid_strategy: str | None = None,
         bid_amount: float | None = None,
         roas_average_floor: float | None = None,
+        raw_targeting: dict[str, Any] | None = None,
         tracking: dict[str, Any] | None = None,
         special_ad_categories: list[str] | None = None,
         link_url: str | None = None,
@@ -2077,6 +2078,11 @@ def register_generated_tools(mcp, _get_client):
                 roas_average_floor: Minimum ROAS as a decimal multiplier (e.g. 2.0 = 2.0x ROAS). Required when
         `bidStrategy` is `LOWEST_COST_WITH_MIN_ROAS`. Sent to Meta as
         `bid_constraints.roas_average_floor` × 10000 (Meta uses fixed-point integers).
+                raw_targeting: Meta only. A raw Meta-native targeting spec passed to the ad set VERBATIM (snake_case:
+        `geo_locations`, `custom_audiences`, `excluded_custom_audiences`, `flexible_spec`,
+        `targeting_automation`, etc.). Use it to target specific custom or lookalike audiences,
+        or to clone a campaign's targeting exactly. Mutually exclusive with `targeting` (sending
+        both → 422). Sent as-is; Meta validates and surfaces any errors.
                 tracking: Meta only. Tracking specs (pixel, URL tags).
                 special_ad_categories: Meta only. Required for housing, employment, credit, or political ads.
                 link_url: TikTok-only. Custom destination URL for the Spark Ad. Without this, TikTok
@@ -2117,6 +2123,7 @@ def register_generated_tools(mcp, _get_client):
                 bid_strategy=bid_strategy,
                 bid_amount=bid_amount,
                 roas_average_floor=roas_average_floor,
+                raw_targeting=raw_targeting,
                 tracking=tracking,
                 special_ad_categories=special_ad_categories,
                 link_url=link_url,
@@ -2179,6 +2186,9 @@ def register_generated_tools(mcp, _get_client):
         zips: list[dict[str, Any]] | None = None,
         metros: list[dict[str, Any]] | None = None,
         custom_locations: list[dict[str, Any]] | None = None,
+        places: list[dict[str, Any]] | None = None,
+        neighborhoods: list[dict[str, Any]] | None = None,
+        excluded_locations: dict[str, Any] | None = None,
         behaviors: list[dict[str, Any]] | None = None,
         income_tier: str | None = None,
         languages: list[str] | None = None,
@@ -2310,6 +2320,9 @@ def register_generated_tools(mcp, _get_client):
                 zips: Postal/ZIP geo targeting. `key` is the platform's postal location ID from /v1/ads/targeting/search?dimension=geo&geoType=zip. Supported on Meta, Google, TikTok, Pinterest, X.
                 metros: DMA / metro-area geo targeting. `key` is the platform's metro ID from /v1/ads/targeting/search?dimension=geo&geoType=metro.
                 custom_locations: Point-radius (lat/lng) geo targeting. Meta only (custom_locations). Rejected on platforms without radius support.
+                places: Named points of interest (businesses, landmarks). Meta only. `key` from /v1/ads/targeting/search?dimension=geo&geoType=place. Maps to geo_locations.places.
+                neighborhoods: Named neighbourhood areas. Meta only. `key` from /v1/ads/targeting/search?dimension=geo&geoType=neighborhood. Maps to geo_locations.neighborhoods.
+                excluded_locations: Geo exclusions. Meta only. Maps to excluded_geo_locations. Supports countries, regions, cities, and zips.
                 behaviors: Behaviour entities from /v1/ads/targeting/search?dimension=behavior. Supported on Meta and TikTok. Each must include id.
                 income_tier: Normalized household-income tier. Meta and TikTok express all four; Google maps only
         `top_10`; rejected on LinkedIn, X, and Pinterest. On Meta, income targeting is incompatible
@@ -2498,6 +2511,9 @@ def register_generated_tools(mcp, _get_client):
                 zips=zips,
                 metros=metros,
                 custom_locations=custom_locations,
+                places=places,
+                neighborhoods=neighborhoods,
+                excluded_locations=excluded_locations,
                 behaviors=behaviors,
                 income_tier=income_tier,
                 languages=languages,
@@ -2615,6 +2631,11 @@ def register_generated_tools(mcp, _get_client):
         thank_you_button_type: str | None = None,
         thank_you_website_url: str | None = None,
         is_optimized_for_quality: bool | None = None,
+        form_type: str | None = None,
+        block_display_for_non_targeted_viewer: bool | None = None,
+        allow_organic_lead_gen: bool | None = None,
+        question_page_custom_headline: str | None = None,
+        context_card: dict[str, Any] | None = None,
     ) -> str:
         """Create a Lead Gen (Instant) form
 
@@ -2631,7 +2652,12 @@ def register_generated_tools(mcp, _get_client):
             thank_you_button_text
             thank_you_button_type
             thank_you_website_url
-            is_optimized_for_quality"""
+            is_optimized_for_quality: Legacy form type toggle. Prefer formType instead. false = More Volume, true = Higher Intent.
+            form_type: Form type. MORE_VOLUME = optimized for lead quantity (default). HIGHER_INTENT = adds a review/confirmation step before submit. RICH_CREATIVE = includes context card and custom headline to educate users before they submit. Supersedes isOptimizedForQuality.
+            block_display_for_non_targeted_viewer: Sharing setting. true = Restricted (only people targeted by the ad can open the form link). false = Open (shareable link, default).
+            allow_organic_lead_gen: Flexible form delivery. true = the form can surface organically on the Page (not just as a paid ad). Defaults to false.
+            question_page_custom_headline: Custom subheadline shown above the form fields on the questions page (the contact-information section description). Defaults to Meta's generic copy when omitted.
+            context_card: Intro card shown before the questions page. Omit to skip the intro screen."""
         client = _get_client()
         try:
             response = client.ads.create_lead_form(
@@ -2648,6 +2674,11 @@ def register_generated_tools(mcp, _get_client):
                 thank_you_button_type=thank_you_button_type,
                 thank_you_website_url=thank_you_website_url,
                 is_optimized_for_quality=is_optimized_for_quality,
+                form_type=form_type,
+                block_display_for_non_targeted_viewer=block_display_for_non_targeted_viewer,
+                allow_organic_lead_gen=allow_organic_lead_gen,
+                question_page_custom_headline=question_page_custom_headline,
+                context_card=context_card,
             )
             return _format_response(response)
         except Exception as e:
@@ -2802,7 +2833,7 @@ def register_generated_tools(mcp, _get_client):
             account_id: Social account ID (a connected account on the target ad platform). (required)
             q: Search query. For geo, the locality name only (no region/country suffix). (required)
             dimension: What to search. `geo` resolves locations (scope further with `geoType`), `interest`/`behavior` resolve audience entities, `income` resolves income-tier options. Defaults to `interest` for backward compatibility with the deprecated /v1/ads/interests alias.
-            geo_type: Only used when `dimension=geo`. The kind of location to resolve. Defaults to `city`.
+            geo_type: Only used when `dimension=geo`. The kind of location to resolve. `place` resolves named points of interest (businesses, landmarks). `neighborhood` resolves named neighbourhood areas. Use `all` to search every geo type in a single relevance-ranked call — mirrors Meta's own unified search box. Defaults to `city`.
             country_code: ISO 3166-1 alpha-2 country code (e.g. NL) to scope a geo search.
             limit: Maximum results to return."""
         client = _get_client()
@@ -9288,6 +9319,38 @@ def register_generated_tools(mcp, _get_client):
         try:
             response = client.sequences.list_sequence_enrollments(
                 sequence_id=sequence_id, status=status, limit=limit, skip=skip
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    # SMS
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Send an SMS or MMS",
+            readOnlyHint=False,
+            destructiveHint=True,
+            openWorldHint=True,
+        )
+    )
+    def sms_send_sms(
+        from_: str,
+        to: str,
+        text: str | None = None,
+        media_urls: list[str] | None = None,
+    ) -> str:
+        """Send an SMS or MMS
+
+        Args:
+            from_: One of your SMS-enabled numbers (E.164). (required)
+            to: Recipient number (E.164). (required)
+            text
+            media_urls: Publicly reachable media URLs for MMS (max 10, total < 1MB)."""
+        client = _get_client()
+        try:
+            response = client.sms.send_sms(
+                from_=from_, to=to, text=text, media_urls=media_urls
             )
             return _format_response(response)
         except Exception as e:

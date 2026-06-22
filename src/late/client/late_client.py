@@ -38,6 +38,7 @@ from ..resources import (
     RedditResource,
     ReviewsResource,
     SequencesResource,
+    SmsResource,
     ToolsResource,
     TrackingTagsResource,
     TwitterEngagementResource,
@@ -153,6 +154,7 @@ class Zernio(BaseClient):
         self.reddit = RedditResource(self)
         self.reviews = ReviewsResource(self)
         self.sequences = SequencesResource(self)
+        self.sms = SmsResource(self)
         self.tools = ToolsResource(self)
         self.tracking_tags = TrackingTagsResource(self)
         self.twitter_engagement = TwitterEngagementResource(self)

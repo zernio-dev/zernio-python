@@ -217,6 +217,7 @@ class AdsResource:
         bid_strategy: Any | None = None,
         bid_amount: float | None = None,
         roas_average_floor: float | None = None,
+        raw_targeting: dict[str, Any] | None = None,
         tracking: dict[str, Any] | None = None,
         special_ad_categories: list[str] | None = None,
         link_url: str | None = None,
@@ -240,6 +241,7 @@ class AdsResource:
             bid_strategy=bid_strategy,
             bid_amount=bid_amount,
             roas_average_floor=roas_average_floor,
+            raw_targeting=raw_targeting,
             tracking=tracking,
             special_ad_categories=special_ad_categories,
             link_url=link_url,
@@ -295,6 +297,9 @@ class AdsResource:
         zips: list[dict[str, Any]] | None = None,
         metros: list[dict[str, Any]] | None = None,
         custom_locations: list[dict[str, Any]] | None = None,
+        places: list[dict[str, Any]] | None = None,
+        neighborhoods: list[dict[str, Any]] | None = None,
+        excluded_locations: dict[str, Any] | None = None,
         behaviors: list[dict[str, Any]] | None = None,
         income_tier: str | None = None,
         languages: list[str] | None = None,
@@ -367,6 +372,9 @@ class AdsResource:
             zips=zips,
             metros=metros,
             custom_locations=custom_locations,
+            places=places,
+            neighborhoods=neighborhoods,
+            excluded_locations=excluded_locations,
             behaviors=behaviors,
             income_tier=income_tier,
             languages=languages,
@@ -444,6 +452,11 @@ class AdsResource:
         thank_you_button_type: str | None = None,
         thank_you_website_url: str | None = None,
         is_optimized_for_quality: bool | None = None,
+        form_type: str | None = None,
+        block_display_for_non_targeted_viewer: bool | None = None,
+        allow_organic_lead_gen: bool | None = None,
+        question_page_custom_headline: str | None = None,
+        context_card: dict[str, Any] | None = None,
     ) -> dict[str, Any]:
         """Create a Lead Gen (Instant) form"""
         payload = self._build_payload(
@@ -460,6 +473,11 @@ class AdsResource:
             thank_you_button_type=thank_you_button_type,
             thank_you_website_url=thank_you_website_url,
             is_optimized_for_quality=is_optimized_for_quality,
+            form_type=form_type,
+            block_display_for_non_targeted_viewer=block_display_for_non_targeted_viewer,
+            allow_organic_lead_gen=allow_organic_lead_gen,
+            question_page_custom_headline=question_page_custom_headline,
+            context_card=context_card,
         )
         return self._client._post("/v1/ads/lead-forms", data=payload)
 
@@ -1002,6 +1020,7 @@ class AdsResource:
         bid_strategy: Any | None = None,
         bid_amount: float | None = None,
         roas_average_floor: float | None = None,
+        raw_targeting: dict[str, Any] | None = None,
         tracking: dict[str, Any] | None = None,
         special_ad_categories: list[str] | None = None,
         link_url: str | None = None,
@@ -1025,6 +1044,7 @@ class AdsResource:
             bid_strategy=bid_strategy,
             bid_amount=bid_amount,
             roas_average_floor=roas_average_floor,
+            raw_targeting=raw_targeting,
             tracking=tracking,
             special_ad_categories=special_ad_categories,
             link_url=link_url,
@@ -1080,6 +1100,9 @@ class AdsResource:
         zips: list[dict[str, Any]] | None = None,
         metros: list[dict[str, Any]] | None = None,
         custom_locations: list[dict[str, Any]] | None = None,
+        places: list[dict[str, Any]] | None = None,
+        neighborhoods: list[dict[str, Any]] | None = None,
+        excluded_locations: dict[str, Any] | None = None,
         behaviors: list[dict[str, Any]] | None = None,
         income_tier: str | None = None,
         languages: list[str] | None = None,
@@ -1152,6 +1175,9 @@ class AdsResource:
             zips=zips,
             metros=metros,
             custom_locations=custom_locations,
+            places=places,
+            neighborhoods=neighborhoods,
+            excluded_locations=excluded_locations,
             behaviors=behaviors,
             income_tier=income_tier,
             languages=languages,
@@ -1229,6 +1255,11 @@ class AdsResource:
         thank_you_button_type: str | None = None,
         thank_you_website_url: str | None = None,
         is_optimized_for_quality: bool | None = None,
+        form_type: str | None = None,
+        block_display_for_non_targeted_viewer: bool | None = None,
+        allow_organic_lead_gen: bool | None = None,
+        question_page_custom_headline: str | None = None,
+        context_card: dict[str, Any] | None = None,
     ) -> dict[str, Any]:
         """Create a Lead Gen (Instant) form (async)"""
         payload = self._build_payload(
@@ -1245,6 +1276,11 @@ class AdsResource:
             thank_you_button_type=thank_you_button_type,
             thank_you_website_url=thank_you_website_url,
             is_optimized_for_quality=is_optimized_for_quality,
+            form_type=form_type,
+            block_display_for_non_targeted_viewer=block_display_for_non_targeted_viewer,
+            allow_organic_lead_gen=allow_organic_lead_gen,
+            question_page_custom_headline=question_page_custom_headline,
+            context_card=context_card,
         )
         return await self._client._apost("/v1/ads/lead-forms", data=payload)
 

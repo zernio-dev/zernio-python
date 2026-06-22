@@ -4623,6 +4623,7 @@ components:
               platform: { type: string }
               platformPostUrl: { type: string, format: uri }
               isExternal: { type: boolean }
+              isAd: { type: boolean, description: 'True when the post is an ad creative. False for organic posts or platforms where the signal is unavailable. For now is only available for LinkedIn posts.' }
               profileId: { type: string, nullable: true }
               thumbnailUrl: { type: string, format: uri }
               mediaType: { type: string, enum: [image, video, gif, document, carousel, text] }
@@ -6702,6 +6703,55 @@ security:
   - bearerAuth: []
 paths:
   # NOTE: Tools download endpoints (/v1/tools/{platform}/download, /transcript, /hashtag-checker) removed from docs but still functional for existing customers
+
+  # ============================================
+  # SMS
+  # ============================================
+  /v1/sms/messages:
+    post:
+      operationId: sendSms
+      tags: [SMS]
+      summary: Send an SMS or MMS
+      description: |
+        Send a text (SMS) or media (MMS) message from one of your SMS-enabled numbers.
+
+        Provide `text`, `mediaUrls`, or both. Supply an `Idempotency-Key` header to make retries safe (a repeated key replays the original result instead of sending again). US numbers must have an approved carrier registration before they can deliver.
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [from, to]
+              properties:
+                from:
+                  type: string
+                  description: One of your SMS-enabled numbers (E.164).
+                  example: "+14155550192"
+                to:
+                  type: string
+                  description: Recipient number (E.164).
+                  example: "+14155550123"
+                text:
+                  type: string
+                  example: "Your verification code is 123456."
+                mediaUrls:
+                  type: array
+                  items: { type: string, format: uri }
+                  description: Publicly reachable media URLs for MMS (max 10, total < 1MB).
+      responses:
+        "200":
+          description: Message accepted for delivery.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id: { type: string, description: Telnyx message id }
+                  conversationId: { type: string }
+                  status: { type: string, example: sent }
 
   # ============================================
   # Validate
@@ -11815,6 +11865,10 @@ paths:
         Moves a connected social account to a different profile owned by the same
         user. The target profile must belong to the same user as the account.
 
+        A profile can hold only one account per platform. Moving an account into a
+        profile that already has an account of the same platform returns 409
+        (`profile_platform_conflict`).
+
         For API keys restricted to specific profiles, BOTH the source account's
         current profile AND the target profile must be in the key's allowed set.
         Calls with a target profile outside the key's scope return 403.
@@ -11853,6 +11907,7 @@ paths:
         '401': { $ref: '#/components/responses/Unauthorized' }
         '403': { description: API key does not have access to the source account or target profile }
         '404': { description: Account or target profile not found }
+        '409': { description: The target profile already has an account of the same platform (profile_platform_conflict) }
     delete:
       operationId: deleteAccount
       tags: [Accounts]
@@ -19020,6 +19075,26 @@ paths:
                               format: date-time
                               nullable: true
                               description: When this profile data was last fetched from Instagram
+                        metadata:
+                          type: object
+                          nullable: true
+                          description: |
+                            Ad-click attribution captured on the first inbound message of the
+                            conversation. Only present when the conversation originated from a
+                            click-to-message ad. Absent on organic conversations.
+
+                            Two sources populate this field:
+                              - WhatsApp CTWA (Click-to-WhatsApp): `ctwa_clid`, `ctwa_source_id`,
+                                `ctwa_source_url`, `ctwa_headline`, `ctwa_source_type`, `ctwa_captured_at`.
+                              - Facebook Messenger CTM / Instagram CTD: `meta_ad_id`, `meta_ad_title`,
+                                `meta_ad_source`, `meta_ad_type`, `meta_ad_ref`, `meta_ad_captured_at`,
+                                `meta_ad_photo_url`, `meta_ad_video_url`, `meta_ad_post_id`,
+                                `meta_ad_product_id`, `meta_ad_flow_id`.
+
+                            Note: `meta_ad_photo_url` and `meta_ad_video_url` are Facebook CDN URLs
+                            that may expire. Use `meta_ad_id` for a permanent reference to the ad.
+                          additionalProperties:
+                            type: string
                   pagination:
                     type: object
                     properties:
@@ -19253,6 +19328,27 @@ paths:
                             format: date-time
                             nullable: true
                             description: When this profile data was last fetched from Instagram
+                      metadata:
+                        type: object
+                        nullable: true
+                        description: |
+                          Ad-click attribution captured on the first inbound message of the
+                          conversation. Only present when the conversation originated from a
+                          click-to-message ad. Absent on organic conversations.
+
+                          Two sources populate this field:
+                            - WhatsApp CTWA (Click-to-WhatsApp): `ctwa_clid`, `ctwa_source_id`,
+                              `ctwa_source_url`, `ctwa_headline`, `ctwa_source_type`, `ctwa_captured_at`.
+                            - Facebook Messenger CTM / Instagram CTD: `meta_ad_id`, `meta_ad_title`,
+                              `meta_ad_source`, `meta_ad_type`, `meta_ad_ref`, `meta_ad_captured_at`,
+                              `meta_ad_photo_url`, `meta_ad_video_url`, `meta_ad_post_id`,
+                              `meta_ad_product_id`, `meta_ad_flow_id`.
+
+                          Note: `meta_ad_photo_url` and `meta_ad_video_url` are Facebook CDN URLs
+                          that may expire. Use `meta_ad_id` for a permanent reference to the ad
+                          (e.g. to link to Meta Ads Manager).
+                        additionalProperties:
+                          type: string
         '401': { $ref: '#/components/responses/Unauthorized' }
         '403':
           description: Inbox addon required
@@ -27828,6 +27924,15 @@ paths:
                     Minimum ROAS as a decimal multiplier (e.g. 2.0 = 2.0x ROAS). Required when
                     `bidStrategy` is `LOWEST_COST_WITH_MIN_ROAS`. Sent to Meta as
                     `bid_constraints.roas_average_floor` × 10000 (Meta uses fixed-point integers).
+                rawTargeting:
+                  type: object
+                  additionalProperties: true
+                  description: |
+                    Meta only. A raw Meta-native targeting spec passed to the ad set VERBATIM (snake_case:
+                    `geo_locations`, `custom_audiences`, `excluded_custom_audiences`, `flexible_spec`,
+                    `targeting_automation`, etc.). Use it to target specific custom or lookalike audiences,
+                    or to clone a campaign's targeting exactly. Mutually exclusive with `targeting` (sending
+                    both → 422). Sent as-is; Meta validates and surfaces any errors.
                 tracking:
                   type: object
                   description: "Meta only. Tracking specs (pixel, URL tags)."
@@ -28171,6 +28276,30 @@ paths:
                       distanceUnit: { type: string, enum: [mile, kilometer] }
                       name: { type: string }
                       address: { type: string }
+                places:
+                  type: array
+                  description: "Named points of interest (businesses, landmarks). Meta only. `key` from /v1/ads/targeting/search?dimension=geo&geoType=place. Maps to geo_locations.places."
+                  items:
+                    type: object
+                    required: [key]
+                    properties:
+                      key: { type: string }
+                neighborhoods:
+                  type: array
+                  description: "Named neighbourhood areas. Meta only. `key` from /v1/ads/targeting/search?dimension=geo&geoType=neighborhood. Maps to geo_locations.neighborhoods."
+                  items:
+                    type: object
+                    required: [key]
+                    properties:
+                      key: { type: string }
+                excludedLocations:
+                  type: object
+                  description: "Geo exclusions. Meta only. Maps to excluded_geo_locations. Supports countries, regions, cities, and zips."
+                  properties:
+                    countries: { type: array, items: { type: string }, description: "ISO-3166 alpha-2 country codes to exclude." }
+                    regions: { type: array, items: { type: object, required: [key], properties: { key: { type: string } } } }
+                    cities: { type: array, items: { type: object, required: [key], properties: { key: { type: string } } } }
+                    zips: { type: array, items: { type: object, required: [key], properties: { key: { type: string } } } }
                 behaviors:
                   type: array
                   description: "Behaviour entities from /v1/ads/targeting/search?dimension=behavior. Supported on Meta and TikTok. Each must include id."
@@ -28711,7 +28840,29 @@ paths:
                 thankYouButtonText: { type: string }
                 thankYouButtonType: { type: string, example: VIEW_WEBSITE }
                 thankYouWebsiteUrl: { type: string, format: uri }
-                isOptimizedForQuality: { type: boolean }
+                isOptimizedForQuality: { type: boolean, description: "Legacy form type toggle. Prefer formType instead. false = More Volume, true = Higher Intent." }
+                formType:
+                  type: string
+                  enum: [MORE_VOLUME, HIGHER_INTENT, RICH_CREATIVE]
+                  description: "Form type. MORE_VOLUME = optimized for lead quantity (default). HIGHER_INTENT = adds a review/confirmation step before submit. RICH_CREATIVE = includes context card and custom headline to educate users before they submit. Supersedes isOptimizedForQuality."
+                blockDisplayForNonTargetedViewer:
+                  type: boolean
+                  description: "Sharing setting. true = Restricted (only people targeted by the ad can open the form link). false = Open (shareable link, default)."
+                allowOrganicLeadGen:
+                  type: boolean
+                  description: "Flexible form delivery. true = the form can surface organically on the Page (not just as a paid ad). Defaults to false."
+                questionPageCustomHeadline:
+                  type: string
+                  description: "Custom subheadline shown above the form fields on the questions page (the contact-information section description). Defaults to Meta's generic copy when omitted."
+                contextCard:
+                  type: object
+                  description: "Intro card shown before the questions page. Omit to skip the intro screen."
+                  properties:
+                    title: { type: string, description: "Headline / title of the intro card." }
+                    content: { type: array, items: { type: string }, description: "Body text lines shown on the intro card." }
+                    style: { type: string, enum: [LIST_STYLE, PARAGRAPH_STYLE], description: "Visual layout of the intro card." }
+                    buttonText: { type: string, description: "CTA button label on the intro card." }
+                    coverPhoto: { type: string, description: "Image hash of the cover photo (obtain from the Meta Ad Images API). Omit to show no image." }
       responses:
         '200':
           description: Created form.
@@ -28738,7 +28889,45 @@ paths:
           description: Form metadata.
           content:
             application/json:
-              schema: { type: object, properties: { status: { type: string }, form: { type: object } } }
+              schema:
+                type: object
+                properties:
+                  status: { type: string, example: success }
+                  form:
+                    type: object
+                    description: Full form config — sufficient to duplicate the form via POST /v1/ads/lead-forms.
+                    properties:
+                      id: { type: string }
+                      name: { type: string }
+                      status: { type: string, enum: [ACTIVE, ARCHIVED], description: "ARCHIVED forms can't receive new leads." }
+                      locale: { type: string, example: EN_US }
+                      created_time: { type: string, format: date-time }
+                      leads_count: { type: integer }
+                      privacy_policy_url: { type: string, format: uri }
+                      follow_up_action_url: { type: string, format: uri, nullable: true }
+                      questions:
+                        type: array
+                        items:
+                          type: object
+                          properties:
+                            key: { type: string }
+                            label: { type: string }
+                            type: { type: string, description: "EMAIL, PHONE, FULL_NAME, FIRST_NAME, LAST_NAME, CUSTOM, …" }
+                            options: { type: array, items: { type: object, properties: { key: { type: string }, value: { type: string } } } }
+                            inline_context: { type: string }
+                      thank_you_page:
+                        type: object
+                        nullable: true
+                        properties:
+                          title: { type: string }
+                          body: { type: string }
+                          button_text: { type: string }
+                          button_type: { type: string, example: VIEW_WEBSITE }
+                          website_url: { type: string, format: uri }
+                      context_card:
+                        type: object
+                        nullable: true
+                        description: Intro card shown before the form questions (title, content, button label).
         '401': { $ref: '#/components/responses/Unauthorized' }
     delete:
       operationId: archiveLeadForm
@@ -28891,7 +29080,7 @@ paths:
         - { name: accountId, in: query, required: true, schema: { type: string }, description: "Social account ID (a connected account on the target ad platform)." }
         - { name: q, in: query, required: true, schema: { type: string }, description: "Search query. For geo, the locality name only (no region/country suffix)." }
         - { name: dimension, in: query, required: false, schema: { type: string, enum: [geo, interest, behavior, income], default: interest }, description: "What to search. `geo` resolves locations (scope further with `geoType`), `interest`/`behavior` resolve audience entities, `income` resolves income-tier options. Defaults to `interest` for backward compatibility with the deprecated /v1/ads/interests alias." }
-        - { name: geoType, in: query, required: false, schema: { type: string, enum: [country, region, city, zip, metro], default: city }, description: "Only used when `dimension=geo`. The kind of location to resolve. Defaults to `city`." }
+        - { name: geoType, in: query, required: false, schema: { type: string, enum: [all, country, region, city, subcity, neighborhood, place, zip, metro_area, geo_market], default: city }, description: "Only used when `dimension=geo`. The kind of location to resolve. `place` resolves named points of interest (businesses, landmarks). `neighborhood` resolves named neighbourhood areas. Use `all` to search every geo type in a single relevance-ranked call — mirrors Meta's own unified search box. Defaults to `city`." }
         - { name: countryCode, in: query, required: false, schema: { type: string, minLength: 2, maxLength: 2 }, description: "ISO 3166-1 alpha-2 country code (e.g. NL) to scope a geo search." }
         - { name: limit, in: query, required: false, schema: { type: integer, minimum: 1, maximum: 100, default: 25 }, description: "Maximum results to return." }
       responses:
@@ -28913,6 +29102,8 @@ paths:
                         type: { type: string, description: "What the result is (e.g. city, region, country, zip, metro, interest, behavior, income)." }
                         path: { type: array, items: { type: string }, description: "Optional breadcrumb of parent labels (e.g. ['United States', 'California', 'Los Angeles']). Disambiguates same-named results." }
                         audienceSize: { type: integer, nullable: true, description: "Optional estimated reachable users for this option, when the platform returns it." }
+                        latitude: { type: number, format: float, nullable: true, description: "Centre latitude of the location. Populated on Meta geo results (city, neighborhood, place, etc.). Useful for map views." }
+                        longitude: { type: number, format: float, nullable: true, description: "Centre longitude of the location." }
         '400':
           description: Missing or invalid query parameters
         '401': { $ref: '#/components/responses/Unauthorized' }

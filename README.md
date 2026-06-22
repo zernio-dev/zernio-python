@@ -609,6 +609,11 @@ Both `from zernio import ...` and `from late import ...` work identically. The `
 | `sequences.pause_sequence()` | Pause sequence |
 | `sequences.unenroll_contact()` | Unenroll contact |
 
+### SMS
+| Method | Description |
+|--------|-------------|
+| `sms.send_sms()` | Send an SMS or MMS |
+
 ### Tracking Tags
 | Method | Description |
 |--------|-------------|

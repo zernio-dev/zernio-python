@@ -29,6 +29,7 @@ from ._generated.messages import MessagesResource
 from ._generated.reddit import RedditResource
 from ._generated.reviews import ReviewsResource
 from ._generated.sequences import SequencesResource
+from ._generated.sms import SmsResource
 from ._generated.tracking_tags import TrackingTagsResource
 from ._generated.twitter_engagement import TwitterEngagementResource
 from ._generated.usage import UsageResource
@@ -80,6 +81,7 @@ __all__ = [
     "RedditResource",
     "ReviewsResource",
     "SequencesResource",
+    "SmsResource",
     "ToolsResource",
     "TrackingTagsResource",
     "TwitterEngagementResource",
