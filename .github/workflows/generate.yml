@@ -127,11 +127,12 @@ jobs:
           - Auto-generated SDK updates
           - Version: $NEW_VERSION"
           # Retry with rebase to survive concurrent dispatches that land
-          # back-to-back pushes to main.
+          # back-to-back pushes to the same branch. Rebase onto the branch this
+          # run is on (github.ref_name), not a hardcoded one.
           for attempt in 1 2 3; do
             if git push; then break; fi
             echo "Push attempt $attempt failed; rebasing and retrying..."
-            git pull --rebase origin main
+            git pull --rebase origin "${{ github.ref_name }}"
             sleep $((attempt * 5))
           done
 
