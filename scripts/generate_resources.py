@@ -15,6 +15,7 @@ Usage:
 
 from __future__ import annotations
 
+import keyword
 import re
 import sys
 from pathlib import Path
@@ -79,7 +80,13 @@ def camel_to_snake(name: str) -> str:
     # Handle acronyms like 'URL' -> 'url', 'API' -> 'api'
     name = re.sub(r"([A-Z]+)([A-Z][a-z])", r"\1_\2", name)
     name = re.sub(r"([a-z\d])([A-Z])", r"\1_\2", name)
-    return name.lower()
+    result = name.lower()
+    # Reserved keywords (e.g. `from`) can't be Python identifiers; suffix with
+    # `_` per PEP 8. snake_to_camel / _build_params' to_camel strip the trailing
+    # underscore, so the wire name (`from`) round-trips unchanged.
+    if keyword.iskeyword(result):
+        result += "_"
+    return result
 
 
 def snake_to_camel(name: str) -> str:

@@ -14,6 +14,7 @@ Usage:
 
 from __future__ import annotations
 
+import keyword
 import re
 import sys
 from pathlib import Path
@@ -76,7 +77,13 @@ def camel_to_snake(name: str) -> str:
     name = name.replace("-", "_")
     name = re.sub(r"([A-Z]+)([A-Z][a-z])", r"\1_\2", name)
     name = re.sub(r"([a-z\d])([A-Z])", r"\1_\2", name)
-    return name.lower()
+    result = name.lower()
+    # Reserved keywords (e.g. `from`) can't be Python identifiers; suffix with
+    # `_` per PEP 8. The matching SDK method param is sanitized the same way, so
+    # the generated `from_=from_` keyword call lines up.
+    if keyword.iskeyword(result):
+        result += "_"
+    return result
 
 
 def _resolve_ref(ref: str, spec: dict[str, Any]) -> dict[str, Any]:
