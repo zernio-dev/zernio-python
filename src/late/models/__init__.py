@@ -10,7 +10,6 @@ from ._generated.models import *  # noqa: F401, F403
 
 # Import specific commonly used models for convenience
 from ._generated.models import (
-    AccountGetResponse,
     AccountsListResponse,
     AccountWithFollowerStats,
     ErrorResponse,
@@ -102,7 +101,6 @@ __all__ = [
     "ProfileUpdateResponse",
     "ProfileDeleteResponse",
     "AccountsListResponse",
-    "AccountGetResponse",
     "FollowerStatsResponse",
     "AccountWithFollowerStats",
     "MediaUploadResponse",

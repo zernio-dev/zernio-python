@@ -1252,14 +1252,6 @@ class TestAccountsResourceMethods:
         assert hasattr(client.accounts, "list")
         assert callable(client.accounts.list)
 
-    def test_accounts_has_get_method(self, api_key: str):
-        """Test accounts resource has get method."""
-        from late import Late
-
-        client = Late(api_key=api_key)
-        assert hasattr(client.accounts, "get")
-        assert callable(client.accounts.get)
-
     def test_accounts_has_get_follower_stats_method(self, api_key: str):
         """Test accounts resource has get_follower_stats method."""
         from late import Late
@@ -1274,7 +1266,6 @@ class TestAccountsResourceMethods:
 
         client = Late(api_key=api_key)
         assert hasattr(client.accounts, "alist")
-        assert hasattr(client.accounts, "aget")
         assert hasattr(client.accounts, "aget_follower_stats")
 
 

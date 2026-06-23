@@ -5,7 +5,6 @@ Accounts resource for managing connected social accounts.
 from __future__ import annotations
 
 from late.models import (
-    AccountGetResponse,
     AccountsListResponse,
     FollowerStatsResponse,
 )
@@ -59,19 +58,6 @@ class AccountsResource(_GeneratedAccountsResource, BaseResource[AccountsListResp
         data = self._client._get(self._BASE_PATH, params=params or None)
         return AccountsListResponse.model_validate(data)
 
-    def get(self, account_id: str) -> AccountGetResponse:
-        """
-        Get an account by ID.
-
-        Args:
-            account_id: The account ID
-
-        Returns:
-            AccountGetResponse with 'account' attribute
-        """
-        data = self._client._get(self._path(account_id))
-        return AccountGetResponse.model_validate(data)
-
     # Signature must mirror _GeneratedAccountsResource.get_follower_stats; this
     # override exists ONLY to return a typed FollowerStatsResponse instead of a
     # raw dict. Keep the params in sync on every OpenAPI regen, dropping them is
@@ -122,11 +108,6 @@ class AccountsResource(_GeneratedAccountsResource, BaseResource[AccountsListResp
         params = self._build_params(profile_id=profile_id)
         data = await self._client._aget(self._BASE_PATH, params=params or None)
         return AccountsListResponse.model_validate(data)
-
-    async def aget(self, account_id: str) -> AccountGetResponse:
-        """Get an account by ID asynchronously."""
-        data = await self._client._aget(self._path(account_id))
-        return AccountGetResponse.model_validate(data)
 
     # Same signature/params as the sync version; only the return wrapping differs.
     # See GET-820 note on get_follower_stats above.

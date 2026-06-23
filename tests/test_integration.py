@@ -437,7 +437,9 @@ class TestAccountsResource:
     def test_list_accounts_by_profile(self, client: Late, mock_account: dict) -> None:
         """Test listing accounts filtered by profile."""
         route = respx.get("https://api.test.com/v1/accounts").mock(
-            return_value=httpx.Response(200, json={"accounts": [mock_account]})
+            return_value=httpx.Response(
+                200, json={"accounts": [mock_account], "hasAnalyticsAccess": False}
+            )
         )
 
         client.accounts.list(profile_id="profile_123")
@@ -445,18 +447,6 @@ class TestAccountsResource:
         assert route.called
         request = route.calls[0].request
         assert "profileId=profile_123" in str(request.url)
-
-    @respx.mock
-    def test_get_account(self, client: Late, mock_account: dict) -> None:
-        """Test getting a single account."""
-        route = respx.get("https://api.test.com/v1/accounts/acc_123").mock(
-            return_value=httpx.Response(200, json={"account": mock_account})
-        )
-
-        result = client.accounts.get("acc_123")
-
-        assert route.called
-        assert result.account.field_id == "acc_123"
 
     @respx.mock
     def test_get_follower_stats(self, client: Late) -> None:
