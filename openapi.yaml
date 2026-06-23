@@ -25128,7 +25128,7 @@ paths:
                   properties:
                     name: { type: string }
                     language: { type: string }
-                    components: { type: array }
+                    components: { type: array, items: { type: object, additionalProperties: true } }
                     variableMapping:
                       type: object
                       description: Maps template variable positions ("1", "2") to contact fields or static values. Resolved per recipient at send time.
