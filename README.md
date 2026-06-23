@@ -609,11 +609,6 @@ Both `from zernio import ...` and `from late import ...` work identically. The `
 | `sequences.pause_sequence()` | Pause sequence |
 | `sequences.unenroll_contact()` | Unenroll contact |
 
-### SMS
-| Method | Description |
-|--------|-------------|
-| `sms.send_sms()` | Send an SMS or MMS |
-
 ### Tracking Tags
 | Method | Description |
 |--------|-------------|
@@ -711,6 +706,7 @@ Both `from zernio import ...` and `from late import ...` work identically. The `
 | Method | Description |
 |--------|-------------|
 | `whatsapp_phone_numbers.list_whats_app_number_countries()` | List offerable number countries |
+| `whatsapp_phone_numbers.create_whats_app_number_kyc_link()` | Create a hosted KYC link |
 | `whatsapp_phone_numbers.get_whats_app_number_info()` | Get number status |
 | `whatsapp_phone_numbers.get_whats_app_number_kyc_form()` | Get regulated-number KYC form spec |
 | `whatsapp_phone_numbers.get_whats_app_number_remediation()` | Get the declined requirements to fix |

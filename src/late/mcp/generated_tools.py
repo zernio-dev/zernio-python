@@ -2048,7 +2048,6 @@ def register_generated_tools(mcp, _get_client):
         bid_strategy: str | None = None,
         bid_amount: float | None = None,
         roas_average_floor: float | None = None,
-        raw_targeting: dict[str, Any] | None = None,
         tracking: dict[str, Any] | None = None,
         special_ad_categories: list[str] | None = None,
         link_url: str | None = None,
@@ -2078,11 +2077,6 @@ def register_generated_tools(mcp, _get_client):
                 roas_average_floor: Minimum ROAS as a decimal multiplier (e.g. 2.0 = 2.0x ROAS). Required when
         `bidStrategy` is `LOWEST_COST_WITH_MIN_ROAS`. Sent to Meta as
         `bid_constraints.roas_average_floor` × 10000 (Meta uses fixed-point integers).
-                raw_targeting: Meta only. A raw Meta-native targeting spec passed to the ad set VERBATIM (snake_case:
-        `geo_locations`, `custom_audiences`, `excluded_custom_audiences`, `flexible_spec`,
-        `targeting_automation`, etc.). Use it to target specific custom or lookalike audiences,
-        or to clone a campaign's targeting exactly. Mutually exclusive with `targeting` (sending
-        both → 422). Sent as-is; Meta validates and surfaces any errors.
                 tracking: Meta only. Tracking specs (pixel, URL tags).
                 special_ad_categories: Meta only. Required for housing, employment, credit, or political ads.
                 link_url: TikTok-only. Custom destination URL for the Spark Ad. Without this, TikTok
@@ -2123,7 +2117,6 @@ def register_generated_tools(mcp, _get_client):
                 bid_strategy=bid_strategy,
                 bid_amount=bid_amount,
                 roas_average_floor=roas_average_floor,
-                raw_targeting=raw_targeting,
                 tracking=tracking,
                 special_ad_categories=special_ad_categories,
                 link_url=link_url,
@@ -2157,7 +2150,6 @@ def register_generated_tools(mcp, _get_client):
         budget_amount: float | None = None,
         budget_type: str | None = None,
         status: str | None = None,
-        campaign_status: str | None = None,
         budget_level: str = "adset",
         currency: str | None = None,
         headline: str | None = None,
@@ -2186,9 +2178,6 @@ def register_generated_tools(mcp, _get_client):
         zips: list[dict[str, Any]] | None = None,
         metros: list[dict[str, Any]] | None = None,
         custom_locations: list[dict[str, Any]] | None = None,
-        places: list[dict[str, Any]] | None = None,
-        neighborhoods: list[dict[str, Any]] | None = None,
-        excluded_locations: dict[str, Any] | None = None,
         behaviors: list[dict[str, Any]] | None = None,
         income_tier: str | None = None,
         languages: list[str] | None = None,
@@ -2232,15 +2221,7 @@ def register_generated_tools(mcp, _get_client):
                 optimization_goal: Meta only. Explicit ad-set `optimization_goal` (e.g. `LANDING_PAGE_VIEWS`, `LINK_CLICKS`, `REACH`, `IMPRESSIONS`, `OFFSITE_CONVERSIONS`, `THRUPLAY`, `LEAD_GENERATION`). Overrides the default derived from `goal` (e.g. `traffic` defaults to `LINK_CLICKS`). Forwarded verbatim to Meta, which validates compatibility with the campaign objective and rejects incompatible combinations.
                 budget_amount: Required on legacy + multi-creative shapes. Inherited on attach.
                 budget_type: Required on legacy + multi-creative shapes. Inherited on attach.
-                status: Meta only. Desired publish state of the ad (and, on the legacy/multi-ad-set shapes, the ad set too).
-        Omitted or `ACTIVE` publishes live immediately (default). `PAUSED` creates the objects paused and skips
-        activation — useful to stage ads before they spend. On the attach shape (`adSetId`), only the new ad is
-        affected; the existing ad set and campaign are already live and are not touched.
-                campaign_status: Meta only. Independent publish state for the CAMPAIGN when the create makes both a new campaign and a
-        new ad set (legacy shape). When omitted, the campaign follows `status`. Use this to stage a paused
-        campaign with an active ad set (`status: ACTIVE, campaignStatus: PAUSED`) — the ad set will start
-        delivering as soon as the campaign is activated later. Ignored when `existingCampaignId` is set (the
-        campaign is already live and its status is not changed).
+                status: Meta only. Publish state of the created ad set + ad. Omitted or ACTIVE publishes live (default, back-compat); PAUSED creates them paused and skips activation, so you can review before they spend.
                 budget_level: Meta only. Where the budget lives, which selects the Meta budget model:
           - `adset` (default): ABO (Ad-set Budget Optimization). The budget is set on the
             ad set. This is the back-compatible behaviour — omit this field to keep it.
@@ -2296,16 +2277,11 @@ def register_generated_tools(mcp, _get_client):
         with `adSetId` and `creatives[]`.
                 existing_creative_id: Meta only. Reuse an EXISTING ad creative by id instead of
         building a new one from the copy/media fields (which are then
-        ignored). Works on both shapes:
-        - Legacy/multi-ad-set (`existingCampaignId`): combine with
-          `existingCampaignId` to build a multi-ad-set campaign that
-          shares one creative across audiences.
-        - Attach (`adSetId`): combine with `adSetId` to add a second
-          (or Nth) ad to an existing ad set reusing the same creative —
-          no `headline`/`body`/`imageUrl` required on the body.
-        Mutually exclusive with `creatives[]`, `dynamicCreative`, and
-        `placementAssets`. The creative id is returned as `creativeId`
-        on the create response.
+        ignored). Combine with `existingCampaignId` to build a
+        multi-ad-set campaign that shares one creative. Mutually
+        exclusive with `creatives[]`, `dynamicCreative`, and
+        `placementAssets`. The creative id used is returned as
+        `creativeId` on the create response.
                 business_name: Google Display only
                 board_id: Pinterest only. Board ID (auto-creates if not provided).
                 organization_id: LinkedIn only. The Company Page that authors the Direct Sponsored Content ("dark") post backing the ad — accepts a numeric organization ID or a full `urn:li:organization:N` URN. Required unless the resolved `accountId` is a connected LinkedIn Company-Page account (defaults to that page) or the LinkedIn ad account is org-owned (defaults to the account's owning organization). The authenticated member must be an ADMINISTRATOR or DIRECT_SPONSORED_CONTENT_POSTER of this page (and the page must be associated with the ad account), or LinkedIn returns 403. Ignored by every other platform.
@@ -2320,9 +2296,6 @@ def register_generated_tools(mcp, _get_client):
                 zips: Postal/ZIP geo targeting. `key` is the platform's postal location ID from /v1/ads/targeting/search?dimension=geo&geoType=zip. Supported on Meta, Google, TikTok, Pinterest, X.
                 metros: DMA / metro-area geo targeting. `key` is the platform's metro ID from /v1/ads/targeting/search?dimension=geo&geoType=metro.
                 custom_locations: Point-radius (lat/lng) geo targeting. Meta only (custom_locations). Rejected on platforms without radius support.
-                places: Named points of interest (businesses, landmarks). Meta only. `key` from /v1/ads/targeting/search?dimension=geo&geoType=place. Maps to geo_locations.places.
-                neighborhoods: Named neighbourhood areas. Meta only. `key` from /v1/ads/targeting/search?dimension=geo&geoType=neighborhood. Maps to geo_locations.neighborhoods.
-                excluded_locations: Geo exclusions. Meta only. Maps to excluded_geo_locations. Supports countries, regions, cities, and zips.
                 behaviors: Behaviour entities from /v1/ads/targeting/search?dimension=behavior. Supported on Meta and TikTok. Each must include id.
                 income_tier: Normalized household-income tier. Meta and TikTok express all four; Google maps only
         `top_10`; rejected on LinkedIn, X, and Pinterest. On Meta, income targeting is incompatible
@@ -2337,9 +2310,6 @@ def register_generated_tools(mcp, _get_client):
         additionally enforces co-selection rules (e.g. some positions require their parent
         publisher platform) and returns an actionable error which we surface. Non-Meta
         platforms reject this field.
-        Can be combined with `rawTargeting` — when both are set, the placement spec is
-        converted to Meta's snake_case and merged into the raw targeting object before
-        it is sent to Meta.
                 saved_targeting_id: ID of a `saved_targeting` audience (created via POST /v1/ads/audiences). When set, its stored
         TargetingSpec is expanded as the base targeting; inline fields on this body merge on top. Lets you
         reuse a named targeting preset without re-sending every field.
@@ -2351,8 +2321,6 @@ def register_generated_tools(mcp, _get_client):
         ageMin/...), `audienceId`, and `savedTargetingId` (sending both → 422). Sent as-is; Meta validates and
         surfaces any errors. If cloning an EU campaign, also pass `dsaBeneficiary` / `dsaPayor` (those are
         separate fields, not part of targeting).
-        Can be combined with the top-level `placements` field — when both are present, placements are
-        converted to Meta's snake_case and merged into this object before it is sent to Meta.
                 special_ad_categories: Meta only. Declares the ad's special category, required for housing, employment, credit, or
         political/social-issue ads (Meta enforces restricted targeting for these). Note: setting a special
         category disables income/zip targeting on Meta.
@@ -2482,7 +2450,6 @@ def register_generated_tools(mcp, _get_client):
                 budget_amount=budget_amount,
                 budget_type=budget_type,
                 status=status,
-                campaign_status=campaign_status,
                 budget_level=budget_level,
                 currency=currency,
                 headline=headline,
@@ -2511,9 +2478,6 @@ def register_generated_tools(mcp, _get_client):
                 zips=zips,
                 metros=metros,
                 custom_locations=custom_locations,
-                places=places,
-                neighborhoods=neighborhoods,
-                excluded_locations=excluded_locations,
                 behaviors=behaviors,
                 income_tier=income_tier,
                 languages=languages,
@@ -2631,11 +2595,6 @@ def register_generated_tools(mcp, _get_client):
         thank_you_button_type: str | None = None,
         thank_you_website_url: str | None = None,
         is_optimized_for_quality: bool | None = None,
-        form_type: str | None = None,
-        block_display_for_non_targeted_viewer: bool | None = None,
-        allow_organic_lead_gen: bool | None = None,
-        question_page_custom_headline: str | None = None,
-        context_card: dict[str, Any] | None = None,
     ) -> str:
         """Create a Lead Gen (Instant) form
 
@@ -2652,12 +2611,7 @@ def register_generated_tools(mcp, _get_client):
             thank_you_button_text
             thank_you_button_type
             thank_you_website_url
-            is_optimized_for_quality: Legacy form type toggle. Prefer formType instead. false = More Volume, true = Higher Intent.
-            form_type: Form type. MORE_VOLUME = optimized for lead quantity (default). HIGHER_INTENT = adds a review/confirmation step before submit. RICH_CREATIVE = includes context card and custom headline to educate users before they submit. Supersedes isOptimizedForQuality.
-            block_display_for_non_targeted_viewer: Sharing setting. true = Restricted (only people targeted by the ad can open the form link). false = Open (shareable link, default).
-            allow_organic_lead_gen: Flexible form delivery. true = the form can surface organically on the Page (not just as a paid ad). Defaults to false.
-            question_page_custom_headline: Custom subheadline shown above the form fields on the questions page (the contact-information section description). Defaults to Meta's generic copy when omitted.
-            context_card: Intro card shown before the questions page. Omit to skip the intro screen."""
+            is_optimized_for_quality"""
         client = _get_client()
         try:
             response = client.ads.create_lead_form(
@@ -2674,11 +2628,6 @@ def register_generated_tools(mcp, _get_client):
                 thank_you_button_type=thank_you_button_type,
                 thank_you_website_url=thank_you_website_url,
                 is_optimized_for_quality=is_optimized_for_quality,
-                form_type=form_type,
-                block_display_for_non_targeted_viewer=block_display_for_non_targeted_viewer,
-                allow_organic_lead_gen=allow_organic_lead_gen,
-                question_page_custom_headline=question_page_custom_headline,
-                context_card=context_card,
             )
             return _format_response(response)
         except Exception as e:
@@ -2833,7 +2782,7 @@ def register_generated_tools(mcp, _get_client):
             account_id: Social account ID (a connected account on the target ad platform). (required)
             q: Search query. For geo, the locality name only (no region/country suffix). (required)
             dimension: What to search. `geo` resolves locations (scope further with `geoType`), `interest`/`behavior` resolve audience entities, `income` resolves income-tier options. Defaults to `interest` for backward compatibility with the deprecated /v1/ads/interests alias.
-            geo_type: Only used when `dimension=geo`. The kind of location to resolve. `place` resolves named points of interest (businesses, landmarks). `neighborhood` resolves named neighbourhood areas. Use `all` to search every geo type in a single relevance-ranked call — mirrors Meta's own unified search box. Defaults to `city`.
+            geo_type: Only used when `dimension=geo`. The kind of location to resolve. Defaults to `city`.
             country_code: ISO 3166-1 alpha-2 country code (e.g. NL) to scope a geo search.
             limit: Maximum results to return."""
         client = _get_client()
@@ -9324,38 +9273,6 @@ def register_generated_tools(mcp, _get_client):
         except Exception as e:
             return f"Error: {e}"
 
-    # SMS
-
-    @mcp.tool(
-        annotations=ToolAnnotations(
-            title="Send an SMS or MMS",
-            readOnlyHint=False,
-            destructiveHint=True,
-            openWorldHint=True,
-        )
-    )
-    def sms_send_sms(
-        from_: str,
-        to: str,
-        text: str | None = None,
-        media_urls: list[str] | None = None,
-    ) -> str:
-        """Send an SMS or MMS
-
-        Args:
-            from_: One of your SMS-enabled numbers (E.164). (required)
-            to: Recipient number (E.164). (required)
-            text
-            media_urls: Publicly reachable media URLs for MMS (max 10, total < 1MB)."""
-        client = _get_client()
-        try:
-            response = client.sms.send_sms(
-                from_=from_, to=to, text=text, media_urls=media_urls
-            )
-            return _format_response(response)
-        except Exception as e:
-            return f"Error: {e}"
-
     # TRACKING_TAGS
 
     @mcp.tool(
@@ -10976,7 +10893,7 @@ def register_generated_tools(mcp, _get_client):
         sip_auth_username: str | None = None,
         sip_auth_password: str | None = None,
         recording_enabled: bool | None = None,
-        call_icon_countries: list[str] | None = None,
+        call_icon_countries: str | None = None,
     ) -> str:
         """Update calling config
 
@@ -11758,6 +11675,7 @@ def register_generated_tools(mcp, _get_client):
         profile_id: str,
         country: str,
         submission_id: str | None = None,
+        quantity: int = 1,
         reuse: bool | None = None,
         reuse_from: str | None = None,
         end_user_first_name: str | None = None,
@@ -11772,6 +11690,7 @@ def register_generated_tools(mcp, _get_client):
             profile_id: (required)
             country: (required)
             submission_id: Idempotency token for this submission attempt. A retry/double-submit with the same token returns the same number; omit and each call creates a new number.
+            quantity: Provision several same-country numbers from one submission (1-5). The single verification covers all of them; each number is billed only when it activates. Numbers that fail to order are skipped (best-effort).
             reuse: Reuse a prior approved verification for this country (skips document/field collection; places the order immediately).
             reuse_from: Which approved verification to reuse when several exist: the phone number it was originally approved for (GET reusable.options[].fromPhoneNumber). Omitted = newest. No match = 409.
             end_user_first_name: End user's legal first name. Required when the country has an action/ID-verification (Onfido) requirement.
@@ -11785,6 +11704,7 @@ def register_generated_tools(mcp, _get_client):
                 profile_id=profile_id,
                 country=country,
                 submission_id=submission_id,
+                quantity=quantity,
                 reuse=reuse,
                 reuse_from=reuse_from,
                 end_user_first_name=end_user_first_name,
@@ -11849,6 +11769,42 @@ def register_generated_tools(mcp, _get_client):
                     administrative_area=administrative_area,
                     postal_code=postal_code,
                 )
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Create a hosted KYC link",
+            readOnlyHint=False,
+            destructiveHint=True,
+            openWorldHint=True,
+        )
+    )
+    def whatsapp_phone_numbers_create_whats_app_number_kyc_link(
+        profile_id: str,
+        country: str,
+        branding: dict[str, Any] | None = None,
+        redirect_url: str | None = None,
+    ) -> str:
+        """Create a hosted KYC link
+
+            Args:
+                profile_id: (required)
+                country: ISO 3166-1 alpha-2 country code (must be a regulated/KYC country). (required)
+                branding: Optional white-label of the hosted page the end customer sees.
+                redirect_url: Where to send the end customer's browser after a successful
+        submit. On completion Zernio appends `kyc=submitted` and
+        `country=<ISO-2>` as query params. When omitted, the hosted
+        page shows a built-in confirmation screen instead."""
+        client = _get_client()
+        try:
+            response = client.whatsapp_phone_numbers.create_whats_app_number_kyc_link(
+                profile_id=profile_id,
+                country=country,
+                branding=branding,
+                redirect_url=redirect_url,
             )
             return _format_response(response)
         except Exception as e:

@@ -108,7 +108,7 @@ class WorkflowsResource:
         description: str | None = None,
         nodes: list[Any] | None = None,
         edges: list[Any] | None = None,
-        entry_node_id: str | None = None,
+        entry_node_id: Any | None = None,
         account_id: str | None = None,
     ) -> dict[str, Any]:
         """Update workflow"""
@@ -252,7 +252,7 @@ class WorkflowsResource:
         description: str | None = None,
         nodes: list[Any] | None = None,
         edges: list[Any] | None = None,
-        entry_node_id: str | None = None,
+        entry_node_id: Any | None = None,
         account_id: str | None = None,
     ) -> dict[str, Any]:
         """Update workflow (async)"""

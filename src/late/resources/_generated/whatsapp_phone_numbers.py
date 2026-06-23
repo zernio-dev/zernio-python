@@ -138,6 +138,7 @@ class WhatsappPhoneNumbersResource:
         country: str,
         *,
         submission_id: str | None = None,
+        quantity: int | None = 1,
         reuse: bool | None = None,
         reuse_from: str | None = None,
         end_user_first_name: str | None = None,
@@ -151,6 +152,7 @@ class WhatsappPhoneNumbersResource:
             profile_id=profile_id,
             country=country,
             submission_id=submission_id,
+            quantity=quantity,
             reuse=reuse,
             reuse_from=reuse_from,
             end_user_first_name=end_user_first_name,
@@ -185,6 +187,23 @@ class WhatsappPhoneNumbersResource:
         return self._client._post(
             "/v1/whatsapp/phone-numbers/kyc/validate-address", data=payload
         )
+
+    def create_whats_app_number_kyc_link(
+        self,
+        profile_id: str,
+        country: str,
+        *,
+        branding: dict[str, Any] | None = None,
+        redirect_url: str | None = None,
+    ) -> dict[str, Any]:
+        """Create a hosted KYC link"""
+        payload = self._build_payload(
+            profile_id=profile_id,
+            country=country,
+            branding=branding,
+            redirect_url=redirect_url,
+        )
+        return self._client._post("/v1/whatsapp/phone-numbers/kyc/share", data=payload)
 
     def get_whats_app_number_remediation(self, id: str) -> dict[str, Any]:
         """Get the declined requirements to fix"""
@@ -306,6 +325,7 @@ class WhatsappPhoneNumbersResource:
         country: str,
         *,
         submission_id: str | None = None,
+        quantity: int | None = 1,
         reuse: bool | None = None,
         reuse_from: str | None = None,
         end_user_first_name: str | None = None,
@@ -319,6 +339,7 @@ class WhatsappPhoneNumbersResource:
             profile_id=profile_id,
             country=country,
             submission_id=submission_id,
+            quantity=quantity,
             reuse=reuse,
             reuse_from=reuse_from,
             end_user_first_name=end_user_first_name,
@@ -356,6 +377,25 @@ class WhatsappPhoneNumbersResource:
         )
         return await self._client._apost(
             "/v1/whatsapp/phone-numbers/kyc/validate-address", data=payload
+        )
+
+    async def acreate_whats_app_number_kyc_link(
+        self,
+        profile_id: str,
+        country: str,
+        *,
+        branding: dict[str, Any] | None = None,
+        redirect_url: str | None = None,
+    ) -> dict[str, Any]:
+        """Create a hosted KYC link (async)"""
+        payload = self._build_payload(
+            profile_id=profile_id,
+            country=country,
+            branding=branding,
+            redirect_url=redirect_url,
+        )
+        return await self._client._apost(
+            "/v1/whatsapp/phone-numbers/kyc/share", data=payload
         )
 
     async def aget_whats_app_number_remediation(self, id: str) -> dict[str, Any]:

@@ -93,10 +93,10 @@ class WhatsappCallingResource:
         account_id: str,
         *,
         forward_to: str | None = None,
-        sip_auth_username: str | None = None,
-        sip_auth_password: str | None = None,
+        sip_auth_username: Any | None = None,
+        sip_auth_password: Any | None = None,
         recording_enabled: bool | None = None,
-        call_icon_countries: list[str] | None = None,
+        call_icon_countries: Any | None = None,
     ) -> dict[str, Any]:
         """Update calling config"""
         payload = self._build_payload(
@@ -235,10 +235,10 @@ class WhatsappCallingResource:
         account_id: str,
         *,
         forward_to: str | None = None,
-        sip_auth_username: str | None = None,
-        sip_auth_password: str | None = None,
+        sip_auth_username: Any | None = None,
+        sip_auth_password: Any | None = None,
         recording_enabled: bool | None = None,
-        call_icon_countries: list[str] | None = None,
+        call_icon_countries: Any | None = None,
     ) -> dict[str, Any]:
         """Update calling config (async)"""
         payload = self._build_payload(
