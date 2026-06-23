@@ -3623,6 +3623,10 @@ components:
           type: string
           format: uri
           description: Alias for instagramThumbnail. If both are provided, instagramThumbnail takes priority.
+        isAiGenerated:
+          type: boolean
+          default: false
+          description: When true, the post is labeled by Instagram as containing AI-generated media. Per Meta, this self-disclosure label is for AI-generated media, not AI-written captions. Applies to feed posts, Reels, Stories, and carousels.
       description: Feed aspect ratio 0.8-1.91, carousels up to 10 items, stories require media (no captions). User tag coordinates 0.0-1.0 from top-left. Images over 8 MB and videos over platform limits are auto-compressed.
 
     LinkedInPlatformData:
