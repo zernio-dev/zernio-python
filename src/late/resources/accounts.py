@@ -85,7 +85,7 @@ class AccountsResource(_GeneratedAccountsResource, BaseResource[AccountsListResp
             granularity: Aggregation level ('daily' | 'weekly' | 'monthly')
 
         Returns:
-            FollowerStatsResponse with 'accounts', 'dateRange', 'aggregation'
+            FollowerStatsResponse with 'accounts', 'stats', 'dateRange', 'granularity'
         """
         if isinstance(account_ids, list):
             account_ids = ",".join(account_ids)
@@ -131,7 +131,7 @@ class AccountsResource(_GeneratedAccountsResource, BaseResource[AccountsListResp
             granularity: Aggregation level ('daily' | 'weekly' | 'monthly')
 
         Returns:
-            FollowerStatsResponse with 'accounts', 'dateRange', 'aggregation'
+            FollowerStatsResponse with 'accounts', 'stats', 'dateRange', 'granularity'
         """
         if isinstance(account_ids, list):
             account_ids = ",".join(account_ids)

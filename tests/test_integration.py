@@ -491,6 +491,93 @@ class TestAccountsResource:
         assert "toDate=2026-01-31" in url_str
         assert "granularity=weekly" in url_str
 
+    @respx.mock
+    def test_get_follower_stats_parses_stats_and_granularity(
+        self, client: Late
+    ) -> None:
+        """FollowerStatsResponse must surface stats map and granularity from the
+        live wire shape. Pre-fix this failed because the model lacked both fields
+        (Pydantic extra='ignore' silently dropped them)."""
+        wire = {
+            "accounts": [
+                {
+                    "_id": "acc_111",
+                    "platform": "linkedin",
+                    "username": "acme",
+                    "profileId": "prof_1",
+                    "isActive": True,
+                    "currentFollowers": 5000,
+                    "growth": 100,
+                }
+            ],
+            "stats": {
+                "acc_111": [
+                    {"date": "2026-01-01", "followers": 4900},
+                    {"date": "2026-01-02", "followers": 5000},
+                ]
+            },
+            "dateRange": {
+                "from": "2026-01-01T00:00:00.000Z",
+                "to": "2026-01-31T23:59:59.999Z",
+            },
+            "granularity": "daily",
+        }
+        respx.get("https://api.test.com/v1/accounts/follower-stats").mock(
+            return_value=httpx.Response(200, json=wire)
+        )
+
+        result = client.accounts.get_follower_stats(account_ids="acc_111")
+
+        assert result.stats is not None
+        assert result.stats != {}
+        assert result.granularity == "daily"
+        # Follower count on the account object must survive model_validate
+        assert result.accounts is not None
+        assert len(result.accounts) == 1
+        assert result.accounts[0].currentFollowers == 5000
+
+    def test_format_follower_stats_response(self) -> None:
+        """_format_response must return lossless JSON for FollowerStatsResponse,
+        not the lossy 'Found N account(s): - platform: username' one-liner.
+        Pre-fix this returned the generic accounts branch output."""
+        import json
+
+        from late.mcp.generated_tools import _format_response
+        from late.models._generated.models import FollowerStatsResponse
+
+        wire = {
+            "accounts": [
+                {
+                    "_id": "acc_111",
+                    "platform": "linkedin",
+                    "username": "acme",
+                    "profileId": "prof_1",
+                    "isActive": True,
+                    "currentFollowers": 5000,
+                    "growth": 100,
+                }
+            ],
+            "stats": {
+                "acc_111": [
+                    {"date": "2026-01-01", "followers": 4900},
+                    {"date": "2026-01-02", "followers": 5000},
+                ]
+            },
+            "granularity": "daily",
+        }
+        response = FollowerStatsResponse.model_validate(wire)
+        output = _format_response(response)
+
+        # Must be valid JSON (model_dump_json path)
+        parsed = json.loads(output)
+        assert parsed.get("granularity") == "daily"
+        assert "stats" in parsed
+        # Must include the follower count from the daily series
+        first_series = list(parsed["stats"].values())[0]
+        assert any(point["followers"] == 5000 for point in first_series)
+        # Must NOT be the lossy one-liner
+        assert not output.startswith("Found ")
+
 
 # =============================================================================
 # Media Resource Tests

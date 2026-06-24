@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+- **MCP `accounts_get_follower_stats` returned only the account name, dropping the follower count and daily series.** The shared `_format_response` helper pattern-matches on the response shape, and `FollowerStatsResponse` has an `accounts` attribute, so it fell into the generic account-list branch that prints only `- {platform}: {username}` and silently discarded `currentFollowers`, `growth`, and the daily `stats` series. Hit in practice by a developer pulling LinkedIn org follower stats (data was present server-side: latest count plus a week of daily snapshots), who saw only the account name come back through the tool. `_format_response` now checks for a `stats` attribute (unique to `FollowerStatsResponse` among all response models) BEFORE the generic `accounts` branch and returns the full `model_dump_json(by_alias=True, exclude_none=True)`, so the count, growth, and series reach the LLM losslessly. Fixed in both the emitted `generated_tools.py` and the `generate_mcp_tools.py` template so a future regen keeps it. Two regression tests added in `tests/test_integration.py`. (The related model gap, `FollowerStatsResponse` missing `stats`/`granularity`, was already corrected on `develop` by an earlier OpenAPI regen, so no model change was needed here.)
+
 ## [1.4.49]
 
 ### Fixed
