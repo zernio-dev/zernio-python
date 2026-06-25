@@ -5094,15 +5094,15 @@ components:
               name: { type: string }
         cities:
           type: array
-          description: "City targeting. Optional `radius` + `distanceUnit` extend beyond the city limits; both must be set together or both omitted. `radius` is only honoured on platforms whose capability map allows city radius (Meta)."
+          description: "City targeting. Optional `radius` + `distance_unit` extend beyond the city limits; both must be set together or both omitted. `radius` is only honoured on platforms whose capability map allows city radius (Meta)."
           items:
             type: object
             required: [key]
             properties:
               key: { type: string }
               name: { type: string }
-              radius: { type: number, description: "Radius around the city. Requires distanceUnit." }
-              distanceUnit: { type: string, enum: [mile, kilometer], description: "Required if radius is set." }
+              radius: { type: number, description: "Radius around the city. Requires distance_unit." }
+              distance_unit: { type: string, enum: [mile, kilometer], description: "Required if radius is set." }
         zips:
           type: array
           description: "Postal/ZIP targeting. `key` is the platform's postal location ID (e.g. Meta `US:94304`). Supported on Meta, Google, TikTok, Pinterest, X."
@@ -5133,10 +5133,10 @@ components:
               radius: { type: number, description: "Positive radius around the point." }
               distanceUnit: { type: string, enum: [mile, kilometer] }
               name: { type: string }
-              address: { type: string }
+              address: { type: string, description: "Optional label, sent to Meta as `address_string`. latitude/longitude take precedence for the pin location." }
         excludedLocations:
           type: object
-          description: "Geo to exclude from the audience. A subset of the inclusion geo shape."
+          description: "Geo to exclude from the audience. Mirrors the inclusion geo shape: excluded cities can carry a radius catchment and excluded custom (lat/lng) pins are supported, both on Meta (excluded_geo_locations)."
           properties:
             countries: { type: array, items: { type: string } }
             regions:
@@ -5149,12 +5149,14 @@ components:
                   name: { type: string }
             cities:
               type: array
+              description: "Cities to exclude. Optional `radius` + `distance_unit` exclude a catchment around the city (both must be set together or both omitted); Meta honours the radius on excluded cities."
               items:
                 type: object
                 required: [key]
                 properties:
                   key: { type: string }
-                  name: { type: string }
+                  radius: { type: number, description: "Radius around the excluded city. Requires distance_unit." }
+                  distance_unit: { type: string, enum: [mile, kilometer], description: "Required if radius is set." }
             zips:
               type: array
               items:
@@ -5163,6 +5165,35 @@ components:
                 properties:
                   key: { type: string }
                   name: { type: string }
+            places:
+              type: array
+              description: "Named points of interest to exclude. `key` from /v1/ads/targeting/search."
+              items:
+                type: object
+                required: [key]
+                properties:
+                  key: { type: string }
+            neighborhoods:
+              type: array
+              description: "Named neighbourhood areas to exclude. `key` from /v1/ads/targeting/search."
+              items:
+                type: object
+                required: [key]
+                properties:
+                  key: { type: string }
+            customLocations:
+              type: array
+              description: "Point-radius (lat/lng) pins to exclude (Meta excluded_geo_locations.custom_locations). Mirrors the inclusion customLocations shape."
+              items:
+                type: object
+                required: [latitude, longitude, radius, distanceUnit]
+                properties:
+                  latitude: { type: number, minimum: -90, maximum: 90 }
+                  longitude: { type: number, minimum: -180, maximum: 180 }
+                  radius: { type: number, description: "Positive radius around the point." }
+                  distanceUnit: { type: string, enum: [mile, kilometer] }
+                  name: { type: string }
+                  address: { type: string, description: "Optional label, sent to Meta as `address_string`. latitude/longitude take precedence for the pin location." }
         ageMin: { type: integer, minimum: 13, maximum: 100 }
         ageMax: { type: integer, minimum: 13, maximum: 100 }
         gender: { type: string, enum: [all, male, female], description: "Restrict by gender. 'all' (default) targets everyone." }
