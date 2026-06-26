@@ -533,6 +533,31 @@ def register_generated_tools(mcp, _get_client):
 
     @mcp.tool(
         annotations=ToolAnnotations(
+            title="List posts for an account",
+            readOnlyHint=True,
+            destructiveHint=False,
+            openWorldHint=False,
+        )
+    )
+    def accounts_get_account_posts(
+        account_id: str, exclude_unlisted: bool | None = None
+    ) -> str:
+        """List posts for an account
+
+        Args:
+            account_id: (required)
+            exclude_unlisted: YouTube only. When `true`, excludes unlisted and private videos from the response. Has no effect on other platforms."""
+        client = _get_client()
+        try:
+            response = client.accounts.get_account_posts(
+                account_id=account_id, exclude_unlisted=exclude_unlisted
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
             title="Check accounts health",
             readOnlyHint=True,
             destructiveHint=False,

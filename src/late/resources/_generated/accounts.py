@@ -123,6 +123,15 @@ class AccountsResource:
         """Disconnect account"""
         return self._client._delete(f"/v1/accounts/{account_id}")
 
+    def get_account_posts(
+        self, account_id: str, *, exclude_unlisted: bool | None = None
+    ) -> dict[str, Any]:
+        """List posts for an account"""
+        params = self._build_params(
+            exclude_unlisted=exclude_unlisted,
+        )
+        return self._client._get(f"/v1/accounts/{account_id}/posts", params=params)
+
     def get_all_accounts_health(
         self,
         *,
@@ -526,6 +535,17 @@ class AccountsResource:
     async def adelete_account(self, account_id: str) -> dict[str, Any]:
         """Disconnect account (async)"""
         return await self._client._adelete(f"/v1/accounts/{account_id}")
+
+    async def aget_account_posts(
+        self, account_id: str, *, exclude_unlisted: bool | None = None
+    ) -> dict[str, Any]:
+        """List posts for an account (async)"""
+        params = self._build_params(
+            exclude_unlisted=exclude_unlisted,
+        )
+        return await self._client._aget(
+            f"/v1/accounts/{account_id}/posts", params=params
+        )
 
     async def aget_all_accounts_health(
         self,
