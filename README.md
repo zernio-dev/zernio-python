@@ -199,7 +199,6 @@ Both `from zernio import ...` and `from late import ...` work identically. The `
 | `accounts.get_all_accounts_health()` | Check accounts health |
 | `accounts.list_accounts()` | List accounts |
 | `accounts.get_account_health()` | Check account health |
-| `accounts.get_account_posts()` | List posts for an account |
 | `accounts.get_follower_stats()` | Get follower stats |
 | `accounts.get_google_business_reviews()` | Get reviews |
 | `accounts.get_linked_in_mentions()` | Resolve LinkedIn mention |
