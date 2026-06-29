@@ -3239,6 +3239,21 @@ components:
           type: string
           format: date-time
           description: Timestamp when the post was published to this platform
+        isTrialReel:
+          type: boolean
+          description: >-
+            Present and true only when this Instagram reel was launched as a
+            Trial through Zernio (created with platformSpecificData.trialParams).
+            Use it to segment trial reels in analytics. Note: Instagram's Graph
+            API exposes no readable trial field, so this reflects creation-time
+            intent only. It indicates the reel STARTED as a trial, not whether
+            or when it graduated.
+        trialGraduationStrategy:
+          type: string
+          enum: [MANUAL, SS_PERFORMANCE]
+          description: >-
+            Graduation strategy the trial reel was launched with. Present only
+            when isTrialReel is true.
         errorMessage:
           type: string
           description: Human-readable error message when status is failed. Contains platform-specific error details explaining why the publish failed.
