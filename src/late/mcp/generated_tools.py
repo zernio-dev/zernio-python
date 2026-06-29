@@ -8142,6 +8142,7 @@ def register_generated_tools(mcp, _get_client):
     def posts_list_posts(
         page: int = 1,
         limit: int = 10,
+        source: str = "zernio",
         status: str | None = None,
         platform: str | None = None,
         profile_id: str | None = None,
@@ -8158,6 +8159,7 @@ def register_generated_tools(mcp, _get_client):
         Args:
             page: Page number
             limit: Results per page
+            source: Which collection to read. `zernio` (default) returns posts authored through Zernio. `external` returns posts synced from the platform (existing/historical posts that were published outside Zernio). Combine with `accountId` and paginate via `page`/`limit` to walk the full synced history (we keep up to the last ~12 months per account).
             status
             platform
             profile_id
@@ -8173,6 +8175,7 @@ def register_generated_tools(mcp, _get_client):
             response = client.posts.list_posts(
                 page=page,
                 limit=limit,
+                source=source,
                 status=status,
                 platform=platform,
                 profile_id=profile_id,

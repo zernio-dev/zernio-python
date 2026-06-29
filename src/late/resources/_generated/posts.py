@@ -61,6 +61,7 @@ class PostsResource:
         *,
         page: int | None = 1,
         limit: int | None = 10,
+        source: str | None = "zernio",
         status: str | None = None,
         platform: str | None = None,
         profile_id: str | None = None,
@@ -76,6 +77,7 @@ class PostsResource:
         params = self._build_params(
             page=page,
             limit=limit,
+            source=source,
             status=status,
             platform=platform,
             profile_id=profile_id,
@@ -256,6 +258,7 @@ class PostsResource:
         *,
         page: int | None = 1,
         limit: int | None = 10,
+        source: str | None = "zernio",
         status: str | None = None,
         platform: str | None = None,
         profile_id: str | None = None,
@@ -271,6 +274,7 @@ class PostsResource:
         params = self._build_params(
             page=page,
             limit=limit,
+            source=source,
             status=status,
             platform=platform,
             profile_id=profile_id,
