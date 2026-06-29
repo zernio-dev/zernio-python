@@ -7206,7 +7206,7 @@ paths:
     get:
       operationId: getYouTubeChannelInsights
       tags: [Analytics]
-      summary: Get YouTube channel-level insights
+      summary: Get YouTube channel insights
       description: |
         Returns channel-scoped aggregate metrics from YouTube Analytics API v2. Saves you
         from looping /v1/analytics/youtube/daily-views over every video when you only need
@@ -7289,7 +7289,7 @@ paths:
     get:
       operationId: getLinkedInOrgAggregateAnalytics
       tags: [Analytics]
-      summary: Get LinkedIn organization page aggregate analytics
+      summary: Get LinkedIn org analytics
       description: |
         Returns aggregate analytics for a LinkedIn organization page. Parallel to
         /v1/accounts/{id}/linkedin-aggregate-analytics (which handles personal accounts only).
@@ -9085,7 +9085,7 @@ paths:
     get:
       operationId: getInboxHeatmap
       tags: [Inbox Analytics]
-      summary: Get inbox day-of-week × hour-of-day heatmap
+      summary: Get day × hour heatmap
       description: |
         Day-of-week × hour-of-day breakdown of inbox messages. Buckets are
         sparse — only cells with at least one event are returned; clients
@@ -9392,7 +9392,7 @@ paths:
     get:
       operationId: listInboxConversationAnalytics
       tags: [Inbox Analytics]
-      summary: List conversations with inbox analytics
+      summary: List conversation analytics
       description: |
         Per-conversation listing with per-row totals + first/last message
         timestamps. The inbox analog of GET /v1/analytics (posts listing) —
@@ -9497,7 +9497,7 @@ paths:
     get:
       operationId: getInboxConversationAnalytics
       tags: [Inbox Analytics]
-      summary: Get analytics for a single conversation
+      summary: Get conversation analytics
       description: |
         Per-conversation inbox analytics. The inbox analog of
         /v1/analytics/post-timeline — one conversation, daily totals,
@@ -11799,7 +11799,7 @@ paths:
     patch:
       operationId: moveAccountToProfile
       tags: [Accounts]
-      summary: Move account to a different profile
+      summary: Move account to another profile
       description: |
         Moves a connected social account to a different profile owned by the same
         user. The target profile must belong to the same user as the account.
@@ -12570,7 +12570,7 @@ paths:
     patch:
       operationId: configureTikTokAdsBrandIdentity
       tags: [Connect]
-      summary: Configure TikTok Ads Brand Identity
+      summary: Set TikTok brand identity
       description: |
         Set or update the Brand Identity (display name + avatar) for a
         `tiktokads` SocialAccount. TikTok requires every ad to carry an
@@ -15681,7 +15681,7 @@ paths:
     get:
       operationId: listWhatsAppPhoneNumbers
       tags: [Connect]
-      summary: List WhatsApp phone numbers for selection
+      summary: List numbers for selection
       description: |
         Fetch the WhatsApp phone numbers available across the user's WhatsApp Business Accounts (WABAs) after a headless OAuth flow.
 
@@ -15754,7 +15754,7 @@ paths:
     post:
       operationId: completeWhatsAppPhoneSelection
       tags: [Connect]
-      summary: Complete WhatsApp phone number selection
+      summary: Complete number selection
       description: |
         Bind a specific WhatsApp phone number to the Zernio profile after the user picks one from `listWhatsAppPhoneNumbers`. Exchanges the short-lived OAuth token for a long-lived token, subscribes the WABA to webhooks, and creates the SocialAccount.
       security:
@@ -17774,7 +17774,7 @@ paths:
     get:
       operationId: listDiscordPinnedMessages
       tags: [Discord]
-      summary: List pinned messages in a Discord channel
+      summary: List pinned messages
       description: |
         Returns the channel's pinned messages, sorted most-recently-pinned
         first. Discord caps a channel at 50 pinned messages and returns the
@@ -18994,7 +18994,7 @@ paths:
           description: Inbox addon required
     post:
       operationId: createInboxConversation
-      summary: Create conversation (send a WhatsApp template)
+      summary: Create conversation
       description: |
         Initiate a new direct message conversation with a specified user. If a conversation already exists with the recipient, the message is added to the existing thread.
 
@@ -21935,7 +21935,7 @@ paths:
     get:
       operationId: getWhatsAppCallPermissions
       tags: [WhatsApp Calling]
-      summary: Check call permission for a consumer
+      summary: Check call permission
       description: |
         Returns the permission state and the list of available actions for
         a given consumer wa_id (e.g. `start_call`, `send_call_permission_request`).
@@ -22117,7 +22117,7 @@ paths:
     get:
       operationId: getWhatsAppCallEstimate
       tags: [WhatsApp Calling]
-      summary: Estimate per-minute cost for a destination
+      summary: Estimate per-minute cost
       description: |
         Returns a zero-markup estimated cost for an outbound call to the
         given destination, broken down by Meta + Telnyx + recording line
@@ -22682,7 +22682,7 @@ paths:
     post:
       operationId: createWhatsAppDataset
       tags: [WhatsApp]
-      summary: Provision CTWA conversions dataset
+      summary: Provision CTWA dataset
       description: |
         Creates (or fetches, if one already exists) the Meta dataset that
         Click-to-WhatsApp ad events are reported against via the Conversions
@@ -22983,7 +22983,7 @@ paths:
     get:
       operationId: searchAvailableWhatsAppNumbers
       tags: [WhatsApp Phone Numbers]
-      summary: Search available numbers to purchase
+      summary: Search available numbers
       description: |
         Search the provider's inventory for numbers available to purchase in a
         country (default US). Optional filters narrow the results. The country
@@ -23020,7 +23020,7 @@ paths:
     get:
       operationId: checkWhatsAppNumberAvailability
       tags: [WhatsApp Phone Numbers]
-      summary: Check a country's availability + address constraint
+      summary: Check country availability
       description: |
         Pre-purchase check, so you can warn BEFORE a customer invests in KYC
         (regulated review is async, 1-3 days). Tells you whether we have
@@ -23058,7 +23058,7 @@ paths:
     get:
       operationId: getWhatsAppNumberKycForm
       tags: [WhatsApp Phone Numbers]
-      summary: Get regulated-number KYC form spec
+      summary: Get KYC form spec
       description: |
         For a Tier 3/4 country, the fields the end customer must provide (Telnyx
         regulatory requirements) before a number can be ordered: text, date,
@@ -23122,7 +23122,7 @@ paths:
     post:
       operationId: submitWhatsAppNumberKyc
       tags: [WhatsApp Phone Numbers]
-      summary: Submit regulated-number KYC
+      summary: Submit KYC
       description: |
         Submit the end customer's KYC (textual values, uploaded documents,
         address) for a Tier 3/4 country. Documents are streamed straight to the
@@ -23225,7 +23225,7 @@ paths:
     post:
       operationId: uploadWhatsAppNumberKycDocument
       tags: [WhatsApp Phone Numbers]
-      summary: Upload a single regulated-number KYC document
+      summary: Upload a KYC document
       description: |
         Upload ONE document and get back its provider document id, to reference
         from POST /v1/whatsapp/phone-numbers/kyc via `documents[].documentId`.
@@ -23258,7 +23258,7 @@ paths:
     post:
       operationId: validateWhatsAppNumberKycAddress
       tags: [WhatsApp Phone Numbers]
-      summary: Pre-validate a regulated-number KYC address (Tier 4)
+      summary: Pre-validate KYC address
       description: |
         Optional early check for the address step of a Tier 4 (end-user identity)
         registration: validates a postal address for deliverability BEFORE the full
@@ -23386,7 +23386,7 @@ paths:
     get:
       operationId: getWhatsAppNumberRemediation
       tags: [WhatsApp Phone Numbers]
-      summary: Get the declined requirements to fix
+      summary: Get declined requirements
       description: |
         For a number in `regulatory_declined`, returns ONLY the requirements the
         reviewer flagged declined, as a form spec (same shape as the KYC form GET).
@@ -23415,7 +23415,7 @@ paths:
     post:
       operationId: remediateWhatsAppNumber
       tags: [WhatsApp Phone Numbers]
-      summary: Fix a declined number and re-submit
+      summary: Resubmit a declined number
       description: |
         Submit corrected values/documents for the declined requirement(s). We
         PATCH them onto the SAME requirement group and re-submit it for approval;
@@ -23586,7 +23586,7 @@ paths:
     post:
       operationId: createWhatsAppSandboxSession
       tags: [WhatsApp Sandbox]
-      summary: Start a sandbox activation for a phone
+      summary: Start a sandbox activation
       description: |
         Creates (or refreshes) a pending sandbox session for the given phone and
         immediately fires the verified sandbox template from the shared sandbox
@@ -25971,7 +25971,7 @@ paths:
   /v1/workflows/{workflowId}/versions/{version}/restore:
     post:
       operationId: restoreWorkflowVersion
-      summary: Restore a previous workflow version
+      summary: Restore a workflow version
       description: >
         Replace the current graph with the named version's snapshot. Before the swap, the current
         graph is itself snapshotted as a new version, so a restore is reversible. The workflow must
@@ -26843,7 +26843,7 @@ paths:
     put:
       operationId: updateAdCampaign
       tags: [Ad Campaigns]
-      summary: Update a campaign (budget and/or bid strategy)
+      summary: Update a campaign
       description: |
         Campaign-level edits. At least one of `budget` or `bidStrategy` is required.
 
@@ -27062,7 +27062,7 @@ paths:
     put:
       operationId: updateAdSet
       tags: [Ad Campaigns]
-      summary: Update an ad set (budget, status, and/or bid strategy)
+      summary: Update an ad set
       description: |
         Ad-set-level writes. Use this for ABO budget updates, ad-set-scoped
         pause/resume, and bid-strategy edits. At least one of `budget`,
@@ -27223,7 +27223,7 @@ paths:
     get:
       operationId: getAdsTimeline
       tags: [Ad Campaigns]
-      summary: Get daily aggregate ad metrics for an account
+      summary: Get daily account metrics
       description: |
         Returns daily aggregate metrics across all ads in a SocialAccount as a single
         time series — one row per calendar day in the requested range. Use this for
@@ -27486,7 +27486,7 @@ paths:
     get:
       operationId: getAdTrackingTags
       tags: [Ads]
-      summary: Read an ad's click-URL tracking tags
+      summary: Get ad tracking tags
       description: |
         Unified read of the platform's native click-URL tracking params.
         - Meta (facebook/instagram): the creative's `url_tags` (and template_url_spec).
@@ -27520,7 +27520,7 @@ paths:
     patch:
       operationId: updateAdTrackingTags
       tags: [Ads]
-      summary: Set/update an ad's click-URL tracking tags
+      summary: Set ad tracking tags
       description: |
         Unified update. Send only the fields for the ad's platform:
         - Meta: `urlTags` (array of {key,value}). Meta creatives are immutable, so this rebuilds the
@@ -28563,7 +28563,7 @@ paths:
     get:
       operationId: listLeads
       tags: [Ads]
-      summary: List submitted leads (cross-form CRM view)
+      summary: List submitted leads
       description: >
         Returns persisted Meta Lead Gen leads for your team, newest-first, with
         keyset pagination on `cursor`. Leads are ingested in real time from the
@@ -28612,7 +28612,7 @@ paths:
     get:
       operationId: listLeadForms
       tags: [Ads]
-      summary: List Lead Gen (Instant) forms
+      summary: List lead forms
       description: Lists the Lead Gen forms owned by the connected Facebook Page. Requires the Ads add-on.
       parameters:
         - { name: accountId, in: query, required: true, schema: { type: string }, description: Connected facebook account id. }
@@ -28634,7 +28634,7 @@ paths:
     post:
       operationId: createLeadForm
       tags: [Ads]
-      summary: Create a Lead Gen (Instant) form
+      summary: Create a lead form
       description: >
         Creates a Lead Gen form on the connected Facebook Page (POST
         /{page-id}/leadgen_forms). NOT idempotent — a retry creates a second
@@ -28689,7 +28689,7 @@ paths:
     get:
       operationId: getLeadForm
       tags: [Ads]
-      summary: Get a single Lead Gen form
+      summary: Get a lead form
       parameters:
         - { name: formId, in: path, required: true, schema: { type: string } }
         - { name: accountId, in: query, required: true, schema: { type: string } }
@@ -28703,7 +28703,7 @@ paths:
     delete:
       operationId: archiveLeadForm
       tags: [Ads]
-      summary: Archive a Lead Gen form
+      summary: Archive a lead form
       description: Meta has no hard delete for forms; this archives the form (status=ARCHIVED).
       parameters:
         - { name: formId, in: path, required: true, schema: { type: string } }
@@ -28757,7 +28757,7 @@ paths:
     post:
       operationId: createTestLead
       tags: [Ads]
-      summary: Create a synthetic test lead
+      summary: Create a test lead
       description: >
         Submits a test lead against the form (POST /{form-id}/test_leads) to
         exercise retrieval without waiting for real ad impressions. Meta allows
@@ -28795,7 +28795,7 @@ paths:
       operationId: searchAdInterests
       deprecated: true
       tags: [Ads]
-      summary: Search targeting interests (deprecated)
+      summary: Search targeting interests
       description: |
         Deprecated alias for `GET /v1/ads/targeting/search?dimension=interest`. Kept for
         backward compatibility, it returns the legacy `{ interests: [...] }` shape rather
@@ -29206,7 +29206,7 @@ paths:
     get:
       operationId: getConversionsQuality
       tags: [Ads]
-      summary: Read Event Match Quality + coverage for a Meta pixel
+      summary: Get Event Match Quality
       description: |
         Reads Meta Event Match Quality (EMQ) and pixel↔CAPI event coverage for a
         pixel/dataset, live from Meta's Dataset Quality API. Web events only (a
@@ -29246,7 +29246,7 @@ paths:
     post:
       operationId: sendConversions
       tags: [Ads]
-      summary: Send conversion events to an ad platform
+      summary: Send conversion events
       description: |
         Relay one or more conversion events to the target ad platform's native Conversions API.
         Platform is inferred from the provided `accountId`. Requires the Ads add-on.
@@ -29377,7 +29377,7 @@ paths:
     post:
       operationId: adjustConversions
       tags: [Ads]
-      summary: Adjust already-uploaded conversions (Google only)
+      summary: Adjust uploaded conversions
       description: |
         Adjust conversions that were previously uploaded via `POST /v1/ads/conversions` —
         retract them, restate their value, or enhance them with first-party data. Requires
@@ -29497,7 +29497,7 @@ paths:
     get:
       operationId: listConversionDestinations
       tags: [Ads]
-      summary: List destinations for the Conversions API
+      summary: List conversion destinations
       description: |
         Returns the list of pixels (Meta), conversion actions (Google), or
         conversion rules (LinkedIn) accessible to the connected ads account.
@@ -29570,7 +29570,7 @@ paths:
     post:
       operationId: createConversionDestination
       tags: [Ads]
-      summary: Create a conversion destination (LinkedIn, Google Ads)
+      summary: Create a conversion destination
       description: |
         Create a new conversion destination on the platform. Supported for
         LinkedIn (conversion rule) and Google Ads (conversion action). Meta
@@ -29737,7 +29737,7 @@ paths:
     get:
       operationId: getConversionDestination
       tags: [Ads]
-      summary: Fetch a single conversion destination
+      summary: Get a conversion destination
       description: |
         LinkedIn-only today. Returns the full destination record for one
         conversion rule. The `adAccountId` query parameter is required because
@@ -29846,7 +29846,7 @@ paths:
     delete:
       operationId: deleteConversionDestination
       tags: [Ads]
-      summary: Soft-delete a conversion destination
+      summary: Delete a conversion destination
       description: |
         LinkedIn-only today. LinkedIn does not expose hard-delete on conversion
         rules — what their UI calls "delete" is the same `enabled: false` flip
@@ -29878,7 +29878,7 @@ paths:
     get:
       operationId: listConversionAssociations
       tags: [Ads]
-      summary: List campaigns associated with a conversion destination
+      summary: List associated campaigns
       description: |
         LinkedIn-only today. Returns the campaigns currently associated with
         this conversion rule. Note that auto-association on rule creation
@@ -29920,7 +29920,7 @@ paths:
     post:
       operationId: addConversionAssociations
       tags: [Ads]
-      summary: Associate campaigns with a conversion destination
+      summary: Associate campaigns
       description: |
         Associate one or more campaigns with this conversion rule. Returns a
         per-campaign success/failure result so callers can retry only the
@@ -29980,7 +29980,7 @@ paths:
     delete:
       operationId: removeConversionAssociations
       tags: [Ads]
-      summary: Remove campaign↔conversion associations
+      summary: Remove associated campaigns
       description: |
         Remove one or more campaign associations from this conversion rule.
         Pass `adAccountId` and `campaignIds` as query parameters
@@ -30032,7 +30032,7 @@ paths:
     get:
       operationId: getConversionMetrics
       tags: [Ads]
-      summary: Fetch attribution metrics for a conversion destination
+      summary: Get attribution metrics
       description: |
         LinkedIn-only today. Returns conversion-attribution metrics
         (`externalWebsiteConversions`, `externalWebsitePostClickConversions`,
@@ -30092,7 +30092,7 @@ paths:
     get:
       operationId: listWhatsAppConversions
       tags: [WhatsApp, Ads]
-      summary: List recent WhatsApp conversion events
+      summary: List conversion events
       description: |
         Returns the most recent conversion events sent through
         `POST /v1/whatsapp/conversions` for the given WhatsApp account.
@@ -30332,7 +30332,7 @@ paths:
     post:
       operationId: createCtwaAd
       tags: [Ads]
-      summary: Create Click-to-WhatsApp ad(s)
+      summary: Create Click-to-WhatsApp ad
       description: |-
         Creates one or more Click-to-WhatsApp (CTWA) ads on Meta under a single campaign and ad set. When tapped, each ad opens a WhatsApp conversation with the business attached to the supplied Facebook Page. The full hierarchy (campaign, ad set, creative(s), ad(s)) is created and activated in one call. The CTA is locked to WHATSAPP_MESSAGE and the destination is hard-coded to api.whatsapp.com/send; Meta resolves the actual WhatsApp number from the Page-to-WA pairing configured in Page settings or Business Manager.
 
@@ -30666,7 +30666,7 @@ paths:
     get:
       operationId: listTrackingTags
       tags: [Tracking Tags]
-      summary: List tracking tags (Meta Pixels)
+      summary: List tracking tags
       description: |
         Returns the tracking tags (Meta Pixels) the connected ads account can
         see. Pass `?adAccountId=act_...` to scope the list to a single ad
@@ -30705,7 +30705,7 @@ paths:
     post:
       operationId: createTrackingTag
       tags: [Tracking Tags]
-      summary: Create a tracking tag (Meta Pixel)
+      summary: Create a tracking tag
       description: |
         Creates a Meta Pixel on the given ad account (`POST /act_{id}/adspixels`
         — `name` is the only input). Returns the created tag including its
@@ -30754,7 +30754,7 @@ paths:
     get:
       operationId: getTrackingTag
       tags: [Tracking Tags]
-      summary: Fetch a single tracking tag (Meta Pixel)
+      summary: Get a tracking tag
       description: |
         Returns the full tag record including the base-code `code` snippet,
         `lastFiredTime`, `ownerBusinessId`, `isUnavailable`, etc. Meta only
@@ -30782,7 +30782,7 @@ paths:
     patch:
       operationId: updateTrackingTag
       tags: [Tracking Tags]
-      summary: Update a tracking tag (Meta Pixel)
+      summary: Update a tracking tag
       description: |
         Partial-update a pixel. Whitelisted fields: `name` (rename),
         `enableAutomaticMatching`, `automaticMatchingFields`,
@@ -30847,7 +30847,7 @@ paths:
     get:
       operationId: listTrackingTagSharedAccounts
       tags: [Tracking Tags]
-      summary: List ad accounts a tracking tag is shared with
+      summary: List accounts it is shared with
       description: Meta only (platform `metaads`); other platforms return 405.
       security:
         - bearerAuth: []
@@ -30874,7 +30874,7 @@ paths:
     post:
       operationId: addTrackingTagSharedAccount
       tags: [Tracking Tags]
-      summary: Share a tracking tag with an ad account
+      summary: Share with an ad account
       description: |
         Shares the pixel with another ad account so campaigns/audiences in that
         account can use it. Requires that you administer both the pixel's owning
@@ -30914,7 +30914,7 @@ paths:
     delete:
       operationId: removeTrackingTagSharedAccount
       tags: [Tracking Tags]
-      summary: Stop sharing a tracking tag with an ad account
+      summary: Stop sharing with an account
       description: |
         `adAccountId` may be passed as a query parameter (recommended) or as a
         JSON body field for clients that can send DELETE bodies. Meta only
@@ -30937,7 +30937,7 @@ paths:
     get:
       operationId: getTrackingTagStats
       tags: [Tracking Tags]
-      summary: Aggregated event stats for a tracking tag (Meta Pixel)
+      summary: Get aggregated event stats
       description: |
         Returns aggregated event counts for the pixel (`GET /{pixel_id}/stats`).
         Rows are passed through from Meta as-is — their shape depends on the

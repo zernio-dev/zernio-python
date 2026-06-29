@@ -57,7 +57,7 @@ class TrackingTagsResource:
     def list_tracking_tags(
         self, account_id: str, *, ad_account_id: str | None = None
     ) -> dict[str, Any]:
-        """List tracking tags (Meta Pixels)"""
+        """List tracking tags"""
         params = self._build_params(
             ad_account_id=ad_account_id,
         )
@@ -68,7 +68,7 @@ class TrackingTagsResource:
     def create_tracking_tag(
         self, account_id: str, ad_account_id: str, name: str
     ) -> dict[str, Any]:
-        """Create a tracking tag (Meta Pixel)"""
+        """Create a tracking tag"""
         payload = self._build_payload(
             ad_account_id=ad_account_id,
             name=name,
@@ -78,7 +78,7 @@ class TrackingTagsResource:
         )
 
     def get_tracking_tag(self, account_id: str, tag_id: str) -> dict[str, Any]:
-        """Fetch a single tracking tag (Meta Pixel)"""
+        """Get a tracking tag"""
         return self._client._get(f"/v1/accounts/{account_id}/tracking-tags/{tag_id}")
 
     def update_tracking_tag(
@@ -92,7 +92,7 @@ class TrackingTagsResource:
         first_party_cookie_status: str | None = None,
         data_use_setting: str | None = None,
     ) -> dict[str, Any]:
-        """Update a tracking tag (Meta Pixel)"""
+        """Update a tracking tag"""
         payload = self._build_payload(
             name=name,
             enable_automatic_matching=enable_automatic_matching,
@@ -107,7 +107,7 @@ class TrackingTagsResource:
     def list_tracking_tag_shared_accounts(
         self, account_id: str, tag_id: str
     ) -> dict[str, Any]:
-        """List ad accounts a tracking tag is shared with"""
+        """List accounts it is shared with"""
         return self._client._get(
             f"/v1/accounts/{account_id}/tracking-tags/{tag_id}/shared-accounts"
         )
@@ -115,7 +115,7 @@ class TrackingTagsResource:
     def add_tracking_tag_shared_account(
         self, account_id: str, tag_id: str, ad_account_id: str
     ) -> dict[str, Any]:
-        """Share a tracking tag with an ad account"""
+        """Share with an ad account"""
         payload = self._build_payload(
             ad_account_id=ad_account_id,
         )
@@ -127,7 +127,7 @@ class TrackingTagsResource:
     def remove_tracking_tag_shared_account(
         self, account_id: str, tag_id: str, *, ad_account_id: str | None = None
     ) -> dict[str, Any]:
-        """Stop sharing a tracking tag with an ad account"""
+        """Stop sharing with an account"""
         params = self._build_params(
             ad_account_id=ad_account_id,
         )
@@ -145,7 +145,7 @@ class TrackingTagsResource:
         start_time: int | None = None,
         end_time: int | None = None,
     ) -> dict[str, Any]:
-        """Aggregated event stats for a tracking tag (Meta Pixel)"""
+        """Get aggregated event stats"""
         params = self._build_params(
             aggregation=aggregation,
             start_time=start_time,
@@ -158,7 +158,7 @@ class TrackingTagsResource:
     async def alist_tracking_tags(
         self, account_id: str, *, ad_account_id: str | None = None
     ) -> dict[str, Any]:
-        """List tracking tags (Meta Pixels) (async)"""
+        """List tracking tags (async)"""
         params = self._build_params(
             ad_account_id=ad_account_id,
         )
@@ -169,7 +169,7 @@ class TrackingTagsResource:
     async def acreate_tracking_tag(
         self, account_id: str, ad_account_id: str, name: str
     ) -> dict[str, Any]:
-        """Create a tracking tag (Meta Pixel) (async)"""
+        """Create a tracking tag (async)"""
         payload = self._build_payload(
             ad_account_id=ad_account_id,
             name=name,
@@ -179,7 +179,7 @@ class TrackingTagsResource:
         )
 
     async def aget_tracking_tag(self, account_id: str, tag_id: str) -> dict[str, Any]:
-        """Fetch a single tracking tag (Meta Pixel) (async)"""
+        """Get a tracking tag (async)"""
         return await self._client._aget(
             f"/v1/accounts/{account_id}/tracking-tags/{tag_id}"
         )
@@ -195,7 +195,7 @@ class TrackingTagsResource:
         first_party_cookie_status: str | None = None,
         data_use_setting: str | None = None,
     ) -> dict[str, Any]:
-        """Update a tracking tag (Meta Pixel) (async)"""
+        """Update a tracking tag (async)"""
         payload = self._build_payload(
             name=name,
             enable_automatic_matching=enable_automatic_matching,
@@ -210,7 +210,7 @@ class TrackingTagsResource:
     async def alist_tracking_tag_shared_accounts(
         self, account_id: str, tag_id: str
     ) -> dict[str, Any]:
-        """List ad accounts a tracking tag is shared with (async)"""
+        """List accounts it is shared with (async)"""
         return await self._client._aget(
             f"/v1/accounts/{account_id}/tracking-tags/{tag_id}/shared-accounts"
         )
@@ -218,7 +218,7 @@ class TrackingTagsResource:
     async def aadd_tracking_tag_shared_account(
         self, account_id: str, tag_id: str, ad_account_id: str
     ) -> dict[str, Any]:
-        """Share a tracking tag with an ad account (async)"""
+        """Share with an ad account (async)"""
         payload = self._build_payload(
             ad_account_id=ad_account_id,
         )
@@ -230,7 +230,7 @@ class TrackingTagsResource:
     async def aremove_tracking_tag_shared_account(
         self, account_id: str, tag_id: str, *, ad_account_id: str | None = None
     ) -> dict[str, Any]:
-        """Stop sharing a tracking tag with an ad account (async)"""
+        """Stop sharing with an account (async)"""
         params = self._build_params(
             ad_account_id=ad_account_id,
         )
@@ -248,7 +248,7 @@ class TrackingTagsResource:
         start_time: int | None = None,
         end_time: int | None = None,
     ) -> dict[str, Any]:
-        """Aggregated event stats for a tracking tag (Meta Pixel) (async)"""
+        """Get aggregated event stats (async)"""
         params = self._build_params(
             aggregation=aggregation,
             start_time=start_time,

@@ -59,7 +59,7 @@ class WhatsappSandboxResource:
         return self._client._get("/v1/whatsapp/sandbox/sessions")
 
     def create_whats_app_sandbox_session(self, phone: str) -> dict[str, Any]:
-        """Start a sandbox activation for a phone"""
+        """Start a sandbox activation"""
         payload = self._build_payload(
             phone=phone,
         )
@@ -74,7 +74,7 @@ class WhatsappSandboxResource:
         return await self._client._aget("/v1/whatsapp/sandbox/sessions")
 
     async def acreate_whats_app_sandbox_session(self, phone: str) -> dict[str, Any]:
-        """Start a sandbox activation for a phone (async)"""
+        """Start a sandbox activation (async)"""
         payload = self._build_payload(
             phone=phone,
         )

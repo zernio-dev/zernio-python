@@ -106,7 +106,7 @@ class AdCampaignsResource:
         bid_strategy: Any | None = None,
         name: str | None = None,
     ) -> dict[str, Any]:
-        """Update a campaign (budget and/or bid strategy)"""
+        """Update a campaign"""
         payload = self._build_payload(
             platform=platform,
             budget=budget,
@@ -171,7 +171,7 @@ class AdCampaignsResource:
         bid_amount: float | None = None,
         roas_average_floor: float | None = None,
     ) -> dict[str, Any]:
-        """Update an ad set (budget, status, and/or bid strategy)"""
+        """Update an ad set"""
         payload = self._build_payload(
             platform=platform,
             budget=budget,
@@ -235,7 +235,7 @@ class AdCampaignsResource:
         to_date: str | None = None,
         platform: str | None = None,
     ) -> dict[str, Any]:
-        """Get daily aggregate ad metrics for an account"""
+        """Get daily account metrics"""
         params = self._build_params(
             account_id=account_id,
             ad_account_id=ad_account_id,
@@ -295,7 +295,7 @@ class AdCampaignsResource:
         bid_strategy: Any | None = None,
         name: str | None = None,
     ) -> dict[str, Any]:
-        """Update a campaign (budget and/or bid strategy) (async)"""
+        """Update a campaign (async)"""
         payload = self._build_payload(
             platform=platform,
             budget=budget,
@@ -364,7 +364,7 @@ class AdCampaignsResource:
         bid_amount: float | None = None,
         roas_average_floor: float | None = None,
     ) -> dict[str, Any]:
-        """Update an ad set (budget, status, and/or bid strategy) (async)"""
+        """Update an ad set (async)"""
         payload = self._build_payload(
             platform=platform,
             budget=budget,
@@ -430,7 +430,7 @@ class AdCampaignsResource:
         to_date: str | None = None,
         platform: str | None = None,
     ) -> dict[str, Any]:
-        """Get daily aggregate ad metrics for an account (async)"""
+        """Get daily account metrics (async)"""
         params = self._build_params(
             account_id=account_id,
             ad_account_id=ad_account_id,

@@ -106,7 +106,7 @@ class ConnectResource:
     def configure_tik_tok_ads_brand_identity(
         self, account_id: str, display_name: str, image_url: str
     ) -> dict[str, Any]:
-        """Configure TikTok Ads Brand Identity"""
+        """Set TikTok brand identity"""
         payload = self._build_payload(
             account_id=account_id,
             display_name=display_name,
@@ -322,7 +322,7 @@ class ConnectResource:
     def list_whats_app_phone_numbers(
         self, profile_id: str, temp_token: str, *, x_connect_token: str | None = None
     ) -> dict[str, Any]:
-        """List WhatsApp phone numbers for selection"""
+        """List numbers for selection"""
         params = self._build_params(
             profile_id=profile_id,
             temp_token=temp_token,
@@ -342,7 +342,7 @@ class ConnectResource:
         user_profile: dict[str, Any] | None = None,
         redirect_url: str | None = None,
     ) -> dict[str, Any]:
-        """Complete WhatsApp phone number selection"""
+        """Complete number selection"""
         payload = self._build_payload(
             profile_id=profile_id,
             phone_number_id=phone_number_id,
@@ -565,7 +565,7 @@ class ConnectResource:
     async def aconfigure_tik_tok_ads_brand_identity(
         self, account_id: str, display_name: str, image_url: str
     ) -> dict[str, Any]:
-        """Configure TikTok Ads Brand Identity (async)"""
+        """Set TikTok brand identity (async)"""
         payload = self._build_payload(
             account_id=account_id,
             display_name=display_name,
@@ -803,7 +803,7 @@ class ConnectResource:
     async def alist_whats_app_phone_numbers(
         self, profile_id: str, temp_token: str, *, x_connect_token: str | None = None
     ) -> dict[str, Any]:
-        """List WhatsApp phone numbers for selection (async)"""
+        """List numbers for selection (async)"""
         params = self._build_params(
             profile_id=profile_id,
             temp_token=temp_token,
@@ -823,7 +823,7 @@ class ConnectResource:
         user_profile: dict[str, Any] | None = None,
         redirect_url: str | None = None,
     ) -> dict[str, Any]:
-        """Complete WhatsApp phone number selection (async)"""
+        """Complete number selection (async)"""
         payload = self._build_payload(
             profile_id=profile_id,
             phone_number_id=phone_number_id,

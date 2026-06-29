@@ -86,7 +86,7 @@ class InboxAnalyticsResource:
         source: str | None = None,
         action: str | None = None,
     ) -> dict[str, Any]:
-        """Get inbox day-of-week × hour-of-day heatmap"""
+        """Get day × hour heatmap"""
         params = self._build_params(
             from_date=from_date,
             to_date=to_date,
@@ -171,7 +171,7 @@ class InboxAnalyticsResource:
         sort_by: str | None = "lastMessageAt",
         order: str | None = "desc",
     ) -> dict[str, Any]:
-        """List conversations with inbox analytics"""
+        """List conversation analytics"""
         params = self._build_params(
             from_date=from_date,
             to_date=to_date,
@@ -189,7 +189,7 @@ class InboxAnalyticsResource:
     def get_inbox_conversation_analytics(
         self, conversation_id: str, from_date: str, *, to_date: str | None = None
     ) -> dict[str, Any]:
-        """Get analytics for a single conversation"""
+        """Get conversation analytics"""
         params = self._build_params(
             from_date=from_date,
             to_date=to_date,
@@ -230,7 +230,7 @@ class InboxAnalyticsResource:
         source: str | None = None,
         action: str | None = None,
     ) -> dict[str, Any]:
-        """Get inbox day-of-week × hour-of-day heatmap (async)"""
+        """Get day × hour heatmap (async)"""
         params = self._build_params(
             from_date=from_date,
             to_date=to_date,
@@ -321,7 +321,7 @@ class InboxAnalyticsResource:
         sort_by: str | None = "lastMessageAt",
         order: str | None = "desc",
     ) -> dict[str, Any]:
-        """List conversations with inbox analytics (async)"""
+        """List conversation analytics (async)"""
         params = self._build_params(
             from_date=from_date,
             to_date=to_date,
@@ -341,7 +341,7 @@ class InboxAnalyticsResource:
     async def aget_inbox_conversation_analytics(
         self, conversation_id: str, from_date: str, *, to_date: str | None = None
     ) -> dict[str, Any]:
-        """Get analytics for a single conversation (async)"""
+        """Get conversation analytics (async)"""
         params = self._build_params(
             from_date=from_date,
             to_date=to_date,

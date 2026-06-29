@@ -96,7 +96,7 @@ class AnalyticsResource:
         until: str | None = None,
         metric_type: str | None = "total_value",
     ) -> dict[str, Any]:
-        """Get YouTube channel-level insights"""
+        """Get YouTube channel insights"""
         params = self._build_params(
             account_id=account_id,
             metrics=metrics,
@@ -117,7 +117,7 @@ class AnalyticsResource:
         until: str | None = None,
         metric_type: str | None = "total_value",
     ) -> dict[str, Any]:
-        """Get LinkedIn organization page aggregate analytics"""
+        """Get LinkedIn org analytics"""
         params = self._build_params(
             account_id=account_id,
             metrics=metrics,
@@ -491,7 +491,7 @@ class AnalyticsResource:
         until: str | None = None,
         metric_type: str | None = "total_value",
     ) -> dict[str, Any]:
-        """Get YouTube channel-level insights (async)"""
+        """Get YouTube channel insights (async)"""
         params = self._build_params(
             account_id=account_id,
             metrics=metrics,
@@ -512,7 +512,7 @@ class AnalyticsResource:
         until: str | None = None,
         metric_type: str | None = "total_value",
     ) -> dict[str, Any]:
-        """Get LinkedIn organization page aggregate analytics (async)"""
+        """Get LinkedIn org analytics (async)"""
         params = self._build_params(
             account_id=account_id,
             metrics=metrics,

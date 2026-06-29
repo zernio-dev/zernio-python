@@ -490,14 +490,14 @@ def register_generated_tools(mcp, _get_client):
 
     @mcp.tool(
         annotations=ToolAnnotations(
-            title="Move account to a different profile",
+            title="Move account to another profile",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
         )
     )
     def accounts_move_account_to_profile(account_id: str, profile_id: str) -> str:
-        """Move account to a different profile
+        """Move account to another profile
 
         Args:
             account_id: (required)
@@ -1408,7 +1408,7 @@ def register_generated_tools(mcp, _get_client):
 
     @mcp.tool(
         annotations=ToolAnnotations(
-            title="Update a campaign (budget and/or bid strategy)",
+            title="Update a campaign",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
@@ -1421,7 +1421,7 @@ def register_generated_tools(mcp, _get_client):
         bid_strategy: str | None = None,
         name: str | None = None,
     ) -> str:
-        """Update a campaign (budget and/or bid strategy)
+        """Update a campaign
 
         Args:
             campaign_id: Platform campaign ID (required)
@@ -1543,7 +1543,7 @@ def register_generated_tools(mcp, _get_client):
 
     @mcp.tool(
         annotations=ToolAnnotations(
-            title="Update an ad set (budget, status, and/or bid strategy)",
+            title="Update an ad set",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
@@ -1559,7 +1559,7 @@ def register_generated_tools(mcp, _get_client):
         bid_amount: float | None = None,
         roas_average_floor: float | None = None,
     ) -> str:
-        """Update an ad set (budget, status, and/or bid strategy)
+        """Update an ad set
 
             Args:
                 ad_set_id: Platform ad set ID (required)
@@ -1678,7 +1678,7 @@ def register_generated_tools(mcp, _get_client):
 
     @mcp.tool(
         annotations=ToolAnnotations(
-            title="Get daily aggregate ad metrics for an account",
+            title="Get daily account metrics",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
@@ -1691,7 +1691,7 @@ def register_generated_tools(mcp, _get_client):
         to_date: str | None = None,
         platform: str | None = None,
     ) -> str:
-        """Get daily aggregate ad metrics for an account
+        """Get daily account metrics
 
         Args:
             account_id: Social account ID. Sibling-expanded to its linked posting↔ads pair. (required)
@@ -1896,14 +1896,14 @@ def register_generated_tools(mcp, _get_client):
 
     @mcp.tool(
         annotations=ToolAnnotations(
-            title="Read an ad's click-URL tracking tags",
+            title="Get ad tracking tags",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
         )
     )
     def ads_get_ad_tracking_tags(ad_id: str) -> str:
-        """Read an ad's click-URL tracking tags
+        """Get ad tracking tags
 
         Args:
             ad_id: Ad id (hex _id, platformAdId, or effective story/media id). (required)"""
@@ -1916,7 +1916,7 @@ def register_generated_tools(mcp, _get_client):
 
     @mcp.tool(
         annotations=ToolAnnotations(
-            title="Set/update an ad's click-URL tracking tags",
+            title="Set ad tracking tags",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
@@ -1931,7 +1931,7 @@ def register_generated_tools(mcp, _get_client):
         dynamic_value_parameters: dict[str, Any] | None = None,
         custom_value_parameters: dict[str, Any] | None = None,
     ) -> str:
-        """Set/update an ad's click-URL tracking tags
+        """Set ad tracking tags
 
         Args:
             ad_id: (required)
@@ -2519,7 +2519,7 @@ def register_generated_tools(mcp, _get_client):
 
     @mcp.tool(
         annotations=ToolAnnotations(
-            title="List submitted leads (cross-form CRM view)",
+            title="List submitted leads",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
@@ -2532,7 +2532,7 @@ def register_generated_tools(mcp, _get_client):
         since: int | None = None,
         cursor: str | None = None,
     ) -> str:
-        """List submitted leads (cross-form CRM view)
+        """List submitted leads
 
         Args:
             form_id: Filter to a single lead form.
@@ -2555,7 +2555,7 @@ def register_generated_tools(mcp, _get_client):
 
     @mcp.tool(
         annotations=ToolAnnotations(
-            title="List Lead Gen (Instant) forms",
+            title="List lead forms",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
@@ -2564,7 +2564,7 @@ def register_generated_tools(mcp, _get_client):
     def ads_list_lead_forms(
         account_id: str, limit: int = 25, cursor: str | None = None
     ) -> str:
-        """List Lead Gen (Instant) forms
+        """List lead forms
 
         Args:
             account_id: Connected facebook account id. (required)
@@ -2581,7 +2581,7 @@ def register_generated_tools(mcp, _get_client):
 
     @mcp.tool(
         annotations=ToolAnnotations(
-            title="Create a Lead Gen (Instant) form",
+            title="Create a lead form",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
@@ -2602,7 +2602,7 @@ def register_generated_tools(mcp, _get_client):
         thank_you_website_url: str | None = None,
         is_optimized_for_quality: bool | None = None,
     ) -> str:
-        """Create a Lead Gen (Instant) form
+        """Create a lead form
 
         Args:
             account_id: (required)
@@ -2641,14 +2641,14 @@ def register_generated_tools(mcp, _get_client):
 
     @mcp.tool(
         annotations=ToolAnnotations(
-            title="Get a single Lead Gen form",
+            title="Get a lead form",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
         )
     )
     def ads_get_lead_form(form_id: str, account_id: str) -> str:
-        """Get a single Lead Gen form
+        """Get a lead form
 
         Args:
             form_id: (required)
@@ -2662,14 +2662,14 @@ def register_generated_tools(mcp, _get_client):
 
     @mcp.tool(
         annotations=ToolAnnotations(
-            title="Archive a Lead Gen form",
+            title="Archive a lead form",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
         )
     )
     def ads_archive_lead_form(form_id: str, account_id: str) -> str:
-        """Archive a Lead Gen form
+        """Archive a lead form
 
         Args:
             form_id: (required)
@@ -2721,7 +2721,7 @@ def register_generated_tools(mcp, _get_client):
 
     @mcp.tool(
         annotations=ToolAnnotations(
-            title="Create a synthetic test lead",
+            title="Create a test lead",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
@@ -2730,7 +2730,7 @@ def register_generated_tools(mcp, _get_client):
     def ads_create_test_lead(
         form_id: str, account_id: str, field_data: list[dict[str, Any]] | None
     ) -> str:
-        """Create a synthetic test lead
+        """Create a test lead
 
         Args:
             form_id: (required)
@@ -2747,14 +2747,14 @@ def register_generated_tools(mcp, _get_client):
 
     @mcp.tool(
         annotations=ToolAnnotations(
-            title="Search targeting interests (deprecated)",
+            title="Search targeting interests",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
         )
     )
     def ads_search_ad_interests(q: str, account_id: str) -> str:
-        """Search targeting interests (deprecated)
+        """Search targeting interests
 
         Args:
             q: Search query (required)
@@ -2888,14 +2888,14 @@ def register_generated_tools(mcp, _get_client):
 
     @mcp.tool(
         annotations=ToolAnnotations(
-            title="Read Event Match Quality + coverage for a Meta pixel",
+            title="Get Event Match Quality",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
         )
     )
     def ads_get_conversions_quality(account_id: str, destination_id: str) -> str:
-        """Read Event Match Quality + coverage for a Meta pixel
+        """Get Event Match Quality
 
         Args:
             account_id: SocialAccount _id (must be a metaads account). (required)
@@ -2911,7 +2911,7 @@ def register_generated_tools(mcp, _get_client):
 
     @mcp.tool(
         annotations=ToolAnnotations(
-            title="Send conversion events to an ad platform",
+            title="Send conversion events",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
@@ -2924,7 +2924,7 @@ def register_generated_tools(mcp, _get_client):
         test_code: str | None = None,
         consent: dict[str, Any] | None = None,
     ) -> str:
-        """Send conversion events to an ad platform
+        """Send conversion events
 
             Args:
                 account_id: SocialAccount ID (metaads, googleads, linkedinads, or tiktokads). (required)
@@ -2953,7 +2953,7 @@ def register_generated_tools(mcp, _get_client):
 
     @mcp.tool(
         annotations=ToolAnnotations(
-            title="Adjust already-uploaded conversions (Google only)",
+            title="Adjust uploaded conversions",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
@@ -2962,7 +2962,7 @@ def register_generated_tools(mcp, _get_client):
     def ads_adjust_conversions(
         account_id: str, destination_id: str, adjustments: list[dict[str, Any]] | None
     ) -> str:
-        """Adjust already-uploaded conversions (Google only)
+        """Adjust uploaded conversions
 
         Args:
             account_id: SocialAccount ID. Must be a `googleads` account. (required)
@@ -2981,14 +2981,14 @@ def register_generated_tools(mcp, _get_client):
 
     @mcp.tool(
         annotations=ToolAnnotations(
-            title="List destinations for the Conversions API",
+            title="List conversion destinations",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
         )
     )
     def ads_list_conversion_destinations(account_id: str) -> str:
-        """List destinations for the Conversions API
+        """List conversion destinations
 
         Args:
             account_id: SocialAccount ID (metaads, googleads, linkedinads, or tiktokads). (required)"""
@@ -3001,7 +3001,7 @@ def register_generated_tools(mcp, _get_client):
 
     @mcp.tool(
         annotations=ToolAnnotations(
-            title="Create a conversion destination (LinkedIn, Google Ads)",
+            title="Create a conversion destination",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
@@ -3021,7 +3021,7 @@ def register_generated_tools(mcp, _get_client):
         counting_type: str | None = None,
         primary_for_goal: bool | None = None,
     ) -> str:
-        """Create a conversion destination (LinkedIn, Google Ads)
+        """Create a conversion destination
 
             Args:
                 account_id: SocialAccount ID (linkedinads or googleads). (required)
@@ -3092,7 +3092,7 @@ def register_generated_tools(mcp, _get_client):
 
     @mcp.tool(
         annotations=ToolAnnotations(
-            title="Fetch a single conversion destination",
+            title="Get a conversion destination",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
@@ -3101,7 +3101,7 @@ def register_generated_tools(mcp, _get_client):
     def ads_get_conversion_destination(
         account_id: str, destination_id: str, ad_account_id: str
     ) -> str:
-        """Fetch a single conversion destination
+        """Get a conversion destination
 
         Args:
             account_id: (required)
@@ -3174,7 +3174,7 @@ def register_generated_tools(mcp, _get_client):
 
     @mcp.tool(
         annotations=ToolAnnotations(
-            title="Soft-delete a conversion destination",
+            title="Delete a conversion destination",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
@@ -3183,7 +3183,7 @@ def register_generated_tools(mcp, _get_client):
     def ads_delete_conversion_destination(
         account_id: str, destination_id: str, ad_account_id: str | None = None
     ) -> str:
-        """Soft-delete a conversion destination
+        """Delete a conversion destination
 
         Args:
             account_id: (required)
@@ -3202,7 +3202,7 @@ def register_generated_tools(mcp, _get_client):
 
     @mcp.tool(
         annotations=ToolAnnotations(
-            title="List campaigns associated with a conversion destination",
+            title="List associated campaigns",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
@@ -3211,7 +3211,7 @@ def register_generated_tools(mcp, _get_client):
     def ads_list_conversion_associations(
         account_id: str, destination_id: str, ad_account_id: str
     ) -> str:
-        """List campaigns associated with a conversion destination
+        """List associated campaigns
 
         Args:
             account_id: (required)
@@ -3230,7 +3230,7 @@ def register_generated_tools(mcp, _get_client):
 
     @mcp.tool(
         annotations=ToolAnnotations(
-            title="Associate campaigns with a conversion destination",
+            title="Associate campaigns",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
@@ -3242,7 +3242,7 @@ def register_generated_tools(mcp, _get_client):
         ad_account_id: str,
         campaign_ids: list[str] | None,
     ) -> str:
-        """Associate campaigns with a conversion destination
+        """Associate campaigns
 
         Args:
             account_id: (required)
@@ -3263,7 +3263,7 @@ def register_generated_tools(mcp, _get_client):
 
     @mcp.tool(
         annotations=ToolAnnotations(
-            title="Remove campaign↔conversion associations",
+            title="Remove associated campaigns",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
@@ -3272,7 +3272,7 @@ def register_generated_tools(mcp, _get_client):
     def ads_remove_conversion_associations(
         account_id: str, destination_id: str, ad_account_id: str, campaign_ids: str
     ) -> str:
-        """Remove campaign↔conversion associations
+        """Remove associated campaigns
 
         Args:
             account_id: (required)
@@ -3293,7 +3293,7 @@ def register_generated_tools(mcp, _get_client):
 
     @mcp.tool(
         annotations=ToolAnnotations(
-            title="Fetch attribution metrics for a conversion destination",
+            title="Get attribution metrics",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
@@ -3307,7 +3307,7 @@ def register_generated_tools(mcp, _get_client):
         end_date: str | None = None,
         granularity: str = "DAILY",
     ) -> str:
-        """Fetch attribution metrics for a conversion destination
+        """Get attribution metrics
 
         Args:
             account_id: (required)
@@ -3332,7 +3332,7 @@ def register_generated_tools(mcp, _get_client):
 
     @mcp.tool(
         annotations=ToolAnnotations(
-            title="Create Click-to-WhatsApp ad(s)",
+            title="Create Click-to-WhatsApp ad",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
@@ -3369,7 +3369,7 @@ def register_generated_tools(mcp, _get_client):
         dsa_beneficiary: str | None = None,
         dsa_payor: str | None = None,
     ) -> str:
-        """Create Click-to-WhatsApp ad(s)
+        """Create Click-to-WhatsApp ad
 
             Args:
                 account_id: Facebook or Instagram SocialAccount ID. (required)
@@ -3546,7 +3546,7 @@ def register_generated_tools(mcp, _get_client):
 
     @mcp.tool(
         annotations=ToolAnnotations(
-            title="Get YouTube channel-level insights",
+            title="Get YouTube channel insights",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
@@ -3559,7 +3559,7 @@ def register_generated_tools(mcp, _get_client):
         until: str | None = None,
         metric_type: str = "total_value",
     ) -> str:
-        """Get YouTube channel-level insights
+        """Get YouTube channel insights
 
             Args:
                 account_id: The Zernio SocialAccount ID for the YouTube account. (required)
@@ -3597,7 +3597,7 @@ def register_generated_tools(mcp, _get_client):
 
     @mcp.tool(
         annotations=ToolAnnotations(
-            title="Get LinkedIn organization page aggregate analytics",
+            title="Get LinkedIn org analytics",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
@@ -3610,7 +3610,7 @@ def register_generated_tools(mcp, _get_client):
         until: str | None = None,
         metric_type: str = "total_value",
     ) -> str:
-        """Get LinkedIn organization page aggregate analytics
+        """Get LinkedIn org analytics
 
             Args:
                 account_id: The Zernio SocialAccount ID for the LinkedIn organization account. (required)
@@ -5301,7 +5301,7 @@ def register_generated_tools(mcp, _get_client):
 
     @mcp.tool(
         annotations=ToolAnnotations(
-            title="Configure TikTok Ads Brand Identity",
+            title="Set TikTok brand identity",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
@@ -5310,7 +5310,7 @@ def register_generated_tools(mcp, _get_client):
     def connect_configure_tik_tok_ads_brand_identity(
         account_id: str, display_name: str, image_url: str
     ) -> str:
-        """Configure TikTok Ads Brand Identity
+        """Set TikTok brand identity
 
         Args:
             account_id: SocialAccount ID of the `tiktokads` account. (required)
@@ -5735,14 +5735,14 @@ def register_generated_tools(mcp, _get_client):
 
     @mcp.tool(
         annotations=ToolAnnotations(
-            title="List WhatsApp phone numbers for selection",
+            title="List numbers for selection",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
         )
     )
     def connect_list_whats_app_phone_numbers(profile_id: str, temp_token: str) -> str:
-        """List WhatsApp phone numbers for selection
+        """List numbers for selection
 
         Args:
             profile_id: The Zernio profile ID from the headless redirect (required)
@@ -5758,7 +5758,7 @@ def register_generated_tools(mcp, _get_client):
 
     @mcp.tool(
         annotations=ToolAnnotations(
-            title="Complete WhatsApp phone number selection",
+            title="Complete number selection",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
@@ -5772,7 +5772,7 @@ def register_generated_tools(mcp, _get_client):
         user_profile: dict[str, Any] | None = None,
         redirect_url: str | None = None,
     ) -> str:
-        """Complete WhatsApp phone number selection
+        """Complete number selection
 
         Args:
             profile_id: The Zernio profile ID (required)
@@ -6788,14 +6788,14 @@ def register_generated_tools(mcp, _get_client):
 
     @mcp.tool(
         annotations=ToolAnnotations(
-            title="List pinned messages in a Discord channel",
+            title="List pinned messages",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
         )
     )
     def discord_list_discord_pinned_messages(channel_id: str, account_id: str) -> str:
-        """List pinned messages in a Discord channel
+        """List pinned messages
 
         Args:
             channel_id: Discord channel snowflake. (required)
@@ -7271,7 +7271,7 @@ def register_generated_tools(mcp, _get_client):
 
     @mcp.tool(
         annotations=ToolAnnotations(
-            title="Get inbox day-of-week × hour-of-day heatmap",
+            title="Get day × hour heatmap",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
@@ -7286,7 +7286,7 @@ def register_generated_tools(mcp, _get_client):
         source: str | None = None,
         action: str | None = None,
     ) -> str:
-        """Get inbox day-of-week × hour-of-day heatmap
+        """Get day × hour heatmap
 
         Args:
             from_date: (required)
@@ -7424,7 +7424,7 @@ def register_generated_tools(mcp, _get_client):
 
     @mcp.tool(
         annotations=ToolAnnotations(
-            title="List conversations with inbox analytics",
+            title="List conversation analytics",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
@@ -7442,7 +7442,7 @@ def register_generated_tools(mcp, _get_client):
         sort_by: str = "lastMessageAt",
         order: str = "desc",
     ) -> str:
-        """List conversations with inbox analytics
+        """List conversation analytics
 
         Args:
             from_date: (required)
@@ -7475,7 +7475,7 @@ def register_generated_tools(mcp, _get_client):
 
     @mcp.tool(
         annotations=ToolAnnotations(
-            title="Get analytics for a single conversation",
+            title="Get conversation analytics",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
@@ -7484,7 +7484,7 @@ def register_generated_tools(mcp, _get_client):
     def inbox_analytics_get_inbox_conversation_analytics(
         conversation_id: str, from_date: str, to_date: str | None = None
     ) -> str:
-        """Get analytics for a single conversation
+        """Get conversation analytics
 
         Args:
             conversation_id: Mongo _id or platformConversationId. (required)
@@ -7697,7 +7697,7 @@ def register_generated_tools(mcp, _get_client):
 
     @mcp.tool(
         annotations=ToolAnnotations(
-            title="Create conversation (send a WhatsApp template)",
+            title="Create conversation",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
@@ -7713,7 +7713,7 @@ def register_generated_tools(mcp, _get_client):
         template_language: str | None = None,
         template_params: list[str] | None = None,
     ) -> str:
-        """Create conversation (send a WhatsApp template)
+        """Create conversation
 
         Args:
             account_id: The social account ID to send from (required)
@@ -9286,7 +9286,7 @@ def register_generated_tools(mcp, _get_client):
 
     @mcp.tool(
         annotations=ToolAnnotations(
-            title="List tracking tags (Meta Pixels)",
+            title="List tracking tags",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
@@ -9295,7 +9295,7 @@ def register_generated_tools(mcp, _get_client):
     def tracking_tags_list_tracking_tags(
         account_id: str, ad_account_id: str | None = None
     ) -> str:
-        """List tracking tags (Meta Pixels)
+        """List tracking tags
 
         Args:
             account_id: Meta ads SocialAccount id (platform `metaads`). (required)
@@ -9311,7 +9311,7 @@ def register_generated_tools(mcp, _get_client):
 
     @mcp.tool(
         annotations=ToolAnnotations(
-            title="Create a tracking tag (Meta Pixel)",
+            title="Create a tracking tag",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
@@ -9320,7 +9320,7 @@ def register_generated_tools(mcp, _get_client):
     def tracking_tags_create_tracking_tag(
         account_id: str, ad_account_id: str, name: str
     ) -> str:
-        """Create a tracking tag (Meta Pixel)
+        """Create a tracking tag
 
         Args:
             account_id: Meta ads SocialAccount id (platform `metaads`). (required)
@@ -9337,14 +9337,14 @@ def register_generated_tools(mcp, _get_client):
 
     @mcp.tool(
         annotations=ToolAnnotations(
-            title="Fetch a single tracking tag (Meta Pixel)",
+            title="Get a tracking tag",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
         )
     )
     def tracking_tags_get_tracking_tag(account_id: str, tag_id: str) -> str:
-        """Fetch a single tracking tag (Meta Pixel)
+        """Get a tracking tag
 
         Args:
             account_id: (required)
@@ -9360,7 +9360,7 @@ def register_generated_tools(mcp, _get_client):
 
     @mcp.tool(
         annotations=ToolAnnotations(
-            title="Update a tracking tag (Meta Pixel)",
+            title="Update a tracking tag",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
@@ -9375,7 +9375,7 @@ def register_generated_tools(mcp, _get_client):
         first_party_cookie_status: str | None = None,
         data_use_setting: str | None = None,
     ) -> str:
-        """Update a tracking tag (Meta Pixel)
+        """Update a tracking tag
 
             Args:
                 account_id: (required)
@@ -9405,7 +9405,7 @@ def register_generated_tools(mcp, _get_client):
 
     @mcp.tool(
         annotations=ToolAnnotations(
-            title="List ad accounts a tracking tag is shared with",
+            title="List accounts it is shared with",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
@@ -9414,7 +9414,7 @@ def register_generated_tools(mcp, _get_client):
     def tracking_tags_list_tracking_tag_shared_accounts(
         account_id: str, tag_id: str
     ) -> str:
-        """List ad accounts a tracking tag is shared with
+        """List accounts it is shared with
 
         Args:
             account_id: (required)
@@ -9430,7 +9430,7 @@ def register_generated_tools(mcp, _get_client):
 
     @mcp.tool(
         annotations=ToolAnnotations(
-            title="Share a tracking tag with an ad account",
+            title="Share with an ad account",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
@@ -9439,7 +9439,7 @@ def register_generated_tools(mcp, _get_client):
     def tracking_tags_add_tracking_tag_shared_account(
         account_id: str, tag_id: str, ad_account_id: str
     ) -> str:
-        """Share a tracking tag with an ad account
+        """Share with an ad account
 
         Args:
             account_id: (required)
@@ -9456,7 +9456,7 @@ def register_generated_tools(mcp, _get_client):
 
     @mcp.tool(
         annotations=ToolAnnotations(
-            title="Stop sharing a tracking tag with an ad account",
+            title="Stop sharing with an account",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
@@ -9465,7 +9465,7 @@ def register_generated_tools(mcp, _get_client):
     def tracking_tags_remove_tracking_tag_shared_account(
         account_id: str, tag_id: str, ad_account_id: str | None = None
     ) -> str:
-        """Stop sharing a tracking tag with an ad account
+        """Stop sharing with an account
 
         Args:
             account_id: (required)
@@ -9482,7 +9482,7 @@ def register_generated_tools(mcp, _get_client):
 
     @mcp.tool(
         annotations=ToolAnnotations(
-            title="Aggregated event stats for a tracking tag (Meta Pixel)",
+            title="Get aggregated event stats",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
@@ -9495,7 +9495,7 @@ def register_generated_tools(mcp, _get_client):
         start_time: int | None = None,
         end_time: int | None = None,
     ) -> str:
-        """Aggregated event stats for a tracking tag (Meta Pixel)
+        """Get aggregated event stats
 
         Args:
             account_id: (required)
@@ -10404,14 +10404,14 @@ def register_generated_tools(mcp, _get_client):
 
     @mcp.tool(
         annotations=ToolAnnotations(
-            title="Provision CTWA conversions dataset",
+            title="Provision CTWA dataset",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
         )
     )
     def whatsapp_create_whats_app_dataset(account_id: str) -> str:
-        """Provision CTWA conversions dataset
+        """Provision CTWA dataset
 
         Args:
             account_id: WhatsApp social account ID (required)"""
@@ -10719,14 +10719,14 @@ def register_generated_tools(mcp, _get_client):
 
     @mcp.tool(
         annotations=ToolAnnotations(
-            title="List recent WhatsApp conversion events",
+            title="List conversion events",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
         )
     )
     def whatsapp_list_whats_app_conversions(account_id: str, limit: int = 50) -> str:
-        """List recent WhatsApp conversion events
+        """List conversion events
 
         Args:
             account_id: WhatsApp social account ID (required)
@@ -10954,7 +10954,7 @@ def register_generated_tools(mcp, _get_client):
 
     @mcp.tool(
         annotations=ToolAnnotations(
-            title="Check call permission for a consumer",
+            title="Check call permission",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
@@ -10963,7 +10963,7 @@ def register_generated_tools(mcp, _get_client):
     def whatsapp_calling_get_whats_app_call_permissions(
         account_id: str, to: str
     ) -> str:
-        """Check call permission for a consumer
+        """Check call permission
 
         Args:
             account_id: (required)
@@ -11086,7 +11086,7 @@ def register_generated_tools(mcp, _get_client):
 
     @mcp.tool(
         annotations=ToolAnnotations(
-            title="Estimate per-minute cost for a destination",
+            title="Estimate per-minute cost",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
@@ -11098,7 +11098,7 @@ def register_generated_tools(mcp, _get_client):
         minutes: int | None = None,
         recording: bool | None = None,
     ) -> str:
-        """Estimate per-minute cost for a destination
+        """Estimate per-minute cost
 
         Args:
             account_id: (required)
@@ -11586,7 +11586,7 @@ def register_generated_tools(mcp, _get_client):
 
     @mcp.tool(
         annotations=ToolAnnotations(
-            title="Search available numbers to purchase",
+            title="Search available numbers",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
@@ -11600,7 +11600,7 @@ def register_generated_tools(mcp, _get_client):
         contains: str | None = None,
         limit: int = 20,
     ) -> str:
-        """Search available numbers to purchase
+        """Search available numbers
 
         Args:
             country
@@ -11625,14 +11625,14 @@ def register_generated_tools(mcp, _get_client):
 
     @mcp.tool(
         annotations=ToolAnnotations(
-            title="Check a country's availability + address constraint",
+            title="Check country availability",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
         )
     )
     def whatsapp_phone_numbers_check_whats_app_number_availability(country: str) -> str:
-        """Check a country's availability + address constraint
+        """Check country availability
 
         Args:
             country: ISO-2 country code. (required)"""
@@ -11649,7 +11649,7 @@ def register_generated_tools(mcp, _get_client):
 
     @mcp.tool(
         annotations=ToolAnnotations(
-            title="Get regulated-number KYC form spec",
+            title="Get KYC form spec",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
@@ -11658,7 +11658,7 @@ def register_generated_tools(mcp, _get_client):
     def whatsapp_phone_numbers_get_whats_app_number_kyc_form(
         country: str, profile_id: str
     ) -> str:
-        """Get regulated-number KYC form spec
+        """Get KYC form spec
 
         Args:
             country: (required)
@@ -11674,7 +11674,7 @@ def register_generated_tools(mcp, _get_client):
 
     @mcp.tool(
         annotations=ToolAnnotations(
-            title="Submit regulated-number KYC",
+            title="Submit KYC",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
@@ -11693,7 +11693,7 @@ def register_generated_tools(mcp, _get_client):
         documents: list[dict[str, Any]] | None = None,
         address: dict[str, Any] | None = None,
     ) -> str:
-        """Submit regulated-number KYC
+        """Submit KYC
 
         Args:
             profile_id: (required)
@@ -11728,14 +11728,14 @@ def register_generated_tools(mcp, _get_client):
 
     @mcp.tool(
         annotations=ToolAnnotations(
-            title="Upload a single regulated-number KYC document",
+            title="Upload a KYC document",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
         )
     )
     def whatsapp_phone_numbers_upload_whats_app_number_kyc_document() -> str:
-        """Upload a single regulated-number KYC document"""
+        """Upload a KYC document"""
         client = _get_client()
         try:
             response = (
@@ -11747,7 +11747,7 @@ def register_generated_tools(mcp, _get_client):
 
     @mcp.tool(
         annotations=ToolAnnotations(
-            title="Pre-validate a regulated-number KYC address (Tier 4)",
+            title="Pre-validate KYC address",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
@@ -11760,7 +11760,7 @@ def register_generated_tools(mcp, _get_client):
         postal_code: str,
         administrative_area: str | None = None,
     ) -> str:
-        """Pre-validate a regulated-number KYC address (Tier 4)
+        """Pre-validate KYC address
 
         Args:
             country: ISO 3166-1 alpha-2 country code. (required)
@@ -11821,14 +11821,14 @@ def register_generated_tools(mcp, _get_client):
 
     @mcp.tool(
         annotations=ToolAnnotations(
-            title="Get the declined requirements to fix",
+            title="Get declined requirements",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
         )
     )
     def whatsapp_phone_numbers_get_whats_app_number_remediation(id: str) -> str:
-        """Get the declined requirements to fix
+        """Get declined requirements
 
         Args:
             id: WhatsAppPhoneNumber id. (required)"""
@@ -11843,7 +11843,7 @@ def register_generated_tools(mcp, _get_client):
 
     @mcp.tool(
         annotations=ToolAnnotations(
-            title="Fix a declined number and re-submit",
+            title="Resubmit a declined number",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
@@ -11855,7 +11855,7 @@ def register_generated_tools(mcp, _get_client):
         documents: list[dict[str, Any]] | None = None,
         address: dict[str, Any] | None = None,
     ) -> str:
-        """Fix a declined number and re-submit
+        """Resubmit a declined number
 
         Args:
             id: (required)
@@ -11938,14 +11938,14 @@ def register_generated_tools(mcp, _get_client):
 
     @mcp.tool(
         annotations=ToolAnnotations(
-            title="Start a sandbox activation for a phone",
+            title="Start a sandbox activation",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
         )
     )
     def whatsapp_sandbox_create_whats_app_sandbox_session(phone: str) -> str:
-        """Start a sandbox activation for a phone
+        """Start a sandbox activation
 
         Args:
             phone: Recipient phone in international format. Digits, spaces, dashes and a leading `+` are all accepted; the server normalizes to E.164 digits-only. (required)"""
@@ -12356,14 +12356,14 @@ def register_generated_tools(mcp, _get_client):
 
     @mcp.tool(
         annotations=ToolAnnotations(
-            title="Restore a previous workflow version",
+            title="Restore a workflow version",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
         )
     )
     def workflows_restore_workflow_version(workflow_id: str, version: int) -> str:
-        """Restore a previous workflow version
+        """Restore a workflow version
 
         Args:
             workflow_id: (required)

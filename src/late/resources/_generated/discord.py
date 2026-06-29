@@ -157,7 +157,7 @@ class DiscordResource:
     def list_discord_pinned_messages(
         self, channel_id: str, account_id: str
     ) -> dict[str, Any]:
-        """List pinned messages in a Discord channel"""
+        """List pinned messages"""
         params = self._build_params(
             account_id=account_id,
         )
@@ -373,7 +373,7 @@ class DiscordResource:
     async def alist_discord_pinned_messages(
         self, channel_id: str, account_id: str
     ) -> dict[str, Any]:
-        """List pinned messages in a Discord channel (async)"""
+        """List pinned messages (async)"""
         params = self._build_params(
             account_id=account_id,
         )

@@ -113,7 +113,7 @@ class AccountsResource:
     def move_account_to_profile(
         self, account_id: str, profile_id: str
     ) -> dict[str, Any]:
-        """Move account to a different profile"""
+        """Move account to another profile"""
         payload = self._build_payload(
             profile_id=profile_id,
         )
@@ -517,7 +517,7 @@ class AccountsResource:
     async def amove_account_to_profile(
         self, account_id: str, profile_id: str
     ) -> dict[str, Any]:
-        """Move account to a different profile (async)"""
+        """Move account to another profile (async)"""
         payload = self._build_payload(
             profile_id=profile_id,
         )

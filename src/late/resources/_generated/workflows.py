@@ -193,7 +193,7 @@ class WorkflowsResource:
     def restore_workflow_version(
         self, workflow_id: str, version: int
     ) -> dict[str, Any]:
-        """Restore a previous workflow version"""
+        """Restore a workflow version"""
         return self._client._post(
             f"/v1/workflows/{workflow_id}/versions/{version}/restore"
         )
@@ -341,7 +341,7 @@ class WorkflowsResource:
     async def arestore_workflow_version(
         self, workflow_id: str, version: int
     ) -> dict[str, Any]:
-        """Restore a previous workflow version (async)"""
+        """Restore a workflow version (async)"""
         return await self._client._apost(
             f"/v1/workflows/{workflow_id}/versions/{version}/restore"
         )

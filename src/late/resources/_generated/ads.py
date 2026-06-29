@@ -138,7 +138,7 @@ class AdsResource:
         return self._client._get(f"/v1/ads/{ad_id}/analytics", params=params)
 
     def get_ad_tracking_tags(self, ad_id: str) -> dict[str, Any]:
-        """Read an ad's click-URL tracking tags"""
+        """Get ad tracking tags"""
         return self._client._get(f"/v1/ads/{ad_id}/tracking-tags")
 
     def update_ad_tracking_tags(
@@ -152,7 +152,7 @@ class AdsResource:
         dynamic_value_parameters: dict[str, Any] | None = None,
         custom_value_parameters: dict[str, Any] | None = None,
     ) -> dict[str, Any]:
-        """Set/update an ad's click-URL tracking tags"""
+        """Set ad tracking tags"""
         payload = self._build_payload(
             url_tags=url_tags,
             creative=creative,
@@ -405,7 +405,7 @@ class AdsResource:
         since: int | None = None,
         cursor: str | None = None,
     ) -> dict[str, Any]:
-        """List submitted leads (cross-form CRM view)"""
+        """List submitted leads"""
         params = self._build_params(
             form_id=form_id,
             account_id=account_id,
@@ -418,7 +418,7 @@ class AdsResource:
     def list_lead_forms(
         self, account_id: str, *, limit: int | None = 25, cursor: str | None = None
     ) -> dict[str, Any]:
-        """List Lead Gen (Instant) forms"""
+        """List lead forms"""
         params = self._build_params(
             account_id=account_id,
             limit=limit,
@@ -443,7 +443,7 @@ class AdsResource:
         thank_you_website_url: str | None = None,
         is_optimized_for_quality: bool | None = None,
     ) -> dict[str, Any]:
-        """Create a Lead Gen (Instant) form"""
+        """Create a lead form"""
         payload = self._build_payload(
             account_id=account_id,
             name=name,
@@ -462,14 +462,14 @@ class AdsResource:
         return self._client._post("/v1/ads/lead-forms", data=payload)
 
     def get_lead_form(self, form_id: str, account_id: str) -> dict[str, Any]:
-        """Get a single Lead Gen form"""
+        """Get a lead form"""
         params = self._build_params(
             account_id=account_id,
         )
         return self._client._get(f"/v1/ads/lead-forms/{form_id}", params=params)
 
     def archive_lead_form(self, form_id: str, account_id: str) -> dict[str, Any]:
-        """Archive a Lead Gen form"""
+        """Archive a lead form"""
         params = self._build_params(
             account_id=account_id,
         )
@@ -496,7 +496,7 @@ class AdsResource:
     def create_test_lead(
         self, form_id: str, account_id: str, field_data: list[dict[str, Any]]
     ) -> dict[str, Any]:
-        """Create a synthetic test lead"""
+        """Create a test lead"""
         payload = self._build_payload(
             account_id=account_id,
             field_data=field_data,
@@ -506,7 +506,7 @@ class AdsResource:
         )
 
     def search_ad_interests(self, q: str, account_id: str) -> dict[str, Any]:
-        """Search targeting interests (deprecated)"""
+        """Search targeting interests"""
         params = self._build_params(
             q=q,
             account_id=account_id,
@@ -573,7 +573,7 @@ class AdsResource:
     def get_conversions_quality(
         self, account_id: str, destination_id: str
     ) -> dict[str, Any]:
-        """Read Event Match Quality + coverage for a Meta pixel"""
+        """Get Event Match Quality"""
         params = self._build_params(
             account_id=account_id,
             destination_id=destination_id,
@@ -589,7 +589,7 @@ class AdsResource:
         test_code: str | None = None,
         consent: dict[str, Any] | None = None,
     ) -> dict[str, Any]:
-        """Send conversion events to an ad platform"""
+        """Send conversion events"""
         payload = self._build_payload(
             account_id=account_id,
             destination_id=destination_id,
@@ -602,7 +602,7 @@ class AdsResource:
     def adjust_conversions(
         self, account_id: str, destination_id: str, adjustments: list[dict[str, Any]]
     ) -> dict[str, Any]:
-        """Adjust already-uploaded conversions (Google only)"""
+        """Adjust uploaded conversions"""
         payload = self._build_payload(
             account_id=account_id,
             destination_id=destination_id,
@@ -611,7 +611,7 @@ class AdsResource:
         return self._client._post("/v1/ads/conversions/adjustments", data=payload)
 
     def list_conversion_destinations(self, account_id: str) -> dict[str, Any]:
-        """List destinations for the Conversions API"""
+        """List conversion destinations"""
         return self._client._get(f"/v1/accounts/{account_id}/conversion-destinations")
 
     def create_conversion_destination(
@@ -630,7 +630,7 @@ class AdsResource:
         counting_type: str | None = None,
         primary_for_goal: bool | None = None,
     ) -> dict[str, Any]:
-        """Create a conversion destination (LinkedIn, Google Ads)"""
+        """Create a conversion destination"""
         payload = self._build_payload(
             ad_account_id=ad_account_id,
             name=name,
@@ -651,7 +651,7 @@ class AdsResource:
     def get_conversion_destination(
         self, account_id: str, destination_id: str, ad_account_id: str
     ) -> dict[str, Any]:
-        """Fetch a single conversion destination"""
+        """Get a conversion destination"""
         params = self._build_params(
             ad_account_id=ad_account_id,
         )
@@ -693,7 +693,7 @@ class AdsResource:
     def delete_conversion_destination(
         self, account_id: str, destination_id: str, *, ad_account_id: str | None = None
     ) -> dict[str, Any]:
-        """Soft-delete a conversion destination"""
+        """Delete a conversion destination"""
         params = self._build_params(
             ad_account_id=ad_account_id,
         )
@@ -705,7 +705,7 @@ class AdsResource:
     def list_conversion_associations(
         self, account_id: str, destination_id: str, ad_account_id: str
     ) -> dict[str, Any]:
-        """List campaigns associated with a conversion destination"""
+        """List associated campaigns"""
         params = self._build_params(
             ad_account_id=ad_account_id,
         )
@@ -721,7 +721,7 @@ class AdsResource:
         ad_account_id: str,
         campaign_ids: list[str],
     ) -> dict[str, Any]:
-        """Associate campaigns with a conversion destination"""
+        """Associate campaigns"""
         payload = self._build_payload(
             ad_account_id=ad_account_id,
             campaign_ids=campaign_ids,
@@ -738,7 +738,7 @@ class AdsResource:
         ad_account_id: str,
         campaign_ids: str,
     ) -> dict[str, Any]:
-        """Remove campaign↔conversion associations"""
+        """Remove associated campaigns"""
         params = self._build_params(
             ad_account_id=ad_account_id,
             campaign_ids=campaign_ids,
@@ -758,7 +758,7 @@ class AdsResource:
         end_date: str | None = None,
         granularity: str | None = "DAILY",
     ) -> dict[str, Any]:
-        """Fetch attribution metrics for a conversion destination"""
+        """Get attribution metrics"""
         params = self._build_params(
             ad_account_id=ad_account_id,
             start_date=start_date,
@@ -803,7 +803,7 @@ class AdsResource:
         dsa_beneficiary: str | None = None,
         dsa_payor: str | None = None,
     ) -> dict[str, Any]:
-        """Create Click-to-WhatsApp ad(s)"""
+        """Create Click-to-WhatsApp ad"""
         payload = self._build_payload(
             account_id=account_id,
             ad_account_id=ad_account_id,
@@ -919,7 +919,7 @@ class AdsResource:
         return await self._client._aget(f"/v1/ads/{ad_id}/analytics", params=params)
 
     async def aget_ad_tracking_tags(self, ad_id: str) -> dict[str, Any]:
-        """Read an ad's click-URL tracking tags (async)"""
+        """Get ad tracking tags (async)"""
         return await self._client._aget(f"/v1/ads/{ad_id}/tracking-tags")
 
     async def aupdate_ad_tracking_tags(
@@ -933,7 +933,7 @@ class AdsResource:
         dynamic_value_parameters: dict[str, Any] | None = None,
         custom_value_parameters: dict[str, Any] | None = None,
     ) -> dict[str, Any]:
-        """Set/update an ad's click-URL tracking tags (async)"""
+        """Set ad tracking tags (async)"""
         payload = self._build_payload(
             url_tags=url_tags,
             creative=creative,
@@ -1188,7 +1188,7 @@ class AdsResource:
         since: int | None = None,
         cursor: str | None = None,
     ) -> dict[str, Any]:
-        """List submitted leads (cross-form CRM view) (async)"""
+        """List submitted leads (async)"""
         params = self._build_params(
             form_id=form_id,
             account_id=account_id,
@@ -1201,7 +1201,7 @@ class AdsResource:
     async def alist_lead_forms(
         self, account_id: str, *, limit: int | None = 25, cursor: str | None = None
     ) -> dict[str, Any]:
-        """List Lead Gen (Instant) forms (async)"""
+        """List lead forms (async)"""
         params = self._build_params(
             account_id=account_id,
             limit=limit,
@@ -1226,7 +1226,7 @@ class AdsResource:
         thank_you_website_url: str | None = None,
         is_optimized_for_quality: bool | None = None,
     ) -> dict[str, Any]:
-        """Create a Lead Gen (Instant) form (async)"""
+        """Create a lead form (async)"""
         payload = self._build_payload(
             account_id=account_id,
             name=name,
@@ -1245,14 +1245,14 @@ class AdsResource:
         return await self._client._apost("/v1/ads/lead-forms", data=payload)
 
     async def aget_lead_form(self, form_id: str, account_id: str) -> dict[str, Any]:
-        """Get a single Lead Gen form (async)"""
+        """Get a lead form (async)"""
         params = self._build_params(
             account_id=account_id,
         )
         return await self._client._aget(f"/v1/ads/lead-forms/{form_id}", params=params)
 
     async def aarchive_lead_form(self, form_id: str, account_id: str) -> dict[str, Any]:
-        """Archive a Lead Gen form (async)"""
+        """Archive a lead form (async)"""
         params = self._build_params(
             account_id=account_id,
         )
@@ -1283,7 +1283,7 @@ class AdsResource:
     async def acreate_test_lead(
         self, form_id: str, account_id: str, field_data: list[dict[str, Any]]
     ) -> dict[str, Any]:
-        """Create a synthetic test lead (async)"""
+        """Create a test lead (async)"""
         payload = self._build_payload(
             account_id=account_id,
             field_data=field_data,
@@ -1293,7 +1293,7 @@ class AdsResource:
         )
 
     async def asearch_ad_interests(self, q: str, account_id: str) -> dict[str, Any]:
-        """Search targeting interests (deprecated) (async)"""
+        """Search targeting interests (async)"""
         params = self._build_params(
             q=q,
             account_id=account_id,
@@ -1364,7 +1364,7 @@ class AdsResource:
     async def aget_conversions_quality(
         self, account_id: str, destination_id: str
     ) -> dict[str, Any]:
-        """Read Event Match Quality + coverage for a Meta pixel (async)"""
+        """Get Event Match Quality (async)"""
         params = self._build_params(
             account_id=account_id,
             destination_id=destination_id,
@@ -1380,7 +1380,7 @@ class AdsResource:
         test_code: str | None = None,
         consent: dict[str, Any] | None = None,
     ) -> dict[str, Any]:
-        """Send conversion events to an ad platform (async)"""
+        """Send conversion events (async)"""
         payload = self._build_payload(
             account_id=account_id,
             destination_id=destination_id,
@@ -1393,7 +1393,7 @@ class AdsResource:
     async def aadjust_conversions(
         self, account_id: str, destination_id: str, adjustments: list[dict[str, Any]]
     ) -> dict[str, Any]:
-        """Adjust already-uploaded conversions (Google only) (async)"""
+        """Adjust uploaded conversions (async)"""
         payload = self._build_payload(
             account_id=account_id,
             destination_id=destination_id,
@@ -1404,7 +1404,7 @@ class AdsResource:
         )
 
     async def alist_conversion_destinations(self, account_id: str) -> dict[str, Any]:
-        """List destinations for the Conversions API (async)"""
+        """List conversion destinations (async)"""
         return await self._client._aget(
             f"/v1/accounts/{account_id}/conversion-destinations"
         )
@@ -1425,7 +1425,7 @@ class AdsResource:
         counting_type: str | None = None,
         primary_for_goal: bool | None = None,
     ) -> dict[str, Any]:
-        """Create a conversion destination (LinkedIn, Google Ads) (async)"""
+        """Create a conversion destination (async)"""
         payload = self._build_payload(
             ad_account_id=ad_account_id,
             name=name,
@@ -1446,7 +1446,7 @@ class AdsResource:
     async def aget_conversion_destination(
         self, account_id: str, destination_id: str, ad_account_id: str
     ) -> dict[str, Any]:
-        """Fetch a single conversion destination (async)"""
+        """Get a conversion destination (async)"""
         params = self._build_params(
             ad_account_id=ad_account_id,
         )
@@ -1488,7 +1488,7 @@ class AdsResource:
     async def adelete_conversion_destination(
         self, account_id: str, destination_id: str, *, ad_account_id: str | None = None
     ) -> dict[str, Any]:
-        """Soft-delete a conversion destination (async)"""
+        """Delete a conversion destination (async)"""
         params = self._build_params(
             ad_account_id=ad_account_id,
         )
@@ -1500,7 +1500,7 @@ class AdsResource:
     async def alist_conversion_associations(
         self, account_id: str, destination_id: str, ad_account_id: str
     ) -> dict[str, Any]:
-        """List campaigns associated with a conversion destination (async)"""
+        """List associated campaigns (async)"""
         params = self._build_params(
             ad_account_id=ad_account_id,
         )
@@ -1516,7 +1516,7 @@ class AdsResource:
         ad_account_id: str,
         campaign_ids: list[str],
     ) -> dict[str, Any]:
-        """Associate campaigns with a conversion destination (async)"""
+        """Associate campaigns (async)"""
         payload = self._build_payload(
             ad_account_id=ad_account_id,
             campaign_ids=campaign_ids,
@@ -1533,7 +1533,7 @@ class AdsResource:
         ad_account_id: str,
         campaign_ids: str,
     ) -> dict[str, Any]:
-        """Remove campaign↔conversion associations (async)"""
+        """Remove associated campaigns (async)"""
         params = self._build_params(
             ad_account_id=ad_account_id,
             campaign_ids=campaign_ids,
@@ -1553,7 +1553,7 @@ class AdsResource:
         end_date: str | None = None,
         granularity: str | None = "DAILY",
     ) -> dict[str, Any]:
-        """Fetch attribution metrics for a conversion destination (async)"""
+        """Get attribution metrics (async)"""
         params = self._build_params(
             ad_account_id=ad_account_id,
             start_date=start_date,
@@ -1598,7 +1598,7 @@ class AdsResource:
         dsa_beneficiary: str | None = None,
         dsa_payor: str | None = None,
     ) -> dict[str, Any]:
-        """Create Click-to-WhatsApp ad(s) (async)"""
+        """Create Click-to-WhatsApp ad (async)"""
         payload = self._build_payload(
             account_id=account_id,
             ad_account_id=ad_account_id,

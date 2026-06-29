@@ -102,7 +102,7 @@ class WhatsappPhoneNumbersResource:
         contains: str | None = None,
         limit: int | None = 20,
     ) -> dict[str, Any]:
-        """Search available numbers to purchase"""
+        """Search available numbers"""
         params = self._build_params(
             country=country,
             type=type,
@@ -114,7 +114,7 @@ class WhatsappPhoneNumbersResource:
         return self._client._get("/v1/whatsapp/phone-numbers/available", params=params)
 
     def check_whats_app_number_availability(self, country: str) -> dict[str, Any]:
-        """Check a country's availability + address constraint"""
+        """Check country availability"""
         params = self._build_params(
             country=country,
         )
@@ -125,7 +125,7 @@ class WhatsappPhoneNumbersResource:
     def get_whats_app_number_kyc_form(
         self, country: str, profile_id: str
     ) -> dict[str, Any]:
-        """Get regulated-number KYC form spec"""
+        """Get KYC form spec"""
         params = self._build_params(
             country=country,
             profile_id=profile_id,
@@ -147,7 +147,7 @@ class WhatsappPhoneNumbersResource:
         documents: list[Any] | None = None,
         address: dict[str, Any] | None = None,
     ) -> dict[str, Any]:
-        """Submit regulated-number KYC"""
+        """Submit KYC"""
         payload = self._build_payload(
             profile_id=profile_id,
             country=country,
@@ -164,7 +164,7 @@ class WhatsappPhoneNumbersResource:
         return self._client._post("/v1/whatsapp/phone-numbers/kyc", data=payload)
 
     def upload_whats_app_number_kyc_document(self, x_filename: str) -> dict[str, Any]:
-        """Upload a single regulated-number KYC document"""
+        """Upload a KYC document"""
         return self._client._post("/v1/whatsapp/phone-numbers/kyc/upload-document")
 
     def validate_whats_app_number_kyc_address(
@@ -176,7 +176,7 @@ class WhatsappPhoneNumbersResource:
         *,
         administrative_area: str | None = None,
     ) -> dict[str, Any]:
-        """Pre-validate a regulated-number KYC address (Tier 4)"""
+        """Pre-validate KYC address"""
         payload = self._build_payload(
             country=country,
             street_address=street_address,
@@ -206,7 +206,7 @@ class WhatsappPhoneNumbersResource:
         return self._client._post("/v1/whatsapp/phone-numbers/kyc/share", data=payload)
 
     def get_whats_app_number_remediation(self, id: str) -> dict[str, Any]:
-        """Get the declined requirements to fix"""
+        """Get declined requirements"""
         return self._client._get(f"/v1/whatsapp/phone-numbers/{id}/remediate")
 
     def remediate_whats_app_number(
@@ -217,7 +217,7 @@ class WhatsappPhoneNumbersResource:
         documents: list[Any] | None = None,
         address: dict[str, Any] | None = None,
     ) -> dict[str, Any]:
-        """Fix a declined number and re-submit"""
+        """Resubmit a declined number"""
         payload = self._build_payload(
             values=values,
             documents=documents,
@@ -285,7 +285,7 @@ class WhatsappPhoneNumbersResource:
         contains: str | None = None,
         limit: int | None = 20,
     ) -> dict[str, Any]:
-        """Search available numbers to purchase (async)"""
+        """Search available numbers (async)"""
         params = self._build_params(
             country=country,
             type=type,
@@ -301,7 +301,7 @@ class WhatsappPhoneNumbersResource:
     async def acheck_whats_app_number_availability(
         self, country: str
     ) -> dict[str, Any]:
-        """Check a country's availability + address constraint (async)"""
+        """Check country availability (async)"""
         params = self._build_params(
             country=country,
         )
@@ -312,7 +312,7 @@ class WhatsappPhoneNumbersResource:
     async def aget_whats_app_number_kyc_form(
         self, country: str, profile_id: str
     ) -> dict[str, Any]:
-        """Get regulated-number KYC form spec (async)"""
+        """Get KYC form spec (async)"""
         params = self._build_params(
             country=country,
             profile_id=profile_id,
@@ -334,7 +334,7 @@ class WhatsappPhoneNumbersResource:
         documents: list[Any] | None = None,
         address: dict[str, Any] | None = None,
     ) -> dict[str, Any]:
-        """Submit regulated-number KYC (async)"""
+        """Submit KYC (async)"""
         payload = self._build_payload(
             profile_id=profile_id,
             country=country,
@@ -353,7 +353,7 @@ class WhatsappPhoneNumbersResource:
     async def aupload_whats_app_number_kyc_document(
         self, x_filename: str
     ) -> dict[str, Any]:
-        """Upload a single regulated-number KYC document (async)"""
+        """Upload a KYC document (async)"""
         return await self._client._apost(
             "/v1/whatsapp/phone-numbers/kyc/upload-document"
         )
@@ -367,7 +367,7 @@ class WhatsappPhoneNumbersResource:
         *,
         administrative_area: str | None = None,
     ) -> dict[str, Any]:
-        """Pre-validate a regulated-number KYC address (Tier 4) (async)"""
+        """Pre-validate KYC address (async)"""
         payload = self._build_payload(
             country=country,
             street_address=street_address,
@@ -399,7 +399,7 @@ class WhatsappPhoneNumbersResource:
         )
 
     async def aget_whats_app_number_remediation(self, id: str) -> dict[str, Any]:
-        """Get the declined requirements to fix (async)"""
+        """Get declined requirements (async)"""
         return await self._client._aget(f"/v1/whatsapp/phone-numbers/{id}/remediate")
 
     async def aremediate_whats_app_number(
@@ -410,7 +410,7 @@ class WhatsappPhoneNumbersResource:
         documents: list[Any] | None = None,
         address: dict[str, Any] | None = None,
     ) -> dict[str, Any]:
-        """Fix a declined number and re-submit (async)"""
+        """Resubmit a declined number (async)"""
         payload = self._build_payload(
             values=values,
             documents=documents,

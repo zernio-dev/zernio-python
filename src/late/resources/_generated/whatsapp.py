@@ -220,7 +220,7 @@ class WhatsappResource:
         return self._client._get("/v1/whatsapp/dataset", params=params)
 
     def create_whats_app_dataset(self, account_id: str) -> dict[str, Any]:
-        """Provision CTWA conversions dataset"""
+        """Provision CTWA dataset"""
         payload = self._build_payload(
             account_id=account_id,
         )
@@ -358,7 +358,7 @@ class WhatsappResource:
     def list_whats_app_conversions(
         self, account_id: str, *, limit: int | None = 50
     ) -> dict[str, Any]:
-        """List recent WhatsApp conversion events"""
+        """List conversion events"""
         params = self._build_params(
             account_id=account_id,
             limit=limit,
@@ -568,7 +568,7 @@ class WhatsappResource:
         return await self._client._aget("/v1/whatsapp/dataset", params=params)
 
     async def acreate_whats_app_dataset(self, account_id: str) -> dict[str, Any]:
-        """Provision CTWA conversions dataset (async)"""
+        """Provision CTWA dataset (async)"""
         payload = self._build_payload(
             account_id=account_id,
         )
@@ -712,7 +712,7 @@ class WhatsappResource:
     async def alist_whats_app_conversions(
         self, account_id: str, *, limit: int | None = 50
     ) -> dict[str, Any]:
-        """List recent WhatsApp conversion events (async)"""
+        """List conversion events (async)"""
         params = self._build_params(
             account_id=account_id,
             limit=limit,

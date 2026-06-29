@@ -123,7 +123,7 @@ class WhatsappCallingResource:
     def get_whats_app_call_permissions(
         self, account_id: str, to: str
     ) -> dict[str, Any]:
-        """Check call permission for a consumer"""
+        """Check call permission"""
         params = self._build_params(
             account_id=account_id,
             to=to,
@@ -189,7 +189,7 @@ class WhatsappCallingResource:
         minutes: int | None = None,
         recording: bool | None = None,
     ) -> dict[str, Any]:
-        """Estimate per-minute cost for a destination"""
+        """Estimate per-minute cost"""
         params = self._build_params(
             account_id=account_id,
             to=to,
@@ -267,7 +267,7 @@ class WhatsappCallingResource:
     async def aget_whats_app_call_permissions(
         self, account_id: str, to: str
     ) -> dict[str, Any]:
-        """Check call permission for a consumer (async)"""
+        """Check call permission (async)"""
         params = self._build_params(
             account_id=account_id,
             to=to,
@@ -335,7 +335,7 @@ class WhatsappCallingResource:
         minutes: int | None = None,
         recording: bool | None = None,
     ) -> dict[str, Any]:
-        """Estimate per-minute cost for a destination (async)"""
+        """Estimate per-minute cost (async)"""
         params = self._build_params(
             account_id=account_id,
             to=to,

@@ -207,7 +207,7 @@ Both `from zernio import ...` and `from late import ...` work identically. The `
 | `accounts.delete_account()` | Disconnect account |
 | `accounts.delete_google_business_review_reply()` | Delete a review reply |
 | `accounts.batch_get_google_business_reviews()` | Batch get reviews |
-| `accounts.move_account_to_profile()` | Move account to a different profile |
+| `accounts.move_account_to_profile()` | Move account to another profile |
 | `accounts.reply_to_google_business_review()` | Reply to a review |
 
 ### Profiles
@@ -233,13 +233,13 @@ Both `from zernio import ...` and `from late import ...` work identically. The `
 | `analytics.get_instagram_demographics()` | Get Instagram demographics |
 | `analytics.get_instagram_follower_history()` | Get Instagram follower history |
 | `analytics.get_linked_in_aggregate_analytics()` | Get LinkedIn aggregate stats |
-| `analytics.get_linked_in_org_aggregate_analytics()` | Get LinkedIn organization page aggregate analytics |
+| `analytics.get_linked_in_org_aggregate_analytics()` | Get LinkedIn org analytics |
 | `analytics.get_linked_in_post_analytics()` | Get LinkedIn post stats |
 | `analytics.get_linked_in_post_reactions()` | Get LinkedIn post reactions |
 | `analytics.get_post_timeline()` | Get post analytics timeline |
 | `analytics.get_posting_frequency()` | Get frequency vs engagement |
 | `analytics.get_tik_tok_account_insights()` | Get TikTok account-level insights |
-| `analytics.get_you_tube_channel_insights()` | Get YouTube channel-level insights |
+| `analytics.get_you_tube_channel_insights()` | Get YouTube channel insights |
 | `analytics.get_you_tube_daily_views()` | Get YouTube daily views |
 | `analytics.get_you_tube_demographics()` | Get YouTube demographics |
 | `analytics.get_you_tube_video_retention()` | Get YouTube video retention curve |
@@ -314,7 +314,7 @@ Both `from zernio import ...` and `from late import ...` work identically. The `
 | `connect.list_linked_in_organizations()` | List LinkedIn orgs |
 | `connect.list_pinterest_boards_for_selection()` | List Pinterest boards |
 | `connect.list_snapchat_profiles()` | List Snapchat profiles |
-| `connect.list_whats_app_phone_numbers()` | List WhatsApp phone numbers for selection |
+| `connect.list_whats_app_phone_numbers()` | List numbers for selection |
 | `connect.get_connect_url()` | Get OAuth connect URL |
 | `connect.get_facebook_pages()` | List Facebook pages |
 | `connect.get_gmb_locations()` | List GBP locations |
@@ -332,8 +332,8 @@ Both `from zernio import ...` and `from late import ...` work identically. The `
 | `connect.update_reddit_subreddits()` | Set default subreddit |
 | `connect.update_youtube_default_playlist()` | Set default YouTube playlist |
 | `connect.complete_telegram_connect()` | Check Telegram status |
-| `connect.complete_whats_app_phone_selection()` | Complete WhatsApp phone number selection |
-| `connect.configure_tik_tok_ads_brand_identity()` | Configure TikTok Ads Brand Identity |
+| `connect.complete_whats_app_phone_selection()` | Complete number selection |
+| `connect.configure_tik_tok_ads_brand_identity()` | Set TikTok brand identity |
 | `connect.connect_ads()` | Connect ads for a platform |
 | `connect.connect_bluesky_credentials()` | Connect Bluesky account |
 | `connect.connect_whats_app_credentials()` | Connect WhatsApp via credentials |
@@ -379,10 +379,10 @@ Both `from zernio import ...` and `from late import ...` work identically. The `
 | `ad_campaigns.list_ad_campaigns()` | List campaigns |
 | `ad_campaigns.bulk_update_ad_campaign_status()` | Pause or resume many campaigns |
 | `ad_campaigns.get_ad_tree()` | Get campaign tree |
-| `ad_campaigns.get_ads_timeline()` | Get daily aggregate ad metrics for an account |
-| `ad_campaigns.update_ad_campaign()` | Update a campaign (budget and/or bid strategy) |
+| `ad_campaigns.get_ads_timeline()` | Get daily account metrics |
+| `ad_campaigns.update_ad_campaign()` | Update a campaign |
 | `ad_campaigns.update_ad_campaign_status()` | Pause or resume a campaign |
-| `ad_campaigns.update_ad_set()` | Update an ad set (budget, status, and/or bid strategy) |
+| `ad_campaigns.update_ad_set()` | Update an ad set |
 | `ad_campaigns.update_ad_set_status()` | Pause or resume a single ad set |
 | `ad_campaigns.delete_ad_campaign()` | Delete a campaign |
 | `ad_campaigns.duplicate_ad_campaign()` | Duplicate a campaign |
@@ -395,38 +395,38 @@ Both `from zernio import ...` and `from late import ...` work identically. The `
 | `ads.list_ad_catalogs()` | List Meta product catalogs |
 | `ads.list_ads()` | List ads |
 | `ads.list_ads_business_centers()` | List TikTok Business Centers |
-| `ads.list_conversion_associations()` | List campaigns associated with a conversion destination |
-| `ads.list_conversion_destinations()` | List destinations for the Conversions API |
+| `ads.list_conversion_associations()` | List associated campaigns |
+| `ads.list_conversion_destinations()` | List conversion destinations |
 | `ads.list_form_leads()` | List leads for a single form |
-| `ads.list_lead_forms()` | List Lead Gen (Instant) forms |
-| `ads.list_leads()` | List submitted leads (cross-form CRM view) |
-| `ads.create_conversion_destination()` | Create a conversion destination (LinkedIn, Google Ads) |
-| `ads.create_ctwa_ad()` | Create Click-to-WhatsApp ad(s) |
-| `ads.create_lead_form()` | Create a Lead Gen (Instant) form |
+| `ads.list_lead_forms()` | List lead forms |
+| `ads.list_leads()` | List submitted leads |
+| `ads.create_conversion_destination()` | Create a conversion destination |
+| `ads.create_ctwa_ad()` | Create Click-to-WhatsApp ad |
+| `ads.create_lead_form()` | Create a lead form |
 | `ads.create_standalone_ad()` | Create standalone ad |
-| `ads.create_test_lead()` | Create a synthetic test lead |
+| `ads.create_test_lead()` | Create a test lead |
 | `ads.get_ad()` | Get ad details |
 | `ads.get_ad_analytics()` | Get ad analytics |
 | `ads.get_ad_comments()` | List comments on an ad |
-| `ads.get_ad_tracking_tags()` | Read an ad's click-URL tracking tags |
-| `ads.get_conversion_destination()` | Fetch a single conversion destination |
-| `ads.get_conversion_metrics()` | Fetch attribution metrics for a conversion destination |
-| `ads.get_conversions_quality()` | Read Event Match Quality + coverage for a Meta pixel |
-| `ads.get_lead_form()` | Get a single Lead Gen form |
+| `ads.get_ad_tracking_tags()` | Get ad tracking tags |
+| `ads.get_conversion_destination()` | Get a conversion destination |
+| `ads.get_conversion_metrics()` | Get attribution metrics |
+| `ads.get_conversions_quality()` | Get Event Match Quality |
+| `ads.get_lead_form()` | Get a lead form |
 | `ads.update_ad()` | Update ad |
-| `ads.update_ad_tracking_tags()` | Set/update an ad's click-URL tracking tags |
+| `ads.update_ad_tracking_tags()` | Set ad tracking tags |
 | `ads.update_conversion_destination()` | Update a conversion destination |
 | `ads.delete_ad()` | Cancel an ad |
-| `ads.delete_conversion_destination()` | Soft-delete a conversion destination |
-| `ads.add_conversion_associations()` | Associate campaigns with a conversion destination |
-| `ads.adjust_conversions()` | Adjust already-uploaded conversions (Google only) |
-| `ads.archive_lead_form()` | Archive a Lead Gen form |
+| `ads.delete_conversion_destination()` | Delete a conversion destination |
+| `ads.add_conversion_associations()` | Associate campaigns |
+| `ads.adjust_conversions()` | Adjust uploaded conversions |
+| `ads.archive_lead_form()` | Archive a lead form |
 | `ads.boost_post()` | Boost post as ad |
 | `ads.estimate_ad_reach()` | Estimate audience reach |
-| `ads.remove_conversion_associations()` | Remove campaign↔conversion associations |
-| `ads.search_ad_interests()` | Search targeting interests (deprecated) |
+| `ads.remove_conversion_associations()` | Remove associated campaigns |
+| `ads.search_ad_interests()` | Search targeting interests |
 | `ads.search_ad_targeting()` | Search targeting options |
-| `ads.send_conversions()` | Send conversion events to an ad platform |
+| `ads.send_conversions()` | Send conversion events |
 
 ### Broadcasts
 | Method | Description |
@@ -491,7 +491,7 @@ Both `from zernio import ...` and `from late import ...` work identically. The `
 |--------|-------------|
 | `discord.list_discord_guild_members()` | List Discord guild members |
 | `discord.list_discord_guild_roles()` | List Discord guild roles |
-| `discord.list_discord_pinned_messages()` | List pinned messages in a Discord channel |
+| `discord.list_discord_pinned_messages()` | List pinned messages |
 | `discord.list_discord_scheduled_events()` | List Discord scheduled events |
 | `discord.create_discord_scheduled_event()` | Create a Discord scheduled event |
 | `discord.get_discord_channels()` | List Discord guild channels |
@@ -557,9 +557,9 @@ Both `from zernio import ...` and `from late import ...` work identically. The `
 ### Inbox Analytics
 | Method | Description |
 |--------|-------------|
-| `inbox_analytics.list_inbox_conversation_analytics()` | List conversations with inbox analytics |
-| `inbox_analytics.get_inbox_conversation_analytics()` | Get analytics for a single conversation |
-| `inbox_analytics.get_inbox_heatmap()` | Get inbox day-of-week × hour-of-day heatmap |
+| `inbox_analytics.list_inbox_conversation_analytics()` | List conversation analytics |
+| `inbox_analytics.get_inbox_conversation_analytics()` | Get conversation analytics |
+| `inbox_analytics.get_inbox_heatmap()` | Get day × hour heatmap |
 | `inbox_analytics.get_inbox_response_time()` | Get inbox response-time stats |
 | `inbox_analytics.get_inbox_source_breakdown()` | Get inbox source breakdown |
 | `inbox_analytics.get_inbox_top_accounts()` | Get top accounts by inbox volume |
@@ -575,7 +575,7 @@ Both `from zernio import ...` and `from late import ...` work identically. The `
 | Method | Description |
 |--------|-------------|
 | `messages.list_inbox_conversations()` | List conversations |
-| `messages.create_inbox_conversation()` | Create conversation (send a WhatsApp template) |
+| `messages.create_inbox_conversation()` | Create conversation |
 | `messages.get_inbox_conversation()` | Get conversation |
 | `messages.get_inbox_conversation_messages()` | List messages |
 | `messages.update_inbox_conversation()` | Update conversation status |
@@ -612,14 +612,14 @@ Both `from zernio import ...` and `from late import ...` work identically. The `
 ### Tracking Tags
 | Method | Description |
 |--------|-------------|
-| `tracking_tags.list_tracking_tag_shared_accounts()` | List ad accounts a tracking tag is shared with |
-| `tracking_tags.list_tracking_tags()` | List tracking tags (Meta Pixels) |
-| `tracking_tags.create_tracking_tag()` | Create a tracking tag (Meta Pixel) |
-| `tracking_tags.get_tracking_tag()` | Fetch a single tracking tag (Meta Pixel) |
-| `tracking_tags.get_tracking_tag_stats()` | Aggregated event stats for a tracking tag (Meta Pixel) |
-| `tracking_tags.update_tracking_tag()` | Update a tracking tag (Meta Pixel) |
-| `tracking_tags.add_tracking_tag_shared_account()` | Share a tracking tag with an ad account |
-| `tracking_tags.remove_tracking_tag_shared_account()` | Stop sharing a tracking tag with an ad account |
+| `tracking_tags.list_tracking_tag_shared_accounts()` | List accounts it is shared with |
+| `tracking_tags.list_tracking_tags()` | List tracking tags |
+| `tracking_tags.create_tracking_tag()` | Create a tracking tag |
+| `tracking_tags.get_tracking_tag()` | Get a tracking tag |
+| `tracking_tags.get_tracking_tag_stats()` | Get aggregated event stats |
+| `tracking_tags.update_tracking_tag()` | Update a tracking tag |
+| `tracking_tags.add_tracking_tag_shared_account()` | Share with an ad account |
+| `tracking_tags.remove_tracking_tag_shared_account()` | Stop sharing with an account |
 
 ### Twitter Engagement
 | Method | Description |
@@ -642,10 +642,10 @@ Both `from zernio import ...` and `from late import ...` work identically. The `
 ### WhatsApp
 | Method | Description |
 |--------|-------------|
-| `whatsapp.list_whats_app_conversions()` | List recent WhatsApp conversion events |
+| `whatsapp.list_whats_app_conversions()` | List conversion events |
 | `whatsapp.list_whats_app_group_chats()` | List active groups |
 | `whatsapp.list_whats_app_group_join_requests()` | List join requests |
-| `whatsapp.create_whats_app_dataset()` | Provision CTWA conversions dataset |
+| `whatsapp.create_whats_app_dataset()` | Provision CTWA dataset |
 | `whatsapp.create_whats_app_group_chat()` | Create group |
 | `whatsapp.create_whats_app_group_invite_link()` | Create invite link |
 | `whatsapp.create_whats_app_template()` | Create template |
@@ -677,8 +677,8 @@ Both `from zernio import ...` and `from late import ...` work identically. The `
 |--------|-------------|
 | `whatsapp_calling.list_whats_app_calls()` | List call history for an account |
 | `whatsapp_calling.get_whats_app_call()` | Get a single call |
-| `whatsapp_calling.get_whats_app_call_estimate()` | Estimate per-minute cost for a destination |
-| `whatsapp_calling.get_whats_app_call_permissions()` | Check call permission for a consumer |
+| `whatsapp_calling.get_whats_app_call_estimate()` | Estimate per-minute cost |
+| `whatsapp_calling.get_whats_app_call_permissions()` | Check call permission |
 | `whatsapp_calling.get_whats_app_calling_config()` | Get calling config for an account |
 | `whatsapp_calling.update_whats_app_calling()` | Update calling config |
 | `whatsapp_calling.disable_whats_app_calling()` | Disable calling on a number |
@@ -708,24 +708,24 @@ Both `from zernio import ...` and `from late import ...` work identically. The `
 | `whatsapp_phone_numbers.list_whats_app_number_countries()` | List offerable number countries |
 | `whatsapp_phone_numbers.create_whats_app_number_kyc_link()` | Create a hosted KYC link |
 | `whatsapp_phone_numbers.get_whats_app_number_info()` | Get number status |
-| `whatsapp_phone_numbers.get_whats_app_number_kyc_form()` | Get regulated-number KYC form spec |
-| `whatsapp_phone_numbers.get_whats_app_number_remediation()` | Get the declined requirements to fix |
+| `whatsapp_phone_numbers.get_whats_app_number_kyc_form()` | Get KYC form spec |
+| `whatsapp_phone_numbers.get_whats_app_number_remediation()` | Get declined requirements |
 | `whatsapp_phone_numbers.get_whats_app_phone_number()` | Get phone number |
 | `whatsapp_phone_numbers.get_whats_app_phone_numbers()` | List phone numbers |
-| `whatsapp_phone_numbers.check_whats_app_number_availability()` | Check a country's availability + address constraint |
+| `whatsapp_phone_numbers.check_whats_app_number_availability()` | Check country availability |
 | `whatsapp_phone_numbers.purchase_whats_app_phone_number()` | Purchase phone number |
 | `whatsapp_phone_numbers.release_whats_app_phone_number()` | Release phone number |
-| `whatsapp_phone_numbers.remediate_whats_app_number()` | Fix a declined number and re-submit |
-| `whatsapp_phone_numbers.search_available_whats_app_numbers()` | Search available numbers to purchase |
-| `whatsapp_phone_numbers.submit_whats_app_number_kyc()` | Submit regulated-number KYC |
-| `whatsapp_phone_numbers.upload_whats_app_number_kyc_document()` | Upload a single regulated-number KYC document |
-| `whatsapp_phone_numbers.validate_whats_app_number_kyc_address()` | Pre-validate a regulated-number KYC address (Tier 4) |
+| `whatsapp_phone_numbers.remediate_whats_app_number()` | Resubmit a declined number |
+| `whatsapp_phone_numbers.search_available_whats_app_numbers()` | Search available numbers |
+| `whatsapp_phone_numbers.submit_whats_app_number_kyc()` | Submit KYC |
+| `whatsapp_phone_numbers.upload_whats_app_number_kyc_document()` | Upload a KYC document |
+| `whatsapp_phone_numbers.validate_whats_app_number_kyc_address()` | Pre-validate KYC address |
 
 ### WhatsApp Sandbox
 | Method | Description |
 |--------|-------------|
 | `whatsapp_sandbox.list_whats_app_sandbox_sessions()` | List your sandbox sessions |
-| `whatsapp_sandbox.create_whats_app_sandbox_session()` | Start a sandbox activation for a phone |
+| `whatsapp_sandbox.create_whats_app_sandbox_session()` | Start a sandbox activation |
 | `whatsapp_sandbox.delete_whats_app_sandbox_session()` | Revoke a sandbox session |
 
 ### WhatsApp Templates
@@ -748,7 +748,7 @@ Both `from zernio import ...` and `from late import ...` work identically. The `
 | `workflows.activate_workflow()` | Activate workflow |
 | `workflows.duplicate_workflow()` | Duplicate a workflow |
 | `workflows.pause_workflow()` | Pause workflow |
-| `workflows.restore_workflow_version()` | Restore a previous workflow version |
+| `workflows.restore_workflow_version()` | Restore a workflow version |
 | `workflows.trigger_workflow()` | Manually start a workflow run |
 
 ### Invites
