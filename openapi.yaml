@@ -11602,7 +11602,11 @@ paths:
       operationId: deleteProfile
       tags: [Profiles]
       summary: Delete profile
-      description: Permanently deletes a profile by ID.
+      description: >-
+        Permanently deletes a profile. Active connected accounts block deletion
+        (returns 400) - disconnect them first. Any remaining disconnected
+        accounts and provisioned WhatsApp numbers are moved to another of your
+        profiles (a new one is created only if needed), never deleted.
       parameters:
         - name: profileId
           in: path
@@ -11617,7 +11621,7 @@ paths:
                 $ref: '#/components/schemas/ProfileDeleteResponse'
               example:
                 message: "Profile deleted successfully"
-        '400': { description: Has connected accounts }
+        '400': { description: Profile has active connected accounts; disconnect them first }
         '401': { $ref: '#/components/responses/Unauthorized' }
         '403': { description: Forbidden }
         '404': { $ref: '#/components/responses/NotFound' }
