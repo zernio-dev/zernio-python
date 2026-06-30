@@ -10367,6 +10367,101 @@ def register_generated_tools(mcp, _get_client):
 
     @mcp.tool(
         annotations=ToolAnnotations(
+            title="Get business username",
+            readOnlyHint=True,
+            destructiveHint=False,
+            openWorldHint=False,
+        )
+    )
+    def whatsapp_get_whatsapp_business_username(account_id: str) -> str:
+        """Get business username
+
+        Args:
+            account_id: WhatsApp social account ID (required)"""
+        client = _get_client()
+        try:
+            response = client.whatsapp.get_whatsapp_business_username(
+                account_id=account_id
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Set business username",
+            readOnlyHint=False,
+            destructiveHint=True,
+            openWorldHint=True,
+        )
+    )
+    def whatsapp_set_whatsapp_business_username(
+        account_id: str, username: str, transfer_action: str = "none"
+    ) -> str:
+        """Set business username
+
+           Args:
+               account_id: WhatsApp social account ID (required)
+               username: Desired username. Letters, digits, period, and underscore only. Must contain at least one letter. No leading, trailing, or consecutive periods. No www prefix. No domain TLD suffix.
+        (required)
+               transfer_action: Pass `force_transfer` to request a transfer if the username is held by another account"""
+        client = _get_client()
+        try:
+            response = client.whatsapp.set_whatsapp_business_username(
+                account_id=account_id,
+                username=username,
+                transfer_action=transfer_action,
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Delete business username",
+            readOnlyHint=False,
+            destructiveHint=True,
+            openWorldHint=True,
+        )
+    )
+    def whatsapp_delete_whatsapp_business_username(account_id: str) -> str:
+        """Delete business username
+
+        Args:
+            account_id: WhatsApp social account ID (required)"""
+        client = _get_client()
+        try:
+            response = client.whatsapp.delete_whatsapp_business_username(
+                account_id=account_id
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Get username suggestions",
+            readOnlyHint=True,
+            destructiveHint=False,
+            openWorldHint=False,
+        )
+    )
+    def whatsapp_get_whatsapp_business_username_suggestions(account_id: str) -> str:
+        """Get username suggestions
+
+        Args:
+            account_id: WhatsApp social account ID (required)"""
+        client = _get_client()
+        try:
+            response = client.whatsapp.get_whatsapp_business_username_suggestions(
+                account_id=account_id
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
             title="Check if a user is blocked",
             readOnlyHint=True,
             destructiveHint=False,

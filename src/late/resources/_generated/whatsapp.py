@@ -177,6 +177,43 @@ class WhatsappResource:
             "/v1/whatsapp/business-profile/display-name", data=payload
         )
 
+    def get_whatsapp_business_username(self, account_id: str) -> dict[str, Any]:
+        """Get business username"""
+        params = self._build_params(
+            account_id=account_id,
+        )
+        return self._client._get(
+            "/v1/whatsapp/business-profile/username", params=params
+        )
+
+    def set_whatsapp_business_username(
+        self, account_id: str, username: str, *, transfer_action: str | None = "none"
+    ) -> dict[str, Any]:
+        """Set business username"""
+        payload = self._build_payload(
+            account_id=account_id,
+            username=username,
+            transfer_action=transfer_action,
+        )
+        return self._client._post(
+            "/v1/whatsapp/business-profile/username", data=payload
+        )
+
+    def delete_whatsapp_business_username(self, account_id: str) -> dict[str, Any]:
+        """Delete business username"""
+        return self._client._delete("/v1/whatsapp/business-profile/username")
+
+    def get_whatsapp_business_username_suggestions(
+        self, account_id: str
+    ) -> dict[str, Any]:
+        """Get username suggestions"""
+        params = self._build_params(
+            account_id=account_id,
+        )
+        return self._client._get(
+            "/v1/whatsapp/business-profile/username/suggestions", params=params
+        )
+
     def get_whats_app_block_status(self, account_id: str, user: str) -> dict[str, Any]:
         """Check if a user is blocked"""
         params = self._build_params(
@@ -519,6 +556,45 @@ class WhatsappResource:
         )
         return await self._client._apost(
             "/v1/whatsapp/business-profile/display-name", data=payload
+        )
+
+    async def aget_whatsapp_business_username(self, account_id: str) -> dict[str, Any]:
+        """Get business username (async)"""
+        params = self._build_params(
+            account_id=account_id,
+        )
+        return await self._client._aget(
+            "/v1/whatsapp/business-profile/username", params=params
+        )
+
+    async def aset_whatsapp_business_username(
+        self, account_id: str, username: str, *, transfer_action: str | None = "none"
+    ) -> dict[str, Any]:
+        """Set business username (async)"""
+        payload = self._build_payload(
+            account_id=account_id,
+            username=username,
+            transfer_action=transfer_action,
+        )
+        return await self._client._apost(
+            "/v1/whatsapp/business-profile/username", data=payload
+        )
+
+    async def adelete_whatsapp_business_username(
+        self, account_id: str
+    ) -> dict[str, Any]:
+        """Delete business username (async)"""
+        return await self._client._adelete("/v1/whatsapp/business-profile/username")
+
+    async def aget_whatsapp_business_username_suggestions(
+        self, account_id: str
+    ) -> dict[str, Any]:
+        """Get username suggestions (async)"""
+        params = self._build_params(
+            account_id=account_id,
+        )
+        return await self._client._aget(
+            "/v1/whatsapp/business-profile/username/suggestions", params=params
         )
 
     async def aget_whats_app_block_status(

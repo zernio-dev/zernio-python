@@ -663,18 +663,22 @@ Both `from zernio import ...` and `from late import ...` work identically. The `
 | `whatsapp.get_whats_app_group_chat()` | Get group info |
 | `whatsapp.get_whats_app_template()` | Get template |
 | `whatsapp.get_whats_app_templates()` | List templates |
+| `whatsapp.get_whatsapp_business_username()` | Get business username |
+| `whatsapp.get_whatsapp_business_username_suggestions()` | Get username suggestions |
 | `whatsapp.update_whats_app_business_profile()` | Update business profile |
 | `whatsapp.update_whats_app_display_name()` | Request display name change |
 | `whatsapp.update_whats_app_group_chat()` | Update group settings |
 | `whatsapp.update_whats_app_template()` | Update template |
 | `whatsapp.delete_whats_app_group_chat()` | Delete group |
 | `whatsapp.delete_whats_app_template()` | Delete template |
+| `whatsapp.delete_whatsapp_business_username()` | Delete business username |
 | `whatsapp.add_whats_app_group_participants()` | Add participants |
 | `whatsapp.approve_whats_app_group_join_requests()` | Approve join requests |
 | `whatsapp.block_whats_app_users()` | Block users |
 | `whatsapp.reject_whats_app_group_join_requests()` | Reject join requests |
 | `whatsapp.remove_whats_app_group_participants()` | Remove participants |
 | `whatsapp.send_whats_app_conversion()` | Send WhatsApp conversion event |
+| `whatsapp.set_whatsapp_business_username()` | Set business username |
 | `whatsapp.unblock_whats_app_users()` | Unblock users |
 | `whatsapp.upload_whats_app_profile_photo()` | Upload profile picture |
 
