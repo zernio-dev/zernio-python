@@ -31,6 +31,7 @@ from ..resources import (
     InvitesResource,
     LogsResource,
     MediaResource,
+    MentionsResource,
     MessagesResource,
     PostsResource,
     ProfilesResource,
@@ -146,6 +147,7 @@ class Zernio(BaseClient):
         self.invites = InvitesResource(self)
         self.logs = LogsResource(self)
         self.media = MediaResource(self)
+        self.mentions = MentionsResource(self)
         self.messages = MessagesResource(self)
         self.posts = PostsResource(self)
         self.profiles = ProfilesResource(self)

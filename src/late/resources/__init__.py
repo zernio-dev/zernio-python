@@ -25,6 +25,7 @@ from ._generated.inbox_analytics import InboxAnalyticsResource
 from ._generated.instagram import InstagramResource
 from ._generated.invites import InvitesResource
 from ._generated.logs import LogsResource
+from ._generated.mentions import MentionsResource
 from ._generated.messages import MessagesResource
 from ._generated.reddit import RedditResource
 from ._generated.reviews import ReviewsResource
@@ -73,6 +74,7 @@ __all__ = [
     "InvitesResource",
     "LogsResource",
     "MediaResource",
+    "MentionsResource",
     "MessagesResource",
     "PostsResource",
     "ProfilesResource",

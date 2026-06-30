@@ -7693,6 +7693,44 @@ def register_generated_tools(mcp, _get_client):
         except Exception as e:
             return f"Error: {e}"
 
+    # MENTIONS
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="List mentions",
+            readOnlyHint=True,
+            destructiveHint=False,
+            openWorldHint=False,
+        )
+    )
+    def mentions_list_inbox_mentions(
+        account_id: str | None = None,
+        profile_id: str | None = None,
+        sort_order: str = "desc",
+        limit: int = 25,
+        cursor: str | None = None,
+    ) -> str:
+        """List mentions
+
+        Args:
+            account_id: Filter by social account ID
+            profile_id: Filter by profile ID
+            sort_order: Sort order by publishedAt
+            limit
+            cursor: Cursor for pagination (ID of the last item from the previous page)"""
+        client = _get_client()
+        try:
+            response = client.mentions.list_inbox_mentions(
+                account_id=account_id,
+                profile_id=profile_id,
+                sort_order=sort_order,
+                limit=limit,
+                cursor=cursor,
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
     # MESSAGES
 
     @mcp.tool(

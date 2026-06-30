@@ -269,6 +269,11 @@ tags:
       Unified inbox API for managing reviews on Facebook Pages and Google Business accounts.
       All endpoints aggregate data from multiple social accounts in a single API call.
       Requires Inbox addon.
+  - name: Mentions
+    description: |
+      Unified inbox API for managing mentions across connected accounts.
+      Currently supports LinkedIn organization mentions.
+      Requires Inbox addon.
   - name: Twitter Engagement
     description: |
       X/Twitter-specific engagement endpoints for retweeting, bookmarking, and following.
@@ -21308,6 +21313,99 @@ paths:
         '400': { description: Bad request }
         '401': { $ref: '#/components/responses/Unauthorized' }
         '404': { description: Account not found }
+
+  /v1/inbox/mentions:
+    get:
+      operationId: listInboxMentions
+      summary: List mentions
+      description: |
+        Returns mentions of your connected organization accounts, delivered via platform webhooks.
+        Currently supports LinkedIn organization mentions.
+
+        Requires Inbox addon.
+      tags: [Mentions]
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - name: accountId
+          in: query
+          schema: { type: string }
+          description: Filter by social account ID
+        - name: profileId
+          in: query
+          schema: { type: string }
+          description: Filter by profile ID
+        - name: sortOrder
+          in: query
+          schema: { type: string, enum: [asc, desc], default: desc }
+          description: Sort order by publishedAt
+        - name: limit
+          in: query
+          schema: { type: integer, minimum: 1, maximum: 100, default: 25 }
+        - name: cursor
+          in: query
+          schema: { type: string }
+          description: Cursor for pagination (ID of the last item from the previous page)
+      responses:
+        '200':
+          description: Paginated list of mentions
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id:
+                          type: string
+                          description: Mention document ID
+                        platform:
+                          type: string
+                          enum: [linkedin]
+                        accountId:
+                          type: string
+                        accountUsername:
+                          type: string
+                        content:
+                          type: string
+                          description: Text of the post that mentioned you
+                        permalink:
+                          type: string
+                          nullable: true
+                          description: URL to the source post on LinkedIn
+                        authorUrn:
+                          type: string
+                          nullable: true
+                          description: LinkedIn URN of the person who mentioned you
+                        organizationalEntity:
+                          type: string
+                          description: URN of the organization that was mentioned
+                        publishedAt:
+                          type: string
+                          format: date-time
+                        createdAt:
+                          type: string
+                          format: date-time
+                  pagination:
+                    type: object
+                    properties:
+                      hasMore:
+                        type: boolean
+                      cursor:
+                        type: string
+                        nullable: true
+                  meta:
+                    type: object
+                    properties:
+                      total:
+                        type: integer
+                      sortOrder:
+                        type: string
+                        enum: [asc, desc]
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { description: Inbox addon required }
 
   /v1/inbox/reviews:
     get:

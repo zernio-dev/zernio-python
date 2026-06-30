@@ -24,6 +24,7 @@ from .instagram import InstagramResource
 from .invites import InvitesResource
 from .logs import LogsResource
 from .media import MediaResource
+from .mentions import MentionsResource
 from .messages import MessagesResource
 from .posts import PostsResource
 from .profiles import ProfilesResource
@@ -68,6 +69,7 @@ __all__ = [
     "InvitesResource",
     "LogsResource",
     "MediaResource",
+    "MentionsResource",
     "MessagesResource",
     "PostsResource",
     "ProfilesResource",

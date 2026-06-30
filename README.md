@@ -572,6 +572,11 @@ Both `from zernio import ...` and `from late import ...` work identically. The `
 | `instagram.list_instagram_stories()` | List active Instagram stories |
 | `instagram.get_instagram_story_insights()` | Get Instagram story insights |
 
+### Mentions
+| Method | Description |
+|--------|-------------|
+| `mentions.list_inbox_mentions()` | List mentions |
+
 ### Messages (Inbox)
 | Method | Description |
 |--------|-------------|
