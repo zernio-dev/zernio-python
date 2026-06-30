@@ -5036,6 +5036,18 @@ components:
           type: number
           description: "Return on ad spend — derived as `purchaseValue / spend`. 0 when `spend` is 0. Equivalent to Meta's `purchase_roas` under default attribution. At ad-set and campaign levels this is recomputed from summed purchaseValue + spend (NOT averaged across children) so it's mathematically correct at every rollup level."
         lastSyncedAt: { type: string, format: date-time, description: "Present on individual ads only, not on campaign aggregations" }
+    AdDailyMetrics:
+      description: |
+        One day of metrics. Same fields as `AdMetrics` plus the `date` they
+        apply to. Returned inside a node's `daily[]` when `GET /v1/ads/tree` is
+        called with `timeIncrement=1`. Rate metrics (ctr/cpc/cpm/costPerConversion/
+        roas) are recomputed per day from that day's sums, so summing the additive
+        fields across a node's `daily[]` reproduces its aggregated `metrics` total.
+      allOf:
+        - $ref: '#/components/schemas/AdMetrics'
+        - type: object
+          properties:
+            date: { type: string, format: date, description: "Calendar day (YYYY-MM-DD) these metrics apply to." }
     AdStatus:
       type: string
       enum: [active, paused, pending_review, rejected, completed, cancelled, error]
@@ -5422,7 +5434,11 @@ components:
         ads:
           type: array
           items: { $ref: '#/components/schemas/Ad' }
-          description: Individual ads within this ad set (capped at 100). Returns a subset of Ad fields from the aggregation (core fields like _id, name, platform, status, budget, metrics, creative, goal are included; targeting and schedule may be absent).
+          description: Individual ads within this ad set (capped at 100). Returns a subset of Ad fields from the aggregation (core fields like _id, name, platform, status, budget, metrics, creative, goal are included; targeting and schedule may be absent). When `timeIncrement=1&dailyLevel=ad`, each entry also carries a `daily[]` array of `AdDailyMetrics`.
+        daily:
+          type: array
+          items: { $ref: '#/components/schemas/AdDailyMetrics' }
+          description: "Per-day metric series for this ad set. Present only when `GET /v1/ads/tree` is called with `timeIncrement=1` and `dailyLevel` is `adset` or `ad`."
     AdTreeCampaign:
       type: object
       description: Campaign with nested ad sets and rolled-up metrics
@@ -5503,6 +5519,10 @@ components:
         adSets:
           type: array
           items: { $ref: '#/components/schemas/AdTreeAdSet' }
+        daily:
+          type: array
+          items: { $ref: '#/components/schemas/AdDailyMetrics' }
+          description: "Per-day metric series for this campaign. Present only when `GET /v1/ads/tree` is called with `timeIncrement=1` (any `dailyLevel`). This is the per-campaign daily trend — summing its additive fields reproduces the campaign `metrics` total."
     AdCampaign:
       type: object
       properties:
@@ -27203,6 +27223,11 @@ paths:
         and campaign levels. Pagination is at the campaign level. Ads without a campaign or ad set
         ID are grouped into synthetic "Ungrouped" buckets.
         If no date range is provided, defaults to the last 90 days. Date range is capped at 730 days max.
+
+        Pass `timeIncrement=1` to also get a daily breakdown: each node gains a `daily[]` array of
+        per-day metrics (same fields as the aggregated `metrics`) in the same call. Use `dailyLevel`
+        (`campaign` default, or `adset` / `ad`) to choose which levels carry the series. This replaces
+        calling the tree once per day for per-campaign daily trends.
       security:
         - bearerAuth: []
       parameters:
@@ -27218,6 +27243,8 @@ paths:
         - { name: fromDate, in: query, schema: { type: string, format: date }, description: "Start of the METRICS date range (YYYY-MM-DD). Affects only the spend/impression numbers overlaid on each node, NOT which campaigns are returned. Defaults to 90 days ago." }
         - { name: toDate, in: query, schema: { type: string, format: date }, description: "End of metrics date range (YYYY-MM-DD). Defaults to today. Max 730-day range." }
         - { name: sort, in: query, schema: { type: string, enum: [newest, oldest, spend_desc, spend_asc], default: newest }, description: "Campaign-level sort order. `newest` (default) / `oldest` order by the campaign's newest-ad createdAt. `spend_desc` / `spend_asc` order by aggregated spend in the requested date range; campaigns with no spend land at the end." }
+        - { name: timeIncrement, in: query, schema: { type: integer, enum: [1] }, description: "Set to `1` to also return a daily breakdown. Mirrors Meta Insights' `time_increment=1`: each node gains a `daily[]` array of per-day metrics (same fields as the aggregated `metrics`) alongside the range total, so you get per-entity daily trends in ONE call instead of calling the tree once per day. Only `1` (daily) is supported. The daily series covers the same date range and uses the same source data as `metrics`. See `dailyLevel` to control which levels carry it." }
+        - { name: dailyLevel, in: query, schema: { type: string, enum: [campaign, adset, ad], default: campaign }, description: "Which tree levels get the `daily[]` series when `timeIncrement=1`. `campaign` (default) attaches it on campaign nodes only — the common per-campaign-trend case, and the smallest payload. `adset` adds it on ad sets too; `ad` adds it on every ad in `ads[]` as well (heaviest — a long range × up to 100 ads per ad set). Scope with `campaignId` to keep `ad`-level responses small. Ignored when `timeIncrement` is unset." }
       responses:
         '200':
           description: Nested campaign tree with pagination
@@ -27435,6 +27462,70 @@ paths:
                 properties:
                   message: { type: string }
         '401': { $ref: '#/components/responses/Unauthorized' }
+        '404': { $ref: '#/components/responses/NotFound' }
+
+  /v1/ads/campaigns/{campaignId}/analytics:
+    get:
+      operationId: getCampaignAnalytics
+      tags: [Ads]
+      summary: Get campaign analytics
+      description: |
+        Returns performance analytics for a whole campaign in one call: summary metrics, a daily
+        timeline over the requested date range (summed across the campaign's ads), and optional
+        demographic breakdowns. Breakdowns are fetched live from Meta at the campaign level (one call
+        per dimension, no per-ad fan-out), so an agency dashboard gets campaign-level age/gender/etc.
+        without summing thousands of per-ad reads. `campaignId` is the platform campaign id; pass
+        `platform` when a campaign id could be ambiguous across platforms. If no date range is provided,
+        defaults to the last 90 days. Date range is capped at 730 days max.
+      security:
+        - bearerAuth: []
+      parameters:
+        - { name: campaignId, in: path, required: true, schema: { type: string }, description: "Platform campaign id (platformCampaignId)." }
+        - { name: platform, in: query, schema: { type: string }, description: "Disambiguate when the campaign id exists across platforms (e.g. facebook, instagram)." }
+        - { name: fromDate, in: query, schema: { type: string, format: date }, description: "Start of date range (YYYY-MM-DD). Defaults to 90 days ago." }
+        - { name: toDate, in: query, schema: { type: string, format: date }, description: "End of date range (YYYY-MM-DD). Defaults to today. Max 730-day range." }
+        - name: breakdowns
+          in: query
+          schema: { type: string }
+          description: "Comma-separated breakdown dimensions (Meta only): age, gender, country, publisher_platform, device_platform, region, platform_position, impression_device, video_asset, image_asset, body_asset, title_asset."
+      responses:
+        '200':
+          description: Campaign analytics
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  campaign:
+                    type: object
+                    properties:
+                      id: { type: string }
+                      name: { type: [string, "null"] }
+                      platform: { type: string }
+                      status: { type: [string, "null"], description: "Effective campaign status (ACTIVE when any child ad is active)." }
+                      currency:
+                        type: [string, "null"]
+                        description: "ISO 4217 code of the ad account (e.g. USD, THB). All money values in `summary` and `daily` are in this currency."
+                  analytics:
+                    type: object
+                    properties:
+                      summary: { $ref: '#/components/schemas/AdMetrics' }
+                      daily:
+                        type: array
+                        items:
+                          allOf:
+                            - { $ref: '#/components/schemas/AdMetrics' }
+                            - type: object
+                              properties:
+                                date: { type: string, format: date }
+                      breakdowns:
+                        type: object
+                        additionalProperties:
+                          type: array
+                          items: { type: object }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403':
+          description: Ads access required. Legacy plans need the Ads add-on; included by default on usage-based plans.
         '404': { $ref: '#/components/responses/NotFound' }
 
   /v1/ads/{adId}/analytics:

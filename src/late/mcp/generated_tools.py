@@ -1640,6 +1640,8 @@ def register_generated_tools(mcp, _get_client):
         from_date: str | None = None,
         to_date: str | None = None,
         sort: str = "newest",
+        time_increment: int | None = None,
+        daily_level: str = "campaign",
     ) -> str:
         """Get campaign tree
 
@@ -1655,7 +1657,9 @@ def register_generated_tools(mcp, _get_client):
             campaign_id: Restrict the tree to a single campaign by its platform campaign id (the id the platform assigns, e.g. Meta's numeric campaign id). Filters the campaign set itself, so it works regardless of account size and pagination — pass this when you already hold a campaign id instead of paging the tree to find it. Mirrors the `campaignId` filter on GET /v1/ads.
             from_date: Start of the METRICS date range (YYYY-MM-DD). Affects only the spend/impression numbers overlaid on each node, NOT which campaigns are returned. Defaults to 90 days ago.
             to_date: End of metrics date range (YYYY-MM-DD). Defaults to today. Max 730-day range.
-            sort: Campaign-level sort order. `newest` (default) / `oldest` order by the campaign's newest-ad createdAt. `spend_desc` / `spend_asc` order by aggregated spend in the requested date range; campaigns with no spend land at the end."""
+            sort: Campaign-level sort order. `newest` (default) / `oldest` order by the campaign's newest-ad createdAt. `spend_desc` / `spend_asc` order by aggregated spend in the requested date range; campaigns with no spend land at the end.
+            time_increment: Set to `1` to also return a daily breakdown. Mirrors Meta Insights' `time_increment=1`: each node gains a `daily[]` array of per-day metrics (same fields as the aggregated `metrics`) alongside the range total, so you get per-entity daily trends in ONE call instead of calling the tree once per day. Only `1` (daily) is supported. The daily series covers the same date range and uses the same source data as `metrics`. See `dailyLevel` to control which levels carry it.
+            daily_level: Which tree levels get the `daily[]` series when `timeIncrement=1`. `campaign` (default) attaches it on campaign nodes only — the common per-campaign-trend case, and the smallest payload. `adset` adds it on ad sets too; `ad` adds it on every ad in `ads[]` as well (heaviest — a long range × up to 100 ads per ad set). Scope with `campaignId` to keep `ad`-level responses small. Ignored when `timeIncrement` is unset."""
         client = _get_client()
         try:
             response = client.ad_campaigns.get_ad_tree(
@@ -1671,6 +1675,8 @@ def register_generated_tools(mcp, _get_client):
                 from_date=from_date,
                 to_date=to_date,
                 sort=sort,
+                time_increment=time_increment,
+                daily_level=daily_level,
             )
             return _format_response(response)
         except Exception as e:
@@ -1860,6 +1866,42 @@ def register_generated_tools(mcp, _get_client):
         client = _get_client()
         try:
             response = client.ads.delete_ad(ad_id=ad_id)
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Get campaign analytics",
+            readOnlyHint=True,
+            destructiveHint=False,
+            openWorldHint=False,
+        )
+    )
+    def ads_get_campaign_analytics(
+        campaign_id: str,
+        platform: str | None = None,
+        from_date: str | None = None,
+        to_date: str | None = None,
+        breakdowns: str | None = None,
+    ) -> str:
+        """Get campaign analytics
+
+        Args:
+            campaign_id: Platform campaign id (platformCampaignId). (required)
+            platform: Disambiguate when the campaign id exists across platforms (e.g. facebook, instagram).
+            from_date: Start of date range (YYYY-MM-DD). Defaults to 90 days ago.
+            to_date: End of date range (YYYY-MM-DD). Defaults to today. Max 730-day range.
+            breakdowns: Comma-separated breakdown dimensions (Meta only): age, gender, country, publisher_platform, device_platform, region, platform_position, impression_device, video_asset, image_asset, body_asset, title_asset."""
+        client = _get_client()
+        try:
+            response = client.ads.get_campaign_analytics(
+                campaign_id=campaign_id,
+                platform=platform,
+                from_date=from_date,
+                to_date=to_date,
+                breakdowns=breakdowns,
+            )
             return _format_response(response)
         except Exception as e:
             return f"Error: {e}"

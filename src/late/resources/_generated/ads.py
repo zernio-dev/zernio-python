@@ -121,6 +121,26 @@ class AdsResource:
         """Cancel an ad"""
         return self._client._delete(f"/v1/ads/{ad_id}")
 
+    def get_campaign_analytics(
+        self,
+        campaign_id: str,
+        *,
+        platform: str | None = None,
+        from_date: str | None = None,
+        to_date: str | None = None,
+        breakdowns: str | None = None,
+    ) -> dict[str, Any]:
+        """Get campaign analytics"""
+        params = self._build_params(
+            platform=platform,
+            from_date=from_date,
+            to_date=to_date,
+            breakdowns=breakdowns,
+        )
+        return self._client._get(
+            f"/v1/ads/campaigns/{campaign_id}/analytics", params=params
+        )
+
     def get_ad_analytics(
         self,
         ad_id: str,
@@ -901,6 +921,26 @@ class AdsResource:
     async def adelete_ad(self, ad_id: str) -> dict[str, Any]:
         """Cancel an ad (async)"""
         return await self._client._adelete(f"/v1/ads/{ad_id}")
+
+    async def aget_campaign_analytics(
+        self,
+        campaign_id: str,
+        *,
+        platform: str | None = None,
+        from_date: str | None = None,
+        to_date: str | None = None,
+        breakdowns: str | None = None,
+    ) -> dict[str, Any]:
+        """Get campaign analytics (async)"""
+        params = self._build_params(
+            platform=platform,
+            from_date=from_date,
+            to_date=to_date,
+            breakdowns=breakdowns,
+        )
+        return await self._client._aget(
+            f"/v1/ads/campaigns/{campaign_id}/analytics", params=params
+        )
 
     async def aget_ad_analytics(
         self,

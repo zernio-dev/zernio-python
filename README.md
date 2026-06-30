@@ -409,6 +409,7 @@ Both `from zernio import ...` and `from late import ...` work identically. The `
 | `ads.get_ad_analytics()` | Get ad analytics |
 | `ads.get_ad_comments()` | List comments on an ad |
 | `ads.get_ad_tracking_tags()` | Get ad tracking tags |
+| `ads.get_campaign_analytics()` | Get campaign analytics |
 | `ads.get_conversion_destination()` | Get a conversion destination |
 | `ads.get_conversion_metrics()` | Get attribution metrics |
 | `ads.get_conversions_quality()` | Get Event Match Quality |
