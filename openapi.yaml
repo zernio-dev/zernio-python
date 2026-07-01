@@ -10806,7 +10806,7 @@ paths:
     post:
       operationId: syncExternalPosts
       tags: [Posts]
-      summary: Sync or verify an external post on demand
+      summary: Sync an external post
       description: |
         Fetch an account's latest external posts (published directly on the platform, not through Zernio) on demand, so a just-published post is retrievable within seconds instead of waiting for the background sync (which refreshes each account at most every ~90 minutes).
 

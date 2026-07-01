@@ -140,7 +140,7 @@ class PostsResource:
     def sync_external_posts(
         self, account_id: str, *, url: str | None = None, post_id: str | None = None
     ) -> dict[str, Any]:
-        """Sync or verify an external post on demand"""
+        """Sync an external post"""
         payload = self._build_payload(
             account_id=account_id,
             url=url,
@@ -348,7 +348,7 @@ class PostsResource:
     async def async_external_posts(
         self, account_id: str, *, url: str | None = None, post_id: str | None = None
     ) -> dict[str, Any]:
-        """Sync or verify an external post on demand (async)"""
+        """Sync an external post (async)"""
         payload = self._build_payload(
             account_id=account_id,
             url=url,

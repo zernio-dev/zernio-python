@@ -8350,7 +8350,7 @@ def register_generated_tools(mcp, _get_client):
 
     @mcp.tool(
         annotations=ToolAnnotations(
-            title="Sync or verify an external post on demand",
+            title="Sync an external post",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
@@ -8359,7 +8359,7 @@ def register_generated_tools(mcp, _get_client):
     def posts_sync_external_posts(
         account_id: str, url: str | None = None, post_id: str | None = None
     ) -> str:
-        """Sync or verify an external post on demand
+        """Sync an external post
 
         Args:
             account_id: SocialAccount ID whose posts to sync. Must be connected to Zernio. (required)
