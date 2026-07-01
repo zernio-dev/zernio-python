@@ -18939,10 +18939,12 @@ paths:
       parameters:
         - name: type
           in: query
-          description: Log category to query
+          description: |
+            Log category to query. Use `all` for the unified view across every category,
+            or `api_request` for your API request logs (method, path, status, latency).
           schema:
             type: string
-            enum: [publishing, connections, webhooks, messaging]
+            enum: [all, publishing, connections, webhooks, messaging, workflow_event, api_request]
             default: publishing
         - name: status
           in: query
@@ -18989,6 +18991,49 @@ paths:
             type: integer
             minimum: 0
             default: 0
+        - name: account_id
+          in: query
+          description: Filter by connected account ID
+          schema:
+            type: string
+        - name: event
+          in: query
+          description: Filter webhook logs by event (e.g. post.published, message.received)
+          schema:
+            type: string
+        - name: request_id
+          in: query
+          description: Correlation ID — returns every log spawned by a single API request
+          schema:
+            type: string
+        - name: from
+          in: query
+          description: Precise start instant (ISO 8601); narrows within the day range
+          schema:
+            type: string
+            format: date-time
+        - name: to
+          in: query
+          description: Precise end instant (ISO 8601)
+          schema:
+            type: string
+            format: date-time
+        - name: status_code
+          in: query
+          description: Filter by exact HTTP status code (api_request logs)
+          schema:
+            type: integer
+        - name: api_key_id
+          in: query
+          description: Filter by the API key that made the request (api_request logs)
+          schema:
+            type: string
+        - name: include_read_receipts
+          in: query
+          description: Include message.read / message.delivered events (hidden by default for messaging logs)
+          schema:
+            type: boolean
+            default: false
       responses:
         '200':
           description: Logs retrieved successfully
@@ -19040,6 +19085,24 @@ paths:
                         metadata:
                           type: string
                           description: Additional context as JSON string
+                        request_id:
+                          type: string
+                          description: Correlation ID linking every log from one API request (api_request logs)
+                        api_key_id:
+                          type: string
+                          description: The API key that made the request (api_request logs)
+                        method:
+                          type: string
+                          description: HTTP method (api_request logs)
+                        path:
+                          type: string
+                          description: Request path (api_request logs)
+                        ip_address:
+                          type: string
+                          description: Client IP address (api_request logs)
+                        user_agent:
+                          type: string
+                          description: Client user-agent (api_request logs)
                   pagination:
                     type: object
                     properties:

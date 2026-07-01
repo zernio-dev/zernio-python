@@ -10,6 +10,8 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Any
 
 if TYPE_CHECKING:
+    from datetime import datetime
+
     from ..client.base import BaseClient
 
 
@@ -65,6 +67,14 @@ class LogsResource:
         days: int | None = 90,
         limit: int | None = 50,
         skip: int | None = 0,
+        account_id: str | None = None,
+        event: str | None = None,
+        request_id: str | None = None,
+        from_: datetime | str | None = None,
+        to: datetime | str | None = None,
+        status_code: int | None = None,
+        api_key_id: str | None = None,
+        include_read_receipts: bool | None = False,
     ) -> dict[str, Any]:
         """List activity logs"""
         params = self._build_params(
@@ -76,6 +86,14 @@ class LogsResource:
             days=days,
             limit=limit,
             skip=skip,
+            account_id=account_id,
+            event=event,
+            request_id=request_id,
+            from_=from_,
+            to=to,
+            status_code=status_code,
+            api_key_id=api_key_id,
+            include_read_receipts=include_read_receipts,
         )
         return self._client._get("/v1/logs", params=params)
 
@@ -90,6 +108,14 @@ class LogsResource:
         days: int | None = 90,
         limit: int | None = 50,
         skip: int | None = 0,
+        account_id: str | None = None,
+        event: str | None = None,
+        request_id: str | None = None,
+        from_: datetime | str | None = None,
+        to: datetime | str | None = None,
+        status_code: int | None = None,
+        api_key_id: str | None = None,
+        include_read_receipts: bool | None = False,
     ) -> dict[str, Any]:
         """List activity logs (async)"""
         params = self._build_params(
@@ -101,5 +127,13 @@ class LogsResource:
             days=days,
             limit=limit,
             skip=skip,
+            account_id=account_id,
+            event=event,
+            request_id=request_id,
+            from_=from_,
+            to=to,
+            status_code=status_code,
+            api_key_id=api_key_id,
+            include_read_receipts=include_read_receipts,
         )
         return await self._client._aget("/v1/logs", params=params)

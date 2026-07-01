@@ -7663,18 +7663,35 @@ def register_generated_tools(mcp, _get_client):
         days: int = 90,
         limit: int = 50,
         skip: int = 0,
+        account_id: str | None = None,
+        event: str | None = None,
+        request_id: str | None = None,
+        from_: str | None = None,
+        to: str | None = None,
+        status_code: int | None = None,
+        api_key_id: str | None = None,
+        include_read_receipts: bool = False,
     ) -> str:
         """List activity logs
 
-        Args:
-            type: Log category to query
-            status: Filter by status
-            platform: Filter by platform
-            action: Filter by action (e.g., post.published, message.sent, account.connected, webhook.delivered)
-            search: Free-text search across log fields
-            days: Number of days to look back (max 90)
-            limit: Maximum number of logs to return (max 100)
-            skip: Number of logs to skip (for pagination)"""
+            Args:
+                type: Log category to query. Use `all` for the unified view across every category,
+        or `api_request` for your API request logs (method, path, status, latency).
+                status: Filter by status
+                platform: Filter by platform
+                action: Filter by action (e.g., post.published, message.sent, account.connected, webhook.delivered)
+                search: Free-text search across log fields
+                days: Number of days to look back (max 90)
+                limit: Maximum number of logs to return (max 100)
+                skip: Number of logs to skip (for pagination)
+                account_id: Filter by connected account ID
+                event: Filter webhook logs by event (e.g. post.published, message.received)
+                request_id: Correlation ID — returns every log spawned by a single API request
+                from_: Precise start instant (ISO 8601); narrows within the day range
+                to: Precise end instant (ISO 8601)
+                status_code: Filter by exact HTTP status code (api_request logs)
+                api_key_id: Filter by the API key that made the request (api_request logs)
+                include_read_receipts: Include message.read / message.delivered events (hidden by default for messaging logs)"""
         client = _get_client()
         try:
             response = client.logs.list_logs(
@@ -7686,6 +7703,14 @@ def register_generated_tools(mcp, _get_client):
                 days=days,
                 limit=limit,
                 skip=skip,
+                account_id=account_id,
+                event=event,
+                request_id=request_id,
+                from_=from_,
+                to=to,
+                status_code=status_code,
+                api_key_id=api_key_id,
+                include_read_receipts=include_read_receipts,
             )
             return _format_response(response)
         except Exception as e:
