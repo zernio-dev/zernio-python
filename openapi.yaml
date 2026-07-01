@@ -793,6 +793,64 @@ components:
           type: array
           description: Individual image URLs for gallery posts (only present when isGallery is true)
           items: { type: string, format: uri }
+    ExternalPostSummary:
+      type: object
+      description: |
+        A post synced from a platform (published directly on the platform, not
+        through Zernio). Returned by GET /v1/posts?source=external and
+        POST /v1/posts/sync-external. Analytics are exposed separately via
+        GET /v1/analytics?source=external.
+      properties:
+        platform:
+          type: string
+          description: Platform the post belongs to (e.g. instagram, youtube, tiktok)
+        platformPostId:
+          type: string
+          description: The platform's own post/media/video id
+        platformPostUrl:
+          type: string
+          description: Canonical URL (permalink) of the post on the platform
+        content:
+          type: string
+          description: Post caption / text
+        publishedAt:
+          type: string
+          format: date-time
+          description: When the post was published on the platform
+        mediaType:
+          type: string
+          description: Media type (e.g. image, video, carousel)
+        mediaUrl:
+          type: string
+          description: Primary media URL
+        thumbnailUrl:
+          type: string
+          description: Thumbnail URL
+        mediaItems:
+          type: array
+          description: Per-item media (for carousels / multi-media posts)
+          items:
+            type: object
+        analytics:
+          type: object
+          description: |
+            Engagement + insights for the post. `likes` and `comments` are
+            available immediately after an on-demand sync (they come from the
+            platform listing). `reach`, `impressions`, `views` depend on the
+            platform's insights, which carry their own delay (e.g. ~24h on
+            Instagram) and read 0 until the platform makes them available.
+          properties:
+            likes: { type: integer }
+            comments: { type: integer }
+            shares: { type: integer }
+            saves: { type: integer }
+            sends: { type: integer }
+            clicks: { type: integer }
+            views: { type: integer }
+            reach: { type: integer }
+            impressions: { type: integer }
+            engagementRate: { type: number }
+            lastUpdated: { type: string, format: date-time, description: When these metrics were last refreshed }
     ErrorResponse:
       type: object
       description: |
@@ -10744,6 +10802,83 @@ paths:
             X-RateLimit-Reset:
               description: Unix timestamp (seconds since epoch) when the next slot frees up in the sliding window
               schema: { type: integer }
+  /v1/posts/sync-external:
+    post:
+      operationId: syncExternalPosts
+      tags: [Posts]
+      summary: Sync or verify an external post on demand
+      description: |
+        Fetch an account's latest external posts (published directly on the platform, not through Zernio) on demand, so a just-published post is retrievable within seconds instead of waiting for the background sync (which refreshes each account at most every ~90 minutes).
+
+        Primary use case: verifying a submitted post. When a user publishes on the platform and immediately pastes the post URL into your app, call this with `accountId` plus `url` (or `postId`) to confirm the post exists and return its metadata.
+
+        Behavior:
+        - We check our stored copy first and return immediately if the post is already known (no platform call).
+        - Otherwise we fetch the account's latest posts live from the platform, then match and return the submitted post.
+        - Requests are debounced per account (~15s): if the account was just synced, the live fetch is skipped.
+
+        `accountId` is required — a post URL or id alone cannot be resolved to an account, and the account must be connected to Zernio (we use its token to read the platform). Supported for every platform with a listing API (Instagram, Facebook, TikTok, YouTube, X, Threads, Pinterest, Reddit, Bluesky, Google Business, and LinkedIn organization accounts; LinkedIn personal accounts are not supported).
+
+        `url` accepts any format the platform uses (e.g. `instagram.com/p/…`, `instagram.com/reel/…`, `youtu.be/…`, `youtube.com/shorts/…`, `tiktok.com/@user/video/…`, and `vm.tiktok.com` short links). Pass `postId` (the platform media/video id) as an alternative locator.
+
+        Note: post-level analytics (reach, impressions) still carry the platform's own delay (e.g. ~24h on Instagram). This endpoint confirms the post exists and returns its metadata plus basic engagement (likes, comments), not delayed insights.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [accountId]
+              properties:
+                accountId:
+                  type: string
+                  description: SocialAccount ID whose posts to sync. Must be connected to Zernio.
+                url:
+                  type: string
+                  description: The post URL to locate. Optional. Provide `url` or `postId` to return a specific post; omit both to just refresh and return the account's recent posts.
+                postId:
+                  type: string
+                  description: The platform post/media/video id to locate, as an alternative to `url`. Optional.
+      responses:
+        '200':
+          description: |
+            Sync result. When `url` or `postId` is provided, returns the matched post (or `found: false`). When neither is provided, returns the account's freshly-synced recent posts.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  synced:
+                    type: object
+                    properties:
+                      postsFound: { type: integer, description: Posts returned by the platform listing during the on-demand sync }
+                      postsSynced: { type: integer, description: Posts inserted or updated in Zernio }
+                      skipped: { type: boolean, description: "True when no live fetch ran: the post was already stored, or the account was synced within the debounce window" }
+                  found:
+                    type: boolean
+                    description: Present only when a locator (`url`/`postId`) was provided — whether the post was found.
+                  post:
+                    description: The matched external post, or null when not found. Present only when a locator was provided.
+                    oneOf:
+                      - $ref: '#/components/schemas/ExternalPostSummary'
+                      - type: 'null'
+                  posts:
+                    type: array
+                    description: The account's recent external posts. Present only when no locator was provided.
+                    items:
+                      $ref: '#/components/schemas/ExternalPostSummary'
+        '400':
+          description: Invalid request (e.g. `accountId` missing or malformed)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Account not found (or not owned by the authenticated user)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
   /v1/posts/{postId}:
     get:
       operationId: getPost

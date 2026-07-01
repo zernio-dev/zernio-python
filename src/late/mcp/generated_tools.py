@@ -8350,6 +8350,32 @@ def register_generated_tools(mcp, _get_client):
 
     @mcp.tool(
         annotations=ToolAnnotations(
+            title="Sync or verify an external post on demand",
+            readOnlyHint=False,
+            destructiveHint=True,
+            openWorldHint=True,
+        )
+    )
+    def posts_sync_external_posts(
+        account_id: str, url: str | None = None, post_id: str | None = None
+    ) -> str:
+        """Sync or verify an external post on demand
+
+        Args:
+            account_id: SocialAccount ID whose posts to sync. Must be connected to Zernio. (required)
+            url: The post URL to locate. Optional. Provide `url` or `postId` to return a specific post; omit both to just refresh and return the account's recent posts.
+            post_id: The platform post/media/video id to locate, as an alternative to `url`. Optional."""
+        client = _get_client()
+        try:
+            response = client.posts.sync_external_posts(
+                account_id=account_id, url=url, post_id=post_id
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
             title="Get post",
             readOnlyHint=True,
             destructiveHint=False,
