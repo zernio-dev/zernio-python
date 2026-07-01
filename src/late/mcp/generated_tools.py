@@ -4253,6 +4253,32 @@ def register_generated_tools(mcp, _get_client):
 
     @mcp.tool(
         annotations=ToolAnnotations(
+            title="Sync an external post",
+            readOnlyHint=False,
+            destructiveHint=True,
+            openWorldHint=True,
+        )
+    )
+    def analytics_sync_external_posts(
+        account_id: str, url: str | None = None, post_id: str | None = None
+    ) -> str:
+        """Sync an external post
+
+        Args:
+            account_id: SocialAccount ID whose posts to sync. Must be connected to Zernio. (required)
+            url: The post URL to locate. Optional. Provide `url` or `postId` to return a specific post; omit both to just refresh and return the account's recent posts.
+            post_id: The platform post/media/video id to locate, as an alternative to `url`. Optional."""
+        client = _get_client()
+        try:
+            response = client.analytics.sync_external_posts(
+                account_id=account_id, url=url, post_id=post_id
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
             title="Get LinkedIn aggregate stats",
             readOnlyHint=True,
             destructiveHint=False,
@@ -8343,32 +8369,6 @@ def register_generated_tools(mcp, _get_client):
                 recycling=recycling,
                 queued_from_profile=queued_from_profile,
                 queue_id=queue_id,
-            )
-            return _format_response(response)
-        except Exception as e:
-            return f"Error: {e}"
-
-    @mcp.tool(
-        annotations=ToolAnnotations(
-            title="Sync an external post",
-            readOnlyHint=False,
-            destructiveHint=True,
-            openWorldHint=True,
-        )
-    )
-    def posts_sync_external_posts(
-        account_id: str, url: str | None = None, post_id: str | None = None
-    ) -> str:
-        """Sync an external post
-
-        Args:
-            account_id: SocialAccount ID whose posts to sync. Must be connected to Zernio. (required)
-            url: The post URL to locate. Optional. Provide `url` or `postId` to return a specific post; omit both to just refresh and return the account's recent posts.
-            post_id: The platform post/media/video id to locate, as an alternative to `url`. Optional."""
-        client = _get_client()
-        try:
-            response = client.posts.sync_external_posts(
-                account_id=account_id, url=url, post_id=post_id
             )
             return _format_response(response)
         except Exception as e:

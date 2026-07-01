@@ -404,6 +404,17 @@ class AnalyticsResource:
             "/v1/analytics/googlebusiness/search-keywords", params=params
         )
 
+    def sync_external_posts(
+        self, account_id: str, *, url: str | None = None, post_id: str | None = None
+    ) -> dict[str, Any]:
+        """Sync an external post"""
+        payload = self._build_payload(
+            account_id=account_id,
+            url=url,
+            post_id=post_id,
+        )
+        return self._client._post("/v1/posts/sync-external", data=payload)
+
     def get_linked_in_aggregate_analytics(
         self,
         account_id: str,
@@ -812,6 +823,17 @@ class AnalyticsResource:
         return await self._client._aget(
             "/v1/analytics/googlebusiness/search-keywords", params=params
         )
+
+    async def async_external_posts(
+        self, account_id: str, *, url: str | None = None, post_id: str | None = None
+    ) -> dict[str, Any]:
+        """Sync an external post (async)"""
+        payload = self._build_payload(
+            account_id=account_id,
+            url=url,
+            post_id=post_id,
+        )
+        return await self._client._apost("/v1/posts/sync-external", data=payload)
 
     async def aget_linked_in_aggregate_analytics(
         self,

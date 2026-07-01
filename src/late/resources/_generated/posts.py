@@ -137,17 +137,6 @@ class PostsResource:
         )
         return self._client._post("/v1/posts", data=payload)
 
-    def sync_external_posts(
-        self, account_id: str, *, url: str | None = None, post_id: str | None = None
-    ) -> dict[str, Any]:
-        """Sync an external post"""
-        payload = self._build_payload(
-            account_id=account_id,
-            url=url,
-            post_id=post_id,
-        )
-        return self._client._post("/v1/posts/sync-external", data=payload)
-
     def get_post(self, post_id: str) -> dict[str, Any]:
         """Get post"""
         return self._client._get(f"/v1/posts/{post_id}")
@@ -344,17 +333,6 @@ class PostsResource:
             queue_id=queue_id,
         )
         return await self._client._apost("/v1/posts", data=payload)
-
-    async def async_external_posts(
-        self, account_id: str, *, url: str | None = None, post_id: str | None = None
-    ) -> dict[str, Any]:
-        """Sync an external post (async)"""
-        payload = self._build_payload(
-            account_id=account_id,
-            url=url,
-            post_id=post_id,
-        )
-        return await self._client._apost("/v1/posts/sync-external", data=payload)
 
     async def aget_post(self, post_id: str) -> dict[str, Any]:
         """Get post (async)"""

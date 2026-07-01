@@ -191,7 +191,6 @@ Both `from zernio import ...` and `from late import ...` work identically. The `
 | `posts.delete_post()` | Delete post |
 | `posts.edit_post()` | Edit published post |
 | `posts.retry_post()` | Retry failed post |
-| `posts.sync_external_posts()` | Sync an external post |
 | `posts.unpublish_post()` | Unpublish post |
 
 ### Accounts
@@ -244,6 +243,7 @@ Both `from zernio import ...` and `from late import ...` work identically. The `
 | `analytics.get_you_tube_daily_views()` | Get YouTube daily views |
 | `analytics.get_you_tube_demographics()` | Get YouTube demographics |
 | `analytics.get_you_tube_video_retention()` | Get YouTube video retention curve |
+| `analytics.sync_external_posts()` | Sync an external post |
 
 ### Account Groups
 | Method | Description |
