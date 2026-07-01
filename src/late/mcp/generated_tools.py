@@ -7949,6 +7949,7 @@ def register_generated_tools(mcp, _get_client):
         message: str | None = None,
         attachment_url: str | None = None,
         attachment_type: str | None = None,
+        attachment_name: str | None = None,
         voice_note: bool | None = None,
         quick_replies: list[dict[str, Any]] | None = None,
         buttons: list[dict[str, Any]] | None = None,
@@ -7969,6 +7970,7 @@ def register_generated_tools(mcp, _get_client):
                 message: Message text
                 attachment_url: URL of the attachment to send (image, video, audio, or file). The URL must be publicly accessible. For binary file uploads, use multipart/form-data instead.
                 attachment_type: Type of attachment. Defaults to file if not specified.
+                attachment_name: WhatsApp only. Display name for a document sent via attachmentUrl with attachmentType: file (e.g. "Report.pdf"). Maps to the recipient's file name; without it WhatsApp derives the name from the URL and shows "Untitled". Ignored for image/video/audio and for binary uploads (which use the uploaded file's name).
                 voice_note: WhatsApp only. When `true` on an audio attachment, the message is sent
         as a voice message (PTT) — the recipient sees the waveform + voice-note
         UI instead of a basic audio attachment. The audio file MUST be `.ogg`
@@ -8034,6 +8036,7 @@ def register_generated_tools(mcp, _get_client):
                 message=message,
                 attachment_url=attachment_url,
                 attachment_type=attachment_type,
+                attachment_name=attachment_name,
                 voice_note=voice_note,
                 quick_replies=quick_replies,
                 buttons=buttons,
