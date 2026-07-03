@@ -1930,6 +1930,9 @@ components:
             id:
               type: string
               description: Social account ID
+            accountId:
+              type: string
+              description: Social account ID (same as id); canonical field for account filtering.
             platform:
               type: string
             username:
@@ -1992,6 +1995,9 @@ components:
             id:
               type: string
               description: Social account ID (the facebook account owning the Page)
+            accountId:
+              type: string
+              description: Social account ID (same as id); canonical field for account filtering.
             platform:
               type: string
               enum: [facebook]
@@ -2064,6 +2070,9 @@ components:
           properties:
             id:
               type: string
+            accountId:
+              type: string
+              description: Social account ID (same as id); canonical field for account filtering.
             platform:
               type: string
             username:
@@ -2094,6 +2103,9 @@ components:
           properties:
             id:
               type: string
+            accountId:
+              type: string
+              description: Social account ID (same as id); canonical field for account filtering.
             platform:
               type: string
             username:
@@ -2165,6 +2177,9 @@ components:
           properties:
             id:
               type: string
+            accountId:
+              type: string
+              description: Social account ID (same as id); canonical field for account filtering.
             platform:
               type: string
             username:
@@ -2313,6 +2328,9 @@ components:
         id:
           type: string
           description: Social account ID
+        accountId:
+          type: string
+          description: Social account ID (same value as id). Canonical field so consumers can filter every webhook event on one field (e.g. route staging vs production by account). id is kept for backward compatibility.
         platform: { type: string }
         username: { type: string }
         displayName: { type: string }
