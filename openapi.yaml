@@ -1565,6 +1565,9 @@ components:
                     type: string
                   status:
                     type: string
+                  accountId:
+                    type: string
+                    description: SocialAccount id this platform target published through. Use it to route events by connected account (e.g. separate staging vs production endpoints). A post can span multiple accounts.
                   platformPostId:
                     type: string
                   publishedUrl:
@@ -1615,6 +1618,7 @@ components:
                 properties:
                   platform: { type: string }
                   status: { type: string }
+                  accountId: { type: string, description: 'SocialAccount id this platform target published through. On post.platform.* events see also the top-level `account` block.' }
                   platformPostId: { type: string }
                   publishedUrl: { type: string }
                   error: { type: string }
