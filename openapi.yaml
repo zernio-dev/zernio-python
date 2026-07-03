@@ -601,6 +601,8 @@ components:
             **send_message**: `{ messageType: text|template|media|interactive, text,
             template:{name,language,variableMapping}, media:{mediaType:image|video|audio|document,
             url,caption}, interactive }`. `template` and `interactive` are WhatsApp-only.
+            `interactive.type` is inferred from the payload shape when omitted; payloads with
+            neither `type` nor an inferable shape are rejected.
 
 
             **wait_for_reply**: `{ timeoutMinutes:int (max 43200), saveAs:string }`. Resume via
