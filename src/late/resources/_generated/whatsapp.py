@@ -310,12 +310,17 @@ class WhatsappResource:
         join_approval_mode: str | None = None,
     ) -> dict[str, Any]:
         """Update group settings"""
+        params = self._build_params(
+            account_id=account_id,
+        )
         payload = self._build_payload(
             subject=subject,
             description=description,
             join_approval_mode=join_approval_mode,
         )
-        return self._client._post(f"/v1/whatsapp/wa-groups/{group_id}", data=payload)
+        return self._client._post(
+            f"/v1/whatsapp/wa-groups/{group_id}", data=payload, params=params
+        )
 
     def delete_whats_app_group_chat(
         self, group_id: str, account_id: str
@@ -330,11 +335,16 @@ class WhatsappResource:
         self, group_id: str, account_id: str, phone_numbers: list[str]
     ) -> dict[str, Any]:
         """Add participants"""
+        params = self._build_params(
+            account_id=account_id,
+        )
         payload = self._build_payload(
             phone_numbers=phone_numbers,
         )
         return self._client._post(
-            f"/v1/whatsapp/wa-groups/{group_id}/participants", data=payload
+            f"/v1/whatsapp/wa-groups/{group_id}/participants",
+            data=payload,
+            params=params,
         )
 
     def remove_whats_app_group_participants(
@@ -374,11 +384,16 @@ class WhatsappResource:
         self, group_id: str, account_id: str, phone_numbers: list[str]
     ) -> dict[str, Any]:
         """Approve join requests"""
+        params = self._build_params(
+            account_id=account_id,
+        )
         payload = self._build_payload(
             phone_numbers=phone_numbers,
         )
         return self._client._post(
-            f"/v1/whatsapp/wa-groups/{group_id}/join-requests", data=payload
+            f"/v1/whatsapp/wa-groups/{group_id}/join-requests",
+            data=payload,
+            params=params,
         )
 
     def reject_whats_app_group_join_requests(
@@ -699,13 +714,16 @@ class WhatsappResource:
         join_approval_mode: str | None = None,
     ) -> dict[str, Any]:
         """Update group settings (async)"""
+        params = self._build_params(
+            account_id=account_id,
+        )
         payload = self._build_payload(
             subject=subject,
             description=description,
             join_approval_mode=join_approval_mode,
         )
         return await self._client._apost(
-            f"/v1/whatsapp/wa-groups/{group_id}", data=payload
+            f"/v1/whatsapp/wa-groups/{group_id}", data=payload, params=params
         )
 
     async def adelete_whats_app_group_chat(
@@ -723,11 +741,16 @@ class WhatsappResource:
         self, group_id: str, account_id: str, phone_numbers: list[str]
     ) -> dict[str, Any]:
         """Add participants (async)"""
+        params = self._build_params(
+            account_id=account_id,
+        )
         payload = self._build_payload(
             phone_numbers=phone_numbers,
         )
         return await self._client._apost(
-            f"/v1/whatsapp/wa-groups/{group_id}/participants", data=payload
+            f"/v1/whatsapp/wa-groups/{group_id}/participants",
+            data=payload,
+            params=params,
         )
 
     async def aremove_whats_app_group_participants(
@@ -767,11 +790,16 @@ class WhatsappResource:
         self, group_id: str, account_id: str, phone_numbers: list[str]
     ) -> dict[str, Any]:
         """Approve join requests (async)"""
+        params = self._build_params(
+            account_id=account_id,
+        )
         payload = self._build_payload(
             phone_numbers=phone_numbers,
         )
         return await self._client._apost(
-            f"/v1/whatsapp/wa-groups/{group_id}/join-requests", data=payload
+            f"/v1/whatsapp/wa-groups/{group_id}/join-requests",
+            data=payload,
+            params=params,
         )
 
     async def areject_whats_app_group_join_requests(
