@@ -8462,7 +8462,7 @@ def register_generated_tools(mcp, _get_client):
             platforms: Target platforms and accounts for this post. Each item must include platform and accountId.
             scheduled_for
             publish_now
-            is_draft
+            is_draft: When omitted, the post keeps its current draft status. Send `false` to promote a draft to scheduled (combined with `scheduledFor`, `publishNow`, or a queue).
             timezone
             visibility
             tags
