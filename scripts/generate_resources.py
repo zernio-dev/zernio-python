@@ -275,11 +275,12 @@ def generate_method_body(
         path_expr = f'f"{path_formatted}"'
 
     # Determine if we need query params based on HTTP method
-    # GET and DELETE use query params; POST/PUT/PATCH typically use body
+    # GET and DELETE use query params; POST/PUT/PATCH carry a body but may ALSO
+    # carry query params (e.g. GBP writes take the payload in the body plus a
+    # locationId query param). Both must be forwarded, not one or the other.
     use_query_params = http_method.upper() in ("GET", "DELETE") and query_params
     use_body_params = http_method.upper() in ("POST", "PUT", "PATCH") and body_params
-    # POST can also have query params in URL
-    use_query_on_post = http_method.upper() in ("POST", "PUT", "PATCH") and query_params and not body_params
+    use_query_on_post = http_method.upper() in ("POST", "PUT", "PATCH") and query_params
 
     # Build params dict if needed
     if use_query_params or use_query_on_post:
@@ -307,12 +308,14 @@ def generate_method_body(
         else:
             lines.append(f"        return {await_prefix}self._client.{client_method}({path_expr})")
     else:  # POST, PUT, PATCH
+        call_args = [path_expr]
         if body_params:
-            lines.append(f"        return {await_prefix}self._client.{client_method}({path_expr}, data=payload)")
-        elif query_params:
-            lines.append(f"        return {await_prefix}self._client.{client_method}({path_expr}, params=params)")
-        else:
-            lines.append(f"        return {await_prefix}self._client.{client_method}({path_expr})")
+            call_args.append("data=payload")
+        if query_params:
+            call_args.append("params=params")
+        lines.append(
+            f"        return {await_prefix}self._client.{client_method}({', '.join(call_args)})"
+        )
 
     return lines
 

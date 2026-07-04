@@ -73,11 +73,14 @@ class GmbServicesResource:
         location_id: str | None = None,
     ) -> dict[str, Any]:
         """Replace services"""
+        params = self._build_params(
+            location_id=location_id,
+        )
         payload = self._build_payload(
             service_items=service_items,
         )
         return self._client._put(
-            f"/v1/accounts/{account_id}/gmb-services", data=payload
+            f"/v1/accounts/{account_id}/gmb-services", data=payload, params=params
         )
 
     async def aget_google_business_services(
@@ -99,9 +102,12 @@ class GmbServicesResource:
         location_id: str | None = None,
     ) -> dict[str, Any]:
         """Replace services (async)"""
+        params = self._build_params(
+            location_id=location_id,
+        )
         payload = self._build_payload(
             service_items=service_items,
         )
         return await self._client._aput(
-            f"/v1/accounts/{account_id}/gmb-services", data=payload
+            f"/v1/accounts/{account_id}/gmb-services", data=payload, params=params
         )

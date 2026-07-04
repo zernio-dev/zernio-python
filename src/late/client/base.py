@@ -235,10 +235,20 @@ class BaseClient:
         self,
         path: str,
         data: dict[str, Any] | None = None,
+        params: dict[str, Any] | None = None,
     ) -> dict[str, Any]:
-        """Make a sync PUT request."""
+        """Make a sync PUT request.
+
+        Accepts both ``data`` (JSON body) and ``params`` (query string). Some
+        write endpoints take a body plus query params, e.g. GBP updates carry
+        the payload in the body and a ``locationId`` query param that selects
+        which location the write targets; without it the API falls back to the
+        account's stored location.
+        """
         with self._sync_client() as client:
-            return self._request_with_retry(client, "PUT", path, json=data)
+            return self._request_with_retry(
+                client, "PUT", path, json=data, params=params
+            )
 
     def _patch(
         self,
@@ -362,10 +372,20 @@ class BaseClient:
         self,
         path: str,
         data: dict[str, Any] | None = None,
+        params: dict[str, Any] | None = None,
     ) -> dict[str, Any]:
-        """Make an async PUT request."""
+        """Make an async PUT request.
+
+        Accepts both ``data`` (JSON body) and ``params`` (query string). Some
+        write endpoints take a body plus query params, e.g. GBP updates carry
+        the payload in the body and a ``locationId`` query param that selects
+        which location the write targets; without it the API falls back to the
+        account's stored location.
+        """
         async with self._async_client() as client:
-            return await self._arequest_with_retry(client, "PUT", path, json=data)
+            return await self._arequest_with_retry(
+                client, "PUT", path, json=data, params=params
+            )
 
     async def _apatch(
         self,

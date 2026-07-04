@@ -78,6 +78,9 @@ class GmbVerificationsResource:
         context: dict[str, Any] | None = None,
     ) -> dict[str, Any]:
         """Start a verification"""
+        params = self._build_params(
+            location_id=location_id,
+        )
         payload = self._build_payload(
             method=method,
             language_code=language_code,
@@ -87,7 +90,7 @@ class GmbVerificationsResource:
             context=context,
         )
         return self._client._post(
-            f"/v1/accounts/{account_id}/gmb-verifications", data=payload
+            f"/v1/accounts/{account_id}/gmb-verifications", data=payload, params=params
         )
 
     def fetch_google_business_verification_options(
@@ -99,12 +102,17 @@ class GmbVerificationsResource:
         context: dict[str, Any] | None = None,
     ) -> dict[str, Any]:
         """Fetch verification options"""
+        params = self._build_params(
+            location_id=location_id,
+        )
         payload = self._build_payload(
             language_code=language_code,
             context=context,
         )
         return self._client._post(
-            f"/v1/accounts/{account_id}/gmb-verifications/options", data=payload
+            f"/v1/accounts/{account_id}/gmb-verifications/options",
+            data=payload,
+            params=params,
         )
 
     def complete_google_business_verification(
@@ -116,12 +124,16 @@ class GmbVerificationsResource:
         location_id: str | None = None,
     ) -> dict[str, Any]:
         """Complete a verification"""
+        params = self._build_params(
+            location_id=location_id,
+        )
         payload = self._build_payload(
             pin=pin,
         )
         return self._client._post(
             f"/v1/accounts/{account_id}/gmb-verifications/{verification_id}/complete",
             data=payload,
+            params=params,
         )
 
     async def aget_google_business_verifications(
@@ -148,6 +160,9 @@ class GmbVerificationsResource:
         context: dict[str, Any] | None = None,
     ) -> dict[str, Any]:
         """Start a verification (async)"""
+        params = self._build_params(
+            location_id=location_id,
+        )
         payload = self._build_payload(
             method=method,
             language_code=language_code,
@@ -157,7 +172,7 @@ class GmbVerificationsResource:
             context=context,
         )
         return await self._client._apost(
-            f"/v1/accounts/{account_id}/gmb-verifications", data=payload
+            f"/v1/accounts/{account_id}/gmb-verifications", data=payload, params=params
         )
 
     async def afetch_google_business_verification_options(
@@ -169,12 +184,17 @@ class GmbVerificationsResource:
         context: dict[str, Any] | None = None,
     ) -> dict[str, Any]:
         """Fetch verification options (async)"""
+        params = self._build_params(
+            location_id=location_id,
+        )
         payload = self._build_payload(
             language_code=language_code,
             context=context,
         )
         return await self._client._apost(
-            f"/v1/accounts/{account_id}/gmb-verifications/options", data=payload
+            f"/v1/accounts/{account_id}/gmb-verifications/options",
+            data=payload,
+            params=params,
         )
 
     async def acomplete_google_business_verification(
@@ -186,10 +206,14 @@ class GmbVerificationsResource:
         location_id: str | None = None,
     ) -> dict[str, Any]:
         """Complete a verification (async)"""
+        params = self._build_params(
+            location_id=location_id,
+        )
         payload = self._build_payload(
             pin=pin,
         )
         return await self._client._apost(
             f"/v1/accounts/{account_id}/gmb-verifications/{verification_id}/complete",
             data=payload,
+            params=params,
         )
