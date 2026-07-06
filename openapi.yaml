@@ -19694,6 +19694,118 @@ paths:
                   code: { type: string, enum: [DM_NOT_ALLOWED] }
         '429':
           description: X API rate limit exceeded
+  /v1/inbox/conversations/search:
+    get:
+      operationId: searchInboxConversations
+      summary: Search conversations
+      description: |
+        Search message text across your conversations and get back the conversations that contain the query, each with up to 3 most-recent matching messages. Useful for finding threads about a topic, or (with direction=outgoing) collecting examples of how you write to customers, for example to teach an AI agent your tone of voice.
+
+        Only platforms whose messages are stored by Zernio are searchable: WhatsApp, SMS, Telegram, Facebook and Instagram. Twitter/X, Bluesky and Reddit conversations are fetched live from the platforms and cannot be searched; those accounts are listed in meta.accountsSkipped.
+
+        Matching is word-based: case-insensitive and accent-insensitive, exact tokens only (no substrings, no stemming). Quote a phrase to match it exactly.
+      tags: [Messages]
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - name: query
+          in: query
+          required: true
+          schema: { type: string, minLength: 2, maxLength: 200 }
+          description: Text to search for in message content
+        - name: direction
+          in: query
+          schema: { type: string, enum: [incoming, outgoing] }
+          description: Only match messages sent to you (incoming) or by you (outgoing)
+        - name: profileId
+          in: query
+          schema: { type: string }
+          description: Filter by profile ID
+        - name: platform
+          in: query
+          schema: { type: string, enum: [facebook, instagram, telegram, whatsapp, sms] }
+          description: Filter by platform (searchable platforms only)
+        - name: accountId
+          in: query
+          schema: { type: string }
+          description: Filter by specific social account ID
+        - name: limit
+          in: query
+          schema: { type: integer, minimum: 1, maximum: 50, default: 20 }
+          description: Maximum number of conversations to return
+        - name: cursor
+          in: query
+          schema: { type: string }
+          description: Pagination cursor for next page
+      responses:
+        '200':
+          description: Conversations containing the query, most recent match first
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        conversation:
+                          type: object
+                          properties:
+                            id: { type: string, description: "Conversation ID, usable with the conversation messages endpoints" }
+                            platform: { type: string }
+                            accountId: { type: string }
+                            participantName: { type: [string, "null"] }
+                            participantUsername: { type: [string, "null"] }
+                            participantPicture: { type: [string, "null"] }
+                            status: { type: string, enum: [active, archived] }
+                            lastMessageAt: { type: [string, "null"], format: date-time }
+                        matchCount:
+                          type: integer
+                          description: Total number of matching messages in this conversation
+                        matches:
+                          type: array
+                          description: Up to 3 most-recent matching messages
+                          items:
+                            type: object
+                            properties:
+                              id: { type: string }
+                              text: { type: [string, "null"] }
+                              direction: { type: string, enum: [incoming, outgoing] }
+                              timestamp: { type: string, format: date-time }
+                  pagination:
+                    type: object
+                    properties:
+                      hasMore: { type: boolean }
+                      nextCursor: { type: [string, "null"] }
+                  meta:
+                    type: object
+                    properties:
+                      accountsQueried: { type: integer }
+                      accountsFailed: { type: integer }
+                      failedAccounts:
+                        type: array
+                        items:
+                          type: object
+                          properties:
+                            accountId: { type: string }
+                            accountUsername: { type: [string, "null"] }
+                            platform: { type: string }
+                            error: { type: string }
+                      lastUpdated: { type: string, format: date-time }
+                      accountsSkipped:
+                        type: array
+                        description: Connected messaging accounts that cannot be searched (live-fetched platforms)
+                        items:
+                          type: object
+                          properties:
+                            accountId: { type: string }
+                            platform: { type: string }
+        '400':
+          description: Invalid query or unsupported platform
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403':
+          description: Inbox addon required
   /v1/inbox/conversations/{conversationId}:
     get:
       operationId: getInboxConversation

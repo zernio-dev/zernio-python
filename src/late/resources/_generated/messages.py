@@ -102,6 +102,29 @@ class MessagesResource:
         )
         return self._client._post("/v1/inbox/conversations", data=payload)
 
+    def search_inbox_conversations(
+        self,
+        query: str,
+        *,
+        direction: str | None = None,
+        profile_id: str | None = None,
+        platform: str | None = None,
+        account_id: str | None = None,
+        limit: int | None = 20,
+        cursor: str | None = None,
+    ) -> dict[str, Any]:
+        """Search conversations"""
+        params = self._build_params(
+            query=query,
+            direction=direction,
+            profile_id=profile_id,
+            platform=platform,
+            account_id=account_id,
+            limit=limit,
+            cursor=cursor,
+        )
+        return self._client._get("/v1/inbox/conversations/search", params=params)
+
     def get_inbox_conversation(
         self, conversation_id: str, account_id: str
     ) -> dict[str, Any]:
@@ -319,6 +342,29 @@ class MessagesResource:
             template_params=template_params,
         )
         return await self._client._apost("/v1/inbox/conversations", data=payload)
+
+    async def asearch_inbox_conversations(
+        self,
+        query: str,
+        *,
+        direction: str | None = None,
+        profile_id: str | None = None,
+        platform: str | None = None,
+        account_id: str | None = None,
+        limit: int | None = 20,
+        cursor: str | None = None,
+    ) -> dict[str, Any]:
+        """Search conversations (async)"""
+        params = self._build_params(
+            query=query,
+            direction=direction,
+            profile_id=profile_id,
+            platform=platform,
+            account_id=account_id,
+            limit=limit,
+            cursor=cursor,
+        )
+        return await self._client._aget("/v1/inbox/conversations/search", params=params)
 
     async def aget_inbox_conversation(
         self, conversation_id: str, account_id: str

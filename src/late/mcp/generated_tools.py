@@ -7958,6 +7958,48 @@ def register_generated_tools(mcp, _get_client):
 
     @mcp.tool(
         annotations=ToolAnnotations(
+            title="Search conversations",
+            readOnlyHint=True,
+            destructiveHint=False,
+            openWorldHint=False,
+        )
+    )
+    def messages_search_inbox_conversations(
+        query: str,
+        direction: str | None = None,
+        profile_id: str | None = None,
+        platform: str | None = None,
+        account_id: str | None = None,
+        limit: int = 20,
+        cursor: str | None = None,
+    ) -> str:
+        """Search conversations
+
+        Args:
+            query: Text to search for in message content (required)
+            direction: Only match messages sent to you (incoming) or by you (outgoing)
+            profile_id: Filter by profile ID
+            platform: Filter by platform (searchable platforms only)
+            account_id: Filter by specific social account ID
+            limit: Maximum number of conversations to return
+            cursor: Pagination cursor for next page"""
+        client = _get_client()
+        try:
+            response = client.messages.search_inbox_conversations(
+                query=query,
+                direction=direction,
+                profile_id=profile_id,
+                platform=platform,
+                account_id=account_id,
+                limit=limit,
+                cursor=cursor,
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
             title="Get conversation",
             readOnlyHint=True,
             destructiveHint=False,

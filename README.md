@@ -601,6 +601,7 @@ Both `from zernio import ...` and `from late import ...` work identically. The `
 | `messages.edit_inbox_message()` | Edit message |
 | `messages.mark_conversation_read()` | Mark a conversation as read |
 | `messages.remove_message_reaction()` | Remove reaction |
+| `messages.search_inbox_conversations()` | Search conversations |
 | `messages.send_inbox_message()` | Send message |
 | `messages.send_typing_indicator()` | Send typing indicator |
 | `messages.upload_media_direct()` | Upload media file |
