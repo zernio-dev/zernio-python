@@ -10,6 +10,8 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Any
 
 if TYPE_CHECKING:
+    from datetime import datetime
+
     from ..client.base import BaseClient
 
 
@@ -58,6 +60,13 @@ class UsageResource:
         """Get X/Twitter API pricing table"""
         return self._client._get("/v1/billing/x-pricing")
 
+    def get_usage(self, *, reconcile: bool | None = None) -> dict[str, Any]:
+        """Get plan and usage snapshot"""
+        params = self._build_params(
+            reconcile=reconcile,
+        )
+        return self._client._get("/v1/usage", params=params)
+
     def get_usage_stats(self, *, reconcile: bool | None = None) -> dict[str, Any]:
         """Get plan and usage stats"""
         params = self._build_params(
@@ -65,9 +74,52 @@ class UsageResource:
         )
         return self._client._get("/v1/usage-stats", params=params)
 
+    def get_calls_usage(
+        self,
+        *,
+        since: datetime | str | None = None,
+        until: datetime | str | None = None,
+        channel: str | None = None,
+        number: str | None = None,
+        group_by: str | None = None,
+    ) -> dict[str, Any]:
+        """Calling usage (volumes + billable cost)"""
+        params = self._build_params(
+            since=since,
+            until=until,
+            channel=channel,
+            number=number,
+            group_by=group_by,
+        )
+        return self._client._get("/v1/usage/calls", params=params)
+
+    def get_sms_usage(
+        self,
+        *,
+        since: datetime | str | None = None,
+        until: datetime | str | None = None,
+        number: str | None = None,
+        group_by: str | None = None,
+    ) -> dict[str, Any]:
+        """SMS usage (volumes)"""
+        params = self._build_params(
+            since=since,
+            until=until,
+            number=number,
+            group_by=group_by,
+        )
+        return self._client._get("/v1/usage/sms", params=params)
+
     async def aget_x_api_pricing(self) -> dict[str, Any]:
         """Get X/Twitter API pricing table (async)"""
         return await self._client._aget("/v1/billing/x-pricing")
+
+    async def aget_usage(self, *, reconcile: bool | None = None) -> dict[str, Any]:
+        """Get plan and usage snapshot (async)"""
+        params = self._build_params(
+            reconcile=reconcile,
+        )
+        return await self._client._aget("/v1/usage", params=params)
 
     async def aget_usage_stats(
         self, *, reconcile: bool | None = None
@@ -77,3 +129,39 @@ class UsageResource:
             reconcile=reconcile,
         )
         return await self._client._aget("/v1/usage-stats", params=params)
+
+    async def aget_calls_usage(
+        self,
+        *,
+        since: datetime | str | None = None,
+        until: datetime | str | None = None,
+        channel: str | None = None,
+        number: str | None = None,
+        group_by: str | None = None,
+    ) -> dict[str, Any]:
+        """Calling usage (volumes + billable cost) (async)"""
+        params = self._build_params(
+            since=since,
+            until=until,
+            channel=channel,
+            number=number,
+            group_by=group_by,
+        )
+        return await self._client._aget("/v1/usage/calls", params=params)
+
+    async def aget_sms_usage(
+        self,
+        *,
+        since: datetime | str | None = None,
+        until: datetime | str | None = None,
+        number: str | None = None,
+        group_by: str | None = None,
+    ) -> dict[str, Any]:
+        """SMS usage (volumes) (async)"""
+        params = self._build_params(
+            since=since,
+            until=until,
+            number=number,
+            group_by=group_by,
+        )
+        return await self._client._aget("/v1/usage/sms", params=params)

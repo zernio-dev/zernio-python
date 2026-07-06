@@ -11,6 +11,7 @@ from .ads import AdsResource
 from .analytics import AnalyticsResource
 from .api_keys import ApiKeysResource
 from .broadcasts import BroadcastsResource
+from .calls import CallsResource
 from .comment_automations import CommentAutomationsResource
 from .comments import CommentsResource
 from .connect import ConnectResource
@@ -26,17 +27,20 @@ from .logs import LogsResource
 from .media import MediaResource
 from .mentions import MentionsResource
 from .messages import MessagesResource
+from .phone_numbers import PhoneNumbersResource
 from .posts import PostsResource
 from .profiles import ProfilesResource
 from .queue import QueueResource
 from .reddit import RedditResource
 from .reviews import ReviewsResource
 from .sequences import SequencesResource
+from .sms import SmsResource
 from .tracking_tags import TrackingTagsResource
 from .twitter_engagement import TwitterEngagementResource
 from .usage import UsageResource
 from .users import UsersResource
 from .validate import ValidateResource
+from .voice import VoiceResource
 from .webhooks import WebhooksResource
 from .whatsapp import WhatsappResource
 from .whatsapp_calling import WhatsappCallingResource
@@ -56,6 +60,7 @@ __all__ = [
     "AnalyticsResource",
     "ApiKeysResource",
     "BroadcastsResource",
+    "CallsResource",
     "CommentAutomationsResource",
     "CommentsResource",
     "ConnectResource",
@@ -71,17 +76,20 @@ __all__ = [
     "MediaResource",
     "MentionsResource",
     "MessagesResource",
+    "PhoneNumbersResource",
     "PostsResource",
     "ProfilesResource",
     "QueueResource",
     "RedditResource",
     "ReviewsResource",
     "SequencesResource",
+    "SmsResource",
     "TrackingTagsResource",
     "TwitterEngagementResource",
     "UsageResource",
     "UsersResource",
     "ValidateResource",
+    "VoiceResource",
     "WebhooksResource",
     "WhatsappResource",
     "WhatsappCallingResource",

@@ -59,10 +59,11 @@ class SmsResource:
         from_: str,
         to: str,
         *,
+        idempotency_key: str | None = None,
         text: str | None = None,
         media_urls: list[str] | None = None,
     ) -> dict[str, Any]:
-        """Send an SMS or MMS"""
+        """Send an SMS/MMS"""
         payload = self._build_payload(
             from_=from_,
             to=to,
@@ -71,15 +72,95 @@ class SmsResource:
         )
         return self._client._post("/v1/sms/messages", data=payload)
 
+    def lookup_sms_number(self, number: str) -> dict[str, Any]:
+        """Look up carrier + line type"""
+        params = self._build_params(
+            number=number,
+        )
+        return self._client._get("/v1/sms/lookup", params=params)
+
+    def list_sms_opt_outs(
+        self, *, format: str | None = "json", limit: int | None = 500
+    ) -> dict[str, Any]:
+        """List SMS opt-outs"""
+        params = self._build_params(
+            format=format,
+            limit=limit,
+        )
+        return self._client._get("/v1/sms/opt-outs", params=params)
+
+    def start_sms_registration(
+        self,
+        registration_type: str,
+        phone_numbers: list[str],
+        *,
+        brand: dict[str, Any] | None = None,
+        campaign: dict[str, Any] | None = None,
+        toll_free: dict[str, Any] | None = None,
+    ) -> dict[str, Any]:
+        """Start a carrier registration"""
+        payload = self._build_payload(
+            registration_type=registration_type,
+            phone_numbers=phone_numbers,
+            brand=brand,
+            campaign=campaign,
+            toll_free=toll_free,
+        )
+        return self._client._post("/v1/sms/registrations", data=payload)
+
+    def list_sms_registrations(self) -> dict[str, Any]:
+        """List carrier registrations"""
+        return self._client._get("/v1/sms/registrations")
+
+    def get_sms_registration(self, id: str) -> dict[str, Any]:
+        """Get a carrier registration"""
+        return self._client._get(f"/v1/sms/registrations/{id}")
+
+    def verify_sms_registration_otp(self, id: str, otp_pin: str) -> dict[str, Any]:
+        """Submit the sole-prop OTP"""
+        payload = self._build_payload(
+            otp_pin=otp_pin,
+        )
+        return self._client._post(
+            f"/v1/sms/registrations/{id}/verify-otp", data=payload
+        )
+
+    def appeal_sms_registration(self, id: str, appeal_reason: str) -> dict[str, Any]:
+        """Appeal a rejected campaign"""
+        payload = self._build_payload(
+            appeal_reason=appeal_reason,
+        )
+        return self._client._post(f"/v1/sms/registrations/{id}/appeal", data=payload)
+
+    def share_sms_registration(self, number_id: str) -> dict[str, Any]:
+        """Create a registration share link"""
+        payload = self._build_payload(
+            number_id=number_id,
+        )
+        return self._client._post("/v1/sms/registrations/share", data=payload)
+
+    def enable_sms_on_number(self, id: str) -> dict[str, Any]:
+        """Enable SMS on a number"""
+        return self._client._post(f"/v1/phone-numbers/{id}/sms")
+
+    def disable_sms_on_number(self, id: str) -> dict[str, Any]:
+        """Disable SMS on a number"""
+        return self._client._delete(f"/v1/phone-numbers/{id}/sms")
+
+    def reuse_sms_registration_for_number(self, id: str) -> dict[str, Any]:
+        """Add a number to an existing registration"""
+        return self._client._post(f"/v1/phone-numbers/{id}/sms/reuse-registration")
+
     async def asend_sms(
         self,
         from_: str,
         to: str,
         *,
+        idempotency_key: str | None = None,
         text: str | None = None,
         media_urls: list[str] | None = None,
     ) -> dict[str, Any]:
-        """Send an SMS or MMS (async)"""
+        """Send an SMS/MMS (async)"""
         payload = self._build_payload(
             from_=from_,
             to=to,
@@ -87,3 +168,90 @@ class SmsResource:
             media_urls=media_urls,
         )
         return await self._client._apost("/v1/sms/messages", data=payload)
+
+    async def alookup_sms_number(self, number: str) -> dict[str, Any]:
+        """Look up carrier + line type (async)"""
+        params = self._build_params(
+            number=number,
+        )
+        return await self._client._aget("/v1/sms/lookup", params=params)
+
+    async def alist_sms_opt_outs(
+        self, *, format: str | None = "json", limit: int | None = 500
+    ) -> dict[str, Any]:
+        """List SMS opt-outs (async)"""
+        params = self._build_params(
+            format=format,
+            limit=limit,
+        )
+        return await self._client._aget("/v1/sms/opt-outs", params=params)
+
+    async def astart_sms_registration(
+        self,
+        registration_type: str,
+        phone_numbers: list[str],
+        *,
+        brand: dict[str, Any] | None = None,
+        campaign: dict[str, Any] | None = None,
+        toll_free: dict[str, Any] | None = None,
+    ) -> dict[str, Any]:
+        """Start a carrier registration (async)"""
+        payload = self._build_payload(
+            registration_type=registration_type,
+            phone_numbers=phone_numbers,
+            brand=brand,
+            campaign=campaign,
+            toll_free=toll_free,
+        )
+        return await self._client._apost("/v1/sms/registrations", data=payload)
+
+    async def alist_sms_registrations(self) -> dict[str, Any]:
+        """List carrier registrations (async)"""
+        return await self._client._aget("/v1/sms/registrations")
+
+    async def aget_sms_registration(self, id: str) -> dict[str, Any]:
+        """Get a carrier registration (async)"""
+        return await self._client._aget(f"/v1/sms/registrations/{id}")
+
+    async def averify_sms_registration_otp(
+        self, id: str, otp_pin: str
+    ) -> dict[str, Any]:
+        """Submit the sole-prop OTP (async)"""
+        payload = self._build_payload(
+            otp_pin=otp_pin,
+        )
+        return await self._client._apost(
+            f"/v1/sms/registrations/{id}/verify-otp", data=payload
+        )
+
+    async def aappeal_sms_registration(
+        self, id: str, appeal_reason: str
+    ) -> dict[str, Any]:
+        """Appeal a rejected campaign (async)"""
+        payload = self._build_payload(
+            appeal_reason=appeal_reason,
+        )
+        return await self._client._apost(
+            f"/v1/sms/registrations/{id}/appeal", data=payload
+        )
+
+    async def ashare_sms_registration(self, number_id: str) -> dict[str, Any]:
+        """Create a registration share link (async)"""
+        payload = self._build_payload(
+            number_id=number_id,
+        )
+        return await self._client._apost("/v1/sms/registrations/share", data=payload)
+
+    async def aenable_sms_on_number(self, id: str) -> dict[str, Any]:
+        """Enable SMS on a number (async)"""
+        return await self._client._apost(f"/v1/phone-numbers/{id}/sms")
+
+    async def adisable_sms_on_number(self, id: str) -> dict[str, Any]:
+        """Disable SMS on a number (async)"""
+        return await self._client._adelete(f"/v1/phone-numbers/{id}/sms")
+
+    async def areuse_sms_registration_for_number(self, id: str) -> dict[str, Any]:
+        """Add a number to an existing registration (async)"""
+        return await self._client._apost(
+            f"/v1/phone-numbers/{id}/sms/reuse-registration"
+        )

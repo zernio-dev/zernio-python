@@ -189,7 +189,10 @@ tags:
       Read the authenticated user and team members.
   - name: Usage
     description: |
-      API usage and quota stats for the current billing period.
+      Usage and metering, hub + spokes. `GET /v1/usage` is the hub: plan, billing period,
+      and quota usage in one snapshot (`/v1/usage-stats` is its deprecated alias). The
+      `/v1/usage/<domain>` spokes (calls, sms) meter consumption over any window with a
+      uniform contract: since/until/number/groupBy in, totals + groups out.
   - name: Profiles
     description: |
       Manage profiles (named groups of social accounts).
@@ -370,16 +373,46 @@ tags:
       Flows are created in DRAFT status, populated with a Flow JSON definition, then published for sending.
       Published flows are immutable; to update, create a new flow (optionally cloning the old one).
       All endpoints require an accountId parameter identifying the WhatsApp-connected social account.
+  - name: Phone Numbers
+    description: |
+      Buy and manage phone numbers. A phone number is a platform-independent unit;
+      WhatsApp, SMS, and Voice are features you enable on it. Purchase, search
+      inventory, complete country KYC, and release numbers here; turn features on
+      via the per-number sub-resources (`/v1/phone-numbers/{id}/voice`, `/sms`,
+      `/whatsapp/...`). Requires a paid plan.
   - name: WhatsApp Phone Numbers
     description: |
-      Manage WhatsApp phone numbers: purchase, verify, and release numbers for your WhatsApp Business account.
-      Requires a paid plan.
+      Deprecated namespace: phone numbers moved to `/v1/phone-numbers` (a number is
+      platform-independent; WhatsApp is one feature on it). These aliases keep
+      working with the same contracts, but new integrations should use the
+      Phone Numbers endpoints.
   - name: WhatsApp Sandbox
     description: |
       Shared WhatsApp sandbox: a Zernio-owned WhatsApp number every user can test against
       without provisioning their own. Send the verified sandbox template to phones you
       activate via a reply-based verification flow. Designed for testing message flows,
       bot replies, and webhook payloads end-to-end with zero number-purchase overhead.
+  - name: Calls
+    description: |
+      Unified call history across every number you own: WhatsApp Business Calling and
+      regular phone (PSTN) calls in one list, newest first, without fanning out one
+      request per number. Each row carries `channel` and `accountId` so you can fetch
+      details and recordings from the matching channel-specific endpoint.
+      Private beta: returns 403 unless your account is enrolled.
+  - name: Voice
+    description: |
+      Regular phone (PSTN) calling on your numbers. Enable voice on a number and route
+      inbound calls to your own AI voice agent (Vapi/Retell), a phone, or a SIP endpoint,
+      with voicemail, business-hours routing, IVR, recording, and transcription. Place
+      outbound calls, manage live ones (end, blind-transfer), resolve recordings, and
+      drive the browser softphone.
+      Private beta: returns 403 unless your account is enrolled.
+  - name: SMS
+    description: |
+      SMS/MMS on your numbers: enable SMS on a number, send messages, validate recipient
+      numbers, export STOP opt-outs, and complete the US carrier registration (10DLC or
+      toll-free) required before US traffic delivers.
+      Private beta: returns 404 unless your account is enrolled.
 components:
   securitySchemes:
     bearerAuth:
@@ -2334,6 +2367,9 @@ components:
         accountId:
           type: string
           description: Social account ID (same value as id). Canonical field so consumers can filter every webhook event on one field (e.g. route staging vs production by account). id is kept for backward compatibility.
+        profileId:
+          type: string
+          description: Zernio profile (workspace) ID this account belongs to. Use it to route or filter inbox webhooks by workspace. This is the profile ID only, not its name (resolve the name via the API with this ID). Optional; omitted on the shared WhatsApp sandbox account and when the account has no resolvable profile.
         platform: { type: string }
         username: { type: string }
         displayName: { type: string }
@@ -2902,6 +2938,74 @@ components:
           format: date-time
           description: When the conversation document was created.
         timestamp: { type: string, format: date-time }
+    CallRecord:
+      type: object
+      description: |
+        One call on a number you own, either channel. `channel` tells you which
+        lane it took: `whatsapp` (WhatsApp Business Calling) or `pstn` (a regular
+        phone call). List endpoints omit `transcript`; use `lastTranscriptSnippet`
+        for a preview and the detail endpoint for the full transcript.
+      properties:
+        _id: { type: string }
+        accountId: { type: string, description: "Owning social account. The unified /v1/calls/{id} detail + recording endpoints work for any channel; the channel-specific endpoints remain for account-scoped access." }
+        conversationId: { type: [string, "null"], description: "Inbox conversation with the counterparty, when one exists." }
+        contactId: { type: [string, "null"], description: "CRM Contact for the counterparty, when resolved." }
+        channel: { type: string, enum: [whatsapp, pstn] }
+        direction: { type: string, enum: [inbound, outbound] }
+        from: { type: string, description: "Caller number (E.164)." }
+        to: { type: string, description: "Callee number (E.164)." }
+        forwardTo: { type: [string, "null"], description: "Destination the call was routed to (tel:/sip:/wss:), snapshotted at routing time." }
+        greeting: { type: [string, "null"], description: "Outbound PSTN only. Message spoken to the callee on answer, before the bridge." }
+        status: { type: string, enum: [ringing, answered, ended, failed] }
+        isVoicemail: { type: boolean, description: True when an inbound call went to voicemail. }
+        amd: { type: boolean, description: Outbound answering-machine detection was requested for this call. }
+        answeredMachine: { type: [boolean, "null"], description: "With `amd`, whether a machine (vs a human) answered." }
+        forwardCallerId: { type: string, enum: [business, caller], description: Caller ID presented on the forwarded leg. }
+        recordingEnabled: { type: boolean, description: "Effective flag for THIS call (number default + per-call override, resolved at create time)." }
+        transcriptionEnabled: { type: boolean }
+        transcriptionLanguage: { type: string, enum: [auto, en, es] }
+        startedAt: { type: string, format: date-time }
+        answeredAt: { type: [string, "null"], format: date-time }
+        endedAt: { type: [string, "null"], format: date-time }
+        transferredAt: { type: [string, "null"], format: date-time, description: "When the call was blind-transferred (POST /v1/voice/calls/{id}/transfer)." }
+        durationSeconds: { type: integer }
+        endReason: { type: string, enum: [hangup, no_answer, rejected, error] }
+        hangupCause: { type: [string, "null"], description: "Raw carrier hangup cause behind endReason (e.g. normal_clearing, not_found, time_limit) — the actual motive when endReason is a coarse bucket." }
+        sipHangupCause: { type: [string, "null"], description: "SIP response code that ended the call, when SIP-signalled (e.g. '403', '488'). The real failure reason for SIP legs." }
+        callErrors:
+          type: array
+          description: Per-call failure log (dial failed, bridge failed, recording error).
+          items:
+            type: object
+            properties:
+              code: { type: integer }
+              message: { type: string }
+        recordingUrl: { type: [string, "null"], description: "May be expired. Resolve a fresh playable URL via GET /v1/calls/{id}/recording (any channel)." }
+        lastTranscriptSnippet: { type: [string, "null"], description: "Most recent transcript segment, for list previews." }
+        transcript:
+          type: array
+          description: Full transcript segments (detail endpoint only; omitted from lists).
+          items:
+            type: object
+            properties:
+              text: { type: string }
+              confidence: { type: number }
+              at: { type: string, format: date-time }
+        billing:
+          type: object
+          properties:
+            metaMinutes: { type: number }
+            telnyxSeconds: { type: number }
+            transcriptionSeconds: { type: number }
+            transcriptionCostUSD: { type: number }
+            metaCostUSD: { type: number, description: 'WhatsApp channel only. Meta per-minute charge, billed by Meta directly to your WABA. Display only; not billed by Zernio.' }
+            telnyxCostUSD: { type: number }
+            recordingCostUSD: { type: number }
+            billableCostUSD: { type: number, description: 'Amount Zernio bills you = telephony leg + recording + transcription (excludes any Meta portion).' }
+            totalCostUSD: { type: number, description: 'Full cost incl. any Meta portion you pay directly. Display only.' }
+            currency: { type: string }
+        createdAt: { type: string, format: date-time }
+        updatedAt: { type: string, format: date-time }
     WebhookPayloadCallReceived:
       type: object
       description: |
@@ -6624,7 +6728,7 @@ webhooks:
         Fired when a purchased WhatsApp number becomes active and usable — both
         the synchronous (Tier 1/2) path and the asynchronous regulated (Tier
         3/4) path land here. Lets integrators react without polling
-        GET /v1/whatsapp/phone-numbers.
+        GET /v1/phone-numbers.
       tags: [Webhook Events]
       requestBody:
         required: true
@@ -6833,7 +6937,7 @@ webhooks:
       summary: WhatsApp number KYC submitted event
       description: |
         Fired when an end customer completes a hosted KYC share link
-        (POST /v1/whatsapp/phone-numbers/kyc/share). The number enters review
+        (POST /v1/phone-numbers/kyc/share). The number enters review
         (pending_regulatory) under your account; `whatsapp.number.activated` or
         `whatsapp.number.declined` follows once the provider rules on it.
       tags: [Webhook Events]
@@ -10220,12 +10324,60 @@ paths:
                     triggeredBy:
                       - { method: publishPost, metering: always }
         '401': { $ref: '#/components/responses/Unauthorized' }
+  /v1/usage:
+    get:
+      operationId: getUsage
+      tags: [Usage]
+      summary: Get plan and usage snapshot
+      description: |
+        The usage hub: current plan name, billing period, plan limits, and
+        usage counts, in one snapshot. For metered consumption over an
+        arbitrary window with breakdowns (by day, by number), use the
+        domain spokes: `GET /v1/usage/calls` and `GET /v1/usage/sms`.
+
+        The response shape depends on the account's `billingSystem`:
+          * Stripe users: per-period `usage.uploads` / `usage.profiles` counters.
+          * Metronome (usage-based) users: `usage.connectedAccounts`,
+            `usage.xApiCallsByOperation` (per-operation X API call counts —
+            resolve keys via `GET /v1/billing/x-pricing`), plus a `spend`
+            block with `currentPeriodCents`, `xSpendCents`, and
+            `xSpendLimitCents`. The legacy `usage.xApiCalls` 3-tier
+            aggregate is still emitted for back-compat but excludes the
+            $0.200 URL tier and any future tiers — new clients should
+            consume `xApiCallsByOperation` only.
+      parameters:
+        - name: reconcile
+          in: query
+          required: false
+          schema:
+            type: boolean
+          description: |
+            For Stripe subscription users, `true` forces a subscription
+            reconciliation pass even when cached plan data looks complete.
+            Omit the parameter, or pass `false`, to use the default
+            first-time-only reconciliation behavior. Invalid boolean values are
+            rejected.
+      responses:
+        '200':
+          description: Usage snapshot
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsageStats'
+        '400': { description: Invalid query parameter }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404': { $ref: '#/components/responses/NotFound' }
   /v1/usage-stats:
     get:
       operationId: getUsageStats
       tags: [Usage]
       summary: Get plan and usage stats
+      deprecated: true
       description: |
+        Deprecated alias of `GET /v1/usage`; same contract. New integrations
+        should use that path (the usage hub), with `GET /v1/usage/calls` and
+        `GET /v1/usage/sms` for metered breakdowns.
+
         Returns the current plan name, billing period, plan limits, and usage counts.
 
         The response shape depends on the account's `billingSystem`:
@@ -10312,6 +10464,117 @@ paths:
         '400': { description: Invalid query parameter }
         '401': { $ref: '#/components/responses/Unauthorized' }
         '404': { $ref: '#/components/responses/NotFound' }
+  /v1/usage/calls:
+    get:
+      operationId: getCallsUsage
+      tags: [Usage]
+      summary: Calling usage (volumes + billable cost)
+      description: |
+        Aggregated calling usage across your numbers, both channels
+        (WhatsApp Business Calling + regular phone/PSTN): call counts,
+        answered counts, minutes, and cost. Use it for cost visibility or to
+        rebill your own customers per number.
+
+        Costs come from each call's billing snapshot, so this endpoint always
+        agrees with the invoice: `billableUSD` is what Zernio bills;
+        `metaUSD` is the WhatsApp per-minute charge Meta bills directly to
+        your WABA (display only, never billed by Zernio).
+
+        Optional `groupBy` returns a breakdown by UTC day, by your number, or
+        by channel. Defaults to the last 30 days.
+      security:
+        - bearerAuth: []
+      parameters:
+        - { name: since, in: query, schema: { type: string, format: date-time }, description: Start of the window (inclusive). Default 30 days before `until`. }
+        - { name: until, in: query, schema: { type: string, format: date-time }, description: End of the window (exclusive). Default now. }
+        - { name: channel, in: query, schema: { type: string, enum: [whatsapp, pstn] } }
+        - { name: number, in: query, schema: { type: string }, description: "Scope to calls involving this number (typically one of YOUR numbers). E.164, leading + optional." }
+        - { name: groupBy, in: query, schema: { type: string, enum: [day, number, channel] } }
+      responses:
+        '200':
+          description: Usage totals (+ breakdown when groupBy is set).
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  since: { type: string, format: date-time }
+                  until: { type: string, format: date-time }
+                  groupBy: { type: [string, "null"], enum: [day, number, channel, null] }
+                  totals:
+                    type: object
+                    properties:
+                      calls: { type: integer }
+                      answered: { type: integer }
+                      minutes: { type: number }
+                      billableUSD: { type: number, description: What Zernio bills for these calls. }
+                      metaUSD: { type: number, description: "WhatsApp only: Meta's per-minute charge, billed by Meta directly to your WABA. Display only." }
+                  groups:
+                    type: array
+                    description: Present (possibly empty) when `groupBy` is set.
+                    items:
+                      type: object
+                      properties:
+                        key: { type: string, description: "The group key: a `YYYY-MM-DD` UTC day, one of your numbers, or a channel." }
+                        calls: { type: integer }
+                        answered: { type: integer }
+                        minutes: { type: number }
+                        billableUSD: { type: number }
+                        metaUSD: { type: number }
+        '400': { description: since must be before until }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+
+  /v1/usage/sms:
+    get:
+      operationId: getSmsUsage
+      tags: [Usage]
+      summary: SMS usage (volumes)
+      description: |
+        Aggregated SMS/MMS volumes across your numbers: sent, received, and
+        total message counts, with an optional breakdown by UTC day or by
+        number. Defaults to the last 30 days.
+
+        Volumes only, deliberately: SMS cost is carrier-rated asynchronously
+        and billed to your invoice, so per-message cost is not available here.
+        Calling usage (GET /v1/usage/calls) does include billable cost.
+      security:
+        - bearerAuth: []
+      parameters:
+        - { name: since, in: query, schema: { type: string, format: date-time }, description: Start of the window (inclusive). Default 30 days before `until`. }
+        - { name: until, in: query, schema: { type: string, format: date-time }, description: End of the window (exclusive). Default now. }
+        - { name: number, in: query, schema: { type: string }, description: "Scope to one of YOUR SMS-enabled numbers (E.164, leading + optional)." }
+        - { name: groupBy, in: query, schema: { type: string, enum: [day, number] } }
+      responses:
+        '200':
+          description: Volume totals (+ breakdown when groupBy is set).
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  since: { type: string, format: date-time }
+                  until: { type: string, format: date-time }
+                  groupBy: { type: [string, "null"], enum: [day, number, null] }
+                  totals:
+                    type: object
+                    properties:
+                      sent: { type: integer }
+                      received: { type: integer }
+                      total: { type: integer }
+                  groups:
+                    type: array
+                    description: Present (possibly empty) when `groupBy` is set.
+                    items:
+                      type: object
+                      properties:
+                        key: { type: string, description: "A `YYYY-MM-DD` UTC day or one of your numbers." }
+                        sent: { type: integer }
+                        received: { type: integer }
+                        total: { type: integer }
+        '400': { description: since must be before until }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404': { description: "`number` doesn't match any of your SMS-enabled numbers" }
+
   /v1/posts:
     get:
       operationId: listPosts
@@ -21645,12 +21908,10 @@ paths:
                           type: string
                           description: Text of the post that mentioned you
                         permalink:
-                          type: string
-                          nullable: true
+                          type: [string, "null"]
                           description: URL to the source post on LinkedIn
                         authorUrn:
-                          type: string
-                          nullable: true
+                          type: [string, "null"]
                           description: LinkedIn URN of the person who mentioned you
                         organizationalEntity:
                           type: string
@@ -21667,8 +21928,7 @@ paths:
                       hasMore:
                         type: boolean
                       cursor:
-                        type: string
-                        nullable: true
+                        type: [string, "null"]
                   meta:
                     type: object
                     properties:
@@ -22209,10 +22469,12 @@ paths:
       description: |
         Returns the local calling configuration snapshot for the connected
         WhatsApp account: whether calling is enabled, the forward-to
-        destination URI, recording opt-in state, the WhatsAppPhoneNumber
-        doc id (use as `{id}` on the calling-config write endpoints) and
-        whether SIP digest credentials are stored (the encrypted password
-        itself is never returned).
+        destination URI, recording opt-in state, the phone number record id
+        (use as `{id}` on the read-write calling sub-resource at
+        /v1/phone-numbers/{id}/whatsapp/calling) and whether SIP digest
+        credentials are stored (the encrypted password itself is never
+        returned). Also carries account-level extras (billing eligibility,
+        current-period spend) that the number-keyed GET does not.
       security:
         - bearerAuth: []
       parameters:
@@ -22225,7 +22487,7 @@ paths:
               schema:
                 type: object
                 properties:
-                  phoneNumberDocId: { type: string, description: "WhatsAppPhoneNumber Mongo ID (use on /v1/whatsapp/phone-numbers/{id}/calling)" }
+                  phoneNumberDocId: { type: string, description: "Phone number record ID (use on /v1/phone-numbers/{id}/whatsapp/calling)" }
                   phoneNumber: { type: string }
                   callingEnabled: { type: boolean }
                   callDeepLink: { type: [string, "null"], description: "Public calling deep link (https://wa.me/call/<number>). Tapping it on a phone starts a WhatsApp voice call to this number. Embed it on websites, emails, or QR codes. Null while calling is disabled; not supported by WhatsApp desktop clients." }
@@ -22241,10 +22503,14 @@ paths:
 
   /v1/whatsapp/phone-numbers/{id}/calling:
     post:
-      operationId: enableWhatsAppCalling
+      operationId: enableWhatsAppCallingLegacy
+      deprecated: true
       tags: [WhatsApp Calling]
       summary: Enable calling on a number
       description: |
+        Deprecated alias of `/v1/phone-numbers/{id}/whatsapp/calling`; same contract. New
+        integrations should use that path.
+
         Enable WhatsApp Business Calling on a connected number. Configures
         Meta calling.status=ENABLED with our Telnyx SIP endpoint, fetches and
         stores the Meta-issued SIP password (encrypted), and snapshots the
@@ -22285,10 +22551,14 @@ paths:
         '404': { description: WhatsApp phone number not found }
         '422': { description: "Not eligible to enable calling: not on usage-based billing, or the number's messaging limit is below Meta's ~2,000-daily-recipient threshold (TIER_250). Warm the number up to raise the limit." }
     patch:
-      operationId: updateWhatsAppCalling
+      operationId: updateWhatsAppCallingLegacy
+      deprecated: true
       tags: [WhatsApp Calling]
       summary: Update calling config
       description: |
+        Deprecated alias of `/v1/phone-numbers/{id}/whatsapp/calling`; same contract. New
+        integrations should use that path.
+
         Update fields on an already-enabled number. Only fields present in
         the body are written; `undefined` leaves the stored value alone,
         explicit `null` clears a nullable field. No Meta side effect, this
@@ -22320,10 +22590,14 @@ paths:
         '404': { description: WhatsApp phone number not found }
         '422': { description: Calling must be enabled before settings can be updated }
     delete:
-      operationId: disableWhatsAppCalling
+      operationId: disableWhatsAppCallingLegacy
+      deprecated: true
       tags: [WhatsApp Calling]
       summary: Disable calling on a number
       description: |
+        Deprecated alias of `/v1/phone-numbers/{id}/whatsapp/calling`; same contract. New
+        integrations should use that path.
+
         Disable calling. Sends calling.status=DISABLED to Meta (best-effort)
         and flips the local `callingEnabled` flag off. forwardTo and SIP
         creds are preserved so a re-enable does not lose the destination.
@@ -22392,8 +22666,22 @@ paths:
         `bodyText`). The consumer must tap Allow in WhatsApp before
         `start_call` is permitted; Meta limits the prompt to 1 per consumer
         per 24h (2 per 7 days) and requires an open 24h service window.
+
+        **Idempotency:** send an `Idempotency-Key` header to make retries
+        safe; same key + same body replays the original response instead of
+        dialing (and billing) a second call.
       security:
         - bearerAuth: []
+      parameters:
+        - name: Idempotency-Key
+          in: header
+          required: false
+          schema: { type: string, maxLength: 255 }
+          description: >-
+            Optional client-generated unique key (e.g. a UUID) that makes
+            dial retries safe. Same key + same body replays the original
+            response; same key + different body → 422; key still processing →
+            409.
       requestBody:
         required: true
         content:
@@ -22453,6 +22741,10 @@ paths:
         Compact history listing for a single connected account. Results are
         scoped to the resolved SocialAccount; profile-scoped team members
         cannot read calls on sibling accounts.
+
+        Cursor pagination: pass the returned `nextCursor` as `before` to fetch
+        the next page (same scheme as `GET /v1/calls`). `since`/`until` remain
+        as absolute range filters and combine with the cursor.
       security:
         - bearerAuth: []
       parameters:
@@ -22461,6 +22753,7 @@ paths:
         - { name: direction, in: query, schema: { type: string, enum: [inbound, outbound] } }
         - { name: since, in: query, schema: { type: string, format: date-time } }
         - { name: until, in: query, schema: { type: string, format: date-time } }
+        - { name: before, in: query, schema: { type: string, format: date-time }, description: "Return calls with startedAt strictly before this instant (use the previous page's nextCursor)." }
         - { name: limit, in: query, schema: { type: integer, minimum: 1, maximum: 200 } }
       responses:
         '200':
@@ -22494,6 +22787,7 @@ paths:
                             billableCostUSD: { type: number, description: 'Amount Zernio bills you = Telnyx leg + recording (excludes Meta).' }
                             totalCostUSD: { type: number, description: 'Full cost incl. the Meta portion you pay directly. Display only.' }
                             currency: { type: string }
+                  nextCursor: { type: [string, "null"], format: date-time, description: Pass as `before` for the next page; null on the last page. }
         '401': { $ref: '#/components/responses/Unauthorized' }
 
   /v1/whatsapp/calls/{callId}:
@@ -22518,6 +22812,38 @@ paths:
                     type: object
         '401': { $ref: '#/components/responses/Unauthorized' }
         '404': { description: Call not found }
+
+  /v1/whatsapp/calls/{callId}/recording:
+    get:
+      operationId: getWhatsAppCallRecording
+      tags: [WhatsApp Calling]
+      summary: Get a call recording
+      description: |
+        Resolves a fresh, playable MP3 URL for the call's recording.
+        Provider-signed recording URLs expire ~10 minutes after signing, so the
+        `recordingUrl` stored on the call is usually stale by the time it is
+        played; this endpoint re-signs on demand. Default responds `302 Found`
+        redirecting to the fresh URL (point an `<audio>` element or a link
+        straight at this endpoint); pass `as=json` to receive `{ url }` instead.
+      security:
+        - bearerAuth: []
+      parameters:
+        - { name: callId, in: path, required: true, schema: { type: string } }
+        - { name: accountId, in: query, required: true, schema: { type: string } }
+        - { name: as, in: query, schema: { type: string, enum: [json] }, description: "`json` returns `{ url }` instead of a 302 redirect." }
+      responses:
+        '302': { description: Redirect to a freshly-signed recording URL. }
+        '200':
+          description: Recording URL (`as=json` only).
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  url: { type: string }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404': { description: "Call not found, or no recording is available for this call" }
+        '502': { description: Recording provider lookup failed }
 
   /v1/whatsapp/calls/estimate:
     get:
@@ -22555,6 +22881,885 @@ paths:
                       billableCostUSD: { type: number, description: 'Estimated amount Zernio bills you = Telnyx leg + recording (excludes Meta).' }
                       totalCostUSD: { type: number, description: 'Estimated full cost incl. the Meta portion you pay directly. Display only.' }
         '401': { $ref: '#/components/responses/Unauthorized' }
+
+  /v1/calls:
+    get:
+      operationId: listCalls
+      tags: [Calls]
+      summary: List all calls (unified history)
+      description: |
+        Unified call history across ALL of your numbers: both channels
+        (WhatsApp Business Calling + regular phone/PSTN), inbound and outbound,
+        newest first. Unlike `GET /v1/voice/calls` (PSTN-only) and
+        `GET /v1/whatsapp/calls` (one account at a time), this endpoint needs no
+        `accountId` and never requires fanning out one request per number.
+
+        Any row can be opened channel-agnostically via `GET /v1/calls/{id}` and
+        `GET /v1/calls/{id}/recording`; no branching on `channel` needed. When
+        the counterparty number matches a CRM contact, `contactId` and
+        `contactName` are set.
+
+        Cursor pagination: pass the returned `nextCursor` as `before` to fetch
+        the next page. `nextCursor` is null on the last page.
+      security:
+        - bearerAuth: []
+      parameters:
+        - { name: channel, in: query, schema: { type: string, enum: [whatsapp, pstn] } }
+        - { name: status, in: query, schema: { type: string, enum: [ringing, answered, ended, failed] } }
+        - { name: direction, in: query, schema: { type: string, enum: [inbound, outbound] } }
+        - { name: number, in: query, schema: { type: string }, description: "Exact filter: calls involving this number (typically one of YOUR numbers, to scope history to a single line). E.164, leading + optional." }
+        - { name: search, in: query, schema: { type: string }, description: "Free-text match on the from/to numbers. Non-digits are stripped, so partial queries like `302` or `+1 302` work." }
+        - { name: before, in: query, schema: { type: string, format: date-time }, description: "Return calls with startedAt strictly before this instant (use the previous page's nextCursor)." }
+        - { name: limit, in: query, schema: { type: integer, minimum: 1, maximum: 200, default: 50 } }
+      responses:
+        '200':
+          description: Calls, newest first
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  calls:
+                    type: array
+                    items:
+                      allOf:
+                        - $ref: '#/components/schemas/CallRecord'
+                        - type: object
+                          properties:
+                            contactName: { type: string, description: "CRM contact name for the counterparty, when resolved." }
+                  nextCursor: { type: [string, "null"], format: date-time, description: Pass as `before` for the next page; null on the last page. }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { description: Not enrolled in the calling beta }
+
+  /v1/calls/{id}:
+    get:
+      operationId: getCall
+      tags: [Calls]
+      summary: Get a call (any channel)
+      description: |
+        Channel-agnostic call detail: works for both WhatsApp and regular
+        phone (PSTN) calls, so any row from `GET /v1/calls` can be opened
+        without branching on `channel`. Returns the full call including
+        transcript segments, with `contactId`/`contactName` set when the
+        counterparty matches a CRM contact.
+      security:
+        - bearerAuth: []
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string } }
+      responses:
+        '200':
+          description: Call
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  call:
+                    allOf:
+                      - $ref: '#/components/schemas/CallRecord'
+                      - type: object
+                        properties:
+                          contactName: { type: string, description: "CRM contact name for the counterparty, when resolved." }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { description: Not enrolled in the calling beta }
+        '404': { description: Call not found }
+
+  /v1/calls/{id}/recording:
+    get:
+      operationId: getCallRecording
+      tags: [Calls]
+      summary: Get a call recording (any channel)
+      description: |
+        Channel-agnostic recording fetch: resolves a fresh, playable MP3 URL
+        for any call regardless of channel (provider-signed URLs expire ~10
+        minutes after signing, so this re-signs on demand). Default responds
+        `302 Found` redirecting to the fresh URL; pass `as=json` to receive
+        `{ url }` instead.
+      security:
+        - bearerAuth: []
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string } }
+        - { name: as, in: query, schema: { type: string, enum: [json] }, description: "`json` returns `{ url }` instead of a 302 redirect." }
+      responses:
+        '302': { description: Redirect to a freshly-signed recording URL. }
+        '200':
+          description: Recording URL (`as=json` only).
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  url: { type: string }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { description: Not enrolled in the calling beta }
+        '404': { description: "Call not found, or no recording is available for this call" }
+        '502': { description: Recording provider lookup failed }
+
+  /v1/voice/calls:
+    post:
+      operationId: createVoiceCall
+      tags: [Voice]
+      summary: Place an outbound phone call
+      description: |
+        Dials `to` FROM one of your voice-enabled numbers and, on answer,
+        bridges the callee to the number's stored forward destination, or to
+        the per-call `forwardTo` override. Destinations can be your own AI
+        voice agent (Vapi/Retell), a phone, or a SIP endpoint. An optional
+        `greeting` is spoken to the callee before the bridge.
+
+        The 200 response means the call is dialing; the lifecycle continues
+        asynchronously (track it via `GET /v1/voice/calls/{id}` or the `call.*`
+        webhooks). Outbound calls are capped per rolling hour (429 when hit).
+
+        **Idempotency:** send an `Idempotency-Key` header to make retries safe;
+        same key + same body replays the original response instead of dialing
+        (and billing) a second call.
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: Idempotency-Key
+          in: header
+          required: false
+          schema: { type: string, maxLength: 255 }
+          description: >-
+            Optional client-generated unique key (e.g. a UUID) that makes
+            dial retries safe. Same key + same body replays the original
+            response; same key + different body → 422; key still processing →
+            409.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [to]
+              properties:
+                to: { type: string, pattern: '^\+\d{6,15}$', description: "Destination to dial, E.164 with leading +." }
+                fromNumber: { type: string, pattern: '^\+\d{6,15}$', description: Which of your voice-enabled numbers to dial from. Optional when you have exactly one. }
+                forwardTo: { type: string, description: "Per-call agent override (tel:+E164, sip:..., or wss://...); defaults to the number's stored forward destination." }
+                greeting: { type: string, maxLength: 1000, description: "Spoken to the callee when they answer, before the bridge." }
+                recordOverride: { type: boolean, description: Per-call recording toggle; defaults to the number's setting. }
+                transcribeOverride: { type: boolean, description: Per-call transcription toggle; defaults to the number's setting. }
+                transcriptionLanguage: { type: string, enum: [auto, en, es], description: "'auto' derives from the callee's country; 'en'/'es' force it." }
+                amd: { type: boolean, description: Answering-machine detection; defers the bridge until human vs machine is known. }
+                voicemailDropMessage: { type: string, maxLength: 1000, description: "Spoken to a detected machine, then hang up (implies `amd`). For outbound voicemail drops." }
+      responses:
+        '200':
+          description: Call originated; lifecycle continues asynchronously.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success: { type: boolean }
+                  callId: { type: string, description: Internal Call doc ID }
+                  telnyxCallControlId: { type: string }
+                  status: { type: string, enum: [dialing] }
+                  direction: { type: string, enum: [outbound] }
+                  from: { type: string }
+                  to: { type: string }
+                  forwardTo: { type: string }
+                  greeting: { type: [string, "null"] }
+                  recordingEnabled: { type: boolean }
+                  transcriptionEnabled: { type: boolean }
+                  transcriptionLanguage: { type: string, enum: [auto, en, es] }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '422': { description: "No voice-enabled number matches `fromNumber`, or no forward destination configured (set the number's forward or pass `forwardTo`)." }
+        '429': { description: Outbound call limit reached (per rolling hour). }
+        '502': { description: Carrier-side originate failed; the call has been marked failed. }
+    get:
+      operationId: listVoiceCalls
+      tags: [Voice]
+      summary: List phone calls
+      description: |
+        Your PSTN voice calls (inbound + outbound), newest first. Cursor
+        pagination: pass the returned `nextCursor` as `before` for the next
+        page. For a history that also includes WhatsApp calls, use
+        `GET /v1/calls`.
+      security:
+        - bearerAuth: []
+      parameters:
+        - { name: status, in: query, schema: { type: string, enum: [ringing, answered, ended, failed] } }
+        - { name: direction, in: query, schema: { type: string, enum: [inbound, outbound] } }
+        - { name: number, in: query, schema: { type: string }, description: "Exact filter: calls involving this number (typically one of your DIDs). E.164, leading + optional." }
+        - { name: before, in: query, schema: { type: string, format: date-time } }
+        - { name: limit, in: query, schema: { type: integer, minimum: 1, maximum: 200, default: 50 } }
+      responses:
+        '200':
+          description: Calls, newest first
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  calls:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/CallRecord'
+                  nextCursor: { type: [string, "null"], format: date-time }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+
+  /v1/voice/calls/{id}:
+    get:
+      operationId: getVoiceCall
+      tags: [Voice]
+      summary: Get a phone call
+      description: Full call detail, including the transcript segments when transcription was on.
+      security:
+        - bearerAuth: []
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string } }
+      responses:
+        '200':
+          description: Call
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  call:
+                    $ref: '#/components/schemas/CallRecord'
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404': { description: Call not found }
+
+  /v1/voice/calls/{id}/end:
+    post:
+      operationId: endVoiceCall
+      tags: [Voice]
+      summary: Hang up a live call
+      description: |
+        Hangs up a live call on demand. Idempotent: ending a call that already
+        ended (or never connected) returns success with the call's current
+        status. Final duration/cost are written asynchronously when the hangup
+        event lands, so the call doc may briefly still show its prior status.
+      security:
+        - bearerAuth: []
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string } }
+      responses:
+        '200':
+          description: Hangup issued (or the call was already over).
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success: { type: boolean }
+                  callId: { type: string }
+                  status: { type: string, description: "`ending` when a hangup was issued; otherwise the call's current status." }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404': { description: Call not found }
+        '502': { description: Carrier-side hangup failed }
+
+  /v1/voice/calls/{id}/recording:
+    get:
+      operationId: getVoiceCallRecording
+      tags: [Voice]
+      summary: Get a call recording
+      description: |
+        Resolves a fresh, playable MP3 URL for the call's recording
+        (provider-signed URLs expire ~10 minutes after signing, so this
+        endpoint re-signs on demand). Default responds `302 Found` redirecting
+        to the fresh URL; pass `as=json` to receive `{ url }` instead.
+      security:
+        - bearerAuth: []
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string } }
+        - { name: as, in: query, schema: { type: string, enum: [json] }, description: "`json` returns `{ url }` instead of a 302 redirect." }
+      responses:
+        '302': { description: Redirect to a freshly-signed recording URL. }
+        '200':
+          description: Recording URL (`as=json` only).
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  url: { type: string }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404': { description: "Call not found, or no recording is available for this call" }
+        '502': { description: Recording provider lookup failed }
+
+  /v1/voice/calls/{id}/transfer:
+    post:
+      operationId: transferVoiceCall
+      tags: [Voice]
+      summary: Blind-transfer a live call
+      description: |
+        Moves the call's current leg to a new destination (a phone number or a
+        SIP endpoint). This is a BLIND transfer: control of the leg is handed
+        off and the call ends normally when the transferred leg hangs up. The
+        caller ID presented on the transfer leg is always your own number.
+      security:
+        - bearerAuth: []
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string } }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [to]
+              properties:
+                to: { type: string, description: "+E164 phone number (tel: prefix optional) or a sip: URI. wss:// is not a valid transfer target." }
+      responses:
+        '200':
+          description: Transfer issued.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success: { type: boolean }
+                  callId: { type: string }
+                  transferredTo: { type: string }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404': { description: Call not found }
+        '409': { description: "Call is not connected yet, or has already ended" }
+
+  /v1/voice/calls/estimate:
+    get:
+      operationId: getVoiceCallEstimate
+      tags: [Voice]
+      summary: Estimate call cost
+      description: |
+        Pre-call cost estimate for a PSTN call: the carrier leg plus optional
+        recording and transcription add-ons. Same billing formula as the
+        post-call invoice, so the quote and the final charge can't disagree.
+        The per-minute figure is deliberately conservative (the real cost
+        comes from the settled carrier record after the call), so estimates
+        trend slightly over the actual invoice. Parity endpoint of
+        `GET /v1/whatsapp/calls/estimate`, minus the Meta line (PSTN calls
+        have no separate Meta bill, so `totalCostUSD` equals
+        `billableCostUSD`).
+      security:
+        - bearerAuth: []
+      parameters:
+        - { name: to, in: query, required: true, schema: { type: string }, description: "Destination number, E.164 (leading + optional)." }
+        - { name: minutes, in: query, schema: { type: integer, minimum: 1, maximum: 120, default: 1 } }
+        - { name: recording, in: query, schema: { type: boolean } }
+        - { name: transcription, in: query, schema: { type: boolean } }
+      responses:
+        '200':
+          description: Estimate
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  destinationCountry: { type: [string, "null"] }
+                  minutes: { type: integer }
+                  perMinuteUsd: { type: number, description: Billable cost per minute for the requested options. }
+                  breakdown:
+                    type: object
+                    properties:
+                      telnyxCostUSD: { type: number }
+                      recordingCostUSD: { type: number }
+                      transcriptionCostUSD: { type: number }
+                      billableCostUSD: { type: number, description: What Zernio bills for the call. }
+                      totalCostUSD: { type: number, description: Equals billableCostUSD (no separate Meta bill on PSTN); kept for shape parity with the WhatsApp estimate. }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+
+  /v1/voice/calls/web:
+    post:
+      operationId: createVoiceWebSession
+      tags: [Voice]
+      summary: Mint a browser softphone session
+      description: |
+        Step 1 of the two-step browser softphone handshake. Mints a WebRTC
+        session (token + credential) the browser registers with the
+        `@telnyx/webrtc` SDK. Once registered, call
+        `POST /v1/voice/calls/web/dial` with the returned `credentialId` to
+        place the call. The split avoids bridging to a browser that has not
+        finished registering. The token lives ~1 hour (it must outlive the
+        whole call, not just the handshake).
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: WebRTC session minted.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success: { type: boolean }
+                  token: { type: string, description: "Login token for the browser WebRTC SDK." }
+                  credentialId: { type: string, description: "Pass to POST /v1/voice/calls/web/dial once the browser is registered." }
+                  expiresAt: { type: string, format: date-time }
+                  sdk: { type: string, example: '@telnyx/webrtc' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '502': { description: Failed to mint the WebRTC session }
+
+  /v1/voice/calls/web/dial:
+    post:
+      operationId: dialVoiceWebCall
+      tags: [Voice]
+      summary: Dial from the browser softphone
+      description: |
+        Step 2 of the browser softphone handshake: places an outbound call
+        whose answered leg is bridged to the browser registered with the
+        credential from `POST /v1/voice/calls/web`. The call runs through the
+        normal outbound lane, so it is logged as outbound (from = your number,
+        to = target) and recorded per the number's settings.
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [to, credentialId]
+              properties:
+                to: { type: string, pattern: '^\+\d{6,15}$', description: "The number to call, E.164 with leading +." }
+                credentialId: { type: string, description: "The WebRTC credential id returned by POST /v1/voice/calls/web (the registered browser)." }
+                fromNumber: { type: string, pattern: '^\+\d{6,15}$', description: Which of your voice-enabled numbers to call from (optional when you have one). }
+                recordOverride: { type: boolean }
+      responses:
+        '200':
+          description: Call originated; answer/bridge continue asynchronously.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success: { type: boolean }
+                  callId: { type: string }
+                  telnyxCallControlId: { type: string }
+                  status: { type: string, enum: [dialing] }
+                  direction: { type: string, enum: [outbound] }
+                  from: { type: string }
+                  to: { type: string }
+                  recordingEnabled: { type: boolean }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '422': { description: "Invalid or unknown WebRTC credential, or no voice-enabled number matches `fromNumber`" }
+        '429': { description: Outbound call limit reached (per rolling hour). }
+        '502': { description: Carrier-side originate failed }
+
+  /v1/sms/messages:
+    post:
+      operationId: sendSms
+      tags: [SMS]
+      summary: Send an SMS/MMS
+      description: |
+        Sends an SMS (or MMS when `mediaUrls` is set) from one of your
+        SMS-enabled numbers. At least one of `text` / `mediaUrls` is required.
+        Both numbers are normalized to E.164, so `from` matches regardless of
+        formatting and replies thread into the same inbox conversation.
+
+        US numbers must have an approved carrier registration
+        (`/v1/sms/registrations`) before messages deliver.
+
+        **Idempotency:** send an `Idempotency-Key` header to make retries safe:
+        same key + same body replays the original response instead of sending a
+        second message; same key + different body returns 422; a key still in
+        flight returns 409.
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: Idempotency-Key
+          in: header
+          required: false
+          schema: { type: string, maxLength: 255 }
+          description: >-
+            Optional client-generated unique key (e.g. a UUID) that makes send
+            retries safe. Same key + same body replays the original response;
+            same key + different body → 422; key still processing → 409.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [from, to]
+              properties:
+                from: { type: string, description: One of your SMS-enabled numbers (E.164; formatting is normalized). }
+                to: { type: string, description: Recipient number (E.164). }
+                text: { type: string, description: "Message body. Required unless `mediaUrls` is set. Max 10 SMS segments (1530 GSM-7 or 670 unicode characters)." }
+                mediaUrls:
+                  type: array
+                  maxItems: 10
+                  items: { type: string, format: uri }
+                  description: Public media URLs to attach (sends as MMS). Max 10.
+      responses:
+        '200':
+          description: Message accepted for delivery.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id: { type: string, description: Message ID }
+                  conversationId: { type: string, description: Inbox conversation the message was threaded into. }
+                  status: { type: string, enum: [sent] }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404': { description: "No SMS-enabled number matches `from`" }
+        '409': { description: Same Idempotency-Key still processing; retry after a short backoff }
+        '422': { description: Idempotency-Key reused with a different body }
+        '502': { description: Carrier-side send failed }
+
+  /v1/sms/lookup:
+    get:
+      operationId: lookupSmsNumber
+      tags: [SMS]
+      summary: Look up carrier + line type
+      description: |
+        Carrier name and line type (mobile / landline / voip / toll-free) for a
+        number, plus `smsReachable` (landlines can't receive SMS). Use it to
+        validate recipients before sending. Each lookup is billed by the
+        carrier-data provider, so call it explicitly (e.g. pre-validating an
+        opt-in list), not on every send.
+      security:
+        - bearerAuth: []
+      parameters:
+        - { name: number, in: query, required: true, schema: { type: string, minLength: 8 }, description: "Number to look up (E.164; formatting is normalized)." }
+      responses:
+        '200':
+          description: Lookup result. An unknown/invalid number returns lineType `unknown` with `smsReachable` false rather than an error.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  phoneNumber: { type: string }
+                  carrierName: { type: [string, "null"] }
+                  lineType: { type: string, enum: [mobile, landline, voip, toll-free, unknown] }
+                  smsReachable: { type: boolean, description: True when the line type can receive SMS (not a landline). }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '502': { description: Lookup provider failed }
+
+  /v1/sms/opt-outs:
+    get:
+      operationId: listSmsOptOuts
+      tags: [SMS]
+      summary: List SMS opt-outs
+      description: |
+        The recipients who opted out of SMS (replied STOP) across your numbers,
+        most recent first. Compliance surface: you must be able to see and
+        export your opt-out list. Read-only: a recipient is re-subscribed only
+        by replying START. Pass `format=csv` to download a CSV instead of JSON.
+      security:
+        - bearerAuth: []
+      parameters:
+        - { name: format, in: query, schema: { type: string, enum: [json, csv], default: json } }
+        - { name: limit, in: query, schema: { type: integer, minimum: 1, maximum: 5000, default: 500 } }
+      responses:
+        '200':
+          description: Opt-out list
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  optOuts:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        phoneNumber: { type: string }
+                        optedOutAt: { type: [string, "null"], format: date-time }
+                        keyword: { type: [string, "null"], description: "The keyword they sent (e.g. STOP), when the carrier recorded one." }
+                        from: { type: [string, "null"], description: Which of your numbers the recipient opted out from. }
+                  count: { type: integer }
+            text/csv:
+              schema: { type: string, description: "`format=csv` download. Columns: phone_number, opted_out_at, keyword, our_number" }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+
+  /v1/sms/registrations:
+    post:
+      operationId: startSmsRegistration
+      tags: [SMS]
+      summary: Start a carrier registration
+      description: |
+        Starts the US carrier registration that a number needs before SMS
+        delivers: 10DLC (standard company or sole-proprietor) or toll-free
+        verification. 10DLC needs `brand` + `campaign`; toll-free needs
+        `tollFree`. Approval is asynchronous; poll
+        `GET /v1/sms/registrations/{id}` (sole-prop registrations first need
+        the OTP step: a code is texted to the brand's mobile number, submit it
+        via `/verify-otp`).
+
+        Already have an approved registration? Add another number to it with
+        `POST /v1/phone-numbers/{id}/sms/reuse-registration` instead
+        of registering (and paying the carrier brand fee) again.
+
+        Rather have your client fill in the legal business details? Create a
+        share link with `POST /v1/sms/registrations/share`.
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [registrationType, phoneNumbers]
+              properties:
+                registrationType: { type: string, enum: [standard_10dlc, sole_prop_10dlc, toll_free] }
+                phoneNumbers:
+                  type: array
+                  minItems: 1
+                  items: { type: string }
+                  description: Your numbers this registration covers.
+                brand:
+                  type: object
+                  description: Required for 10DLC. The legal entity behind the traffic (TCR brand).
+                  required: [entityType, displayName, country, vertical]
+                  properties:
+                    entityType: { type: string, enum: [PRIVATE_PROFIT, PUBLIC_PROFIT, NON_PROFIT, GOVERNMENT, SOLE_PROPRIETOR] }
+                    displayName: { type: string }
+                    companyName: { type: string, description: Legal company name. Required for every entityType except SOLE_PROPRIETOR. }
+                    ein: { type: string, description: Required for every entityType except SOLE_PROPRIETOR. }
+                    phone: { type: string }
+                    mobilePhone: { type: string, description: Required for SOLE_PROPRIETOR; the verification OTP is texted there (US/CA mobile). }
+                    street: { type: string }
+                    city: { type: string }
+                    state: { type: string }
+                    postalCode: { type: string }
+                    country: { type: string, enum: [US, CA] }
+                    email: { type: string, format: email, description: Brand contact email; defaults to your account email when omitted. }
+                    website: { type: string }
+                    vertical: { type: string, enum: [AGRICULTURE, COMMUNICATION, CONSTRUCTION, EDUCATION, ENERGY, ENTERTAINMENT, FINANCIAL, GAMBLING, GOVERNMENT, HEALTHCARE, HOSPITALITY, HUMAN_RESOURCES, INSURANCE, LEGAL, MANUFACTURING, NGO, POLITICAL, POSTAL, PROFESSIONAL, REAL_ESTATE, RETAIL, TECHNOLOGY, TRANSPORTATION] }
+                    stockSymbol: { type: string }
+                campaign:
+                  type: object
+                  description: Required for 10DLC. What you'll send and how recipients opt in/out.
+                  required: [usecase, description, messageFlow, sample1, helpMessage, optinKeywords, optinMessage, optoutKeywords, optoutMessage, helpKeywords]
+                  properties:
+                    usecase: { type: string }
+                    description: { type: string, minLength: 40, maxLength: 4096 }
+                    messageFlow: { type: string, minLength: 40, maxLength: 2048, description: How a recipient ends up receiving your messages (the opt-in flow). }
+                    sample1: { type: string, minLength: 20 }
+                    sample2: { type: string }
+                    helpMessage: { type: string, minLength: 20, maxLength: 320 }
+                    optinKeywords: { type: string }
+                    optinMessage: { type: string, minLength: 20, maxLength: 320 }
+                    optoutKeywords: { type: string }
+                    optoutMessage: { type: string, minLength: 20, maxLength: 320 }
+                    helpKeywords: { type: string }
+                    embeddedLink: { type: boolean }
+                    embeddedPhone: { type: boolean }
+                    numberPool: { type: boolean }
+                    ageGated: { type: boolean }
+                    directLending: { type: boolean }
+                tollFree:
+                  type: object
+                  description: Required for toll_free.
+                  required: [businessName, corporateWebsite, phoneNumbers, useCase, useCaseSummary, productionMessageContent, optInWorkflow, optInWorkflowImageUrls, messageVolume, additionalInformation, businessAddr1, businessCity, businessState, businessZip, businessContactFirstName, businessContactLastName, businessContactEmail, businessContactPhone, businessRegistrationNumber, businessRegistrationType, businessRegistrationCountry]
+                  properties:
+                    businessName: { type: string }
+                    corporateWebsite: { type: string, format: uri }
+                    phoneNumbers: { type: array, minItems: 1, items: { type: string } }
+                    useCase: { type: string }
+                    useCaseSummary: { type: string }
+                    productionMessageContent: { type: string }
+                    optInWorkflow: { type: string, maxLength: 500, description: How recipients opt in to your messages. }
+                    optInWorkflowImageUrls:
+                      type: array
+                      minItems: 1
+                      items: { type: string, format: uri }
+                      description: Screenshot URL(s) showing the opt-in flow (at least one).
+                    messageVolume: { type: string, enum: ["10", "100", "1,000", "10,000", "100,000", "250,000", "500,000", "750,000", "1,000,000", "5,000,000", "10,000,000+"], description: Expected monthly message volume tier. }
+                    additionalInformation: { type: string }
+                    businessAddr1: { type: string }
+                    businessAddr2: { type: string }
+                    businessCity: { type: string }
+                    businessState: { type: string }
+                    businessZip: { type: string }
+                    businessContactFirstName: { type: string }
+                    businessContactLastName: { type: string }
+                    businessContactEmail: { type: string, format: email }
+                    businessContactPhone: { type: string }
+                    businessRegistrationNumber: { type: string }
+                    businessRegistrationType: { type: string, description: "e.g. EIN (US), Companies House (UK), ABN (AU)." }
+                    businessRegistrationCountry: { type: string, description: ISO 3166-1 alpha-2. }
+      responses:
+        '200':
+          description: Registration submitted.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  registrationId: { type: string }
+                  status: { type: string, enum: [pending] }
+                  awaitingOtp: { type: boolean, description: "True for sole-prop 10DLC: an OTP was texted to the brand's mobile; submit it via /verify-otp." }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '422': { description: Carrier registry rejected a field; `param` names it when known. }
+    get:
+      operationId: listSmsRegistrations
+      tags: [SMS]
+      summary: List carrier registrations
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Registrations, newest first
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  registrations:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id: { type: string }
+                        registrationType: { type: string, enum: [standard_10dlc, sole_prop_10dlc, toll_free] }
+                        displayName: { type: [string, "null"] }
+                        status: { type: string, enum: [pending, approved, rejected] }
+                        brandStatus: { type: string, description: Carrier-registry brand status (e.g. VERIFIED). }
+                        campaignStatus: { type: string }
+                        brandId: { type: [string, "null"], description: "TCR brand id, useful when referencing the brand in carrier support threads." }
+                        campaignId: { type: [string, "null"], description: TCR campaign id. }
+                        declineReason: { type: [string, "null"] }
+                        phoneNumbers: { type: array, items: { type: string } }
+                        awaitingOtp: { type: boolean, description: Sole-prop 10DLC only; the OTP step is still pending. }
+                        trustScore: { type: [number, "null"], description: Carrier-assigned brand trust score; drives throughput. }
+                        throughput:
+                          type: object
+                          description: Carrier throughput tier derived from the trust score.
+                          properties:
+                            label: { type: string }
+                            smsPerMinute: { type: number }
+                            smsPerDay: { type: number }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+
+  /v1/sms/registrations/{id}:
+    get:
+      operationId: getSmsRegistration
+      tags: [SMS]
+      summary: Get a carrier registration
+      description: Poll this for approval progress after starting a registration.
+      security:
+        - bearerAuth: []
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string } }
+      responses:
+        '200':
+          description: Registration
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id: { type: string }
+                  registrationType: { type: string, enum: [standard_10dlc, sole_prop_10dlc, toll_free] }
+                  status: { type: string, enum: [pending, approved, rejected] }
+                  brandStatus: { type: string }
+                  campaignStatus: { type: string }
+                  declineReason: { type: [string, "null"] }
+                  phoneNumbers: { type: array, items: { type: string } }
+                  awaitingOtp: { type: boolean }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404': { description: Registration not found }
+
+  /v1/sms/registrations/{id}/verify-otp:
+    post:
+      operationId: verifySmsRegistrationOtp
+      tags: [SMS]
+      summary: Submit the sole-prop OTP
+      description: |
+        Completes sole-proprietor 10DLC brand verification by submitting the
+        one-time PIN texted to the brand's mobile number. On success the
+        registration continues to campaign creation automatically.
+      security:
+        - bearerAuth: []
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string } }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [otpPin]
+              properties:
+                otpPin: { type: string, minLength: 4, maxLength: 10 }
+      responses:
+        '200':
+          description: OTP result
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  verified: { type: boolean }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404': { description: Registration not found }
+
+  /v1/sms/registrations/{id}/appeal:
+    post:
+      operationId: appealSmsRegistration
+      tags: [SMS]
+      summary: Appeal a rejected campaign
+      description: |
+        Appeals a rejected 10DLC campaign with the carrier registry. Only a
+        registration that reached campaign creation can be appealed; a
+        brand-level rejection should be fixed and re-verified instead. On
+        success the registration returns to `pending`.
+      security:
+        - bearerAuth: []
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string } }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [appealReason]
+              properties:
+                appealReason: { type: string, minLength: 10, maxLength: 2000 }
+      responses:
+        '200':
+          description: Appeal submitted; the registration is pending again.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status: { type: string, enum: [pending] }
+        '400': { description: Registration has no campaign to appeal; fix the brand and re-verify instead }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404': { description: Registration not found }
+
+  /v1/sms/registrations/share:
+    post:
+      operationId: shareSmsRegistration
+      tags: [SMS]
+      summary: Create a registration share link
+      description: |
+        Creates a single-use, expiring link (valid 7 days) that lets someone
+        else (whoever has the legal business details) fill in the carrier
+        registration form for one of your numbers, without a Zernio login. The
+        registration is created under your account once the form is submitted.
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [numberId]
+              properties:
+                numberId: { type: string, description: "Your phone number's ID (from GET /v1/phone-numbers)." }
+      responses:
+        '200':
+          description: Share link created.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  url: { type: string }
+                  expiresAt: { type: string, format: date-time }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404': { description: Number not found }
 
   /v1/whatsapp/template-library:
     get:
@@ -22866,8 +24071,7 @@ paths:
                 properties:
                   success: { type: boolean }
                   username:
-                    type: string
-                    nullable: true
+                    type: [string, "null"]
                     description: The current username, or null if none is set
                   status:
                     type: string
@@ -23311,12 +24515,459 @@ paths:
   # PHONE NUMBERS
   # ──────────────────────────────────────────────────────────────────────────
 
+  # ─── Phone Numbers (platform-independent) ──────────────────────
+  #
+  # A phone number is the unit you buy; WhatsApp, SMS, and Voice are features
+  # enabled on it. This is the canonical namespace; the
+  # /v1/whatsapp/phone-numbers/* paths further down are deprecated aliases
+  # kept for back-compat.
+
+  /v1/phone-numbers:
+    get:
+      operationId: listPhoneNumbers
+      tags: [Phone Numbers]
+      summary: List phone numbers
+      description: |
+        List all phone numbers purchased by the authenticated user.
+        By default, released numbers are excluded. Connected (bring-your-own)
+        WhatsApp numbers are returned in the separate `connected` array; they
+        are not billed and have no provisioning lifecycle.
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: status
+          in: query
+          required: false
+          description: |
+            Filter by status (by default excludes released numbers). NOTE:
+            `status=pending_regulatory` returns the "provisioning" view — numbers
+            still in review PLUS recently-declined (last 30 days) ones, so a
+            failed registration surfaces (with `regulatoryDeclineReason`) instead
+            of silently disappearing. Declined numbers can be re-submitted via
+            POST /v1/phone-numbers/{id}/remediate. `verifying` is the
+            short-lived state after the number is provisioned on our side while
+            WhatsApp confirms the activation code; the number is not billed until
+            it reaches `active`.
+          schema:
+            type: string
+            enum: [provisioning, verifying, pending_payment, pending_regulatory, regulatory_declined, active, suspended, releasing, released]
+        - name: profileId
+          in: query
+          required: false
+          description: Filter by profile
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Phone numbers retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  numbers:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        _id: { type: string }
+                        phoneNumber: { type: string }
+                        country: { type: string }
+                        status: { type: string, enum: [pending_payment, pending_regulatory, regulatory_declined, provisioning, verifying, active, suspended, releasing, released] }
+                        registrantName: { type: [string, "null"], description: "For regulated numbers, who it's registered for (company or person) — set from the submitted KYC." }
+                        telnyxOrderId: { type: [string, "null"], description: Present once the number order has been placed (i.e. the requirement group was approved). Absent while still in identity review. }
+                        monthlyCents: { type: integer, description: Per-country monthly price in cents ($2..$25). }
+                        hostedByZernio: { type: boolean, description: "False for numbers you brought yourself (connected via Meta embedded signup) — they live on your own carrier, so SMS/Calls can't be enabled on them." }
+                        profileId: { type: object }
+                        provisionedAt: { type: string, format: date-time }
+                        metaPreverifiedId: { type: string }
+                        metaVerificationStatus: { type: string }
+                        onfidoVerificationUrl: { type: [string, "null"], description: For regulated (Tier 3/4) numbers with an Onfido ID-verification step — the link to forward to the end user. Set once the order is placed; null otherwise. Poll this field after submitting KYC. }
+                        endUserFirstName: { type: [string, "null"] }
+                        endUserLastName: { type: [string, "null"] }
+                        regulatoryDeclineReason: { type: [string, "null"], description: Reviewer rejection reason when status is regulatory_declined. }
+                        createdAt: { type: string, format: date-time }
+                  connected:
+                    type: array
+                    description: |
+                      Connected (bring-your-own) WhatsApp numbers — your own WABA
+                      numbers linked via Embedded Signup. Not provisioned or billed
+                      by Zernio, so they are not in `numbers`; `accountId` is the
+                      social-account id used by the messaging and inbox endpoints.
+                      Included only on the default and `status=active` views.
+                    items:
+                      type: object
+                      properties:
+                        accountId: { type: string }
+                        phoneNumber: { type: [string, "null"] }
+                        displayName: { type: [string, "null"] }
+                        profileId: { type: [string, "null"] }
+                        connectedAt: { type: [string, "null"], format: date-time }
+                  sandbox:
+                    type: [object, "null"]
+                    description: |
+                      The shared WhatsApp sandbox (one Zernio-owned number, all users test
+                      against it). Present when the sandbox is configured; null otherwise.
+                      The `accountId` lets you address the sandbox in compose endpoints.
+                      `template` is the only template a sandbox send is allowed to use.
+                    properties:
+                      phoneNumber: { type: string, example: "+12029087457" }
+                      accountId: { type: [string, "null"] }
+                      template:
+                        type: object
+                        properties:
+                          name: { type: string, example: "sandbox_start" }
+                          language: { type: string, example: "en" }
+                      isSandbox: { type: boolean }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+
+  /v1/phone-numbers/{id}:
+    get:
+      operationId: getPhoneNumber
+      tags: [Phone Numbers]
+      summary: Get phone number
+      description: |
+        Retrieve the current status of a purchased phone number. Poll this to
+        track Meta pre-verification (US sync path) and, for regulated (Tier 3/4)
+        numbers, the async lifecycle: pending_regulatory → active (or
+        regulatory_declined). When a regulated number has an Onfido ID step,
+        `onfidoVerificationUrl` appears here once the order is placed — forward
+        it to the end user. (Or subscribe to the whatsapp.number.* webhooks
+        instead of polling.)
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Phone number record ID
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Phone number retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  phoneNumber:
+                    type: object
+                    properties:
+                      id: { type: string }
+                      phoneNumber: { type: string }
+                      status: { type: string, enum: [pending_payment, pending_regulatory, regulatory_declined, provisioning, verifying, active, suspended, releasing, released] }
+                      country: { type: string }
+                      metaPreverifiedId: { type: string }
+                      metaVerificationStatus: { type: string }
+                      onfidoVerificationUrl: { type: [string, "null"], description: For a regulated number with an Onfido ID step — the link to forward to the end user. Appears once the order is placed; null otherwise. }
+                      endUserFirstName: { type: [string, "null"] }
+                      endUserLastName: { type: [string, "null"] }
+                      regulatoryDeclineReason: { type: [string, "null"], description: Reviewer rejection reason when status is regulatory_declined. }
+                      provisionedAt: { type: string, format: date-time }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404': { $ref: '#/components/responses/NotFound' }
+    delete:
+      operationId: releasePhoneNumber
+      tags: [Phone Numbers]
+      summary: Release phone number
+      description: |
+        Release a purchased phone number. This will:
+        1. Disconnect any linked WhatsApp social account
+        2. Decrement the Stripe subscription quantity (or cancel if last number)
+        3. Release the number from Telnyx
+        4. Mark the number as released
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Phone number record ID
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Phone number released successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message: { type: string }
+                  phoneNumber:
+                    type: object
+                    properties:
+                      id: { type: string }
+                      phoneNumber: { type: string }
+                      status: { type: string, description: "\"released\"" }
+                      releasedAt: { type: string, format: date-time }
+        '400': { description: Phone number is already released or being released }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404': { $ref: '#/components/responses/NotFound' }
+
+  /v1/phone-numbers/purchase:
+    post:
+      operationId: purchasePhoneNumber
+      tags: [Phone Numbers]
+      summary: Purchase phone number
+      description: |
+        Initiate purchasing a phone number. Payment-first flow: the user does not pick
+        a specific number. The system either creates a Stripe Checkout Session (first number)
+        or increments the existing subscription quantity and provisions inline (subsequent numbers).
+
+        Requires a paid plan. The maximum number of phone numbers is determined by the user's plan.
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - profileId
+              properties:
+                profileId:
+                  type: string
+                  description: Profile to associate the number with
+                country:
+                  type: string
+                  description: >
+                    ISO 3166-1 alpha-2 country for the number (default US).
+                    International numbers require usage-based billing. Tier 3/4
+                    countries return 202 { status: "kyc_required", kycUrl } —
+                    the customer must complete KYC at that URL before the number
+                    is ordered. See GET /v1/phone-numbers/countries.
+                  default: US
+                connectWhatsapp:
+                  type: boolean
+                  default: true
+                  description: >
+                    A phone number is the unit; WhatsApp is one optional feature.
+                    Pass false to buy a STANDALONE number (Calls/SMS only):
+                    provisioning skips the Meta pre-verify/OTP steps and the
+                    number activates immediately. Omitted defaults to the
+                    WhatsApp provisioning path. WhatsApp can be connected to a
+                    standalone number later from the connect flow.
+                wantsSms:
+                  type: boolean
+                  default: false
+                  description: >
+                    SMS capability is per-number, not per-country. Pass true to
+                    provision from the SMS-capable inventory pool so the number
+                    can actually text (see also GET /v1/phone-numbers/available
+                    with sms=true, and smsAvailable on GET
+                    /v1/phone-numbers/countries).
+                purchaseIntentId:
+                  type: string
+                  maxLength: 100
+                  description: >
+                    Optional idempotency key. Send the same value when retrying
+                    a purchase: if a number was already bought under this key,
+                    the API returns { status: "already_purchased", numberId,
+                    phoneNumber } instead of provisioning a second number.
+                    Generate a fresh key for each genuinely new purchase.
+                allowMultiple:
+                  type: boolean
+                  default: false
+                  description: >
+                    Any second purchase within 10 minutes of a previous one is
+                    rejected with 409 code PURCHASE_VELOCITY as duplicate
+                    protection. Pass true to confirm the additional purchase is
+                    intentional (e.g. bulk provisioning).
+            example:
+              profileId: "507f1f77bcf86cd799439011"
+              country: "DE"
+      responses:
+        '200':
+          description: |
+            Either a checkout URL (first number) or the provisioned phone number (subsequent numbers).
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - type: object
+                    description: Checkout session created (first number)
+                    properties:
+                      message: { type: string }
+                      checkoutUrl: { type: string, format: uri }
+                  - type: object
+                    description: Phone number provisioned inline (subsequent numbers)
+                    properties:
+                      message: { type: string }
+                      phoneNumber:
+                        type: object
+                        properties:
+                          id: { type: string }
+                          phoneNumber: { type: string }
+                          status: { type: string }
+                          country: { type: string }
+                          provisionedAt: { type: string, format: date-time }
+                          metaPreverifiedId: { type: string }
+                          metaVerificationStatus: { type: string }
+                  - type: object
+                    description: >
+                      A number was already purchased under the supplied
+                      purchaseIntentId; no new number was provisioned.
+                    properties:
+                      status: { type: string, enum: [already_purchased] }
+                      numberId: { type: string }
+                      phoneNumber: { type: string }
+        '400': { description: "Plan limit reached, profileId required, or country not available" }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { description: A paid plan is required }
+        '409':
+          description: >
+            Duplicate-purchase protection: another number was purchased for
+            this user within the last 10 minutes. Retry with allowMultiple:
+            true to confirm the additional purchase is intentional.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error: { type: string }
+                  code: { type: string, enum: [PURCHASE_VELOCITY] }
+        '202':
+          description: Country requires end-user KYC before the number can be ordered.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status: { type: string, enum: [kyc_required] }
+                  country: { type: string }
+                  kycUrl: { type: string }
+        '402': { description: 'Payment method required (Metronome user with no card on file). Response body carries code: PAYMENT_REQUIRED; add a card, then retry.' }
+        '422': { description: 'International numbers require usage-based billing (legacy Stripe users are US-only). Response body code: USAGE_BILLING_REQUIRED.' }
+
+  /v1/phone-numbers/countries:
+    get:
+      operationId: listPhoneNumberCountries
+      tags: [Phone Numbers]
+      summary: List offerable number countries
+      description: |
+        The phone number countries available to purchase, each with its flat
+        monthly price (cents), regulatory tier, whether it needs end-user KYC
+        (Tier 3/4), and per-feature availability (PSTN calls, WhatsApp, SMS,
+        and WhatsApp Business Calling outbound). Drives the country picker.
+        Tier-4 countries appear only when enabled.
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Offerable countries, cheapest first.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  countries:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        code: { type: string, description: ISO 3166-1 alpha-2 }
+                        tier: { type: integer, enum: [1, 2, 3, 4] }
+                        monthlyCents: { type: integer }
+                        needsKyc: { type: boolean }
+                        callsAvailable: { type: boolean, description: "Regular phone (PSTN) calling on the number, inbound + outbound. Available on every offerable country." }
+                        whatsappAvailable: { type: boolean, description: WhatsApp can be enabled on numbers from this country. }
+                        smsAvailable: { type: boolean, description: Whether this country's number type can do SMS. Use it to filter the picker when the buyer wants SMS (pair with `wantsSms` on purchase). }
+                        outboundCallingAvailable: { type: boolean, description: "WhatsApp Business Calling (BIC) outbound availability, a Meta feature blocked in some countries. NOT the PSTN Calls feature (`callsAvailable`)." }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+
+  /v1/phone-numbers/available:
+    get:
+      operationId: searchAvailablePhoneNumbers
+      tags: [Phone Numbers]
+      summary: Search available numbers
+      description: |
+        Search the provider's inventory for numbers available to purchase in a
+        country (default US). Optional filters narrow the results. The country
+        must be offerable (see GET /v1/phone-numbers/countries). Voice
+        capability is always required; pass `sms=true` to only see numbers that
+        can also text (SMS support is per-number, not per-country).
+      security:
+        - bearerAuth: []
+      parameters:
+        - { name: country, in: query, required: false, schema: { type: string, default: US } }
+        - { name: type, in: query, required: false, description: "Number type; defaults to the country's WhatsApp-safe type", schema: { type: string } }
+        - { name: prefix, in: query, required: false, description: Area code, schema: { type: string } }
+        - { name: locality, in: query, required: false, description: City, schema: { type: string } }
+        - { name: contains, in: query, required: false, description: Pattern to match within the number, schema: { type: string } }
+        - { name: sms, in: query, required: false, schema: { type: boolean }, description: "true narrows the pool to SMS-capable numbers. Each result still carries its full `features` list for per-number capability badging." }
+        - { name: limit, in: query, required: false, schema: { type: integer, default: 20, maximum: 100 } }
+      responses:
+        '200':
+          description: Available numbers.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  country: { type: string }
+                  numberType: { type: string }
+                  requireSms: { type: boolean, description: Echo of the `sms` filter applied to this search. }
+                  numbers:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        phoneNumber: { type: string }
+                        features: { type: array, items: { type: string }, description: "Provider capability list for this number (e.g. voice, sms, mms)." }
+        '400': { description: Country not available }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+
+  /v1/phone-numbers/availability:
+    get:
+      operationId: checkPhoneNumberAvailability
+      tags: [Phone Numbers]
+      summary: Check country availability
+      description: |
+        Pre-purchase check, so you can warn BEFORE a customer invests in KYC
+        (regulated review is async, 1-3 days). Tells you whether we have
+        deliverable inventory, and what address the customer needs:
+          - `addressConstraint: geo`  → the registered address MUST be in one of
+            the returned `areas` (the only place we have stock). A different-area
+            address passes pre-approval but the number can never be assigned.
+          - `addressConstraint: country` → any in-country address works.
+          - `addressConstraint: none` → field-only / instant country, no address.
+        Call this before starting the KYC form for regulated countries.
+      security:
+        - bearerAuth: []
+      parameters:
+        - { name: country, in: query, required: true, schema: { type: string }, description: ISO-2 country code. }
+      responses:
+        '200':
+          description: Availability + address constraint.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  country: { type: string }
+                  numberType: { type: string }
+                  available: { type: boolean, description: Whether deliverable voice inventory exists right now. }
+                  addressConstraint: { type: string, enum: [geo, country, none] }
+                  areas:
+                    type: array
+                    description: For `geo` only — the area(s) the registered address must be in.
+                    items: { type: string }
+        '400': { description: Country not offerable }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+
   /v1/whatsapp/phone-numbers:
     get:
       operationId: getWhatsAppPhoneNumbers
+      deprecated: true
       tags: [WhatsApp Phone Numbers]
       summary: List phone numbers
       description: |
+        Deprecated alias of `/v1/phone-numbers`; same contract. New
+        integrations should use that path.
+
         List all WhatsApp phone numbers purchased by the authenticated user.
         By default, released numbers are excluded. Connected (bring-your-own)
         numbers are returned in the separate `connected` array — they are not
@@ -23366,6 +25017,7 @@ paths:
                         registrantName: { type: [string, "null"], description: "For regulated numbers, who it's registered for (company or person) — set from the submitted KYC." }
                         telnyxOrderId: { type: [string, "null"], description: Present once the number order has been placed (i.e. the requirement group was approved). Absent while still in identity review. }
                         monthlyCents: { type: integer, description: Per-country monthly price in cents ($2..$25). }
+                        hostedByZernio: { type: boolean, description: "False for numbers you brought yourself (connected via Meta embedded signup) — they live on your own carrier, so SMS/Calls can't be enabled on them." }
                         profileId: { type: object }
                         provisionedAt: { type: string, format: date-time }
                         metaPreverifiedId: { type: string }
@@ -23412,9 +25064,13 @@ paths:
   /v1/whatsapp/phone-numbers/purchase:
     post:
       operationId: purchaseWhatsAppPhoneNumber
+      deprecated: true
       tags: [WhatsApp Phone Numbers]
       summary: Purchase phone number
       description: |
+        Deprecated alias of `/v1/phone-numbers/purchase`; same contract. New
+        integrations should use that path.
+
         Initiate purchasing a WhatsApp phone number. Payment-first flow: the user does not pick
         a specific number. The system either creates a Stripe Checkout Session (first number)
         or increments the existing subscription quantity and provisions inline (subsequent numbers).
@@ -23529,9 +25185,13 @@ paths:
   /v1/whatsapp/phone-numbers/countries:
     get:
       operationId: listWhatsAppNumberCountries
+      deprecated: true
       tags: [WhatsApp Phone Numbers]
       summary: List offerable number countries
       description: |
+        Deprecated alias of `/v1/phone-numbers/countries`; same contract. New
+        integrations should use that path.
+
         The WhatsApp number countries available to purchase, each with its flat
         monthly price (cents), regulatory tier, whether it needs end-user KYC
         (Tier 3/4), and whether outbound calling is available (not BIC-blocked).
@@ -23561,9 +25221,13 @@ paths:
   /v1/whatsapp/phone-numbers/available:
     get:
       operationId: searchAvailableWhatsAppNumbers
+      deprecated: true
       tags: [WhatsApp Phone Numbers]
       summary: Search available numbers
       description: |
+        Deprecated alias of `/v1/phone-numbers/available`; same contract. New
+        integrations should use that path.
+
         Search the provider's inventory for numbers available to purchase in a
         country (default US). Optional filters narrow the results. The country
         must be offerable (see GET /v1/whatsapp/phone-numbers/countries).
@@ -23598,9 +25262,13 @@ paths:
   /v1/whatsapp/phone-numbers/availability:
     get:
       operationId: checkWhatsAppNumberAvailability
+      deprecated: true
       tags: [WhatsApp Phone Numbers]
       summary: Check country availability
       description: |
+        Deprecated alias of `/v1/phone-numbers/availability`; same contract. New
+        integrations should use that path.
+
         Pre-purchase check, so you can warn BEFORE a customer invests in KYC
         (regulated review is async, 1-3 days). Tells you whether we have
         deliverable inventory, and what address the customer needs:
@@ -23633,12 +25301,692 @@ paths:
         '400': { description: Country not offerable }
         '401': { $ref: '#/components/responses/Unauthorized' }
 
+  /v1/phone-numbers/kyc:
+    get:
+      operationId: getPhoneNumberKycForm
+      tags: [Phone Numbers]
+      summary: Get KYC form spec
+      description: |
+        For a Tier 3/4 country, the fields the end customer must provide (Telnyx
+        regulatory requirements) before a number can be ordered: text, date,
+        address, or file (document) per requirement.
+      security:
+        - bearerAuth: []
+      parameters:
+        - { name: country, in: query, required: true, schema: { type: string } }
+      responses:
+        '200':
+          description: The KYC form spec.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  country: { type: string }
+                  numberType: { type: string }
+                  fields:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        requirementId: { type: string }
+                        label: { type: string }
+                        kind: { type: string, enum: [text, date, address, file, action], description: '"action" = an out-of-band verification (e.g. Onfido); not filled here, fulfilled after the order via a link.' }
+                        description: { type: [string, "null"], description: Plain-English explanation of what to provide. }
+                        example: { type: [string, "null"], description: Concrete example value. }
+                        localTo: { type: [string, "null"], description: ISO country the value must be local to }
+                  reusable:
+                    type: [object, "null"]
+                    description: Present when this account already has an approved verification for the country that can be reused (skip the form). `fromPhoneNumber`/`details` mirror the newest option; `options` lists ALL approved verifications (agencies hold one per end client) — pass the chosen option's `fromPhoneNumber` as `reuseFrom` on POST.
+                    properties:
+                      available: { type: boolean }
+                      fromPhoneNumber: { type: string }
+                      details:
+                        type: array
+                        description: Human-readable summary of the verification on file (field labels + values, plus the address as one line). Best-effort — may be empty if the provider lookup fails.
+                        items:
+                          type: object
+                          properties:
+                            label: { type: string }
+                            value: { type: string }
+                      options:
+                        type: array
+                        description: One entry per distinct approved verification, newest first.
+                        items:
+                          type: object
+                          properties:
+                            fromPhoneNumber: { type: string }
+                            details:
+                              type: array
+                              items:
+                                type: object
+                                properties:
+                                  label: { type: string }
+                                  value: { type: string }
+        '400': { description: Country not available }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+    post:
+      operationId: submitPhoneNumberKyc
+      tags: [Phone Numbers]
+      summary: Submit KYC
+      description: |
+        Submit the end customer's KYC (textual values, uploaded documents,
+        address) for a Tier 3/4 country. Documents are streamed straight to the
+        number provider and are not stored by Zernio. Builds + submits a
+        regulatory requirement group and claims a pending_regulatory slot; the
+        number is ordered + activated once the provider approves (asynchronous).
+        A customer may hold several same-country numbers in review at once; a
+        double-submit of the SAME attempt is deduped via `submissionId`.
+
+        For an ID-card document requirement, carriers commonly require BOTH sides:
+        combine the front and back into a single file before uploading (the
+        dashboard does this automatically). A one-sided ID is a common decline
+        reason; fix it via POST /v1/phone-numbers/{id}/remediate.
+
+        Before submitting, call GET /v1/phone-numbers/availability to
+        check the country has deliverable inventory and, for geographic-match
+        countries, which area the address must be in — otherwise the submission
+        can pass review yet never be assignable a number.
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [profileId, country]
+              properties:
+                profileId: { type: string }
+                country: { type: string }
+                submissionId: { type: string, description: Idempotency token for this submission attempt. A retry/double-submit with the same token returns the same number; omit and each call creates a new number. }
+                quantity: { type: integer, minimum: 1, maximum: 5, default: 1, description: 'Provision several same-country numbers from one submission (1-5). The single verification covers all of them; each number is billed only when it activates. Numbers that fail to order are skipped (best-effort).' }
+                reuse: { type: boolean, description: Reuse a prior approved verification for this country (skips document/field collection; places the order immediately). }
+                reuseFrom: { type: string, description: 'Which approved verification to reuse when several exist: the phone number it was originally approved for (GET reusable.options[].fromPhoneNumber). Omitted = newest. No match = 409.' }
+                endUserFirstName: { type: string, description: End user's legal first name. Required when the country has an action/ID-verification (Onfido) requirement. }
+                endUserLastName: { type: string, description: End user's legal last name. Same condition as endUserFirstName. }
+                values:
+                  type: object
+                  additionalProperties: { type: string }
+                  description: requirementId → textual value
+                documents:
+                  type: array
+                  description: One per document requirement. Each is EITHER inline base64 OR a `documentId` returned by POST /v1/phone-numbers/kyc/upload-document (use the upload endpoint for large files to stay under the request-size limit).
+                  items:
+                    oneOf:
+                      - type: object
+                        required: [requirementId, filename, base64]
+                        properties:
+                          requirementId: { type: string }
+                          filename: { type: string }
+                          base64: { type: string }
+                      - type: object
+                        required: [requirementId, documentId]
+                        properties:
+                          requirementId: { type: string }
+                          documentId: { type: string, description: Id from POST /v1/phone-numbers/kyc/upload-document. }
+                address:
+                  type: object
+                  properties:
+                    requirementId: { type: string }
+                    country_code: { type: string }
+                    business_name: { type: string }
+                    first_name: { type: string }
+                    last_name: { type: string }
+                    street_address: { type: string }
+                    locality: { type: string }
+                    administrative_area: { type: string }
+                    postal_code: { type: string }
+      responses:
+        '200':
+          description: KYC submitted (or already submitted); number pending review.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status: { type: string, enum: [kyc_submitted, kyc_reused, kyc_already_submitted] }
+                  phoneNumber:
+                    type: object
+                    description: The first/primary number, kept at the top level for backward compatibility. See `numbers` for the full set when `quantity` > 1.
+                    properties:
+                      id: { type: string }
+                      status: { type: string }
+                      country: { type: string }
+                  numbers:
+                    type: array
+                    description: Every number provisioned from this submission. Length equals the requested `quantity` on full success (fewer if some orders failed; best-effort). The first element mirrors `phoneNumber`.
+                    items:
+                      type: object
+                      properties:
+                        id: { type: string }
+                        status: { type: string }
+                        phoneNumber: { type: string }
+                        country: { type: string }
+        '400': { description: "Validation error (e.g. address not in-country, file too large)" }
+        '409': { description: reuse requested but no prior approved verification exists for this country }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+
+  /v1/phone-numbers/kyc/upload-document:
+    post:
+      operationId: uploadPhoneNumberKycDocument
+      tags: [Phone Numbers]
+      summary: Upload a KYC document
+      description: |
+        Upload ONE document and get back its provider document id, to reference
+        from POST /v1/phone-numbers/kyc via `documents[].documentId`.
+        Send the RAW file bytes as the request body (not base64); put the filename
+        in the `X-Filename` header. Uploading documents one-per-request keeps each
+        request under the ~4.5MB body limit. The document streams straight to the
+        number provider and is not stored by Zernio.
+      security:
+        - bearerAuth: []
+      parameters:
+        - { name: X-Filename, in: header, required: true, schema: { type: string }, description: URL-encoded original filename. }
+      requestBody:
+        required: true
+        content:
+          application/octet-stream:
+            schema: { type: string, format: binary }
+      responses:
+        '200':
+          description: Document uploaded.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  documentId: { type: string, description: "Reference this id in the KYC submit's documents[].documentId." }
+        '400': { description: "Missing X-Filename, empty body, or file too large (over 20MB)." }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+
+  /v1/phone-numbers/kyc/validate-address:
+    post:
+      operationId: validatePhoneNumberKycAddress
+      tags: [Phone Numbers]
+      summary: Pre-validate KYC address
+      description: |
+        Optional early check for the address step of a Tier 4 (end-user identity)
+        registration: validates a postal address for deliverability BEFORE the full
+        KYC submit, so it can be corrected before any documents are uploaded. The
+        full submit (POST /v1/phone-numbers/kyc) re-validates the address,
+        so this call is purely a fast feedback path and skipping it is safe. Only
+        the postal address is sent (no documents, no gov-ID fields). A region
+        (`administrative_area`) is required by the validator; when it is omitted the
+        pre-check is skipped and `{ ok: true, skipped: true }` is returned (the
+        final submit still validates).
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [country, street_address, locality, postal_code]
+              properties:
+                country: { type: string, minLength: 2, maxLength: 2, description: ISO 3166-1 alpha-2 country code. }
+                street_address: { type: string }
+                locality: { type: string, description: City / town. }
+                administrative_area: { type: string, description: "State / province / region. When omitted, the pre-check is skipped (the final submit still validates)." }
+                postal_code: { type: string }
+      responses:
+        '200':
+          description: Address is deliverable, or the pre-check was skipped (no region supplied).
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  ok: { type: boolean, example: true }
+                  skipped: { type: boolean, description: "true when no `administrative_area` was supplied, so no pre-check ran." }
+        '400':
+          description: |
+            The country isn't offered, or the address could not be verified. When the
+            provider returned usable corrections, `details.addressSuggestions` carries
+            them per field for a one-click "apply suggestion" card. (Flat error
+            envelope: `error` is the human message; `code`/`param`/`details` are
+            top-level siblings.)
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error: { type: string, description: Human-readable message. }
+                  type: { type: string }
+                  code: { type: string, example: INVALID_FIELD_VALUE }
+                  param: { type: string, example: address }
+                  details:
+                    type: object
+                    properties:
+                      addressSuggestions:
+                        type: array
+                        items:
+                          type: object
+                          properties:
+                            field: { type: string, example: administrative_area }
+                            label: { type: string, example: State / Province }
+                            value: { type: string, example: Dublin }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+
+  /v1/phone-numbers/kyc/share:
+    post:
+      operationId: createPhoneNumberKycLink
+      tags: [Phone Numbers]
+      summary: Create a hosted KYC link
+      description: |
+        Create a single-use, 7-day hosted KYC link that your end customer
+        completes WITHOUT a Zernio login — useful when the person who holds the
+        ID and address is not your team. They fill the regulated verification on
+        a Zernio-hosted page; the number provisions under YOUR account once they
+        submit. Only regulated (KYC) countries are valid: a country that does not
+        require KYC returns 400.
+
+        White-label the page with `branding` (your company name, logo, brand
+        color). Supply `redirect_url` to send the end customer back to your own
+        site after a successful submit (completion params are appended — see
+        below). Listen for the `whatsapp.number.kyc_submitted` webhook to react
+        when the form is completed.
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [profileId, country]
+              properties:
+                profileId: { type: string }
+                country: { type: string, minLength: 2, maxLength: 2, description: ISO 3166-1 alpha-2 country code (must be a regulated/KYC country). }
+                branding:
+                  type: object
+                  description: Optional white-label of the hosted page the end customer sees.
+                  properties:
+                    companyName: { type: string, maxLength: 60, description: 'Your company name, shown on the hosted page.' }
+                    logoUrl: { type: string, format: uri, description: Logo shown above the form. }
+                    brandColor: { type: string, pattern: '^#[0-9a-fA-F]{6}$', description: 'Hex color (e.g. #1a73e8) used as a brand accent on the page.' }
+                redirect_url:
+                  type: string
+                  format: uri
+                  description: |
+                    Where to send the end customer's browser after a successful
+                    submit. On completion Zernio appends `kyc=submitted` and
+                    `country=<ISO-2>` as query params. When omitted, the hosted
+                    page shows a built-in confirmation screen instead.
+      responses:
+        '200':
+          description: Hosted KYC link created.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  url: { type: string, description: The hosted link to send your end customer. }
+                  token: { type: string }
+                  expiresAt: { type: string, format: date-time }
+        '400': { description: Country does not require KYC (not a regulated country). }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+
+  /v1/phone-numbers/port-in:
+    post:
+      operationId: createPhoneNumberPortIn
+      tags: [Phone Numbers]
+      summary: Port numbers in
+      description: |
+        Submit a port-in for one or more existing numbers from another carrier.
+        Creates the carrier order(s), attaches the end-user (current account)
+        info plus the LOA and invoice documents, and submits to the losing
+        carrier. The transfer PIN is forwarded to the carrier and never stored.
+        Ported numbers arrive voice-ready (and SMS-ready where the order
+        supports messaging).
+
+        Run the portability check (POST /v1/phone-numbers/port-in/check) and
+        upload the two documents (POST /v1/phone-numbers/port-in/documents)
+        first. The carrier may split the numbers into several orders (by
+        country, number type, losing carrier); `orders` carries per-order
+        results, and a partial failure still returns 201 with the failed
+        orders' `error` set (they stay as cancellable drafts).
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [phoneNumbers, endUser, loaDocumentId, invoiceDocumentId]
+              properties:
+                phoneNumbers:
+                  type: array
+                  minItems: 1
+                  maxItems: 50
+                  items: { type: string }
+                  description: E.164 numbers to port in.
+                endUser:
+                  type: object
+                  description: End-user / current-carrier account info that authorizes the port.
+                  required: [entityName, authPersonName, streetAddress, locality, administrativeArea, postalCode, countryCode]
+                  properties:
+                    entityName: { type: string }
+                    authPersonName: { type: string }
+                    billingPhoneNumber: { type: string }
+                    accountNumber: { type: string }
+                    pinPasscode: { type: string, description: "Transfer PIN. Forwarded to the carrier, never stored." }
+                    streetAddress: { type: string }
+                    extendedAddress: { type: string }
+                    locality: { type: string }
+                    administrativeArea: { type: string }
+                    postalCode: { type: string }
+                    countryCode: { type: string, minLength: 2, maxLength: 2 }
+                loaDocumentId: { type: string, description: Document id from POST /v1/phone-numbers/port-in/documents (kind=loa). }
+                invoiceDocumentId: { type: string, description: Document id from POST /v1/phone-numbers/port-in/documents (kind=invoice). }
+                focDatetimeRequested: { type: string, format: date-time, description: Requested port date; the carrier confirms the actual FOC later. }
+                customerReference: { type: string, maxLength: 100 }
+      responses:
+        '201':
+          description: Port submitted. Top-level fields mirror the first successfully submitted order; per-order truth (including failures) is in `orders`.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id: { type: string, description: Porting order ID. }
+                  telnyxPortingOrderId: { type: string }
+                  status: { type: string, enum: [draft, pending, foc_confirmed, ported, exception, cancelled] }
+                  phoneNumbers: { type: array, items: { type: string } }
+                  orders:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id: { type: string }
+                        telnyxPortingOrderId: { type: string }
+                        status: { type: string }
+                        phoneNumbers: { type: array, items: { type: string } }
+                        error: { type: string, description: Present when this split order failed to submit (it stays as a cancellable draft). }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '409': { description: "A number is already provisioned, or already in an in-flight port" }
+        '422': { description: "A number is not portable (reason included), or every split order failed to submit" }
+    get:
+      operationId: listPhoneNumberPortIns
+      tags: [Phone Numbers]
+      summary: List port-in orders
+      description: |
+        Your porting orders, newest first (max 50). Poll this for port progress:
+        pending, confirmed FOC date, exception reason, or ported.
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Porting orders
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  orders:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id: { type: string }
+                        status: { type: string, enum: [draft, pending, foc_confirmed, ported, exception, cancelled] }
+                        telnyxStatusValue: { type: [string, "null"], description: Raw carrier status string. }
+                        phoneNumbers: { type: array, items: { type: string } }
+                        fastPortEligible: { type: [boolean, "null"] }
+                        focDatetimeRequested: { type: [string, "null"], format: date-time }
+                        focDatetimeActual: { type: [string, "null"], format: date-time }
+                        declineReason: { type: [string, "null"] }
+                        submittedAt: { type: [string, "null"], format: date-time }
+                        portedAt: { type: [string, "null"], format: date-time }
+                        createdAt: { type: string, format: date-time }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+
+  /v1/phone-numbers/port-in/check:
+    post:
+      operationId: checkPhoneNumberPortability
+      tags: [Phone Numbers]
+      summary: Check portability
+      description: |
+        Pre-flight portability check: whether each number can be ported in and
+        whether it qualifies for FastPort, BEFORE the user commits to a port
+        order (LOA, invoice, service address). Read-only; creates no order and
+        bills nothing.
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [phoneNumbers]
+              properties:
+                phoneNumbers:
+                  type: array
+                  minItems: 1
+                  maxItems: 50
+                  items: { type: string }
+                  description: "E.164 numbers to check, e.g. +13035550000."
+      responses:
+        '200':
+          description: Per-number portability.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  results:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        phoneNumber: { type: string }
+                        portable: { type: boolean }
+                        fastPortable: { type: boolean, description: Qualifies for the carrier's accelerated FastPort lane. }
+                        notPortableReason: { type: [string, "null"], description: Carrier reason when not portable; null when portable. }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+
+  /v1/phone-numbers/port-in/documents:
+    post:
+      operationId: uploadPhoneNumberPortInDocument
+      tags: [Phone Numbers]
+      summary: Upload a porting document
+      description: |
+        Upload ONE porting document (the signed LOA or a recent carrier invoice)
+        and get back its `documentId`, which the port-in create request takes as
+        `loaDocumentId` / `invoiceDocumentId`. PDF, JPEG, or PNG, 10MB max.
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required: [file]
+              properties:
+                file: { type: string, format: binary, description: "The document (PDF/JPEG/PNG, 10MB max)." }
+                kind: { type: string, enum: [loa, invoice], description: Informational; used for the stored filename. }
+      responses:
+        '200':
+          description: Document uploaded.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  documentId: { type: string }
+        '400': { description: "Missing file, file too large, or unsupported type" }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+
+  /v1/phone-numbers/port-in/{id}:
+    delete:
+      operationId: cancelPhoneNumberPortIn
+      tags: [Phone Numbers]
+      summary: Cancel a port-in
+      description: |
+        Cancel an in-flight port (wrong number, staying with the old carrier).
+        Only orders that haven't ported can be cancelled; a completed port is a
+        normal number release instead. The carrier may report `cancel-pending`
+        briefly while the losing carrier acknowledges; it settles to
+        `cancelled`.
+      security:
+        - bearerAuth: []
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string }, description: Porting order ID (from the port-in list). }
+      responses:
+        '200':
+          description: Cancel accepted (idempotent when already cancelled).
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id: { type: string }
+                  status: { type: string, enum: [draft, pending, foc_confirmed, ported, exception, cancelled] }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404': { description: Porting order not found }
+        '409': { description: "Port already completed (release the number instead), or the carrier rejected the cancel (reason included)" }
+
+  /v1/phone-numbers/kyc/review-packet:
+    post:
+      operationId: reviewPhoneNumberKycPacket
+      tags: [Phone Numbers]
+      summary: Pre-review a KYC packet
+      description: |
+        Advisory dry-run of a regulated-KYC packet before submitting: reviews
+        the exact documents the regulator will see (referenced by the ids from
+        POST /v1/phone-numbers/kyc/upload-document) against the declared values
+        and address, and returns plain-language advisories for likely decline
+        reasons (wrong document type, mismatched address, one-sided ID scans).
+        Non-blocking: advisories are warnings, submitting anyway is always
+        allowed, and any review failure degrades to an empty list.
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [country, numberType, docs]
+              properties:
+                country: { type: string, minLength: 2, maxLength: 2 }
+                numberType: { type: string }
+                values: { type: object, additionalProperties: { type: string }, description: requirementId to declared textual value. }
+                address: { type: object, additionalProperties: { type: string }, description: "Declared address (street_address, locality, ...), so a mismatched proof-of-address can be flagged." }
+                docs:
+                  type: array
+                  minItems: 1
+                  maxItems: 4
+                  items:
+                    type: object
+                    required: [requirementId, documentId]
+                    properties:
+                      requirementId: { type: string }
+                      documentId: { type: string, description: Id from POST /v1/phone-numbers/kyc/upload-document. }
+      responses:
+        '200':
+          description: Advisories (empty when the packet looks fine or the review was unavailable).
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  advisories:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        requirementId: { type: string }
+                        concern: { type: string, description: One short plain-language concern about that requirement's document. }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+
+  /v1/phone-numbers/{id}/remediate:
+    get:
+      operationId: getPhoneNumberRemediation
+      tags: [Phone Numbers]
+      summary: Get declined requirements
+      description: |
+        For a number in `regulatory_declined`, returns ONLY the requirements the
+        reviewer flagged declined, as a form spec (same shape as the KYC form GET).
+        The customer fixes just those — Telnyx supports correcting a declined
+        requirement group and re-submitting it (no new number/group). Falls back
+        to the full spec if the provider exposes no per-requirement flags.
+      security:
+        - bearerAuth: []
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string }, description: Phone number record ID. }
+      responses:
+        '200':
+          description: The declined requirements to fix.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  country: { type: string }
+                  numberType: { type: string }
+                  declineReason: { type: [string, "null"] }
+                  fields: { type: array, items: { type: object }, description: Same field shape as GET /v1/phone-numbers/kyc. }
+        '400': { description: Number is not awaiting remediation }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404': { description: Number not found }
+    post:
+      operationId: remediatePhoneNumber
+      tags: [Phone Numbers]
+      summary: Resubmit a declined number
+      description: |
+        Submit corrected values/documents for the declined requirement(s). We
+        PATCH them onto the SAME requirement group and re-submit it for approval;
+        the number goes `regulatory_declined` → `pending_regulatory`. No new
+        number and no new billing. Body shape matches the KYC submit (values /
+        documents / address) — send only the corrected fields.
+      security:
+        - bearerAuth: []
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string } }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                values: { type: object, additionalProperties: { type: string } }
+                documents:
+                  type: array
+                  items:
+                    oneOf:
+                      - { type: object, required: [requirementId, filename, base64], properties: { requirementId: { type: string }, filename: { type: string }, base64: { type: string } } }
+                      - { type: object, required: [requirementId, documentId], properties: { requirementId: { type: string }, documentId: { type: string } } }
+                address: { type: object, description: Same shape as the KYC submit address. }
+      responses:
+        '200':
+          description: Re-submitted for approval.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status: { type: string, example: resubmitted }
+                  phoneNumber: { type: object, properties: { id: { type: string }, status: { type: string } } }
+        '400': { description: Number is not awaiting remediation / nothing to remediate }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404': { description: Number not found }
+
   /v1/whatsapp/phone-numbers/kyc:
     get:
       operationId: getWhatsAppNumberKycForm
+      deprecated: true
       tags: [WhatsApp Phone Numbers]
       summary: Get KYC form spec
       description: |
+        Deprecated alias of `/v1/phone-numbers/kyc`; same contract. New
+        integrations should use that path.
+
         For a Tier 3/4 country, the fields the end customer must provide (Telnyx
         regulatory requirements) before a number can be ordered: text, date,
         address, or file (document) per requirement.
@@ -23701,9 +26049,13 @@ paths:
         '401': { $ref: '#/components/responses/Unauthorized' }
     post:
       operationId: submitWhatsAppNumberKyc
+      deprecated: true
       tags: [WhatsApp Phone Numbers]
       summary: Submit KYC
       description: |
+        Deprecated alias of `/v1/phone-numbers/kyc`; same contract. New
+        integrations should use that path.
+
         Submit the end customer's KYC (textual values, uploaded documents,
         address) for a Tier 3/4 country. Documents are streamed straight to the
         number provider and are not stored by Zernio. Builds + submits a
@@ -23804,9 +26156,13 @@ paths:
   /v1/whatsapp/phone-numbers/kyc/upload-document:
     post:
       operationId: uploadWhatsAppNumberKycDocument
+      deprecated: true
       tags: [WhatsApp Phone Numbers]
       summary: Upload a KYC document
       description: |
+        Deprecated alias of `/v1/phone-numbers/kyc/upload-document`; same contract. New
+        integrations should use that path.
+
         Upload ONE document and get back its provider document id, to reference
         from POST /v1/whatsapp/phone-numbers/kyc via `documents[].documentId`.
         Send the RAW file bytes as the request body (not base64); put the filename
@@ -23837,9 +26193,13 @@ paths:
   /v1/whatsapp/phone-numbers/kyc/validate-address:
     post:
       operationId: validateWhatsAppNumberKycAddress
+      deprecated: true
       tags: [WhatsApp Phone Numbers]
       summary: Pre-validate KYC address
       description: |
+        Deprecated alias of `/v1/phone-numbers/kyc/validate-address`; same contract. New
+        integrations should use that path.
+
         Optional early check for the address step of a Tier 4 (end-user identity)
         registration: validates a postal address for deliverability BEFORE the full
         KYC submit, so it can be corrected before any documents are uploaded. The
@@ -23906,9 +26266,13 @@ paths:
   /v1/whatsapp/phone-numbers/kyc/share:
     post:
       operationId: createWhatsAppNumberKycLink
+      deprecated: true
       tags: [WhatsApp Phone Numbers]
       summary: Create a hosted KYC link
       description: |
+        Deprecated alias of `/v1/phone-numbers/kyc/share`; same contract. New
+        integrations should use that path.
+
         Create a single-use, 7-day hosted KYC link that your end customer
         completes WITHOUT a Zernio login — useful when the person who holds the
         ID and address is not your team. They fill the regulated verification on
@@ -23965,9 +26329,13 @@ paths:
   /v1/whatsapp/phone-numbers/{id}/remediate:
     get:
       operationId: getWhatsAppNumberRemediation
+      deprecated: true
       tags: [WhatsApp Phone Numbers]
       summary: Get declined requirements
       description: |
+        Deprecated alias of `/v1/phone-numbers/{id}/remediate`; same contract. New
+        integrations should use that path.
+
         For a number in `regulatory_declined`, returns ONLY the requirements the
         reviewer flagged declined, as a form spec (same shape as the KYC form GET).
         The customer fixes just those — Telnyx supports correcting a declined
@@ -23994,9 +26362,13 @@ paths:
         '404': { description: Number not found }
     post:
       operationId: remediateWhatsAppNumber
+      deprecated: true
       tags: [WhatsApp Phone Numbers]
       summary: Resubmit a declined number
       description: |
+        Deprecated alias of `/v1/phone-numbers/{id}/remediate`; same contract. New
+        integrations should use that path.
+
         Submit corrected values/documents for the declined requirement(s). We
         PATCH them onto the SAME requirement group and re-submit it for approval;
         the number goes `regulatory_declined` → `pending_regulatory`. No new
@@ -24035,12 +26407,379 @@ paths:
         '401': { $ref: '#/components/responses/Unauthorized' }
         '404': { description: Number not found }
 
+  /v1/phone-numbers/{id}/voice:
+    post:
+      operationId: enableVoiceOnNumber
+      tags: [Voice]
+      summary: Enable phone calling on a number
+      description: |
+        Turns on regular phone (PSTN) calling for one of your numbers and
+        configures how inbound calls are handled. Inbound calls route to
+        `forwardTo`: your own AI voice agent (Vapi/Retell), a phone, or a SIP
+        endpoint. Optional extras: voicemail, business-hours windows, an IVR
+        menu, a caller blocklist, recording, and transcription. A number can
+        also be voice-enabled with no forward (outbound-only).
+
+        Idempotent, and doubles as the settings update: only fields present in
+        the body are written. Omitting `forwardTo` preserves the current
+        destination; sending an empty string clears it.
+      security:
+        - bearerAuth: []
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string }, description: "Phone number record ID (from GET /v1/phone-numbers)." }
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                forwardTo: { type: string, description: "tel:+E164, sip:..., or wss://... destination for inbound calls. Empty string clears the forward (outbound-only); omitted preserves the current one." }
+                recordingEnabled: { type: boolean }
+                transcriptionEnabled: { type: boolean }
+                transcriptionLanguage: { type: string, enum: [auto, en, es] }
+                voicemailEnabled: { type: boolean, description: Voicemail is taken when there's no live destination. Default on. }
+                voicemailGreeting: { type: string, maxLength: 1000, description: Custom spoken greeting; empty string restores the default. }
+                businessHoursEnabled: { type: boolean, description: "Outside the windows, inbound skips the forward and goes to voicemail. Off = 24/7." }
+                businessHoursTimezone: { type: string, maxLength: 64, description: IANA timezone the windows are evaluated in. }
+                businessHours:
+                  type: array
+                  maxItems: 21
+                  items:
+                    type: object
+                    required: [day, open, close]
+                    properties:
+                      day: { type: integer, minimum: 0, maximum: 6, description: 0 = Sunday. }
+                      open: { type: string, pattern: '^\d{2}:\d{2}$' }
+                      close: { type: string, pattern: '^\d{2}:\d{2}$' }
+                blockedCallers:
+                  type: array
+                  maxItems: 1000
+                  items: { type: string }
+                  description: E.164 numbers rejected before answer. Replaces the whole list; bare 10-digit values are normalized as US numbers.
+                forwardCallerId: { type: string, enum: [business, caller], description: "Caller ID on the forwarded leg: your number (`business`) or the original caller's (`caller`)." }
+                ivrEnabled: { type: boolean, description: IVR menu (supersedes the plain forward within business hours). }
+                ivrPrompt: { type: string, maxLength: 1000 }
+                ivrOptions:
+                  type: array
+                  maxItems: 12
+                  items:
+                    type: object
+                    required: [digit, forwardTo]
+                    properties:
+                      digit: { type: string, pattern: '^[0-9*#]$' }
+                      forwardTo: { type: string, description: "tel:+E164, sip:..., or wss://... destination for this digit." }
+                      label: { type: string, maxLength: 80 }
+      responses:
+        '200':
+          description: Voice enabled; the full effective voice config is echoed back.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  enabled: { type: boolean }
+                  phoneNumber: { type: string }
+                  pstnForwardTo: { type: [string, "null"] }
+                  recordingEnabled: { type: boolean }
+                  transcriptionEnabled: { type: boolean }
+                  transcriptionLanguage: { type: string, enum: [auto, en, es] }
+                  voicemailEnabled: { type: boolean }
+                  voicemailGreeting: { type: [string, "null"] }
+                  businessHoursEnabled: { type: boolean }
+                  businessHoursTimezone: { type: [string, "null"] }
+                  businessHours: { type: array, items: { type: object, properties: { day: { type: integer }, open: { type: string }, close: { type: string } } } }
+                  blockedCallers: { type: array, items: { type: string } }
+                  forwardCallerId: { type: string, enum: [business, caller] }
+                  ivrEnabled: { type: boolean }
+                  ivrPrompt: { type: [string, "null"] }
+                  ivrOptions: { type: array, items: { type: object, properties: { digit: { type: string }, forwardTo: { type: string }, label: { type: string } } } }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404': { description: Number not found }
+        '422': { description: "This number is hosted by your own carrier (brought via WhatsApp embedded signup), so calls can't be enabled on it." }
+    delete:
+      operationId: disableVoiceOnNumber
+      tags: [Voice]
+      summary: Disable phone calling on a number
+      description: |
+        Turns off PSTN calling for the number. The stored forward destination
+        and settings are preserved, so re-enabling restores the prior config.
+      security:
+        - bearerAuth: []
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string } }
+      responses:
+        '200':
+          description: Voice disabled.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  enabled: { type: boolean, description: Always false after a successful disable. }
+                  phoneNumber: { type: string }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404': { description: Number not found }
+
+  /v1/phone-numbers/{id}/sms:
+    post:
+      operationId: enableSmsOnNumber
+      tags: [SMS]
+      summary: Enable SMS on a number
+      description: |
+        Turns on SMS for one of your numbers. The number's real carrier
+        capability is checked first: some number types can't do SMS at all
+        (`smsCapable: false`), and a number still provisioning at the carrier
+        returns `notReady: true` (try again once provisioning finishes).
+
+        US numbers additionally need a carrier registration before messages
+        deliver; the response tells you which path applies:
+        - `alreadyRegistered: true`: a prior registration still covers this
+          number; SMS was simply reactivated.
+        - `reusable` set: you have an approved registration this number can
+          join in one click via
+          `POST /v1/phone-numbers/{id}/sms/reuse-registration`
+          (no new brand/campaign, no extra carrier fee).
+        - `needsRegistration: true` and no `reusable`: start one via
+          `POST /v1/sms/registrations`.
+
+        Idempotent: re-running re-attempts any carrier-side setup that failed.
+      security:
+        - bearerAuth: []
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string }, description: "Phone number record ID (from GET /v1/phone-numbers)." }
+      responses:
+        '200':
+          description: "Result. Check `enabled`: a 200 with `enabled: false` means the number can't do SMS (`smsCapable: false`) or isn't ready yet (`notReady: true`)."
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  enabled: { type: boolean }
+                  id: { type: string, description: The SMS social account ID (present when enabled). }
+                  phoneNumber: { type: string }
+                  isActive: { type: boolean, description: False for US numbers until their registration is approved. }
+                  country: { type: string }
+                  smsCapable: { type: [boolean, "null"], description: Null when capability can't be read yet (still provisioning). }
+                  mmsCapable: { type: boolean }
+                  domesticOnly: { type: boolean }
+                  notReady: { type: boolean, description: Number is still provisioning at the carrier; retry shortly. }
+                  needsRegistration: { type: boolean, description: US only; a carrier registration is required before delivery. }
+                  alreadyRegistered: { type: boolean, description: A prior non-rejected registration already covers this number; no re-submit needed. }
+                  registrationStatus: { type: [string, "null"], enum: [pending, approved, rejected, null] }
+                  reusable:
+                    type: [object, "null"]
+                    description: Present when an existing approved registration can cover this number via /sms/reuse-registration.
+                    properties:
+                      registrationId: { type: string }
+                      status: { type: string }
+                  message: { type: string, description: Human-readable explanation when `enabled` is false. }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404': { description: Number not found }
+        '422': { description: "This number is hosted by your own carrier (brought via WhatsApp embedded signup), so SMS can't be enabled on it." }
+    delete:
+      operationId: disableSmsOnNumber
+      tags: [SMS]
+      summary: Disable SMS on a number
+      description: |
+        Turns off SMS for the number (deactivates its SMS account). The carrier
+        registration is untouched, so re-enabling later just reactivates it,
+        with no re-registration.
+      security:
+        - bearerAuth: []
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string } }
+      responses:
+        '200':
+          description: SMS disabled.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  enabled: { type: boolean, description: Always false after a successful disable. }
+                  phoneNumber: { type: string }
+                  disabled: { type: boolean, description: False when SMS was already off. Legacy field; prefer `enabled`. }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404': { description: Number not found }
+
+  /v1/phone-numbers/{id}/sms/reuse-registration:
+    post:
+      operationId: reuseSmsRegistrationForNumber
+      tags: [SMS]
+      summary: Add a number to an existing registration
+      description: |
+        Attaches this number to your existing approved 10DLC campaign instead
+        of running a fresh registration: the number inherits the campaign's
+        approval (no new brand or campaign, no extra carrier fee). Enable SMS
+        on the number first (`POST /v1/phone-numbers/{id}/sms`; its response
+        tells you whether a reusable registration exists).
+      security:
+        - bearerAuth: []
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string } }
+      responses:
+        '200':
+          description: Number added to the existing registration.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  registrationId: { type: string }
+                  status: { type: string, enum: [pending, approved, rejected] }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404': { description: Number not found }
+        '409': { description: No existing SMS registration to reuse for this number }
+
+  /v1/phone-numbers/{id}/whatsapp/calling:
+    get:
+      operationId: getWhatsAppCalling
+      tags: [WhatsApp Calling]
+      summary: Get calling config for a number
+      description: |
+        The WhatsApp Business Calling configuration of this number, keyed the
+        same way as the POST/PATCH/DELETE below (full read-write on one
+        sub-resource). Encrypted secrets are never returned; only a boolean
+        saying whether a SIP password is stored. The account-scoped read
+        (`GET /v1/whatsapp/calling?accountId=`) remains for callers that only
+        know the social account id, and additionally carries account-level
+        extras (billing eligibility, current-period spend).
+      security:
+        - bearerAuth: []
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string }, description: "Phone number record ID (from GET /v1/phone-numbers)." }
+      responses:
+        '200':
+          description: Calling config
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  phoneNumber: { type: string }
+                  callingEnabled: { type: boolean }
+                  callDeepLink: { type: [string, "null"], description: "Public calling deep link (https://wa.me/call/<number>). Null while calling is disabled." }
+                  forwardTo: { type: [string, "null"], description: "tel:+E164 / sip:... / wss://... destination" }
+                  recordingEnabled: { type: boolean }
+                  sipAuthUsername: { type: [string, "null"] }
+                  sipAuthPasswordConfigured: { type: boolean, description: True when a SIP digest password is stored. The plaintext is never returned. }
+                  callIconCountries:
+                    type: [array, "null"]
+                    items: { type: string, minLength: 2, maxLength: 2 }
+                  outboundDisabled: { type: boolean, description: "True when the number's country blocks business-initiated (outbound) WhatsApp calling; inbound still works." }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404': { description: Number not found }
+    post:
+      operationId: enableWhatsAppCalling
+      tags: [WhatsApp Calling]
+      summary: Enable calling on a number
+      description: |
+        Enable WhatsApp Business Calling on a connected number. Configures
+        Meta calling.status=ENABLED with our Telnyx SIP endpoint, fetches and
+        stores the Meta-issued SIP password (encrypted), and snapshots the
+        customer's forward-to destination.
+      security:
+        - bearerAuth: []
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string }, description: "Phone number record ID (from GET /v1/phone-numbers)." }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [accountId, forwardTo]
+              properties:
+                accountId: { type: string }
+                forwardTo: { type: string, description: "tel:+E164 / sip:... / wss://... destination" }
+                sipAuthUsername: { type: string }
+                sipAuthPassword: { type: string, description: "Stored encrypted, never returned by any endpoint." }
+                recordingEnabled: { type: boolean, default: false }
+                callIconCountries:
+                  type: array
+                  items: { type: string, minLength: 2, maxLength: 2 }
+      responses:
+        '200':
+          description: Calling enabled
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success: { type: boolean }
+                  callingEnabled: { type: boolean }
+                  sipHostname: { type: string }
+                  forwardTo: { type: string }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404': { description: Phone number not found }
+        '422': { description: "Not eligible to enable calling: not on usage-based billing, or the number's messaging limit is below Meta's ~2,000-daily-recipient threshold (TIER_250). Warm the number up to raise the limit." }
+    patch:
+      operationId: updateWhatsAppCalling
+      tags: [WhatsApp Calling]
+      summary: Update calling config
+      description: |
+        Update fields on an already-enabled number. Only fields present in
+        the body are written; `undefined` leaves the stored value alone,
+        explicit `null` clears a nullable field. No Meta side effect, this
+        only changes local routing state consumed by the Telnyx webhook
+        handler.
+      security:
+        - bearerAuth: []
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string } }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [accountId]
+              properties:
+                accountId: { type: string }
+                forwardTo: { type: string }
+                sipAuthUsername: { type: [string, "null"] }
+                sipAuthPassword: { type: [string, "null"] }
+                recordingEnabled: { type: boolean }
+                callIconCountries:
+                  type: [array, "null"]
+                  items: { type: string, minLength: 2, maxLength: 2 }
+      responses:
+        '200': { description: Updated }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404': { description: Phone number not found }
+        '422': { description: Calling must be enabled before settings can be updated }
+    delete:
+      operationId: disableWhatsAppCalling
+      tags: [WhatsApp Calling]
+      summary: Disable calling on a number
+      description: |
+        Disable calling. Sends calling.status=DISABLED to Meta (best-effort)
+        and flips the local `callingEnabled` flag off. forwardTo and SIP
+        creds are preserved so a re-enable does not lose the destination.
+      security:
+        - bearerAuth: []
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string } }
+        - { name: accountId, in: query, required: true, schema: { type: string } }
+      responses:
+        '200': { description: Disabled }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404': { description: Phone number not found }
+
+
+
   /v1/whatsapp/phone-numbers/{phoneNumberId}:
     get:
       operationId: getWhatsAppPhoneNumber
+      deprecated: true
       tags: [WhatsApp Phone Numbers]
       summary: Get phone number
       description: |
+        Deprecated alias of `/v1/phone-numbers/{id}`; same contract. New
+        integrations should use that path.
+
         Retrieve the current status of a purchased phone number. Poll this to
         track Meta pre-verification (US sync path) and, for regulated (Tier 3/4)
         numbers, the async lifecycle: pending_regulatory → active (or
@@ -24083,9 +26822,13 @@ paths:
         '404': { $ref: '#/components/responses/NotFound' }
     delete:
       operationId: releaseWhatsAppPhoneNumber
+      deprecated: true
       tags: [WhatsApp Phone Numbers]
       summary: Release phone number
       description: |
+        Deprecated alias of `/v1/phone-numbers/{id}`; same contract. New
+        integrations should use that path.
+
         Release a purchased phone number. This will:
         1. Disconnect any linked WhatsApp social account
         2. Decrement the Stripe subscription quantity (or cancel if last number)

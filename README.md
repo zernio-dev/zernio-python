@@ -299,6 +299,9 @@ Both `from zernio import ...` and `from late import ...` work identically. The `
 ### Usage
 | Method | Description |
 |--------|-------------|
+| `usage.get_calls_usage()` | Calling usage (volumes + billable cost) |
+| `usage.get_sms_usage()` | SMS usage (volumes) |
+| `usage.get_usage()` | Get plan and usage snapshot |
 | `usage.get_usage_stats()` | Get plan and usage stats |
 | `usage.get_x_api_pricing()` | Get X/Twitter API pricing table |
 
@@ -443,6 +446,13 @@ Both `from zernio import ...` and `from late import ...` work identically. The `
 | `broadcasts.cancel_broadcast()` | Cancel broadcast |
 | `broadcasts.schedule_broadcast()` | Schedule broadcast for later |
 | `broadcasts.send_broadcast()` | Send broadcast now |
+
+### Calls
+| Method | Description |
+|--------|-------------|
+| `calls.list_calls()` | List all calls (unified history) |
+| `calls.get_call()` | Get a call (any channel) |
+| `calls.get_call_recording()` | Get a call recording (any channel) |
 
 ### Comment Automations
 | Method | Description |
@@ -595,6 +605,30 @@ Both `from zernio import ...` and `from late import ...` work identically. The `
 | `messages.send_typing_indicator()` | Send typing indicator |
 | `messages.upload_media_direct()` | Upload media file |
 
+### Phone Numbers
+| Method | Description |
+|--------|-------------|
+| `phone_numbers.list_phone_number_countries()` | List offerable number countries |
+| `phone_numbers.list_phone_number_port_ins()` | List port-in orders |
+| `phone_numbers.list_phone_numbers()` | List phone numbers |
+| `phone_numbers.create_phone_number_kyc_link()` | Create a hosted KYC link |
+| `phone_numbers.create_phone_number_port_in()` | Port numbers in |
+| `phone_numbers.get_phone_number()` | Get phone number |
+| `phone_numbers.get_phone_number_kyc_form()` | Get KYC form spec |
+| `phone_numbers.get_phone_number_remediation()` | Get declined requirements |
+| `phone_numbers.cancel_phone_number_port_in()` | Cancel a port-in |
+| `phone_numbers.check_phone_number_availability()` | Check country availability |
+| `phone_numbers.check_phone_number_portability()` | Check portability |
+| `phone_numbers.purchase_phone_number()` | Purchase phone number |
+| `phone_numbers.release_phone_number()` | Release phone number |
+| `phone_numbers.remediate_phone_number()` | Resubmit a declined number |
+| `phone_numbers.review_phone_number_kyc_packet()` | Pre-review a KYC packet |
+| `phone_numbers.search_available_phone_numbers()` | Search available numbers |
+| `phone_numbers.submit_phone_number_kyc()` | Submit KYC |
+| `phone_numbers.upload_phone_number_kyc_document()` | Upload a KYC document |
+| `phone_numbers.upload_phone_number_port_in_document()` | Upload a porting document |
+| `phone_numbers.validate_phone_number_kyc_address()` | Pre-validate KYC address |
+
 ### Reviews (Inbox)
 | Method | Description |
 |--------|-------------|
@@ -615,6 +649,22 @@ Both `from zernio import ...` and `from late import ...` work identically. The `
 | `sequences.enroll_contacts()` | Enroll contacts in a sequence |
 | `sequences.pause_sequence()` | Pause sequence |
 | `sequences.unenroll_contact()` | Unenroll contact |
+
+### SMS
+| Method | Description |
+|--------|-------------|
+| `sms.list_sms_opt_outs()` | List SMS opt-outs |
+| `sms.list_sms_registrations()` | List carrier registrations |
+| `sms.get_sms_registration()` | Get a carrier registration |
+| `sms.appeal_sms_registration()` | Appeal a rejected campaign |
+| `sms.disable_sms_on_number()` | Disable SMS on a number |
+| `sms.enable_sms_on_number()` | Enable SMS on a number |
+| `sms.lookup_sms_number()` | Look up carrier + line type |
+| `sms.reuse_sms_registration_for_number()` | Add a number to an existing registration |
+| `sms.send_sms()` | Send an SMS/MMS |
+| `sms.share_sms_registration()` | Create a registration share link |
+| `sms.start_sms_registration()` | Start a carrier registration |
+| `sms.verify_sms_registration_otp()` | Submit the sole-prop OTP |
 
 ### Tracking Tags
 | Method | Description |
@@ -645,6 +695,21 @@ Both `from zernio import ...` and `from late import ...` work identically. The `
 | `validate.validate_post()` | Validate post content |
 | `validate.validate_post_length()` | Validate character count |
 | `validate.validate_subreddit()` | Check subreddit existence |
+
+### Voice
+| Method | Description |
+|--------|-------------|
+| `voice.list_voice_calls()` | List phone calls |
+| `voice.create_voice_call()` | Place an outbound phone call |
+| `voice.create_voice_web_session()` | Mint a browser softphone session |
+| `voice.get_voice_call()` | Get a phone call |
+| `voice.get_voice_call_estimate()` | Estimate call cost |
+| `voice.get_voice_call_recording()` | Get a call recording |
+| `voice.dial_voice_web_call()` | Dial from the browser softphone |
+| `voice.disable_voice_on_number()` | Disable phone calling on a number |
+| `voice.enable_voice_on_number()` | Enable phone calling on a number |
+| `voice.end_voice_call()` | Hang up a live call |
+| `voice.transfer_voice_call()` | Blind-transfer a live call |
 
 ### WhatsApp
 | Method | Description |
@@ -690,10 +755,15 @@ Both `from zernio import ...` and `from late import ...` work identically. The `
 | `whatsapp_calling.get_whats_app_call()` | Get a single call |
 | `whatsapp_calling.get_whats_app_call_estimate()` | Estimate per-minute cost |
 | `whatsapp_calling.get_whats_app_call_permissions()` | Check call permission |
+| `whatsapp_calling.get_whats_app_call_recording()` | Get a call recording |
+| `whatsapp_calling.get_whats_app_calling()` | Get calling config for a number |
 | `whatsapp_calling.get_whats_app_calling_config()` | Get calling config for an account |
 | `whatsapp_calling.update_whats_app_calling()` | Update calling config |
+| `whatsapp_calling.update_whats_app_calling_legacy()` | Update calling config |
 | `whatsapp_calling.disable_whats_app_calling()` | Disable calling on a number |
+| `whatsapp_calling.disable_whats_app_calling_legacy()` | Disable calling on a number |
 | `whatsapp_calling.enable_whats_app_calling()` | Enable calling on a number |
+| `whatsapp_calling.enable_whats_app_calling_legacy()` | Enable calling on a number |
 | `whatsapp_calling.initiate_whats_app_call()` | Initiate outbound call |
 
 ### WhatsApp Flows

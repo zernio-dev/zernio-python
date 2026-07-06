@@ -18,6 +18,7 @@ from ..resources import (
     AnalyticsResource,
     ApiKeysResource,
     BroadcastsResource,
+    CallsResource,
     CommentAutomationsResource,
     CommentsResource,
     ConnectResource,
@@ -33,18 +34,21 @@ from ..resources import (
     MediaResource,
     MentionsResource,
     MessagesResource,
+    PhoneNumbersResource,
     PostsResource,
     ProfilesResource,
     QueueResource,
     RedditResource,
     ReviewsResource,
     SequencesResource,
+    SmsResource,
     ToolsResource,
     TrackingTagsResource,
     TwitterEngagementResource,
     UsageResource,
     UsersResource,
     ValidateResource,
+    VoiceResource,
     WebhooksResource,
     WhatsappCallingResource,
     WhatsappFlowsResource,
@@ -134,6 +138,7 @@ class Zernio(BaseClient):
         self.analytics = AnalyticsResource(self)
         self.api_keys = ApiKeysResource(self)
         self.broadcasts = BroadcastsResource(self)
+        self.calls = CallsResource(self)
         self.comment_automations = CommentAutomationsResource(self)
         self.comments = CommentsResource(self)
         self.connect = ConnectResource(self)
@@ -149,18 +154,21 @@ class Zernio(BaseClient):
         self.media = MediaResource(self)
         self.mentions = MentionsResource(self)
         self.messages = MessagesResource(self)
+        self.phone_numbers = PhoneNumbersResource(self)
         self.posts = PostsResource(self)
         self.profiles = ProfilesResource(self)
         self.queue = QueueResource(self)
         self.reddit = RedditResource(self)
         self.reviews = ReviewsResource(self)
         self.sequences = SequencesResource(self)
+        self.sms = SmsResource(self)
         self.tools = ToolsResource(self)
         self.tracking_tags = TrackingTagsResource(self)
         self.twitter_engagement = TwitterEngagementResource(self)
         self.usage = UsageResource(self)
         self.users = UsersResource(self)
         self.validate = ValidateResource(self)
+        self.voice = VoiceResource(self)
         self.webhooks = WebhooksResource(self)
         self.whatsapp = WhatsappResource(self)
         self.whatsapp_calling = WhatsappCallingResource(self)

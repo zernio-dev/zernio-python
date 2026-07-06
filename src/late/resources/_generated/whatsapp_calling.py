@@ -63,7 +63,7 @@ class WhatsappCallingResource:
         )
         return self._client._get("/v1/whatsapp/calling", params=params)
 
-    def enable_whats_app_calling(
+    def enable_whats_app_calling_legacy(
         self,
         id: str,
         account_id: str,
@@ -87,7 +87,7 @@ class WhatsappCallingResource:
             f"/v1/whatsapp/phone-numbers/{id}/calling", data=payload
         )
 
-    def update_whats_app_calling(
+    def update_whats_app_calling_legacy(
         self,
         id: str,
         account_id: str,
@@ -111,7 +111,9 @@ class WhatsappCallingResource:
             f"/v1/whatsapp/phone-numbers/{id}/calling", data=payload
         )
 
-    def disable_whats_app_calling(self, id: str, account_id: str) -> dict[str, Any]:
+    def disable_whats_app_calling_legacy(
+        self, id: str, account_id: str
+    ) -> dict[str, Any]:
         """Disable calling on a number"""
         params = self._build_params(
             account_id=account_id,
@@ -135,6 +137,7 @@ class WhatsappCallingResource:
         account_id: str,
         to: str,
         *,
+        idempotency_key: str | None = None,
         action: str | None = None,
         body_text: str | None = None,
         forward_to: str | None = None,
@@ -161,6 +164,7 @@ class WhatsappCallingResource:
         direction: str | None = None,
         since: datetime | str | None = None,
         until: datetime | str | None = None,
+        before: datetime | str | None = None,
         limit: int | None = None,
     ) -> dict[str, Any]:
         """List call history for an account"""
@@ -170,6 +174,7 @@ class WhatsappCallingResource:
             direction=direction,
             since=since,
             until=until,
+            before=before,
             limit=limit,
         )
         return self._client._get("/v1/whatsapp/calls", params=params)
@@ -180,6 +185,18 @@ class WhatsappCallingResource:
             account_id=account_id,
         )
         return self._client._get(f"/v1/whatsapp/calls/{call_id}", params=params)
+
+    def get_whats_app_call_recording(
+        self, call_id: str, account_id: str, *, as_: str | None = None
+    ) -> dict[str, Any]:
+        """Get a call recording"""
+        params = self._build_params(
+            account_id=account_id,
+            as_=as_,
+        )
+        return self._client._get(
+            f"/v1/whatsapp/calls/{call_id}/recording", params=params
+        )
 
     def get_whats_app_call_estimate(
         self,
@@ -198,6 +215,67 @@ class WhatsappCallingResource:
         )
         return self._client._get("/v1/whatsapp/calls/estimate", params=params)
 
+    def get_whats_app_calling(self, id: str) -> dict[str, Any]:
+        """Get calling config for a number"""
+        return self._client._get(f"/v1/phone-numbers/{id}/whatsapp/calling")
+
+    def enable_whats_app_calling(
+        self,
+        id: str,
+        account_id: str,
+        forward_to: str,
+        *,
+        sip_auth_username: str | None = None,
+        sip_auth_password: str | None = None,
+        recording_enabled: bool | None = False,
+        call_icon_countries: list[str] | None = None,
+    ) -> dict[str, Any]:
+        """Enable calling on a number"""
+        payload = self._build_payload(
+            account_id=account_id,
+            forward_to=forward_to,
+            sip_auth_username=sip_auth_username,
+            sip_auth_password=sip_auth_password,
+            recording_enabled=recording_enabled,
+            call_icon_countries=call_icon_countries,
+        )
+        return self._client._post(
+            f"/v1/phone-numbers/{id}/whatsapp/calling", data=payload
+        )
+
+    def update_whats_app_calling(
+        self,
+        id: str,
+        account_id: str,
+        *,
+        forward_to: str | None = None,
+        sip_auth_username: Any | None = None,
+        sip_auth_password: Any | None = None,
+        recording_enabled: bool | None = None,
+        call_icon_countries: Any | None = None,
+    ) -> dict[str, Any]:
+        """Update calling config"""
+        payload = self._build_payload(
+            account_id=account_id,
+            forward_to=forward_to,
+            sip_auth_username=sip_auth_username,
+            sip_auth_password=sip_auth_password,
+            recording_enabled=recording_enabled,
+            call_icon_countries=call_icon_countries,
+        )
+        return self._client._patch(
+            f"/v1/phone-numbers/{id}/whatsapp/calling", data=payload
+        )
+
+    def disable_whats_app_calling(self, id: str, account_id: str) -> dict[str, Any]:
+        """Disable calling on a number"""
+        params = self._build_params(
+            account_id=account_id,
+        )
+        return self._client._delete(
+            f"/v1/phone-numbers/{id}/whatsapp/calling", params=params
+        )
+
     async def aget_whats_app_calling_config(self, account_id: str) -> dict[str, Any]:
         """Get calling config for an account (async)"""
         params = self._build_params(
@@ -205,7 +283,7 @@ class WhatsappCallingResource:
         )
         return await self._client._aget("/v1/whatsapp/calling", params=params)
 
-    async def aenable_whats_app_calling(
+    async def aenable_whats_app_calling_legacy(
         self,
         id: str,
         account_id: str,
@@ -229,7 +307,7 @@ class WhatsappCallingResource:
             f"/v1/whatsapp/phone-numbers/{id}/calling", data=payload
         )
 
-    async def aupdate_whats_app_calling(
+    async def aupdate_whats_app_calling_legacy(
         self,
         id: str,
         account_id: str,
@@ -253,7 +331,7 @@ class WhatsappCallingResource:
             f"/v1/whatsapp/phone-numbers/{id}/calling", data=payload
         )
 
-    async def adisable_whats_app_calling(
+    async def adisable_whats_app_calling_legacy(
         self, id: str, account_id: str
     ) -> dict[str, Any]:
         """Disable calling on a number (async)"""
@@ -279,6 +357,7 @@ class WhatsappCallingResource:
         account_id: str,
         to: str,
         *,
+        idempotency_key: str | None = None,
         action: str | None = None,
         body_text: str | None = None,
         forward_to: str | None = None,
@@ -305,6 +384,7 @@ class WhatsappCallingResource:
         direction: str | None = None,
         since: datetime | str | None = None,
         until: datetime | str | None = None,
+        before: datetime | str | None = None,
         limit: int | None = None,
     ) -> dict[str, Any]:
         """List call history for an account (async)"""
@@ -314,6 +394,7 @@ class WhatsappCallingResource:
             direction=direction,
             since=since,
             until=until,
+            before=before,
             limit=limit,
         )
         return await self._client._aget("/v1/whatsapp/calls", params=params)
@@ -326,6 +407,18 @@ class WhatsappCallingResource:
             account_id=account_id,
         )
         return await self._client._aget(f"/v1/whatsapp/calls/{call_id}", params=params)
+
+    async def aget_whats_app_call_recording(
+        self, call_id: str, account_id: str, *, as_: str | None = None
+    ) -> dict[str, Any]:
+        """Get a call recording (async)"""
+        params = self._build_params(
+            account_id=account_id,
+            as_=as_,
+        )
+        return await self._client._aget(
+            f"/v1/whatsapp/calls/{call_id}/recording", params=params
+        )
 
     async def aget_whats_app_call_estimate(
         self,
@@ -343,3 +436,66 @@ class WhatsappCallingResource:
             recording=recording,
         )
         return await self._client._aget("/v1/whatsapp/calls/estimate", params=params)
+
+    async def aget_whats_app_calling(self, id: str) -> dict[str, Any]:
+        """Get calling config for a number (async)"""
+        return await self._client._aget(f"/v1/phone-numbers/{id}/whatsapp/calling")
+
+    async def aenable_whats_app_calling(
+        self,
+        id: str,
+        account_id: str,
+        forward_to: str,
+        *,
+        sip_auth_username: str | None = None,
+        sip_auth_password: str | None = None,
+        recording_enabled: bool | None = False,
+        call_icon_countries: list[str] | None = None,
+    ) -> dict[str, Any]:
+        """Enable calling on a number (async)"""
+        payload = self._build_payload(
+            account_id=account_id,
+            forward_to=forward_to,
+            sip_auth_username=sip_auth_username,
+            sip_auth_password=sip_auth_password,
+            recording_enabled=recording_enabled,
+            call_icon_countries=call_icon_countries,
+        )
+        return await self._client._apost(
+            f"/v1/phone-numbers/{id}/whatsapp/calling", data=payload
+        )
+
+    async def aupdate_whats_app_calling(
+        self,
+        id: str,
+        account_id: str,
+        *,
+        forward_to: str | None = None,
+        sip_auth_username: Any | None = None,
+        sip_auth_password: Any | None = None,
+        recording_enabled: bool | None = None,
+        call_icon_countries: Any | None = None,
+    ) -> dict[str, Any]:
+        """Update calling config (async)"""
+        payload = self._build_payload(
+            account_id=account_id,
+            forward_to=forward_to,
+            sip_auth_username=sip_auth_username,
+            sip_auth_password=sip_auth_password,
+            recording_enabled=recording_enabled,
+            call_icon_countries=call_icon_countries,
+        )
+        return await self._client._apatch(
+            f"/v1/phone-numbers/{id}/whatsapp/calling", data=payload
+        )
+
+    async def adisable_whats_app_calling(
+        self, id: str, account_id: str
+    ) -> dict[str, Any]:
+        """Disable calling on a number (async)"""
+        params = self._build_params(
+            account_id=account_id,
+        )
+        return await self._client._adelete(
+            f"/v1/phone-numbers/{id}/whatsapp/calling", params=params
+        )

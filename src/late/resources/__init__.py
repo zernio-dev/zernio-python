@@ -13,6 +13,7 @@ from ._generated.ad_campaigns import AdCampaignsResource
 from ._generated.ads import AdsResource
 from ._generated.api_keys import ApiKeysResource
 from ._generated.broadcasts import BroadcastsResource
+from ._generated.calls import CallsResource
 from ._generated.comment_automations import CommentAutomationsResource
 from ._generated.comments import CommentsResource
 from ._generated.connect import ConnectResource
@@ -27,13 +28,16 @@ from ._generated.invites import InvitesResource
 from ._generated.logs import LogsResource
 from ._generated.mentions import MentionsResource
 from ._generated.messages import MessagesResource
+from ._generated.phone_numbers import PhoneNumbersResource
 from ._generated.reddit import RedditResource
 from ._generated.reviews import ReviewsResource
 from ._generated.sequences import SequencesResource
+from ._generated.sms import SmsResource
 from ._generated.tracking_tags import TrackingTagsResource
 from ._generated.twitter_engagement import TwitterEngagementResource
 from ._generated.usage import UsageResource
 from ._generated.validate import ValidateResource
+from ._generated.voice import VoiceResource
 from ._generated.webhooks import WebhooksResource
 from ._generated.whatsapp import WhatsappResource
 from ._generated.whatsapp_calling import WhatsappCallingResource
@@ -61,6 +65,7 @@ __all__ = [
     "AnalyticsResource",
     "ApiKeysResource",
     "BroadcastsResource",
+    "CallsResource",
     "CommentAutomationsResource",
     "CommentsResource",
     "ConnectResource",
@@ -76,18 +81,21 @@ __all__ = [
     "MediaResource",
     "MentionsResource",
     "MessagesResource",
+    "PhoneNumbersResource",
     "PostsResource",
     "ProfilesResource",
     "QueueResource",
     "RedditResource",
     "ReviewsResource",
     "SequencesResource",
+    "SmsResource",
     "ToolsResource",
     "TrackingTagsResource",
     "TwitterEngagementResource",
     "UsageResource",
     "UsersResource",
     "ValidateResource",
+    "VoiceResource",
     "WebhooksResource",
     "WhatsappResource",
     "WhatsappCallingResource",

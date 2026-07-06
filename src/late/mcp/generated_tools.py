@@ -4723,6 +4723,91 @@ def register_generated_tools(mcp, _get_client):
         except Exception as e:
             return f"Error: {e}"
 
+    # CALLS
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="List all calls (unified history)",
+            readOnlyHint=True,
+            destructiveHint=False,
+            openWorldHint=False,
+        )
+    )
+    def calls_list_calls(
+        channel: str | None = None,
+        status: str | None = None,
+        direction: str | None = None,
+        number: str | None = None,
+        search: str | None = None,
+        before: str | None = None,
+        limit: int = 50,
+    ) -> str:
+        """List all calls (unified history)
+
+        Args:
+            channel
+            status
+            direction
+            number: Exact filter: calls involving this number (typically one of YOUR numbers, to scope history to a single line). E.164, leading + optional.
+            search: Free-text match on the from/to numbers. Non-digits are stripped, so partial queries like `302` or `+1 302` work.
+            before: Return calls with startedAt strictly before this instant (use the previous page's nextCursor).
+            limit"""
+        client = _get_client()
+        try:
+            response = client.calls.list_calls(
+                channel=channel,
+                status=status,
+                direction=direction,
+                number=number,
+                search=search,
+                before=before,
+                limit=limit,
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Get a call (any channel)",
+            readOnlyHint=True,
+            destructiveHint=False,
+            openWorldHint=False,
+        )
+    )
+    def calls_get_call(id: str) -> str:
+        """Get a call (any channel)
+
+        Args:
+            id: (required)"""
+        client = _get_client()
+        try:
+            response = client.calls.get_call(id=id)
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Get a call recording (any channel)",
+            readOnlyHint=True,
+            destructiveHint=False,
+            openWorldHint=False,
+        )
+    )
+    def calls_get_call_recording(id: str, as_: str | None = None) -> str:
+        """Get a call recording (any channel)
+
+        Args:
+            id: (required)
+            as_: `json` returns `{ url }` instead of a 302 redirect."""
+        client = _get_client()
+        try:
+            response = client.calls.get_call_recording(id=id, as_=as_)
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
     # COMMENT_AUTOMATIONS
 
     @mcp.tool(
@@ -8263,6 +8348,567 @@ def register_generated_tools(mcp, _get_client):
         except Exception as e:
             return f"Error: {e}"
 
+    # PHONE_NUMBERS
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="List phone numbers",
+            readOnlyHint=True,
+            destructiveHint=False,
+            openWorldHint=False,
+        )
+    )
+    def phone_numbers_list_phone_numbers(
+        status: str | None = None, profile_id: str | None = None
+    ) -> str:
+        """List phone numbers
+
+            Args:
+                status: Filter by status (by default excludes released numbers). NOTE:
+        `status=pending_regulatory` returns the "provisioning" view — numbers
+        still in review PLUS recently-declined (last 30 days) ones, so a
+        failed registration surfaces (with `regulatoryDeclineReason`) instead
+        of silently disappearing. Declined numbers can be re-submitted via
+        POST /v1/phone-numbers/{id}/remediate. `verifying` is the
+        short-lived state after the number is provisioned on our side while
+        WhatsApp confirms the activation code; the number is not billed until
+        it reaches `active`.
+                profile_id: Filter by profile"""
+        client = _get_client()
+        try:
+            response = client.phone_numbers.list_phone_numbers(
+                status=status, profile_id=profile_id
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Get phone number",
+            readOnlyHint=True,
+            destructiveHint=False,
+            openWorldHint=False,
+        )
+    )
+    def phone_numbers_get_phone_number(id: str) -> str:
+        """Get phone number
+
+        Args:
+            id: Phone number record ID (required)"""
+        client = _get_client()
+        try:
+            response = client.phone_numbers.get_phone_number(id=id)
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Release phone number",
+            readOnlyHint=False,
+            destructiveHint=True,
+            openWorldHint=True,
+        )
+    )
+    def phone_numbers_release_phone_number(id: str) -> str:
+        """Release phone number
+
+        Args:
+            id: Phone number record ID (required)"""
+        client = _get_client()
+        try:
+            response = client.phone_numbers.release_phone_number(id=id)
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Purchase phone number",
+            readOnlyHint=False,
+            destructiveHint=True,
+            openWorldHint=True,
+        )
+    )
+    def phone_numbers_purchase_phone_number(
+        profile_id: str,
+        country: str = "US",
+        connect_whatsapp: bool = True,
+        wants_sms: bool = False,
+        purchase_intent_id: str | None = None,
+        allow_multiple: bool = False,
+    ) -> str:
+        """Purchase phone number
+
+        Args:
+            profile_id: Profile to associate the number with (required)
+            country: ISO 3166-1 alpha-2 country for the number (default US). International numbers require usage-based billing. Tier 3/4 countries return 202 { status: "kyc_required", kycUrl } — the customer must complete KYC at that URL before the number is ordered. See GET /v1/phone-numbers/countries.
+            connect_whatsapp: A phone number is the unit; WhatsApp is one optional feature. Pass false to buy a STANDALONE number (Calls/SMS only): provisioning skips the Meta pre-verify/OTP steps and the number activates immediately. Omitted defaults to the WhatsApp provisioning path. WhatsApp can be connected to a standalone number later from the connect flow.
+            wants_sms: SMS capability is per-number, not per-country. Pass true to provision from the SMS-capable inventory pool so the number can actually text (see also GET /v1/phone-numbers/available with sms=true, and smsAvailable on GET /v1/phone-numbers/countries).
+            purchase_intent_id: Optional idempotency key. Send the same value when retrying a purchase: if a number was already bought under this key, the API returns { status: "already_purchased", numberId, phoneNumber } instead of provisioning a second number. Generate a fresh key for each genuinely new purchase.
+            allow_multiple: Any second purchase within 10 minutes of a previous one is rejected with 409 code PURCHASE_VELOCITY as duplicate protection. Pass true to confirm the additional purchase is intentional (e.g. bulk provisioning)."""
+        client = _get_client()
+        try:
+            response = client.phone_numbers.purchase_phone_number(
+                profile_id=profile_id,
+                country=country,
+                connect_whatsapp=connect_whatsapp,
+                wants_sms=wants_sms,
+                purchase_intent_id=purchase_intent_id,
+                allow_multiple=allow_multiple,
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="List offerable number countries",
+            readOnlyHint=True,
+            destructiveHint=False,
+            openWorldHint=False,
+        )
+    )
+    def phone_numbers_list_phone_number_countries() -> str:
+        """List offerable number countries"""
+        client = _get_client()
+        try:
+            response = client.phone_numbers.list_phone_number_countries()
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Search available numbers",
+            readOnlyHint=True,
+            destructiveHint=False,
+            openWorldHint=False,
+        )
+    )
+    def phone_numbers_search_available_phone_numbers(
+        country: str = "US",
+        type: str | None = None,
+        prefix: str | None = None,
+        locality: str | None = None,
+        contains: str | None = None,
+        sms: bool | None = None,
+        limit: int = 20,
+    ) -> str:
+        """Search available numbers
+
+        Args:
+            country
+            type: Number type; defaults to the country's WhatsApp-safe type
+            prefix: Area code
+            locality: City
+            contains: Pattern to match within the number
+            sms: true narrows the pool to SMS-capable numbers. Each result still carries its full `features` list for per-number capability badging.
+            limit"""
+        client = _get_client()
+        try:
+            response = client.phone_numbers.search_available_phone_numbers(
+                country=country,
+                type=type,
+                prefix=prefix,
+                locality=locality,
+                contains=contains,
+                sms=sms,
+                limit=limit,
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Check country availability",
+            readOnlyHint=True,
+            destructiveHint=False,
+            openWorldHint=False,
+        )
+    )
+    def phone_numbers_check_phone_number_availability(country: str) -> str:
+        """Check country availability
+
+        Args:
+            country: ISO-2 country code. (required)"""
+        client = _get_client()
+        try:
+            response = client.phone_numbers.check_phone_number_availability(
+                country=country
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Get KYC form spec",
+            readOnlyHint=True,
+            destructiveHint=False,
+            openWorldHint=False,
+        )
+    )
+    def phone_numbers_get_phone_number_kyc_form(country: str) -> str:
+        """Get KYC form spec
+
+        Args:
+            country: (required)"""
+        client = _get_client()
+        try:
+            response = client.phone_numbers.get_phone_number_kyc_form(country=country)
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Submit KYC",
+            readOnlyHint=False,
+            destructiveHint=True,
+            openWorldHint=True,
+        )
+    )
+    def phone_numbers_submit_phone_number_kyc(
+        profile_id: str,
+        country: str,
+        submission_id: str | None = None,
+        quantity: int = 1,
+        reuse: bool | None = None,
+        reuse_from: str | None = None,
+        end_user_first_name: str | None = None,
+        end_user_last_name: str | None = None,
+        values: dict[str, Any] | None = None,
+        documents: list[dict[str, Any]] | None = None,
+        address: dict[str, Any] | None = None,
+    ) -> str:
+        """Submit KYC
+
+        Args:
+            profile_id: (required)
+            country: (required)
+            submission_id: Idempotency token for this submission attempt. A retry/double-submit with the same token returns the same number; omit and each call creates a new number.
+            quantity: Provision several same-country numbers from one submission (1-5). The single verification covers all of them; each number is billed only when it activates. Numbers that fail to order are skipped (best-effort).
+            reuse: Reuse a prior approved verification for this country (skips document/field collection; places the order immediately).
+            reuse_from: Which approved verification to reuse when several exist: the phone number it was originally approved for (GET reusable.options[].fromPhoneNumber). Omitted = newest. No match = 409.
+            end_user_first_name: End user's legal first name. Required when the country has an action/ID-verification (Onfido) requirement.
+            end_user_last_name: End user's legal last name. Same condition as endUserFirstName.
+            values: requirementId → textual value
+            documents: One per document requirement. Each is EITHER inline base64 OR a `documentId` returned by POST /v1/phone-numbers/kyc/upload-document (use the upload endpoint for large files to stay under the request-size limit).
+            address"""
+        client = _get_client()
+        try:
+            response = client.phone_numbers.submit_phone_number_kyc(
+                profile_id=profile_id,
+                country=country,
+                submission_id=submission_id,
+                quantity=quantity,
+                reuse=reuse,
+                reuse_from=reuse_from,
+                end_user_first_name=end_user_first_name,
+                end_user_last_name=end_user_last_name,
+                values=values,
+                documents=documents,
+                address=address,
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Upload a KYC document",
+            readOnlyHint=False,
+            destructiveHint=True,
+            openWorldHint=True,
+        )
+    )
+    def phone_numbers_upload_phone_number_kyc_document() -> str:
+        """Upload a KYC document"""
+        client = _get_client()
+        try:
+            response = client.phone_numbers.upload_phone_number_kyc_document()
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Pre-validate KYC address",
+            readOnlyHint=False,
+            destructiveHint=True,
+            openWorldHint=True,
+        )
+    )
+    def phone_numbers_validate_phone_number_kyc_address(
+        country: str,
+        street_address: str,
+        locality: str,
+        postal_code: str,
+        administrative_area: str | None = None,
+    ) -> str:
+        """Pre-validate KYC address
+
+        Args:
+            country: ISO 3166-1 alpha-2 country code. (required)
+            street_address: (required)
+            locality: City / town. (required)
+            administrative_area: State / province / region. When omitted, the pre-check is skipped (the final submit still validates).
+            postal_code: (required)"""
+        client = _get_client()
+        try:
+            response = client.phone_numbers.validate_phone_number_kyc_address(
+                country=country,
+                street_address=street_address,
+                locality=locality,
+                administrative_area=administrative_area,
+                postal_code=postal_code,
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Create a hosted KYC link",
+            readOnlyHint=False,
+            destructiveHint=True,
+            openWorldHint=True,
+        )
+    )
+    def phone_numbers_create_phone_number_kyc_link(
+        profile_id: str,
+        country: str,
+        branding: dict[str, Any] | None = None,
+        redirect_url: str | None = None,
+    ) -> str:
+        """Create a hosted KYC link
+
+            Args:
+                profile_id: (required)
+                country: ISO 3166-1 alpha-2 country code (must be a regulated/KYC country). (required)
+                branding: Optional white-label of the hosted page the end customer sees.
+                redirect_url: Where to send the end customer's browser after a successful
+        submit. On completion Zernio appends `kyc=submitted` and
+        `country=<ISO-2>` as query params. When omitted, the hosted
+        page shows a built-in confirmation screen instead."""
+        client = _get_client()
+        try:
+            response = client.phone_numbers.create_phone_number_kyc_link(
+                profile_id=profile_id,
+                country=country,
+                branding=branding,
+                redirect_url=redirect_url,
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Port numbers in",
+            readOnlyHint=False,
+            destructiveHint=True,
+            openWorldHint=True,
+        )
+    )
+    def phone_numbers_create_phone_number_port_in(
+        phone_numbers: list[str] | None,
+        end_user: dict[str, Any] | None,
+        loa_document_id: str,
+        invoice_document_id: str,
+        foc_datetime_requested: str | None = None,
+        customer_reference: str | None = None,
+    ) -> str:
+        """Port numbers in
+
+        Args:
+            phone_numbers: E.164 numbers to port in. (required)
+            end_user: End-user / current-carrier account info that authorizes the port. (required)
+            loa_document_id: Document id from POST /v1/phone-numbers/port-in/documents (kind=loa). (required)
+            invoice_document_id: Document id from POST /v1/phone-numbers/port-in/documents (kind=invoice). (required)
+            foc_datetime_requested: Requested port date; the carrier confirms the actual FOC later.
+            customer_reference"""
+        client = _get_client()
+        try:
+            response = client.phone_numbers.create_phone_number_port_in(
+                phone_numbers=phone_numbers,
+                end_user=end_user,
+                loa_document_id=loa_document_id,
+                invoice_document_id=invoice_document_id,
+                foc_datetime_requested=foc_datetime_requested,
+                customer_reference=customer_reference,
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="List port-in orders",
+            readOnlyHint=True,
+            destructiveHint=False,
+            openWorldHint=False,
+        )
+    )
+    def phone_numbers_list_phone_number_port_ins() -> str:
+        """List port-in orders"""
+        client = _get_client()
+        try:
+            response = client.phone_numbers.list_phone_number_port_ins()
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Check portability",
+            readOnlyHint=False,
+            destructiveHint=True,
+            openWorldHint=True,
+        )
+    )
+    def phone_numbers_check_phone_number_portability(
+        phone_numbers: list[str] | None,
+    ) -> str:
+        """Check portability
+
+        Args:
+            phone_numbers: E.164 numbers to check, e.g. +13035550000. (required)"""
+        client = _get_client()
+        try:
+            response = client.phone_numbers.check_phone_number_portability(
+                phone_numbers=phone_numbers
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Upload a porting document",
+            readOnlyHint=False,
+            destructiveHint=True,
+            openWorldHint=True,
+        )
+    )
+    def phone_numbers_upload_phone_number_port_in_document() -> str:
+        """Upload a porting document"""
+        client = _get_client()
+        try:
+            response = client.phone_numbers.upload_phone_number_port_in_document()
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Cancel a port-in",
+            readOnlyHint=False,
+            destructiveHint=True,
+            openWorldHint=True,
+        )
+    )
+    def phone_numbers_cancel_phone_number_port_in(id: str) -> str:
+        """Cancel a port-in
+
+        Args:
+            id: Porting order ID (from the port-in list). (required)"""
+        client = _get_client()
+        try:
+            response = client.phone_numbers.cancel_phone_number_port_in(id=id)
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Pre-review a KYC packet",
+            readOnlyHint=False,
+            destructiveHint=True,
+            openWorldHint=True,
+        )
+    )
+    def phone_numbers_review_phone_number_kyc_packet(
+        country: str,
+        number_type: str,
+        docs: list[dict[str, Any]] | None,
+        values: dict[str, Any] | None = None,
+        address: dict[str, Any] | None = None,
+    ) -> str:
+        """Pre-review a KYC packet
+
+        Args:
+            country: (required)
+            number_type: (required)
+            values: requirementId to declared textual value.
+            address: Declared address (street_address, locality, ...), so a mismatched proof-of-address can be flagged.
+            docs: (required)"""
+        client = _get_client()
+        try:
+            response = client.phone_numbers.review_phone_number_kyc_packet(
+                country=country,
+                number_type=number_type,
+                values=values,
+                address=address,
+                docs=docs,
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Get declined requirements",
+            readOnlyHint=True,
+            destructiveHint=False,
+            openWorldHint=False,
+        )
+    )
+    def phone_numbers_get_phone_number_remediation(id: str) -> str:
+        """Get declined requirements
+
+        Args:
+            id: Phone number record ID. (required)"""
+        client = _get_client()
+        try:
+            response = client.phone_numbers.get_phone_number_remediation(id=id)
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Resubmit a declined number",
+            readOnlyHint=False,
+            destructiveHint=True,
+            openWorldHint=True,
+        )
+    )
+    def phone_numbers_remediate_phone_number(
+        id: str,
+        values: dict[str, Any] | None = None,
+        documents: list[dict[str, Any]] | None = None,
+        address: dict[str, Any] | None = None,
+    ) -> str:
+        """Resubmit a declined number
+
+        Args:
+            id: (required)
+            values
+            documents
+            address: Same shape as the KYC submit address."""
+        client = _get_client()
+        try:
+            response = client.phone_numbers.remediate_phone_number(
+                id=id, values=values, documents=documents, address=address
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
     # POSTS
 
     @mcp.tool(
@@ -9416,6 +10062,276 @@ def register_generated_tools(mcp, _get_client):
         except Exception as e:
             return f"Error: {e}"
 
+    # SMS
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Send an SMS/MMS",
+            readOnlyHint=False,
+            destructiveHint=True,
+            openWorldHint=True,
+        )
+    )
+    def sms_send_sms(
+        from_: str,
+        to: str,
+        text: str | None = None,
+        media_urls: list[str] | None = None,
+    ) -> str:
+        """Send an SMS/MMS
+
+        Args:
+            from_: One of your SMS-enabled numbers (E.164; formatting is normalized). (required)
+            to: Recipient number (E.164). (required)
+            text: Message body. Required unless `mediaUrls` is set. Max 10 SMS segments (1530 GSM-7 or 670 unicode characters).
+            media_urls: Public media URLs to attach (sends as MMS). Max 10."""
+        client = _get_client()
+        try:
+            response = client.sms.send_sms(
+                from_=from_, to=to, text=text, media_urls=media_urls
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Look up carrier + line type",
+            readOnlyHint=True,
+            destructiveHint=False,
+            openWorldHint=False,
+        )
+    )
+    def sms_lookup_sms_number(number: str) -> str:
+        """Look up carrier + line type
+
+        Args:
+            number: Number to look up (E.164; formatting is normalized). (required)"""
+        client = _get_client()
+        try:
+            response = client.sms.lookup_sms_number(number=number)
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="List SMS opt-outs",
+            readOnlyHint=True,
+            destructiveHint=False,
+            openWorldHint=False,
+        )
+    )
+    def sms_list_sms_opt_outs(format: str = "json", limit: int = 500) -> str:
+        """List SMS opt-outs
+
+        Args:
+            format
+            limit"""
+        client = _get_client()
+        try:
+            response = client.sms.list_sms_opt_outs(format=format, limit=limit)
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Start a carrier registration",
+            readOnlyHint=False,
+            destructiveHint=True,
+            openWorldHint=True,
+        )
+    )
+    def sms_start_sms_registration(
+        registration_type: str,
+        phone_numbers: list[str] | None,
+        brand: dict[str, Any] | None = None,
+        campaign: dict[str, Any] | None = None,
+        toll_free: dict[str, Any] | None = None,
+    ) -> str:
+        """Start a carrier registration
+
+        Args:
+            registration_type: (required)
+            phone_numbers: Your numbers this registration covers. (required)
+            brand: Required for 10DLC. The legal entity behind the traffic (TCR brand).
+            campaign: Required for 10DLC. What you'll send and how recipients opt in/out.
+            toll_free: Required for toll_free."""
+        client = _get_client()
+        try:
+            response = client.sms.start_sms_registration(
+                registration_type=registration_type,
+                phone_numbers=phone_numbers,
+                brand=brand,
+                campaign=campaign,
+                toll_free=toll_free,
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="List carrier registrations",
+            readOnlyHint=True,
+            destructiveHint=False,
+            openWorldHint=False,
+        )
+    )
+    def sms_list_sms_registrations() -> str:
+        """List carrier registrations"""
+        client = _get_client()
+        try:
+            response = client.sms.list_sms_registrations()
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Get a carrier registration",
+            readOnlyHint=True,
+            destructiveHint=False,
+            openWorldHint=False,
+        )
+    )
+    def sms_get_sms_registration(id: str) -> str:
+        """Get a carrier registration
+
+        Args:
+            id: (required)"""
+        client = _get_client()
+        try:
+            response = client.sms.get_sms_registration(id=id)
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Submit the sole-prop OTP",
+            readOnlyHint=False,
+            destructiveHint=True,
+            openWorldHint=True,
+        )
+    )
+    def sms_verify_sms_registration_otp(id: str, otp_pin: str) -> str:
+        """Submit the sole-prop OTP
+
+        Args:
+            id: (required)
+            otp_pin: (required)"""
+        client = _get_client()
+        try:
+            response = client.sms.verify_sms_registration_otp(id=id, otp_pin=otp_pin)
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Appeal a rejected campaign",
+            readOnlyHint=False,
+            destructiveHint=True,
+            openWorldHint=True,
+        )
+    )
+    def sms_appeal_sms_registration(id: str, appeal_reason: str) -> str:
+        """Appeal a rejected campaign
+
+        Args:
+            id: (required)
+            appeal_reason: (required)"""
+        client = _get_client()
+        try:
+            response = client.sms.appeal_sms_registration(
+                id=id, appeal_reason=appeal_reason
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Create a registration share link",
+            readOnlyHint=False,
+            destructiveHint=True,
+            openWorldHint=True,
+        )
+    )
+    def sms_share_sms_registration(number_id: str) -> str:
+        """Create a registration share link
+
+        Args:
+            number_id: Your phone number's ID (from GET /v1/phone-numbers). (required)"""
+        client = _get_client()
+        try:
+            response = client.sms.share_sms_registration(number_id=number_id)
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Enable SMS on a number",
+            readOnlyHint=False,
+            destructiveHint=True,
+            openWorldHint=True,
+        )
+    )
+    def sms_enable_sms_on_number(id: str) -> str:
+        """Enable SMS on a number
+
+        Args:
+            id: Phone number record ID (from GET /v1/phone-numbers). (required)"""
+        client = _get_client()
+        try:
+            response = client.sms.enable_sms_on_number(id=id)
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Disable SMS on a number",
+            readOnlyHint=False,
+            destructiveHint=True,
+            openWorldHint=True,
+        )
+    )
+    def sms_disable_sms_on_number(id: str) -> str:
+        """Disable SMS on a number
+
+        Args:
+            id: (required)"""
+        client = _get_client()
+        try:
+            response = client.sms.disable_sms_on_number(id=id)
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Add a number to an existing registration",
+            readOnlyHint=False,
+            destructiveHint=True,
+            openWorldHint=True,
+        )
+    )
+    def sms_reuse_sms_registration_for_number(id: str) -> str:
+        """Add a number to an existing registration
+
+        Args:
+            id: (required)"""
+        client = _get_client()
+        try:
+            response = client.sms.reuse_sms_registration_for_number(id=id)
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
     # TRACKING_TAGS
 
     @mcp.tool(
@@ -9811,6 +10727,30 @@ def register_generated_tools(mcp, _get_client):
 
     @mcp.tool(
         annotations=ToolAnnotations(
+            title="Get plan and usage snapshot",
+            readOnlyHint=True,
+            destructiveHint=False,
+            openWorldHint=False,
+        )
+    )
+    def usage_get_usage(reconcile: bool | None = None) -> str:
+        """Get plan and usage snapshot
+
+            Args:
+                reconcile: For Stripe subscription users, `true` forces a subscription
+        reconciliation pass even when cached plan data looks complete.
+        Omit the parameter, or pass `false`, to use the default
+        first-time-only reconciliation behavior. Invalid boolean values are
+        rejected."""
+        client = _get_client()
+        try:
+            response = client.usage.get_usage(reconcile=reconcile)
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
             title="Get plan and usage stats",
             readOnlyHint=True,
             destructiveHint=False,
@@ -9829,6 +10769,72 @@ def register_generated_tools(mcp, _get_client):
         client = _get_client()
         try:
             response = client.usage.get_usage_stats(reconcile=reconcile)
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Calling usage (volumes + billable cost)",
+            readOnlyHint=True,
+            destructiveHint=False,
+            openWorldHint=False,
+        )
+    )
+    def usage_get_calls_usage(
+        since: str | None = None,
+        until: str | None = None,
+        channel: str | None = None,
+        number: str | None = None,
+        group_by: str | None = None,
+    ) -> str:
+        """Calling usage (volumes + billable cost)
+
+        Args:
+            since: Start of the window (inclusive). Default 30 days before `until`.
+            until: End of the window (exclusive). Default now.
+            channel
+            number: Scope to calls involving this number (typically one of YOUR numbers). E.164, leading + optional.
+            group_by"""
+        client = _get_client()
+        try:
+            response = client.usage.get_calls_usage(
+                since=since,
+                until=until,
+                channel=channel,
+                number=number,
+                group_by=group_by,
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="SMS usage (volumes)",
+            readOnlyHint=True,
+            destructiveHint=False,
+            openWorldHint=False,
+        )
+    )
+    def usage_get_sms_usage(
+        since: str | None = None,
+        until: str | None = None,
+        number: str | None = None,
+        group_by: str | None = None,
+    ) -> str:
+        """SMS usage (volumes)
+
+        Args:
+            since: Start of the window (inclusive). Default 30 days before `until`.
+            until: End of the window (exclusive). Default now.
+            number: Scope to one of YOUR SMS-enabled numbers (E.164, leading + optional).
+            group_by"""
+        client = _get_client()
+        try:
+            response = client.usage.get_sms_usage(
+                since=since, until=until, number=number, group_by=group_by
+            )
             return _format_response(response)
         except Exception as e:
             return f"Error: {e}"
@@ -9961,6 +10967,340 @@ def register_generated_tools(mcp, _get_client):
             response = client.validate.validate_subreddit(
                 name=name, account_id=account_id
             )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    # VOICE
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Place an outbound phone call",
+            readOnlyHint=False,
+            destructiveHint=True,
+            openWorldHint=True,
+        )
+    )
+    def voice_create_voice_call(
+        to: str,
+        from_number: str | None = None,
+        forward_to: str | None = None,
+        greeting: str | None = None,
+        record_override: bool | None = None,
+        transcribe_override: bool | None = None,
+        transcription_language: str | None = None,
+        amd: bool | None = None,
+        voicemail_drop_message: str | None = None,
+    ) -> str:
+        """Place an outbound phone call
+
+        Args:
+            to: Destination to dial, E.164 with leading +. (required)
+            from_number: Which of your voice-enabled numbers to dial from. Optional when you have exactly one.
+            forward_to: Per-call agent override (tel:+E164, sip:..., or wss://...); defaults to the number's stored forward destination.
+            greeting: Spoken to the callee when they answer, before the bridge.
+            record_override: Per-call recording toggle; defaults to the number's setting.
+            transcribe_override: Per-call transcription toggle; defaults to the number's setting.
+            transcription_language: 'auto' derives from the callee's country; 'en'/'es' force it.
+            amd: Answering-machine detection; defers the bridge until human vs machine is known.
+            voicemail_drop_message: Spoken to a detected machine, then hang up (implies `amd`). For outbound voicemail drops."""
+        client = _get_client()
+        try:
+            response = client.voice.create_voice_call(
+                to=to,
+                from_number=from_number,
+                forward_to=forward_to,
+                greeting=greeting,
+                record_override=record_override,
+                transcribe_override=transcribe_override,
+                transcription_language=transcription_language,
+                amd=amd,
+                voicemail_drop_message=voicemail_drop_message,
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="List phone calls",
+            readOnlyHint=True,
+            destructiveHint=False,
+            openWorldHint=False,
+        )
+    )
+    def voice_list_voice_calls(
+        status: str | None = None,
+        direction: str | None = None,
+        number: str | None = None,
+        before: str | None = None,
+        limit: int = 50,
+    ) -> str:
+        """List phone calls
+
+        Args:
+            status
+            direction
+            number: Exact filter: calls involving this number (typically one of your DIDs). E.164, leading + optional.
+            before
+            limit"""
+        client = _get_client()
+        try:
+            response = client.voice.list_voice_calls(
+                status=status,
+                direction=direction,
+                number=number,
+                before=before,
+                limit=limit,
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Get a phone call",
+            readOnlyHint=True,
+            destructiveHint=False,
+            openWorldHint=False,
+        )
+    )
+    def voice_get_voice_call(id: str) -> str:
+        """Get a phone call
+
+        Args:
+            id: (required)"""
+        client = _get_client()
+        try:
+            response = client.voice.get_voice_call(id=id)
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Hang up a live call",
+            readOnlyHint=False,
+            destructiveHint=True,
+            openWorldHint=True,
+        )
+    )
+    def voice_end_voice_call(id: str) -> str:
+        """Hang up a live call
+
+        Args:
+            id: (required)"""
+        client = _get_client()
+        try:
+            response = client.voice.end_voice_call(id=id)
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Get a call recording",
+            readOnlyHint=True,
+            destructiveHint=False,
+            openWorldHint=False,
+        )
+    )
+    def voice_get_voice_call_recording(id: str, as_: str | None = None) -> str:
+        """Get a call recording
+
+        Args:
+            id: (required)
+            as_: `json` returns `{ url }` instead of a 302 redirect."""
+        client = _get_client()
+        try:
+            response = client.voice.get_voice_call_recording(id=id, as_=as_)
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Blind-transfer a live call",
+            readOnlyHint=False,
+            destructiveHint=True,
+            openWorldHint=True,
+        )
+    )
+    def voice_transfer_voice_call(id: str, to: str) -> str:
+        """Blind-transfer a live call
+
+        Args:
+            id: (required)
+            to: +E164 phone number (tel: prefix optional) or a sip: URI. wss:// is not a valid transfer target. (required)"""
+        client = _get_client()
+        try:
+            response = client.voice.transfer_voice_call(id=id, to=to)
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Estimate call cost",
+            readOnlyHint=True,
+            destructiveHint=False,
+            openWorldHint=False,
+        )
+    )
+    def voice_get_voice_call_estimate(
+        to: str,
+        minutes: int = 1,
+        recording: bool | None = None,
+        transcription: bool | None = None,
+    ) -> str:
+        """Estimate call cost
+
+        Args:
+            to: Destination number, E.164 (leading + optional). (required)
+            minutes
+            recording
+            transcription"""
+        client = _get_client()
+        try:
+            response = client.voice.get_voice_call_estimate(
+                to=to, minutes=minutes, recording=recording, transcription=transcription
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Mint a browser softphone session",
+            readOnlyHint=False,
+            destructiveHint=True,
+            openWorldHint=True,
+        )
+    )
+    def voice_create_voice_web_session() -> str:
+        """Mint a browser softphone session"""
+        client = _get_client()
+        try:
+            response = client.voice.create_voice_web_session()
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Dial from the browser softphone",
+            readOnlyHint=False,
+            destructiveHint=True,
+            openWorldHint=True,
+        )
+    )
+    def voice_dial_voice_web_call(
+        to: str,
+        credential_id: str,
+        from_number: str | None = None,
+        record_override: bool | None = None,
+    ) -> str:
+        """Dial from the browser softphone
+
+        Args:
+            to: The number to call, E.164 with leading +. (required)
+            credential_id: The WebRTC credential id returned by POST /v1/voice/calls/web (the registered browser). (required)
+            from_number: Which of your voice-enabled numbers to call from (optional when you have one).
+            record_override"""
+        client = _get_client()
+        try:
+            response = client.voice.dial_voice_web_call(
+                to=to,
+                credential_id=credential_id,
+                from_number=from_number,
+                record_override=record_override,
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Enable phone calling on a number",
+            readOnlyHint=False,
+            destructiveHint=True,
+            openWorldHint=True,
+        )
+    )
+    def voice_enable_voice_on_number(
+        id: str,
+        forward_to: str | None = None,
+        recording_enabled: bool | None = None,
+        transcription_enabled: bool | None = None,
+        transcription_language: str | None = None,
+        voicemail_enabled: bool | None = None,
+        voicemail_greeting: str | None = None,
+        business_hours_enabled: bool | None = None,
+        business_hours_timezone: str | None = None,
+        business_hours: list[dict[str, Any]] | None = None,
+        blocked_callers: list[str] | None = None,
+        forward_caller_id: str | None = None,
+        ivr_enabled: bool | None = None,
+        ivr_prompt: str | None = None,
+        ivr_options: list[dict[str, Any]] | None = None,
+    ) -> str:
+        """Enable phone calling on a number
+
+        Args:
+            id: Phone number record ID (from GET /v1/phone-numbers). (required)
+            forward_to: tel:+E164, sip:..., or wss://... destination for inbound calls. Empty string clears the forward (outbound-only); omitted preserves the current one.
+            recording_enabled
+            transcription_enabled
+            transcription_language
+            voicemail_enabled: Voicemail is taken when there's no live destination. Default on.
+            voicemail_greeting: Custom spoken greeting; empty string restores the default.
+            business_hours_enabled: Outside the windows, inbound skips the forward and goes to voicemail. Off = 24/7.
+            business_hours_timezone: IANA timezone the windows are evaluated in.
+            business_hours
+            blocked_callers: E.164 numbers rejected before answer. Replaces the whole list; bare 10-digit values are normalized as US numbers.
+            forward_caller_id: Caller ID on the forwarded leg: your number (`business`) or the original caller's (`caller`).
+            ivr_enabled: IVR menu (supersedes the plain forward within business hours).
+            ivr_prompt
+            ivr_options"""
+        client = _get_client()
+        try:
+            response = client.voice.enable_voice_on_number(
+                id=id,
+                forward_to=forward_to,
+                recording_enabled=recording_enabled,
+                transcription_enabled=transcription_enabled,
+                transcription_language=transcription_language,
+                voicemail_enabled=voicemail_enabled,
+                voicemail_greeting=voicemail_greeting,
+                business_hours_enabled=business_hours_enabled,
+                business_hours_timezone=business_hours_timezone,
+                business_hours=business_hours,
+                blocked_callers=blocked_callers,
+                forward_caller_id=forward_caller_id,
+                ivr_enabled=ivr_enabled,
+                ivr_prompt=ivr_prompt,
+                ivr_options=ivr_options,
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Disable phone calling on a number",
+            readOnlyHint=False,
+            destructiveHint=True,
+            openWorldHint=True,
+        )
+    )
+    def voice_disable_voice_on_number(id: str) -> str:
+        """Disable phone calling on a number
+
+        Args:
+            id: (required)"""
+        client = _get_client()
+        try:
+            response = client.voice.disable_voice_on_number(id=id)
             return _format_response(response)
         except Exception as e:
             return f"Error: {e}"
@@ -11082,7 +12422,7 @@ def register_generated_tools(mcp, _get_client):
             openWorldHint=True,
         )
     )
-    def whatsapp_calling_enable_whats_app_calling(
+    def whatsapp_calling_enable_whats_app_calling_legacy(
         id: str,
         account_id: str,
         forward_to: str,
@@ -11103,7 +12443,7 @@ def register_generated_tools(mcp, _get_client):
             call_icon_countries"""
         client = _get_client()
         try:
-            response = client.whatsapp_calling.enable_whats_app_calling(
+            response = client.whatsapp_calling.enable_whats_app_calling_legacy(
                 id=id,
                 account_id=account_id,
                 forward_to=forward_to,
@@ -11124,7 +12464,7 @@ def register_generated_tools(mcp, _get_client):
             openWorldHint=True,
         )
     )
-    def whatsapp_calling_update_whats_app_calling(
+    def whatsapp_calling_update_whats_app_calling_legacy(
         id: str,
         account_id: str,
         forward_to: str | None = None,
@@ -11145,7 +12485,7 @@ def register_generated_tools(mcp, _get_client):
             call_icon_countries"""
         client = _get_client()
         try:
-            response = client.whatsapp_calling.update_whats_app_calling(
+            response = client.whatsapp_calling.update_whats_app_calling_legacy(
                 id=id,
                 account_id=account_id,
                 forward_to=forward_to,
@@ -11166,7 +12506,9 @@ def register_generated_tools(mcp, _get_client):
             openWorldHint=True,
         )
     )
-    def whatsapp_calling_disable_whats_app_calling(id: str, account_id: str) -> str:
+    def whatsapp_calling_disable_whats_app_calling_legacy(
+        id: str, account_id: str
+    ) -> str:
         """Disable calling on a number
 
         Args:
@@ -11174,7 +12516,7 @@ def register_generated_tools(mcp, _get_client):
             account_id: (required)"""
         client = _get_client()
         try:
-            response = client.whatsapp_calling.disable_whats_app_calling(
+            response = client.whatsapp_calling.disable_whats_app_calling_legacy(
                 id=id, account_id=account_id
             )
             return _format_response(response)
@@ -11265,6 +12607,7 @@ def register_generated_tools(mcp, _get_client):
         direction: str | None = None,
         since: str | None = None,
         until: str | None = None,
+        before: str | None = None,
         limit: int | None = None,
     ) -> str:
         """List call history for an account
@@ -11275,6 +12618,7 @@ def register_generated_tools(mcp, _get_client):
             direction
             since
             until
+            before: Return calls with startedAt strictly before this instant (use the previous page's nextCursor).
             limit"""
         client = _get_client()
         try:
@@ -11284,6 +12628,7 @@ def register_generated_tools(mcp, _get_client):
                 direction=direction,
                 since=since,
                 until=until,
+                before=before,
                 limit=limit,
             )
             return _format_response(response)
@@ -11315,6 +12660,32 @@ def register_generated_tools(mcp, _get_client):
 
     @mcp.tool(
         annotations=ToolAnnotations(
+            title="Get a call recording",
+            readOnlyHint=True,
+            destructiveHint=False,
+            openWorldHint=False,
+        )
+    )
+    def whatsapp_calling_get_whats_app_call_recording(
+        call_id: str, account_id: str, as_: str | None = None
+    ) -> str:
+        """Get a call recording
+
+        Args:
+            call_id: (required)
+            account_id: (required)
+            as_: `json` returns `{ url }` instead of a 302 redirect."""
+        client = _get_client()
+        try:
+            response = client.whatsapp_calling.get_whats_app_call_recording(
+                call_id=call_id, account_id=account_id, as_=as_
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
             title="Estimate per-minute cost",
             readOnlyHint=True,
             destructiveHint=False,
@@ -11338,6 +12709,133 @@ def register_generated_tools(mcp, _get_client):
         try:
             response = client.whatsapp_calling.get_whats_app_call_estimate(
                 account_id=account_id, to=to, minutes=minutes, recording=recording
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Get calling config for a number",
+            readOnlyHint=True,
+            destructiveHint=False,
+            openWorldHint=False,
+        )
+    )
+    def whatsapp_calling_get_whats_app_calling(id: str) -> str:
+        """Get calling config for a number
+
+        Args:
+            id: Phone number record ID (from GET /v1/phone-numbers). (required)"""
+        client = _get_client()
+        try:
+            response = client.whatsapp_calling.get_whats_app_calling(id=id)
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Enable calling on a number",
+            readOnlyHint=False,
+            destructiveHint=True,
+            openWorldHint=True,
+        )
+    )
+    def whatsapp_calling_enable_whats_app_calling(
+        id: str,
+        account_id: str,
+        forward_to: str,
+        sip_auth_username: str | None = None,
+        sip_auth_password: str | None = None,
+        recording_enabled: bool = False,
+        call_icon_countries: list[str] | None = None,
+    ) -> str:
+        """Enable calling on a number
+
+        Args:
+            id: Phone number record ID (from GET /v1/phone-numbers). (required)
+            account_id: (required)
+            forward_to: tel:+E164 / sip:... / wss://... destination (required)
+            sip_auth_username
+            sip_auth_password: Stored encrypted, never returned by any endpoint.
+            recording_enabled
+            call_icon_countries"""
+        client = _get_client()
+        try:
+            response = client.whatsapp_calling.enable_whats_app_calling(
+                id=id,
+                account_id=account_id,
+                forward_to=forward_to,
+                sip_auth_username=sip_auth_username,
+                sip_auth_password=sip_auth_password,
+                recording_enabled=recording_enabled,
+                call_icon_countries=call_icon_countries,
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Update calling config",
+            readOnlyHint=False,
+            destructiveHint=True,
+            openWorldHint=True,
+        )
+    )
+    def whatsapp_calling_update_whats_app_calling(
+        id: str,
+        account_id: str,
+        forward_to: str | None = None,
+        sip_auth_username: str | None = None,
+        sip_auth_password: str | None = None,
+        recording_enabled: bool | None = None,
+        call_icon_countries: str | None = None,
+    ) -> str:
+        """Update calling config
+
+        Args:
+            id: (required)
+            account_id: (required)
+            forward_to
+            sip_auth_username
+            sip_auth_password
+            recording_enabled
+            call_icon_countries"""
+        client = _get_client()
+        try:
+            response = client.whatsapp_calling.update_whats_app_calling(
+                id=id,
+                account_id=account_id,
+                forward_to=forward_to,
+                sip_auth_username=sip_auth_username,
+                sip_auth_password=sip_auth_password,
+                recording_enabled=recording_enabled,
+                call_icon_countries=call_icon_countries,
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Disable calling on a number",
+            readOnlyHint=False,
+            destructiveHint=True,
+            openWorldHint=True,
+        )
+    )
+    def whatsapp_calling_disable_whats_app_calling(id: str, account_id: str) -> str:
+        """Disable calling on a number
+
+        Args:
+            id: (required)
+            account_id: (required)"""
+        client = _get_client()
+        try:
+            response = client.whatsapp_calling.disable_whats_app_calling(
+                id=id, account_id=account_id
             )
             return _format_response(response)
         except Exception as e:
