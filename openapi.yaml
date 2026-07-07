@@ -2602,6 +2602,49 @@ components:
                 WhatsApp only. Parsed Flow response JSON. Populated when
                 `flowResponseJson` is valid JSON; otherwise omitted. Keys and
                 value types depend on the specific Flow that was submitted.
+            order:
+              type: object
+              description: |
+                WhatsApp only. Cart submitted by the user from a commerce message
+                (catalog, product, or product-list message). Meta's `order` object
+                forwarded verbatim.
+              properties:
+                catalog_id:
+                  type: string
+                  description: Meta catalog the ordered products belong to.
+                text:
+                  type: string
+                  description: Optional free-text note the user attached to the cart.
+                product_items:
+                  type: array
+                  items:
+                    type: object
+                    properties:
+                      product_retailer_id:
+                        type: string
+                        description: Retailer ID (SKU) of the ordered product.
+                      quantity:
+                        type: integer
+                        description: Quantity ordered for this line item.
+                      item_price:
+                        type: number
+                        description: Unit price of the item.
+                      currency:
+                        type: string
+                        description: ISO 4217 currency code (e.g. USD).
+            referredProduct:
+              type: object
+              description: |
+                WhatsApp only. The product the user is asking about. Set when an
+                inbound text carries Meta's `context.referred_product` (the user
+                tapped "Message business" on a product). Forwarded verbatim.
+              properties:
+                catalog_id:
+                  type: string
+                  description: Meta catalog the product belongs to.
+                product_retailer_id:
+                  type: string
+                  description: Retailer ID (SKU) of the product being asked about.
             storyReply:
               type: object
               description: |
@@ -20277,16 +20320,32 @@ paths:
                   type: object
                   description: |
                     WhatsApp-only. Rich interactive payload for list messages, CTA URL
-                    buttons, Flow prompts, and location requests. When set, takes
-                    priority over `buttons` and `quickReplies`. The shape mirrors
-                    Meta's Cloud API `interactive` object verbatim, so any payload
-                    that works against Meta directly will also work here.
+                    buttons, Flow prompts, location requests, voice-call buttons, and
+                    commerce messages (single product, product list, catalog, and
+                    carousel). When set, takes priority over `buttons` and
+                    `quickReplies`. The shape mirrors Meta's Cloud API `interactive`
+                    object verbatim, so any payload that works against Meta directly
+                    will also work here.
 
                     Use `buttons` / `quickReplies` for simple button replies
-                    (WhatsApp's `interactive.type: "button"`) — the abstraction caps at
+                    (WhatsApp's `interactive.type: "button"`): the abstraction caps at
                     3 buttons and handles the auto-conversion for you. Use this field
-                    only for `list`, `cta_url`, `flow`, `location_request_message`, or
-                    `voice_call` messages.
+                    only for the types listed in the enum below.
+
+                    All interactive messages are session messages: they can only be
+                    sent inside the 24-hour customer service window opened by the
+                    user's last inbound message.
+
+                    Commerce types (`product`, `product_list`, `catalog_message`, and
+                    product carousels) require a Meta catalog connected to the
+                    WhatsApp Business Account in Commerce Manager. Media carousels
+                    (image/video cards) do not need a catalog.
+
+                    For `product`, `body` is optional (WhatsApp renders the product
+                    card itself) and `header` is not allowed (the product image is
+                    the header). For `product_list`, a `header` with `type: "text"`
+                    is required. For `carousel`, top-level `header`/`footer` are not
+                    supported; media goes on each card instead.
 
                     For `voice_call`, the message renders WhatsApp's native call
                     button; tapping it starts a voice call to your business number.
@@ -20299,17 +20358,25 @@ paths:
                     "Send location" button; the user's reply arrives as a regular
                     location message in the conversation.
 
+                    For `catalog_message`, `action` may also be omitted (we default it
+                    to `{ "name": "catalog_message" }`).
+
                     Tap events come back via the `message.received` webhook with
                     `metadata.interactiveType` set to `list_reply` or `nfm_reply`.
-                  required: [type, body]
+                    Carts submitted from commerce messages arrive as `metadata.order`;
+                    product inquiries arrive as `metadata.referredProduct`.
+                  required: [type]
                   properties:
                     type:
                       type: string
-                      enum: [list, cta_url, flow, location_request_message, voice_call]
+                      enum: [list, cta_url, flow, location_request_message, voice_call, product, product_list, catalog_message, carousel]
                       description: Which interactive layout to render.
                     header:
                       type: object
-                      description: Optional header shown above the body.
+                      description: |
+                        Optional header shown above the body. Required with
+                        `type: "text"` for `product_list`; not allowed for `product`
+                        or `carousel`.
                       properties:
                         type: { type: string, enum: [text, image, video, document] }
                         text: { type: string, description: Required when header type is text. }
@@ -20318,6 +20385,7 @@ paths:
                         document: { type: object, properties: { link: { type: string } } }
                     body:
                       type: object
+                      description: Required for every type except `product`, where it is optional.
                       required: [text]
                       properties:
                         text: { type: string, description: Main body text. }
@@ -20405,6 +20473,81 @@ paths:
                           required: [name]
                           properties:
                             name: { type: string, enum: [send_location] }
+                        - type: object
+                          description: |
+                            Single-product action. `type` on the parent must be
+                            `product`. Requires a Meta catalog connected to the
+                            WhatsApp Business Account in Commerce Manager.
+                          required: [catalog_id, product_retailer_id]
+                          properties:
+                            catalog_id: { type: string, description: Meta catalog ID connected to the WhatsApp Business Account. }
+                            product_retailer_id: { type: string, description: Retailer ID (SKU) of the product inside the catalog. }
+                        - type: object
+                          description: |
+                            Multi-product action. `type` on the parent must be
+                            `product_list`. Requires a Meta catalog connected to the
+                            WhatsApp Business Account in Commerce Manager.
+                          required: [catalog_id, sections]
+                          properties:
+                            catalog_id: { type: string, description: Meta catalog ID connected to the WhatsApp Business Account. }
+                            sections:
+                              type: array
+                              minItems: 1
+                              maxItems: 10
+                              description: 1-10 sections. Total products across all sections cannot exceed 30.
+                              items:
+                                type: object
+                                required: [product_items]
+                                properties:
+                                  title: { type: string, description: Optional section header. }
+                                  product_items:
+                                    type: array
+                                    minItems: 1
+                                    items:
+                                      type: object
+                                      required: [product_retailer_id]
+                                      properties:
+                                        product_retailer_id: { type: string, description: Retailer ID (SKU) of the product inside the catalog. }
+                        - type: object
+                          description: |
+                            Catalog-message action. `type` on the parent must be
+                            `catalog_message`. May be omitted entirely; it is defaulted
+                            to `{ "name": "catalog_message" }`. Requires a Meta catalog
+                            connected to the WhatsApp Business Account in Commerce
+                            Manager.
+                          required: [name]
+                          properties:
+                            name: { type: string, enum: [catalog_message] }
+                            parameters:
+                              type: object
+                              properties:
+                                thumbnail_product_retailer_id: { type: string, description: Optional product whose image is used as the message thumbnail. Falls back to the first catalog item when omitted. }
+                        - type: object
+                          description: |
+                            Carousel action. `type` on the parent must be `carousel`.
+                            Carries 2-10 cards, either all product cards
+                            (`type: "product"`, all referencing the same `catalog_id`)
+                            or media cards (any other `type`, e.g. `cta_url`, with a
+                            required image/video `header` on each card). `card_index`
+                            (0-9, non-repeating) is auto-filled sequentially when
+                            omitted. Product carousels require a Meta catalog connected
+                            to the WhatsApp Business Account in Commerce Manager; media
+                            carousels do not.
+                          required: [cards]
+                          properties:
+                            cards:
+                              type: array
+                              minItems: 2
+                              maxItems: 10
+                              items:
+                                type: object
+                                additionalProperties: true
+                                properties:
+                                  card_index: { type: integer, minimum: 0, maximum: 9, description: Card position. Auto-filled sequentially when omitted. }
+                                  type: { type: string, description: "`product` for a product card; media cards use `cta_url` or a quick-reply type." }
+                                  header: { type: object, description: Media cards only, required. Carries the card's image or video. }
+                                  body: { type: object, description: Optional card body text. }
+                                  action: { type: object, description: "Product cards: `{ catalog_id, product_retailer_id }` (required). Media cards: the card's button action (e.g. `cta_url` with `parameters.display_text` and `parameters.url`)." }
                 replyMarkup:
                   type: object
                   description: Telegram-native keyboard markup. Ignored on other platforms.

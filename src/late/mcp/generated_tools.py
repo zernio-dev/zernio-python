@@ -8150,16 +8150,32 @@ def register_generated_tools(mcp, _get_client):
         filled in automatically from the template definition, use the
         create-conversation endpoint (POST /v1/inbox/conversations) instead.
                 interactive: WhatsApp-only. Rich interactive payload for list messages, CTA URL
-        buttons, Flow prompts, and location requests. When set, takes
-        priority over `buttons` and `quickReplies`. The shape mirrors
-        Meta's Cloud API `interactive` object verbatim, so any payload
-        that works against Meta directly will also work here.
+        buttons, Flow prompts, location requests, voice-call buttons, and
+        commerce messages (single product, product list, catalog, and
+        carousel). When set, takes priority over `buttons` and
+        `quickReplies`. The shape mirrors Meta's Cloud API `interactive`
+        object verbatim, so any payload that works against Meta directly
+        will also work here.
 
         Use `buttons` / `quickReplies` for simple button replies
-        (WhatsApp's `interactive.type: "button"`) — the abstraction caps at
+        (WhatsApp's `interactive.type: "button"`): the abstraction caps at
         3 buttons and handles the auto-conversion for you. Use this field
-        only for `list`, `cta_url`, `flow`, `location_request_message`, or
-        `voice_call` messages.
+        only for the types listed in the enum below.
+
+        All interactive messages are session messages: they can only be
+        sent inside the 24-hour customer service window opened by the
+        user's last inbound message.
+
+        Commerce types (`product`, `product_list`, `catalog_message`, and
+        product carousels) require a Meta catalog connected to the
+        WhatsApp Business Account in Commerce Manager. Media carousels
+        (image/video cards) do not need a catalog.
+
+        For `product`, `body` is optional (WhatsApp renders the product
+        card itself) and `header` is not allowed (the product image is
+        the header). For `product_list`, a `header` with `type: "text"`
+        is required. For `carousel`, top-level `header`/`footer` are not
+        supported; media goes on each card instead.
 
         For `voice_call`, the message renders WhatsApp's native call
         button; tapping it starts a voice call to your business number.
@@ -8172,8 +8188,13 @@ def register_generated_tools(mcp, _get_client):
         "Send location" button; the user's reply arrives as a regular
         location message in the conversation.
 
+        For `catalog_message`, `action` may also be omitted (we default it
+        to `{ "name": "catalog_message" }`).
+
         Tap events come back via the `message.received` webhook with
         `metadata.interactiveType` set to `list_reply` or `nfm_reply`.
+        Carts submitted from commerce messages arrive as `metadata.order`;
+        product inquiries arrive as `metadata.referredProduct`.
                 reply_markup: Telegram-native keyboard markup. Ignored on other platforms.
                 messaging_type: Facebook messaging type. Required when using messageTag.
                 message_tag: Facebook message tag for messaging outside 24h window. Requires messagingType MESSAGE_TAG. Instagram only supports HUMAN_AGENT.
