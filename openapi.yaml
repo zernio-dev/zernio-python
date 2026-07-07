@@ -11132,13 +11132,18 @@ paths:
                   error: { type: string }
         '401': { $ref: '#/components/responses/Unauthorized' }
         '403':
-          description: Forbidden
+          description: |
+            Forbidden. Distinguish by the `code` field:
+            - `ACCOUNT_DISCONNECTED` — a target account exists but its platform connection is no longer active (token expired or revoked, or the account was disconnected). Reconnect the account, then refresh account IDs from `GET /v1/accounts` (accounts report their connection state via `isActive`). The disconnect itself is also emitted as the `account.disconnected` webhook event.
+            - `PROFILE_OVER_LIMIT` — a target account belongs to a profile beyond the plan's profile limit.
+            - No `code` — a target `accountId` does not belong to the authenticated user (or is outside the API key's profile scope).
           content:
             application/json:
               schema:
                 type: object
                 properties:
-                  error: { type: string }
+                  error: { type: string, example: 'Account 6a0f6d2e520992756d96bb6c (facebook "My Page") is disconnected and cannot be posted to. Facebook tokens expired. Please reconnect your Facebook account. After reconnecting, refresh your account IDs from GET /v1/accounts.' }
+                  code: { type: string, enum: [ACCOUNT_DISCONNECTED, PROFILE_OVER_LIMIT], description: Stable machine-readable cause. Absent for ownership failures. }
         '409':
           description: |
             Duplicate content detected. Returned when the requested post matches an existing one on `(platform, accountId, content-hash)` within the last 24 hours, AND the request was NOT an `x-request-id` retry of an in-flight call. Distinct from same-`x-request-id` retries (which return HTTP 200 with the original post — see operation description for the idempotency contract).
