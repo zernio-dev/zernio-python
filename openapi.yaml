@@ -22041,6 +22041,15 @@ paths:
                         authorUrn:
                           type: [string, "null"]
                           description: LinkedIn URN of the person who mentioned you
+                        authorName:
+                          type: [string, "null"]
+                          description: Display name of the author, resolved from authorUrn. Null when LinkedIn does not allow resolving the profile.
+                        authorUsername:
+                          type: [string, "null"]
+                          description: LinkedIn vanity name of the author (the slug in their profile URL)
+                        authorPicture:
+                          type: [string, "null"]
+                          description: Profile picture URL of the author. LinkedIn CDN URLs expire after some time, so fetch promptly rather than storing long-term.
                         organizationalEntity:
                           type: string
                           description: URN of the organization that was mentioned
