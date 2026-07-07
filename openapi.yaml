@@ -19675,7 +19675,7 @@ paths:
                         description: Platform message ID (dm_event_id)
                       conversationId:
                         type: string
-                        description: Platform conversation ID (dm_conversation_id)
+                        description: Platform conversation ID (dm_conversation_id). For WhatsApp, this is Zernio's internal conversation id (24-character hex) which matches the id returned by the list-conversations endpoint and the conversationId in the message.received and conversation.started webhooks; use it to correlate the created thread with inbound events.
                       participantId:
                         type: string
                         description: Twitter numeric user ID of the recipient
