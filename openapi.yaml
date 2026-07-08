@@ -31076,7 +31076,7 @@ paths:
         - name: breakdowns
           in: query
           schema: { type: string }
-          description: "Comma-separated breakdown dimensions (Meta only): age, gender, country, publisher_platform, device_platform, region, platform_position, impression_device, video_asset, image_asset, body_asset, title_asset."
+          description: "Comma-separated breakdown dimensions (Meta only): age, gender, country, publisher_platform, device_platform, region, platform_position, impression_device, video_asset, image_asset, body_asset, title_asset. `placement` is accepted as an alias for `publisher_platform` (Facebook vs Instagram vs Audience Network). The singular `breakdown` is accepted too. Unknown values return 400 with the supported list rather than being ignored."
       responses:
         '200':
           description: Campaign analytics
@@ -31117,6 +31117,11 @@ paths:
                           items: { type: object }
         '202':
           description: "Part of the requested date range predates the ingested history; a background backfill job has been queued. The body has the same shape as the 200 response, carries the currently-available data, and includes `backfillPending: true`. A `Retry-After` header carries the recommended poll interval in seconds. Allow the job a short time to run (typically 1-3 minutes) and submit the request again; once ingestion completes the same request returns 200 with the full range."
+        '400':
+          description: "Invalid parameter (e.g. an unknown `breakdowns` dimension). The message lists the offending value(s) and the supported set."
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ErrorResponse' }
         '401': { $ref: '#/components/responses/Unauthorized' }
         '403':
           description: Ads access required. Legacy plans need the Ads add-on; included by default on usage-based plans.
@@ -31140,7 +31145,7 @@ paths:
         - name: breakdowns
           in: query
           schema: { type: string }
-          description: "Comma-separated breakdown dimensions. Meta: age, gender, country, publisher_platform, device_platform, region. TikTok: gender, age, country_code, platform, ac, language."
+          description: "Comma-separated breakdown dimensions. Meta: age, gender, country, publisher_platform, device_platform, region, platform_position, impression_device, video_asset, image_asset, body_asset, title_asset. TikTok: gender, age, country_code, platform, ac, language. `placement` is accepted as an alias for `publisher_platform` (Facebook vs Instagram vs Audience Network). The singular `breakdown` is accepted too. Unknown values return 400 with the supported list rather than being ignored."
       responses:
         '200':
           description: Ad analytics
@@ -31182,6 +31187,11 @@ paths:
                           items: { type: object }
         '202':
           description: "Part of the requested date range predates the ingested history; a background backfill job has been queued. The body has the same shape as the 200 response, carries the currently-available data, and includes `backfillPending: true`. A `Retry-After` header carries the recommended poll interval in seconds. Allow the job a short time to run (typically 1-3 minutes) and submit the request again; once ingestion completes the same request returns 200 with the full range."
+        '400':
+          description: "Invalid parameter (e.g. an unknown `breakdowns` dimension). The message lists the offending value(s) and the supported set."
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ErrorResponse' }
         '401': { $ref: '#/components/responses/Unauthorized' }
         '403':
           description: Ads access required. Legacy plans need the Ads add-on; included by default on usage-based plans.
