@@ -1922,7 +1922,7 @@ def register_generated_tools(mcp, _get_client):
             platform: Disambiguate when the campaign id exists across platforms (e.g. facebook, instagram).
             from_date: Start of date range (YYYY-MM-DD). Defaults to 90 days ago.
             to_date: End of date range (YYYY-MM-DD). Defaults to today. Max 730-day range.
-            breakdowns: Comma-separated breakdown dimensions (Meta only): age, gender, country, publisher_platform, device_platform, region, platform_position, impression_device, video_asset, image_asset, body_asset, title_asset. `placement` is accepted as an alias for `publisher_platform` (Facebook vs Instagram vs Audience Network). The singular `breakdown` is accepted too. Unknown values return 400 with the supported list rather than being ignored."""
+            breakdowns: Comma-separated breakdown dimensions (Meta only): age, gender, country, publisher_platform, device_platform, region, platform_position, impression_device, video_asset, image_asset, body_asset, title_asset."""
         client = _get_client()
         try:
             response = client.ads.get_campaign_analytics(
@@ -1956,7 +1956,7 @@ def register_generated_tools(mcp, _get_client):
             ad_id: (required)
             from_date: Start of date range (YYYY-MM-DD). Defaults to 90 days ago.
             to_date: End of date range (YYYY-MM-DD). Defaults to today. Max 730-day range.
-            breakdowns: Comma-separated breakdown dimensions. Meta: age, gender, country, publisher_platform, device_platform, region, platform_position, impression_device, video_asset, image_asset, body_asset, title_asset. TikTok: gender, age, country_code, platform, ac, language. `placement` is accepted as an alias for `publisher_platform` (Facebook vs Instagram vs Audience Network). The singular `breakdown` is accepted too. Unknown values return 400 with the supported list rather than being ignored."""
+            breakdowns: Comma-separated breakdown dimensions. Meta: age, gender, country, publisher_platform, device_platform, region. TikTok: gender, age, country_code, platform, ac, language."""
         client = _get_client()
         try:
             response = client.ads.get_ad_analytics(
