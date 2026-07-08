@@ -4816,6 +4816,7 @@ components:
         saves: { type: integer, example: 0, description: 'Number of saves/bookmarks (Instagram, Pinterest)' }
         clicks: { type: integer, example: 0 }
         views: { type: integer, example: 0 }
+        follows: { type: integer, example: 0, description: 'Instagram feed posts and stories only: organic accounts that started following from this post. 0 for reels and other platforms.' }
         igReelsAvgWatchTime: { type: integer, example: 0, description: 'Instagram Reels only: average watch time per play, in milliseconds. 0 for non-Reels media and other platforms.' }
         igReelsVideoViewTotalTime: { type: integer, example: 0, description: 'Instagram Reels only: total watch time including replays, in milliseconds. 0 for non-Reels media and other platforms.' }
         engagementRate: { type: number, example: 0 }
@@ -7341,7 +7342,7 @@ paths:
           description: Page number (default 1)
         - name: sortBy
           in: query
-          schema: { type: string, enum: [date, engagement, impressions, reach, likes, comments, shares, saves, clicks, views], default: date }
+          schema: { type: string, enum: [date, engagement, impressions, reach, likes, comments, shares, saves, clicks, views, follows], default: date }
           description: Sort by date, engagement, or a specific metric
         - name: order
           in: query
