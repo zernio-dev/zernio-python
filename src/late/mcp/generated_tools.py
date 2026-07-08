@@ -1284,6 +1284,36 @@ def register_generated_tools(mcp, _get_client):
 
     @mcp.tool(
         annotations=ToolAnnotations(
+            title="Update saved targeting audience",
+            readOnlyHint=False,
+            destructiveHint=True,
+            openWorldHint=True,
+        )
+    )
+    def ad_audiences_update_ad_audience(
+        audience_id: str,
+        name: str | None = None,
+        description: str | None = None,
+        spec: dict[str, Any] | None = None,
+    ) -> str:
+        """Update saved targeting audience
+
+        Args:
+            audience_id: (required)
+            name
+            description
+            spec: Full replacement for the stored targeting spec."""
+        client = _get_client()
+        try:
+            response = client.ad_audiences.update_ad_audience(
+                audience_id=audience_id, name=name, description=description, spec=spec
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
             title="Delete custom audience",
             readOnlyHint=False,
             destructiveHint=True,

@@ -32731,6 +32731,7 @@ paths:
                       type: object
                       properties:
                         id: { type: [string, "null"] }
+                        accountId: { type: string, description: "Social account the audience was created against. Returned for saved_targeting items." }
                         platformAudienceId: { type: string }
                         name: { type: string }
                         description: { type: string }
@@ -32834,11 +32835,55 @@ paths:
         '403':
           description: Ads access required. Legacy plans need the Ads add-on; included by default on usage-based plans.
         '404': { $ref: '#/components/responses/NotFound' }
+    put:
+      operationId: updateAdAudience
+      tags: [Ad Audiences]
+      summary: Update saved targeting audience
+      description: |
+        Update a `saved_targeting` audience's name, description, or spec. Only `saved_targeting` audiences are
+        updatable (they exist only on Zernio); uploaded/derived audiences return 422, delete and recreate those
+        instead. `spec` replaces the stored spec wholesale (no merge). Ads already created from this audience are
+        unaffected, they snapshot the targeting at creation.
+      security:
+        - bearerAuth: []
+      parameters:
+        - { name: audienceId, in: path, required: true, schema: { type: string } }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              description: At least one field is required.
+              properties:
+                name: { type: string, maxLength: 255 }
+                description: { type: string }
+                spec:
+                  allOf: [{ $ref: '#/components/schemas/TargetingSpec' }]
+                  description: Full replacement for the stored targeting spec.
+      responses:
+        '200':
+          description: Audience updated
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  audience: { type: object }
+                  message: { type: string }
+        '400':
+          description: Invalid body (no fields provided or malformed spec)
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403':
+          description: Ads access required. Legacy plans need the Ads add-on; included by default on usage-based plans.
+        '404': { $ref: '#/components/responses/NotFound' }
+        '422':
+          description: The audience is not saved_targeting (uploaded/derived audiences are managed on the platform)
     delete:
       operationId: deleteAdAudience
       tags: [Ad Audiences]
       summary: Delete custom audience
-      description: Deletes the audience from both Meta and the local database.
+      description: Deletes the audience from both the platform and the local database. `saved_targeting` audiences exist only on Zernio, so only the local record is removed.
       security:
         - bearerAuth: []
       parameters:

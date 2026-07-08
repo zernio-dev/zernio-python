@@ -79,6 +79,22 @@ class AdAudiencesResource:
         """Get audience details"""
         return self._client._get(f"/v1/ads/audiences/{audience_id}")
 
+    def update_ad_audience(
+        self,
+        audience_id: str,
+        *,
+        name: str | None = None,
+        description: str | None = None,
+        spec: Any | None = None,
+    ) -> dict[str, Any]:
+        """Update saved targeting audience"""
+        payload = self._build_payload(
+            name=name,
+            description=description,
+            spec=spec,
+        )
+        return self._client._put(f"/v1/ads/audiences/{audience_id}", data=payload)
+
     def delete_ad_audience(self, audience_id: str) -> dict[str, Any]:
         """Delete custom audience"""
         return self._client._delete(f"/v1/ads/audiences/{audience_id}")
@@ -118,6 +134,24 @@ class AdAudiencesResource:
     async def aget_ad_audience(self, audience_id: str) -> dict[str, Any]:
         """Get audience details (async)"""
         return await self._client._aget(f"/v1/ads/audiences/{audience_id}")
+
+    async def aupdate_ad_audience(
+        self,
+        audience_id: str,
+        *,
+        name: str | None = None,
+        description: str | None = None,
+        spec: Any | None = None,
+    ) -> dict[str, Any]:
+        """Update saved targeting audience (async)"""
+        payload = self._build_payload(
+            name=name,
+            description=description,
+            spec=spec,
+        )
+        return await self._client._aput(
+            f"/v1/ads/audiences/{audience_id}", data=payload
+        )
 
     async def adelete_ad_audience(self, audience_id: str) -> dict[str, Any]:
         """Delete custom audience (async)"""
