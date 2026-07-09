@@ -6503,7 +6503,7 @@ def register_generated_tools(mcp, _get_client):
 
     @mcp.tool(
         annotations=ToolAnnotations(
-            title="Set flair on a published Reddit post",
+            title="Set Reddit post flair",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
@@ -6516,7 +6516,7 @@ def register_generated_tools(mcp, _get_client):
         flair_template_id: str,
         text: str | None = None,
     ) -> str:
-        """Set flair on a published Reddit post
+        """Set Reddit post flair
 
         Args:
             account_id: The ID of the Reddit account that owns the post (required)
@@ -7290,7 +7290,7 @@ def register_generated_tools(mcp, _get_client):
 
     @mcp.tool(
         annotations=ToolAnnotations(
-            title="Crosspost a Discord announcement message",
+            title="Crosspost Discord message",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
@@ -7299,7 +7299,7 @@ def register_generated_tools(mcp, _get_client):
     def discord_crosspost_discord_message(
         channel_id: str, message_id: str, account_id: str
     ) -> str:
-        """Crosspost a Discord announcement message
+        """Crosspost Discord message
 
         Args:
             channel_id: Discord announcement channel snowflake ID (required)

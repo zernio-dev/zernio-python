@@ -350,7 +350,7 @@ Both `from zernio import ...` and `from late import ...` work identically. The `
 | `connect.select_linked_in_organization()` | Select LinkedIn org |
 | `connect.select_pinterest_board()` | Select Pinterest board |
 | `connect.select_snapchat_profile()` | Select Snapchat profile |
-| `connect.set_reddit_post_flair()` | Set flair on a published Reddit post |
+| `connect.set_reddit_post_flair()` | Set Reddit post flair |
 | `connect.vote_reddit_thing()` | Vote on a Reddit post or comment |
 
 ### Reddit
@@ -524,7 +524,7 @@ Both `from zernio import ...` and `from late import ...` work identically. The `
 | `discord.delete_discord_message()` | Delete a Discord channel message |
 | `discord.delete_discord_scheduled_event()` | Delete a Discord scheduled event |
 | `discord.add_discord_member_role()` | Assign a role to a guild member |
-| `discord.crosspost_discord_message()` | Crosspost a Discord announcement message |
+| `discord.crosspost_discord_message()` | Crosspost Discord message |
 | `discord.edit_discord_guild_role()` | Edit a Discord guild role |
 | `discord.pin_discord_message()` | Pin a Discord message |
 | `discord.remove_discord_member_role()` | Remove a role from a guild member |

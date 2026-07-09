@@ -18162,7 +18162,7 @@ paths:
     post:
       operationId: setRedditPostFlair
       tags: [Connect]
-      summary: Set flair on a published Reddit post
+      summary: Set Reddit post flair
       description: |
         Applies a flair to a post the connected account already published. Use the GET on this
         path to list the available `flairTemplateId` values for the subreddit.
@@ -18814,7 +18814,7 @@ paths:
     post:
       operationId: crosspostDiscordMessage
       tags: [Discord]
-      summary: Crosspost a Discord announcement message
+      summary: Crosspost Discord message
       description: |
         Publishes a message from an announcement channel so it propagates to every server
         following that channel.

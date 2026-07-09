@@ -540,7 +540,7 @@ class ConnectResource:
         *,
         text: str | None = None,
     ) -> dict[str, Any]:
-        """Set flair on a published Reddit post"""
+        """Set Reddit post flair"""
         payload = self._build_payload(
             subreddit=subreddit,
             post_id=post_id,
@@ -1065,7 +1065,7 @@ class ConnectResource:
         *,
         text: str | None = None,
     ) -> dict[str, Any]:
-        """Set flair on a published Reddit post (async)"""
+        """Set Reddit post flair (async)"""
         payload = self._build_payload(
             subreddit=subreddit,
             post_id=post_id,

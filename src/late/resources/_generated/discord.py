@@ -234,7 +234,7 @@ class DiscordResource:
     def crosspost_discord_message(
         self, channel_id: str, message_id: str, account_id: str
     ) -> dict[str, Any]:
-        """Crosspost a Discord announcement message"""
+        """Crosspost Discord message"""
         params = self._build_params(
             account_id=account_id,
         )
@@ -561,7 +561,7 @@ class DiscordResource:
     async def acrosspost_discord_message(
         self, channel_id: str, message_id: str, account_id: str
     ) -> dict[str, Any]:
-        """Crosspost a Discord announcement message (async)"""
+        """Crosspost Discord message (async)"""
         params = self._build_params(
             account_id=account_id,
         )
