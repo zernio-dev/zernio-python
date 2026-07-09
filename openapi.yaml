@@ -24542,13 +24542,13 @@ paths:
                 brand:
                   type: object
                   description: Required for 10DLC. The legal entity behind the traffic (TCR brand).
-                  required: [entityType, displayName, country, vertical]
+                  required: [entityType, displayName, country, vertical, website, street, city, state, postalCode]
                   properties:
                     entityType: { type: string, enum: [PRIVATE_PROFIT, PUBLIC_PROFIT, NON_PROFIT, GOVERNMENT, SOLE_PROPRIETOR] }
                     displayName: { type: string }
                     companyName: { type: string, description: Legal company name. Required for every entityType except SOLE_PROPRIETOR. }
                     ein: { type: string, description: Required for every entityType except SOLE_PROPRIETOR. }
-                    phone: { type: string }
+                    phone: { type: string, description: Business contact phone. Required for every entityType except SOLE_PROPRIETOR. }
                     mobilePhone: { type: string, description: Required for SOLE_PROPRIETOR; the verification OTP is texted there (US/CA mobile). }
                     street: { type: string }
                     city: { type: string }
@@ -24556,19 +24556,24 @@ paths:
                     postalCode: { type: string }
                     country: { type: string, enum: [US, CA] }
                     email: { type: string, format: email, description: Brand contact email; defaults to your account email when omitted. }
-                    website: { type: string }
+                    website: { type: string, description: "The brand's website (sole proprietors may use a social profile such as LinkedIn or a business Facebook page). Carriers verify the brand against it; a bare domain is normalized to https://." }
                     vertical: { type: string, enum: [AGRICULTURE, COMMUNICATION, CONSTRUCTION, EDUCATION, ENERGY, ENTERTAINMENT, FINANCIAL, GAMBLING, GOVERNMENT, HEALTHCARE, HOSPITALITY, HUMAN_RESOURCES, INSURANCE, LEGAL, MANUFACTURING, NGO, POLITICAL, POSTAL, PROFESSIONAL, REAL_ESTATE, RETAIL, TECHNOLOGY, TRANSPORTATION] }
                     stockSymbol: { type: string }
                 campaign:
                   type: object
-                  description: Required for 10DLC. What you'll send and how recipients opt in/out.
-                  required: [usecase, description, messageFlow, sample1, helpMessage, optinKeywords, optinMessage, optoutKeywords, optoutMessage, helpKeywords]
+                  description: |
+                    Required for 10DLC. What you'll send and how recipients opt in/out.
+                    Opt-in/opt-out/help auto-responses must name the registered brand and
+                    carry the carrier-required disclosures; submissions that don't (or that
+                    are blank) are automatically rewritten to a compliant, brand-named
+                    template before the campaign is filed.
+                  required: [usecase, description, messageFlow, sample1, sample2, helpMessage, optinKeywords, optinMessage, optoutKeywords, optoutMessage, helpKeywords]
                   properties:
                     usecase: { type: string }
                     description: { type: string, minLength: 40, maxLength: 4096 }
                     messageFlow: { type: string, minLength: 40, maxLength: 2048, description: How a recipient ends up receiving your messages (the opt-in flow). }
                     sample1: { type: string, minLength: 20 }
-                    sample2: { type: string }
+                    sample2: { type: string, minLength: 20, description: Second example message; carriers require two distinct samples, so it must differ from sample1. }
                     helpMessage: { type: string, minLength: 20, maxLength: 320 }
                     optinKeywords: { type: string }
                     optinMessage: { type: string, minLength: 20, maxLength: 320 }

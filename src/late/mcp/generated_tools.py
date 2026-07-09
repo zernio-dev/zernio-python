@@ -10678,12 +10678,16 @@ def register_generated_tools(mcp, _get_client):
     ) -> str:
         """Start a carrier registration
 
-        Args:
-            registration_type: (required)
-            phone_numbers: Your numbers this registration covers. (required)
-            brand: Required for 10DLC. The legal entity behind the traffic (TCR brand).
-            campaign: Required for 10DLC. What you'll send and how recipients opt in/out.
-            toll_free: Required for toll_free."""
+            Args:
+                registration_type: (required)
+                phone_numbers: Your numbers this registration covers. (required)
+                brand: Required for 10DLC. The legal entity behind the traffic (TCR brand).
+                campaign: Required for 10DLC. What you'll send and how recipients opt in/out.
+        Opt-in/opt-out/help auto-responses must name the registered brand and
+        carry the carrier-required disclosures; submissions that don't (or that
+        are blank) are automatically rewritten to a compliant, brand-named
+        template before the campaign is filed.
+                toll_free: Required for toll_free."""
         client = _get_client()
         try:
             response = client.sms.start_sms_registration(
