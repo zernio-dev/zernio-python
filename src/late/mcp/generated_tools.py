@@ -5475,7 +5475,7 @@ def register_generated_tools(mcp, _get_client):
         Args:
             platform: Social media platform to connect (required)
             profile_id: Your Zernio profile ID (get from /v1/profiles) (required)
-            redirect_url: Your custom redirect URL after connection completes. Standard mode appends ?connected={platform}&profileId=X&accountId=Y&username=Z. Headless mode appends OAuth data params for platforms requiring selection (e.g. LinkedIn orgs, Facebook pages). If no selection is needed, the account is created directly and the redirect includes accountId.
+            redirect_url: Your custom redirect URL after connection completes. Accepts an http(s) URL, a custom app scheme for mobile deeplinks (e.g. myapp://callback), or a relative path. Result params are appended with the URL API, so an existing query string is preserved. Standard mode appends connected={platform}&profileId=X&accountId=Y&username=Z. Headless mode appends OAuth data params for platforms requiring selection (e.g. LinkedIn orgs, Facebook pages). If no selection is needed, the account is created directly and the redirect includes accountId.
             headless: When true, the user is redirected to your redirect_url with raw OAuth data (code, state) instead of Zernio's default account selection UI. Use this to build a custom connect experience."""
         client = _get_client()
         try:
@@ -5542,7 +5542,7 @@ def register_generated_tools(mcp, _get_client):
         omit to enter ads-only mode (no TikTok posting account linked; ad creation uses
         a Brand Identity instead of a TT_USER). Ignored for same-token (`facebook`,
         `instagram`, `linkedin`, `pinterest`) and standalone (`googleads`) platforms.
-                redirect_url: Custom redirect URL after OAuth completes (same-token platforms only)
+                redirect_url: Custom redirect URL after OAuth completes (same-token platforms only). Accepts an http(s) URL, a custom app scheme for mobile deeplinks (e.g. myapp://callback), or a relative path.
                 headless: Enable headless mode (same-token platforms only)
                 ad_account_id: Scope ad sync to a single platform ad account. Without this param,
         sync covers every ad account the connected token can see. Supported
