@@ -12235,11 +12235,17 @@ def register_generated_tools(mcp, _get_client):
             openWorldHint=True,
         )
     )
-    def whatsapp_upload_whats_app_profile_photo() -> str:
-        """Upload profile picture"""
+    def whatsapp_upload_whats_app_profile_photo(account_id: str, url: str) -> str:
+        """Upload profile picture
+
+        Args:
+            account_id: WhatsApp social account ID (required)
+            url: Publicly reachable https URL of the image (JPEG or PNG, max 5MB, recommended 640x640). Fetched server-side; must resolve directly without redirects. (required)"""
         client = _get_client()
         try:
-            response = client.whatsapp.upload_whats_app_profile_photo()
+            response = client.whatsapp.upload_whats_app_profile_photo(
+                account_id=account_id, url=url
+            )
             return _format_response(response)
         except Exception as e:
             return f"Error: {e}"

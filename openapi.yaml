@@ -24978,6 +24978,11 @@ paths:
         Upload a new profile picture for the WhatsApp Business Profile.
         Uses Meta's resumable upload API under the hood: creates an upload session,
         uploads the image bytes, then updates the business profile with the resulting handle.
+
+        Provide the image either as a binary upload (`multipart/form-data` with `file`)
+        or as a download URL (`application/json` with `url`) — with a URL we fetch the
+        image server-side and upload the bytes for you. Meta's profile-photo API is
+        bytes-only, so there is no direct URL passthrough. JPEG/PNG, max 5MB either way.
       security:
         - bearerAuth: []
       requestBody:
@@ -24995,6 +25000,18 @@ paths:
                   type: string
                   format: binary
                   description: Image file (JPEG or PNG, max 5MB, recommended 640x640)
+          application/json:
+            schema:
+              type: object
+              required: [accountId, url]
+              properties:
+                accountId:
+                  type: string
+                  description: WhatsApp social account ID
+                url:
+                  type: string
+                  format: uri
+                  description: Publicly reachable https URL of the image (JPEG or PNG, max 5MB, recommended 640x640). Fetched server-side; must resolve directly without redirects.
       responses:
         '200':
           description: Profile picture updated successfully
@@ -25005,9 +25022,10 @@ paths:
                 properties:
                   success: { type: boolean }
                   message: { type: string }
-        '400': { description: "Invalid file type, file too large, or missing parameters" }
+        '400': { description: "Invalid file type/URL, file too large, or missing parameters" }
         '401': { $ref: '#/components/responses/Unauthorized' }
         '404': { description: WhatsApp account not found }
+        '422': { description: "Profile photo is locked for WhatsApp coexistence numbers (manage it in the WhatsApp Business app)" }
 
   /v1/whatsapp/business-profile/display-name:
     get:

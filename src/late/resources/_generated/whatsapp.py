@@ -152,9 +152,15 @@ class WhatsappResource:
         )
         return self._client._post("/v1/whatsapp/business-profile", data=payload)
 
-    def upload_whats_app_profile_photo(self) -> dict[str, Any]:
+    def upload_whats_app_profile_photo(
+        self, account_id: str, url: str
+    ) -> dict[str, Any]:
         """Upload profile picture"""
-        return self._client._post("/v1/whatsapp/business-profile/photo")
+        payload = self._build_payload(
+            account_id=account_id,
+            url=url,
+        )
+        return self._client._post("/v1/whatsapp/business-profile/photo", data=payload)
 
     def get_whats_app_display_name(self, account_id: str) -> dict[str, Any]:
         """Get display name status"""
@@ -548,9 +554,17 @@ class WhatsappResource:
         )
         return await self._client._apost("/v1/whatsapp/business-profile", data=payload)
 
-    async def aupload_whats_app_profile_photo(self) -> dict[str, Any]:
+    async def aupload_whats_app_profile_photo(
+        self, account_id: str, url: str
+    ) -> dict[str, Any]:
         """Upload profile picture (async)"""
-        return await self._client._apost("/v1/whatsapp/business-profile/photo")
+        payload = self._build_payload(
+            account_id=account_id,
+            url=url,
+        )
+        return await self._client._apost(
+            "/v1/whatsapp/business-profile/photo", data=payload
+        )
 
     async def aget_whats_app_display_name(self, account_id: str) -> dict[str, Any]:
         """Get display name status (async)"""
