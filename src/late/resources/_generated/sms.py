@@ -148,7 +148,7 @@ class SmsResource:
         return self._client._delete(f"/v1/phone-numbers/{id}/sms")
 
     def reuse_sms_registration_for_number(self, id: str) -> dict[str, Any]:
-        """Add a number to an existing registration"""
+        """Add number to SMS registration"""
         return self._client._post(f"/v1/phone-numbers/{id}/sms/reuse-registration")
 
     async def asend_sms(
@@ -251,7 +251,7 @@ class SmsResource:
         return await self._client._adelete(f"/v1/phone-numbers/{id}/sms")
 
     async def areuse_sms_registration_for_number(self, id: str) -> dict[str, Any]:
-        """Add a number to an existing registration (async)"""
+        """Add number to SMS registration (async)"""
         return await self._client._apost(
             f"/v1/phone-numbers/{id}/sms/reuse-registration"
         )

@@ -300,7 +300,7 @@ Both `from zernio import ...` and `from late import ...` work identically. The `
 ### Usage
 | Method | Description |
 |--------|-------------|
-| `usage.get_calls_usage()` | Calling usage (volumes + billable cost) |
+| `usage.get_calls_usage()` | Calling usage and cost |
 | `usage.get_sms_usage()` | SMS usage (volumes) |
 | `usage.get_usage()` | Get plan and usage snapshot |
 | `usage.get_usage_stats()` | Get plan and usage stats |
@@ -457,7 +457,7 @@ Both `from zernio import ...` and `from late import ...` work identically. The `
 |--------|-------------|
 | `calls.list_calls()` | List all calls (unified history) |
 | `calls.get_call()` | Get a call (any channel) |
-| `calls.get_call_recording()` | Get a call recording (any channel) |
+| `calls.get_call_recording()` | Get a call recording |
 
 ### Comment Automations
 | Method | Description |
@@ -676,7 +676,7 @@ Both `from zernio import ...` and `from late import ...` work identically. The `
 | `sms.disable_sms_on_number()` | Disable SMS on a number |
 | `sms.enable_sms_on_number()` | Enable SMS on a number |
 | `sms.lookup_sms_number()` | Look up carrier + line type |
-| `sms.reuse_sms_registration_for_number()` | Add a number to an existing registration |
+| `sms.reuse_sms_registration_for_number()` | Add number to SMS registration |
 | `sms.send_sms()` | Send an SMS/MMS |
 | `sms.share_sms_registration()` | Create a registration share link |
 | `sms.start_sms_registration()` | Start a carrier registration |

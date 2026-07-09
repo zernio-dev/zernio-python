@@ -84,7 +84,7 @@ class CallsResource:
         return self._client._get(f"/v1/calls/{id}")
 
     def get_call_recording(self, id: str, *, as_: str | None = None) -> dict[str, Any]:
-        """Get a call recording (any channel)"""
+        """Get a call recording"""
         params = self._build_params(
             as_=as_,
         )
@@ -120,7 +120,7 @@ class CallsResource:
     async def aget_call_recording(
         self, id: str, *, as_: str | None = None
     ) -> dict[str, Any]:
-        """Get a call recording (any channel) (async)"""
+        """Get a call recording (async)"""
         params = self._build_params(
             as_=as_,
         )

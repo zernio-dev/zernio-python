@@ -10537,7 +10537,7 @@ paths:
     get:
       operationId: getCallsUsage
       tags: [Usage]
-      summary: Calling usage (volumes + billable cost)
+      summary: Calling usage and cost
       description: |
         Aggregated calling usage across your numbers, both channels
         (WhatsApp Business Calling + regular phone/PSTN): call counts,
@@ -23996,7 +23996,7 @@ paths:
     get:
       operationId: getCallRecording
       tags: [Calls]
-      summary: Get a call recording (any channel)
+      summary: Get a call recording
       description: |
         Channel-agnostic recording fetch: resolves a fresh, playable MP3 URL
         for any call regardless of channel (provider-signed URLs expire ~10
@@ -27636,7 +27636,7 @@ paths:
     post:
       operationId: reuseSmsRegistrationForNumber
       tags: [SMS]
-      summary: Add a number to an existing registration
+      summary: Add number to SMS registration
       description: |
         Attaches this number to your existing approved 10DLC campaign instead
         of running a fresh registration: the number inherits the campaign's

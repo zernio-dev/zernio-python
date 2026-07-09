@@ -4842,14 +4842,14 @@ def register_generated_tools(mcp, _get_client):
 
     @mcp.tool(
         annotations=ToolAnnotations(
-            title="Get a call recording (any channel)",
+            title="Get a call recording",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
         )
     )
     def calls_get_call_recording(id: str, as_: str | None = None) -> str:
-        """Get a call recording (any channel)
+        """Get a call recording
 
         Args:
             id: (required)
@@ -10840,14 +10840,14 @@ def register_generated_tools(mcp, _get_client):
 
     @mcp.tool(
         annotations=ToolAnnotations(
-            title="Add a number to an existing registration",
+            title="Add number to SMS registration",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
         )
     )
     def sms_reuse_sms_registration_for_number(id: str) -> str:
-        """Add a number to an existing registration
+        """Add number to SMS registration
 
         Args:
             id: (required)"""
@@ -11301,7 +11301,7 @@ def register_generated_tools(mcp, _get_client):
 
     @mcp.tool(
         annotations=ToolAnnotations(
-            title="Calling usage (volumes + billable cost)",
+            title="Calling usage and cost",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
@@ -11314,7 +11314,7 @@ def register_generated_tools(mcp, _get_client):
         number: str | None = None,
         group_by: str | None = None,
     ) -> str:
-        """Calling usage (volumes + billable cost)
+        """Calling usage and cost
 
         Args:
             since: Start of the window (inclusive). Default 30 days before `until`.

@@ -83,7 +83,7 @@ class UsageResource:
         number: str | None = None,
         group_by: str | None = None,
     ) -> dict[str, Any]:
-        """Calling usage (volumes + billable cost)"""
+        """Calling usage and cost"""
         params = self._build_params(
             since=since,
             until=until,
@@ -139,7 +139,7 @@ class UsageResource:
         number: str | None = None,
         group_by: str | None = None,
     ) -> dict[str, Any]:
-        """Calling usage (volumes + billable cost) (async)"""
+        """Calling usage and cost (async)"""
         params = self._build_params(
             since=since,
             until=until,
