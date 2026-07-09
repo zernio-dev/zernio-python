@@ -56,19 +56,35 @@ class UsageResource:
                 result[to_camel(k)] = v
         return result
 
+    def get_billing(self) -> dict[str, Any]:
+        """Account billing snapshot (plan, cycle, balance, caps, status)"""
+        return self._client._get("/v1/billing")
+
     def get_x_api_pricing(self) -> dict[str, Any]:
         """Get X/Twitter API pricing table"""
         return self._client._get("/v1/billing/x-pricing")
 
-    def get_usage(self, *, reconcile: bool | None = None) -> dict[str, Any]:
-        """Get plan and usage snapshot"""
+    def get_usage(
+        self,
+        *,
+        reconcile: bool | None = None,
+        range: str | None = "cycle",
+        from_: str | None = None,
+        to: str | None = None,
+        granularity: str | None = "day",
+    ) -> dict[str, Any]:
+        """Usage snapshot (default) or billed-spend metering (with params)"""
         params = self._build_params(
             reconcile=reconcile,
+            range=range,
+            from_=from_,
+            to=to,
+            granularity=granularity,
         )
         return self._client._get("/v1/usage", params=params)
 
     def get_usage_stats(self, *, reconcile: bool | None = None) -> dict[str, Any]:
-        """Get plan and usage stats"""
+        """Get plan and usage snapshot (plan, limits, payment status)"""
         params = self._build_params(
             reconcile=reconcile,
         )
@@ -110,21 +126,37 @@ class UsageResource:
         )
         return self._client._get("/v1/usage/sms", params=params)
 
+    async def aget_billing(self) -> dict[str, Any]:
+        """Account billing snapshot (plan, cycle, balance, caps, status) (async)"""
+        return await self._client._aget("/v1/billing")
+
     async def aget_x_api_pricing(self) -> dict[str, Any]:
         """Get X/Twitter API pricing table (async)"""
         return await self._client._aget("/v1/billing/x-pricing")
 
-    async def aget_usage(self, *, reconcile: bool | None = None) -> dict[str, Any]:
-        """Get plan and usage snapshot (async)"""
+    async def aget_usage(
+        self,
+        *,
+        reconcile: bool | None = None,
+        range: str | None = "cycle",
+        from_: str | None = None,
+        to: str | None = None,
+        granularity: str | None = "day",
+    ) -> dict[str, Any]:
+        """Usage snapshot (default) or billed-spend metering (with params) (async)"""
         params = self._build_params(
             reconcile=reconcile,
+            range=range,
+            from_=from_,
+            to=to,
+            granularity=granularity,
         )
         return await self._client._aget("/v1/usage", params=params)
 
     async def aget_usage_stats(
         self, *, reconcile: bool | None = None
     ) -> dict[str, Any]:
-        """Get plan and usage stats (async)"""
+        """Get plan and usage snapshot (plan, limits, payment status) (async)"""
         params = self._build_params(
             reconcile=reconcile,
         )

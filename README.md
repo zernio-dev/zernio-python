@@ -300,10 +300,11 @@ Both `from zernio import ...` and `from late import ...` work identically. The `
 ### Usage
 | Method | Description |
 |--------|-------------|
+| `usage.get_billing()` | Account billing snapshot (plan, cycle, balance, caps, status) |
 | `usage.get_calls_usage()` | Calling usage and cost |
 | `usage.get_sms_usage()` | SMS usage (volumes) |
-| `usage.get_usage()` | Get plan and usage snapshot |
-| `usage.get_usage_stats()` | Get plan and usage stats |
+| `usage.get_usage()` | Usage snapshot (default) or billed-spend metering (with params) |
+| `usage.get_usage_stats()` | Get plan and usage snapshot (plan, limits, payment status) |
 | `usage.get_x_api_pricing()` | Get X/Twitter API pricing table |
 
 ### Logs

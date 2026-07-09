@@ -11240,6 +11240,23 @@ def register_generated_tools(mcp, _get_client):
 
     @mcp.tool(
         annotations=ToolAnnotations(
+            title="Account billing snapshot (plan, cycle, balance, caps, status)",
+            readOnlyHint=True,
+            destructiveHint=False,
+            openWorldHint=False,
+        )
+    )
+    def usage_get_billing() -> str:
+        """Account billing snapshot (plan, cycle, balance, caps, status)"""
+        client = _get_client()
+        try:
+            response = client.usage.get_billing()
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
             title="Get X/Twitter API pricing table",
             readOnlyHint=True,
             destructiveHint=False,
@@ -11257,38 +11274,57 @@ def register_generated_tools(mcp, _get_client):
 
     @mcp.tool(
         annotations=ToolAnnotations(
-            title="Get plan and usage snapshot",
+            title="Usage snapshot (default) or billed-spend metering (with params)",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
         )
     )
-    def usage_get_usage(reconcile: bool | None = None) -> str:
-        """Get plan and usage snapshot
+    def usage_get_usage(
+        reconcile: bool | None = None,
+        range: str = "cycle",
+        from_: str | None = None,
+        to: str | None = None,
+        granularity: str = "day",
+    ) -> str:
+        """Usage snapshot (default) or billed-spend metering (with params)
 
             Args:
-                reconcile: For Stripe subscription users, `true` forces a subscription
-        reconciliation pass even when cached plan data looks complete.
-        Omit the parameter, or pass `false`, to use the default
-        first-time-only reconciliation behavior. Invalid boolean values are
-        rejected."""
+                reconcile: Snapshot mode only. For Stripe subscription users, `true` forces a
+        subscription reconciliation pass even when cached plan data looks
+        complete.
+                range: Window to report. `cycle` / `prev-cycle` resolve to the customer's
+        real billing-period bounds (falling back to a trailing 30 days when
+        no invoice exists yet); `7d`…`12mo` are trailing windows; `custom`
+        uses `from` / `to`.
+                from_: Inclusive start (UTC date). Required when `range=custom`.
+                to: Inclusive end (UTC date). Required when `range=custom`. Max span 366 days.
+                granularity: Bucketing of the `days` series: `day` (one row per UTC day),
+        `month` (one row per calendar month, dated to the 1st), or `total`
+        (no series — read `totals`). Does not affect `totals`."""
         client = _get_client()
         try:
-            response = client.usage.get_usage(reconcile=reconcile)
+            response = client.usage.get_usage(
+                reconcile=reconcile,
+                range=range,
+                from_=from_,
+                to=to,
+                granularity=granularity,
+            )
             return _format_response(response)
         except Exception as e:
             return f"Error: {e}"
 
     @mcp.tool(
         annotations=ToolAnnotations(
-            title="Get plan and usage stats",
+            title="Get plan and usage snapshot (plan, limits, payment status)",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
         )
     )
     def usage_get_usage_stats(reconcile: bool | None = None) -> str:
-        """Get plan and usage stats
+        """Get plan and usage snapshot (plan, limits, payment status)
 
             Args:
                 reconcile: For Stripe subscription users, `true` forces a subscription

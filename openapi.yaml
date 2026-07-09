@@ -189,10 +189,14 @@ tags:
       Read the authenticated user and team members.
   - name: Usage
     description: |
-      Usage and metering, hub + spokes. `GET /v1/usage` is the hub: plan, billing period,
-      and quota usage in one snapshot (`/v1/usage-stats` is its deprecated alias). The
-      `/v1/usage/<domain>` spokes (calls, sms) meter consumption over any window with a
-      uniform contract: since/until/number/groupBy in, totals + groups out.
+      Usage and metering. `GET /v1/usage` is dual-mode: bare calls return the
+      plan / quota snapshot (back-compat, same as `/v1/usage-stats`); calls
+      with `range` / `granularity` params return usage METERING — billed spend
+      (USD) by product family (accounts, numbers, calls, sms, dlc, xApi,
+      credits) over any window, from Metronome's invoice breakdown (also served
+      at `GET /v1/usage/daily`). The `/v1/usage/<domain>` spokes (calls, sms)
+      meter per-domain consumption volumes over a window. `GET /v1/billing` is
+      the billing statement (balance, credits, caps, payment status).
   - name: Profiles
     description: |
       Manage profiles (named groups of social accounts).
@@ -4632,6 +4636,139 @@ components:
           enum: [read-write, read]
           description: "'read-write' allows all operations, 'read' restricts to GET requests only"
           default: read-write
+    BillingSnapshot:
+      type: object
+      description: |
+        Account billing state — plan, cycle, balance, spend caps, and payment /
+        access status. Returned by `GET /v1/billing`.
+      properties:
+        billingSystem:
+          type: string
+          enum: [metronome, stripe]
+        plan:
+          type: object
+          properties:
+            name: { type: string }
+            isUsageBased: { type: boolean }
+        period:
+          type: object
+          description: Current billing cycle. `start`/`end` are resolved for usage-based accounts only.
+          properties:
+            start: { type: string, format: date-time, nullable: true }
+            end: { type: string, format: date-time, nullable: true }
+            anchorDay: { type: integer, description: Day-of-month the cycle resets. }
+        balance:
+          type: object
+          nullable: true
+          description: Accrued spend + remaining credits this cycle. `null` for fixed-subscription (Stripe) plans.
+          properties:
+            accruedThisPeriodCents: { type: integer }
+            creditsRemainingCents: { type: integer }
+        caps:
+          type: object
+          properties:
+            xSpendUsedCents: { type: integer }
+            xSpendLimitCents: { type: integer, nullable: true, description: Monthly X-API spend cap; null = unlimited. }
+        status:
+          type: object
+          properties:
+            hasAccess: { type: boolean }
+            suspended: { type: boolean }
+            suspendedAt: { type: string, format: date-time, nullable: true }
+            suspensionReason: { type: string, nullable: true }
+            openInvoiceUrl: { type: string, nullable: true, description: Hosted invoice URL for dunning (Stripe). }
+            declineReason: { type: string, nullable: true }
+            autoUpgradeEnabled: { type: boolean }
+        legacy:
+          type: object
+          description: Deprecated plan entitlements (Stripe only); absent for usage-based accounts.
+          properties:
+            limits:
+              type: object
+              properties:
+                uploads: { type: integer }
+                profiles: { type: integer }
+    UsageMetering:
+      type: object
+      description: |
+        Billed spend by product family over a window, from Metronome's invoice
+        breakdown (the CHARGE view). Returned by `GET /v1/usage`.
+      properties:
+        supported:
+          type: boolean
+          description: False for legacy Stripe accounts (no Metronome invoice to split); `days` and `totals` are then empty/zero.
+        granularity:
+          type: string
+          enum: [day, month, total]
+        days:
+          type: array
+          description: One row per bucket. Empty when `granularity=total`. `date` is a UTC date (month buckets use the 1st).
+          items:
+            type: object
+            properties:
+              date: { type: string, format: date }
+              accounts: { type: number }
+              numbers: { type: number }
+              calls: { type: number }
+              sms: { type: number }
+              dlc: { type: number, description: 10DLC registration (brand + campaign) fees. }
+              xApi: { type: number }
+              credits: { type: number, description: Applied credits/discounts (negative). }
+              other: { type: number }
+        totals:
+          type: object
+          description: Sum of each product over the whole window (USD), plus `total`. Unaffected by `granularity`.
+          properties:
+            accounts: { type: number }
+            numbers: { type: number }
+            calls: { type: number }
+            sms: { type: number }
+            dlc: { type: number }
+            xApi: { type: number }
+            credits: { type: number }
+            other: { type: number }
+            total: { type: number }
+        lineItems:
+          type: array
+          description: Per-invoice-line-item rows (largest spend first) for a detailed breakdown.
+          items:
+            type: object
+            properties:
+              name: { type: string }
+              product:
+                type: string
+                enum: [accounts, numbers, calls, sms, dlc, xApi, credits, other]
+              totalUsd: { type: number }
+              quantity: { type: number }
+        peaks:
+          type: object
+          description: Peak counts over the window (Metronome COUNT metrics + live active-number count).
+          properties:
+            accounts: { type: integer }
+            numbers: { type: integer }
+        callUsage:
+          type: object
+          description: Billable call volumes over the window.
+          properties:
+            whatsapp:
+              type: object
+              properties:
+                count: { type: integer }
+                minutes: { type: integer }
+            pstn:
+              type: object
+              properties:
+                count: { type: integer }
+                minutes: { type: integer }
+        period:
+          type: object
+          properties:
+            start: { type: string, format: date-time }
+            end: { type: string, format: date-time }
+            source:
+              type: string
+              enum: [cycle, window]
+              description: '`cycle` = a real billing period resolved; `window` = trailing/custom window (or cycle fallback).'
     UsageStats:
       type: object
       description: |
@@ -10340,6 +10477,30 @@ paths:
         '400': { description: Missing params }
         '401': { $ref: '#/components/responses/Unauthorized' }
         '404': { description: Account not found }
+  /v1/billing:
+    get:
+      operationId: getBilling
+      tags: [Usage]
+      summary: Account billing snapshot (plan, cycle, balance, caps, status)
+      description: |
+        The billing "wallet/statement" view: current plan, billing cycle,
+        accrued balance + remaining credits this period, spend caps, and
+        payment / access status. This is the billing half of the legacy
+        `/v1/usage-stats` snapshot — the per-product consumption half is metering
+        and lives on `GET /v1/usage`.
+
+        Usage-based (Metronome) accounts get a populated `balance`; legacy Stripe
+        accounts get `balance: null` plus a deprecated `legacy.limits` block and,
+        when payment-blocked, `status.openInvoiceUrl` / `status.declineReason`.
+      responses:
+        '200':
+          description: Billing snapshot
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BillingSnapshot'
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404': { $ref: '#/components/responses/NotFound' }
   /v1/billing/x-pricing:
     get:
       operationId: getXApiPricing
@@ -10405,23 +10566,27 @@ paths:
     get:
       operationId: getUsage
       tags: [Usage]
-      summary: Get plan and usage snapshot
+      summary: Usage snapshot (default) or billed-spend metering (with params)
       description: |
-        The usage hub: current plan name, billing period, plan limits, and
-        usage counts, in one snapshot. For metered consumption over an
-        arbitrary window with breakdowns (by day, by number), use the
-        domain spokes: `GET /v1/usage/calls` and `GET /v1/usage/sms`.
+        Dual-mode endpoint, selected by query params — fully backward
+        compatible:
 
-        The response shape depends on the account's `billingSystem`:
-          * Stripe users: per-period `usage.uploads` / `usage.profiles` counters.
-          * Metronome (usage-based) users: `usage.connectedAccounts`,
-            `usage.xApiCallsByOperation` (per-operation X API call counts —
-            resolve keys via `GET /v1/billing/x-pricing`), plus a `spend`
-            block with `currentPeriodCents`, `xSpendCents`, and
-            `xSpendLimitCents`. The legacy `usage.xApiCalls` 3-tier
-            aggregate is still emitted for back-compat but excludes the
-            $0.200 URL tier and any future tiers — new clients should
-            consume `xApiCallsByOperation` only.
+        **Without metering params (the default):** the plan / quota / usage
+        snapshot — plan name, billing period, limits, usage counts, access
+        state. Identical to `GET /v1/usage-stats`. Existing integrations keep
+        working unchanged.
+
+        **With `range`, `granularity`, `from`, or `to`:** usage METERING —
+        billed spend (USD) by product family (`accounts`, `numbers`, `calls`,
+        `sms`, `dlc`, `xApi`, `credits`, `other`) over the window, at
+        `day` / `month` / `total` granularity, from Metronome's invoice
+        breakdown (the CHARGE view — always reconciles with what gets billed).
+        Also served at `GET /v1/usage/daily`. Usage-based accounts only —
+        legacy Stripe accounts get `{ "supported": false, "days": [] }`.
+
+        For per-domain consumption *volumes* use `GET /v1/usage/calls` and
+        `GET /v1/usage/sms`. For the billing statement (balance, credits,
+        caps, payment status) use `GET /v1/billing`.
       parameters:
         - name: reconcile
           in: query
@@ -10429,18 +10594,53 @@ paths:
           schema:
             type: boolean
           description: |
-            For Stripe subscription users, `true` forces a subscription
-            reconciliation pass even when cached plan data looks complete.
-            Omit the parameter, or pass `false`, to use the default
-            first-time-only reconciliation behavior. Invalid boolean values are
-            rejected.
+            Snapshot mode only. For Stripe subscription users, `true` forces a
+            subscription reconciliation pass even when cached plan data looks
+            complete.
+        - name: range
+          in: query
+          required: false
+          schema:
+            type: string
+            enum: [cycle, prev-cycle, 7d, 14d, 30d, 3mo, 12mo, custom]
+            default: cycle
+          description: |
+            Window to report. `cycle` / `prev-cycle` resolve to the customer's
+            real billing-period bounds (falling back to a trailing 30 days when
+            no invoice exists yet); `7d`…`12mo` are trailing windows; `custom`
+            uses `from` / `to`.
+        - name: from
+          in: query
+          required: false
+          schema: { type: string, format: date }
+          description: Inclusive start (UTC date). Required when `range=custom`.
+        - name: to
+          in: query
+          required: false
+          schema: { type: string, format: date }
+          description: Inclusive end (UTC date). Required when `range=custom`. Max span 366 days.
+        - name: granularity
+          in: query
+          required: false
+          schema:
+            type: string
+            enum: [day, month, total]
+            default: day
+          description: |
+            Bucketing of the `days` series: `day` (one row per UTC day),
+            `month` (one row per calendar month, dated to the 1st), or `total`
+            (no series — read `totals`). Does not affect `totals`.
       responses:
         '200':
-          description: Usage snapshot
+          description: |
+            Snapshot (no metering params) or billed spend by product over the
+            window (with metering params).
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/UsageStats'
+                oneOf:
+                  - $ref: '#/components/schemas/UsageStats'
+                  - $ref: '#/components/schemas/UsageMetering'
         '400': { description: Invalid query parameter }
         '401': { $ref: '#/components/responses/Unauthorized' }
         '404': { $ref: '#/components/responses/NotFound' }
@@ -10448,14 +10648,15 @@ paths:
     get:
       operationId: getUsageStats
       tags: [Usage]
-      summary: Get plan and usage stats
+      summary: Get plan and usage snapshot (plan, limits, payment status)
       deprecated: true
       description: |
-        Deprecated alias of `GET /v1/usage`; same contract. New integrations
-        should use that path (the usage hub), with `GET /v1/usage/calls` and
-        `GET /v1/usage/sms` for metered breakdowns.
-
-        Returns the current plan name, billing period, plan limits, and usage counts.
+        The plan / quota / payment-status snapshot: current plan name, billing
+        period, plan limits, usage counts, and access state. Identical to a
+        bare `GET /v1/usage` call (this path is its deprecated alias). For
+        billed spend by product, call `GET /v1/usage` with `range` /
+        `granularity` params. The statement view (balance, credits, caps,
+        payment status) lives at `GET /v1/billing`.
 
         The response shape depends on the account's `billingSystem`:
           * Stripe users: per-period `usage.uploads` / `usage.profiles` counters.
