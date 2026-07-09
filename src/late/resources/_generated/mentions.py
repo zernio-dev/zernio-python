@@ -73,6 +73,23 @@ class MentionsResource:
         )
         return self._client._get("/v1/inbox/mentions", params=params)
 
+    def reply_to_mention(
+        self,
+        account_id: str,
+        media_id: str,
+        message: str,
+        *,
+        comment_id: str | None = None,
+    ) -> dict[str, Any]:
+        """Reply to a mention"""
+        payload = self._build_payload(
+            account_id=account_id,
+            media_id=media_id,
+            comment_id=comment_id,
+            message=message,
+        )
+        return self._client._post("/v1/inbox/mentions/reply", data=payload)
+
     async def alist_inbox_mentions(
         self,
         *,
@@ -91,3 +108,20 @@ class MentionsResource:
             cursor=cursor,
         )
         return await self._client._aget("/v1/inbox/mentions", params=params)
+
+    async def areply_to_mention(
+        self,
+        account_id: str,
+        media_id: str,
+        message: str,
+        *,
+        comment_id: str | None = None,
+    ) -> dict[str, Any]:
+        """Reply to a mention (async)"""
+        payload = self._build_payload(
+            account_id=account_id,
+            media_id=media_id,
+            comment_id=comment_id,
+            message=message,
+        )
+        return await self._client._apost("/v1/inbox/mentions/reply", data=payload)

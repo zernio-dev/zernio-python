@@ -112,6 +112,72 @@ class DiscordResource:
         )
         return self._client._get(f"/v1/discord/guilds/{guild_id}/roles", params=params)
 
+    def create_discord_guild_role(
+        self,
+        guild_id: str,
+        account_id: str,
+        name: str,
+        *,
+        color: int | None = None,
+        hoist: bool | None = None,
+        mentionable: bool | None = None,
+        permissions: str | None = None,
+    ) -> dict[str, Any]:
+        """Create a Discord guild role"""
+        params = self._build_params(
+            account_id=account_id,
+        )
+        payload = self._build_payload(
+            name=name,
+            color=color,
+            hoist=hoist,
+            mentionable=mentionable,
+            permissions=permissions,
+        )
+        return self._client._post(
+            f"/v1/discord/guilds/{guild_id}/roles", data=payload, params=params
+        )
+
+    def edit_discord_guild_role(
+        self,
+        guild_id: str,
+        role_id: str,
+        account_id: str,
+        *,
+        name: str | None = None,
+        color: int | None = None,
+        hoist: bool | None = None,
+        mentionable: bool | None = None,
+        permissions: str | None = None,
+    ) -> dict[str, Any]:
+        """Edit a Discord guild role"""
+        params = self._build_params(
+            account_id=account_id,
+        )
+        payload = self._build_payload(
+            name=name,
+            color=color,
+            hoist=hoist,
+            mentionable=mentionable,
+            permissions=permissions,
+        )
+        return self._client._patch(
+            f"/v1/discord/guilds/{guild_id}/roles/{role_id}",
+            data=payload,
+            params=params,
+        )
+
+    def delete_discord_guild_role(
+        self, guild_id: str, role_id: str, account_id: str
+    ) -> dict[str, Any]:
+        """Delete a Discord guild role"""
+        params = self._build_params(
+            account_id=account_id,
+        )
+        return self._client._delete(
+            f"/v1/discord/guilds/{guild_id}/roles/{role_id}", params=params
+        )
+
     def list_discord_guild_members(
         self,
         guild_id: str,
@@ -152,6 +218,51 @@ class DiscordResource:
         return self._client._delete(
             f"/v1/discord/guilds/{guild_id}/members/{user_id}/roles/{role_id}",
             params=params,
+        )
+
+    def delete_discord_message(
+        self, channel_id: str, message_id: str, account_id: str
+    ) -> dict[str, Any]:
+        """Delete a Discord channel message"""
+        params = self._build_params(
+            account_id=account_id,
+        )
+        return self._client._delete(
+            f"/v1/discord/channels/{channel_id}/messages/{message_id}", params=params
+        )
+
+    def crosspost_discord_message(
+        self, channel_id: str, message_id: str, account_id: str
+    ) -> dict[str, Any]:
+        """Crosspost a Discord announcement message"""
+        params = self._build_params(
+            account_id=account_id,
+        )
+        return self._client._post(
+            f"/v1/discord/channels/{channel_id}/messages/{message_id}/crosspost",
+            params=params,
+        )
+
+    def create_discord_thread(
+        self,
+        channel_id: str,
+        account_id: str,
+        name: str,
+        *,
+        message_id: str | None = None,
+        auto_archive_duration: int | None = None,
+    ) -> dict[str, Any]:
+        """Create a Discord public thread"""
+        params = self._build_params(
+            account_id=account_id,
+        )
+        payload = self._build_payload(
+            name=name,
+            message_id=message_id,
+            auto_archive_duration=auto_archive_duration,
+        )
+        return self._client._post(
+            f"/v1/discord/channels/{channel_id}/threads", data=payload, params=params
         )
 
     def list_discord_pinned_messages(
@@ -328,6 +439,72 @@ class DiscordResource:
             f"/v1/discord/guilds/{guild_id}/roles", params=params
         )
 
+    async def acreate_discord_guild_role(
+        self,
+        guild_id: str,
+        account_id: str,
+        name: str,
+        *,
+        color: int | None = None,
+        hoist: bool | None = None,
+        mentionable: bool | None = None,
+        permissions: str | None = None,
+    ) -> dict[str, Any]:
+        """Create a Discord guild role (async)"""
+        params = self._build_params(
+            account_id=account_id,
+        )
+        payload = self._build_payload(
+            name=name,
+            color=color,
+            hoist=hoist,
+            mentionable=mentionable,
+            permissions=permissions,
+        )
+        return await self._client._apost(
+            f"/v1/discord/guilds/{guild_id}/roles", data=payload, params=params
+        )
+
+    async def aedit_discord_guild_role(
+        self,
+        guild_id: str,
+        role_id: str,
+        account_id: str,
+        *,
+        name: str | None = None,
+        color: int | None = None,
+        hoist: bool | None = None,
+        mentionable: bool | None = None,
+        permissions: str | None = None,
+    ) -> dict[str, Any]:
+        """Edit a Discord guild role (async)"""
+        params = self._build_params(
+            account_id=account_id,
+        )
+        payload = self._build_payload(
+            name=name,
+            color=color,
+            hoist=hoist,
+            mentionable=mentionable,
+            permissions=permissions,
+        )
+        return await self._client._apatch(
+            f"/v1/discord/guilds/{guild_id}/roles/{role_id}",
+            data=payload,
+            params=params,
+        )
+
+    async def adelete_discord_guild_role(
+        self, guild_id: str, role_id: str, account_id: str
+    ) -> dict[str, Any]:
+        """Delete a Discord guild role (async)"""
+        params = self._build_params(
+            account_id=account_id,
+        )
+        return await self._client._adelete(
+            f"/v1/discord/guilds/{guild_id}/roles/{role_id}", params=params
+        )
+
     async def alist_discord_guild_members(
         self,
         guild_id: str,
@@ -368,6 +545,51 @@ class DiscordResource:
         return await self._client._adelete(
             f"/v1/discord/guilds/{guild_id}/members/{user_id}/roles/{role_id}",
             params=params,
+        )
+
+    async def adelete_discord_message(
+        self, channel_id: str, message_id: str, account_id: str
+    ) -> dict[str, Any]:
+        """Delete a Discord channel message (async)"""
+        params = self._build_params(
+            account_id=account_id,
+        )
+        return await self._client._adelete(
+            f"/v1/discord/channels/{channel_id}/messages/{message_id}", params=params
+        )
+
+    async def acrosspost_discord_message(
+        self, channel_id: str, message_id: str, account_id: str
+    ) -> dict[str, Any]:
+        """Crosspost a Discord announcement message (async)"""
+        params = self._build_params(
+            account_id=account_id,
+        )
+        return await self._client._apost(
+            f"/v1/discord/channels/{channel_id}/messages/{message_id}/crosspost",
+            params=params,
+        )
+
+    async def acreate_discord_thread(
+        self,
+        channel_id: str,
+        account_id: str,
+        name: str,
+        *,
+        message_id: str | None = None,
+        auto_archive_duration: int | None = None,
+    ) -> dict[str, Any]:
+        """Create a Discord public thread (async)"""
+        params = self._build_params(
+            account_id=account_id,
+        )
+        payload = self._build_payload(
+            name=name,
+            message_id=message_id,
+            auto_archive_duration=auto_archive_duration,
+        )
+        return await self._client._apost(
+            f"/v1/discord/channels/{channel_id}/threads", data=payload, params=params
         )
 
     async def alist_discord_pinned_messages(

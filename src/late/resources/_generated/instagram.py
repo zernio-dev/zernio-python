@@ -58,6 +58,12 @@ class InstagramResource:
         """List active Instagram stories"""
         return self._client._get(f"/v1/accounts/{account_id}/instagram/stories")
 
+    def get_instagram_publishing_limit(self, account_id: str) -> dict[str, Any]:
+        """Get Instagram publishing limit"""
+        return self._client._get(
+            f"/v1/accounts/{account_id}/instagram/publishing-limit"
+        )
+
     def get_instagram_story_insights(
         self, account_id: str, story_id: str
     ) -> dict[str, Any]:
@@ -69,6 +75,12 @@ class InstagramResource:
     async def alist_instagram_stories(self, account_id: str) -> dict[str, Any]:
         """List active Instagram stories (async)"""
         return await self._client._aget(f"/v1/accounts/{account_id}/instagram/stories")
+
+    async def aget_instagram_publishing_limit(self, account_id: str) -> dict[str, Any]:
+        """Get Instagram publishing limit (async)"""
+        return await self._client._aget(
+            f"/v1/accounts/{account_id}/instagram/publishing-limit"
+        )
 
     async def aget_instagram_story_insights(
         self, account_id: str, story_id: str

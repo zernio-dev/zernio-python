@@ -135,6 +135,45 @@ class CommentsResource:
         )
         return self._client._delete(f"/v1/inbox/comments/{post_id}", params=params)
 
+    def edit_inbox_comment(
+        self,
+        post_id: str,
+        comment_id: str,
+        account_id: str,
+        platform: str,
+        content: str,
+    ) -> dict[str, Any]:
+        """Edit comment"""
+        payload = self._build_payload(
+            account_id=account_id,
+            platform=platform,
+            content=content,
+        )
+        return self._client._patch(
+            f"/v1/inbox/comments/{post_id}/{comment_id}", data=payload
+        )
+
+    def set_comment_moderation(
+        self,
+        post_id: str,
+        comment_id: str,
+        account_id: str,
+        platform: str,
+        moderation_status: str,
+        *,
+        ban_author: bool | None = None,
+    ) -> dict[str, Any]:
+        """Set comment moderation status"""
+        payload = self._build_payload(
+            account_id=account_id,
+            platform=platform,
+            moderation_status=moderation_status,
+            ban_author=ban_author,
+        )
+        return self._client._post(
+            f"/v1/inbox/comments/{post_id}/{comment_id}/moderation", data=payload
+        )
+
     def hide_inbox_comment(
         self, post_id: str, comment_id: str, account_id: str
     ) -> dict[str, Any]:
@@ -286,6 +325,45 @@ class CommentsResource:
         )
         return await self._client._adelete(
             f"/v1/inbox/comments/{post_id}", params=params
+        )
+
+    async def aedit_inbox_comment(
+        self,
+        post_id: str,
+        comment_id: str,
+        account_id: str,
+        platform: str,
+        content: str,
+    ) -> dict[str, Any]:
+        """Edit comment (async)"""
+        payload = self._build_payload(
+            account_id=account_id,
+            platform=platform,
+            content=content,
+        )
+        return await self._client._apatch(
+            f"/v1/inbox/comments/{post_id}/{comment_id}", data=payload
+        )
+
+    async def aset_comment_moderation(
+        self,
+        post_id: str,
+        comment_id: str,
+        account_id: str,
+        platform: str,
+        moderation_status: str,
+        *,
+        ban_author: bool | None = None,
+    ) -> dict[str, Any]:
+        """Set comment moderation status (async)"""
+        payload = self._build_payload(
+            account_id=account_id,
+            platform=platform,
+            moderation_status=moderation_status,
+            ban_author=ban_author,
+        )
+        return await self._client._apost(
+            f"/v1/inbox/comments/{post_id}/{comment_id}/moderation", data=payload
         )
 
     async def ahide_inbox_comment(

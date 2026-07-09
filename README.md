@@ -227,6 +227,7 @@ Both `from zernio import ...` and `from late import ...` work identically. The `
 | `analytics.get_content_decay()` | Get content performance decay |
 | `analytics.get_daily_metrics()` | Get daily aggregated metrics |
 | `analytics.get_facebook_page_insights()` | Get Facebook Page insights |
+| `analytics.get_facebook_post_reactions()` | Get Facebook post reactions |
 | `analytics.get_google_business_performance()` | Get GBP performance metrics |
 | `analytics.get_google_business_search_keywords()` | Get GBP search keywords |
 | `analytics.get_instagram_account_insights()` | Get Instagram insights |
@@ -327,6 +328,7 @@ Both `from zernio import ...` and `from late import ...` work identically. The `
 | `connect.get_pinterest_boards()` | List Pinterest boards |
 | `connect.get_reddit_flairs()` | List subreddit flairs |
 | `connect.get_reddit_subreddits()` | List Reddit subreddits |
+| `connect.get_subreddit_rules()` | Get subreddit rules |
 | `connect.get_telegram_connect_status()` | Generate Telegram code |
 | `connect.get_youtube_playlists()` | List YouTube playlists |
 | `connect.update_facebook_page()` | Update Facebook page |
@@ -348,6 +350,8 @@ Both `from zernio import ...` and `from late import ...` work identically. The `
 | `connect.select_linked_in_organization()` | Select LinkedIn org |
 | `connect.select_pinterest_board()` | Select Pinterest board |
 | `connect.select_snapchat_profile()` | Select Snapchat profile |
+| `connect.set_reddit_post_flair()` | Set flair on a published Reddit post |
+| `connect.vote_reddit_thing()` | Vote on a Reddit post or comment |
 
 ### Reddit
 | Method | Description |
@@ -471,10 +475,12 @@ Both `from zernio import ...` and `from late import ...` work identically. The `
 | `comments.list_inbox_comments()` | List commented posts |
 | `comments.get_inbox_post_comments()` | Get post comments |
 | `comments.delete_inbox_comment()` | Delete comment |
+| `comments.edit_inbox_comment()` | Edit comment |
 | `comments.hide_inbox_comment()` | Hide comment |
 | `comments.like_inbox_comment()` | Like comment |
 | `comments.reply_to_inbox_post()` | Reply to comment |
 | `comments.send_private_reply_to_comment()` | Send private reply |
+| `comments.set_comment_moderation()` | Set comment moderation status |
 | `comments.unhide_inbox_comment()` | Unhide comment |
 | `comments.unlike_inbox_comment()` | Unlike comment |
 
@@ -506,14 +512,20 @@ Both `from zernio import ...` and `from late import ...` work identically. The `
 | `discord.list_discord_guild_roles()` | List Discord guild roles |
 | `discord.list_discord_pinned_messages()` | List pinned messages |
 | `discord.list_discord_scheduled_events()` | List Discord scheduled events |
+| `discord.create_discord_guild_role()` | Create a Discord guild role |
 | `discord.create_discord_scheduled_event()` | Create a Discord scheduled event |
+| `discord.create_discord_thread()` | Create a Discord public thread |
 | `discord.get_discord_channels()` | List Discord guild channels |
 | `discord.get_discord_scheduled_event()` | Get a Discord scheduled event |
 | `discord.get_discord_settings()` | Get Discord account settings |
 | `discord.update_discord_scheduled_event()` | Update a Discord scheduled event |
 | `discord.update_discord_settings()` | Update Discord settings |
+| `discord.delete_discord_guild_role()` | Delete a Discord guild role |
+| `discord.delete_discord_message()` | Delete a Discord channel message |
 | `discord.delete_discord_scheduled_event()` | Delete a Discord scheduled event |
 | `discord.add_discord_member_role()` | Assign a role to a guild member |
+| `discord.crosspost_discord_message()` | Crosspost a Discord announcement message |
+| `discord.edit_discord_guild_role()` | Edit a Discord guild role |
 | `discord.pin_discord_message()` | Pin a Discord message |
 | `discord.remove_discord_member_role()` | Remove a role from a guild member |
 | `discord.send_discord_direct_message()` | Send a Discord Direct Message |
@@ -582,12 +594,14 @@ Both `from zernio import ...` and `from late import ...` work identically. The `
 | Method | Description |
 |--------|-------------|
 | `instagram.list_instagram_stories()` | List active Instagram stories |
+| `instagram.get_instagram_publishing_limit()` | Get Instagram publishing limit |
 | `instagram.get_instagram_story_insights()` | Get Instagram story insights |
 
 ### Mentions
 | Method | Description |
 |--------|-------------|
 | `mentions.list_inbox_mentions()` | List mentions |
+| `mentions.reply_to_mention()` | Reply to a mention |
 
 ### Messages (Inbox)
 | Method | Description |

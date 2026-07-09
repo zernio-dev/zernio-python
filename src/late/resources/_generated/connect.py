@@ -504,6 +504,24 @@ class ConnectResource:
             f"/v1/accounts/{account_id}/reddit-subreddits", data=payload
         )
 
+    def get_subreddit_rules(self, account_id: str, subreddit: str) -> dict[str, Any]:
+        """Get subreddit rules"""
+        return self._client._get(
+            f"/v1/accounts/{account_id}/reddit-subreddits/{subreddit}/rules"
+        )
+
+    def vote_reddit_thing(
+        self, account_id: str, thing_id: str, direction: int
+    ) -> dict[str, Any]:
+        """Vote on a Reddit post or comment"""
+        payload = self._build_payload(
+            thing_id=thing_id,
+            direction=direction,
+        )
+        return self._client._post(
+            f"/v1/accounts/{account_id}/reddit-vote", data=payload
+        )
+
     def get_reddit_flairs(self, account_id: str, subreddit: str) -> dict[str, Any]:
         """List subreddit flairs"""
         params = self._build_params(
@@ -511,6 +529,26 @@ class ConnectResource:
         )
         return self._client._get(
             f"/v1/accounts/{account_id}/reddit-flairs", params=params
+        )
+
+    def set_reddit_post_flair(
+        self,
+        account_id: str,
+        subreddit: str,
+        post_id: str,
+        flair_template_id: str,
+        *,
+        text: str | None = None,
+    ) -> dict[str, Any]:
+        """Set flair on a published Reddit post"""
+        payload = self._build_payload(
+            subreddit=subreddit,
+            post_id=post_id,
+            flair_template_id=flair_template_id,
+            text=text,
+        )
+        return self._client._post(
+            f"/v1/accounts/{account_id}/reddit-flairs", data=payload
         )
 
     async def aget_connect_url(
@@ -987,6 +1025,26 @@ class ConnectResource:
             f"/v1/accounts/{account_id}/reddit-subreddits", data=payload
         )
 
+    async def aget_subreddit_rules(
+        self, account_id: str, subreddit: str
+    ) -> dict[str, Any]:
+        """Get subreddit rules (async)"""
+        return await self._client._aget(
+            f"/v1/accounts/{account_id}/reddit-subreddits/{subreddit}/rules"
+        )
+
+    async def avote_reddit_thing(
+        self, account_id: str, thing_id: str, direction: int
+    ) -> dict[str, Any]:
+        """Vote on a Reddit post or comment (async)"""
+        payload = self._build_payload(
+            thing_id=thing_id,
+            direction=direction,
+        )
+        return await self._client._apost(
+            f"/v1/accounts/{account_id}/reddit-vote", data=payload
+        )
+
     async def aget_reddit_flairs(
         self, account_id: str, subreddit: str
     ) -> dict[str, Any]:
@@ -996,4 +1054,24 @@ class ConnectResource:
         )
         return await self._client._aget(
             f"/v1/accounts/{account_id}/reddit-flairs", params=params
+        )
+
+    async def aset_reddit_post_flair(
+        self,
+        account_id: str,
+        subreddit: str,
+        post_id: str,
+        flair_template_id: str,
+        *,
+        text: str | None = None,
+    ) -> dict[str, Any]:
+        """Set flair on a published Reddit post (async)"""
+        payload = self._build_payload(
+            subreddit=subreddit,
+            post_id=post_id,
+            flair_template_id=flair_template_id,
+            text=text,
+        )
+        return await self._client._apost(
+            f"/v1/accounts/{account_id}/reddit-flairs", data=payload
         )

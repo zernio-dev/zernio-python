@@ -462,6 +462,17 @@ class AnalyticsResource:
             f"/v1/accounts/{account_id}/linkedin-post-reactions", params=params
         )
 
+    def get_facebook_post_reactions(
+        self, account_id: str, post_id: str
+    ) -> dict[str, Any]:
+        """Get Facebook post reactions"""
+        params = self._build_params(
+            post_id=post_id,
+        )
+        return self._client._get(
+            f"/v1/accounts/{account_id}/facebook-post-reactions", params=params
+        )
+
     async def aget_analytics(
         self,
         *,
@@ -882,4 +893,15 @@ class AnalyticsResource:
         )
         return await self._client._aget(
             f"/v1/accounts/{account_id}/linkedin-post-reactions", params=params
+        )
+
+    async def aget_facebook_post_reactions(
+        self, account_id: str, post_id: str
+    ) -> dict[str, Any]:
+        """Get Facebook post reactions (async)"""
+        params = self._build_params(
+            post_id=post_id,
+        )
+        return await self._client._aget(
+            f"/v1/accounts/{account_id}/facebook-post-reactions", params=params
         )
