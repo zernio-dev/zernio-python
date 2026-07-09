@@ -4071,10 +4071,6 @@ components:
           type: object
           description: "Offer details. Required when topicType is OFFER. All fields are optional per Google's API, but at least one is recommended."
           properties:
-            offerType:
-              type: string
-              enum: [OFFER, BUY_ONE_GET_ONE]
-              description: Type of offer
             redeemOnlineUrl:
               type: string
               format: uri
