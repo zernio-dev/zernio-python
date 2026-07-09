@@ -1608,6 +1608,10 @@ components:
                     type: string
                   error:
                     type: string
+            metadata:
+              type: object
+              additionalProperties: true
+              description: The free-form `metadata` object supplied when the post was created, echoed back so you can map events onto your own records. Omitted when the post was created without it.
         timestamp:
           type: string
           format: date-time
@@ -1658,6 +1662,10 @@ components:
                   platformPostId: { type: string }
                   publishedUrl: { type: string }
                   error: { type: string }
+            metadata:
+              type: object
+              additionalProperties: true
+              description: The free-form `metadata` object supplied when the post was created, echoed back so you can map events onto your own records. Omitted when the post was created without it.
         platform:
           type: object
           description: The specific platform that just transitioned to a terminal state.
