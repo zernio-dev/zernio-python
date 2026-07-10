@@ -35421,6 +35421,44 @@ paths:
                 audienceId:
                   type: string
                   description: Custom audience ID to target.
+                placements:
+                  type: object
+                  description: |
+                    Manual ad placements on the shared ad set. Omit
+                    for automatic placements. When set, restricts delivery to the chosen surfaces,
+                    mapped onto the ad set's `targeting.{publisher_platforms, facebook_positions, instagram_positions,
+                    messenger_positions, audience_network_positions, threads_positions,
+                    whatsapp_positions, device_platforms}`. Enum membership is validated here; Meta
+                    additionally enforces co-selection rules and restricts which
+                    placements are eligible for click-to-WhatsApp ads, returning an actionable
+                    error which we surface.
+                  properties:
+                    publisherPlatforms:
+                      type: array
+                      items: { type: string, enum: [facebook, instagram, threads, messenger, audience_network] }
+                      description: "Top-level platforms to deliver on. A position field below is only honoured when its parent platform is included here."
+                    facebookPositions:
+                      type: array
+                      items: { type: string, enum: [feed, right_hand_column, marketplace, video_feeds, story, search, instream_video, facebook_reels, facebook_reels_overlay, profile_feed, notification] }
+                    instagramPositions:
+                      type: array
+                      items: { type: string, enum: [stream, story, explore, explore_home, reels, profile_feed, ig_search, profile_reels] }
+                    messengerPositions:
+                      type: array
+                      items: { type: string, enum: [messenger_home, sponsored_messages, story] }
+                    audienceNetworkPositions:
+                      type: array
+                      items: { type: string, enum: [classic, rewarded_video] }
+                    threadsPositions:
+                      type: array
+                      items: { type: string, enum: [threads_stream] }
+                    whatsappPositions:
+                      type: array
+                      items: { type: string, enum: [status] }
+                    devicePlatforms:
+                      type: array
+                      items: { type: string, enum: [mobile, desktop] }
+                      description: "Restrict by device. Omit to deliver on both mobile and desktop."
                 advantageAudience:
                   type: integer
                   enum: [0, 1]

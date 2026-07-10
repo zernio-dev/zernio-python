@@ -3433,6 +3433,7 @@ def register_generated_tools(mcp, _get_client):
         age_max: int | None = None,
         interests: list[dict[str, Any]] | None = None,
         audience_id: str | None = None,
+        placements: dict[str, Any] | None = None,
         advantage_audience: int | None = None,
         objective: str | None = None,
         bid_strategy: str | None = None,
@@ -3496,6 +3497,14 @@ def register_generated_tools(mcp, _get_client):
                 age_max
                 interests
                 audience_id: Custom audience ID to target.
+                placements: Manual ad placements on the shared ad set. Omit
+        for automatic placements. When set, restricts delivery to the chosen surfaces,
+        mapped onto the ad set's `targeting.{publisher_platforms, facebook_positions, instagram_positions,
+        messenger_positions, audience_network_positions, threads_positions,
+        whatsapp_positions, device_platforms}`. Enum membership is validated here; Meta
+        additionally enforces co-selection rules and restricts which
+        placements are eligible for click-to-WhatsApp ads, returning an actionable
+        error which we surface.
                 advantage_audience: Meta's Advantage+ audience expansion. `0` (default) keeps
         targeting strict; `1` lets Meta expand beyond the supplied
         targeting when its delivery system finds better matches.
@@ -3548,6 +3557,7 @@ def register_generated_tools(mcp, _get_client):
                 age_max=age_max,
                 interests=interests,
                 audience_id=audience_id,
+                placements=placements,
                 advantage_audience=advantage_audience,
                 objective=objective,
                 bid_strategy=bid_strategy,
