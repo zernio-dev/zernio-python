@@ -10767,16 +10767,29 @@ def register_generated_tools(mcp, _get_client):
             openWorldHint=True,
         )
     )
-    def sms_appeal_sms_registration(id: str, appeal_reason: str) -> str:
+    def sms_appeal_sms_registration(
+        id: str,
+        appeal_reason: str,
+        message_flow: str | None = None,
+        sample1: str | None = None,
+        sample2: str | None = None,
+    ) -> str:
         """Appeal a rejected campaign
 
         Args:
             id: (required)
-            appeal_reason: (required)"""
+            appeal_reason: Goes verbatim to the carrier reviewer — address the decline reason directly. (required)
+            message_flow: Corrected opt-in flow; include a link to the opt-in page/form.
+            sample1
+            sample2"""
         client = _get_client()
         try:
             response = client.sms.appeal_sms_registration(
-                id=id, appeal_reason=appeal_reason
+                id=id,
+                appeal_reason=appeal_reason,
+                message_flow=message_flow,
+                sample1=sample1,
+                sample2=sample2,
             )
             return _format_response(response)
         except Exception as e:

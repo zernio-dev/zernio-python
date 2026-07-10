@@ -125,10 +125,21 @@ class SmsResource:
             f"/v1/sms/registrations/{id}/verify-otp", data=payload
         )
 
-    def appeal_sms_registration(self, id: str, appeal_reason: str) -> dict[str, Any]:
+    def appeal_sms_registration(
+        self,
+        id: str,
+        appeal_reason: str,
+        *,
+        message_flow: str | None = None,
+        sample1: str | None = None,
+        sample2: str | None = None,
+    ) -> dict[str, Any]:
         """Appeal a rejected campaign"""
         payload = self._build_payload(
             appeal_reason=appeal_reason,
+            message_flow=message_flow,
+            sample1=sample1,
+            sample2=sample2,
         )
         return self._client._post(f"/v1/sms/registrations/{id}/appeal", data=payload)
 
@@ -225,11 +236,20 @@ class SmsResource:
         )
 
     async def aappeal_sms_registration(
-        self, id: str, appeal_reason: str
+        self,
+        id: str,
+        appeal_reason: str,
+        *,
+        message_flow: str | None = None,
+        sample1: str | None = None,
+        sample2: str | None = None,
     ) -> dict[str, Any]:
         """Appeal a rejected campaign (async)"""
         payload = self._build_payload(
             appeal_reason=appeal_reason,
+            message_flow=message_flow,
+            sample1=sample1,
+            sample2=sample2,
         )
         return await self._client._apost(
             f"/v1/sms/registrations/{id}/appeal", data=payload
