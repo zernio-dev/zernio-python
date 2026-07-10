@@ -179,24 +179,22 @@ class WhatsappCallingResource:
         )
         return self._client._get("/v1/whatsapp/calls", params=params)
 
-    def get_whats_app_call(self, call_id: str, account_id: str) -> dict[str, Any]:
+    def get_whats_app_call(self, id: str, account_id: str) -> dict[str, Any]:
         """Get a single call"""
         params = self._build_params(
             account_id=account_id,
         )
-        return self._client._get(f"/v1/whatsapp/calls/{call_id}", params=params)
+        return self._client._get(f"/v1/whatsapp/calls/{id}", params=params)
 
     def get_whats_app_call_recording(
-        self, call_id: str, account_id: str, *, as_: str | None = None
+        self, id: str, account_id: str, *, as_: str | None = None
     ) -> dict[str, Any]:
         """Get a call recording"""
         params = self._build_params(
             account_id=account_id,
             as_=as_,
         )
-        return self._client._get(
-            f"/v1/whatsapp/calls/{call_id}/recording", params=params
-        )
+        return self._client._get(f"/v1/whatsapp/calls/{id}/recording", params=params)
 
     def get_whats_app_call_estimate(
         self,
@@ -399,17 +397,15 @@ class WhatsappCallingResource:
         )
         return await self._client._aget("/v1/whatsapp/calls", params=params)
 
-    async def aget_whats_app_call(
-        self, call_id: str, account_id: str
-    ) -> dict[str, Any]:
+    async def aget_whats_app_call(self, id: str, account_id: str) -> dict[str, Any]:
         """Get a single call (async)"""
         params = self._build_params(
             account_id=account_id,
         )
-        return await self._client._aget(f"/v1/whatsapp/calls/{call_id}", params=params)
+        return await self._client._aget(f"/v1/whatsapp/calls/{id}", params=params)
 
     async def aget_whats_app_call_recording(
-        self, call_id: str, account_id: str, *, as_: str | None = None
+        self, id: str, account_id: str, *, as_: str | None = None
     ) -> dict[str, Any]:
         """Get a call recording (async)"""
         params = self._build_params(
@@ -417,7 +413,7 @@ class WhatsappCallingResource:
             as_=as_,
         )
         return await self._client._aget(
-            f"/v1/whatsapp/calls/{call_id}/recording", params=params
+            f"/v1/whatsapp/calls/{id}/recording", params=params
         )
 
     async def aget_whats_app_call_estimate(

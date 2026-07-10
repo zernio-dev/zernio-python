@@ -13228,16 +13228,16 @@ def register_generated_tools(mcp, _get_client):
             openWorldHint=False,
         )
     )
-    def whatsapp_calling_get_whats_app_call(call_id: str, account_id: str) -> str:
+    def whatsapp_calling_get_whats_app_call(id: str, account_id: str) -> str:
         """Get a single call
 
         Args:
-            call_id: (required)
+            id: (required)
             account_id: (required)"""
         client = _get_client()
         try:
             response = client.whatsapp_calling.get_whats_app_call(
-                call_id=call_id, account_id=account_id
+                id=id, account_id=account_id
             )
             return _format_response(response)
         except Exception as e:
@@ -13252,18 +13252,18 @@ def register_generated_tools(mcp, _get_client):
         )
     )
     def whatsapp_calling_get_whats_app_call_recording(
-        call_id: str, account_id: str, as_: str | None = None
+        id: str, account_id: str, as_: str | None = None
     ) -> str:
         """Get a call recording
 
         Args:
-            call_id: (required)
+            id: (required)
             account_id: (required)
             as_: `json` returns `{ url }` instead of a 302 redirect."""
         client = _get_client()
         try:
             response = client.whatsapp_calling.get_whats_app_call_recording(
-                call_id=call_id, account_id=account_id, as_=as_
+                id=id, account_id=account_id, as_=as_
             )
             return _format_response(response)
         except Exception as e:

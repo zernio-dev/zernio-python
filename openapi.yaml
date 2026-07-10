@@ -24099,7 +24099,7 @@ paths:
                   nextCursor: { type: [string, "null"], format: date-time, description: Pass as `before` for the next page; null on the last page. }
         '401': { $ref: '#/components/responses/Unauthorized' }
 
-  /v1/whatsapp/calls/{callId}:
+  /v1/whatsapp/calls/{id}:
     get:
       operationId: getWhatsAppCall
       tags: [WhatsApp Calling]
@@ -24107,7 +24107,7 @@ paths:
       security:
         - bearerAuth: []
       parameters:
-        - { name: callId, in: path, required: true, schema: { type: string } }
+        - { name: id, in: path, required: true, schema: { type: string } }
         - { name: accountId, in: query, required: true, schema: { type: string } }
       responses:
         '200':
@@ -24122,7 +24122,7 @@ paths:
         '401': { $ref: '#/components/responses/Unauthorized' }
         '404': { description: Call not found }
 
-  /v1/whatsapp/calls/{callId}/recording:
+  /v1/whatsapp/calls/{id}/recording:
     get:
       operationId: getWhatsAppCallRecording
       tags: [WhatsApp Calling]
@@ -24137,7 +24137,7 @@ paths:
       security:
         - bearerAuth: []
       parameters:
-        - { name: callId, in: path, required: true, schema: { type: string } }
+        - { name: id, in: path, required: true, schema: { type: string } }
         - { name: accountId, in: query, required: true, schema: { type: string } }
         - { name: as, in: query, schema: { type: string, enum: [json] }, description: "`json` returns `{ url }` instead of a 302 redirect." }
       responses:
@@ -26073,11 +26073,14 @@ paths:
       tags: [Phone Numbers]
       summary: Purchase phone number
       description: |
-        Initiate purchasing a phone number. Payment-first flow: the user does not pick
-        a specific number. The system either creates a Stripe Checkout Session (first number)
-        or increments the existing subscription quantity and provisions inline (subsequent numbers).
+        Payment-first: you do not pick a specific number, the system provisions one and
+        auto-assigns it. With usage-based billing active and a payment method on file, the
+        number provisions inline and bills per month on your usage-based invoice (there is
+        no checkout redirect). No payment method on file returns `402 PAYMENT_REQUIRED`;
+        a regulated country returns `202` with `status: "kyc_required"` and a `kycUrl`.
 
-        Requires a paid plan. The maximum number of phone numbers is determined by the user's plan.
+        Requires usage-based billing (the Usage plan). The maximum number of phone numbers
+        is determined by the user's plan.
       security:
         - bearerAuth: []
       requestBody:
@@ -26432,11 +26435,14 @@ paths:
         Deprecated alias of `/v1/phone-numbers/purchase`; same contract. New
         integrations should use that path.
 
-        Initiate purchasing a WhatsApp phone number. Payment-first flow: the user does not pick
-        a specific number. The system either creates a Stripe Checkout Session (first number)
-        or increments the existing subscription quantity and provisions inline (subsequent numbers).
+        Payment-first: you do not pick a specific number, the system provisions one and
+        auto-assigns it. With usage-based billing active and a payment method on file, the
+        number provisions inline and bills per month on your usage-based invoice (there is
+        no checkout redirect). No payment method on file returns `402 PAYMENT_REQUIRED`;
+        a regulated country returns `202` with `status: "kyc_required"` and a `kycUrl`.
 
-        Requires a paid plan. The maximum number of phone numbers is determined by the user's plan.
+        Requires usage-based billing (the Usage plan). The maximum number of phone numbers
+        is determined by the user's plan.
       security:
         - bearerAuth: []
       requestBody:
