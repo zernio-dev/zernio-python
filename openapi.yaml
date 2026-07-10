@@ -32554,6 +32554,8 @@ paths:
                         status: { type: string }
                         timezoneName: { type: string, description: "IANA timezone of the ad account (Meta only). Drives daily-budget reset and Insights day boundaries." }
                         timezoneOffsetHoursUtc: { type: number, description: "Signed UTC offset in hours, reflecting current DST (Meta only)." }
+                        selectable: { type: boolean, description: "Meta only. Whether the account can create/run ads now. Absent (treat as true) on non-Meta platforms." }
+                        unusableReason: { type: string, nullable: true, description: "Meta only. Human-readable reason when selectable is false; null when selectable." }
         '401': { $ref: '#/components/responses/Unauthorized' }
         '422':
           description: Platform ads connection required (TikTok Ads, X Ads) or Instagram missing linked Facebook account
