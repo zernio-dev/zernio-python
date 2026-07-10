@@ -32978,7 +32978,7 @@ paths:
                   properties:
                     publisherPlatforms:
                       type: array
-                      items: { type: string, enum: [facebook, instagram, threads, messenger, audience_network] }
+                      items: { type: string, enum: [facebook, instagram, threads, messenger, audience_network, whatsapp] }
                       description: "Top-level platforms to deliver on. A position field below is only honoured when its parent platform is included here."
                     facebookPositions:
                       type: array
@@ -33154,7 +33154,7 @@ paths:
                             properties:
                               publisherPlatforms:
                                 type: array
-                                items: { type: string, enum: [facebook, instagram, threads, messenger, audience_network] }
+                                items: { type: string, enum: [facebook, instagram, threads, messenger, audience_network, whatsapp] }
                               facebookPositions:
                                 type: array
                                 items: { type: string, enum: [feed, right_hand_column, marketplace, video_feeds, story, search, instream_video, facebook_reels, facebook_reels_overlay, profile_feed, notification] }
@@ -35435,7 +35435,7 @@ paths:
                   properties:
                     publisherPlatforms:
                       type: array
-                      items: { type: string, enum: [facebook, instagram, threads, messenger, audience_network] }
+                      items: { type: string, enum: [facebook, instagram, threads, messenger, audience_network, whatsapp] }
                       description: "Top-level platforms to deliver on. A position field below is only honoured when its parent platform is included here."
                     facebookPositions:
                       type: array
