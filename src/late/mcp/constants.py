@@ -5,10 +5,11 @@ import os
 # Server information
 SERVICE_NAME = "Zernio MCP Server"
 SERVICE_VERSION = "1.2.0"
-# Both transports are exposed simultaneously. SSE is kept for backwards
-# compatibility with older clients; Streamable HTTP is the modern transport
-# (recommended for Claude Code, mcp-remote, and any client behind a proxy
-# that closes long-idle connections).
+# Streamable HTTP is the primary transport (single endpoint, request/response
+# with optional chunked streaming — no long-idle connection for proxies or
+# bridges like mcp-remote to kill). Legacy SSE is still served for backwards
+# compatibility: production continues to receive GET /sse connections from
+# older client configs. New clients should use Streamable HTTP.
 TRANSPORT_TYPE = "sse+streamable-http"
 
 # Default server configuration
@@ -22,15 +23,11 @@ ENV_PORT = "PORT"
 # Endpoints
 ENDPOINT_ROOT = "/"
 ENDPOINT_HEALTH = "/health"
-# Legacy SSE transport (two-endpoint protocol: GET /sse + POST /messages/).
-# The GET /sse connection is held open for server -> client messages, which
-# is the part that gets killed by idle timeouts on proxies / mcp-remote.
+ENDPOINT_MCP = "/mcp"
+# Legacy SSE transport (two-endpoint protocol: GET /sse + POST /messages/),
+# deprecated but kept for backwards compatibility with older client configs.
 ENDPOINT_SSE = "/sse"
 ENDPOINT_MESSAGES = "/messages/"
-# Modern Streamable HTTP transport (single endpoint, request/response with
-# optional chunked streaming). No long-idle connection => survives proxies
-# that drop idle TCP. This is the MCP-recommended transport going forward.
-ENDPOINT_MCP = "/mcp"
 
 # --- OAuth 2.0 protected-resource discovery (RFC 9728 / MCP authorization spec) ---
 # This MCP server is a *resource server*: it does not mint tokens, it accepts
@@ -38,10 +35,13 @@ ENDPOINT_MCP = "/mcp"
 # also accepts plain Zernio API keys — see verify_late_api_key). A spec-
 # compliant client (e.g. Claude's connector) handed only the /mcp URL discovers
 # the authorization server by:
-#   1. reading the `resource_metadata` parameter on our 401 WWW-Authenticate, or
-#   2. fetching /.well-known/oauth-protected-resource on THIS origin.
-# Both must be served from the resource server's own origin, which is why this
-# metadata lives here on mcp.zernio.com and not only on zernio.com.
+#   1. reading the `resource_metadata` parameter on the 401 WWW-Authenticate
+#      challenge (emitted by FastMCP's RemoteAuthProvider), or
+#   2. fetching the path-inserted discovery document that FastMCP serves at
+#      /.well-known/oauth-protected-resource/mcp on THIS origin.
+# The pre-FastMCP server served the document at the root well-known path below;
+# it is kept as a permanent redirect to the canonical document so clients still
+# holding the old URL keep working (see http_server).
 ENDPOINT_OAUTH_PROTECTED_RESOURCE = "/.well-known/oauth-protected-resource"
 
 # Public URL of this MCP server — the OAuth `resource` identifier. Must be the
@@ -68,15 +68,6 @@ OAUTH_SCOPES = [
     "messaging:write",
     "automations:write",
 ]
-
-# Single source of truth for the 401 WWW-Authenticate challenge (used by both
-# transports). The `resource_metadata` parameter (RFC 9728 §5.1) points clients
-# at our protected-resource document so they can run OAuth discovery; clients
-# that already hold a static API key just send it and skip discovery entirely.
-WWW_AUTHENTICATE_BEARER = (
-    'Bearer realm="zernio-mcp", '
-    f'resource_metadata="{MCP_PUBLIC_URL}{ENDPOINT_OAUTH_PROTECTED_RESOURCE}"'
-)
 
 # Documentation
 DOCS_URL = "https://docs.zernio.com"

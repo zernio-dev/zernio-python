@@ -30,11 +30,14 @@ from datetime import datetime, timedelta
 from typing import Any
 
 import httpx
-from mcp.server.fastmcp import FastMCP
+from fastmcp import FastMCP
+from fastmcp.server.dependencies import get_access_token
+from fastmcp.server.transforms.search import BM25SearchTransform
 from mcp.types import ToolAnnotations
 
 from late import Late, MediaType, PostStatus
 
+from .auth import build_auth_provider
 from .tool_definitions import TOOL_DEFINITIONS
 
 # Context variable to store the Zernio API key for the current connection
@@ -44,6 +47,46 @@ _zernio_api_key: ContextVar[str | None] = ContextVar("zernio_api_key", default=N
 _docs_cache: dict[str, tuple[str, datetime]] = {}
 _DOCS_URL = "https://docs.zernio.com/llms-full.txt"
 _CACHE_TTL_HOURS = 24
+
+# Always-visible core: the 20 hand-written ergonomic tools (guardrails +
+# LLM-shaped args, preferred over their raw generated twins) plus the generated
+# tools central to working on a profile — posting, the scheduling queue,
+# pre-publish validation, account health, cross-platform analytics basics, and
+# engagement on published posts. The remaining ~430 generated tools (messaging
+# suite, ads, connect, platform-specific analytics, ...) sit behind the BM25
+# tool-search transform (search_tools / call_tool), so clients see ~51 tools up
+# front instead of 481 — small enough that clients which cap or truncate large
+# tool lists show them all.
+_PINNED_TOOLS = [
+    # Hand-written ergonomic tools
+    "accounts_list", "accounts_get",
+    "profiles_list", "profiles_get", "profiles_create", "profiles_update", "profiles_delete",
+    "posts_list", "posts_get", "posts_create", "posts_publish_now", "posts_cross_post",
+    "posts_update", "posts_delete", "posts_retry", "posts_list_failed", "posts_retry_all_failed",
+    "media_generate_upload_link", "media_check_upload_status",
+    "docs_search",
+    # Posting operations not covered by the ergonomic set
+    "posts_bulk_upload_posts", "posts_unpublish_post", "posts_edit_post",
+    # Scheduling queue
+    "queue_list_queue_slots", "queue_create_queue_slot", "queue_update_queue_slot",
+    "queue_delete_queue_slot", "queue_preview_queue", "queue_get_next_queue_slot",
+    # Pre-publish validation
+    "validate_post", "validate_post_length", "validate_media",
+    # Account health & organisation
+    "accounts_get_all_accounts_health", "accounts_get_account_health",
+    "accounts_get_follower_stats", "accounts_move_account_to_profile",
+    "account_groups_list_account_groups",
+    # Cross-platform analytics basics
+    "analytics_get_analytics", "analytics_get_best_time_to_post",
+    "analytics_get_daily_metrics", "analytics_get_post_timeline",
+    # Engagement on published posts
+    "comments_list_inbox_comments", "comments_get_inbox_post_comments",
+    "comments_reply_to_inbox_post",
+    "mentions_list_inbox_mentions", "mentions_reply_to_mention",
+    # Campaign tags & usage
+    "tracking_tags_list_tracking_tags", "tracking_tags_get_tracking_tag_stats",
+    "usage_get_usage",
+]
 
 # Initialize MCP server
 mcp = FastMCP(
@@ -72,6 +115,12 @@ return an error containing the candidate list - read it, pick the right
 account, and retry with account_id set. Never guess. The legacy behaviour
 of silently picking the first matching account has been removed.
 """,
+    # Resource-server auth: validates the bearer against the Zernio API and
+    # auto-serves RFC 9728 protected-resource discovery (see late.mcp.auth).
+    auth=build_auth_provider(),
+    # Collapse the ~383 generated tools behind search_tools/call_tool; the
+    # pinned ergonomic tools remain always-visible.
+    transforms=[BM25SearchTransform(always_visible=_PINNED_TOOLS, max_results=8)],
 )
 
 
@@ -127,7 +176,8 @@ def set_late_api_key(api_key: str) -> None:
     """
     Set the Zernio API key for the current async context.
 
-    Kept as set_late_api_key for backwards compatibility with HTTP server routes.
+    In HTTP mode the key now flows through FastMCP's AccessToken (see
+    _get_client); this setter remains for tests and embedding use.
 
     Args:
         api_key: The Zernio API key to use for this connection.
@@ -139,7 +189,7 @@ def _get_client() -> Late:
     """
     Get Zernio client with API key from context or environment.
 
-    For HTTP/SSE connections, uses the API key from the current context.
+    For HTTP connections, uses the bearer validated by the FastMCP auth layer.
     For STDIO connections (Claude Desktop), falls back to env vars.
     Priority: ZERNIO_API_KEY > LATE_API_KEY (legacy).
 
@@ -149,17 +199,28 @@ def _get_client() -> Late:
     Raises:
         ValueError: If no API key is available.
     """
-    # Try to get API key from context (HTTP/SSE mode)
-    api_key = _zernio_api_key.get()
+    # HTTP mode: the FastMCP auth layer validated the bearer and exposes it as
+    # the current request's AccessToken. get_access_token() returns None off
+    # HTTP (STDIO) or when unauthenticated.
+    api_key = ""
+    try:
+        token = get_access_token()
+    except Exception:
+        token = None
+    if token is not None:
+        api_key = token.token or ""
 
-    # Fall back to environment variables (STDIO mode for Claude Desktop)
+    # Fall back to the per-request ContextVar (kept for tests) then env vars
+    # (STDIO mode for Claude Desktop).
+    if not api_key:
+        api_key = _zernio_api_key.get() or ""
     if not api_key:
         api_key = os.getenv("ZERNIO_API_KEY") or os.getenv("LATE_API_KEY", "")
 
     if not api_key:
         raise ValueError(
             "Zernio API key is required. "
-            "For HTTP/SSE: provide via Authorization: Bearer header. "
+            "For HTTP: provide via Authorization: Bearer header. "
             "For STDIO: set ZERNIO_API_KEY environment variable."
         )
 

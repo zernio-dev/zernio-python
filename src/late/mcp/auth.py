@@ -4,7 +4,16 @@ import os
 from urllib.parse import urlparse
 
 import httpx
+from fastmcp.server.auth import AccessToken, RemoteAuthProvider, TokenVerifier
 from starlette.requests import Request
+
+from late.mcp.constants import (
+    DOCS_URL,
+    MCP_PUBLIC_URL,
+    OAUTH_AUTHORIZATION_SERVER,
+    OAUTH_SCOPES,
+    SERVICE_NAME,
+)
 
 # Origin allowlist for DNS-rebinding protection (MCP spec / Anthropic Connectors
 # Directory requirement). Matched as exact host or subdomain suffix. Extend at
@@ -49,26 +58,6 @@ def is_allowed_origin(request: Request) -> bool:
     return any(host == s or host.endswith("." + s) for s in _allowed_origin_suffixes())
 
 
-def extract_late_api_key(request: Request) -> str | None:
-    """
-    Extract Zernio API key from request Authorization header.
-
-    Expects: Authorization: Bearer <your_api_key>
-
-    Function name kept as extract_late_api_key for backwards compatibility.
-
-    Args:
-        request: The incoming Starlette request.
-
-    Returns:
-        The extracted API key, or None if not found.
-    """
-    auth_header = request.headers.get("Authorization")
-    if auth_header and auth_header.startswith("Bearer "):
-        return auth_header[7:]  # Remove "Bearer " prefix
-    return None
-
-
 async def verify_late_api_key(api_key: str) -> bool:
     """
     Verify Zernio API key by making a test request to Zernio API.
@@ -91,3 +80,38 @@ async def verify_late_api_key(api_key: str) -> bool:
             return response.status_code == 200
     except Exception:
         return False
+
+
+class ZernioTokenVerifier(TokenVerifier):
+    """Resource-server token verification for the Zernio MCP server.
+
+    Accepts BOTH plain Zernio API keys and OAuth access tokens: both arrive as
+    the same bearer string and are validated the same way — a live GET to the
+    Zernio API (verify_late_api_key). HTTP 200 => valid. Deliberately
+    format-agnostic (no JWT decode), which is why a static API key works here
+    just as well as an issued OAuth token.
+    """
+
+    async def verify_token(self, token: str) -> AccessToken | None:
+        if not await verify_late_api_key(token):
+            return None
+        return AccessToken(token=token, client_id="zernio", scopes=list(OAUTH_SCOPES))
+
+
+def build_auth_provider() -> RemoteAuthProvider:
+    """Build the FastMCP resource-server auth provider.
+
+    RemoteAuthProvider makes this server an OAuth 2.0 resource server: it
+    auto-serves /.well-known/oauth-protected-resource (RFC 9728), emits the 401
+    WWW-Authenticate challenge pointing clients back at that document, and
+    delegates token validation to ZernioTokenVerifier. The authorization server
+    itself (token / authorize / register) lives at zernio.com.
+    """
+    return RemoteAuthProvider(
+        token_verifier=ZernioTokenVerifier(),
+        authorization_servers=[OAUTH_AUTHORIZATION_SERVER],
+        base_url=MCP_PUBLIC_URL,
+        scopes_supported=list(OAUTH_SCOPES),
+        resource_name=SERVICE_NAME,
+        resource_documentation=DOCS_URL,
+    )
