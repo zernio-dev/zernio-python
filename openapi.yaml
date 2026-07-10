@@ -4783,6 +4783,19 @@ components:
               type: string
               enum: [cycle, window]
               description: '`cycle` = a real billing period resolved; `window` = trailing/custom window (or cycle fallback).'
+        tax:
+          type: [object, "null"]
+          description: |
+            Estimated tax on the window's net `totals.total`, computed with
+            Stripe Tax against the billing address (the same engine the real
+            invoice uses; invoices apply exclusive tax, so the card is charged
+            total + tax). Null when the account has no billing address on
+            file, the total is zero or negative, or the estimate failed.
+          properties:
+            taxUsd: { type: number, description: Estimated tax in USD, added on top of `totals.total`. }
+            ratePercent: { type: [number, "null"], description: Combined rate percentage, e.g. 21. }
+            jurisdictionLabel: { type: [string, "null"], description: Human jurisdiction label, e.g. "ES VAT" or "WA sales tax". }
+            reverseCharge: { type: boolean, description: True for EU/UK B2B reverse charge (0 tax added by design). }
     UsageStats:
       type: object
       description: |
