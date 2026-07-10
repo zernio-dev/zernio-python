@@ -8449,8 +8449,8 @@ def register_generated_tools(mcp, _get_client):
         """Search conversations
 
         Args:
-            query: Text to search for in message content (required)
-            direction: Only match messages sent to you (incoming) or by you (outgoing)
+            query: Text to search for, in message content and in the contact's name, username, or phone number (required)
+            direction: Only match messages sent to you (incoming) or by you (outgoing). Contact-identity matching is not applied when this is set.
             profile_id: Filter by profile ID
             platform: Filter by platform (searchable platforms only)
             account_id: Filter by specific social account ID

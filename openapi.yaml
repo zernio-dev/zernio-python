@@ -20611,11 +20611,14 @@ paths:
       operationId: searchInboxConversations
       summary: Search conversations
       description: |
-        Search message text across your conversations and get back the conversations that contain the query, each with up to 3 most-recent matching messages. Useful for finding threads about a topic, or (with direction=outgoing) collecting examples of how you write to customers, for example to teach an AI agent your tone of voice.
+        Search your conversations two ways at once, and get back the matching conversations, most-recent match first:
 
-        Only platforms whose messages are stored by Zernio are searchable: WhatsApp, SMS, Telegram, Facebook and Instagram. Twitter/X, Bluesky and Reddit conversations are fetched live from the platforms and cannot be searched; those accounts are listed in meta.accountsSkipped.
+        - Message text: matches words inside message bodies. Case-insensitive and accent-insensitive, exact tokens only (no substrings, no stemming). Each hit carries up to 3 most-recent matching messages. With direction=outgoing you can collect examples of how you write to customers, for example to teach an AI agent your tone of voice.
+        - Contact identity: matches the participant's name, username, or phone number as a case-insensitive substring. These hits have matchCount 0 and an empty matches array.
 
-        Matching is word-based: case-insensitive and accent-insensitive, exact tokens only (no substrings, no stemming). Quote a phrase to match it exactly.
+        A conversation that matches both ways is returned once, carrying its message matches.
+
+        Only platforms whose messages are stored by Zernio are searchable: WhatsApp, SMS, Telegram, Facebook, Instagram, Twitter/X and Reddit. Bluesky conversations are fetched live from the platform and cannot be searched; those accounts are listed in meta.accountsSkipped.
       tags: [Messages]
       security: [{ bearerAuth: [] }]
       parameters:
@@ -20623,11 +20626,11 @@ paths:
           in: query
           required: true
           schema: { type: string, minLength: 2, maxLength: 200 }
-          description: Text to search for in message content
+          description: "Text to search for, in message content and in the contact's name, username, or phone number"
         - name: direction
           in: query
           schema: { type: string, enum: [incoming, outgoing] }
-          description: Only match messages sent to you (incoming) or by you (outgoing)
+          description: "Only match messages sent to you (incoming) or by you (outgoing). Contact-identity matching is not applied when this is set."
         - name: profileId
           in: query
           schema: { type: string }
@@ -20671,13 +20674,14 @@ paths:
                             participantUsername: { type: [string, "null"] }
                             participantPicture: { type: [string, "null"] }
                             status: { type: string, enum: [active, archived] }
+                            lastMessage: { type: [string, "null"], description: "The conversation's most recent message preview" }
                             lastMessageAt: { type: [string, "null"], format: date-time }
                         matchCount:
                           type: integer
-                          description: Total number of matching messages in this conversation
+                          description: "Number of matching messages in this conversation. 0 when the conversation matched only on contact identity (name, username, or phone number), not on message text."
                         matches:
                           type: array
-                          description: Up to 3 most-recent matching messages
+                          description: Up to 3 most-recent matching messages (empty for an identity-only match)
                           items:
                             type: object
                             properties:
