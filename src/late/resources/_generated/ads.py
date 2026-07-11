@@ -121,6 +121,13 @@ class AdsResource:
         """Cancel an ad"""
         return self._client._delete(f"/v1/ads/{ad_id}")
 
+    def update_ad_status(self, ad_id: str, status: str) -> dict[str, Any]:
+        """Pause or resume a single ad"""
+        payload = self._build_payload(
+            status=status,
+        )
+        return self._client._put(f"/v1/ads/{ad_id}/status", data=payload)
+
     def get_campaign_analytics(
         self,
         campaign_id: str,
@@ -923,6 +930,13 @@ class AdsResource:
     async def adelete_ad(self, ad_id: str) -> dict[str, Any]:
         """Cancel an ad (async)"""
         return await self._client._adelete(f"/v1/ads/{ad_id}")
+
+    async def aupdate_ad_status(self, ad_id: str, status: str) -> dict[str, Any]:
+        """Pause or resume a single ad (async)"""
+        payload = self._build_payload(
+            status=status,
+        )
+        return await self._client._aput(f"/v1/ads/{ad_id}/status", data=payload)
 
     async def aget_campaign_analytics(
         self,

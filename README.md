@@ -425,6 +425,7 @@ Both `from zernio import ...` and `from late import ...` work identically. The `
 | `ads.get_conversions_quality()` | Get Event Match Quality |
 | `ads.get_lead_form()` | Get a lead form |
 | `ads.update_ad()` | Update ad |
+| `ads.update_ad_status()` | Pause or resume a single ad |
 | `ads.update_ad_tracking_tags()` | Set ad tracking tags |
 | `ads.update_conversion_destination()` | Update a conversion destination |
 | `ads.delete_ad()` | Cancel an ad |

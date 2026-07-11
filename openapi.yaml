@@ -32175,6 +32175,50 @@ paths:
         '401': { $ref: '#/components/responses/Unauthorized' }
         '404': { $ref: '#/components/responses/NotFound' }
 
+  /v1/ads/{adId}/status:
+    put:
+      operationId: updateAdStatus
+      tags: [Ads]
+      summary: Pause or resume a single ad
+      description: |
+        Ad-scoped pause/resume — touches ONLY this ad, never its parent ad set or
+        campaign (so sibling ads keep running). Thin wrapper over the `status`
+        field of PUT /v1/ads/{adId}, for callers that want a URL symmetric to
+        /v1/ads/campaigns/{campaignId}/status and /v1/ads/ad-sets/{adSetId}/status.
+
+        `{adId}` accepts the same identifier dialects as GET/PUT /v1/ads/{adId}
+        (Zernio hex `_id`, Meta numeric `platformAdId`, or the creative's
+        effective story/media IDs). `platform` is inferred from the ad, so it's
+        not required in the body. Ads in terminal statuses (rejected, completed,
+        cancelled) and no-op flips (already in the target state) are skipped.
+      security:
+        - bearerAuth: []
+      parameters:
+        - { name: adId, in: path, required: true, schema: { type: string }, description: "Zernio `_id` (hex), Meta `platformAdId` (numeric), or one of the creative's effective story/media IDs." }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [status]
+              properties:
+                status: { type: string, enum: [active, paused] }
+      responses:
+        '200':
+          description: Ad status updated (or skipped when no change was needed)
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  updated: { type: integer, description: "1 when the status changed, 0 when skipped" }
+                  skipped: { type: integer, description: "1 when skipped (terminal status or already in target state), else 0" }
+                  message: { type: string, description: "Human-readable summary (present only when skipped)" }
+        '400': { description: Invalid input }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404': { description: Ad not found }
+
   /v1/ads/campaigns/{campaignId}/analytics:
     get:
       operationId: getCampaignAnalytics

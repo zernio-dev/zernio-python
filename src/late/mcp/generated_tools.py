@@ -1902,6 +1902,27 @@ def register_generated_tools(mcp, _get_client):
 
     @mcp.tool(
         annotations=ToolAnnotations(
+            title="Pause or resume a single ad",
+            readOnlyHint=False,
+            destructiveHint=True,
+            openWorldHint=True,
+        )
+    )
+    def ads_update_ad_status(ad_id: str, status: str) -> str:
+        """Pause or resume a single ad
+
+        Args:
+            ad_id: Zernio `_id` (hex), Meta `platformAdId` (numeric), or one of the creative's effective story/media IDs. (required)
+            status: (required)"""
+        client = _get_client()
+        try:
+            response = client.ads.update_ad_status(ad_id=ad_id, status=status)
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
             title="Get campaign analytics",
             readOnlyHint=True,
             destructiveHint=False,
