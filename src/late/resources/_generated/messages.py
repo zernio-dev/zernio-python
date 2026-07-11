@@ -88,6 +88,7 @@ class MessagesResource:
         template_name: str | None = None,
         template_language: str | None = None,
         template_params: list[str] | None = None,
+        header_media: dict[str, Any] | None = None,
     ) -> dict[str, Any]:
         """Create conversation"""
         payload = self._build_payload(
@@ -99,6 +100,7 @@ class MessagesResource:
             template_name=template_name,
             template_language=template_language,
             template_params=template_params,
+            header_media=header_media,
         )
         return self._client._post("/v1/inbox/conversations", data=payload)
 
@@ -329,6 +331,7 @@ class MessagesResource:
         template_name: str | None = None,
         template_language: str | None = None,
         template_params: list[str] | None = None,
+        header_media: dict[str, Any] | None = None,
     ) -> dict[str, Any]:
         """Create conversation (async)"""
         payload = self._build_payload(
@@ -340,6 +343,7 @@ class MessagesResource:
             template_name=template_name,
             template_language=template_language,
             template_params=template_params,
+            header_media=header_media,
         )
         return await self._client._apost("/v1/inbox/conversations", data=payload)
 
