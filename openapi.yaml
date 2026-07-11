@@ -2968,7 +2968,7 @@ components:
         Fired once when a new conversation begins, in either direction. A conversation
         starts the first time an account and a contact exchange a message on any DM
         platform (Instagram, Messenger/Facebook, Telegram, WhatsApp, Twitter, Reddit,
-        Bluesky). Platform-agnostic — one subscription covers every DM platform.
+        Bluesky, SMS). Platform-agnostic — one subscription covers every DM platform.
       required: [id, event, conversation, account, startedAt, timestamp]
       properties:
         id: { type: string, description: Stable webhook event ID }
@@ -2982,7 +2982,7 @@ components:
             id: { type: string, description: Internal conversation ID }
             platform:
               type: string
-              enum: [instagram, facebook, telegram, whatsapp, twitter, reddit, bluesky]
+              enum: [instagram, facebook, telegram, whatsapp, twitter, reddit, bluesky, sms]
             platformConversationId: { type: string }
             participantId: { type: string, description: "Contact's platform identifier (IGSID, PSID, wa_id, etc.)" }
             participantName: { type: string }
