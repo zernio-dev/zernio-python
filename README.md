@@ -857,10 +857,10 @@ Both `from zernio import ...` and `from late import ...` work identically. The `
 
 ## MCP Server (Claude Desktop)
 
-The SDK includes a Model Context Protocol (MCP) server for integration with Claude Desktop. See [MCP documentation](https://docs.zernio.com/resources/mcp) for setup instructions.
+The Model Context Protocol server now lives in the standalone [zernio-mcp](https://github.com/zernio-dev/zernio-mcp) project. It consumes this SDK as a versioned dependency and is synchronized only after a successful SDK release.
 
 ```bash
-pip install zernio-sdk[mcp]
+uvx zernio-mcp
 ```
 
 ## Requirements

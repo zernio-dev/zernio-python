@@ -536,49 +536,6 @@ class TestAccountsResource:
         assert len(result.accounts) == 1
         assert result.accounts[0].currentFollowers == 5000
 
-    def test_format_follower_stats_response(self) -> None:
-        """_format_response must return lossless JSON for FollowerStatsResponse,
-        not the lossy 'Found N account(s): - platform: username' one-liner.
-        Pre-fix this returned the generic accounts branch output."""
-        import json
-
-        from late.mcp.generated_tools import _format_response
-        from late.models._generated.models import FollowerStatsResponse
-
-        wire = {
-            "accounts": [
-                {
-                    "_id": "acc_111",
-                    "platform": "linkedin",
-                    "username": "acme",
-                    "profileId": "prof_1",
-                    "isActive": True,
-                    "currentFollowers": 5000,
-                    "growth": 100,
-                }
-            ],
-            "stats": {
-                "acc_111": [
-                    {"date": "2026-01-01", "followers": 4900},
-                    {"date": "2026-01-02", "followers": 5000},
-                ]
-            },
-            "granularity": "daily",
-        }
-        response = FollowerStatsResponse.model_validate(wire)
-        output = _format_response(response)
-
-        # Must be valid JSON (model_dump_json path)
-        parsed = json.loads(output)
-        assert parsed.get("granularity") == "daily"
-        assert "stats" in parsed
-        # Must include the follower count from the daily series
-        first_series = list(parsed["stats"].values())[0]
-        assert any(point["followers"] == 5000 for point in first_series)
-        # Must NOT be the lossy one-liner
-        assert not output.startswith("Found ")
-
-
 # =============================================================================
 # Media Resource Tests
 # =============================================================================
