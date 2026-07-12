@@ -59,34 +59,17 @@ anthropic = [
 all = [
     "openai>=1.0.0",
     "anthropic>=0.40.0",
-    "mcp>=1.8.0",
-]
-mcp = [
-    "fastmcp>=3.1.0",
-    "mcp>=1.8.0",
-    "starlette>=0.42.0",
-    "uvicorn[standard]>=0.32.0",
 ]
 dev = [
     "pytest>=8.0.0",
     "pytest-asyncio>=0.24.0",
     "pytest-cov>=6.0.0",
     "respx>=0.21.0",
-    # Needed so tests can import late.mcp.generated_tools (formatter regression test).
-    "mcp>=1.8.0",
     "ruff>=0.8.0",
     "mypy>=1.13.0",
     "datamodel-code-generator>=0.26.0",
     "pyyaml>=6.0.0",
 ]
-
-[project.scripts]
-# New Zernio-branded entry points
-zernio-mcp = "late.mcp.server:main"
-zernio-mcp-http = "late.mcp.http_server:main"
-# Backward-compatible entry points (kept for existing users)
-late-mcp = "late.mcp.server:main"
-late-mcp-http = "late.mcp.http_server:main"
 
 [project.urls]
 Homepage = "https://zernio.com"
@@ -159,7 +142,6 @@ plugins = ["pydantic.mypy"]
 module = [
     "late.models._generated.*",
     "late.ai.*",
-    "late.mcp.*",
     "late.resources.*",
     "late.pipelines.*",
 ]

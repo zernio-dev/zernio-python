@@ -56,12 +56,6 @@ jobs:
           uv run python scripts/generate_models.py || echo "Model generation skipped (requires local docs repo)"
           echo "Model generation complete."
 
-      - name: Generate MCP tools
-        run: |
-          echo "Starting MCP tool generation..."
-          uv run --with pyyaml python scripts/generate_mcp_tools.py
-          echo "MCP tool generation complete."
-
       - name: Generate README SDK Reference
         run: |
           echo "Starting README SDK Reference generation..."
@@ -72,8 +66,6 @@ jobs:
         run: |
           uv run ruff check --fix src/late/resources/_generated/ || true
           uv run ruff format src/late/resources/_generated/ || true
-          uv run ruff check --fix src/late/mcp/generated_tools.py || true
-          uv run ruff format src/late/mcp/generated_tools.py || true
 
       - name: Run tests
         run: uv run pytest tests -v --tb=short
@@ -163,7 +155,6 @@ jobs:
 
       - name: Publish zernio-sdk to PyPI
         if: steps.changes.outputs.has_changes == 'true'
-        continue-on-error: true
         uses: pypa/gh-action-pypi-publish@release/v1
         with:
           password: ${{ secrets.PYPI_API_TOKEN }}
@@ -189,8 +180,24 @@ jobs:
 
       - name: Publish late-sdk to PyPI
         if: steps.changes.outputs.has_changes == 'true'
-        continue-on-error: true
         uses: pypa/gh-action-pypi-publish@release/v1
         with:
           password: ${{ secrets.PYPI_API_TOKEN }}
           skip-existing: true
+
+      - name: Notify zernio-mcp after successful SDK publication
+        if: steps.changes.outputs.has_changes == 'true'
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.MCP_REPO_TOKEN }}
+          script: |
+            await github.rest.repos.createDispatchEvent({
+              owner: 'zernio-dev',
+              repo: 'zernio-mcp',
+              event_type: 'sdk-released',
+              client_payload: {
+                sdk_version: '${{ steps.version.outputs.new_version }}',
+                sdk_repository: context.repo.owner + '/' + context.repo.repo,
+                sdk_sha: context.sha,
+              },
+            });

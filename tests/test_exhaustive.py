@@ -538,69 +538,6 @@ class TestCrossPostResult:
 
 
 # ============================================================================
-# MCP TESTS
-# ============================================================================
-
-
-class TestMCPImports:
-    """Test MCP module imports."""
-
-    def test_import_mcp_server(self):
-        """Test MCP server import."""
-        from late.mcp import mcp
-
-        assert mcp is not None
-
-    def test_import_mcp_tools(self):
-        """Test MCP tools can be imported."""
-        from late.mcp.server import (
-            accounts_get,
-            accounts_list,
-            media_check_upload_status,
-            media_generate_upload_link,
-            posts_create,
-            posts_cross_post,
-            posts_delete,
-            posts_get,
-            posts_list,
-            posts_list_failed,
-            posts_publish_now,
-            posts_retry,
-            posts_retry_all_failed,
-            posts_update,
-            profiles_create,
-            profiles_delete,
-            profiles_get,
-            profiles_list,
-            profiles_update,
-        )
-
-        # Accounts
-        assert accounts_list is not None
-        assert accounts_get is not None
-        # Profiles
-        assert profiles_list is not None
-        assert profiles_get is not None
-        assert profiles_create is not None
-        assert profiles_update is not None
-        assert profiles_delete is not None
-        # Posts
-        assert posts_list is not None
-        assert posts_get is not None
-        assert posts_create is not None
-        assert posts_publish_now is not None
-        assert posts_cross_post is not None
-        assert posts_update is not None
-        assert posts_delete is not None
-        assert posts_retry is not None
-        assert posts_list_failed is not None
-        assert posts_retry_all_failed is not None
-        # Media
-        assert media_generate_upload_link is not None
-        assert media_check_upload_status is not None
-
-
-# ============================================================================
 # RATE LIMITER TESTS
 # ============================================================================
 
@@ -754,58 +691,6 @@ class TestIntegrationAI:
         assert response.text is not None
         assert len(response.text) > 0
         assert response.provider == "openai"
-
-
-@pytest.mark.skipif(
-    not os.getenv("LATE_API_KEY"),
-    reason="LATE_API_KEY not set",
-)
-class TestIntegrationMCP:
-    """Integration tests for MCP tools."""
-
-    def test_mcp_list_accounts(self):
-        """Test MCP list_accounts tool."""
-        from late.mcp.server import list_accounts
-
-        result = list_accounts()
-        assert "account" in result.lower() or "connected" in result.lower()
-
-    def test_mcp_list_posts(self):
-        """Test MCP list_posts tool."""
-        from late.mcp.server import list_posts
-
-        result = list_posts(limit=3)
-        assert isinstance(result, str)
-
-    def test_mcp_get_account(self):
-        """Test MCP get_account tool."""
-        from late.mcp.server import get_account
-
-        result = get_account("twitter")
-        assert isinstance(result, str)
-
-    def test_mcp_list_failed_posts(self):
-        """Test MCP list_failed_posts tool."""
-        from late.mcp.server import list_failed_posts
-
-        result = list_failed_posts(limit=5)
-        assert isinstance(result, str)
-
-    def test_mcp_get_post(self):
-        """Test MCP get_post tool."""
-        from late.mcp.server import get_post, list_posts
-
-        # Get a post ID from list
-        posts_result = list_posts(limit=1)
-        # Extract post ID if available
-        if "ID:" in posts_result:
-            import re
-            match = re.search(r"ID: ([a-f0-9]+)", posts_result)
-            if match:
-                post_id = match.group(1)
-                result = get_post(post_id)
-                assert "Post ID:" in result
-                assert "Status:" in result
 
 
 # ============================================================================
