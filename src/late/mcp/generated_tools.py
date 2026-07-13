@@ -2127,6 +2127,85 @@ def register_generated_tools(mcp, _get_client):
 
     @mcp.tool(
         annotations=ToolAnnotations(
+            title="Update ad account settings",
+            readOnlyHint=False,
+            destructiveHint=True,
+            openWorldHint=True,
+        )
+    )
+    def ads_update_ad_account(
+        account_id: str,
+        ad_account_id: str,
+        default_dsa_beneficiary: str,
+        default_dsa_payor: str | None = None,
+    ) -> str:
+        """Update ad account settings
+
+        Args:
+            account_id: Social account ID (metaads, or a facebook/instagram posting account) (required)
+            ad_account_id: Meta ad account ID (act_...) (required)
+            default_dsa_beneficiary: Legal entity benefiting from ads on this ad account (required)
+            default_dsa_payor: Legal entity paying for ads on this ad account. Defaults to defaultDsaBeneficiary when omitted."""
+        client = _get_client()
+        try:
+            response = client.ads.update_ad_account(
+                account_id=account_id,
+                ad_account_id=ad_account_id,
+                default_dsa_beneficiary=default_dsa_beneficiary,
+                default_dsa_payor=default_dsa_payor,
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Get ad account DSA defaults",
+            readOnlyHint=True,
+            destructiveHint=False,
+            openWorldHint=False,
+        )
+    )
+    def ads_get_dsa_defaults(account_id: str, ad_account_id: str) -> str:
+        """Get ad account DSA defaults
+
+        Args:
+            account_id: Social account ID (metaads, or a facebook/instagram posting account) (required)
+            ad_account_id: Meta ad account ID (act_...) (required)"""
+        client = _get_client()
+        try:
+            response = client.ads.get_dsa_defaults(
+                account_id=account_id, ad_account_id=ad_account_id
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="List DSA beneficiary/payor suggestions",
+            readOnlyHint=True,
+            destructiveHint=False,
+            openWorldHint=False,
+        )
+    )
+    def ads_get_dsa_recommendations(account_id: str, ad_account_id: str) -> str:
+        """List DSA beneficiary/payor suggestions
+
+        Args:
+            account_id: Social account ID (metaads, or a facebook/instagram posting account) (required)
+            ad_account_id: Meta ad account ID (act_...) (required)"""
+        client = _get_client()
+        try:
+            response = client.ads.get_dsa_recommendations(
+                account_id=account_id, ad_account_id=ad_account_id
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
             title="Boost post as ad",
             readOnlyHint=False,
             destructiveHint=True,
@@ -2194,12 +2273,14 @@ def register_generated_tools(mcp, _get_client):
         account running the ads (same-BC creators only). The creator generates the
         code in their TikTok app's Promote settings and shares it with the
         advertiser. Maps to `auth_code` on the creative entry of /v2/ad/create/.
-                dsa_beneficiary: Name of the legal entity benefiting from the ad.
-        Required by Meta when targeting EU users (DSA Article 26).
-        Not enforced at schema level; enforced server-side when targeting intersects EU member states.
-                dsa_payor: Name of the legal entity paying for the ad.
-        Required by Meta when targeting EU users (DSA Article 26).
-        Note Meta API spelling: dsa_payor (not dsa_payer)."""
+                dsa_beneficiary: Legal entity that benefits from the ad. Required when targeting EU users
+        (EU DSA, Article 26). Optional if the ad account has a default beneficiary:
+        set it once via `PATCH /v1/ads/accounts` or in Meta Ads Manager, and Meta
+        fills it in whenever the field is omitted.
+                dsa_payor: Legal entity that pays for the ad. Can differ from `dsaBeneficiary`
+        (for example, an agency paying for a client's ads). Same rules as
+        `dsaBeneficiary`: required for EU targeting unless the ad account has
+        a default payor."""
         client = _get_client()
         try:
             response = client.ads.boost_post(
@@ -2482,12 +2563,14 @@ def register_generated_tools(mcp, _get_client):
                 roas_average_floor: Minimum ROAS as a decimal multiplier (e.g. 2.0 = 2.0x ROAS). Required when
         `bidStrategy` is `LOWEST_COST_WITH_MIN_ROAS`. Sent to Meta as
         `bid_constraints.roas_average_floor` × 10000.
-                dsa_beneficiary: Name of the legal entity benefiting from the ad.
-        Required by Meta when targeting EU users (DSA Article 26).
-        Not enforced at schema level; enforced server-side when targeting intersects EU member states.
-                dsa_payor: Name of the legal entity paying for the ad.
-        Required by Meta when targeting EU users (DSA Article 26).
-        Note Meta API spelling: dsa_payor (not dsa_payer).
+                dsa_beneficiary: Legal entity that benefits from the ad. Required when targeting EU users
+        (EU DSA, Article 26). Optional if the ad account has a default beneficiary:
+        set it once via `PATCH /v1/ads/accounts` or in Meta Ads Manager, and Meta
+        fills it in whenever the field is omitted.
+                dsa_payor: Legal entity that pays for the ad. Can differ from `dsaBeneficiary`
+        (for example, an agency paying for a client's ads). Same rules as
+        `dsaBeneficiary`: required for EU targeting unless the ad account has
+        a default payor.
                 brand_identity: TikTok only. Synthetic Brand Identity used when the ad
         attributes to a CUSTOMIZED_USER (instead of a real TT_USER
         @username). Required on the FIRST CUSTOMIZED_USER ad on a
@@ -3547,12 +3630,14 @@ def register_generated_tools(mcp, _get_client):
         Required when `bidStrategy` is `LOWEST_COST_WITH_MIN_ROAS`;
         rejected otherwise. Meta enforces its own upper bound
         server-side.
-                dsa_beneficiary: Name of the legal entity benefiting from the ad.
-        Required by Meta when targeting EU users (DSA Article 26).
-        Not enforced at schema level; enforced server-side when targeting intersects EU member states.
-                dsa_payor: Name of the legal entity paying for the ad.
-        Required by Meta when targeting EU users (DSA Article 26).
-        Note Meta API spelling: dsa_payor (not dsa_payer)."""
+                dsa_beneficiary: Legal entity that benefits from the ad. Required when targeting EU users
+        (EU DSA, Article 26). Optional if the ad account has a default beneficiary:
+        set it once via `PATCH /v1/ads/accounts` or in Meta Ads Manager, and Meta
+        fills it in whenever the field is omitted.
+                dsa_payor: Legal entity that pays for the ad. Can differ from `dsaBeneficiary`
+        (for example, an agency paying for a client's ads). Same rules as
+        `dsaBeneficiary`: required for EU targeting unless the ad account has
+        a default payor."""
         client = _get_client()
         try:
             response = client.ads.create_ctwa_ad(

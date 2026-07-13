@@ -32627,6 +32627,131 @@ paths:
         '401': { $ref: '#/components/responses/Unauthorized' }
         '422':
           description: Platform ads connection required (TikTok Ads, X Ads) or Instagram missing linked Facebook account
+    patch:
+      operationId: updateAdAccount
+      tags: [Ads]
+      summary: Update ad account settings
+      description: |
+        Sets the default DSA beneficiary and payor on a Meta ad account (EU DSA, Article 26).
+        Set them once and every EU-targeted call to `/v1/ads/create`, `/v1/ads/boost` and
+        `/v1/ads/ctwa` on that ad account can omit `dsaBeneficiary`/`dsaPayor`: Meta applies
+        the defaults automatically.
+
+        The values are written to the ad account on Meta, the same setting Ads Manager edits.
+        Nothing is stored in Zernio, and defaults already set in Ads Manager work identically.
+        Zernio never guesses these values for you. Beneficiary and payor are legal disclosures
+        shown to EU users, so you must provide the entity names explicitly. Use
+        `GET /v1/ads/dsa-recommendations` to offer suggestions in your UI.
+
+        If `defaultDsaPayor` is omitted, the beneficiary is also set as the payor, which
+        covers the common case where the same entity benefits from and pays for the ads.
+        Read the current values back with `GET /v1/ads/dsa-defaults`.
+
+        Currently supported for Meta accounts only; other platforms return 400.
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [accountId, adAccountId, defaultDsaBeneficiary]
+              properties:
+                accountId: { type: string, description: "Social account ID (metaads, or a facebook/instagram posting account)" }
+                adAccountId: { type: string, description: "Meta ad account ID (act_...)" }
+                defaultDsaBeneficiary: { type: string, maxLength: 100, description: "Legal entity benefiting from ads on this ad account" }
+                defaultDsaPayor: { type: string, maxLength: 100, description: "Legal entity paying for ads on this ad account. Defaults to defaultDsaBeneficiary when omitted." }
+      responses:
+        '200':
+          description: DSA defaults updated (re-read from Meta after the write)
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  adAccountId: { type: string }
+                  dsaDefaults:
+                    type: object
+                    properties:
+                      beneficiary: { type: string }
+                      payor: { type: string }
+        '400':
+          description: Unsupported platform (non-Meta account) or invalid adAccountId
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404':
+          description: Social account not found
+
+  /v1/ads/dsa-defaults:
+    get:
+      operationId: getDsaDefaults
+      tags: [Ads]
+      summary: Get ad account DSA defaults
+      description: |
+        Returns the default DSA beneficiary and payor currently set on a Meta ad account,
+        whether they were set via `PATCH /v1/ads/accounts` or in Meta Ads Manager. Fields
+        are omitted when no default is configured. Meta accounts only.
+      security:
+        - bearerAuth: []
+      parameters:
+        - { name: accountId, in: query, required: true, schema: { type: string }, description: "Social account ID (metaads, or a facebook/instagram posting account)" }
+        - { name: adAccountId, in: query, required: true, schema: { type: string }, description: "Meta ad account ID (act_...)" }
+      responses:
+        '200':
+          description: Current DSA defaults (empty object when none are set)
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  adAccountId: { type: string }
+                  dsaDefaults:
+                    type: object
+                    properties:
+                      beneficiary: { type: string }
+                      payor: { type: string }
+        '400':
+          description: Non-Meta adAccountId
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404':
+          description: Social account not found
+
+  /v1/ads/dsa-recommendations:
+    get:
+      operationId: getDsaRecommendations
+      tags: [Ads]
+      summary: List DSA beneficiary/payor suggestions
+      description: |
+        Returns Meta's suggested beneficiary/payor names for an ad account, derived by Meta
+        from the account's recent activity. Useful for prefilling `dsaBeneficiary`/`dsaPayor`
+        inputs, or the defaults sent to `PATCH /v1/ads/accounts`, in your own UI.
+
+        Meta returns a single flat list. Entries are not labeled as beneficiary or payor,
+        and since these are legal disclosures Zernio never applies them automatically: let
+        your user pick the right entity. The list may be empty for accounts with little
+        activity. Meta accounts only.
+      security:
+        - bearerAuth: []
+      parameters:
+        - { name: accountId, in: query, required: true, schema: { type: string }, description: "Social account ID (metaads, or a facebook/instagram posting account)" }
+        - { name: adAccountId, in: query, required: true, schema: { type: string }, description: "Meta ad account ID (act_...)" }
+      responses:
+        '200':
+          description: Suggested DSA strings (may be empty when Meta has no recommendations)
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  adAccountId: { type: string }
+                  recommendations:
+                    type: array
+                    items: { type: string }
+        '400':
+          description: Non-Meta adAccountId
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404':
+          description: Social account not found
 
   /v1/ads/boost:
     post:
@@ -32735,16 +32860,18 @@ paths:
                   type: string
                   maxLength: 100
                   description: |
-                    Name of the legal entity benefiting from the ad.
-                    Required by Meta when targeting EU users (DSA Article 26).
-                    Not enforced at schema level; enforced server-side when targeting intersects EU member states.
+                    Legal entity that benefits from the ad. Required when targeting EU users
+                    (EU DSA, Article 26). Optional if the ad account has a default beneficiary:
+                    set it once via `PATCH /v1/ads/accounts` or in Meta Ads Manager, and Meta
+                    fills it in whenever the field is omitted.
                 dsaPayor:
                   type: string
                   maxLength: 100
                   description: |
-                    Name of the legal entity paying for the ad.
-                    Required by Meta when targeting EU users (DSA Article 26).
-                    Note Meta API spelling: dsa_payor (not dsa_payer).
+                    Legal entity that pays for the ad. Can differ from `dsaBeneficiary`
+                    (for example, an agency paying for a client's ads). Same rules as
+                    `dsaBeneficiary`: required for EU targeting unless the ad account has
+                    a default payor.
       responses:
         '201':
           description: Ad created
@@ -33295,16 +33422,18 @@ paths:
                   type: string
                   maxLength: 100
                   description: |
-                    Name of the legal entity benefiting from the ad.
-                    Required by Meta when targeting EU users (DSA Article 26).
-                    Not enforced at schema level; enforced server-side when targeting intersects EU member states.
+                    Legal entity that benefits from the ad. Required when targeting EU users
+                    (EU DSA, Article 26). Optional if the ad account has a default beneficiary:
+                    set it once via `PATCH /v1/ads/accounts` or in Meta Ads Manager, and Meta
+                    fills it in whenever the field is omitted.
                 dsaPayor:
                   type: string
                   maxLength: 100
                   description: |
-                    Name of the legal entity paying for the ad.
-                    Required by Meta when targeting EU users (DSA Article 26).
-                    Note Meta API spelling: dsa_payor (not dsa_payer).
+                    Legal entity that pays for the ad. Can differ from `dsaBeneficiary`
+                    (for example, an agency paying for a client's ads). Same rules as
+                    `dsaBeneficiary`: required for EU targeting unless the ad account has
+                    a default payor.
                 brandIdentity:
                   type: object
                   description: |
@@ -35582,16 +35711,18 @@ paths:
                   type: string
                   maxLength: 100
                   description: |
-                    Name of the legal entity benefiting from the ad.
-                    Required by Meta when targeting EU users (DSA Article 26).
-                    Not enforced at schema level; enforced server-side when targeting intersects EU member states.
+                    Legal entity that benefits from the ad. Required when targeting EU users
+                    (EU DSA, Article 26). Optional if the ad account has a default beneficiary:
+                    set it once via `PATCH /v1/ads/accounts` or in Meta Ads Manager, and Meta
+                    fills it in whenever the field is omitted.
                 dsaPayor:
                   type: string
                   maxLength: 100
                   description: |
-                    Name of the legal entity paying for the ad.
-                    Required by Meta when targeting EU users (DSA Article 26).
-                    Note Meta API spelling: dsa_payor (not dsa_payer).
+                    Legal entity that pays for the ad. Can differ from `dsaBeneficiary`
+                    (for example, an agency paying for a client's ads). Same rules as
+                    `dsaBeneficiary`: required for EU targeting unless the ad account has
+                    a default payor.
       responses:
         '201':
           description: |

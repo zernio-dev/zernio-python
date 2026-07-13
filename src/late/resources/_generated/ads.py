@@ -228,6 +228,41 @@ class AdsResource:
         )
         return self._client._get("/v1/ads/accounts", params=params)
 
+    def update_ad_account(
+        self,
+        account_id: str,
+        ad_account_id: str,
+        default_dsa_beneficiary: str,
+        *,
+        default_dsa_payor: str | None = None,
+    ) -> dict[str, Any]:
+        """Update ad account settings"""
+        payload = self._build_payload(
+            account_id=account_id,
+            ad_account_id=ad_account_id,
+            default_dsa_beneficiary=default_dsa_beneficiary,
+            default_dsa_payor=default_dsa_payor,
+        )
+        return self._client._patch("/v1/ads/accounts", data=payload)
+
+    def get_dsa_defaults(self, account_id: str, ad_account_id: str) -> dict[str, Any]:
+        """Get ad account DSA defaults"""
+        params = self._build_params(
+            account_id=account_id,
+            ad_account_id=ad_account_id,
+        )
+        return self._client._get("/v1/ads/dsa-defaults", params=params)
+
+    def get_dsa_recommendations(
+        self, account_id: str, ad_account_id: str
+    ) -> dict[str, Any]:
+        """List DSA beneficiary/payor suggestions"""
+        params = self._build_params(
+            account_id=account_id,
+            ad_account_id=ad_account_id,
+        )
+        return self._client._get("/v1/ads/dsa-recommendations", params=params)
+
     def boost_post(
         self,
         account_id: str,
@@ -1039,6 +1074,43 @@ class AdsResource:
             limit=limit,
         )
         return await self._client._aget("/v1/ads/accounts", params=params)
+
+    async def aupdate_ad_account(
+        self,
+        account_id: str,
+        ad_account_id: str,
+        default_dsa_beneficiary: str,
+        *,
+        default_dsa_payor: str | None = None,
+    ) -> dict[str, Any]:
+        """Update ad account settings (async)"""
+        payload = self._build_payload(
+            account_id=account_id,
+            ad_account_id=ad_account_id,
+            default_dsa_beneficiary=default_dsa_beneficiary,
+            default_dsa_payor=default_dsa_payor,
+        )
+        return await self._client._apatch("/v1/ads/accounts", data=payload)
+
+    async def aget_dsa_defaults(
+        self, account_id: str, ad_account_id: str
+    ) -> dict[str, Any]:
+        """Get ad account DSA defaults (async)"""
+        params = self._build_params(
+            account_id=account_id,
+            ad_account_id=ad_account_id,
+        )
+        return await self._client._aget("/v1/ads/dsa-defaults", params=params)
+
+    async def aget_dsa_recommendations(
+        self, account_id: str, ad_account_id: str
+    ) -> dict[str, Any]:
+        """List DSA beneficiary/payor suggestions (async)"""
+        params = self._build_params(
+            account_id=account_id,
+            ad_account_id=ad_account_id,
+        )
+        return await self._client._aget("/v1/ads/dsa-recommendations", params=params)
 
     async def aboost_post(
         self,

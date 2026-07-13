@@ -423,8 +423,11 @@ Both `from zernio import ...` and `from late import ...` work identically. The `
 | `ads.get_conversion_destination()` | Get a conversion destination |
 | `ads.get_conversion_metrics()` | Get attribution metrics |
 | `ads.get_conversions_quality()` | Get Event Match Quality |
+| `ads.get_dsa_defaults()` | Get ad account DSA defaults |
+| `ads.get_dsa_recommendations()` | List DSA beneficiary/payor suggestions |
 | `ads.get_lead_form()` | Get a lead form |
 | `ads.update_ad()` | Update ad |
+| `ads.update_ad_account()` | Update ad account settings |
 | `ads.update_ad_status()` | Pause or resume a single ad |
 | `ads.update_ad_tracking_tags()` | Set ad tracking tags |
 | `ads.update_conversion_destination()` | Update a conversion destination |
