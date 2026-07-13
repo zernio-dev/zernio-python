@@ -23359,6 +23359,12 @@ paths:
                         text: { type: string }
                         created: { type: string, format: date-time }
                         hasReply: { type: boolean }
+                        hasPhotos:
+                          type: boolean
+                          description: Whether the review has at least one photo. Google Business only; always false for other platforms.
+                        photoCount:
+                          type: integer
+                          description: Number of photos attached to the review (photos only; videos are not counted). Google Business only; 0 for other platforms.
                         reply:
                           type: [object, "null"]
                           properties:
@@ -32622,6 +32628,7 @@ paths:
                         status: { type: string }
                         timezoneName: { type: string, description: "IANA timezone of the ad account (Meta only). Drives daily-budget reset and Insights day boundaries." }
                         timezoneOffsetHoursUtc: { type: number, description: "Signed UTC offset in hours, reflecting current DST (Meta only)." }
+                        minimumDailyBudget: { type: number, description: "Meta only. Minimum daily budget for the account, in the account currency's major units. This is the impressions-billed minimum; other billing events have higher minimums. Absent when the connected token cannot read it." }
                         selectable: { type: boolean, description: "Meta only. Whether the account can create/run ads now. Absent (treat as true) on non-Meta platforms." }
                         unusableReason: { type: string, nullable: true, description: "Meta only. Human-readable reason when selectable is false; null when selectable." }
         '401': { $ref: '#/components/responses/Unauthorized' }
