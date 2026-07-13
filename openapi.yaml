@@ -5056,6 +5056,9 @@ components:
               type: { type: string, enum: [image, video] }
               url: { type: string, format: uri, description: Direct URL to the media }
               thumbnail: { type: string, format: uri, description: Thumbnail URL (same as url for images) }
+              altText:
+                type: string
+                description: Accessibility alt text set on the media, when present.
     AnalyticsListResponse:
       type: object
       properties:
@@ -5093,6 +5096,9 @@ components:
                     type: { type: string, enum: [image, video] }
                     url: { type: string, format: uri, description: Direct URL to the media }
                     thumbnail: { type: string, format: uri, description: Thumbnail URL (same as url for images) }
+                    altText:
+                      type: string
+                      description: Accessibility alt text set on the media, when present.
         pagination:
           $ref: '#/components/schemas/Pagination'
         accounts:
