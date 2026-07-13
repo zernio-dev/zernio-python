@@ -494,9 +494,11 @@ components:
             incur real per-call pass-through costs. Applies to the 1st
             X account, not just the 3rd+.
 
-          - `enterprise_required`: the team has reached the public
-            pricing ceiling (2,000 connected accounts). Beyond that
-            requires a custom enterprise contract negotiated directly.
+          - `enterprise_required`: the team is on an enterprise
+            contract with a negotiated connected-account cap and has
+            reached it. Self-service teams have NO connection cap (the
+            $1/account rate continues at any scale), so this reason can
+            only fire for teams whose contract sets an explicit limit.
             `dashboard_url` deep-links to the enterprise contact page
             rather than the billing tab. The end-user already has a
             card on file; this gate is about contract terms, not card
@@ -507,7 +509,7 @@ components:
         redirect the end-user to `dashboard_url` to add a payment method
         via Zernio's hosted Stripe Setup Checkout. For
         `enterprise_required`, redirect to `dashboard_url` (the
-        enterprise contact form) so they can talk to sales.
+        enterprise contact form) to adjust the contract's limit.
       content:
         application/json:
           schema:
@@ -555,18 +557,13 @@ components:
                   has_payment_method:
                     type: boolean
                     description: Whether the team currently has a card on file in Stripe. Set when reason=free_tier_exceeded or reason=twitter_passthrough.
-                  public_account_limit:
-                    type: integer
-                    description: Public pricing ceiling (the published cap beyond which an enterprise contract is required). Only set when reason=enterprise_required.
-                    example: 2000
                   effective_account_limit:
                     type: integer
                     description: |
-                      The cap actually applied to this team. Equals
-                      `public_account_limit` for organic teams; for teams
-                      with a per-customer override (grandfathered legacy
-                      customers, signed enterprise contracts) this can
-                      be higher. Only set when reason=enterprise_required.
+                      The negotiated connected-account cap from the
+                      team's enterprise contract. Self-service teams
+                      have no cap and never receive this reason. Only
+                      set when reason=enterprise_required.
                     example: 2000
           examples:
             freeTierExceeded:
@@ -592,15 +589,14 @@ components:
                 details:
                   has_payment_method: false
             enterpriseRequired:
-              summary: Team has hit the public 2,000-account ceiling
+              summary: Team reached the negotiated cap on its enterprise contract
               value:
-                error: 'You have 2000 connected accounts. Beyond 2,000 requires an enterprise contract. Please contact sales to enable larger usage.'
+                error: 'You have 2000 connected accounts, which reaches the 2,000-account limit on your contract. Contact us to raise it.'
                 code: PAYMENT_REQUIRED
                 reason: enterprise_required
                 documentation_url: https://docs.zernio.com/billing/payment-method-required
                 dashboard_url: https://zernio.com/enterprise
                 details:
-                  public_account_limit: 2000
                   effective_account_limit: 2000
                   current_account_count: 2000
   schemas:
