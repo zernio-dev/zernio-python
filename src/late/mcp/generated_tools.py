@@ -9281,6 +9281,7 @@ def register_generated_tools(mcp, _get_client):
         invoice_document_id: str,
         foc_datetime_requested: str | None = None,
         customer_reference: str | None = None,
+        port_type: str = "full",
     ) -> str:
         """Port numbers in
 
@@ -9289,8 +9290,9 @@ def register_generated_tools(mcp, _get_client):
             end_user: End-user / current-carrier account info that authorizes the port. (required)
             loa_document_id: Document id from POST /v1/phone-numbers/port-in/documents (kind=loa). (required)
             invoice_document_id: Document id from POST /v1/phone-numbers/port-in/documents (kind=invoice). (required)
-            foc_datetime_requested: Requested port date; the carrier confirms the actual FOC later.
-            customer_reference"""
+            foc_datetime_requested: Requested port date; the carrier confirms the actual FOC later. Defaults to one week out (shifted off weekends) when omitted.
+            customer_reference
+            port_type: Whether the losing account ports all its numbers (full) or keeps some (partial)."""
         client = _get_client()
         try:
             response = client.phone_numbers.create_phone_number_port_in(
@@ -9300,6 +9302,7 @@ def register_generated_tools(mcp, _get_client):
                 invoice_document_id=invoice_document_id,
                 foc_datetime_requested=foc_datetime_requested,
                 customer_reference=customer_reference,
+                port_type=port_type,
             )
             return _format_response(response)
         except Exception as e:

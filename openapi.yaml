@@ -27077,7 +27077,7 @@ paths:
                   properties:
                     entityName: { type: string }
                     authPersonName: { type: string }
-                    billingPhoneNumber: { type: string }
+                    billingPhoneNumber: { type: string, description: "Phone number on the losing carrier's bill. Defaults to the ported number itself on single-number orders." }
                     accountNumber: { type: string }
                     pinPasscode: { type: string, description: "Transfer PIN. Forwarded to the carrier, never stored." }
                     streetAddress: { type: string }
@@ -27088,8 +27088,9 @@ paths:
                     countryCode: { type: string, minLength: 2, maxLength: 2 }
                 loaDocumentId: { type: string, description: Document id from POST /v1/phone-numbers/port-in/documents (kind=loa). }
                 invoiceDocumentId: { type: string, description: Document id from POST /v1/phone-numbers/port-in/documents (kind=invoice). }
-                focDatetimeRequested: { type: string, format: date-time, description: Requested port date; the carrier confirms the actual FOC later. }
+                focDatetimeRequested: { type: string, format: date-time, description: "Requested port date; the carrier confirms the actual FOC later. Defaults to one week out (shifted off weekends) when omitted." }
                 customerReference: { type: string, maxLength: 100 }
+                portType: { type: string, enum: [full, partial], default: full, description: "Whether the losing account ports all its numbers (full) or keeps some (partial)." }
       responses:
         '201':
           description: Port submitted. Top-level fields mirror the first successfully submitted order; per-order truth (including failures) is in `orders`.

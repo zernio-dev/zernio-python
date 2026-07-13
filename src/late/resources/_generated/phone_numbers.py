@@ -218,6 +218,7 @@ class PhoneNumbersResource:
         *,
         foc_datetime_requested: datetime | str | None = None,
         customer_reference: str | None = None,
+        port_type: str | None = "full",
     ) -> dict[str, Any]:
         """Port numbers in"""
         payload = self._build_payload(
@@ -227,6 +228,7 @@ class PhoneNumbersResource:
             invoice_document_id=invoice_document_id,
             foc_datetime_requested=foc_datetime_requested,
             customer_reference=customer_reference,
+            port_type=port_type,
         )
         return self._client._post("/v1/phone-numbers/port-in", data=payload)
 
@@ -454,6 +456,7 @@ class PhoneNumbersResource:
         *,
         foc_datetime_requested: datetime | str | None = None,
         customer_reference: str | None = None,
+        port_type: str | None = "full",
     ) -> dict[str, Any]:
         """Port numbers in (async)"""
         payload = self._build_payload(
@@ -463,6 +466,7 @@ class PhoneNumbersResource:
             invoice_document_id=invoice_document_id,
             foc_datetime_requested=foc_datetime_requested,
             customer_reference=customer_reference,
+            port_type=port_type,
         )
         return await self._client._apost("/v1/phone-numbers/port-in", data=payload)
 
