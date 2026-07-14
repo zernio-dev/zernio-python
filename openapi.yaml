@@ -3941,6 +3941,45 @@ components:
         when no media attached. Use organizationUrn for multi-org posting. Geo-restriction only works for
         organization pages (not personal profiles) and requires the targeted audience to exceed 300 followers.
 
+    LinkedInAdsPlatformData:
+      type: object
+      additionalProperties: false
+      properties:
+        costType:
+          type: string
+          enum: [CPM, CPC, CPV]
+          description: |
+            Campaign cost model (billing event). Defaults to `CPM`. Required when
+            `unitCost` is set so the manual bid applies to an explicit cost model.
+        unitCost:
+          type: number
+          description: |
+            Manual bid in WHOLE account-currency units (e.g. 2.5 = $2.50). Requires
+            `costType`. Omit for LinkedIn's automated (max delivery) bidding.
+            LinkedIn enforces its own per-audience min/max bid bounds.
+        optimizationTargetType:
+          type: string
+          description: |
+            Campaign `optimizationTargetType` (e.g. `MAX_CLICK`, `TARGET_COST_PER_CLICK`,
+            `MAX_IMPRESSION`). Forwarded verbatim — LinkedIn validates compatibility with
+            the objective and `costType`. Omit for the objective-derived default.
+        creativeSelection:
+          type: string
+          enum: [OPTIMIZED, ROUND_ROBIN]
+          description: How LinkedIn rotates creatives within the campaign. Defaults to `OPTIMIZED`.
+        audienceExpansionEnabled:
+          type: boolean
+          description: Enable LinkedIn audience expansion. Defaults to false.
+        offsiteDeliveryEnabled:
+          type: boolean
+          description: Deliver on the LinkedIn Audience Network. Defaults to false.
+        connectedTelevisionOnly:
+          type: boolean
+          description: Restrict delivery to Connected TV inventory.
+      description: >
+        LinkedIn campaign bidding and delivery controls for POST /v1/ads/boost and
+        POST /v1/ads/create. Unknown keys are rejected.
+
     PinterestPlatformData:
       type: object
       properties:
@@ -32857,6 +32896,14 @@ paths:
                     Minimum ROAS as a decimal multiplier (e.g. 2.0 = 2.0x ROAS). Required when
                     `bidStrategy` is `LOWEST_COST_WITH_MIN_ROAS`. Sent to Meta as
                     `bid_constraints.roas_average_floor` × 10000 (Meta uses fixed-point integers).
+                platformSpecificData:
+                  description: |
+                    Platform-specific options. The platform is derived from `accountId`;
+                    sending options for a different platform returns a 400. LinkedIn
+                    (campaign bidding and delivery controls) is the only platform with
+                    options today.
+                  oneOf:
+                    - $ref: '#/components/schemas/LinkedInAdsPlatformData'
                 tracking:
                   type: object
                   description: "Meta only. Tracking specs (pixel, URL tags)."
@@ -33455,6 +33502,14 @@ paths:
                     Minimum ROAS as a decimal multiplier (e.g. 2.0 = 2.0x ROAS). Required when
                     `bidStrategy` is `LOWEST_COST_WITH_MIN_ROAS`. Sent to Meta as
                     `bid_constraints.roas_average_floor` × 10000.
+                platformSpecificData:
+                  description: |
+                    Platform-specific options. The platform is derived from `accountId`;
+                    sending options for a different platform returns a 400. LinkedIn
+                    (campaign bidding and delivery controls) is the only platform with
+                    options today.
+                  oneOf:
+                    - $ref: '#/components/schemas/LinkedInAdsPlatformData'
                 dsaBeneficiary:
                   type: string
                   maxLength: 100

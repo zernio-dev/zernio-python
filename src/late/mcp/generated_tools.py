@@ -2226,6 +2226,7 @@ def register_generated_tools(mcp, _get_client):
         bid_strategy: str | None = None,
         bid_amount: float | None = None,
         roas_average_floor: float | None = None,
+        platform_specific_data: dict[str, Any] | None = None,
         tracking: dict[str, Any] | None = None,
         special_ad_categories: list[str] | None = None,
         link_url: str | None = None,
@@ -2255,6 +2256,10 @@ def register_generated_tools(mcp, _get_client):
                 roas_average_floor: Minimum ROAS as a decimal multiplier (e.g. 2.0 = 2.0x ROAS). Required when
         `bidStrategy` is `LOWEST_COST_WITH_MIN_ROAS`. Sent to Meta as
         `bid_constraints.roas_average_floor` × 10000 (Meta uses fixed-point integers).
+                platform_specific_data: Platform-specific options. The platform is derived from `accountId`;
+        sending options for a different platform returns a 400. LinkedIn
+        (campaign bidding and delivery controls) is the only platform with
+        options today.
                 tracking: Meta only. Tracking specs (pixel, URL tags).
                 special_ad_categories: Meta only. Required for housing, employment, credit, or political ads.
                 link_url: TikTok-only. Custom destination URL for the Spark Ad. Without this, TikTok
@@ -2297,6 +2302,7 @@ def register_generated_tools(mcp, _get_client):
                 bid_strategy=bid_strategy,
                 bid_amount=bid_amount,
                 roas_average_floor=roas_average_floor,
+                platform_specific_data=platform_specific_data,
                 tracking=tracking,
                 special_ad_categories=special_ad_categories,
                 link_url=link_url,
@@ -2381,6 +2387,7 @@ def register_generated_tools(mcp, _get_client):
         bid_strategy: str | None = None,
         bid_amount: float | None = None,
         roas_average_floor: float | None = None,
+        platform_specific_data: dict[str, Any] | None = None,
         dsa_beneficiary: str | None = None,
         dsa_payor: str | None = None,
         brand_identity: dict[str, Any] | None = None,
@@ -2563,6 +2570,10 @@ def register_generated_tools(mcp, _get_client):
                 roas_average_floor: Minimum ROAS as a decimal multiplier (e.g. 2.0 = 2.0x ROAS). Required when
         `bidStrategy` is `LOWEST_COST_WITH_MIN_ROAS`. Sent to Meta as
         `bid_constraints.roas_average_floor` × 10000.
+                platform_specific_data: Platform-specific options. The platform is derived from `accountId`;
+        sending options for a different platform returns a 400. LinkedIn
+        (campaign bidding and delivery controls) is the only platform with
+        options today.
                 dsa_beneficiary: Legal entity that benefits from the ad. Required when targeting EU users
         (EU DSA, Article 26). Optional if the ad account has a default beneficiary:
         set it once via `PATCH /v1/ads/accounts` or in Meta Ads Manager, and Meta
@@ -2683,6 +2694,7 @@ def register_generated_tools(mcp, _get_client):
                 bid_strategy=bid_strategy,
                 bid_amount=bid_amount,
                 roas_average_floor=roas_average_floor,
+                platform_specific_data=platform_specific_data,
                 dsa_beneficiary=dsa_beneficiary,
                 dsa_payor=dsa_payor,
                 brand_identity=brand_identity,
