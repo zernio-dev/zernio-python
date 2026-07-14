@@ -125,6 +125,10 @@ class SmsResource:
             f"/v1/sms/registrations/{id}/verify-otp", data=payload
         )
 
+    def resend_sms_registration_otp(self, id: str) -> dict[str, Any]:
+        """Re-send the sole-prop OTP"""
+        return self._client._post(f"/v1/sms/registrations/{id}/resend-otp")
+
     def appeal_sms_registration(
         self,
         id: str,
@@ -234,6 +238,10 @@ class SmsResource:
         return await self._client._apost(
             f"/v1/sms/registrations/{id}/verify-otp", data=payload
         )
+
+    async def aresend_sms_registration_otp(self, id: str) -> dict[str, Any]:
+        """Re-send the sole-prop OTP (async)"""
+        return await self._client._apost(f"/v1/sms/registrations/{id}/resend-otp")
 
     async def aappeal_sms_registration(
         self,

@@ -9394,14 +9394,18 @@ def register_generated_tools(mcp, _get_client):
     ) -> str:
         """Port numbers in
 
-        Args:
-            phone_numbers: E.164 numbers to port in. (required)
-            end_user: End-user / current-carrier account info that authorizes the port. (required)
-            loa_document_id: Document id from POST /v1/phone-numbers/port-in/documents (kind=loa). (required)
-            invoice_document_id: Document id from POST /v1/phone-numbers/port-in/documents (kind=invoice). (required)
-            foc_datetime_requested: Requested port date; the carrier confirms the actual FOC later. Defaults to one week out (shifted off weekends) when omitted.
-            customer_reference
-            port_type: Whether the losing account ports all its numbers (full) or keeps some (partial)."""
+            Args:
+                phone_numbers: E.164 numbers to port in. (required)
+                end_user: End-user / current-carrier account info that authorizes the port. The
+        losing carrier matches every field against its records and rejects the
+        whole port on a mismatch — enter values exactly as they appear on the
+        carrier bill.
+         (required)
+                loa_document_id: Document id from POST /v1/phone-numbers/port-in/documents (kind=loa). (required)
+                invoice_document_id: Document id from POST /v1/phone-numbers/port-in/documents (kind=invoice). (required)
+                foc_datetime_requested: Requested port date; the carrier confirms the actual FOC later. Defaults to one week out (shifted off weekends) when omitted.
+                customer_reference
+                port_type: Whether the losing account ports all its numbers (full) or keeps some (partial)."""
         client = _get_client()
         try:
             response = client.phone_numbers.create_phone_number_port_in(
@@ -10829,10 +10833,13 @@ def register_generated_tools(mcp, _get_client):
                 phone_numbers: Your numbers this registration covers. (required)
                 brand: Required for 10DLC. The legal entity behind the traffic (TCR brand).
                 campaign: Required for 10DLC. What you'll send and how recipients opt in/out.
-        Opt-in/opt-out/help auto-responses must name the registered brand and
-        carry the carrier-required disclosures; submissions that don't (or that
-        are blank) are automatically rewritten to a compliant, brand-named
-        template before the campaign is filed.
+        The opt-in/opt-out/help auto-responses (`optinMessage`,
+        `optoutMessage`, `helpMessage`) are optional: when omitted, a
+        compliant, brand-named template with the carrier-required
+        disclosures is generated for you. If you do send them, they must
+        name the registered brand and carry the disclosures — submissions
+        that don't are rewritten to the compliant template before the
+        campaign is filed.
                 toll_free: Required for toll_free."""
         client = _get_client()
         try:
@@ -10901,6 +10908,26 @@ def register_generated_tools(mcp, _get_client):
         client = _get_client()
         try:
             response = client.sms.verify_sms_registration_otp(id=id, otp_pin=otp_pin)
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Re-send the sole-prop OTP",
+            readOnlyHint=False,
+            destructiveHint=True,
+            openWorldHint=True,
+        )
+    )
+    def sms_resend_sms_registration_otp(id: str) -> str:
+        """Re-send the sole-prop OTP
+
+        Args:
+            id: (required)"""
+        client = _get_client()
+        try:
+            response = client.sms.resend_sms_registration_otp(id=id)
             return _format_response(response)
         except Exception as e:
             return f"Error: {e}"

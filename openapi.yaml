@@ -24923,11 +24923,14 @@ paths:
                   type: object
                   description: |
                     Required for 10DLC. What you'll send and how recipients opt in/out.
-                    Opt-in/opt-out/help auto-responses must name the registered brand and
-                    carry the carrier-required disclosures; submissions that don't (or that
-                    are blank) are automatically rewritten to a compliant, brand-named
-                    template before the campaign is filed.
-                  required: [usecase, description, messageFlow, sample1, sample2, helpMessage, optinKeywords, optinMessage, optoutKeywords, optoutMessage, helpKeywords]
+                    The opt-in/opt-out/help auto-responses (`optinMessage`,
+                    `optoutMessage`, `helpMessage`) are optional: when omitted, a
+                    compliant, brand-named template with the carrier-required
+                    disclosures is generated for you. If you do send them, they must
+                    name the registered brand and carry the disclosures — submissions
+                    that don't are rewritten to the compliant template before the
+                    campaign is filed.
+                  required: [usecase, description, messageFlow, sample1, sample2, optinKeywords, optoutKeywords, helpKeywords]
                   properties:
                     usecase: { type: string }
                     subUsecases:
@@ -25110,6 +25113,34 @@ paths:
                   verified: { type: boolean }
         '401': { $ref: '#/components/responses/Unauthorized' }
         '404': { description: Registration not found }
+
+  /v1/sms/registrations/{id}/resend-otp:
+    post:
+      operationId: resendSmsRegistrationOtp
+      tags: [SMS]
+      summary: Re-send the sole-prop OTP
+      description: |
+        Re-sends the sole-proprietor verification PIN to the brand's mobile
+        number — use it when the original code expired or never arrived. Only
+        valid while the registration is pending and awaiting its OTP; rate
+        limited to one send per minute.
+      security:
+        - bearerAuth: []
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string } }
+      responses:
+        '200':
+          description: A new code was sent
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  sent: { type: boolean }
+        '400': { description: The registration is not awaiting a verification code }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404': { description: Registration not found }
+        '429': { description: A code was just sent — wait a minute before requesting another }
 
   /v1/sms/registrations/{id}/appeal:
     post:
@@ -27119,20 +27150,24 @@ paths:
                   description: E.164 numbers to port in.
                 endUser:
                   type: object
-                  description: End-user / current-carrier account info that authorizes the port.
-                  required: [entityName, authPersonName, streetAddress, locality, administrativeArea, postalCode, countryCode]
+                  description: |
+                    End-user / current-carrier account info that authorizes the port. The
+                    losing carrier matches every field against its records and rejects the
+                    whole port on a mismatch — enter values exactly as they appear on the
+                    carrier bill.
+                  required: [entityName, authPersonName, accountNumber, streetAddress, locality, administrativeArea, postalCode, countryCode]
                   properties:
-                    entityName: { type: string }
-                    authPersonName: { type: string }
-                    billingPhoneNumber: { type: string, description: "Phone number on the losing carrier's bill. Defaults to the ported number itself on single-number orders." }
-                    accountNumber: { type: string }
-                    pinPasscode: { type: string, description: "Transfer PIN. Forwarded to the carrier, never stored." }
+                    entityName: { type: string, description: "Account holder / business name, as on the carrier account." }
+                    authPersonName: { type: string, description: "Full name (first + last) of the person authorizing the port — must match the LOA signature." }
+                    billingPhoneNumber: { type: string, description: "Phone number on the losing carrier's bill. Defaults to the ported number itself on single-number orders. Validated as a real phone number when present." }
+                    accountNumber: { type: string, description: "Account number with the losing carrier — required (carriers reject ports without it; on prepaid mobile plans it is often the phone number itself)." }
+                    pinPasscode: { type: string, description: "Transfer PIN. Required for mobile numbers (wireless carriers reject PIN-less ports). Forwarded to the carrier, never stored." }
                     streetAddress: { type: string }
                     extendedAddress: { type: string }
                     locality: { type: string }
-                    administrativeArea: { type: string }
-                    postalCode: { type: string }
-                    countryCode: { type: string, minLength: 2, maxLength: 2 }
+                    administrativeArea: { type: string, description: "2-letter US state / CA province code (full names are accepted and normalized)." }
+                    postalCode: { type: string, description: "US ZIP (5 digits) or Canadian postal code, matching countryCode." }
+                    countryCode: { type: string, minLength: 2, maxLength: 2, enum: [US, CA] }
                 loaDocumentId: { type: string, description: Document id from POST /v1/phone-numbers/port-in/documents (kind=loa). }
                 invoiceDocumentId: { type: string, description: Document id from POST /v1/phone-numbers/port-in/documents (kind=invoice). }
                 focDatetimeRequested: { type: string, format: date-time, description: "Requested port date; the carrier confirms the actual FOC later. Defaults to one week out (shifted off weekends) when omitted." }
@@ -27240,6 +27275,7 @@ paths:
                         phoneNumber: { type: string }
                         portable: { type: boolean }
                         fastPortable: { type: boolean, description: Qualifies for the carrier's accelerated FastPort lane. }
+                        lineType: { type: [string, "null"], description: "Line type when known (mobile, landline, voip…). A mobile number requires the transfer PIN at submit." }
                         notPortableReason: { type: [string, "null"], description: Carrier reason when not portable; null when portable. }
         '401': { $ref: '#/components/responses/Unauthorized' }
 
