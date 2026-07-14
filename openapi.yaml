@@ -34422,7 +34422,7 @@ paths:
         - { name: accountId, in: query, required: true, schema: { type: string }, description: Social account ID }
         - { name: adAccountId, in: query, required: true, schema: { type: string }, description: Platform ad account ID }
         - { name: platform, in: query, schema: { type: string, enum: [facebook, instagram, googleads, tiktok, tiktokads, pinterest, linkedin, linkedinads, twitter, xads] } }
-        - { name: type, in: query, required: false, schema: { type: string, enum: [customer_list, website, lookalike, saved_targeting] }, description: "Filter to one audience type. `saved_targeting` returns stored TargetingSpec audiences (each item carries a `spec`); the other types return uploaded/derived audiences." }
+        - { name: type, in: query, required: false, schema: { type: string, enum: [customer_list, company_list, engagement, website, lookalike, saved_targeting] }, description: "Filter to one audience type. `saved_targeting` returns stored TargetingSpec audiences; the other types return uploaded/derived audiences." }
       responses:
         '200':
           description: Audiences
@@ -34441,7 +34441,7 @@ paths:
                         platformAudienceId: { type: string }
                         name: { type: string }
                         description: { type: string }
-                        type: { type: string, enum: [customer_list, website, lookalike, saved_targeting] }
+                        type: { type: string, enum: [customer_list, company_list, engagement, website, lookalike, saved_targeting] }
                         spec:
                           anyOf:
                             - $ref: '#/components/schemas/TargetingSpec'
@@ -34481,7 +34481,54 @@ paths:
                     adAccountId: { type: string, description: "Platform ad account ID. Must start with act_ for Meta; bare platform id for others (Google customer id, X/TikTok/LinkedIn/Pinterest account id)." }
                     name: { type: string, maxLength: 255 }
                     description: { type: string }
-                    type: { type: string, enum: [customer_list, website, lookalike] }
+                    type: { type: string, enum: [customer_list, company_list, engagement, website, lookalike] }
+                    sourceType:
+                      type: string
+                      enum: [VIDEO_ADS, LEAD_GEN_FORMS, ORGANIZATION_PAGES, EVENT_PAGES, SINGLE_IMAGE_ADS]
+                      description: |
+                        Required for engagement audiences (LinkedIn only): what
+                        members engaged with — a video/leadgen/single-image ad
+                        campaign, a Company Page or an Event page.
+                    trigger:
+                      type: string
+                      description: |
+                        Required for engagement audiences. The action, validated
+                        by LinkedIn against `sourceType`. Common values:
+                        VIDEO_ADS FIRST_QUARTILE / MIDPOINT / THIRD_QUARTILE /
+                        FULL_COMPLETE; LEAD_GEN_FORMS VIEW_FORM /
+                        LEAD_FORM_SUBMIT; ORGANIZATION_PAGES VIEW / CTA_CLICK;
+                        EVENT_PAGES RSVPED / VIDEO_VIEWED / ENGAGEMENT / CLICK.
+                    lookbackDays:
+                      type: integer
+                      enum: [30, 60, 90, 180, 365]
+                      description: Required for engagement audiences. Rolling window.
+                    engagementSources:
+                      type: array
+                      minItems: 1
+                      maxItems: 50
+                      description: |
+                        Required for engagement audiences. Campaign URNs for the
+                        ad source types, organization URNs for pages and events.
+                        LinkedIn creates one rule per source, all sharing the
+                        same trigger and lookbackDays.
+                      items: { type: string }
+                    companies:
+                      type: array
+                      minItems: 1
+                      maxItems: 300000
+                      description: |
+                        Required for company_list audiences (LinkedIn only): plain-text
+                        company rows for account targeting. Each row needs at least one
+                        identifier. LinkedIn recommends 1,000+ companies for a usable
+                        match rate and takes up to 48h to process the list.
+                      items:
+                        type: object
+                        additionalProperties: false
+                        properties:
+                          name: { type: string, maxLength: 255 }
+                          domain: { type: string, maxLength: 100 }
+                          website: { type: string, maxLength: 100 }
+                          linkedinPageUrl: { type: string }
                     pixelId: { type: string, description: Required for website audiences }
                     retentionDays: { type: integer, minimum: 1, maximum: 180, description: Required for website audiences }
                     sourceAudienceId: { type: string, description: Required for lookalike audiences }
