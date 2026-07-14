@@ -31163,6 +31163,8 @@ paths:
                           items: { $ref: '#/components/schemas/DmButton' }
                           description: Inline DM buttons (up to 3). Omitted when none are set.
                         commentReply: { type: string }
+                        dmMessageVariations: { type: array, items: { type: string }, description: "Alternate DM texts rotated at random with dmMessage. Omitted when none." }
+                        commentReplyVariations: { type: array, items: { type: string }, description: "Alternate public replies rotated at random with commentReply. Omitted when none." }
                         linkTracking: { type: boolean, description: "Whether link buttons in the DM are wrapped in a tracked redirect to count clicks." }
                         clickTag: { type: string, description: "Tag applied to a contact when they click a tracked link." }
                         isActive: { type: boolean }
@@ -31235,6 +31237,16 @@ paths:
                   items: { $ref: '#/components/schemas/DmButton' }
                   description: "Optional inline DM buttons (1-3). Phone buttons are Facebook-only. Omit or pass [] for a plain-text DM."
                 commentReply: { type: string, description: Optional public reply to the comment }
+                dmMessageVariations:
+                  type: array
+                  maxItems: 5
+                  items: { type: string }
+                  description: "Optional alternate DM texts for random rotation. When set, each triggered comment sends one picked at random from [dmMessage, ...dmMessageVariations], so repeat commenters get slightly different DMs (helps avoid identical-message patterns). Up to 5. Buttons are attached to whichever text is picked, not varied."
+                commentReplyVariations:
+                  type: array
+                  maxItems: 5
+                  items: { type: string }
+                  description: "Optional alternate public replies, rotated at random alongside commentReply (picked independently of the DM). Up to 5."
                 linkTracking: { type: boolean, default: true, description: "Wrap link buttons in the DM in a tracked redirect so clicks are counted (Link Clicks / CTR). Pass false to send links exactly as written. Defaults to on." }
                 clickTag: { type: string, description: "Optional tag applied to a contact when they click a tracked link (requires linkTracking). Lets you segment clickers for broadcasts/sequences." }
       responses:
@@ -31262,6 +31274,8 @@ paths:
                         items: { $ref: '#/components/schemas/DmButton' }
                         description: Inline DM buttons (up to 3). Omitted when none are set.
                       commentReply: { type: string }
+                      dmMessageVariations: { type: array, items: { type: string }, description: "Alternate DM texts rotated at random with dmMessage. Omitted when none." }
+                      commentReplyVariations: { type: array, items: { type: string }, description: "Alternate public replies rotated at random with commentReply. Omitted when none." }
                       linkTracking: { type: boolean }
                       clickTag: { type: string }
                       isActive: { type: boolean }
@@ -31309,6 +31323,8 @@ paths:
                         items: { $ref: '#/components/schemas/DmButton' }
                         description: Inline DM buttons (up to 3). Omitted when none are set.
                       commentReply: { type: string }
+                      dmMessageVariations: { type: array, items: { type: string }, description: "Alternate DM texts rotated at random with dmMessage. Omitted when none." }
+                      commentReplyVariations: { type: array, items: { type: string }, description: "Alternate public replies rotated at random with commentReply. Omitted when none." }
                       linkTracking: { type: boolean }
                       clickTag: { type: string }
                       isActive: { type: boolean }
@@ -31360,6 +31376,16 @@ paths:
                   items: { $ref: '#/components/schemas/DmButton' }
                   description: "Inline DM buttons (1-3). Pass [] to clear all buttons."
                 commentReply: { type: string }
+                dmMessageVariations:
+                  type: array
+                  maxItems: 5
+                  items: { type: string }
+                  description: "Alternate DM texts for random rotation (see create). Pass [] to clear."
+                commentReplyVariations:
+                  type: array
+                  maxItems: 5
+                  items: { type: string }
+                  description: "Alternate public replies for random rotation. Pass [] to clear."
                 linkTracking: { type: boolean, description: "Wrap link buttons in a tracked redirect to count clicks. Pass false to send links untouched." }
                 clickTag: { type: string, description: "Tag applied to a contact when they click a tracked link (requires linkTracking). Empty string clears it." }
                 isActive: { type: boolean }
@@ -31385,6 +31411,8 @@ paths:
                         items: { $ref: '#/components/schemas/DmButton' }
                         description: Inline DM buttons (up to 3). Omitted when none are set.
                       commentReply: { type: string }
+                      dmMessageVariations: { type: array, items: { type: string }, description: "Alternate DM texts rotated at random with dmMessage. Omitted when none." }
+                      commentReplyVariations: { type: array, items: { type: string }, description: "Alternate public replies rotated at random with commentReply. Omitted when none." }
                       isActive: { type: boolean }
                       updatedAt: { type: string, format: date-time }
         '401': { $ref: '#/components/responses/Unauthorized' }

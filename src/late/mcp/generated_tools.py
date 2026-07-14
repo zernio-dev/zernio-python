@@ -5024,6 +5024,8 @@ def register_generated_tools(mcp, _get_client):
         match_mode: str = "contains",
         buttons: list[dict[str, Any]] | None = None,
         comment_reply: str | None = None,
+        dm_message_variations: list[str] | None = None,
+        comment_reply_variations: list[str] | None = None,
         link_tracking: bool = True,
         click_tag: str | None = None,
     ) -> str:
@@ -5042,6 +5044,8 @@ def register_generated_tools(mcp, _get_client):
             dm_message: DM text to send to commenter. Max 640 chars when buttons are set, otherwise ~1000. (required)
             buttons: Optional inline DM buttons (1-3). Phone buttons are Facebook-only. Omit or pass [] for a plain-text DM.
             comment_reply: Optional public reply to the comment
+            dm_message_variations: Optional alternate DM texts for random rotation. When set, each triggered comment sends one picked at random from [dmMessage, ...dmMessageVariations], so repeat commenters get slightly different DMs (helps avoid identical-message patterns). Up to 5. Buttons are attached to whichever text is picked, not varied.
+            comment_reply_variations: Optional alternate public replies, rotated at random alongside commentReply (picked independently of the DM). Up to 5.
             link_tracking: Wrap link buttons in the DM in a tracked redirect so clicks are counted (Link Clicks / CTR). Pass false to send links exactly as written. Defaults to on.
             click_tag: Optional tag applied to a contact when they click a tracked link (requires linkTracking). Lets you segment clickers for broadcasts/sequences."""
         client = _get_client()
@@ -5059,6 +5063,8 @@ def register_generated_tools(mcp, _get_client):
                 dm_message=dm_message,
                 buttons=buttons,
                 comment_reply=comment_reply,
+                dm_message_variations=dm_message_variations,
+                comment_reply_variations=comment_reply_variations,
                 link_tracking=link_tracking,
                 click_tag=click_tag,
             )
@@ -5104,6 +5110,8 @@ def register_generated_tools(mcp, _get_client):
         dm_message: str | None = None,
         buttons: list[dict[str, Any]] | None = None,
         comment_reply: str | None = None,
+        dm_message_variations: list[str] | None = None,
+        comment_reply_variations: list[str] | None = None,
         link_tracking: bool | None = None,
         click_tag: str | None = None,
         is_active: bool | None = None,
@@ -5118,6 +5126,8 @@ def register_generated_tools(mcp, _get_client):
             dm_message
             buttons: Inline DM buttons (1-3). Pass [] to clear all buttons.
             comment_reply
+            dm_message_variations: Alternate DM texts for random rotation (see create). Pass [] to clear.
+            comment_reply_variations: Alternate public replies for random rotation. Pass [] to clear.
             link_tracking: Wrap link buttons in a tracked redirect to count clicks. Pass false to send links untouched.
             click_tag: Tag applied to a contact when they click a tracked link (requires linkTracking). Empty string clears it.
             is_active"""
@@ -5131,6 +5141,8 @@ def register_generated_tools(mcp, _get_client):
                 dm_message=dm_message,
                 buttons=buttons,
                 comment_reply=comment_reply,
+                dm_message_variations=dm_message_variations,
+                comment_reply_variations=comment_reply_variations,
                 link_tracking=link_tracking,
                 click_tag=click_tag,
                 is_active=is_active,
