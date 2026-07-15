@@ -687,6 +687,7 @@ Both `from zernio import ...` and `from late import ...` work identically. The `
 | `sms.send_sms()` | Send an SMS/MMS |
 | `sms.share_sms_registration()` | Create a registration share link |
 | `sms.start_sms_registration()` | Start a carrier registration |
+| `sms.upload_sms_opt_in_proof()` | Upload opt-in form proof for an appeal |
 | `sms.verify_sms_registration_otp()` | Submit the sole-prop OTP |
 
 ### Tracking Tags
