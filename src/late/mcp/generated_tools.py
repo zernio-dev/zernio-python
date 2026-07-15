@@ -11037,6 +11037,23 @@ def register_generated_tools(mcp, _get_client):
 
     @mcp.tool(
         annotations=ToolAnnotations(
+            title="Upload opt-in form proof",
+            readOnlyHint=False,
+            destructiveHint=True,
+            openWorldHint=True,
+        )
+    )
+    def sms_upload_sms_opt_in_proof_file() -> str:
+        """Upload opt-in form proof"""
+        client = _get_client()
+        try:
+            response = client.sms.upload_sms_opt_in_proof_file()
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
             title="Upload opt-in form proof for an appeal",
             readOnlyHint=False,
             destructiveHint=True,

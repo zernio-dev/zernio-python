@@ -25485,6 +25485,41 @@ paths:
         '401': { $ref: '#/components/responses/Unauthorized' }
         '404': { description: Registration not found }
 
+  /v1/sms/opt-in-proof:
+    post:
+      operationId: uploadSmsOptInProofFile
+      tags: [SMS]
+      summary: Upload opt-in form proof
+      description: |
+        Hosts a screenshot (or PDF) of your SMS opt-in form and returns its
+        public URL. Include that URL in the campaign's `messageFlow` (the
+        opt-in workflow text) — the carrier registry has no attachment field,
+        so reviewers verify consent by opening links in that answer. Works
+        before a registration exists (use it when registering) and for
+        appeals. `/v1/sms/registrations/{id}/opt-in-proof` is an alias.
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required: [file]
+              properties:
+                file: { type: string, format: binary, description: "PNG, JPG, WebP, GIF or PDF, max 4MB." }
+      responses:
+        '200':
+          description: File hosted.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  url: { type: string, description: Public URL to reference in the opt-in flow text. }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '422': { description: Unsupported file type or file too large }
+
   /v1/sms/registrations/{id}/opt-in-proof:
     post:
       operationId: uploadSmsOptInProof

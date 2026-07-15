@@ -151,6 +151,10 @@ class SmsResource:
         )
         return self._client._post(f"/v1/sms/registrations/{id}/appeal", data=payload)
 
+    def upload_sms_opt_in_proof_file(self) -> dict[str, Any]:
+        """Upload opt-in form proof"""
+        return self._client._post("/v1/sms/opt-in-proof")
+
     def upload_sms_opt_in_proof(self, id: str) -> dict[str, Any]:
         """Upload opt-in form proof for an appeal"""
         return self._client._post(f"/v1/sms/registrations/{id}/opt-in-proof")
@@ -272,6 +276,10 @@ class SmsResource:
         return await self._client._apost(
             f"/v1/sms/registrations/{id}/appeal", data=payload
         )
+
+    async def aupload_sms_opt_in_proof_file(self) -> dict[str, Any]:
+        """Upload opt-in form proof (async)"""
+        return await self._client._apost("/v1/sms/opt-in-proof")
 
     async def aupload_sms_opt_in_proof(self, id: str) -> dict[str, Any]:
         """Upload opt-in form proof for an appeal (async)"""
