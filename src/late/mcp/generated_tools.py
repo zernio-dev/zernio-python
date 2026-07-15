@@ -6453,6 +6453,39 @@ def register_generated_tools(mcp, _get_client):
 
     @mcp.tool(
         annotations=ToolAnnotations(
+            title="Create Pinterest board",
+            readOnlyHint=False,
+            destructiveHint=True,
+            openWorldHint=True,
+        )
+    )
+    def connect_create_pinterest_board(
+        account_id: str,
+        name: str,
+        description: str | None = None,
+        privacy: str = "PUBLIC",
+    ) -> str:
+        """Create Pinterest board
+
+        Args:
+            account_id: (required)
+            name: Name of the board (required)
+            description: Board description
+            privacy: Board privacy setting"""
+        client = _get_client()
+        try:
+            response = client.connect.create_pinterest_board(
+                account_id=account_id,
+                name=name,
+                description=description,
+                privacy=privacy,
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
             title="List YouTube playlists",
             readOnlyHint=True,
             destructiveHint=False,

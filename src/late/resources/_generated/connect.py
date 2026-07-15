@@ -441,6 +441,24 @@ class ConnectResource:
             f"/v1/accounts/{account_id}/pinterest-boards", data=payload
         )
 
+    def create_pinterest_board(
+        self,
+        account_id: str,
+        name: str,
+        *,
+        description: str | None = None,
+        privacy: str | None = "PUBLIC",
+    ) -> dict[str, Any]:
+        """Create Pinterest board"""
+        payload = self._build_payload(
+            name=name,
+            description=description,
+            privacy=privacy,
+        )
+        return self._client._post(
+            f"/v1/accounts/{account_id}/pinterest-boards", data=payload
+        )
+
     def get_youtube_playlists(self, account_id: str) -> dict[str, Any]:
         """List YouTube playlists"""
         return self._client._get(f"/v1/accounts/{account_id}/youtube-playlists")
@@ -959,6 +977,24 @@ class ConnectResource:
             default_board_name=default_board_name,
         )
         return await self._client._aput(
+            f"/v1/accounts/{account_id}/pinterest-boards", data=payload
+        )
+
+    async def acreate_pinterest_board(
+        self,
+        account_id: str,
+        name: str,
+        *,
+        description: str | None = None,
+        privacy: str | None = "PUBLIC",
+    ) -> dict[str, Any]:
+        """Create Pinterest board (async)"""
+        payload = self._build_payload(
+            name=name,
+            description=description,
+            privacy=privacy,
+        )
+        return await self._client._apost(
             f"/v1/accounts/{account_id}/pinterest-boards", data=payload
         )
 

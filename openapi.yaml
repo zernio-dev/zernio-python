@@ -18199,6 +18199,65 @@ paths:
         '400': { description: Invalid request }
         '401': { $ref: '#/components/responses/Unauthorized' }
         '404': { description: Account not found }
+    post:
+      operationId: createPinterestBoard
+      tags: [Connect]
+      summary: Create Pinterest board
+      description: Creates a new board on the connected Pinterest account. The returned board ID can be used immediately as `platformSpecificData.boardId` when creating a Pinterest post.
+      parameters:
+        - name: accountId
+          in: path
+          required: true
+          schema: { type: string }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [name]
+              properties:
+                name:
+                  type: string
+                  description: Name of the board
+                description:
+                  type: string
+                  description: Board description
+                privacy:
+                  type: string
+                  enum: [PUBLIC, PROTECTED, SECRET]
+                  default: PUBLIC
+                  description: Board privacy setting
+            example:
+              name: "Summer Recipes"
+              description: "My favorite summer recipes"
+              privacy: "PUBLIC"
+      responses:
+        '201':
+          description: Board created
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  board:
+                    type: object
+                    properties:
+                      id: { type: string }
+                      name: { type: string }
+                      description: { type: string }
+                      privacy: { type: string }
+                      url: { type: string }
+              example:
+                board:
+                  id: "345678901234567890"
+                  name: "Summer Recipes"
+                  description: "My favorite summer recipes"
+                  privacy: "PUBLIC"
+        '400': { description: Invalid request or not a Pinterest account }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404': { description: Account not found }
+        '502': { description: Pinterest rejected the request (e.g. duplicate board name) }
 
   /v1/accounts/{accountId}/youtube-playlists:
     get:
