@@ -116,6 +116,10 @@ class SmsResource:
         """List carrier registrations"""
         return self._client._get("/v1/sms/registrations")
 
+    def deactivate_sms_registration(self, id: str) -> dict[str, Any]:
+        """Deactivate a brand/campaign registration"""
+        return self._client._delete(f"/v1/sms/registrations/{id}")
+
     def get_sms_registration(self, id: str) -> dict[str, Any]:
         """Get a carrier registration"""
         return self._client._get(f"/v1/sms/registrations/{id}")
@@ -237,6 +241,10 @@ class SmsResource:
     async def alist_sms_registrations(self) -> dict[str, Any]:
         """List carrier registrations (async)"""
         return await self._client._aget("/v1/sms/registrations")
+
+    async def adeactivate_sms_registration(self, id: str) -> dict[str, Any]:
+        """Deactivate a brand/campaign registration (async)"""
+        return await self._client._adelete(f"/v1/sms/registrations/{id}")
 
     async def aget_sms_registration(self, id: str) -> dict[str, Any]:
         """Get a carrier registration (async)"""

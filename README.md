@@ -681,6 +681,7 @@ Both `from zernio import ...` and `from late import ...` work identically. The `
 | `sms.list_sms_registrations()` | List carrier registrations |
 | `sms.get_sms_registration()` | Get a carrier registration |
 | `sms.appeal_sms_registration()` | Appeal a rejected campaign |
+| `sms.deactivate_sms_registration()` | Deactivate a brand/campaign registration |
 | `sms.disable_sms_on_number()` | Disable SMS on a number |
 | `sms.enable_sms_on_number()` | Enable SMS on a number |
 | `sms.lookup_sms_number()` | Look up carrier + line type |

@@ -25369,6 +25369,33 @@ paths:
         '401': { $ref: '#/components/responses/Unauthorized' }
 
   /v1/sms/registrations/{id}:
+    delete:
+      operationId: deactivateSmsRegistration
+      tags: [SMS]
+      summary: Deactivate a brand/campaign registration
+      description: |
+        Terminates the campaign with the carrier registry so the recurring
+        monthly campaign fee stops (carriers bill the first 3 months of a
+        campaign regardless). Numbers covered by it can no longer SEND texts —
+        receiving is unaffected — until they're registered under a new brand.
+        Irreversible: a deactivated campaign cannot be restored; texting again
+        later requires a new registration (new one-time and review fees).
+        Idempotent.
+      security:
+        - bearerAuth: []
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string } }
+      responses:
+        '200':
+          description: Registration deactivated.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status: { type: string, enum: [deactivated] }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404': { description: Registration not found }
     get:
       operationId: getSmsRegistration
       tags: [SMS]

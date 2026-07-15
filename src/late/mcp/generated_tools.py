@@ -11057,6 +11057,26 @@ def register_generated_tools(mcp, _get_client):
 
     @mcp.tool(
         annotations=ToolAnnotations(
+            title="Deactivate a brand/campaign registration",
+            readOnlyHint=False,
+            destructiveHint=True,
+            openWorldHint=True,
+        )
+    )
+    def sms_deactivate_sms_registration(id: str) -> str:
+        """Deactivate a brand/campaign registration
+
+        Args:
+            id: (required)"""
+        client = _get_client()
+        try:
+            response = client.sms.deactivate_sms_registration(id=id)
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
             title="Get a carrier registration",
             readOnlyHint=True,
             destructiveHint=False,
