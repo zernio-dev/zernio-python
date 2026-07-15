@@ -34422,7 +34422,7 @@ paths:
         - { name: accountId, in: query, required: true, schema: { type: string }, description: Social account ID }
         - { name: adAccountId, in: query, required: true, schema: { type: string }, description: Platform ad account ID }
         - { name: platform, in: query, schema: { type: string, enum: [facebook, instagram, googleads, tiktok, tiktokads, pinterest, linkedin, linkedinads, twitter, xads] } }
-        - { name: type, in: query, required: false, schema: { type: string, enum: [customer_list, company_list, engagement, website, lookalike, saved_targeting] }, description: "Filter to one audience type. `saved_targeting` returns stored TargetingSpec audiences; the other types return uploaded/derived audiences." }
+        - { name: type, in: query, required: false, schema: { type: string, enum: [customer_list, company_list, engagement, website, website_retargeting, lookalike, saved_targeting] }, description: "Filter to one audience type. `saved_targeting` returns stored TargetingSpec audiences; the other types return uploaded/derived audiences." }
       responses:
         '200':
           description: Audiences
@@ -34441,7 +34441,7 @@ paths:
                         platformAudienceId: { type: string }
                         name: { type: string }
                         description: { type: string }
-                        type: { type: string, enum: [customer_list, company_list, engagement, website, lookalike, saved_targeting] }
+                        type: { type: string, enum: [customer_list, company_list, engagement, website, website_retargeting, lookalike, saved_targeting] }
                         spec:
                           anyOf:
                             - $ref: '#/components/schemas/TargetingSpec'
@@ -34481,7 +34481,24 @@ paths:
                     adAccountId: { type: string, description: "Platform ad account ID. Must start with act_ for Meta; bare platform id for others (Google customer id, X/TikTok/LinkedIn/Pinterest account id)." }
                     name: { type: string, maxLength: 255 }
                     description: { type: string }
-                    type: { type: string, enum: [customer_list, company_list, engagement, website, lookalike] }
+                    type: { type: string, enum: [customer_list, company_list, engagement, website, website_retargeting, lookalike] }
+                    matchRules:
+                      type: array
+                      minItems: 1
+                      maxItems: 50
+                      description: |
+                        Required for website_retargeting audiences (LinkedIn only).
+                        Each rule is a URL pattern; a member who visits any
+                        matching page enters the segment. Needs the LinkedIn
+                        Insight Tag installed on the customer's site — the
+                        segment only starts filling once the tag reports visits.
+                      items:
+                        type: object
+                        additionalProperties: false
+                        required: [matchType, matchValue]
+                        properties:
+                          matchType: { type: string, enum: [EXACT, STARTS_WITH, CONTAINS, ENDS_WITH] }
+                          matchValue: { type: string }
                     sourceType:
                       type: string
                       enum: [VIDEO_ADS, LEAD_GEN_FORMS, ORGANIZATION_PAGES, EVENT_PAGES, SINGLE_IMAGE_ADS]
