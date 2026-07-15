@@ -112,9 +112,14 @@ class SmsResource:
         )
         return self._client._post("/v1/sms/registrations", data=payload)
 
-    def list_sms_registrations(self) -> dict[str, Any]:
+    def list_sms_registrations(
+        self, *, include_deactivated: bool | None = None
+    ) -> dict[str, Any]:
         """List carrier registrations"""
-        return self._client._get("/v1/sms/registrations")
+        params = self._build_params(
+            include_deactivated=include_deactivated,
+        )
+        return self._client._get("/v1/sms/registrations", params=params)
 
     def deactivate_sms_registration(self, id: str) -> dict[str, Any]:
         """Deactivate a brand/campaign registration"""
@@ -238,9 +243,14 @@ class SmsResource:
         )
         return await self._client._apost("/v1/sms/registrations", data=payload)
 
-    async def alist_sms_registrations(self) -> dict[str, Any]:
+    async def alist_sms_registrations(
+        self, *, include_deactivated: bool | None = None
+    ) -> dict[str, Any]:
         """List carrier registrations (async)"""
-        return await self._client._aget("/v1/sms/registrations")
+        params = self._build_params(
+            include_deactivated=include_deactivated,
+        )
+        return await self._client._aget("/v1/sms/registrations", params=params)
 
     async def adeactivate_sms_registration(self, id: str) -> dict[str, Any]:
         """Deactivate a brand/campaign registration (async)"""

@@ -11046,11 +11046,16 @@ def register_generated_tools(mcp, _get_client):
             openWorldHint=False,
         )
     )
-    def sms_list_sms_registrations() -> str:
-        """List carrier registrations"""
+    def sms_list_sms_registrations(include_deactivated: bool | None = None) -> str:
+        """List carrier registrations
+
+        Args:
+            include_deactivated: Deactivated (terminated) registrations are hidden by default — pass true to include them."""
         client = _get_client()
         try:
-            response = client.sms.list_sms_registrations()
+            response = client.sms.list_sms_registrations(
+                include_deactivated=include_deactivated
+            )
             return _format_response(response)
         except Exception as e:
             return f"Error: {e}"
