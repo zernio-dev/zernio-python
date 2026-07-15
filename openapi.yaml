@@ -3941,6 +3941,13 @@ components:
         when no media attached. Use organizationUrn for multi-org posting. Geo-restriction only works for
         organization pages (not personal profiles) and requires the targeted audience to exceed 300 followers.
 
+    MoneyAmount:
+      type: object
+      required: [amount, currencyCode]
+      properties:
+        amount:       { type: string, description: "Amount as a decimal string, e.g. \"88.59\"." }
+        currencyCode: { type: string, description: "ISO 4217 currency code, e.g. \"USD\"." }
+
     LinkedInAdsPlatformData:
       type: object
       additionalProperties: false
@@ -34487,6 +34494,158 @@ paths:
           description: Ads access required. Legacy plans need the Ads add-on; included by default on usage-based plans.
         '404': { $ref: '#/components/responses/NotFound' }
 
+  /v1/ads/targeting/bid-pricing:
+    post:
+      operationId: getLinkedInBidPricing
+      tags: [Ads]
+      summary: Suggested bid and budget bounds (LinkedIn)
+      description: |
+        LinkedIn-only. Returns the suggested bid and bid limits for a targeting
+        spec, plus the daily-budget bounds LinkedIn will accept. Use it before
+        creating a campaign to pick a bid inside the allowed range and warn the
+        user if their daily budget is below the minimum. Wraps LinkedIn's
+        `adBudgetPricing` finder.
+
+        Non-LinkedIn accounts return `available: false` so clients can hide the
+        pricing UI without treating it as a failure.
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [accountId, adAccountId, spec]
+              properties:
+                accountId: { type: string, description: "Zernio social account ID (LinkedIn)." }
+                adAccountId: { type: string, description: "LinkedIn ad account ID (numeric)." }
+                spec: { allOf: [{ $ref: '#/components/schemas/TargetingSpec' }], description: "Same targeting spec used by POST /v1/ads/create." }
+                campaignType: { type: string, enum: [TEXT_AD, SPONSORED_UPDATES, SPONSORED_INMAILS], description: "Defaults to SPONSORED_UPDATES." }
+                bidType: { type: string, enum: [CPM, CPC, CPV], description: "Defaults to CPM." }
+                matchType: { type: string, enum: [EXACT, AUDIENCE_EXPANDED], description: "Defaults to EXACT." }
+                currency: { type: string, minLength: 3, maxLength: 3, description: "ISO 4217, defaults to USD." }
+                objectiveType: { type: string, description: "LinkedIn objectiveType, e.g. WEBSITE_VISIT, LEAD_GENERATION, VIDEO_VIEW." }
+                optimizationTargetType: { type: string, description: "LinkedIn optimizationTargetType, e.g. MAX_CLICK, MAX_IMPRESSION." }
+                dailyBudget: { type: number, description: "Optional daily budget in whole account-currency units. LinkedIn refines the suggested bid to this budget." }
+      responses:
+        '200':
+          description: Pricing insights
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [available]
+                properties:
+                  available: { type: boolean }
+                  pricing:
+                    type: [object, "null"]
+                    description: LinkedIn's adBudgetPricing element. Null when LinkedIn has no data for the combination.
+                    properties:
+                      bidLimits:
+                        type: object
+                        properties:
+                          min: { $ref: '#/components/schemas/MoneyAmount' }
+                          max: { $ref: '#/components/schemas/MoneyAmount' }
+                      suggestedBid:
+                        type: object
+                        properties:
+                          min:     { $ref: '#/components/schemas/MoneyAmount' }
+                          default: { $ref: '#/components/schemas/MoneyAmount' }
+                          max:     { $ref: '#/components/schemas/MoneyAmount' }
+                      dailyBudgetLimits:
+                        type: object
+                        properties:
+                          min:     { $ref: '#/components/schemas/MoneyAmount' }
+                          default: { $ref: '#/components/schemas/MoneyAmount' }
+                          max:     { $ref: '#/components/schemas/MoneyAmount' }
+        '400': { description: "Invalid targeting or unsupported objective/optimization/bid combination." }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { description: "Ads access required." }
+        '404': { $ref: '#/components/responses/NotFound' }
+
+  /v1/ads/targeting/supply-forecast:
+    post:
+      operationId: getLinkedInSupplyForecast
+      tags: [Ads]
+      summary: Impressions, clicks and spend forecast (LinkedIn)
+      description: |
+        LinkedIn-only. Forecasted impressions, clicks, spend and ~20 other
+        metrics for a targeting spec over a time range. Wraps LinkedIn's
+        `adSupplyForecasts` finder.
+
+        Each returned series carries a `metricType` (IMPRESSION, CLICK, SPENDING,
+        MAX_POTENTIAL_BUDGET, COST_PER_MILLION_IMPRESSIONS, ...) and a
+        `granularity` (DAILY, SEVEN_DAY, THIRTY_DAY, CUSTOM). LinkedIn caps the
+        daily spending forecast at 1.2x the daily budget and returns 0 once the
+        total budget is exhausted.
+
+        Non-LinkedIn accounts return `available: false`.
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [accountId, adAccountId, spec, timeRangeStart, timeRangeEnd]
+              properties:
+                accountId: { type: string }
+                adAccountId: { type: string }
+                spec: { allOf: [{ $ref: '#/components/schemas/TargetingSpec' }] }
+                campaignType: { type: string, enum: [SPONSORED_UPDATES, SPONSORED_INMAILS, DYNAMIC], description: "Defaults to SPONSORED_UPDATES." }
+                timeRangeStart: { type: integer, description: "Unix ms. Must be in the future." }
+                timeRangeEnd: { type: integer, description: "Unix ms. Must be after start and within LinkedIn's max horizon." }
+                objectiveType: { type: string }
+                optimizationTarget: { type: string, description: "When set, the forecast assumes auto-bidding. When unset, competingBid is required." }
+                dailyBudget: { type: number, description: "Either dailyBudget or totalBudget is required." }
+                totalBudget: { type: number }
+                currency: { type: string, minLength: 3, maxLength: 3, description: "ISO 4217, defaults to USD." }
+                competingBid:
+                  type: object
+                  required: [bidType, amount]
+                  description: "Required for manual-bid forecasts (when optimizationTarget is not set)."
+                  properties:
+                    bidType: { type: string, enum: [CPM, CPC, CPV] }
+                    amount: { type: number }
+                enableAudienceNetwork: { type: boolean, description: "Defaults to false. Required true for connectedTelevisionOnly." }
+                enableAudienceExpansion: { type: boolean, description: "Defaults to false." }
+                connectedTelevisionOnly: { type: boolean, description: "Defaults to false." }
+      responses:
+        '200':
+          description: Forecast series
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [available]
+                properties:
+                  available: { type: boolean }
+                  forecast:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        metricType:  { type: string }
+                        granularity: { type: string, enum: [DAILY, SEVEN_DAY, THIRTY_DAY, CUSTOM] }
+                        timeSeries:
+                          type: array
+                          items:
+                            type: object
+                            properties:
+                              timestamp: { type: integer }
+                              value:     { type: number }
+                              adForecastRange:
+                                type: object
+                                properties:
+                                  lowEnd:  { type: number }
+                                  highEnd: { type: number }
+        '400': { description: "Invalid targeting, missing budget, or LinkedIn forecast validation error (e.g. END_DATE_MAX_HORIZON_FOR_FORECAST)." }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { description: "Ads access required." }
+        '404': { $ref: '#/components/responses/NotFound' }
+
   /v1/ads/catalogs:
     get:
       operationId: listAdCatalogs
@@ -34630,6 +34789,11 @@ paths:
                         matching page enters the segment. Needs the LinkedIn
                         Insight Tag installed on the customer's site — the
                         segment only starts filling once the tag reports visits.
+
+                        The response's `platformAudienceId` is the LinkedIn
+                        adSegment id, valid for downstream use.
+                        These segments appear in GET /v1/ads/audiences with 
+                        `type: website_retargeting` once LinkedIn has finished building them.
                       items:
                         type: object
                         additionalProperties: false

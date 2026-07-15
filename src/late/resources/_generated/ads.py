@@ -617,6 +617,74 @@ class AdsResource:
         )
         return self._client._post("/v1/ads/targeting/reach-estimate", data=payload)
 
+    def get_linked_in_bid_pricing(
+        self,
+        account_id: str,
+        ad_account_id: str,
+        spec: Any,
+        *,
+        campaign_type: str | None = None,
+        bid_type: str | None = None,
+        match_type: str | None = None,
+        currency: str | None = None,
+        objective_type: str | None = None,
+        optimization_target_type: str | None = None,
+        daily_budget: float | None = None,
+    ) -> dict[str, Any]:
+        """Suggested bid and budget bounds (LinkedIn)"""
+        payload = self._build_payload(
+            account_id=account_id,
+            ad_account_id=ad_account_id,
+            spec=spec,
+            campaign_type=campaign_type,
+            bid_type=bid_type,
+            match_type=match_type,
+            currency=currency,
+            objective_type=objective_type,
+            optimization_target_type=optimization_target_type,
+            daily_budget=daily_budget,
+        )
+        return self._client._post("/v1/ads/targeting/bid-pricing", data=payload)
+
+    def get_linked_in_supply_forecast(
+        self,
+        account_id: str,
+        ad_account_id: str,
+        spec: Any,
+        time_range_start: int,
+        time_range_end: int,
+        *,
+        campaign_type: str | None = None,
+        objective_type: str | None = None,
+        optimization_target: str | None = None,
+        daily_budget: float | None = None,
+        total_budget: float | None = None,
+        currency: str | None = None,
+        competing_bid: dict[str, Any] | None = None,
+        enable_audience_network: bool | None = None,
+        enable_audience_expansion: bool | None = None,
+        connected_television_only: bool | None = None,
+    ) -> dict[str, Any]:
+        """Impressions, clicks and spend forecast (LinkedIn)"""
+        payload = self._build_payload(
+            account_id=account_id,
+            ad_account_id=ad_account_id,
+            spec=spec,
+            campaign_type=campaign_type,
+            time_range_start=time_range_start,
+            time_range_end=time_range_end,
+            objective_type=objective_type,
+            optimization_target=optimization_target,
+            daily_budget=daily_budget,
+            total_budget=total_budget,
+            currency=currency,
+            competing_bid=competing_bid,
+            enable_audience_network=enable_audience_network,
+            enable_audience_expansion=enable_audience_expansion,
+            connected_television_only=connected_television_only,
+        )
+        return self._client._post("/v1/ads/targeting/supply-forecast", data=payload)
+
     def list_ad_catalogs(self, account_id: str, ad_account_id: str) -> dict[str, Any]:
         """List Meta product catalogs"""
         params = self._build_params(
@@ -1474,6 +1542,76 @@ class AdsResource:
         )
         return await self._client._apost(
             "/v1/ads/targeting/reach-estimate", data=payload
+        )
+
+    async def aget_linked_in_bid_pricing(
+        self,
+        account_id: str,
+        ad_account_id: str,
+        spec: Any,
+        *,
+        campaign_type: str | None = None,
+        bid_type: str | None = None,
+        match_type: str | None = None,
+        currency: str | None = None,
+        objective_type: str | None = None,
+        optimization_target_type: str | None = None,
+        daily_budget: float | None = None,
+    ) -> dict[str, Any]:
+        """Suggested bid and budget bounds (LinkedIn) (async)"""
+        payload = self._build_payload(
+            account_id=account_id,
+            ad_account_id=ad_account_id,
+            spec=spec,
+            campaign_type=campaign_type,
+            bid_type=bid_type,
+            match_type=match_type,
+            currency=currency,
+            objective_type=objective_type,
+            optimization_target_type=optimization_target_type,
+            daily_budget=daily_budget,
+        )
+        return await self._client._apost("/v1/ads/targeting/bid-pricing", data=payload)
+
+    async def aget_linked_in_supply_forecast(
+        self,
+        account_id: str,
+        ad_account_id: str,
+        spec: Any,
+        time_range_start: int,
+        time_range_end: int,
+        *,
+        campaign_type: str | None = None,
+        objective_type: str | None = None,
+        optimization_target: str | None = None,
+        daily_budget: float | None = None,
+        total_budget: float | None = None,
+        currency: str | None = None,
+        competing_bid: dict[str, Any] | None = None,
+        enable_audience_network: bool | None = None,
+        enable_audience_expansion: bool | None = None,
+        connected_television_only: bool | None = None,
+    ) -> dict[str, Any]:
+        """Impressions, clicks and spend forecast (LinkedIn) (async)"""
+        payload = self._build_payload(
+            account_id=account_id,
+            ad_account_id=ad_account_id,
+            spec=spec,
+            campaign_type=campaign_type,
+            time_range_start=time_range_start,
+            time_range_end=time_range_end,
+            objective_type=objective_type,
+            optimization_target=optimization_target,
+            daily_budget=daily_budget,
+            total_budget=total_budget,
+            currency=currency,
+            competing_bid=competing_bid,
+            enable_audience_network=enable_audience_network,
+            enable_audience_expansion=enable_audience_expansion,
+            connected_television_only=connected_television_only,
+        )
+        return await self._client._apost(
+            "/v1/ads/targeting/supply-forecast", data=payload
         )
 
     async def alist_ad_catalogs(

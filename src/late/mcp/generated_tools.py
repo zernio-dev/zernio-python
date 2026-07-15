@@ -3062,6 +3062,123 @@ def register_generated_tools(mcp, _get_client):
 
     @mcp.tool(
         annotations=ToolAnnotations(
+            title="Suggested bid and budget bounds (LinkedIn)",
+            readOnlyHint=False,
+            destructiveHint=True,
+            openWorldHint=True,
+        )
+    )
+    def ads_get_linked_in_bid_pricing(
+        account_id: str,
+        ad_account_id: str,
+        spec: dict[str, Any] | None,
+        campaign_type: str | None = None,
+        bid_type: str | None = None,
+        match_type: str | None = None,
+        currency: str | None = None,
+        objective_type: str | None = None,
+        optimization_target_type: str | None = None,
+        daily_budget: float | None = None,
+    ) -> str:
+        """Suggested bid and budget bounds (LinkedIn)
+
+        Args:
+            account_id: Zernio social account ID (LinkedIn). (required)
+            ad_account_id: LinkedIn ad account ID (numeric). (required)
+            spec: Same targeting spec used by POST /v1/ads/create. (required)
+            campaign_type: Defaults to SPONSORED_UPDATES.
+            bid_type: Defaults to CPM.
+            match_type: Defaults to EXACT.
+            currency: ISO 4217, defaults to USD.
+            objective_type: LinkedIn objectiveType, e.g. WEBSITE_VISIT, LEAD_GENERATION, VIDEO_VIEW.
+            optimization_target_type: LinkedIn optimizationTargetType, e.g. MAX_CLICK, MAX_IMPRESSION.
+            daily_budget: Optional daily budget in whole account-currency units. LinkedIn refines the suggested bid to this budget."""
+        client = _get_client()
+        try:
+            response = client.ads.get_linked_in_bid_pricing(
+                account_id=account_id,
+                ad_account_id=ad_account_id,
+                spec=spec,
+                campaign_type=campaign_type,
+                bid_type=bid_type,
+                match_type=match_type,
+                currency=currency,
+                objective_type=objective_type,
+                optimization_target_type=optimization_target_type,
+                daily_budget=daily_budget,
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Impressions, clicks and spend forecast (LinkedIn)",
+            readOnlyHint=False,
+            destructiveHint=True,
+            openWorldHint=True,
+        )
+    )
+    def ads_get_linked_in_supply_forecast(
+        account_id: str,
+        ad_account_id: str,
+        spec: dict[str, Any] | None,
+        time_range_start: int,
+        time_range_end: int,
+        campaign_type: str | None = None,
+        objective_type: str | None = None,
+        optimization_target: str | None = None,
+        daily_budget: float | None = None,
+        total_budget: float | None = None,
+        currency: str | None = None,
+        competing_bid: dict[str, Any] | None = None,
+        enable_audience_network: bool | None = None,
+        enable_audience_expansion: bool | None = None,
+        connected_television_only: bool | None = None,
+    ) -> str:
+        """Impressions, clicks and spend forecast (LinkedIn)
+
+        Args:
+            account_id: (required)
+            ad_account_id: (required)
+            spec: (required)
+            campaign_type: Defaults to SPONSORED_UPDATES.
+            time_range_start: Unix ms. Must be in the future. (required)
+            time_range_end: Unix ms. Must be after start and within LinkedIn's max horizon. (required)
+            objective_type
+            optimization_target: When set, the forecast assumes auto-bidding. When unset, competingBid is required.
+            daily_budget: Either dailyBudget or totalBudget is required.
+            total_budget
+            currency: ISO 4217, defaults to USD.
+            competing_bid: Required for manual-bid forecasts (when optimizationTarget is not set).
+            enable_audience_network: Defaults to false. Required true for connectedTelevisionOnly.
+            enable_audience_expansion: Defaults to false.
+            connected_television_only: Defaults to false."""
+        client = _get_client()
+        try:
+            response = client.ads.get_linked_in_supply_forecast(
+                account_id=account_id,
+                ad_account_id=ad_account_id,
+                spec=spec,
+                campaign_type=campaign_type,
+                time_range_start=time_range_start,
+                time_range_end=time_range_end,
+                objective_type=objective_type,
+                optimization_target=optimization_target,
+                daily_budget=daily_budget,
+                total_budget=total_budget,
+                currency=currency,
+                competing_bid=competing_bid,
+                enable_audience_network=enable_audience_network,
+                enable_audience_expansion=enable_audience_expansion,
+                connected_television_only=connected_television_only,
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
             title="List Meta product catalogs",
             readOnlyHint=True,
             destructiveHint=False,

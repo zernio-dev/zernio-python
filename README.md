@@ -427,6 +427,8 @@ Both `from zernio import ...` and `from late import ...` work identically. The `
 | `ads.get_dsa_defaults()` | Get ad account DSA defaults |
 | `ads.get_dsa_recommendations()` | List DSA beneficiary/payor suggestions |
 | `ads.get_lead_form()` | Get a lead form |
+| `ads.get_linked_in_bid_pricing()` | Suggested bid and budget bounds (LinkedIn) |
+| `ads.get_linked_in_supply_forecast()` | Impressions, clicks and spend forecast (LinkedIn) |
 | `ads.update_ad()` | Update ad |
 | `ads.update_ad_account()` | Update ad account settings |
 | `ads.update_ad_status()` | Pause or resume a single ad |
