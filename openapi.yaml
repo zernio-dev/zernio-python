@@ -25284,6 +25284,11 @@ paths:
                     directLending: { type: boolean }
                     privacyPolicyLink: { type: string, description: "Link to your privacy policy. Recommended: reviewers check that it says mobile information is not sold or shared with third parties for promotional purposes. A bare domain is normalized to https://." }
                     termsAndConditionsLink: { type: string, description: "Link to your terms & conditions. A bare domain is normalized to https://." }
+                wizardValues:
+                  type: object
+                  additionalProperties: { type: string }
+                  description: Raw dashboard-wizard answers, stored only to prefill edit-and-resubmit. API integrators can omit.
+                resubmitRequestId: { type: string, description: "Resubmit a registration that was returned for changes — updates it in place instead of creating a new one." }
                 tollFree:
                   type: object
                   description: Required for toll_free.
@@ -25356,7 +25361,7 @@ paths:
                         id: { type: string }
                         registrationType: { type: string, enum: [standard_10dlc, sole_prop_10dlc, toll_free] }
                         displayName: { type: [string, "null"] }
-                        status: { type: string, enum: [pending, approved, rejected] }
+                        status: { type: string, enum: [pending, approved, rejected, requested, changes_requested, deactivated], description: "requested/changes_requested = pre-submission review states; customers see them as pending / needs changes." }
                         brandStatus: { type: string, description: Carrier-registry brand status (e.g. VERIFIED). }
                         campaignStatus: { type: string }
                         brandId: { type: [string, "null"], description: "TCR brand id, useful when referencing the brand in carrier support threads." }
@@ -25421,7 +25426,7 @@ paths:
                 properties:
                   id: { type: string }
                   registrationType: { type: string, enum: [standard_10dlc, sole_prop_10dlc, toll_free] }
-                  status: { type: string, enum: [pending, approved, rejected] }
+                  status: { type: string, enum: [pending, approved, rejected, requested, changes_requested, deactivated], description: "requested/changes_requested = pre-submission review states; customers see them as pending / needs changes." }
                   brandStatus: { type: string }
                   campaignStatus: { type: string }
                   declineReason: { type: [string, "null"] }
@@ -28552,7 +28557,7 @@ paths:
                 type: object
                 properties:
                   registrationId: { type: string }
-                  status: { type: string, enum: [pending, approved, rejected] }
+                  status: { type: string, enum: [pending, approved, rejected, requested, changes_requested, deactivated], description: "requested/changes_requested = pre-submission review states; customers see them as pending / needs changes." }
         '401': { $ref: '#/components/responses/Unauthorized' }
         '404': { description: Number not found }
         '409': { description: No existing SMS registration to reuse for this number }

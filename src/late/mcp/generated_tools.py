@@ -11008,6 +11008,8 @@ def register_generated_tools(mcp, _get_client):
         phone_numbers: list[str] | None,
         brand: dict[str, Any] | None = None,
         campaign: dict[str, Any] | None = None,
+        wizard_values: dict[str, Any] | None = None,
+        resubmit_request_id: str | None = None,
         toll_free: dict[str, Any] | None = None,
     ) -> str:
         """Start a carrier registration
@@ -11024,6 +11026,8 @@ def register_generated_tools(mcp, _get_client):
         name the registered brand and carry the disclosures — submissions
         that don't are rewritten to the compliant template before the
         campaign is filed.
+                wizard_values: Raw dashboard-wizard answers, stored only to prefill edit-and-resubmit. API integrators can omit.
+                resubmit_request_id: Resubmit a registration that was returned for changes — updates it in place instead of creating a new one.
                 toll_free: Required for toll_free."""
         client = _get_client()
         try:
@@ -11032,6 +11036,8 @@ def register_generated_tools(mcp, _get_client):
                 phone_numbers=phone_numbers,
                 brand=brand,
                 campaign=campaign,
+                wizard_values=wizard_values,
+                resubmit_request_id=resubmit_request_id,
                 toll_free=toll_free,
             )
             return _format_response(response)

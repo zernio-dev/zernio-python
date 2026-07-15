@@ -100,6 +100,8 @@ class SmsResource:
         *,
         brand: dict[str, Any] | None = None,
         campaign: dict[str, Any] | None = None,
+        wizard_values: dict[str, Any] | None = None,
+        resubmit_request_id: str | None = None,
         toll_free: dict[str, Any] | None = None,
     ) -> dict[str, Any]:
         """Start a carrier registration"""
@@ -108,6 +110,8 @@ class SmsResource:
             phone_numbers=phone_numbers,
             brand=brand,
             campaign=campaign,
+            wizard_values=wizard_values,
+            resubmit_request_id=resubmit_request_id,
             toll_free=toll_free,
         )
         return self._client._post("/v1/sms/registrations", data=payload)
@@ -231,6 +235,8 @@ class SmsResource:
         *,
         brand: dict[str, Any] | None = None,
         campaign: dict[str, Any] | None = None,
+        wizard_values: dict[str, Any] | None = None,
+        resubmit_request_id: str | None = None,
         toll_free: dict[str, Any] | None = None,
     ) -> dict[str, Any]:
         """Start a carrier registration (async)"""
@@ -239,6 +245,8 @@ class SmsResource:
             phone_numbers=phone_numbers,
             brand=brand,
             campaign=campaign,
+            wizard_values=wizard_values,
+            resubmit_request_id=resubmit_request_id,
             toll_free=toll_free,
         )
         return await self._client._apost("/v1/sms/registrations", data=payload)
