@@ -25243,11 +25243,13 @@ paths:
                     optoutKeywords: { type: string }
                     optoutMessage: { type: string, minLength: 20, maxLength: 320 }
                     helpKeywords: { type: string }
-                    embeddedLink: { type: boolean }
-                    embeddedPhone: { type: boolean }
+                    embeddedLink: { type: boolean, description: "Whether messages carry links. Auto-derived from the samples when omitted, so the declaration matches what the reviewer reads." }
+                    embeddedPhone: { type: boolean, description: "Whether messages carry phone numbers. Auto-derived from the samples when omitted." }
                     numberPool: { type: boolean }
                     ageGated: { type: boolean }
                     directLending: { type: boolean }
+                    privacyPolicyLink: { type: string, description: "Link to your privacy policy. Recommended: reviewers check that it says mobile information is not sold or shared with third parties for promotional purposes. A bare domain is normalized to https://." }
+                    termsAndConditionsLink: { type: string, description: "Link to your terms & conditions. A bare domain is normalized to https://." }
                 tollFree:
                   type: object
                   description: Required for toll_free.
