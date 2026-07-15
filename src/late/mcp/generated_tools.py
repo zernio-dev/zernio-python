@@ -10818,6 +10818,7 @@ def register_generated_tools(mcp, _get_client):
         to: str,
         text: str | None = None,
         media_urls: list[str] | None = None,
+        send_at: str | None = None,
     ) -> str:
         """Send an SMS/MMS
 
@@ -10825,11 +10826,12 @@ def register_generated_tools(mcp, _get_client):
             from_: One of your SMS-enabled numbers (E.164; formatting is normalized). (required)
             to: Recipient number (E.164). (required)
             text: Message body. Required unless `mediaUrls` is set. Max 10 SMS segments (1530 GSM-7 or 670 unicode characters).
-            media_urls: Public media URLs to attach (sends as MMS). Max 10."""
+            media_urls: Public media URLs to attach (sends as MMS). Max 10.
+            send_at: Optional. Schedule the send for a future time (ISO 8601 with offset, e.g. `2026-08-01T12:00:00Z`). Must be in the future. The message is queued and the `message.delivered` webhook fires when it actually sends."""
         client = _get_client()
         try:
             response = client.sms.send_sms(
-                from_=from_, to=to, text=text, media_urls=media_urls
+                from_=from_, to=to, text=text, media_urls=media_urls, send_at=send_at
             )
             return _format_response(response)
         except Exception as e:

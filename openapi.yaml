@@ -25070,6 +25070,10 @@ paths:
                   maxItems: 10
                   items: { type: string, format: uri }
                   description: Public media URLs to attach (sends as MMS). Max 10.
+                sendAt:
+                  type: string
+                  format: date-time
+                  description: "Optional. Schedule the send for a future time (ISO 8601 with offset, e.g. `2026-08-01T12:00:00Z`). Must be in the future. The message is queued and the `message.delivered` webhook fires when it actually sends."
       responses:
         '200':
           description: Message accepted for delivery.
