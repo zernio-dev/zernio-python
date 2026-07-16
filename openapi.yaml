@@ -4965,12 +4965,11 @@ components:
           type: object
           description: Current billing cycle. `start`/`end` are resolved for usage-based accounts only.
           properties:
-            start: { type: string, format: date-time, nullable: true }
-            end: { type: string, format: date-time, nullable: true }
+            start: { type: [string, "null"], format: date-time }
+            end: { type: [string, "null"], format: date-time }
             anchorDay: { type: integer, description: Day-of-month the cycle resets. }
         balance:
-          type: object
-          nullable: true
+          type: [object, "null"]
           description: Accrued spend + remaining credits this cycle. `null` for fixed-subscription (Stripe) plans.
           properties:
             accruedThisPeriodCents: { type: integer }
@@ -4979,16 +4978,16 @@ components:
           type: object
           properties:
             xSpendUsedCents: { type: integer }
-            xSpendLimitCents: { type: integer, nullable: true, description: Monthly X-API spend cap; null = unlimited. }
+            xSpendLimitCents: { type: [integer, "null"], description: Monthly X-API spend cap; null = unlimited. }
         status:
           type: object
           properties:
             hasAccess: { type: boolean }
             suspended: { type: boolean }
-            suspendedAt: { type: string, format: date-time, nullable: true }
-            suspensionReason: { type: string, nullable: true }
-            openInvoiceUrl: { type: string, nullable: true, description: Hosted invoice URL for dunning (Stripe). }
-            declineReason: { type: string, nullable: true }
+            suspendedAt: { type: [string, "null"], format: date-time }
+            suspensionReason: { type: [string, "null"] }
+            openInvoiceUrl: { type: [string, "null"], description: Hosted invoice URL for dunning (Stripe). }
+            declineReason: { type: [string, "null"] }
             autoUpgradeEnabled: { type: boolean }
         legacy:
           type: object
@@ -5089,9 +5088,9 @@ components:
             total + tax). Null when the account has no billing address on
             file, the total is zero or negative, or the estimate failed.
           properties:
-            taxUsd: { type: number, description: Estimated tax in USD, added on top of `totals.total`. }
-            ratePercent: { type: [number, "null"], description: Combined rate percentage, e.g. 21. }
-            jurisdictionLabel: { type: [string, "null"], description: Human jurisdiction label, e.g. "ES VAT" or "WA sales tax". }
+            taxUsd: { type: number, description: "Estimated tax in USD, added on top of `totals.total`." }
+            ratePercent: { type: [number, "null"], description: "Combined rate percentage, e.g. 21." }
+            jurisdictionLabel: { type: [string, "null"], description: 'Human jurisdiction label, e.g. "ES VAT" or "WA sales tax".' }
             reverseCharge: { type: boolean, description: True for EU/UK B2B reverse charge (0 tax added by design). }
     UsageStats:
       type: object
@@ -10603,6 +10602,7 @@ paths:
                     - "64e1f0a9e2b5af0012ab34cd"
                     - "64e1f0a9e2b5af0012ab34ce"
                     - "64e1f0a9e2b5af0012ab34cf"
+        '400': { description: Invalid request }
         '401': { $ref: '#/components/responses/Unauthorized' }
         '404': { $ref: '#/components/responses/NotFound' }
         '409': { description: Group name already exists }
@@ -10627,6 +10627,7 @@ paths:
                   message: { type: string }
               example:
                 message: "Account group deleted successfully"
+        '400': { description: Invalid request }
         '401': { $ref: '#/components/responses/Unauthorized' }
         '404': { $ref: '#/components/responses/NotFound' }
   /v1/media/presign:
@@ -25280,7 +25281,7 @@ paths:
                     description: { type: string, minLength: 40, maxLength: 4096 }
                     messageFlow: { type: string, minLength: 40, maxLength: 2048, description: "How a recipient ends up receiving your messages (the opt-in flow). Include a link to the page or form where they opt in — carrier reviewers reject campaigns whose consent they can't verify." }
                     sample1: { type: string, minLength: 20 }
-                    sample2: { type: string, minLength: 20, description: Second example message; carriers require two distinct samples, so it must differ from sample1. }
+                    sample2: { type: string, minLength: 20, description: "Second example message; carriers require two distinct samples, so it must differ from sample1." }
                     helpMessage: { type: string, minLength: 20, maxLength: 320 }
                     optinKeywords: { type: string }
                     optinMessage: { type: string, minLength: 20, maxLength: 320 }
@@ -29952,6 +29953,7 @@ paths:
                       limit: { type: integer }
                       skip: { type: integer }
                       hasMore: { type: boolean }
+        '400': { description: Invalid request }
         '401': { $ref: '#/components/responses/Unauthorized' }
     post:
       operationId: createContact
@@ -30008,6 +30010,7 @@ paths:
                       platformIdentifier: { type: string }
                       displayIdentifier: { type: string }
                   warning: { type: string }
+        '400': { description: Invalid request }
         '401': { $ref: '#/components/responses/Unauthorized' }
         '409': { description: Duplicate contact }
 
@@ -30062,6 +30065,7 @@ paths:
                         conversationId: { type: string }
                         lastActiveAt: { type: [string, "null"], format: date-time, description: 'Most recent message (either direction) in this channel''s conversation, or null if none.' }
                         createdAt: { type: string, format: date-time }
+        '400': { description: Invalid request }
         '401': { $ref: '#/components/responses/Unauthorized' }
         '404': { $ref: '#/components/responses/NotFound' }
     patch:
@@ -30107,6 +30111,7 @@ paths:
                       isBlocked: { type: boolean }
                       notes: { type: string }
                       updatedAt: { type: string, format: date-time }
+        '400': { description: Invalid request }
         '401': { $ref: '#/components/responses/Unauthorized' }
         '404': { $ref: '#/components/responses/NotFound' }
     delete:
@@ -30118,6 +30123,7 @@ paths:
         - { name: contactId, in: path, required: true, schema: { type: string } }
       responses:
         '200': { description: Contact deleted }
+        '400': { description: Invalid request }
         '401': { $ref: '#/components/responses/Unauthorized' }
         '404': { $ref: '#/components/responses/NotFound' }
 
@@ -30152,6 +30158,7 @@ paths:
                         conversationId: { type: string }
                         metadata: { type: object }
                         createdAt: { type: string, format: date-time }
+        '400': { description: Invalid request }
         '401': { $ref: '#/components/responses/Unauthorized' }
         '404': { $ref: '#/components/responses/NotFound' }
 
@@ -30198,6 +30205,7 @@ paths:
                   skipped: { type: integer }
                   errors: { type: array, items: { type: object } }
                   total: { type: integer }
+        '400': { description: Invalid request }
         '401': { $ref: '#/components/responses/Unauthorized' }
 
   /v1/contacts/{contactId}/fields/{slug}:
@@ -30404,6 +30412,7 @@ paths:
                       limit: { type: integer }
                       skip: { type: integer }
                       hasMore: { type: boolean }
+        '400': { description: Invalid request }
         '401': { $ref: '#/components/responses/Unauthorized' }
     post:
       operationId: createBroadcast
@@ -30467,6 +30476,7 @@ paths:
                       accountId: { type: string }
                       status: { type: string }
                       createdAt: { type: string, format: date-time }
+        '400': { description: Invalid request }
         '401': { $ref: '#/components/responses/Unauthorized' }
 
   /v1/broadcasts/{broadcastId}:
@@ -30710,6 +30720,7 @@ paths:
                       limit: { type: integer }
                       skip: { type: integer }
                       hasMore: { type: boolean }
+        '400': { description: Invalid request }
         '401': { $ref: '#/components/responses/Unauthorized' }
         '404': { $ref: '#/components/responses/NotFound' }
     post:
@@ -30740,6 +30751,7 @@ paths:
                   success: { type: boolean }
                   added: { type: integer, description: Number of recipients successfully added }
                   skipped: { type: integer, description: Number skipped (duplicates or missing channels) }
+        '400': { description: Invalid request }
         '401': { $ref: '#/components/responses/Unauthorized' }
         '404': { $ref: '#/components/responses/NotFound' }
 
@@ -31704,6 +31716,7 @@ paths:
                             delivered: { type: integer, description: "DMs confirmed delivered (Messenger; IG emits no delivery receipt)." }
                             read: { type: integer, description: "DMs confirmed read (IG messaging_seen / Messenger message_reads)." }
                         createdAt: { type: string, format: date-time }
+        '400': { description: Invalid request }
         '401': { $ref: '#/components/responses/Unauthorized' }
     post:
       operationId: createCommentAutomation
@@ -33219,7 +33232,7 @@ paths:
                         timezoneOffsetHoursUtc: { type: number, description: "Signed UTC offset in hours, reflecting current DST (Meta only)." }
                         minimumDailyBudget: { type: number, description: "Meta only. Minimum daily budget for the account, in the account currency's major units. This is the impressions-billed minimum; other billing events have higher minimums. Absent when the connected token cannot read it." }
                         selectable: { type: boolean, description: "Meta only. Whether the account can create/run ads now. Absent (treat as true) on non-Meta platforms." }
-                        unusableReason: { type: string, nullable: true, description: "Meta only. Human-readable reason when selectable is false; null when selectable." }
+                        unusableReason: { type: [string, "null"], description: "Meta only. Human-readable reason when selectable is false; null when selectable." }
         '401': { $ref: '#/components/responses/Unauthorized' }
         '422':
           description: Platform ads connection required (TikTok Ads, X Ads) or Instagram missing linked Facebook account
@@ -35185,7 +35198,7 @@ paths:
                   numReceived: { type: integer }
                   numInvalid: { type: integer }
         '400':
-          description: Invalid input (empty users array, missing email/phone)
+          description: Invalid input (malformed audienceId, empty users array, missing email/phone)
         '401': { $ref: '#/components/responses/Unauthorized' }
         '403':
           description: Ads access required. Legacy plans need the Ads add-on; included by default on usage-based plans.
