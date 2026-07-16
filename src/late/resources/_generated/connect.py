@@ -89,6 +89,7 @@ class ConnectResource:
         account_id: str | None = None,
         redirect_url: str | None = None,
         headless: bool | None = False,
+        force: bool | None = False,
         ad_account_id: str | None = None,
         ad_account_ids: list[str] | None = None,
     ) -> dict[str, Any]:
@@ -98,6 +99,7 @@ class ConnectResource:
             account_id=account_id,
             redirect_url=redirect_url,
             headless=headless,
+            force=force,
             ad_account_id=ad_account_id,
             ad_account_ids=ad_account_ids,
         )
@@ -604,6 +606,7 @@ class ConnectResource:
         account_id: str | None = None,
         redirect_url: str | None = None,
         headless: bool | None = False,
+        force: bool | None = False,
         ad_account_id: str | None = None,
         ad_account_ids: list[str] | None = None,
     ) -> dict[str, Any]:
@@ -613,6 +616,7 @@ class ConnectResource:
             account_id=account_id,
             redirect_url=redirect_url,
             headless=headless,
+            force=force,
             ad_account_id=ad_account_id,
             ad_account_ids=ad_account_ids,
         )

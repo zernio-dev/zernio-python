@@ -2240,6 +2240,7 @@ def register_generated_tools(mcp, _get_client):
         currency: str | None = None,
         schedule: dict[str, Any] | None = None,
         targeting: dict[str, Any] | None = None,
+        raw_targeting: dict[str, Any] | None = None,
         bid_strategy: str | None = None,
         bid_amount: float | None = None,
         roas_average_floor: float | None = None,
@@ -2264,7 +2265,16 @@ def register_generated_tools(mcp, _get_client):
                 budget: (required)
                 currency
                 schedule
-                targeting
+                targeting: Same geo/demographic fields as the `TargetingSpec` used by /v1/ads/create.
+        Geo keys (`regions`/`cities`/`zips`/`metros`) resolve via
+        GET /v1/ads/targeting/search?dimension=geo. City radius and lat/lng
+        `customLocations` are Meta-only and preserve the boosted post's
+        social proof (the ad references the existing post).
+                raw_targeting: Meta only. A verbatim Meta-native targeting spec (e.g.
+        `{ "geo_locations": { "cities": [{ "key": "...", "radius": 15, "distance_unit": "kilometer" }] } }`),
+        forwarded unchanged. Mutually exclusive with `targeting` (sending both is a 400).
+        Use for advanced fields the structured object does not expose (flexible_spec,
+        excluded audiences, business places).
                 bid_strategy: Meta bid strategy applied to the ad set. On TikTok, mapped to
         `bid_type` / `bid_price` / `deep_bid_type` automatically.
                 bid_amount: Bid cap in WHOLE currency units (USD: 5 = $5.00; JPY: 100 = ¥100). Required when
@@ -2316,6 +2326,7 @@ def register_generated_tools(mcp, _get_client):
                 currency=currency,
                 schedule=schedule,
                 targeting=targeting,
+                raw_targeting=raw_targeting,
                 bid_strategy=bid_strategy,
                 bid_amount=bid_amount,
                 roas_average_floor=roas_average_floor,
@@ -5819,6 +5830,7 @@ def register_generated_tools(mcp, _get_client):
         account_id: str | None = None,
         redirect_url: str | None = None,
         headless: bool = False,
+        force: bool = False,
         ad_account_id: str | None = None,
         ad_account_ids: list[str] | None = None,
     ) -> str:
@@ -5833,6 +5845,12 @@ def register_generated_tools(mcp, _get_client):
         `instagram`, `linkedin`, `pinterest`) and standalone (`googleads`) platforms.
                 redirect_url: Custom redirect URL after OAuth completes (same-token platforms only). Accepts an http(s) URL, a custom app scheme for mobile deeplinks (e.g. myapp://callback), or a relative path.
                 headless: Enable headless mode (same-token platforms only)
+                force: Force a fresh OAuth even when an account already exists. Normally the
+        endpoint returns `alreadyConnected: true` whenever a connected account
+        is found, keying off its active state rather than token liveness.
+        Set `force=true` to bypass that and always receivean `authUrl`.
+        Completing the returned OAuth refreshes the stored token
+        on the existing posting and ads accounts in place.
                 ad_account_id: Scope ad sync to a single platform ad account. Without this param,
         sync covers every ad account the connected token can see. Supported
         on `facebook`/`instagram` (Meta, `act_<digits>`), `linkedin` (bare
@@ -5858,6 +5876,7 @@ def register_generated_tools(mcp, _get_client):
                 account_id=account_id,
                 redirect_url=redirect_url,
                 headless=headless,
+                force=force,
                 ad_account_id=ad_account_id,
                 ad_account_ids=ad_account_ids,
             )

@@ -13684,6 +13684,16 @@ paths:
           in: query
           schema: { type: boolean, default: false }
           description: Enable headless mode (same-token platforms only)
+        - name: force
+          in: query
+          schema: { type: boolean, default: false }
+          description: |
+            Force a fresh OAuth even when an account already exists. Normally the
+            endpoint returns `alreadyConnected: true` whenever a connected account
+            is found, keying off its active state rather than token liveness.
+            Set `force=true` to bypass that and always receivean `authUrl`.
+            Completing the returned OAuth refreshes the stored token
+            on the existing posting and ads accounts in place.
         - name: adAccountId
           in: query
           schema: { type: string }
@@ -33358,10 +33368,69 @@ paths:
                     endDate: { type: string, format: date-time, description: Required for lifetime budgets }
                 targeting:
                   type: object
+                  description: |
+                    Same geo/demographic fields as the `TargetingSpec` used by /v1/ads/create.
+                    Geo keys (`regions`/`cities`/`zips`/`metros`) resolve via
+                    GET /v1/ads/targeting/search?dimension=geo. City radius and lat/lng
+                    `customLocations` are Meta-only and preserve the boosted post's
+                    social proof (the ad references the existing post).
                   properties:
                     ageMin: { type: integer, minimum: 13, maximum: 65 }
                     ageMax: { type: integer, minimum: 13, maximum: 65 }
+                    gender: { type: string, enum: [all, male, female], description: "Meta only." }
+                    languages: { type: array, items: { type: string }, description: "Meta locale ids (numeric), passed through as given." }
                     countries: { type: array, items: { type: string }, description: "ISO country codes. Required for TikTok boosts (TikTok's ad group requires location_ids); optional on other platforms." }
+                    regions:
+                      type: array
+                      description: "Region/state targeting. `key` from /v1/ads/targeting/search?dimension=geo&geoType=region."
+                      items:
+                        type: object
+                        required: [key]
+                        properties:
+                          key: { type: string }
+                          name: { type: string }
+                    cities:
+                      type: array
+                      description: "City targeting. Optional `radius` + `distance_unit` extend beyond the city limits (both set together, Meta only)."
+                      items:
+                        type: object
+                        required: [key]
+                        properties:
+                          key: { type: string }
+                          name: { type: string }
+                          radius: { type: number, description: "Requires distance_unit." }
+                          distance_unit: { type: string, enum: [mile, kilometer] }
+                    zips:
+                      type: array
+                      description: "Postal/ZIP targeting. `key` is the platform's postal location ID (e.g. Meta `US:94304`)."
+                      items:
+                        type: object
+                        required: [key]
+                        properties:
+                          key: { type: string }
+                          name: { type: string }
+                    metros:
+                      type: array
+                      description: "DMA / metro-area targeting. `key` is the platform's metro ID (e.g. Meta `DMA:807`)."
+                      items:
+                        type: object
+                        required: [key]
+                        properties:
+                          key: { type: string }
+                          name: { type: string }
+                    customLocations:
+                      type: array
+                      description: "Point-radius (lat/lng) targeting (Meta custom_locations). No geo `key` lookup needed."
+                      items:
+                        type: object
+                        required: [latitude, longitude, radius, distanceUnit]
+                        properties:
+                          latitude: { type: number, minimum: -90, maximum: 90 }
+                          longitude: { type: number, minimum: -180, maximum: 180 }
+                          radius: { type: number }
+                          distanceUnit: { type: string, enum: [mile, kilometer] }
+                          name: { type: string }
+                          address: { type: string, description: "Optional label, sent to Meta as `address_string`." }
                     interests:
                       type: array
                       description: "Interest objects from /v1/ads/interests. Each must include id and name."
@@ -33372,6 +33441,15 @@ paths:
                           id: { type: string }
                           name: { type: string }
                     advantage_audience: { type: integer, enum: [0, 1], description: "Meta only. 0 = disabled (default), 1 = enabled." }
+                rawTargeting:
+                  type: object
+                  additionalProperties: true
+                  description: |
+                    Meta only. A verbatim Meta-native targeting spec (e.g.
+                    `{ "geo_locations": { "cities": [{ "key": "...", "radius": 15, "distance_unit": "kilometer" }] } }`),
+                    forwarded unchanged. Mutually exclusive with `targeting` (sending both is a 400).
+                    Use for advanced fields the structured object does not expose (flexible_spec,
+                    excluded audiences, business places).
                 bidStrategy:
                   allOf: [{ $ref: '#/components/schemas/BidStrategy' }]
                   description: |
