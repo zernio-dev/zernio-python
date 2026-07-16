@@ -1450,15 +1450,19 @@ def register_generated_tools(mcp, _get_client):
         budget: dict[str, Any] | None = None,
         bid_strategy: str | None = None,
         name: str | None = None,
+        platform_specific_data: dict[str, Any] | None = None,
     ) -> str:
         """Update a campaign
 
-        Args:
-            campaign_id: Platform campaign ID (required)
-            platform: (required)
-            budget
-            bid_strategy: Campaign-level default. Ad sets inherit this unless they override.
-            name: Rename the campaign (Meta only; other platforms return 501). At least one of budget/bidStrategy/name is required."""
+            Args:
+                campaign_id: Platform campaign ID (required)
+                platform: (required)
+                budget
+                bid_strategy: Campaign-level default. Ad sets inherit this unless they override.
+                name: Rename the campaign (Meta only; other platforms return 501). At least one of budget/bidStrategy/name/platformSpecificData is required.
+                platform_specific_data: Platform-specific campaign settings. The platform is implied by the `platform`
+        body param (same convention as platformSpecificData on POST /v1/ads/create).
+        Meta (facebook/instagram) only; other platforms return 400."""
         client = _get_client()
         try:
             response = client.ad_campaigns.update_ad_campaign(
@@ -1467,6 +1471,7 @@ def register_generated_tools(mcp, _get_client):
                 budget=budget,
                 bid_strategy=bid_strategy,
                 name=name,
+                platform_specific_data=platform_specific_data,
             )
             return _format_response(response)
         except Exception as e:
@@ -1588,6 +1593,7 @@ def register_generated_tools(mcp, _get_client):
         bid_strategy: str | None = None,
         bid_amount: float | None = None,
         roas_average_floor: float | None = None,
+        platform_specific_data: dict[str, Any] | None = None,
     ) -> str:
         """Update an ad set
 
@@ -1606,7 +1612,9 @@ def register_generated_tools(mcp, _get_client):
         bidStrategy is LOWEST_COST_WITH_BID_CAP or COST_CAP. Internally converted to Meta's
         smallest-denomination integer.
                 roas_average_floor: Minimum ROAS as a decimal multiplier (2.0 = 2.0x). Required when bidStrategy is
-        LOWEST_COST_WITH_MIN_ROAS. Sent to Meta as `bid_constraints.roas_average_floor` × 10000."""
+        LOWEST_COST_WITH_MIN_ROAS. Sent to Meta as `bid_constraints.roas_average_floor` × 10000.
+                platform_specific_data: Platform-specific post-launch delivery settings. The platform is implied by the
+        `platform` body param. Meta only; other platforms return 400. Unknown keys are rejected."""
         client = _get_client()
         try:
             response = client.ad_campaigns.update_ad_set(
@@ -1618,6 +1626,7 @@ def register_generated_tools(mcp, _get_client):
                 bid_strategy=bid_strategy,
                 bid_amount=bid_amount,
                 roas_average_floor=roas_average_floor,
+                platform_specific_data=platform_specific_data,
             )
             return _format_response(response)
         except Exception as e:
@@ -2361,6 +2370,7 @@ def register_generated_tools(mcp, _get_client):
         tracking: dict[str, Any] | None = None,
         goal: str | None = None,
         optimization_goal: str | None = None,
+        billing_event: str | None = None,
         budget_amount: float | None = None,
         budget_type: str | None = None,
         status: str | None = None,
@@ -2449,6 +2459,7 @@ def register_generated_tools(mcp, _get_client):
         - `job_applicants` requires a `platformSpecificData.jobs` creative.
         - For `lead_generation` or `conversions` on LinkedIn, or to promote an existing post, use POST /v1/ads/boost.
                 optimization_goal: Meta only. Explicit ad-set `optimization_goal` (e.g. `LANDING_PAGE_VIEWS`, `LINK_CLICKS`, `REACH`, `IMPRESSIONS`, `OFFSITE_CONVERSIONS`, `THRUPLAY`, `LEAD_GENERATION`). Overrides the default derived from `goal` (e.g. `traffic` defaults to `LINK_CLICKS`). Forwarded verbatim to Meta, which validates compatibility with the campaign objective and rejects incompatible combinations.
+                billing_event: Meta only. Explicit ad-set `billing_event`. Defaults to `IMPRESSIONS`. Forwarded verbatim to Meta, which validates compatibility with the optimization goal.
                 budget_amount: Required on legacy + multi-creative shapes. Inherited on attach.
                 budget_type: Required on legacy + multi-creative shapes. Inherited on attach.
                 status: Meta only. Publish state of the created ad set + ad. Omitted or ACTIVE publishes live (default, back-compat); PAUSED creates them paused and skips activation, so you can review before they spend.
@@ -2692,6 +2703,7 @@ def register_generated_tools(mcp, _get_client):
                 tracking=tracking,
                 goal=goal,
                 optimization_goal=optimization_goal,
+                billing_event=billing_event,
                 budget_amount=budget_amount,
                 budget_type=budget_type,
                 status=status,

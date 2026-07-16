@@ -32238,13 +32238,15 @@ paths:
       tags: [Ad Campaigns]
       summary: Update a campaign
       description: |
-        Campaign-level edits. At least one of `budget` or `bidStrategy` is required.
+        Campaign-level edits. At least one of `budget`, `bidStrategy`, `name` or `platformSpecificData` is required.
 
         - `budget` updates the CBO (Campaign Budget Optimization) budget. For ABO campaigns
           (where the budget lives on the ad set), use PUT /v1/ads/ad-sets/{adSetId} instead — this endpoint
           will return 409 with code BUDGET_LEVEL_MISMATCH.
         - `bidStrategy` sets the campaign-level default bid strategy. Per Meta's spec, `bid_amount` and
           `bid_constraints` do NOT exist at the campaign level — pass them via PUT /v1/ads/ad-sets/{adSetId}.
+        - `platformSpecificData.spendCap` (Meta only) sets the campaign's lifetime spend cap, in the ad
+          account's currency.
 
         Meta-only for now. Other platforms return 501 Not Implemented.
       security:
@@ -32269,7 +32271,15 @@ paths:
                 bidStrategy:
                   allOf: [{ $ref: '#/components/schemas/BidStrategy' }]
                   description: "Campaign-level default. Ad sets inherit this unless they override."
-                name: { type: string, maxLength: 255, description: "Rename the campaign (Meta only; other platforms return 501). At least one of budget/bidStrategy/name is required." }
+                name: { type: string, maxLength: 255, description: "Rename the campaign (Meta only; other platforms return 501). At least one of budget/bidStrategy/name/platformSpecificData is required." }
+                platformSpecificData:
+                  type: object
+                  description: |
+                    Platform-specific campaign settings. The platform is implied by the `platform`
+                    body param (same convention as platformSpecificData on POST /v1/ads/create).
+                    Meta (facebook/instagram) only; other platforms return 400.
+                  properties:
+                    spendCap: { type: [number, "null"], description: "Campaign lifetime spend cap, in the ad account's currency (Meta `spend_cap`). Pass null to remove the cap (0 is rejected by Meta)." }
       responses:
         '200':
           description: Campaign updated
@@ -32282,6 +32292,7 @@ paths:
                   budget: { $ref: '#/components/schemas/AdBudget' }
                   budgetLevel: { type: string, enum: [campaign] }
                   bidStrategy: { $ref: '#/components/schemas/BidStrategy' }
+                  platformSpecificData: { type: object }
         '400': { description: Invalid input }
         '401': { $ref: '#/components/responses/Unauthorized' }
         '404': { description: Campaign not found }
@@ -32475,13 +32486,18 @@ paths:
       summary: Update an ad set
       description: |
         Ad-set-level writes. Use this for ABO budget updates, ad-set-scoped
-        pause/resume, and bid-strategy edits. At least one of `budget`,
-        `status`, or `bidStrategy` is required.
+        pause/resume, bid-strategy edits, and Meta-only post-launch delivery
+        settings via `platformSpecificData`. At least one updatable field
+        is required.
 
         Bid strategy compatibility (per Meta's spec):
         - `LOWEST_COST_WITHOUT_CAP`: no `bidAmount`, no `roasAverageFloor`.
         - `LOWEST_COST_WITH_BID_CAP` / `COST_CAP`: `bidAmount` REQUIRED (whole currency units).
         - `LOWEST_COST_WITH_MIN_ROAS`: `roasAverageFloor` REQUIRED (decimal multiplier, e.g. 2.0 = 2.0x ROAS).
+
+        Delivery settings are validated by Meta against the campaign objective;
+        incompatible combinations (e.g. a billingEvent the optimization goal
+        doesn't allow) surface as 400s from Meta.
 
         When updating `budget` on an ABO campaign: if the parent campaign is
         CBO, the response is 409 with code BUDGET_LEVEL_MISMATCH — route to
@@ -32526,6 +32542,28 @@ paths:
                   description: |
                     Minimum ROAS as a decimal multiplier (2.0 = 2.0x). Required when bidStrategy is
                     LOWEST_COST_WITH_MIN_ROAS. Sent to Meta as `bid_constraints.roas_average_floor` × 10000.
+                platformSpecificData:
+                  type: object
+                  description: |
+                    Platform-specific post-launch delivery settings. The platform is implied by the
+                    `platform` body param. Meta only; other platforms return 400. Unknown keys are rejected.
+                  properties:
+                    optimizationGoal: { type: string, description: "Meta ad-set optimization_goal (e.g. OFFSITE_CONVERSIONS, LANDING_PAGE_VIEWS)." }
+                    billingEvent: { type: string, description: "Meta ad-set billing_event (e.g. IMPRESSIONS, LINK_CLICKS, THRUPLAY)." }
+                    startDate: { type: string, description: "Ad set start_time (ISO 8601)." }
+                    endDate: { type: string, description: "Ad set end_time (ISO 8601)." }
+                    promotedObject:
+                      type: object
+                      description: "Meta ad-set promoted_object, forwarded verbatim (same shape as /v1/ads/create)."
+                      properties:
+                        pixelId: { type: string }
+                        customEventType: { type: string }
+                        pageId: { type: string }
+                        applicationId: { type: string }
+                        objectStoreUrl: { type: string }
+                        customConversionId: { type: string }
+                        productCatalogId: { type: string }
+                        productSetId: { type: string }
       responses:
         '200':
           description: Ad set updated
@@ -32542,6 +32580,7 @@ paths:
                   bidStrategy: { $ref: '#/components/schemas/BidStrategy' }
                   bidAmount: { type: [number, "null"] }
                   roasAverageFloor: { type: [number, "null"] }
+                  platformSpecificData: { type: object }
         '400': { description: Invalid input }
         '401': { $ref: '#/components/responses/Unauthorized' }
         '404': { description: Ad set not found }
@@ -33754,6 +33793,7 @@ paths:
                     - `job_applicants` requires a `platformSpecificData.jobs` creative.
                     - For `lead_generation` or `conversions` on LinkedIn, or to promote an existing post, use POST /v1/ads/boost.
                 optimizationGoal: { type: string, description: "Meta only. Explicit ad-set `optimization_goal` (e.g. `LANDING_PAGE_VIEWS`, `LINK_CLICKS`, `REACH`, `IMPRESSIONS`, `OFFSITE_CONVERSIONS`, `THRUPLAY`, `LEAD_GENERATION`). Overrides the default derived from `goal` (e.g. `traffic` defaults to `LINK_CLICKS`). Forwarded verbatim to Meta, which validates compatibility with the campaign objective and rejects incompatible combinations." }
+                billingEvent: { type: string, description: "Meta only. Explicit ad-set `billing_event`. Defaults to `IMPRESSIONS`. Forwarded verbatim to Meta, which validates compatibility with the optimization goal." }
                 budgetAmount: { type: number, description: "Required on legacy + multi-creative shapes. Inherited on attach." }
                 budgetType: { type: string, enum: [daily, lifetime], description: "Required on legacy + multi-creative shapes. Inherited on attach." }
                 status:

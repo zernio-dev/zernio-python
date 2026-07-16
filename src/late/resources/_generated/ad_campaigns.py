@@ -105,6 +105,7 @@ class AdCampaignsResource:
         budget: dict[str, Any] | None = None,
         bid_strategy: Any | None = None,
         name: str | None = None,
+        platform_specific_data: dict[str, Any] | None = None,
     ) -> dict[str, Any]:
         """Update a campaign"""
         payload = self._build_payload(
@@ -112,6 +113,7 @@ class AdCampaignsResource:
             budget=budget,
             bid_strategy=bid_strategy,
             name=name,
+            platform_specific_data=platform_specific_data,
         )
         return self._client._put(f"/v1/ads/campaigns/{campaign_id}", data=payload)
 
@@ -170,6 +172,7 @@ class AdCampaignsResource:
         bid_strategy: Any | None = None,
         bid_amount: float | None = None,
         roas_average_floor: float | None = None,
+        platform_specific_data: dict[str, Any] | None = None,
     ) -> dict[str, Any]:
         """Update an ad set"""
         payload = self._build_payload(
@@ -180,6 +183,7 @@ class AdCampaignsResource:
             bid_strategy=bid_strategy,
             bid_amount=bid_amount,
             roas_average_floor=roas_average_floor,
+            platform_specific_data=platform_specific_data,
         )
         return self._client._put(f"/v1/ads/ad-sets/{ad_set_id}", data=payload)
 
@@ -298,6 +302,7 @@ class AdCampaignsResource:
         budget: dict[str, Any] | None = None,
         bid_strategy: Any | None = None,
         name: str | None = None,
+        platform_specific_data: dict[str, Any] | None = None,
     ) -> dict[str, Any]:
         """Update a campaign (async)"""
         payload = self._build_payload(
@@ -305,6 +310,7 @@ class AdCampaignsResource:
             budget=budget,
             bid_strategy=bid_strategy,
             name=name,
+            platform_specific_data=platform_specific_data,
         )
         return await self._client._aput(
             f"/v1/ads/campaigns/{campaign_id}", data=payload
@@ -367,6 +373,7 @@ class AdCampaignsResource:
         bid_strategy: Any | None = None,
         bid_amount: float | None = None,
         roas_average_floor: float | None = None,
+        platform_specific_data: dict[str, Any] | None = None,
     ) -> dict[str, Any]:
         """Update an ad set (async)"""
         payload = self._build_payload(
@@ -377,6 +384,7 @@ class AdCampaignsResource:
             bid_strategy=bid_strategy,
             bid_amount=bid_amount,
             roas_average_floor=roas_average_floor,
+            platform_specific_data=platform_specific_data,
         )
         return await self._client._aput(f"/v1/ads/ad-sets/{ad_set_id}", data=payload)
 
