@@ -266,6 +266,7 @@ class AnalyticsResource:
         self,
         account_id: str,
         *,
+        video_id: str | None = None,
         breakdown: str | None = None,
         start_date: str | None = None,
         end_date: str | None = None,
@@ -273,6 +274,7 @@ class AnalyticsResource:
         """Get YouTube demographics"""
         params = self._build_params(
             account_id=account_id,
+            video_id=video_id,
             breakdown=breakdown,
             start_date=start_date,
             end_date=end_date,
@@ -693,6 +695,7 @@ class AnalyticsResource:
         self,
         account_id: str,
         *,
+        video_id: str | None = None,
         breakdown: str | None = None,
         start_date: str | None = None,
         end_date: str | None = None,
@@ -700,6 +703,7 @@ class AnalyticsResource:
         """Get YouTube demographics (async)"""
         params = self._build_params(
             account_id=account_id,
+            video_id=video_id,
             breakdown=breakdown,
             start_date=start_date,
             end_date=end_date,

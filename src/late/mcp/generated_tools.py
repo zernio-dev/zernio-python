@@ -3769,6 +3769,10 @@ def register_generated_tools(mcp, _get_client):
         TargetingGeoLocationCity. `key` is Meta's city ID
         (lookupable via GET /v1/ads/targeting/search). `radius`
         and `distance_unit` are coupled: set both or neither.
+        Meta enforces a minimum city radius (~17 km / 10 mi);
+        smaller values resolve to a 0-size audience and the ad
+        fails at launch. For a tighter catchment use customLocations
+        (lat/lng).
                 regions: Region / state-level geo targeting. `key` is Meta's region
         ID (lookupable via GET /v1/ads/targeting/search?type=region).
                 zips: ZIP / postal-code geo targeting. `key` is the platform's
@@ -4321,6 +4325,7 @@ def register_generated_tools(mcp, _get_client):
     )
     def analytics_get_you_tube_demographics(
         account_id: str,
+        video_id: str | None = None,
         breakdown: str | None = None,
         start_date: str | None = None,
         end_date: str | None = None,
@@ -4329,14 +4334,18 @@ def register_generated_tools(mcp, _get_client):
 
             Args:
                 account_id: The Zernio SocialAccount ID for the YouTube account (required)
+                video_id: YouTube video ID. When provided, demographics are scoped to this single video
+        (must belong to the connected channel; otherwise 404 video_not_found).
                 breakdown: Comma-separated list of demographic dimensions: age, gender, country.
         Defaults to all three if omitted.
-                start_date: Start date in YYYY-MM-DD format. Defaults to 90 days ago.
+                start_date: Start date in YYYY-MM-DD format. Defaults to 90 days ago, or to the video's
+        publish date (lifetime) when videoId is provided.
                 end_date: End date in YYYY-MM-DD format. Defaults to 3 days ago (YouTube data latency)."""
         client = _get_client()
         try:
             response = client.analytics.get_you_tube_demographics(
                 account_id=account_id,
+                video_id=video_id,
                 breakdown=breakdown,
                 start_date=start_date,
                 end_date=end_date,
