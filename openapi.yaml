@@ -14286,6 +14286,14 @@ paths:
                           properties:
                             comment: { type: string, description: Business owner reply }
                             updateTime: { type: string, format: date-time }
+                        photoCount: { type: integer, description: 'Number of photos attached to the review (photos only, videos are not counted)' }
+                        photos:
+                          type: array
+                          description: Photos attached to the review by the reviewer
+                          items:
+                            type: object
+                            properties:
+                              url: { type: string, format: uri }
                   averageRating: { type: number, description: Overall average rating }
                   totalReviewCount: { type: integer, description: Total number of reviews }
                   nextPageToken: { type: [string, "null"], description: Token for next page }
@@ -14308,6 +14316,8 @@ paths:
                     reviewReply:
                       comment: "Thank you for your kind words! We appreciate your support."
                       updateTime: "2024-01-16T08:00:00Z"
+                    photoCount: 0
+                    photos: []
                   - id: "AIe9_BGx0987654321"
                     name: "accounts/123456789/locations/9281089117903930794/reviews/AIe9_BGx0987654321"
                     reviewer:
@@ -14320,6 +14330,8 @@ paths:
                     createTime: "2024-01-10T14:20:00Z"
                     updateTime: "2024-01-10T14:20:00Z"
                     reviewReply: null
+                    photoCount: 0
+                    photos: []
                 averageRating: 4.5
                 totalReviewCount: 125
                 nextPageToken: "CiAKHAoUMTIzNDU2Nzg5"
@@ -23806,6 +23818,13 @@ paths:
                         photoCount:
                           type: integer
                           description: Number of photos attached to the review (photos only; videos are not counted). Google Business only; 0 for other platforms.
+                        photos:
+                          type: array
+                          description: 'Photos attached to the review. Google Business only; always an empty array for other platforms.'
+                          items:
+                            type: object
+                            properties:
+                              url: { type: string, format: uri }
                         reply:
                           type: [object, "null"]
                           properties:
@@ -33920,7 +33939,16 @@ paths:
                 businessName: { type: string, maxLength: 25, description: "Google Display only" }
                 boardId: { type: string, description: "Pinterest only. Board ID (auto-creates if not provided)." }
                 organizationId: { type: string, description: "LinkedIn only. The Company Page that authors the Direct Sponsored Content (\"dark\") post backing the ad — accepts a numeric organization ID or a full `urn:li:organization:N` URN. Required unless the resolved `accountId` is a connected LinkedIn Company-Page account (defaults to that page) or the LinkedIn ad account is org-owned (defaults to the account's owning organization). The authenticated member must be an ADMINISTRATOR or DIRECT_SPONSORED_CONTENT_POSTER of this page (and the page must be associated with the ad account), or LinkedIn returns 403. Ignored by every other platform." }
-                countries: { type: array, items: { type: string }, description: "ISO 3166-1 alpha-2 country codes (e.g. ['NL']). Defaults to ['US'] when no `cities` or `regions` are provided. (LinkedIn currently honours country-level targeting only.)" }
+                targeting:
+                  description: |
+                    Nested targeting object — the same TargetingSpec shape as `POST /v1/ads/boost`,
+                    `POST /v1/ads/targeting/reach-estimate`, and `saved_targeting` audiences. Merged
+                    UNDER the flat inline targeting fields below: `savedTargetingId` < `targeting` <
+                    flat fields (a flat field present on the body replaces the nested value entirely).
+                    Both forms are equivalent; use whichever your integration already builds.
+                  allOf:
+                    - $ref: '#/components/schemas/TargetingSpec'
+                countries: { type: array, items: { type: string }, description: "ISO 3166-1 alpha-2 country codes (e.g. ['NL']). Defaults to ['US'] when no other geo targeting (flat or nested `targeting`) is provided. (LinkedIn currently honours country-level targeting only.)" }
                 cities:
                   type: array
                   description: |
