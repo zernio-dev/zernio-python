@@ -8946,6 +8946,16 @@ def register_generated_tools(mcp, _get_client):
         other formats are rejected by WhatsApp. Ignored for non-audio attachments.
                 quick_replies: Quick reply buttons. Mutually exclusive with buttons. Max 13 items.
                 buttons: Action buttons. Mutually exclusive with quickReplies. Max 3 items.
+
+        WhatsApp: buttons always render as interactive reply buttons.
+        Only `title` and `payload` are used — `type`, `url`, and `phone`
+        are ignored (WhatsApp has no URL/phone button in this field; use
+        the `interactive` field with `type: cta_url` for a link button).
+        `payload` becomes the button reply ID delivered on the
+        `message.received` webhook when the user taps. To send a simple
+        reply-button message, provide `title` + `payload` and set
+        `type: postback`, e.g.
+        `{ "type": "postback", "title": "Yes", "payload": "yes" }`.
                 template: Platform-dependent template payload. Ignored on Telegram.
 
         Instagram / Facebook: a generic template (carousel). Set `type: generic`

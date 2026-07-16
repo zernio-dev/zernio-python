@@ -21507,15 +21507,26 @@ paths:
                 buttons:
                   type: array
                   maxItems: 3
-                  description: Action buttons. Mutually exclusive with quickReplies. Max 3 items.
+                  description: |
+                    Action buttons. Mutually exclusive with quickReplies. Max 3 items.
+
+                    WhatsApp: buttons always render as interactive reply buttons.
+                    Only `title` and `payload` are used — `type`, `url`, and `phone`
+                    are ignored (WhatsApp has no URL/phone button in this field; use
+                    the `interactive` field with `type: cta_url` for a link button).
+                    `payload` becomes the button reply ID delivered on the
+                    `message.received` webhook when the user taps. To send a simple
+                    reply-button message, provide `title` + `payload` and set
+                    `type: postback`, e.g.
+                    `{ "type": "postback", "title": "Yes", "payload": "yes" }`.
                   items:
                     type: object
                     required: [type, title]
                     properties:
-                      type: { type: string, enum: [url, postback, phone], description: Button type. phone is Facebook only. }
+                      type: { type: string, enum: [url, postback, phone], description: "Button type. phone is Facebook only. Ignored on WhatsApp (buttons always render as reply buttons)." }
                       title: { type: string, maxLength: 20, description: Button label (max 20 chars) }
-                      url: { type: string, description: URL for url-type buttons }
-                      payload: { type: string, description: Payload for postback-type buttons }
+                      url: { type: string, description: URL for url-type buttons (Facebook/Instagram only) }
+                      payload: { type: string, description: "Payload for postback-type buttons. On WhatsApp, this is the reply ID returned on the message.received webhook when the button is tapped." }
                       phone: { type: string, description: Phone number for phone-type buttons (Facebook only) }
                 template:
                   type: object
