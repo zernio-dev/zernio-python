@@ -2539,7 +2539,7 @@ def register_generated_tools(mcp, _get_client):
                 income_tier: Normalized household-income tier. Meta and TikTok express all four; Google maps only
         `top_10`; rejected on LinkedIn, X, and Pinterest. On Meta, income targeting is incompatible
         with housing/employment/credit `specialAdCategories`.
-                languages: Language codes (e.g. ['en']). Restricts the audience by language.
+                languages: Language codes restricting the audience by language. On Meta, ISO 639-1 codes (e.g. ['en'], ['de']); a bare code targets all regional variants ("en" = all English), or use a region-qualified code for a specific one ("en_GB", "pt_BR", "zh_TW"). Unknown codes are rejected. Other ad platforms use their own language-code systems.
                 placements: Meta only. Manual ad placements. Omit for automatic placements (Meta's default,
         recommended for most cases — Meta optimises delivery across all eligible surfaces).
         When set, restricts delivery to the chosen surfaces, mapped onto the ad set's
@@ -6697,18 +6697,22 @@ def register_generated_tools(mcp, _get_client):
         )
     )
     def connect_get_gmb_locations(
-        account_id: str, search: str | None = None, filter: str | None = None
+        account_id: str,
+        search: str | None = None,
+        filter: str | None = None,
+        limit: int = 100,
     ) -> str:
         """List GBP locations
 
         Args:
             account_id: (required)
             search: Free-text search on the business name, applied server-side by Google. Use for accounts with many locations.
-            filter: Raw Google Business Information API filter expression (advanced; takes precedence over search), e.g. storeCode="LH279411"."""
+            filter: Raw Google Business Information API filter expression (advanced; takes precedence over search), e.g. storeCode="LH279411".
+            limit: Max locations to return (default 100, max 500). Raise it to enumerate an account with more than 100 locations; for accounts with thousands, use search/filter instead."""
         client = _get_client()
         try:
             response = client.connect.get_gmb_locations(
-                account_id=account_id, search=search, filter=filter
+                account_id=account_id, search=search, filter=filter, limit=limit
             )
             return _format_response(response)
         except Exception as e:

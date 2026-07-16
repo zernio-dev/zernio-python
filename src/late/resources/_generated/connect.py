@@ -482,12 +482,18 @@ class ConnectResource:
         )
 
     def get_gmb_locations(
-        self, account_id: str, *, search: str | None = None, filter: str | None = None
+        self,
+        account_id: str,
+        *,
+        search: str | None = None,
+        filter: str | None = None,
+        limit: int | None = 100,
     ) -> dict[str, Any]:
         """List GBP locations"""
         params = self._build_params(
             search=search,
             filter=filter,
+            limit=limit,
         )
         return self._client._get(
             f"/v1/accounts/{account_id}/gmb-locations", params=params
@@ -1023,12 +1029,18 @@ class ConnectResource:
         )
 
     async def aget_gmb_locations(
-        self, account_id: str, *, search: str | None = None, filter: str | None = None
+        self,
+        account_id: str,
+        *,
+        search: str | None = None,
+        filter: str | None = None,
+        limit: int | None = 100,
     ) -> dict[str, Any]:
         """List GBP locations (async)"""
         params = self._build_params(
             search=search,
             filter=filter,
+            limit=limit,
         )
         return await self._client._aget(
             f"/v1/accounts/{account_id}/gmb-locations", params=params

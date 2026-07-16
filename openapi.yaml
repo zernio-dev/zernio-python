@@ -5992,7 +5992,7 @@ components:
             tiers on Google, and any income tier on LinkedIn / X / Pinterest, are rejected.
             On Meta, income/zip targeting requires the relevant `specialAdCategories` to be
             unset (housing/employment/credit ads cannot use it).
-        languages: { type: array, items: { type: string }, description: "Language codes (e.g. ['en'])." }
+        languages: { type: array, items: { type: string }, description: "Language codes restricting the audience by language. On Meta, ISO 639-1 codes (e.g. ['en']); a bare code targets all regional variants (\"en\" = all English), or use a region-qualified code (\"en_GB\", \"pt_BR\") for a specific one. Unknown codes are rejected." }
         interests:
           type: array
           description: "Interest entities from /v1/ads/targeting/search?dimension=interest. Each carries the platform's opaque id."
@@ -18444,7 +18444,8 @@ paths:
         Returns Google Business Profile locations the connected account can access,
         plus the currently selected location. The list is bounded (see hasMore); for
         accounts that own many locations, use the search or filter query params to find
-        a specific one instead of loading them all.
+        a specific one instead of loading them all, or raise limit to enumerate an
+        account with more than 100 locations.
       parameters:
         - name: accountId
           in: path
@@ -18460,6 +18461,11 @@ paths:
           required: false
           schema: { type: string }
           description: Raw Google Business Information API filter expression (advanced; takes precedence over search), e.g. storeCode="LH279411".
+        - name: limit
+          in: query
+          required: false
+          schema: { type: integer, minimum: 1, maximum: 500, default: 100 }
+          description: Max locations to return (default 100, max 500). Raise it to enumerate an account with more than 100 locations; for accounts with thousands, use search/filter instead.
       responses:
         '200':
           description: Locations list
@@ -18497,6 +18503,7 @@ paths:
                     websiteUrl: "https://mybusiness.com"
                 selectedLocationId: "12345678901234567890"
                 cached: true
+        '400': { description: Invalid query parameter (e.g. limit out of range) }
         '401': { $ref: '#/components/responses/Unauthorized' }
         '404': { description: Account not found }
     put:
@@ -33934,7 +33941,7 @@ paths:
                     Normalized household-income tier. Meta and TikTok express all four; Google maps only
                     `top_10`; rejected on LinkedIn, X, and Pinterest. On Meta, income targeting is incompatible
                     with housing/employment/credit `specialAdCategories`.
-                languages: { type: array, items: { type: string }, description: "Language codes (e.g. ['en']). Restricts the audience by language." }
+                languages: { type: array, items: { type: string }, description: "Language codes restricting the audience by language. On Meta, ISO 639-1 codes (e.g. ['en'], ['de']); a bare code targets all regional variants (\"en\" = all English), or use a region-qualified code for a specific one (\"en_GB\", \"pt_BR\", \"zh_TW\"). Unknown codes are rejected. Other ad platforms use their own language-code systems." }
                 placements:
                   type: object
                   description: |
