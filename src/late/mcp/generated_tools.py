@@ -1546,7 +1546,7 @@ def register_generated_tools(mcp, _get_client):
             campaign_id: Source platform campaign ID (required)
             platform: (required)
             deep_copy: Copy child ad sets + ads + creatives + targeting
-            status_option
+            status_option: ACTIVE = launch the clone immediately (spends the moment LinkedIn approves it). PAUSED = clone stays DRAFT, safe default. INHERITED_FROM_SOURCE = mirror each entity's source status per-entity. Duplicating an ACTIVE campaign this way starts a second front of spend.
             start_time: Reschedule the copied hierarchy's start time
             end_time
             rename_strategy
@@ -2493,18 +2493,27 @@ def register_generated_tools(mcp, _get_client):
         to build N full ads sharing one ad set: create the first ad
         via the normal shape, then attach the rest one call each.
 
-        Supported on Meta (facebook, instagram) and TikTok. On TikTok
-        the `adSetId` is the ad group ID; the new ad inherits the
-        ad group's bid + budget + targeting.
-                existing_campaign_id: Meta only. Add the new ad set under this EXISTING campaign
-        instead of creating a new one (multi-ad-set audience testing).
-        The new ad set's budget is matched to the campaign's mode
-        automatically: for a CBO campaign (campaign-level budget) omit
-        `budgetAmount`/`budgetType` — the campaign owns the budget; for
-        an ABO campaign pass them (they go on the new ad set). On
-        failure only the new ad set is cleaned up; the existing campaign
-        is left untouched and is never (re)activated. Mutually exclusive
-        with `adSetId` and `creatives[]`.
+        Supported on Meta (facebook, instagram), TikTok, and
+        LinkedIn. On TikTok the `adSetId` is the ad group ID; the
+        new ad inherits the ad group's bid + budget + targeting.
+        On LinkedIn the `adSetId` is the LinkedIn Campaign ID
+        (numeric); we attach a new Creative to that Campaign, so
+        the Campaign's `platformSpecificData` bidding, targeting,
+        budget and schedule are inherited (passing those fields
+        returns 400).
+                existing_campaign_id: Meta + LinkedIn. On Meta: add the new ad set under this
+        EXISTING campaign instead of creating a new one
+        (multi-ad-set audience testing). The new ad set's budget
+        is matched to the campaign's mode automatically: for a
+        CBO campaign (campaign-level budget) omit
+        `budgetAmount`/`budgetType` — the campaign owns the
+        budget; for an ABO campaign pass them (they go on the new
+        ad set). On LinkedIn: create a new Campaign (and its
+        Creative) under this EXISTING CampaignGroup. On failure
+        only the entities we authored are cleaned up; the
+        pre-existing parent is left untouched and is never
+        (re)activated. Mutually exclusive with `adSetId` and
+        `creatives[]`.
                 existing_creative_id: Meta only. Reuse an EXISTING ad creative by id instead of
         building a new one from the copy/media fields (which are then
         ignored). Combine with `existingCampaignId` to build a
