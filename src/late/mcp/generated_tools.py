@@ -10446,12 +10446,12 @@ def register_generated_tools(mcp, _get_client):
             openWorldHint=True,
         )
     )
-    def queue_delete_queue_slot(profile_id: str, queue_id: str) -> str:
+    def queue_delete_queue_slot(profile_id: str, queue_id: str | None = None) -> str:
         """Delete schedule
 
         Args:
             profile_id: (required)
-            queue_id: Queue ID to delete (required)"""
+            queue_id: Queue ID to delete. Omit to delete all queues for the profile"""
         client = _get_client()
         try:
             response = client.queue.delete_queue_slot(

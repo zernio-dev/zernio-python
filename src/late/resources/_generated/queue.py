@@ -109,7 +109,9 @@ class QueueResource:
         )
         return self._client._put("/v1/queue/slots", data=payload)
 
-    def delete_queue_slot(self, profile_id: str, queue_id: str) -> dict[str, Any]:
+    def delete_queue_slot(
+        self, profile_id: str, *, queue_id: str | None = None
+    ) -> dict[str, Any]:
         """Delete schedule"""
         params = self._build_params(
             profile_id=profile_id,
@@ -194,7 +196,7 @@ class QueueResource:
         return await self._client._aput("/v1/queue/slots", data=payload)
 
     async def adelete_queue_slot(
-        self, profile_id: str, queue_id: str
+        self, profile_id: str, *, queue_id: str | None = None
     ) -> dict[str, Any]:
         """Delete schedule (async)"""
         params = self._build_params(

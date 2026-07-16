@@ -12799,6 +12799,7 @@ paths:
                   color: "#2196F3"
                   isDefault: true
                   createdAt: "2024-11-01T10:00:00Z"
+        '400': { description: Invalid request }
         '401': { $ref: '#/components/responses/Unauthorized' }
         '404': { $ref: '#/components/responses/NotFound' }
     delete:
@@ -19944,7 +19945,7 @@ paths:
         - name: all
           in: query
           required: false
-          schema: { type: string, enum: ['true'] }
+          schema: { type: string, enum: ['true', 'false'] }
           description: Set to 'true' to list all queues for the profile
       responses:
         '200':
@@ -20001,7 +20002,7 @@ paths:
                         slots: [{ dayOfWeek: 1, time: "18:00" }]
                         active: true
                     count: 2
-        '400': { description: Missing profileId }
+        '400': { description: Invalid request }
         '401': { $ref: '#/components/responses/Unauthorized' }
         '404': { description: Profile not found }
     post:
@@ -20133,7 +20134,8 @@ paths:
       tags: [Queue]
       summary: Delete schedule
       description: |
-        Delete a queue from a profile. Requires queueId to specify which queue to delete.
+        Delete a queue from a profile. Pass queueId to delete a specific queue;
+        omit it to delete all queues for the profile.
         If deleting the default queue, another queue will be promoted to default.
       parameters:
         - name: profileId
@@ -20142,9 +20144,9 @@ paths:
           schema: { type: string }
         - name: queueId
           in: query
-          required: true
+          required: false
           schema: { type: string }
-          description: Queue ID to delete
+          description: Queue ID to delete. Omit to delete all queues for the profile
       responses:
         '200':
           description: Queue schedule deleted
@@ -20155,8 +20157,9 @@ paths:
               example:
                 success: true
                 deleted: true
-        '400': { description: Missing profileId or queueId }
+        '400': { description: Invalid request }
         '401': { $ref: '#/components/responses/Unauthorized' }
+        '404': { description: Profile or queue not found }
   /v1/queue/preview:
     get:
       operationId: previewQueue
@@ -31391,6 +31394,7 @@ paths:
                       limit: { type: integer }
                       skip: { type: integer }
                       hasMore: { type: boolean }
+        '400': { description: Invalid request }
         '401': { $ref: '#/components/responses/Unauthorized' }
     post:
       operationId: createSequence
@@ -31453,6 +31457,7 @@ paths:
                       status: { type: string }
                       stepsCount: { type: integer }
                       createdAt: { type: string, format: date-time }
+        '400': { description: Invalid request }
         '401': { $ref: '#/components/responses/Unauthorized' }
 
   /v1/sequences/{sequenceId}:
@@ -31497,6 +31502,7 @@ paths:
                       totalExited: { type: integer }
                       createdAt: { type: string, format: date-time }
                       updatedAt: { type: string, format: date-time }
+        '400': { description: Invalid request }
         '401': { $ref: '#/components/responses/Unauthorized' }
         '404': { $ref: '#/components/responses/NotFound' }
     patch:
@@ -31561,6 +31567,7 @@ paths:
                       exitOnReply: { type: boolean }
                       exitOnUnsubscribe: { type: boolean }
                       updatedAt: { type: string, format: date-time }
+        '400': { description: Invalid request }
         '401': { $ref: '#/components/responses/Unauthorized' }
         '404': { $ref: '#/components/responses/NotFound' }
     delete:
@@ -31572,6 +31579,7 @@ paths:
         - { name: sequenceId, in: path, required: true, schema: { type: string } }
       responses:
         '200': { description: Sequence deleted }
+        '400': { description: Invalid request }
         '401': { $ref: '#/components/responses/Unauthorized' }
         '404': { $ref: '#/components/responses/NotFound' }
 
@@ -31597,7 +31605,7 @@ paths:
                     properties:
                       id: { type: string }
                       status: { type: string }
-        '400': { description: Invalid status or no steps }
+        '400': { description: Invalid request }
         '401': { $ref: '#/components/responses/Unauthorized' }
         '404': { $ref: '#/components/responses/NotFound' }
 
@@ -31623,7 +31631,7 @@ paths:
                     properties:
                       id: { type: string }
                       status: { type: string }
-        '400': { description: Sequence is not active }
+        '400': { description: Invalid request }
         '401': { $ref: '#/components/responses/Unauthorized' }
         '404': { $ref: '#/components/responses/NotFound' }
 
@@ -31655,7 +31663,17 @@ paths:
                 properties:
                   success: { type: boolean }
                   enrolled: { type: integer, description: Number of contacts successfully enrolled }
-                  skipped: { type: integer, description: Number skipped (already enrolled or missing channel) }
+                  failed: { type: integer, description: 'Number that failed (already enrolled, or no subscribed channel on the sequence platform)' }
+                  results:
+                    type: array
+                    description: Per-contact outcome
+                    items:
+                      type: object
+                      properties:
+                        contactId: { type: string }
+                        success: { type: boolean }
+                        error: { type: string, description: Present when success is false }
+        '400': { description: Invalid request }
         '401': { $ref: '#/components/responses/Unauthorized' }
         '404': { $ref: '#/components/responses/NotFound' }
 
@@ -31670,6 +31688,7 @@ paths:
         - { name: contactId, in: path, required: true, schema: { type: string } }
       responses:
         '200': { description: Contact unenrolled }
+        '400': { description: Invalid request }
         '401': { $ref: '#/components/responses/Unauthorized' }
         '404': { $ref: '#/components/responses/NotFound' }
 
@@ -31717,6 +31736,7 @@ paths:
                       limit: { type: integer }
                       skip: { type: integer }
                       hasMore: { type: boolean }
+        '400': { description: Invalid request }
         '401': { $ref: '#/components/responses/Unauthorized' }
         '404': { $ref: '#/components/responses/NotFound' }
 
