@@ -515,6 +515,24 @@ class ConnectResource:
             f"/v1/accounts/{account_id}/gmb-locations", data=payload
         )
 
+    def assign_google_business_location(
+        self,
+        account_id: str,
+        profile_id: str,
+        selected_location_id: str,
+        *,
+        google_account_id: str | None = None,
+    ) -> dict[str, Any]:
+        """Assign GBP location to another profile"""
+        payload = self._build_payload(
+            profile_id=profile_id,
+            selected_location_id=selected_location_id,
+            google_account_id=google_account_id,
+        )
+        return self._client._post(
+            f"/v1/accounts/{account_id}/gmb-locations/assign", data=payload
+        )
+
     def get_reddit_subreddits(self, account_id: str) -> dict[str, Any]:
         """List Reddit subreddits"""
         return self._client._get(f"/v1/accounts/{account_id}/reddit-subreddits")
@@ -1060,6 +1078,24 @@ class ConnectResource:
         )
         return await self._client._aput(
             f"/v1/accounts/{account_id}/gmb-locations", data=payload
+        )
+
+    async def aassign_google_business_location(
+        self,
+        account_id: str,
+        profile_id: str,
+        selected_location_id: str,
+        *,
+        google_account_id: str | None = None,
+    ) -> dict[str, Any]:
+        """Assign GBP location to another profile (async)"""
+        payload = self._build_payload(
+            profile_id=profile_id,
+            selected_location_id=selected_location_id,
+            google_account_id=google_account_id,
+        )
+        return await self._client._apost(
+            f"/v1/accounts/{account_id}/gmb-locations/assign", data=payload
         )
 
     async def aget_reddit_subreddits(self, account_id: str) -> dict[str, Any]:

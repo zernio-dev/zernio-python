@@ -4870,6 +4870,14 @@ components:
           type: string
           description: Full profile URL for the connected account on its platform.
         isActive: { type: boolean }
+        needsReconnection:
+          type: boolean
+          description: |
+            The platform definitively reported the stored OAuth token as dead.
+            While true, GET /v1/connect/{platform}/ads returns a
+            fresh authUrl (implicit force=true) instead of alreadyConnected,
+            so re-running the connect flow recovers the account. Cleared
+            automatically when the account is re-authorized.
         followersCount:
           type: number
           description: Follower count (only included if user has analytics add-on)
@@ -14037,6 +14045,20 @@ paths:
           description: User does not have access to the specified profile
         '404':
           description: Selected page not found in available pages
+        '409':
+          description: |
+            Reconnect identity mismatch. The OAuth
+            was initiated as a `force=true` token-recovery re-auth
+            (`GET /v1/connect/{platform}/ads`), but the grant landed on a different
+            Facebook user or page than the connected account. The existing account
+            is left untouched.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error: { type: string }
+                  code: { type: string, enum: [RECONNECT_ACCOUNT_MISMATCH] }
         '500':
           description: Failed to save Facebook connection
 
@@ -18574,6 +18596,87 @@ paths:
         '400': { description: Location not in available locations }
         '401': { $ref: '#/components/responses/Unauthorized' }
         '404': { description: Account not found }
+
+  /v1/accounts/{accountId}/gmb-locations/assign:
+    post:
+      operationId: assignGoogleBusinessLocation
+      tags: [Connect]
+      summary: Assign GBP location to another profile
+      description: >
+        Connect a Google Business location onto a DIFFERENT profile by reusing the
+        OAuth grant from an already-connected GBP account — no browser, no
+        re-authorization. Built for agencies whose single Google account has manager
+        access to many client locations and who run one profile per client: connect
+        one location the normal way (browser OAuth), then bulk-assign the rest onto
+        each client's profile via this endpoint. The path `accountId` is a SOURCE
+        connected GBP account (the token holder); the body `profileId` is the TARGET
+        profile. Returns 409 if the target profile already has a Google Business
+        connection (switch its location with PUT gmb-locations instead).
+      parameters:
+        - name: accountId
+          in: path
+          required: true
+          schema: { type: string }
+          description: A source connected GBP account whose OAuth grant is reused.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [profileId, selectedLocationId]
+              properties:
+                profileId:
+                  type: string
+                  description: Target profile to connect the location onto.
+                selectedLocationId:
+                  type: string
+                  description: The Google Business location ID to assign (e.g. "locations/123").
+                googleAccountId:
+                  type: string
+                  description: >
+                    Optional but recommended. The Google Business Account resource name
+                    ("accounts/123") that owns the location (from GET gmb-locations). When
+                    provided the location is resolved directly instead of by enumerating the
+                    account, required for accounts with many locations.
+            example:
+              profileId: "507f1f77bcf86cd799439011"
+              selectedLocationId: "locations/12345678901234567890"
+              googleAccountId: "accounts/123456789"
+      responses:
+        '200':
+          description: Location assigned to the target profile
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message: { type: string }
+                  account:
+                    type: object
+                    properties:
+                      accountId: { type: string }
+                      platform: { type: string }
+                      username: { type: string }
+                      displayName: { type: string }
+                      isActive: { type: boolean }
+                      selectedLocationName: { type: string }
+                      selectedLocationId: { type: string }
+              example:
+                message: "Google Business location assigned to profile successfully"
+                account:
+                  accountId: "6a41f0ab70e2d329a7741307"
+                  platform: "googlebusiness"
+                  username: "Snap Fitness Dianella"
+                  displayName: "Snap Fitness Dianella"
+                  isActive: true
+                  selectedLocationName: "Snap Fitness Dianella"
+                  selectedLocationId: "locations/12345678901234567890"
+        '400': { description: Invalid body, or selected location not found under the Google account }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { description: Payment required, or target profile exceeds plan limit }
+        '404': { description: Source Google Business account not found }
+        '409': { description: Target profile already has a Google Business connection (use PUT gmb-locations to switch its location) }
 
   /v1/accounts/{accountId}/facebook-post-reactions:
     get:
@@ -26762,6 +26865,18 @@ paths:
                     the customer must complete KYC at that URL before the number
                     is ordered. See GET /v1/phone-numbers/countries.
                   default: US
+                numberType:
+                  type: string
+                  enum: [local, mobile, national, toll_free]
+                  description: >
+                    Which of the country's offered number types to order
+                    (see `types[]` on GET /v1/phone-numbers/countries). Omitted
+                    = the country's default type, which is always the
+                    WhatsApp-safe choice. Capabilities, price, and KYC
+                    requirements are per (country, type): toll_free can never
+                    connect WhatsApp (400 when combined with
+                    connectWhatsapp:true), and wantsSms:true requires an
+                    SMS-capable type.
                 connectWhatsapp:
                   type: boolean
                   default: true
@@ -26860,6 +26975,7 @@ paths:
                 properties:
                   status: { type: string, enum: [kyc_required] }
                   country: { type: string }
+                  numberType: { type: string, description: The type that will be ordered after KYC approval. }
                   kycUrl: { type: string }
         '402': { description: 'Payment method required (Metronome user with no card on file). Response body carries code: PAYMENT_REQUIRED; add a card, then retry.' }
         '422': { description: 'International numbers require usage-based billing (legacy Stripe users are US-only). Response body code: USAGE_BILLING_REQUIRED.' }
@@ -26898,6 +27014,26 @@ paths:
                         whatsappAvailable: { type: boolean, description: WhatsApp can be enabled on numbers from this country. }
                         smsAvailable: { type: boolean, description: Whether this country's number type can do SMS. Use it to filter the picker when the buyer wants SMS (pair with `wantsSms` on purchase). }
                         outboundCallingAvailable: { type: boolean, description: "WhatsApp Business Calling (BIC) outbound availability, a Meta feature blocked in some countries. NOT the PSTN Calls feature (`callsAvailable`)." }
+                        inStock: { type: boolean, description: "Live carrier-stock snapshot (refreshed every 6h + on availability checks): false when NO offered type currently has deliverable inventory, so a purchase would fail. Treat as advisory; the purchase itself re-checks." }
+                        types:
+                          type: array
+                          description: >
+                            Every number type offered in this country (default
+                            first). Capabilities, KYC tier, monthly price, and
+                            stock are per type. The country-level fields above
+                            mirror the first (default) entry. Pass the chosen
+                            `numberType` to POST /v1/phone-numbers/purchase.
+                          items:
+                            type: object
+                            properties:
+                              numberType: { type: string, enum: [local, mobile, national, toll_free] }
+                              tier: { type: integer, enum: [1, 2, 3, 4] }
+                              needsKyc: { type: boolean }
+                              monthlyCents: { type: integer }
+                              whatsappAvailable: { type: boolean, description: "Always false for toll_free (WhatsApp does not reliably register toll-free numbers)." }
+                              smsAvailable: { type: boolean }
+                              callsAvailable: { type: boolean }
+                              inStock: { type: boolean }
         '401': { $ref: '#/components/responses/Unauthorized' }
 
   /v1/phone-numbers/available:
@@ -26961,6 +27097,7 @@ paths:
         - bearerAuth: []
       parameters:
         - { name: country, in: query, required: true, schema: { type: string }, description: ISO-2 country code. }
+        - { name: numberType, in: query, required: false, schema: { type: string, enum: [local, mobile, national, toll_free] }, description: "Check a specific offered type (stock and address constraints are per type). Omitted = the country's default type." }
       responses:
         '200':
           description: Availability + address constraint.
@@ -27203,6 +27340,7 @@ paths:
                 properties:
                   status: { type: string, enum: [kyc_required] }
                   country: { type: string }
+                  numberType: { type: string, description: The type that will be ordered after KYC approval. }
                   kycUrl: { type: string }
         '402': { description: 'Payment method required (Metronome user with no card on file). Response body carries code: PAYMENT_REQUIRED; add a card, then retry.' }
         '422': { description: 'International numbers require usage-based billing (legacy Stripe users are US-only). Response body code: USAGE_BILLING_REQUIRED.' }
@@ -27307,6 +27445,7 @@ paths:
         - bearerAuth: []
       parameters:
         - { name: country, in: query, required: true, schema: { type: string }, description: ISO-2 country code. }
+        - { name: numberType, in: query, required: false, schema: { type: string, enum: [local, mobile, national, toll_free] }, description: "Check a specific offered type (stock and address constraints are per type). Omitted = the country's default type." }
       responses:
         '200':
           description: Availability + address constraint.
@@ -27339,6 +27478,7 @@ paths:
         - bearerAuth: []
       parameters:
         - { name: country, in: query, required: true, schema: { type: string } }
+        - { name: numberType, in: query, required: false, schema: { type: string, enum: [local, mobile, national, toll_free] }, description: "Requirements and reuse eligibility are per (country, type). Omitted = the country's default type. Pass the same value on the POST." }
       responses:
         '200':
           description: The KYC form spec.

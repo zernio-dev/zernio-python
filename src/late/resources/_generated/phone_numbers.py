@@ -79,6 +79,7 @@ class PhoneNumbersResource:
         profile_id: str,
         *,
         country: str | None = "US",
+        number_type: str | None = None,
         connect_whatsapp: bool | None = True,
         wants_sms: bool | None = False,
         purchase_intent_id: str | None = None,
@@ -88,6 +89,7 @@ class PhoneNumbersResource:
         payload = self._build_payload(
             profile_id=profile_id,
             country=country,
+            number_type=number_type,
             connect_whatsapp=connect_whatsapp,
             wants_sms=wants_sms,
             purchase_intent_id=purchase_intent_id,
@@ -122,17 +124,23 @@ class PhoneNumbersResource:
         )
         return self._client._get("/v1/phone-numbers/available", params=params)
 
-    def check_phone_number_availability(self, country: str) -> dict[str, Any]:
+    def check_phone_number_availability(
+        self, country: str, *, number_type: str | None = None
+    ) -> dict[str, Any]:
         """Check country availability"""
         params = self._build_params(
             country=country,
+            number_type=number_type,
         )
         return self._client._get("/v1/phone-numbers/availability", params=params)
 
-    def get_phone_number_kyc_form(self, country: str) -> dict[str, Any]:
+    def get_phone_number_kyc_form(
+        self, country: str, *, number_type: str | None = None
+    ) -> dict[str, Any]:
         """Get KYC form spec"""
         params = self._build_params(
             country=country,
+            number_type=number_type,
         )
         return self._client._get("/v1/phone-numbers/kyc", params=params)
 
@@ -315,6 +323,7 @@ class PhoneNumbersResource:
         profile_id: str,
         *,
         country: str | None = "US",
+        number_type: str | None = None,
         connect_whatsapp: bool | None = True,
         wants_sms: bool | None = False,
         purchase_intent_id: str | None = None,
@@ -324,6 +333,7 @@ class PhoneNumbersResource:
         payload = self._build_payload(
             profile_id=profile_id,
             country=country,
+            number_type=number_type,
             connect_whatsapp=connect_whatsapp,
             wants_sms=wants_sms,
             purchase_intent_id=purchase_intent_id,
@@ -358,17 +368,23 @@ class PhoneNumbersResource:
         )
         return await self._client._aget("/v1/phone-numbers/available", params=params)
 
-    async def acheck_phone_number_availability(self, country: str) -> dict[str, Any]:
+    async def acheck_phone_number_availability(
+        self, country: str, *, number_type: str | None = None
+    ) -> dict[str, Any]:
         """Check country availability (async)"""
         params = self._build_params(
             country=country,
+            number_type=number_type,
         )
         return await self._client._aget("/v1/phone-numbers/availability", params=params)
 
-    async def aget_phone_number_kyc_form(self, country: str) -> dict[str, Any]:
+    async def aget_phone_number_kyc_form(
+        self, country: str, *, number_type: str | None = None
+    ) -> dict[str, Any]:
         """Get KYC form spec (async)"""
         params = self._build_params(
             country=country,
+            number_type=number_type,
         )
         return await self._client._aget("/v1/phone-numbers/kyc", params=params)
 

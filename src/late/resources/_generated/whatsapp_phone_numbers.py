@@ -113,10 +113,13 @@ class WhatsappPhoneNumbersResource:
         )
         return self._client._get("/v1/whatsapp/phone-numbers/available", params=params)
 
-    def check_whats_app_number_availability(self, country: str) -> dict[str, Any]:
+    def check_whats_app_number_availability(
+        self, country: str, *, number_type: str | None = None
+    ) -> dict[str, Any]:
         """Check country availability"""
         params = self._build_params(
             country=country,
+            number_type=number_type,
         )
         return self._client._get(
             "/v1/whatsapp/phone-numbers/availability", params=params
@@ -299,11 +302,12 @@ class WhatsappPhoneNumbersResource:
         )
 
     async def acheck_whats_app_number_availability(
-        self, country: str
+        self, country: str, *, number_type: str | None = None
     ) -> dict[str, Any]:
         """Check country availability (async)"""
         params = self._build_params(
             country=country,
+            number_type=number_type,
         )
         return await self._client._aget(
             "/v1/whatsapp/phone-numbers/availability", params=params
