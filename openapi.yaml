@@ -2852,6 +2852,27 @@ components:
         timestamp:
           type: string
           format: date-time
+    InboxMessageEditAttachment:
+      type: object
+      description: Attachment snapshot inside an edit-history entry.
+      properties:
+        type: { type: string }
+        url: { type: string }
+        payload: { type: object }
+    InboxMessageEditHistoryEntry:
+      type: object
+      description: One prior version of an edited message.
+      required: [text, attachments, editedAt]
+      properties:
+        text:
+          type: [string, "null"]
+        attachments:
+          type: array
+          items:
+            $ref: '#/components/schemas/InboxMessageEditAttachment'
+        editedAt:
+          type: string
+          format: date-time
     WebhookPayloadMessageEdited:
       type: object
       description: |
@@ -2871,22 +2892,7 @@ components:
           type: array
           description: Prior versions of the message, oldest first.
           items:
-            type: object
-            required: [text, attachments, editedAt]
-            properties:
-              text:
-                type: [string, "null"]
-              attachments:
-                type: array
-                items:
-                  type: object
-                  properties:
-                    type: { type: string }
-                    url: { type: string }
-                    payload: { type: object }
-              editedAt:
-                type: string
-                format: date-time
+            $ref: '#/components/schemas/InboxMessageEditHistoryEntry'
         editCount:
           type: integer
           description: Total number of edits applied to this message.
@@ -21551,18 +21557,7 @@ paths:
                           type: array
                           description: Every prior version of the message, oldest first.
                           items:
-                            type: object
-                            properties:
-                              text: { type: [string, "null"] }
-                              attachments:
-                                type: array
-                                items:
-                                  type: object
-                                  properties:
-                                    type: { type: string }
-                                    url: { type: string }
-                                    payload: { type: object }
-                              editedAt: { type: string, format: date-time }
+                            $ref: '#/components/schemas/InboxMessageEditHistoryEntry'
                         isDeleted:
                           type: boolean
                           description: True if the sender has deleted (unsent) this message. The original message and attachments fields remain populated.
