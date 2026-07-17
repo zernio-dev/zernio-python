@@ -1976,6 +1976,144 @@ def register_generated_tools(mcp, _get_client):
 
     @mcp.tool(
         annotations=ToolAnnotations(
+            title="Flexible live insights query (Meta)",
+            readOnlyHint=True,
+            destructiveHint=False,
+            openWorldHint=False,
+        )
+    )
+    def ads_query_ad_insights(
+        account_id: str,
+        object_id: str,
+        level: str | None = None,
+        fields: str | None = None,
+        breakdowns: str | None = None,
+        filtering: str | None = None,
+        date_preset: str | None = None,
+        from_date: str | None = None,
+        to_date: str | None = None,
+        time_increment: str | None = None,
+        limit: int = 25,
+        after: str | None = None,
+    ) -> str:
+        """Flexible live insights query (Meta)
+
+        Args:
+            account_id: Zernio SocialAccount id (posting or ads variant) used to resolve the Meta token. (required)
+            object_id: Meta insights node: act_<n>, campaign id, ad set id or ad id. (required)
+            level: Row granularity
+            fields: Comma-separated Graph insights fields (e.g. spend,impressions,frequency,website_purchase_roas). Omitted = Meta's default set.
+            breakdowns: Comma-separated Graph breakdowns (e.g. age,gender or publisher_platform).
+            filtering: JSON array of Meta filter objects: [{"field", "operator", "value"}]. Applied server-side by Meta.
+            date_preset: Meta date_preset (e.g. last_7d, last_30d, this_month). Mutually exclusive with fromDate/toDate.
+            from_date: Start of range (YYYY-MM-DD); requires toDate.
+            to_date: End of range (YYYY-MM-DD); requires fromDate.
+            time_increment: Days per row (1-90), monthly, or all_days.
+            limit: Rows per page
+            after: Cursor from paging.after of the previous page."""
+        client = _get_client()
+        try:
+            response = client.ads.query_ad_insights(
+                account_id=account_id,
+                object_id=object_id,
+                level=level,
+                fields=fields,
+                breakdowns=breakdowns,
+                filtering=filtering,
+                date_preset=date_preset,
+                from_date=from_date,
+                to_date=to_date,
+                time_increment=time_increment,
+                limit=limit,
+                after=after,
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Submit an async insights report run (Meta)",
+            readOnlyHint=False,
+            destructiveHint=True,
+            openWorldHint=True,
+        )
+    )
+    def ads_create_ad_insights_report(
+        account_id: str,
+        object_id: str,
+        level: str | None = None,
+        fields: str | None = None,
+        breakdowns: str | None = None,
+        filtering: list[dict[str, Any]] | None = None,
+        date_preset: str | None = None,
+        from_date: str | None = None,
+        to_date: str | None = None,
+        time_increment: str | None = None,
+    ) -> str:
+        """Submit an async insights report run (Meta)
+
+        Args:
+            account_id: Zernio SocialAccount id (posting or ads variant). (required)
+            object_id: Meta insights node: act_<n>, campaign id, ad set id or ad id. (required)
+            level
+            fields: Comma-separated Graph insights fields.
+            breakdowns: Comma-separated Graph breakdowns.
+            filtering: Meta filter objects, applied server-side.
+            date_preset: Mutually exclusive with fromDate/toDate.
+            from_date
+            to_date
+            time_increment"""
+        client = _get_client()
+        try:
+            response = client.ads.create_ad_insights_report(
+                account_id=account_id,
+                object_id=object_id,
+                level=level,
+                fields=fields,
+                breakdowns=breakdowns,
+                filtering=filtering,
+                date_preset=date_preset,
+                from_date=from_date,
+                to_date=to_date,
+                time_increment=time_increment,
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Poll an async insights report run (Meta)",
+            readOnlyHint=True,
+            destructiveHint=False,
+            openWorldHint=False,
+        )
+    )
+    def ads_get_ad_insights_report(
+        report_run_id: str, account_id: str, limit: int = 25, after: str | None = None
+    ) -> str:
+        """Poll an async insights report run (Meta)
+
+        Args:
+            report_run_id: (required)
+            account_id: Zernio SocialAccount id used to resolve the Meta token (must be the same connection that created the run). (required)
+            limit
+            after"""
+        client = _get_client()
+        try:
+            response = client.ads.get_ad_insights_report(
+                report_run_id=report_run_id,
+                account_id=account_id,
+                limit=limit,
+                after=after,
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
             title="Get ad analytics",
             readOnlyHint=True,
             destructiveHint=False,

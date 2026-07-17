@@ -18672,11 +18672,11 @@ paths:
                   isActive: true
                   selectedLocationName: "Snap Fitness Dianella"
                   selectedLocationId: "locations/12345678901234567890"
-        '400': { description: Invalid body, or selected location not found under the Google account }
+        '400': { description: 'Invalid body, or selected location not found under the Google account' }
         '401': { $ref: '#/components/responses/Unauthorized' }
-        '403': { description: Payment required, or target profile exceeds plan limit }
+        '403': { description: 'Payment required, or target profile exceeds plan limit' }
         '404': { description: Source Google Business account not found }
-        '409': { description: Target profile already has a Google Business connection (use PUT gmb-locations to switch its location) }
+        '409': { description: 'Target profile already has a Google Business connection (use PUT gmb-locations to switch its location)' }
 
   /v1/accounts/{accountId}/facebook-post-reactions:
     get:
@@ -33188,6 +33188,155 @@ paths:
         '403':
           description: Ads access required. Legacy plans need the Ads add-on; included by default on usage-based plans.
         '404': { $ref: '#/components/responses/NotFound' }
+
+  /v1/ads/insights:
+    get:
+      operationId: queryAdInsights
+      tags: [Ads]
+      summary: Flexible live insights query (Meta)
+      description: |
+        Live, flexible insights query against Meta's Graph API. Unlike GET /v1/ads/{adId}/analytics
+        (fixed metric set, cached), this forwards caller-chosen `fields`, `breakdowns` and `filtering`
+        to any Meta insights node and returns Meta's rows verbatim.
+
+        `objectId` selects the node: an ad account, campaign, ad set or ad platform id.
+        `level` sets row granularity independently of the node.
+
+        Semantic validation is Meta's: an unknown field or invalid breakdown combination returns a 400
+        carrying Meta's message. For long ranges or agency-scale accounts prefer the async variant
+        (POST /v1/ads/insights/reports). Meta only.
+      security:
+        - bearerAuth: []
+      parameters:
+        - { name: accountId, in: query, required: true, schema: { type: string }, description: "Zernio SocialAccount id (posting or ads variant) used to resolve the Meta token." }
+        - { name: objectId, in: query, required: true, schema: { type: string }, description: "Meta insights node: act_<n>, campaign id, ad set id or ad id." }
+        - { name: level, in: query, schema: { type: string, enum: [ad, adset, campaign, account] }, description: Row granularity }
+        - { name: fields, in: query, schema: { type: string }, description: "Comma-separated Graph insights fields (e.g. spend,impressions,frequency,website_purchase_roas). Omitted = Meta's default set." }
+        - { name: breakdowns, in: query, schema: { type: string }, description: "Comma-separated Graph breakdowns (e.g. age,gender or publisher_platform)." }
+        - { name: filtering, in: query, schema: { type: string }, description: "JSON array of Meta filter objects: [{\"field\", \"operator\", \"value\"}]. Applied server-side by Meta." }
+        - { name: datePreset, in: query, schema: { type: string }, description: "Meta date_preset (e.g. last_7d, last_30d, this_month). Mutually exclusive with fromDate/toDate." }
+        - { name: fromDate, in: query, schema: { type: string, format: date }, description: "Start of range (YYYY-MM-DD); requires toDate." }
+        - { name: toDate, in: query, schema: { type: string, format: date }, description: "End of range (YYYY-MM-DD); requires fromDate." }
+        - { name: timeIncrement, in: query, schema: { type: string }, description: "Days per row (1-90), monthly, or all_days." }
+        - { name: limit, in: query, schema: { type: integer, minimum: 1, maximum: 500, default: 25 }, description: Rows per page }
+        - { name: after, in: query, schema: { type: string }, description: "Cursor from paging.after of the previous page." }
+      responses:
+        '200':
+          description: Insight rows (raw Meta shape)
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  objectId: { type: string }
+                  data:
+                    type: array
+                    items: { type: object, description: "Raw Meta insights row; keys are the requested Graph fields plus date_start/date_stop." }
+                  paging:
+                    type: object
+                    properties:
+                      after: { type: [string, "null"], description: "Cursor for the next page; null when exhausted." }
+        '400': { description: "Invalid input, or Meta rejected the query (unknown field, invalid breakdown combo) — message carries Meta's error" }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '429': { description: Meta rate limit reached }
+        '501': { description: Only supported on Meta (facebook/instagram) }
+
+  /v1/ads/insights/reports:
+    post:
+      operationId: createAdInsightsReport
+      tags: [Ads]
+      summary: Submit an async insights report run (Meta)
+      description: |
+        Submits an asynchronous Meta insights report. Same query surface as GET /v1/ads/insights, but
+        in the JSON body; Meta processes the report server-side, which is the right choice for long
+        ranges or large accounts where the sync query is slow or rate-limited. Returns a `reportRunId`
+        to poll via GET /v1/ads/insights/reports/{reportRunId}. Meta only.
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [accountId, objectId]
+              properties:
+                accountId: { type: string, description: "Zernio SocialAccount id (posting or ads variant)." }
+                objectId: { type: string, description: "Meta insights node: act_<n>, campaign id, ad set id or ad id." }
+                level: { type: string, enum: [ad, adset, campaign, account] }
+                fields: { type: string, description: "Comma-separated Graph insights fields." }
+                breakdowns: { type: string, description: "Comma-separated Graph breakdowns." }
+                filtering:
+                  type: array
+                  description: "Meta filter objects, applied server-side."
+                  items:
+                    type: object
+                    required: [field, operator]
+                    properties:
+                      field: { type: string }
+                      operator: { type: string }
+                      value: {}
+                datePreset: { type: string, description: "Mutually exclusive with fromDate/toDate." }
+                fromDate: { type: string, format: date }
+                toDate: { type: string, format: date }
+                timeIncrement:
+                  oneOf: [{ type: integer, minimum: 1, maximum: 90 }, { type: string, enum: [monthly, all_days] }]
+      responses:
+        '202':
+          description: Report run submitted
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  reportRunId: { type: string }
+                  status: { type: string, example: Job Started }
+        '400': { description: "Invalid input, or Meta rejected the report parameters" }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '429': { description: Meta rate limit reached }
+        '501': { description: Only supported on Meta (facebook/instagram) }
+
+  /v1/ads/insights/reports/{reportRunId}:
+    get:
+      operationId: getAdInsightsReport
+      tags: [Ads]
+      summary: Poll an async insights report run (Meta)
+      description: |
+        Status and results for a report run created via POST /v1/ads/insights/reports. While the job
+        runs, returns `status` and `percentCompletion`. Once `status` is "Job Completed" the response
+        also carries a `data` page, cursor-paginated via `limit` / `after`.
+      security:
+        - bearerAuth: []
+      parameters:
+        - { name: reportRunId, in: path, required: true, schema: { type: string } }
+        - { name: accountId, in: query, required: true, schema: { type: string }, description: "Zernio SocialAccount id used to resolve the Meta token (must be the same connection that created the run)." }
+        - { name: limit, in: query, schema: { type: integer, minimum: 1, maximum: 500, default: 25 } }
+        - { name: after, in: query, schema: { type: string } }
+      responses:
+        '200':
+          description: Report run status (plus results when completed)
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  reportRunId: { type: string }
+                  status: { type: string, description: "Meta async_status: Job Not Started, Job Started, Job Running, Job Completed, Job Failed, Job Skipped." }
+                  percentCompletion: { type: integer }
+                  dateStart: { type: string }
+                  dateStop: { type: string }
+                  data:
+                    type: array
+                    items: { type: object }
+                    description: "Present only when status is Job Completed."
+                  paging:
+                    type: object
+                    properties:
+                      after: { type: [string, "null"] }
+        '400': { description: "Invalid input, or the report run is not readable with this account's token" }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '429': { description: Meta rate limit reached }
+        '501': { description: Only supported on Meta (facebook/instagram) }
 
   /v1/ads/{adId}/analytics:
     get:

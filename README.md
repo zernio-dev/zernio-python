@@ -412,6 +412,7 @@ Both `from zernio import ...` and `from late import ...` work identically. The `
 | `ads.list_form_leads()` | List leads for a single form |
 | `ads.list_lead_forms()` | List lead forms |
 | `ads.list_leads()` | List submitted leads |
+| `ads.create_ad_insights_report()` | Submit an async insights report run (Meta) |
 | `ads.create_conversion_destination()` | Create a conversion destination |
 | `ads.create_ctwa_ad()` | Create Click-to-WhatsApp ad |
 | `ads.create_lead_form()` | Create a lead form |
@@ -420,6 +421,7 @@ Both `from zernio import ...` and `from late import ...` work identically. The `
 | `ads.get_ad()` | Get ad details |
 | `ads.get_ad_analytics()` | Get ad analytics |
 | `ads.get_ad_comments()` | List comments on an ad |
+| `ads.get_ad_insights_report()` | Poll an async insights report run (Meta) |
 | `ads.get_ad_tracking_tags()` | Get ad tracking tags |
 | `ads.get_campaign_analytics()` | Get campaign analytics |
 | `ads.get_conversion_destination()` | Get a conversion destination |
@@ -442,6 +444,7 @@ Both `from zernio import ...` and `from late import ...` work identically. The `
 | `ads.archive_lead_form()` | Archive a lead form |
 | `ads.boost_post()` | Boost post as ad |
 | `ads.estimate_ad_reach()` | Estimate audience reach |
+| `ads.query_ad_insights()` | Flexible live insights query (Meta) |
 | `ads.remove_conversion_associations()` | Remove associated campaigns |
 | `ads.search_ad_interests()` | Search targeting interests |
 | `ads.search_ad_targeting()` | Search targeting options |

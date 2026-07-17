@@ -148,6 +148,86 @@ class AdsResource:
             f"/v1/ads/campaigns/{campaign_id}/analytics", params=params
         )
 
+    def query_ad_insights(
+        self,
+        account_id: str,
+        object_id: str,
+        *,
+        level: str | None = None,
+        fields: str | None = None,
+        breakdowns: str | None = None,
+        filtering: str | None = None,
+        date_preset: str | None = None,
+        from_date: str | None = None,
+        to_date: str | None = None,
+        time_increment: str | None = None,
+        limit: int | None = 25,
+        after: str | None = None,
+    ) -> dict[str, Any]:
+        """Flexible live insights query (Meta)"""
+        params = self._build_params(
+            account_id=account_id,
+            object_id=object_id,
+            level=level,
+            fields=fields,
+            breakdowns=breakdowns,
+            filtering=filtering,
+            date_preset=date_preset,
+            from_date=from_date,
+            to_date=to_date,
+            time_increment=time_increment,
+            limit=limit,
+            after=after,
+        )
+        return self._client._get("/v1/ads/insights", params=params)
+
+    def create_ad_insights_report(
+        self,
+        account_id: str,
+        object_id: str,
+        *,
+        level: str | None = None,
+        fields: str | None = None,
+        breakdowns: str | None = None,
+        filtering: list[dict[str, Any]] | None = None,
+        date_preset: str | None = None,
+        from_date: str | None = None,
+        to_date: str | None = None,
+        time_increment: Any | None = None,
+    ) -> dict[str, Any]:
+        """Submit an async insights report run (Meta)"""
+        payload = self._build_payload(
+            account_id=account_id,
+            object_id=object_id,
+            level=level,
+            fields=fields,
+            breakdowns=breakdowns,
+            filtering=filtering,
+            date_preset=date_preset,
+            from_date=from_date,
+            to_date=to_date,
+            time_increment=time_increment,
+        )
+        return self._client._post("/v1/ads/insights/reports", data=payload)
+
+    def get_ad_insights_report(
+        self,
+        report_run_id: str,
+        account_id: str,
+        *,
+        limit: int | None = 25,
+        after: str | None = None,
+    ) -> dict[str, Any]:
+        """Poll an async insights report run (Meta)"""
+        params = self._build_params(
+            account_id=account_id,
+            limit=limit,
+            after=after,
+        )
+        return self._client._get(
+            f"/v1/ads/insights/reports/{report_run_id}", params=params
+        )
+
     def get_ad_analytics(
         self,
         ad_id: str,
@@ -1069,6 +1149,86 @@ class AdsResource:
         )
         return await self._client._aget(
             f"/v1/ads/campaigns/{campaign_id}/analytics", params=params
+        )
+
+    async def aquery_ad_insights(
+        self,
+        account_id: str,
+        object_id: str,
+        *,
+        level: str | None = None,
+        fields: str | None = None,
+        breakdowns: str | None = None,
+        filtering: str | None = None,
+        date_preset: str | None = None,
+        from_date: str | None = None,
+        to_date: str | None = None,
+        time_increment: str | None = None,
+        limit: int | None = 25,
+        after: str | None = None,
+    ) -> dict[str, Any]:
+        """Flexible live insights query (Meta) (async)"""
+        params = self._build_params(
+            account_id=account_id,
+            object_id=object_id,
+            level=level,
+            fields=fields,
+            breakdowns=breakdowns,
+            filtering=filtering,
+            date_preset=date_preset,
+            from_date=from_date,
+            to_date=to_date,
+            time_increment=time_increment,
+            limit=limit,
+            after=after,
+        )
+        return await self._client._aget("/v1/ads/insights", params=params)
+
+    async def acreate_ad_insights_report(
+        self,
+        account_id: str,
+        object_id: str,
+        *,
+        level: str | None = None,
+        fields: str | None = None,
+        breakdowns: str | None = None,
+        filtering: list[dict[str, Any]] | None = None,
+        date_preset: str | None = None,
+        from_date: str | None = None,
+        to_date: str | None = None,
+        time_increment: Any | None = None,
+    ) -> dict[str, Any]:
+        """Submit an async insights report run (Meta) (async)"""
+        payload = self._build_payload(
+            account_id=account_id,
+            object_id=object_id,
+            level=level,
+            fields=fields,
+            breakdowns=breakdowns,
+            filtering=filtering,
+            date_preset=date_preset,
+            from_date=from_date,
+            to_date=to_date,
+            time_increment=time_increment,
+        )
+        return await self._client._apost("/v1/ads/insights/reports", data=payload)
+
+    async def aget_ad_insights_report(
+        self,
+        report_run_id: str,
+        account_id: str,
+        *,
+        limit: int | None = 25,
+        after: str | None = None,
+    ) -> dict[str, Any]:
+        """Poll an async insights report run (Meta) (async)"""
+        params = self._build_params(
+            account_id=account_id,
+            limit=limit,
+            after=after,
+        )
+        return await self._client._aget(
+            f"/v1/ads/insights/reports/{report_run_id}", params=params
         )
 
     async def aget_ad_analytics(
