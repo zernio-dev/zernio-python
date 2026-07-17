@@ -9469,6 +9469,7 @@ paths:
                         bucket_label: "30d+"
                         avg_pct_of_final: 0.8
                         post_count: 41
+        '400': { description: Invalid request }
         '401': { $ref: '#/components/responses/Unauthorized' }
         '403':
           description: Analytics access required. Legacy plans need the Analytics add-on; included by default on usage-based plans.
@@ -24362,6 +24363,7 @@ paths:
                   callingEnabled: { type: boolean }
                   sipHostname: { type: string }
                   forwardTo: { type: string }
+        '400': { description: Invalid request }
         '401': { $ref: '#/components/responses/Unauthorized' }
         '404': { description: WhatsApp phone number not found }
         '422': { description: "Not eligible to enable calling: not on usage-based billing, or the number's messaging limit is below Meta's ~2,000-daily-recipient threshold (TIER_250). Warm the number up to raise the limit." }
@@ -24401,6 +24403,7 @@ paths:
                   items: { type: string, minLength: 2, maxLength: 2 }
       responses:
         '200': { description: Updated }
+        '400': { description: Invalid request }
         '401': { $ref: '#/components/responses/Unauthorized' }
         '404': { description: WhatsApp phone number not found }
         '422': { description: Calling must be enabled before settings can be updated }
@@ -24423,6 +24426,7 @@ paths:
         - { name: accountId, in: query, required: true, schema: { type: string } }
       responses:
         '200': { description: Disabled }
+        '400': { description: Invalid request }
         '401': { $ref: '#/components/responses/Unauthorized' }
         '404': { description: WhatsApp phone number not found }
 
@@ -28696,6 +28700,7 @@ paths:
                     type: [array, "null"]
                     items: { type: string, minLength: 2, maxLength: 2 }
                   outboundDisabled: { type: boolean, description: "True when the number's country blocks business-initiated (outbound) WhatsApp calling; inbound still works." }
+        '400': { description: Invalid request }
         '401': { $ref: '#/components/responses/Unauthorized' }
         '404': { description: Number not found }
     post:
@@ -28739,6 +28744,7 @@ paths:
                   callingEnabled: { type: boolean }
                   sipHostname: { type: string }
                   forwardTo: { type: string }
+        '400': { description: Invalid request }
         '401': { $ref: '#/components/responses/Unauthorized' }
         '404': { description: Phone number not found }
         '422': { description: "Not eligible to enable calling: not on usage-based billing, or the number's messaging limit is below Meta's ~2,000-daily-recipient threshold (TIER_250). Warm the number up to raise the limit." }
@@ -28774,6 +28780,7 @@ paths:
                   items: { type: string, minLength: 2, maxLength: 2 }
       responses:
         '200': { description: Updated }
+        '400': { description: Invalid request }
         '401': { $ref: '#/components/responses/Unauthorized' }
         '404': { description: Phone number not found }
         '422': { description: Calling must be enabled before settings can be updated }
@@ -28792,6 +28799,7 @@ paths:
         - { name: accountId, in: query, required: true, schema: { type: string } }
       responses:
         '200': { description: Disabled }
+        '400': { description: Invalid request }
         '401': { $ref: '#/components/responses/Unauthorized' }
         '404': { description: Phone number not found }
 
@@ -30360,6 +30368,7 @@ paths:
                         type: { type: string, enum: [text, number, date, boolean, select] }
                         options: { type: array, items: { type: string } }
                         createdAt: { type: string, format: date-time }
+        '400': { description: Invalid profileId format }
         '401': { $ref: '#/components/responses/Unauthorized' }
     post:
       operationId: createCustomField
@@ -30397,6 +30406,7 @@ paths:
                       type: { type: string, enum: [text, number, date, boolean, select] }
                       options: { type: array, items: { type: string } }
                       createdAt: { type: string, format: date-time }
+        '400': { description: Invalid request body }
         '401': { $ref: '#/components/responses/Unauthorized' }
         '409': { description: Duplicate slug }
 
@@ -30409,6 +30419,7 @@ paths:
       parameters:
         - { name: fieldId, in: path, required: true, schema: { type: string } }
       requestBody:
+        required: true
         content:
           application/json:
             schema:
@@ -30433,6 +30444,7 @@ paths:
                       slug: { type: string }
                       type: { type: string }
                       options: { type: array, items: { type: string } }
+        '400': { description: Invalid fieldId or request body }
         '401': { $ref: '#/components/responses/Unauthorized' }
         '404': { $ref: '#/components/responses/NotFound' }
     delete:
@@ -30444,6 +30456,7 @@ paths:
         - { name: fieldId, in: path, required: true, schema: { type: string } }
       responses:
         '200': { description: Custom field deleted }
+        '400': { description: Invalid fieldId format }
         '401': { $ref: '#/components/responses/Unauthorized' }
         '404': { $ref: '#/components/responses/NotFound' }
 
@@ -31139,6 +31152,7 @@ paths:
                       limit: { type: integer }
                       skip: { type: integer }
                       hasMore: { type: boolean }
+        '400': { description: Invalid request }
         '401': { $ref: '#/components/responses/Unauthorized' }
         '404': { $ref: '#/components/responses/NotFound' }
     post:
