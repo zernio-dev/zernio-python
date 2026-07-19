@@ -194,6 +194,24 @@ def extract_parameters(operation: dict[str, Any]) -> list[dict[str, Any]]:
                 "default": prop_schema.get("default"),
             })
 
+    # Path/query params and body props share one kwarg list; two spec names that
+    # snake_case to the same kwarg would emit a "duplicate argument" SyntaxError
+    # in the generated file, discovered only at pytest collection. Fail here with
+    # the operation and field names instead (fix is spec-side: rename one field;
+    # a generator-side rename would corrupt the wire key via _build_payload).
+    seen: dict[str, dict[str, Any]] = {}
+    for param in params:
+        clash = seen.get(param["name"])
+        if clash:
+            op_id = operation.get("operationId", "<unknown operation>")
+            raise SystemExit(
+                f"generate_resources: kwarg collision in {op_id}: "
+                f"{clash['in']} '{clash['original_name']}' and {param['in']} "
+                f"'{param['original_name']}' both snake_case to '{param['name']}'. "
+                "Rename one of them in the OpenAPI spec."
+            )
+        seen[param["name"]] = param
+
     return params
 
 
