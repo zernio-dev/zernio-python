@@ -1085,7 +1085,7 @@ def register_generated_tools(mcp, _get_client):
             account_id: (required)
             location_id: Override which location to target. If omitted, uses the account's selected location.
             name: Resource name of the place action link (e.g. locations/123/placeActionLinks/456) (required)
-            uri: New action URL
+            uri: New action URL. At least one of uri or placeActionType is required (enforced server-side; not modeled as anyOf because required-only anyOf branches break SDK generators).
             place_action_type: New action type"""
         client = _get_client()
         try:
@@ -2601,7 +2601,7 @@ def register_generated_tools(mcp, _get_client):
                 billing_event: Meta only. Explicit ad-set `billing_event`. Defaults to `IMPRESSIONS`. Forwarded verbatim to Meta, which validates compatibility with the optimization goal.
                 budget_amount: Required on legacy + multi-creative shapes. Inherited on attach.
                 budget_type: Required on legacy + multi-creative shapes. Inherited on attach.
-                status: Meta only. Publish state of the created ad set + ad. Omitted or ACTIVE publishes live (default, back-compat); PAUSED creates them paused and skips activation, so you can review before they spend.
+                status: Meta and TikTok. Publish state of the created entities. Omitted or ACTIVE publishes live (default, back-compat); PAUSED creates them paused and skips activation, so you can review before they spend. On TikTok the whole campaign > ad group > ad hierarchy stays paused.
                 budget_level: Meta only. Where the budget lives, which selects the Meta budget model:
           - `adset` (default): ABO (Ad-set Budget Optimization). The budget is set on the
             ad set. This is the back-compatible behaviour — omit this field to keep it.
@@ -2680,15 +2680,15 @@ def register_generated_tools(mcp, _get_client):
         flat fields (a flat field present on the body replaces the nested value entirely).
         Both forms are equivalent; use whichever your integration already builds.
                 countries: ISO 3166-1 alpha-2 country codes (e.g. ['NL']). Defaults to ['US'] when no other geo targeting (flat or nested `targeting`) is provided. (LinkedIn currently honours country-level targeting only.)
-                cities: Meta-only. City-level geo targeting. Each city is targeted by Meta's opaque `key` (the city ID) which can be looked up via `GET /v1/ads/targeting/search?type=city&q=<name>&country_code=<ISO>`. Optional `radius` + `distance_unit` extend the targeting beyond the city limits (e.g. radius 25 km around the city center). Both must be set together, or both omitted (Meta defaults to ~16 km when omitted).
+                cities: City-level geo targeting (Meta and TikTok). Each city is targeted by the platform's opaque `key` (the city ID) which can be looked up via `GET /v1/ads/targeting/search?dimension=geo&q=<name>&countryCode=<ISO>`. Optional `radius` + `distance_unit` (Meta only) extend the targeting beyond the city limits (e.g. radius 25 km around the city center). Both must be set together, or both omitted (Meta defaults to ~16 km when omitted).
 
-        Cannot overlap with the same country in `countries` (Meta returns a "locations overlap" error). Either drop the country or scope it to a different country.
-                regions: Meta-only. Region-level (state/province) geo targeting. Each region is targeted by Meta's opaque `key` (the region ID) which can be looked up via `GET /v1/ads/targeting/search?type=region&q=<name>&country_code=<ISO>`.
+        On Meta, cannot overlap with the same country in `countries` (Meta returns a "locations overlap" error). Either drop the country or scope it to a different country. On TikTok, keys are numeric location ids and can be sent without `countries`.
+                regions: Region-level (state/province) geo targeting (Meta and TikTok). Each region is targeted by the platform's opaque `key` (the region ID) which can be looked up via `GET /v1/ads/targeting/search?dimension=geo&q=<name>&countryCode=<ISO>`.
                 age_min
                 age_max
                 interests: Interest objects from /v1/ads/interests. Each must include id and name.
                 zips: Postal/ZIP geo targeting. `key` is the platform's postal location ID from /v1/ads/targeting/search?dimension=geo&geoType=zip. Supported on Meta, Google, TikTok, Pinterest, X.
-                metros: DMA / metro-area geo targeting. `key` is the platform's metro ID from /v1/ads/targeting/search?dimension=geo&geoType=metro.
+                metros: DMA / metro-area geo targeting (Meta and TikTok). `key` is the platform's metro ID from /v1/ads/targeting/search?dimension=geo&geoType=metro (TikTok metros appear as type `metro`, e.g. the New York DMA).
                 custom_locations: Point-radius (lat/lng) geo targeting. Meta only (custom_locations). Rejected on platforms without radius support.
                 behaviors: Behaviour entities from /v1/ads/targeting/search?dimension=behavior. Supported on Meta and TikTok. Each must include id.
                 income_tier: Normalized household-income tier. Meta and TikTok express all four; Google maps only
@@ -4838,7 +4838,7 @@ def register_generated_tools(mcp, _get_client):
         )
     )
     def analytics_get_linked_in_post_reactions(
-        account_id: str, urn: str, limit: int = 25, cursor: str | None = None
+        account_id: str, urn: str, limit: int = 25, cursor: int = 0
     ) -> str:
         """Get LinkedIn post reactions
 

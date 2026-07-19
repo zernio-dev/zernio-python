@@ -458,6 +458,11 @@ components:
       description: Page size
       schema: { type: integer, minimum: 1, maximum: 100, default: 10 }
   responses:
+    BadRequest:
+      description: Invalid request
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/ErrorResponse' }
     Unauthorized:
       description: Unauthorized
       content:
@@ -1132,7 +1137,7 @@ components:
       type: object
       properties:
         price: { $ref: '#/components/schemas/Money' }
-        spiciness: { type: string, description: "Spiciness level (e.g. MILD, MEDIUM, HOT)" }
+        spiciness: { type: string, enum: [SPICINESS_UNSPECIFIED, MILD, MEDIUM, HOT], description: "Spiciness level (e.g. MILD, MEDIUM, HOT)" }
         allergen:
           type: array
           items: { type: string }
@@ -1141,7 +1146,7 @@ components:
           type: array
           items: { type: string }
           description: "Dietary labels (e.g. VEGETARIAN, VEGAN, GLUTEN_FREE)"
-        servesNumPeople: { type: integer, description: Number of people the item serves }
+        servesNumPeople: { type: integer, minimum: 1, description: Number of people the item serves }
         preparationMethods:
           type: array
           items: { type: string }
@@ -1156,15 +1161,18 @@ components:
       properties:
         labels:
           type: array
+          minItems: 1
           items: { $ref: '#/components/schemas/FoodMenuLabel' }
         attributes: { $ref: '#/components/schemas/FoodMenuItemAttributes' }
         options:
           type: array
           items:
             type: object
+            required: [labels, attributes]
             properties:
               labels:
                 type: array
+                minItems: 1
                 items: { $ref: '#/components/schemas/FoodMenuLabel' }
               attributes: { $ref: '#/components/schemas/FoodMenuItemAttributes' }
           description: Item variants/options (e.g. sizes, preparations)
@@ -1174,6 +1182,7 @@ components:
       properties:
         labels:
           type: array
+          minItems: 1
           items: { $ref: '#/components/schemas/FoodMenuLabel' }
         items:
           type: array
@@ -1184,6 +1193,7 @@ components:
       properties:
         labels:
           type: array
+          minItems: 1
           items: { $ref: '#/components/schemas/FoodMenuLabel' }
         sections:
           type: array
@@ -1194,6 +1204,7 @@ components:
           description: "Cuisine types (e.g. AMERICAN, ITALIAN, JAPANESE)"
         sourceUrl:
           type: string
+          format: uri
           description: URL of the original menu source
     YouTubeDailyViewsResponse:
       type: object
@@ -13211,6 +13222,7 @@ paths:
                     tokenValid: false
                     needsReconnect: true
                     issues: ["Token expired"]
+        '400': { $ref: '#/components/responses/BadRequest' }
         '401': { $ref: '#/components/responses/Unauthorized' }
   /v1/accounts/{accountId}/health:
     get:
@@ -14561,7 +14573,7 @@ paths:
           description: The Zernio account ID (from /v1/accounts)
         - name: locationId
           in: query
-          schema: { type: string }
+          schema: { type: string, minLength: 1 }
           description: Override which location to query. If omitted, uses the account's selected location.
       security:
         - bearerAuth: []
@@ -14629,7 +14641,7 @@ paths:
           description: The last segment of a verification `name` from GET /gmb-verifications.
         - name: locationId
           in: query
-          schema: { type: string }
+          schema: { type: string, minLength: 1 }
           description: Override which location to target. If omitted, uses the account's selected location.
       security:
         - bearerAuth: []
@@ -15243,7 +15255,7 @@ paths:
           description: Override which location to query. If omitted, uses the account's selected location. Use GET /gmb-locations to list valid IDs.
         - name: pageSize
           in: query
-          schema: { type: integer, maximum: 100, default: 100 }
+          schema: { type: integer, minimum: 1, maximum: 100, default: 100 }
           description: Number of items to return (max 100)
         - name: pageToken
           in: query
@@ -15297,7 +15309,7 @@ paths:
       description: |
         Creates a media item (photo) for a location from a publicly accessible URL.
 
-        Categories determine where the photo appears: COVER, PROFILE, LOGO, EXTERIOR, INTERIOR, FOOD_AND_DRINK, MENU, PRODUCT, TEAMS, ADDITIONAL.
+        Categories determine where the photo appears: CATEGORY_UNSPECIFIED, COVER, PROFILE, LOGO, EXTERIOR, INTERIOR, PRODUCT, FOOD_AND_DRINK, MENU, COMMON_AREA, ROOMS, TEAMS, AT_WORK, ADDITIONAL.
       parameters:
         - name: accountId
           in: path
@@ -15317,12 +15329,12 @@ paths:
               type: object
               required: [sourceUrl]
               properties:
-                sourceUrl: { type: string, description: Publicly accessible image URL }
+                sourceUrl: { type: string, format: uri, description: Publicly accessible image URL }
                 mediaFormat: { type: string, enum: [PHOTO, VIDEO], default: PHOTO }
-                description: { type: string, description: Photo description }
+                description: { type: string, minLength: 1, description: Photo description }
                 category:
                   type: string
-                  enum: [COVER, PROFILE, LOGO, EXTERIOR, INTERIOR, FOOD_AND_DRINK, MENU, PRODUCT, TEAMS, ADDITIONAL]
+                  enum: [CATEGORY_UNSPECIFIED, COVER, PROFILE, LOGO, EXTERIOR, INTERIOR, PRODUCT, FOOD_AND_DRINK, MENU, COMMON_AREA, ROOMS, TEAMS, AT_WORK, ADDITIONAL]
                   description: Where the photo appears on the listing
             example:
               sourceUrl: "https://example.com/photos/restaurant-interior.jpg"
@@ -15630,16 +15642,28 @@ paths:
                   type: array
                   items:
                     type: object
+                    required: [name]
                     properties:
-                      name: { type: string }
+                      name: { type: string, minLength: 1 }
+                      valueType:
+                        type: string
+                        enum: [ATTRIBUTE_VALUE_TYPE_UNSPECIFIED, BOOL, ENUM, URL, REPEATED_ENUM]
                       values: { type: array, items: {} }
                       repeatedEnumValue:
                         type: object
                         properties:
                           setValues: { type: array, items: { type: string } }
                           unsetValues: { type: array, items: { type: string } }
+                      uriValues:
+                        type: array
+                        items:
+                          type: object
+                          required: [uri]
+                          properties:
+                            uri: { type: string, format: uri }
                 attributeMask:
                   type: string
+                  minLength: 1
                   description: "Comma-separated attribute names to update (e.g. 'has_delivery,has_takeout')"
             example:
               attributes:
@@ -15693,7 +15717,7 @@ paths:
           description: Override which location to query. If omitted, uses the account's selected location. Use GET /gmb-locations to list valid IDs.
         - name: pageSize
           in: query
-          schema: { type: integer, maximum: 100, default: 100 }
+          schema: { type: integer, minimum: 1, maximum: 100, default: 100 }
         - name: pageToken
           in: query
           schema: { type: string }
@@ -15767,7 +15791,7 @@ paths:
               type: object
               required: [uri, placeActionType]
               properties:
-                uri: { type: string, description: The action URL }
+                uri: { type: string, format: uri, description: The action URL }
                 placeActionType:
                   type: string
                   enum: [APPOINTMENT, ONLINE_APPOINTMENT, DINING_RESERVATION, FOOD_ORDERING, FOOD_DELIVERY, FOOD_TAKEOUT, SHOP_ONLINE]
@@ -15870,7 +15894,8 @@ paths:
                   description: "Resource name of the place action link (e.g. locations/123/placeActionLinks/456)"
                 uri:
                   type: string
-                  description: New action URL
+                  format: uri
+                  description: "New action URL. At least one of uri or placeActionType is required (enforced server-side; not modeled as anyOf because required-only anyOf branches break SDK generators)."
                 placeActionType:
                   type: string
                   enum: [APPOINTMENT, ONLINE_APPOINTMENT, DINING_RESERVATION, FOOD_ORDERING, FOOD_DELIVERY, FOOD_TAKEOUT, SHOP_ONLINE]
@@ -15956,6 +15981,11 @@ paths:
                             currencyCode: { type: string, example: "USD" }
                             units: { type: string, example: "50" }
                             nanos: { type: integer }
+        '400':
+          description: Invalid request
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ErrorResponse' }
         '401':
           description: Unauthorized
           content:
@@ -15995,23 +16025,28 @@ paths:
                     properties:
                       structuredServiceItem:
                         type: object
+                        required: [serviceTypeId]
+                        description: "Exactly one of structuredServiceItem or freeFormServiceItem is required per item (enforced server-side; not modeled as oneOf because required-only oneOf branches break SDK generators)."
                         properties:
-                          serviceTypeId: { type: string }
+                          serviceTypeId: { type: string, minLength: 1 }
                           description: { type: string }
                       freeFormServiceItem:
                         type: object
+                        required: [category, label]
                         properties:
-                          category: { type: string }
+                          category: { type: string, minLength: 1 }
                           label:
                             type: object
+                            required: [displayName]
                             properties:
-                              displayName: { type: string }
+                              displayName: { type: string, minLength: 1 }
                               description: { type: string }
+                              languageCode: { type: string }
                       price:
                         type: object
                         properties:
-                          currencyCode: { type: string }
-                          units: { type: string }
+                          currencyCode: { type: string, minLength: 1 }
+                          units: { type: string, minLength: 1 }
                           nanos: { type: integer }
             example:
               serviceItems:
@@ -16068,15 +16103,18 @@ paths:
               properties:
                 locationNames:
                   type: array
-                  items: { type: string }
+                  minItems: 1
+                  items: { type: string, pattern: '^accounts/[^/]+/locations/[^/]+$' }
                   description: "Array of full location resource names (e.g. ['accounts/123/locations/456'])"
                 pageSize:
                   type: integer
+                  minimum: 1
                   maximum: 50
                   default: 50
                   description: Number of reviews per page (max 50)
                 pageToken:
                   type: string
+                  minLength: 1
                   description: Pagination token from previous response
             example:
               locationNames: ["accounts/123/locations/456", "accounts/123/locations/789"]
@@ -16142,6 +16180,7 @@ paths:
               properties:
                 comment:
                   type: string
+                  minLength: 1
                   description: The reply text to post on the review. Must be non-empty.
             example:
               comment: "Thank you for your kind words, we really appreciate it!"
@@ -16404,7 +16443,15 @@ paths:
                 tempToken: { type: string }
                 userProfile: { type: object }
                 accountType: { type: string, enum: [personal, organization] }
-                selectedOrganization: { type: object }
+                selectedOrganization:
+                  type: object
+                  required: [id, urn, name]
+                  properties:
+                    id: { type: string, minLength: 1 }
+                    urn: { type: string, pattern: '^urn:li:organization:' }
+                    name: { type: string, minLength: 1 }
+                    logoUrl: { type: string, format: uri }
+                    vanityName: { type: string }
                 redirect_url: { type: string, format: uri }
             examples:
               personalAccount:
@@ -17804,7 +17851,7 @@ paths:
           in: query
           required: true
           description: The LinkedIn post URN
-          schema: { type: string }
+          schema: { type: string, pattern: '^urn:li:(share|ugcPost|activity):[0-9]+$' }
           example: "urn:li:share:7123456789012345678"
         - name: limit
           in: query
@@ -17812,7 +17859,7 @@ paths:
           description: Maximum number of reactions to return per page
         - name: cursor
           in: query
-          schema: { type: string }
+          schema: { type: integer, minimum: 0, default: 0 }
           description: Offset-based pagination start index
       responses:
         '200':
@@ -17877,15 +17924,7 @@ paths:
                   cursor: "25"
                   total: 156
                 lastUpdated: "2026-03-08T12:00:00.000Z"
-        '400':
-          description: Invalid request or platform limitation
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  error: { type: string }
-                  code: { type: string, enum: [missing_urn, invalid_urn, invalid_platform, PLATFORM_LIMITATION] }
+        '400': { $ref: '#/components/responses/BadRequest' }
         '401': { $ref: '#/components/responses/Unauthorized' }
         '402':
           description: Analytics access required. Legacy plans need the Analytics add-on; included by default on usage-based plans.
@@ -17919,6 +17958,7 @@ paths:
               accountType: "organization"
               selectedOrganization:
                 id: "12345678"
+                urn: "urn:li:organization:12345678"
                 name: "Acme Corporation"
                 vanityName: "acme-corp"
       responses:
@@ -17930,15 +17970,12 @@ paths:
                 type: object
                 properties:
                   message: { type: string }
-                  account: { $ref: '#/components/schemas/SocialAccount' }
+                  accountType: { type: string, enum: [personal, organization] }
+                  accountName: { type: string }
               example:
-                message: "LinkedIn account type updated successfully"
-                account:
-                  _id: "64e1f0a9e2b5af0012ab34cd"
-                  platform: "linkedin"
-                  username: "acme-corp"
-                  displayName: "Acme Corporation"
-                  isActive: true
+                message: "LinkedIn account updated successfully"
+                accountType: "organization"
+                accountName: "Acme Corporation"
         '400': { description: Invalid request }
         '401': { $ref: '#/components/responses/Unauthorized' }
         '404': { description: Account not found }
@@ -18457,7 +18494,7 @@ paths:
               type: object
               required: [defaultPlaylistId]
               properties:
-                defaultPlaylistId: { type: string }
+                defaultPlaylistId: { type: string, minLength: 1 }
                 defaultPlaylistName: { type: string }
             example:
               defaultPlaylistId: "PLxxxxxxxxxxxxx"
@@ -18566,9 +18603,10 @@ paths:
               type: object
               required: [selectedLocationId]
               properties:
-                selectedLocationId: { type: string }
+                selectedLocationId: { type: string, minLength: 1 }
                 googleAccountId:
                   type: string
+                  minLength: 1
                   description: >
                     Optional but recommended. The Google Business Account resource name
                     ("accounts/123") that owns the new location (from GET gmb-locations).
@@ -18813,7 +18851,7 @@ paths:
               type: object
               required: [defaultSubreddit]
               properties:
-                defaultSubreddit: { type: string }
+                defaultSubreddit: { type: string, minLength: 1 }
             example:
               defaultSubreddit: "marketing"
       responses:
@@ -18962,7 +19000,7 @@ paths:
         - name: subreddit
           in: query
           required: true
-          schema: { type: string }
+          schema: { type: string, minLength: 1 }
           description: Subreddit name (without "r/" prefix) to fetch flairs for
       responses:
         '200':
@@ -19021,9 +19059,9 @@ paths:
               type: object
               required: [subreddit, postId, flairTemplateId]
               properties:
-                subreddit: { type: string, description: Subreddit name (without the "r/" prefix) }
-                postId: { type: string, description: 'Reddit post id, with or without the t3_ prefix' }
-                flairTemplateId: { type: string, description: Flair template id from the GET on this path }
+                subreddit: { type: string, minLength: 1, description: Subreddit name (without the "r/" prefix) }
+                postId: { type: string, minLength: 1, description: 'Reddit post id, with or without the t3_ prefix' }
+                flairTemplateId: { type: string, minLength: 1, description: Flair template id from the GET on this path }
                 text: { type: string, description: "Optional override text, only for editable flair templates" }
             example:
               subreddit: "webdev"
@@ -20957,7 +20995,9 @@ paths:
                     items:
                       type: object
                       properties:
-                        id: { type: string }
+                        id:
+                          type: string
+                          description: 'Opaque conversation identifier. Pass it back verbatim to any /v1/inbox/conversations/{conversationId} route; do not assume a fixed format.'
                         platform: { type: string }
                         accountId: { type: string }
                         accountUsername: { type: string }
@@ -22517,6 +22557,7 @@ paths:
       responses:
         '200':
           description: Menu deleted
+        '400': { $ref: '#/components/responses/BadRequest' }
         '401': { $ref: '#/components/responses/Unauthorized' }
 
   /v1/accounts/{accountId}/instagram-ice-breakers:
@@ -22564,13 +22605,14 @@ paths:
               properties:
                 ice_breakers:
                   type: array
+                  minItems: 1
                   maxItems: 4
                   items:
                     type: object
                     required: [question, payload]
                     properties:
-                      question: { type: string, maxLength: 80 }
-                      payload: { type: string }
+                      question: { type: string, minLength: 1, maxLength: 80 }
+                      payload: { type: string, minLength: 1 }
       responses:
         '200':
           description: Ice breakers set successfully
@@ -22591,6 +22633,7 @@ paths:
       responses:
         '200':
           description: Ice breakers deleted
+        '400': { $ref: '#/components/responses/BadRequest' }
         '401': { $ref: '#/components/responses/Unauthorized' }
 
   /v1/accounts/{accountId}/telegram-commands:
@@ -22618,8 +22661,8 @@ paths:
                     items:
                       type: object
                       properties:
-                        command: { type: string }
-                        description: { type: string }
+                        command: { type: string, minLength: 1, maxLength: 32, pattern: '^[a-z0-9_]+$' }
+                        description: { type: string, minLength: 1, maxLength: 256 }
         '400':
           description: Not a Telegram account
         '401': { $ref: '#/components/responses/Unauthorized' }
@@ -22644,12 +22687,13 @@ paths:
               properties:
                 commands:
                   type: array
+                  maxItems: 100
                   items:
                     type: object
                     required: [command, description]
                     properties:
-                      command: { type: string, description: Bot command without leading slash }
-                      description: { type: string, description: Command description }
+                      command: { type: string, minLength: 1, maxLength: 32, pattern: '^[a-z0-9_]+$', description: Bot command without leading slash }
+                      description: { type: string, minLength: 1, maxLength: 256, description: Command description }
       responses:
         '200':
           description: Commands set successfully
@@ -22670,6 +22714,7 @@ paths:
       responses:
         '200':
           description: Commands deleted
+        '400': { $ref: '#/components/responses/BadRequest' }
         '401': { $ref: '#/components/responses/Unauthorized' }
 
   /v1/inbox/comments:
@@ -34116,7 +34161,7 @@ paths:
                 status:
                   type: string
                   enum: [ACTIVE, PAUSED]
-                  description: "Meta only. Publish state of the created ad set + ad. Omitted or ACTIVE publishes live (default, back-compat); PAUSED creates them paused and skips activation, so you can review before they spend."
+                  description: "Meta and TikTok. Publish state of the created entities. Omitted or ACTIVE publishes live (default, back-compat); PAUSED creates them paused and skips activation, so you can review before they spend. On TikTok the whole campaign > ad group > ad hierarchy stays paused."
                 budgetLevel:
                   type: string
                   enum: [adset, campaign]
@@ -34250,9 +34295,9 @@ paths:
                 cities:
                   type: array
                   description: |
-                    Meta-only. City-level geo targeting. Each city is targeted by Meta's opaque `key` (the city ID) which can be looked up via `GET /v1/ads/targeting/search?type=city&q=<name>&country_code=<ISO>`. Optional `radius` + `distance_unit` extend the targeting beyond the city limits (e.g. radius 25 km around the city center). Both must be set together, or both omitted (Meta defaults to ~16 km when omitted).
+                    City-level geo targeting (Meta and TikTok). Each city is targeted by the platform's opaque `key` (the city ID) which can be looked up via `GET /v1/ads/targeting/search?dimension=geo&q=<name>&countryCode=<ISO>`. Optional `radius` + `distance_unit` (Meta only) extend the targeting beyond the city limits (e.g. radius 25 km around the city center). Both must be set together, or both omitted (Meta defaults to ~16 km when omitted).
 
-                    Cannot overlap with the same country in `countries` (Meta returns a "locations overlap" error). Either drop the country or scope it to a different country.
+                    On Meta, cannot overlap with the same country in `countries` (Meta returns a "locations overlap" error). Either drop the country or scope it to a different country. On TikTok, keys are numeric location ids and can be sent without `countries`.
                   items:
                     type: object
                     required: [key]
@@ -34263,12 +34308,12 @@ paths:
                 regions:
                   type: array
                   description: |
-                    Meta-only. Region-level (state/province) geo targeting. Each region is targeted by Meta's opaque `key` (the region ID) which can be looked up via `GET /v1/ads/targeting/search?type=region&q=<name>&country_code=<ISO>`.
+                    Region-level (state/province) geo targeting (Meta and TikTok). Each region is targeted by the platform's opaque `key` (the region ID) which can be looked up via `GET /v1/ads/targeting/search?dimension=geo&q=<name>&countryCode=<ISO>`.
                   items:
                     type: object
                     required: [key]
                     properties:
-                      key: { type: string, description: "Meta region ID, from /v1/ads/targeting/search results." }
+                      key: { type: string, description: "Platform region ID, from /v1/ads/targeting/search results." }
                 ageMin: { type: integer, minimum: 13, maximum: 65 }
                 ageMax: { type: integer, minimum: 13, maximum: 65 }
                 interests:
@@ -34291,7 +34336,7 @@ paths:
                       name: { type: string }
                 metros:
                   type: array
-                  description: "DMA / metro-area geo targeting. `key` is the platform's metro ID from /v1/ads/targeting/search?dimension=geo&geoType=metro."
+                  description: "DMA / metro-area geo targeting (Meta and TikTok). `key` is the platform's metro ID from /v1/ads/targeting/search?dimension=geo&geoType=metro (TikTok metros appear as type `metro`, e.g. the New York DMA)."
                   items:
                     type: object
                     required: [key]
@@ -35030,6 +35075,12 @@ paths:
         varies by platform (e.g. behaviours are Meta/TikTok only). Results are normalized
         across platforms into a single shape, so the same client code consumes Meta,
         TikTok, LinkedIn, X, Pinterest, and Google results.
+
+        TikTok geo searches return every matching level in one list (`type` is
+        `country`, `region`, `city`, `district`, or `metro` for DMA areas) —
+        `geoType` is not applied. Results are scoped to the advertiser's targetable
+        markets, and every id is usable in `regions`/`cities`/`metros` keys on
+        `POST /v1/ads/create`.
 
         For geo queries, `q` should contain only the locality name (e.g. `"Amsterdam"`,
         not `"Amsterdam, NL"`). Use `countryCode` to disambiguate.
