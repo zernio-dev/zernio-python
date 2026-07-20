@@ -14244,8 +14244,8 @@ paths:
                       username: { type: string }
                       displayName: { type: string }
                       isActive: { type: boolean }
-                      selectedLocationName: { type: string }
-                      selectedLocationId: { type: string }
+                      selectedLocationName: { type: string, description: 'Human-readable location display name, NOT a resource name. Do not use it to build API paths.' }
+                      selectedLocationId: { type: string, description: 'Bare GBP location id. Combine with the GBP account id as accounts/{gbpAccountId}/locations/{selectedLocationId} to form the location resource names that gmb-reviews/batch expects in locationNames.' }
               example:
                 message: "Google Business location connected successfully"
                 redirect_url: "https://yourdomain.com/integrations/callback?connected=googlebusiness&profileId=507f1f77bcf86cd799439011&username=My+Coffee+Shop"
@@ -16083,7 +16083,12 @@ paths:
       description: |
         Fetches reviews across multiple locations in a single request.
         More efficient than calling GET /gmb-reviews per location for multi-location businesses.
-        Returns a flat list of individual reviews, each tagged with its review resource name.
+        Returns a flat locationReviews array (not grouped by location): each item carries
+        the location resource name it belongs to (`name`) plus the review object (`review`),
+        whose identity is `review.reviewId`.
+        Reviews are requested from Google ordered by `orderBy` (default `updateTime desc`,
+        newest first), so callers polling for recent reviews can stop paginating once they
+        cross their date window.
         Note: this endpoint does not return aggregate metrics (averageRating / totalReviewCount).
         For those, use the single-location GET /gmb-reviews endpoint.
       parameters:
@@ -16104,8 +16109,9 @@ paths:
                 locationNames:
                   type: array
                   minItems: 1
+                  maxItems: 50
                   items: { type: string, pattern: '^accounts/[^/]+/locations/[^/]+$' }
-                  description: "Array of full location resource names (e.g. ['accounts/123/locations/456'])"
+                  description: "Array of full location resource names (e.g. ['accounts/123/locations/456']). Max 50 per request (Google's batchGetReviews cap); chunk larger sets into multiple requests."
                 pageSize:
                   type: integer
                   minimum: 1
@@ -16116,6 +16122,11 @@ paths:
                   type: string
                   minLength: 1
                   description: Pagination token from previous response
+                orderBy:
+                  type: string
+                  enum: ['updateTime desc', 'rating', 'rating desc']
+                  default: 'updateTime desc'
+                  description: "Sort order requested from Google. Defaults to 'updateTime desc' (newest first), which allows early-stopping pagination once results cross your date window."
             example:
               locationNames: ["accounts/123/locations/456", "accounts/123/locations/789"]
               pageSize: 50
@@ -16134,8 +16145,8 @@ paths:
                     items:
                       type: object
                       properties:
-                        name: { type: string, description: Full review resource name (accounts/*/locations/*/reviews/*) }
-                        review: { type: object, description: "The review object (reviewId, starRating, comment, reviewer, createTime, updateTime, reviewReply)" }
+                        name: { type: string, description: 'LOCATION resource name the review belongs to (accounts/{accountId}/locations/{locationId}) - NOT the review resource name. Use it to attribute the review to a location; the review identity is review.reviewId (full review resource name at review.name).' }
+                        review: { type: object, description: "The review object: reviewId (the review's identity), name (full review resource name, accounts/*/locations/*/reviews/*), starRating, comment, reviewer, createTime, updateTime, reviewReply, and reviewMediaItems (review photos/videos; photo items carry thumbnailUrl, video items carry videoUrl)" }
                   nextPageToken: { type: string }
         '400':
           description: Invalid request
@@ -18704,8 +18715,8 @@ paths:
                       username: { type: string }
                       displayName: { type: string }
                       isActive: { type: boolean }
-                      selectedLocationName: { type: string }
-                      selectedLocationId: { type: string }
+                      selectedLocationName: { type: string, description: 'Human-readable location display name (e.g. "Snap Fitness Dianella"), NOT a resource name. Do not use it to build API paths.' }
+                      selectedLocationId: { type: string, description: 'Bare GBP location id (digits only). Combine with the GBP account id as accounts/{gbpAccountId}/locations/{selectedLocationId} to form the location resource names that gmb-reviews/batch expects in locationNames.' }
               example:
                 message: "Google Business location assigned to profile successfully"
                 account:
@@ -18715,7 +18726,7 @@ paths:
                   displayName: "Snap Fitness Dianella"
                   isActive: true
                   selectedLocationName: "Snap Fitness Dianella"
-                  selectedLocationId: "locations/12345678901234567890"
+                  selectedLocationId: "12345678901234567890"
         '400': { description: 'Invalid body, or selected location not found under the Google account' }
         '401': { $ref: '#/components/responses/Unauthorized' }
         '403': { description: 'Payment required, or target profile exceeds plan limit' }
@@ -22788,12 +22799,12 @@ paths:
                         platform: { type: string }
                         accountId: { type: string }
                         accountUsername: { type: string }
-                        content: { type: string }
-                        picture: { type: [string, "null"] }
-                        permalink: { type: [string, "null"] }
+                        content: { type: string, description: "The post text/caption. On ad rows (isAd: true) this is the AD NAME, not the underlying post's caption — the creative text isn't exposed here." }
+                        picture: { type: [string, "null"], description: 'Post media thumbnail. On ad rows this is the ad creative thumbnail.' }
+                        permalink: { type: [string, "null"], description: 'Public URL of the post. On ad rows: the Facebook dark-post URL (facebook placement) or the IG media permalink (instagram placement); may be null when unknown.' }
                         createdTime: { type: string, format: date-time }
                         commentCount: { type: integer }
-                        likeCount: { type: integer }
+                        likeCount: { type: integer, description: 'Not fetched for ad rows (always 0 there).' }
                         cid: { type: [string, "null"], description: Bluesky content identifier }
                         subreddit: { type: [string, "null"], description: Reddit subreddit name }
                         isAd: { type: boolean, description: "True when this row is an ad (boosted/dark post). `platform` is then the placement (facebook = the Page dark post / instagram = the IG media), `id` is `{adId}:{placement}`, and the thread is at GET /v1/ads/{adId}/comments?placement={placement}." }
@@ -23948,10 +23959,12 @@ paths:
                     items:
                       type: object
                       properties:
-                        id: { type: string }
+                        id: { type: string, description: 'Review identifier. For Google Business this is the full review resource name (accounts/{accountId}/locations/{locationId}/reviews/{reviewId}), so it also encodes the location.' }
                         platform: { type: string }
                         accountId: { type: string }
                         accountUsername: { type: string }
+                        locationId: { type: string, description: 'Bare GBP location id the review belongs to. Google Business only; absent for other platforms.' }
+                        locationName: { type: [string, "null"], description: 'Human-readable GBP location display name. Google Business only; absent for other platforms.' }
                         reviewer:
                           type: object
                           properties:

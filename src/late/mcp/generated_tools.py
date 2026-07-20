@@ -1113,14 +1113,16 @@ def register_generated_tools(mcp, _get_client):
         location_names: list[str] | None,
         page_size: int = 50,
         page_token: str | None = None,
+        order_by: str = "updateTime desc",
     ) -> str:
         """Batch get reviews
 
         Args:
             account_id: (required)
-            location_names: Array of full location resource names (e.g. ['accounts/123/locations/456']) (required)
+            location_names: Array of full location resource names (e.g. ['accounts/123/locations/456']). Max 50 per request (Google's batchGetReviews cap); chunk larger sets into multiple requests. (required)
             page_size: Number of reviews per page (max 50)
-            page_token: Pagination token from previous response"""
+            page_token: Pagination token from previous response
+            order_by: Sort order requested from Google. Defaults to 'updateTime desc' (newest first), which allows early-stopping pagination once results cross your date window."""
         client = _get_client()
         try:
             response = client.accounts.batch_get_google_business_reviews(
@@ -1128,6 +1130,7 @@ def register_generated_tools(mcp, _get_client):
                 location_names=location_names,
                 page_size=page_size,
                 page_token=page_token,
+                order_by=order_by,
             )
             return _format_response(response)
         except Exception as e:

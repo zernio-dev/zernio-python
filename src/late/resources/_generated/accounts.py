@@ -438,12 +438,14 @@ class AccountsResource:
         *,
         page_size: int | None = 50,
         page_token: str | None = None,
+        order_by: str | None = "updateTime desc",
     ) -> dict[str, Any]:
         """Batch get reviews"""
         payload = self._build_payload(
             location_names=location_names,
             page_size=page_size,
             page_token=page_token,
+            order_by=order_by,
         )
         return self._client._post(
             f"/v1/accounts/{account_id}/gmb-reviews/batch", data=payload
@@ -866,12 +868,14 @@ class AccountsResource:
         *,
         page_size: int | None = 50,
         page_token: str | None = None,
+        order_by: str | None = "updateTime desc",
     ) -> dict[str, Any]:
         """Batch get reviews (async)"""
         payload = self._build_payload(
             location_names=location_names,
             page_size=page_size,
             page_token=page_token,
+            order_by=order_by,
         )
         return await self._client._apost(
             f"/v1/accounts/{account_id}/gmb-reviews/batch", data=payload
