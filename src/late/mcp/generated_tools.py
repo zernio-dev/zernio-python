@@ -5648,6 +5648,7 @@ def register_generated_tools(mcp, _get_client):
         post_id: str,
         account_id: str,
         message: str,
+        attachment_url: str | None = None,
         comment_id: str | None = None,
         parent_cid: str | None = None,
         root_uri: str | None = None,
@@ -5659,6 +5660,7 @@ def register_generated_tools(mcp, _get_client):
             post_id: Zernio post ID or platform-specific post ID. LinkedIn third-party posts accept full activity URN or numeric ID. (required)
             account_id: (required)
             message: (required)
+            attachment_url: (Facebook only) URL of an image to attach, publishing a photo comment alongside the text. The URL must be publicly accessible so Meta can fetch it. Returns 400 for other platforms.
             comment_id: Reply to specific comment (optional)
             parent_cid: (Bluesky only) Parent content identifier
             root_uri: (Bluesky only) Root post URI
@@ -5669,6 +5671,7 @@ def register_generated_tools(mcp, _get_client):
                 post_id=post_id,
                 account_id=account_id,
                 message=message,
+                attachment_url=attachment_url,
                 comment_id=comment_id,
                 parent_cid=parent_cid,
                 root_uri=root_uri,

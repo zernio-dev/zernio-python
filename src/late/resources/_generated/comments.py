@@ -109,6 +109,7 @@ class CommentsResource:
         account_id: str,
         message: str,
         *,
+        attachment_url: str | None = None,
         comment_id: str | None = None,
         parent_cid: str | None = None,
         root_uri: str | None = None,
@@ -118,6 +119,7 @@ class CommentsResource:
         payload = self._build_payload(
             account_id=account_id,
             message=message,
+            attachment_url=attachment_url,
             comment_id=comment_id,
             parent_cid=parent_cid,
             root_uri=root_uri,
@@ -299,6 +301,7 @@ class CommentsResource:
         account_id: str,
         message: str,
         *,
+        attachment_url: str | None = None,
         comment_id: str | None = None,
         parent_cid: str | None = None,
         root_uri: str | None = None,
@@ -308,6 +311,7 @@ class CommentsResource:
         payload = self._build_payload(
             account_id=account_id,
             message=message,
+            attachment_url=attachment_url,
             comment_id=comment_id,
             parent_cid=parent_cid,
             root_uri=root_uri,

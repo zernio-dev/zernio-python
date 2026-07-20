@@ -22978,6 +22978,10 @@ paths:
               properties:
                 accountId: { type: string }
                 message: { type: string }
+                attachmentUrl:
+                  type: string
+                  format: uri
+                  description: '(Facebook only) URL of an image to attach, publishing a photo comment alongside the text. The URL must be publicly accessible so Meta can fetch it. Returns 400 for other platforms.'
                 commentId: { type: string, description: Reply to specific comment (optional) }
                 parentCid: { type: string, description: (Bluesky only) Parent content identifier }
                 rootUri: { type: string, description: (Bluesky only) Root post URI }
@@ -22997,6 +23001,8 @@ paths:
                       commentId: { type: string }
                       isReply: { type: boolean }
                       cid: { type: [string, "null"], description: Bluesky CID }
+        '400':
+          description: 'Invalid request (e.g. attachmentUrl on a platform other than Facebook, code PLATFORM_NOT_SUPPORTED)'
         '401': { $ref: '#/components/responses/Unauthorized' }
         '403':
           description: Inbox addon required
