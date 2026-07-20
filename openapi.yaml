@@ -33272,6 +33272,10 @@ paths:
         - { name: level, in: query, schema: { type: string, enum: [ad, adset, campaign, account] }, description: Row granularity }
         - { name: fields, in: query, schema: { type: string }, description: "Comma-separated Graph insights fields (e.g. spend,impressions,frequency,website_purchase_roas). Omitted = Meta's default set." }
         - { name: breakdowns, in: query, schema: { type: string }, description: "Comma-separated Graph breakdowns (e.g. age,gender or publisher_platform)." }
+        - { name: actionBreakdowns, in: query, schema: { type: string }, description: "Comma-separated Graph action breakdowns. Segments the actions[] arrays in each row." }
+        - { name: actionAttributionWindows, in: query, schema: { type: string }, description: "Comma-separated Meta attribution windows. Action values are returned keyed per window." }
+        - { name: actionReportTime, in: query, schema: { type: string }, description: "When actions are counted: impression, conversion or mixed." }
+        - { name: useUnifiedAttributionSetting, in: query, schema: { type: boolean }, description: "Use the ad sets' own attribution settings for action counting." }
         - { name: filtering, in: query, schema: { type: string }, description: "JSON array of Meta filter objects: [{\"field\", \"operator\", \"value\"}]. Applied server-side by Meta." }
         - { name: datePreset, in: query, schema: { type: string }, description: "Meta date_preset (e.g. last_7d, last_30d, this_month). Mutually exclusive with fromDate/toDate." }
         - { name: fromDate, in: query, schema: { type: string, format: date }, description: "Start of range (YYYY-MM-DD); requires toDate." }
@@ -33325,6 +33329,13 @@ paths:
                 level: { type: string, enum: [ad, adset, campaign, account] }
                 fields: { type: string, description: "Comma-separated Graph insights fields." }
                 breakdowns: { type: string, description: "Comma-separated Graph breakdowns." }
+                actionBreakdowns: { type: string, description: "Comma-separated Graph action breakdowns (e.g. action_type,action_destination)." }
+                actionAttributionWindows:
+                  type: array
+                  items: { type: string }
+                  description: "Meta attribution windows (e.g. [\"7d_click\", \"1d_view\"]). Action values are returned keyed per window."
+                actionReportTime: { type: string, description: "When actions are counted: impression, conversion or mixed." }
+                useUnifiedAttributionSetting: { type: boolean, description: "Use the ad sets' own attribution settings for action counting." }
                 filtering:
                   type: array
                   description: "Meta filter objects, applied server-side."
@@ -34517,6 +34528,27 @@ paths:
                       enum: [SINGLE_IMAGE, CAROUSEL_IMAGE]
                       default: SINGLE_IMAGE
                       description: "Asset-feed ad format. Defaults to SINGLE_IMAGE."
+                carouselCards:
+                  type: array
+                  minItems: 2
+                  maxItems: 10
+                  description: |
+                    Meta only. Hand-built carousel: 2-10 authored cards in DETERMINISTIC order, mapped to
+                    the creative's `link_data.child_attachments`. Unlike `dynamicCreative`,
+                    you control the card order and per-card copy/link. Requires top-level `body`,
+                    `linkUrl` and `callToAction`.
+                    Mutually exclusive with `imageUrl`/`video`, `creatives[]`, `dynamicCreative`,
+                    `placementAssets`, `existingCreativeId`, `adSetId`, `leadGenFormId` and goal
+                    `catalog_sales`.
+                  items:
+                    type: object
+                    required: [imageUrl]
+                    properties:
+                      imageUrl: { type: string, format: uri, description: "Card image; uploaded to the ad account and referenced by hash." }
+                      linkUrl: { type: string, format: uri, description: "Card destination URL. Defaults to the top-level linkUrl." }
+                      headline: { type: string, maxLength: 255, description: "Card headline, shown below the card image." }
+                      description: { type: string, maxLength: 255, description: "Card description, shown under the headline." }
+                      callToAction: { type: string, description: "Card CTA override. Defaults to the top-level callToAction; same enum." }
                 placementAssets:
                   type: object
                   description: |

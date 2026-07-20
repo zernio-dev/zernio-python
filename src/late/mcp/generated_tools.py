@@ -1991,6 +1991,10 @@ def register_generated_tools(mcp, _get_client):
         level: str | None = None,
         fields: str | None = None,
         breakdowns: str | None = None,
+        action_breakdowns: str | None = None,
+        action_attribution_windows: str | None = None,
+        action_report_time: str | None = None,
+        use_unified_attribution_setting: bool | None = None,
         filtering: str | None = None,
         date_preset: str | None = None,
         from_date: str | None = None,
@@ -2007,6 +2011,10 @@ def register_generated_tools(mcp, _get_client):
             level: Row granularity
             fields: Comma-separated Graph insights fields (e.g. spend,impressions,frequency,website_purchase_roas). Omitted = Meta's default set.
             breakdowns: Comma-separated Graph breakdowns (e.g. age,gender or publisher_platform).
+            action_breakdowns: Comma-separated Graph action breakdowns. Segments the actions[] arrays in each row.
+            action_attribution_windows: Comma-separated Meta attribution windows. Action values are returned keyed per window.
+            action_report_time: When actions are counted: impression, conversion or mixed.
+            use_unified_attribution_setting: Use the ad sets' own attribution settings for action counting.
             filtering: JSON array of Meta filter objects: [{"field", "operator", "value"}]. Applied server-side by Meta.
             date_preset: Meta date_preset (e.g. last_7d, last_30d, this_month). Mutually exclusive with fromDate/toDate.
             from_date: Start of range (YYYY-MM-DD); requires toDate.
@@ -2022,6 +2030,10 @@ def register_generated_tools(mcp, _get_client):
                 level=level,
                 fields=fields,
                 breakdowns=breakdowns,
+                action_breakdowns=action_breakdowns,
+                action_attribution_windows=action_attribution_windows,
+                action_report_time=action_report_time,
+                use_unified_attribution_setting=use_unified_attribution_setting,
                 filtering=filtering,
                 date_preset=date_preset,
                 from_date=from_date,
@@ -2048,6 +2060,10 @@ def register_generated_tools(mcp, _get_client):
         level: str | None = None,
         fields: str | None = None,
         breakdowns: str | None = None,
+        action_breakdowns: str | None = None,
+        action_attribution_windows: list[str] | None = None,
+        action_report_time: str | None = None,
+        use_unified_attribution_setting: bool | None = None,
         filtering: list[dict[str, Any]] | None = None,
         date_preset: str | None = None,
         from_date: str | None = None,
@@ -2062,6 +2078,10 @@ def register_generated_tools(mcp, _get_client):
             level
             fields: Comma-separated Graph insights fields.
             breakdowns: Comma-separated Graph breakdowns.
+            action_breakdowns: Comma-separated Graph action breakdowns (e.g. action_type,action_destination).
+            action_attribution_windows: Meta attribution windows (e.g. ["7d_click", "1d_view"]). Action values are returned keyed per window.
+            action_report_time: When actions are counted: impression, conversion or mixed.
+            use_unified_attribution_setting: Use the ad sets' own attribution settings for action counting.
             filtering: Meta filter objects, applied server-side.
             date_preset: Mutually exclusive with fromDate/toDate.
             from_date
@@ -2075,6 +2095,10 @@ def register_generated_tools(mcp, _get_client):
                 level=level,
                 fields=fields,
                 breakdowns=breakdowns,
+                action_breakdowns=action_breakdowns,
+                action_attribution_windows=action_attribution_windows,
+                action_report_time=action_report_time,
+                use_unified_attribution_setting=use_unified_attribution_setting,
                 filtering=filtering,
                 date_preset=date_preset,
                 from_date=from_date,
@@ -2555,6 +2579,7 @@ def register_generated_tools(mcp, _get_client):
         start_date: str | None = None,
         instagram_account_id: str | None = None,
         dynamic_creative: dict[str, Any] | None = None,
+        carousel_cards: list[dict[str, Any]] | None = None,
         placement_assets: dict[str, Any] | None = None,
         audience_id: str | None = None,
         campaign_type: str = "display",
@@ -2736,6 +2761,13 @@ def register_generated_tools(mcp, _get_client):
         (`imageUrl`, `headline`, `body`, `linkUrl`, `callToAction`) are ignored. Mutually
         exclusive with the `creatives[]` multi-creative shape. Meta limits: ≤10 images,
         ≤5 bodies / titles / descriptions.
+                carousel_cards: Meta only. Hand-built carousel: 2-10 authored cards in DETERMINISTIC order, mapped to
+        the creative's `link_data.child_attachments`. Unlike `dynamicCreative`,
+        you control the card order and per-card copy/link. Requires top-level `body`,
+        `linkUrl` and `callToAction`.
+        Mutually exclusive with `imageUrl`/`video`, `creatives[]`, `dynamicCreative`,
+        `placementAssets`, `existingCreativeId`, `adSetId`, `leadGenFormId` and goal
+        `catalog_sales`.
                 placement_assets: Meta only. Placement asset customization: pin a SPECIFIC asset (image OR video) to
         each placement group on a SINGLE ad (e.g. a 9:16 on Stories/Reels and a 4:5 on Feed).
         The same thing Meta Ads Manager produces with "different creative per placement",
@@ -2894,6 +2926,7 @@ def register_generated_tools(mcp, _get_client):
                 start_date=start_date,
                 instagram_account_id=instagram_account_id,
                 dynamic_creative=dynamic_creative,
+                carousel_cards=carousel_cards,
                 placement_assets=placement_assets,
                 audience_id=audience_id,
                 campaign_type=campaign_type,
