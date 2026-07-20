@@ -1979,6 +1979,63 @@ def register_generated_tools(mcp, _get_client):
 
     @mcp.tool(
         annotations=ToolAnnotations(
+            title="Render pre-create ad previews (Meta)",
+            readOnlyHint=False,
+            destructiveHint=True,
+            openWorldHint=True,
+        )
+    )
+    def ads_generate_ad_previews(
+        account_id: str,
+        ad_account_id: str,
+        formats: list[str] | None = None,
+        existing_creative_id: str | None = None,
+        creative_spec: dict[str, Any] | None = None,
+    ) -> str:
+        """Render pre-create ad previews (Meta)
+
+        Args:
+            account_id: Zernio SocialAccount id used to resolve the Meta token. (required)
+            ad_account_id: Meta ad account id (act_<n>). (required)
+            formats: Meta ad_format values, one preview per format. Defaults to [DESKTOP_FEED_STANDARD].
+            existing_creative_id: Preview an existing ad-account creative by id. Mutually exclusive with creativeSpec.
+            creative_spec: Raw Meta creative spec forwarded verbatim to /generatepreviews. Mutually exclusive with existingCreativeId."""
+        client = _get_client()
+        try:
+            response = client.ads.generate_ad_previews(
+                account_id=account_id,
+                ad_account_id=ad_account_id,
+                formats=formats,
+                existing_creative_id=existing_creative_id,
+                creative_spec=creative_spec,
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Render previews of an existing ad (Meta)",
+            readOnlyHint=True,
+            destructiveHint=False,
+            openWorldHint=False,
+        )
+    )
+    def ads_get_ad_previews(ad_id: str, formats: str | None = None) -> str:
+        """Render previews of an existing ad (Meta)
+
+        Args:
+            ad_id: Zernio ad id (24-char hex). (required)
+            formats: Comma-separated Meta ad_format values (max 10), one preview per format. Defaults to DESKTOP_FEED_STANDARD."""
+        client = _get_client()
+        try:
+            response = client.ads.get_ad_previews(ad_id=ad_id, formats=formats)
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
             title="Flexible live insights query (Meta)",
             readOnlyHint=True,
             destructiveHint=False,
@@ -3882,174 +3939,51 @@ def register_generated_tools(mcp, _get_client):
 
     @mcp.tool(
         annotations=ToolAnnotations(
-            title="Create Click-to-WhatsApp ad",
+            title="Create click-to-message ad (WhatsApp / Messenger / Instagram Direct)",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
         )
     )
-    def ads_create_ctwa_ad(
-        account_id: str,
-        ad_account_id: str,
-        name: str,
-        budget_amount: float,
-        budget_type: str,
-        headline: str | None = None,
-        body: str | None = None,
-        image_url: str | None = None,
-        video: dict[str, Any] | None = None,
-        creatives: list[dict[str, Any]] | None = None,
-        currency: str | None = None,
-        end_date: str | None = None,
-        countries: list[str] | None = None,
-        cities: list[dict[str, Any]] | None = None,
-        regions: list[dict[str, Any]] | None = None,
-        zips: list[dict[str, Any]] | None = None,
-        metros: list[dict[str, Any]] | None = None,
-        custom_locations: list[dict[str, Any]] | None = None,
-        age_min: int | None = None,
-        age_max: int | None = None,
-        interests: list[dict[str, Any]] | None = None,
-        audience_id: str | None = None,
-        placements: dict[str, Any] | None = None,
-        advantage_audience: int | None = None,
-        objective: str | None = None,
-        bid_strategy: str | None = None,
-        bid_amount: float | None = None,
-        roas_average_floor: float | None = None,
-        dsa_beneficiary: str | None = None,
-        dsa_payor: str | None = None,
-    ) -> str:
-        """Create Click-to-WhatsApp ad
-
-            Args:
-                account_id: Facebook or Instagram SocialAccount ID. (required)
-                ad_account_id: Meta ad account ID, e.g. `act_123456789`. (required)
-                name: Ad display name. Used to derive campaign / ad set names.
-        On the multi-creative shape, each ad's Meta name gets a
-        " #N" suffix (1-indexed) so Ads Manager shows them as a
-        numbered batch.
-         (required)
-                headline: Single-creative shape only. Mutually exclusive with
-        `creatives[]`.
-                body: Primary text shown above the image / video. Single-creative
-        shape only. Mutually exclusive with `creatives[]`.
-                image_url: Image asset for single-creative shape. Mutually exclusive
-        with `video` and with `creatives[]`. Required on the
-        single-creative shape if `video` is not supplied.
-                video: Video creative for single-creative shape. Mutually
-        exclusive with `imageUrl` and with `creatives[]`. Required
-        on the single-creative shape if `imageUrl` is not supplied.
-                creatives: Multi-creative shape: N CTWA ads under one campaign + one
-        ad set, sharing budget and targeting. Mutually exclusive
-        with the top-level single-creative fields (`headline` /
-        `body` / `imageUrl` / `video`). Each entry must supply its
-        own headline, body, and exactly one of `imageUrl` /
-        `video`.
-                budget_amount: Budget amount in the ad account's currency major units
-        (e.g. dollars for USD, not cents). Must be > 0.
-         (required)
-                budget_type: (required)
-                currency: ISO 4217 currency code matching the ad account's currency
-        (e.g. `USD`). Optional; Meta infers from the ad account
-        when omitted.
-                end_date: ISO 8601 datetime. Required when `budgetType` is `lifetime`.
-                countries: ISO 3166-1 alpha-2 country codes. Defaults to `["US"]` only
-        when no other geo (`cities`, `regions`, `zips`, `metros`,
-        `customLocations`) is supplied.
-                cities: City-level geo targeting for local CTWA campaigns (e.g.
-        25km radius around Milan). Each entry maps to Meta's
-        TargetingGeoLocationCity. `key` is Meta's city ID
-        (lookupable via GET /v1/ads/targeting/search). `radius`
-        and `distance_unit` are coupled: set both or neither.
-        Meta enforces a minimum city radius (~17 km / 10 mi);
-        smaller values resolve to a 0-size audience and the ad
-        fails at launch. For a tighter catchment use customLocations
-        (lat/lng).
-                regions: Region / state-level geo targeting. `key` is Meta's region
-        ID (lookupable via GET /v1/ads/targeting/search?type=region).
-                zips: ZIP / postal-code geo targeting. `key` is the platform's
-        postal id resolved via /v1/ads/targeting/search.
-                metros: DMA / metro-area geo targeting. `key` is Meta's metro id
-        (e.g. `DMA:807`).
-                custom_locations: Point-radius geo (Meta `geo_locations.custom_locations`).
-        Use for targeting a radius around a specific lat/long when
-        no Meta city/region key fits. `distanceUnit` is required.
-                age_min
-                age_max
-                interests
-                audience_id: Custom audience ID to target.
-                placements: Manual ad placements on the shared ad set. Omit
-        for automatic placements. When set, restricts delivery to the chosen surfaces,
-        mapped onto the ad set's `targeting.{publisher_platforms, facebook_positions, instagram_positions,
-        messenger_positions, audience_network_positions, threads_positions,
-        whatsapp_positions, device_platforms}`. Enum membership is validated here; Meta
-        additionally enforces co-selection rules and restricts which
-        placements are eligible for click-to-WhatsApp ads, returning an actionable
-        error which we surface.
-                advantage_audience: Meta's Advantage+ audience expansion. `0` (default) keeps
-        targeting strict; `1` lets Meta expand beyond the supplied
-        targeting when its delivery system finds better matches.
-        Always sent on CREATE (Meta requires it).
-                objective: Defaults to `OUTCOME_ENGAGEMENT` (the broadly-supported CTWA
-        objective). `OUTCOME_SALES` and `OUTCOME_LEADS` require
-        additional account configuration (Dataset linked to the WABA
-        for sales) and may be rejected by Meta if missing.
-                bid_strategy: Meta bid strategy applied to the shared ad set. Defaults to
-        `LOWEST_COST_WITHOUT_CAP` (auto-bid) when omitted.
-        `LOWEST_COST_WITH_BID_CAP` and `COST_CAP` require
-        `bidAmount`. `LOWEST_COST_WITH_MIN_ROAS` requires
-        `roasAverageFloor`. CTWA's `optimization_goal` is fixed to
-        `CONVERSATIONS`, but the bid strategy is independent.
-                bid_amount: Whole currency units (e.g. `5` = $5.00 on a USD account).
-        Required when `bidStrategy` is `LOWEST_COST_WITH_BID_CAP`
-        or `COST_CAP`; rejected otherwise.
-                roas_average_floor: Decimal ROAS multiplier (e.g. `2.0` = 2.0× ROAS floor).
-        Required when `bidStrategy` is `LOWEST_COST_WITH_MIN_ROAS`;
-        rejected otherwise. Meta enforces its own upper bound
-        server-side.
-                dsa_beneficiary: Legal entity that benefits from the ad. Required when targeting EU users
-        (EU DSA, Article 26). Optional if the ad account has a default beneficiary:
-        set it once via `PATCH /v1/ads/accounts` or in Meta Ads Manager, and Meta
-        fills it in whenever the field is omitted.
-                dsa_payor: Legal entity that pays for the ad. Can differ from `dsaBeneficiary`
-        (for example, an agency paying for a client's ads). Same rules as
-        `dsaBeneficiary`: required for EU targeting unless the ad account has
-        a default payor."""
+    def ads_create_messaging_ad() -> str:
+        """Create click-to-message ad (WhatsApp / Messenger / Instagram Direct)"""
         client = _get_client()
         try:
-            response = client.ads.create_ctwa_ad(
-                account_id=account_id,
-                ad_account_id=ad_account_id,
-                name=name,
-                headline=headline,
-                body=body,
-                image_url=image_url,
-                video=video,
-                creatives=creatives,
-                budget_amount=budget_amount,
-                budget_type=budget_type,
-                currency=currency,
-                end_date=end_date,
-                countries=countries,
-                cities=cities,
-                regions=regions,
-                zips=zips,
-                metros=metros,
-                custom_locations=custom_locations,
-                age_min=age_min,
-                age_max=age_max,
-                interests=interests,
-                audience_id=audience_id,
-                placements=placements,
-                advantage_audience=advantage_audience,
-                objective=objective,
-                bid_strategy=bid_strategy,
-                bid_amount=bid_amount,
-                roas_average_floor=roas_average_floor,
-                dsa_beneficiary=dsa_beneficiary,
-                dsa_payor=dsa_payor,
-            )
+            response = client.ads.create_messaging_ad()
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Create Click-to-Call ad",
+            readOnlyHint=False,
+            destructiveHint=True,
+            openWorldHint=True,
+        )
+    )
+    def ads_create_call_ad() -> str:
+        """Create Click-to-Call ad"""
+        client = _get_client()
+        try:
+            response = client.ads.create_call_ad()
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Create Click-to-WhatsApp ad (deprecated)",
+            readOnlyHint=False,
+            destructiveHint=True,
+            openWorldHint=True,
+        )
+    )
+    def ads_create_ctwa_ad() -> str:
+        """Create Click-to-WhatsApp ad (deprecated)"""
+        client = _get_client()
+        try:
+            response = client.ads.create_ctwa_ad()
             return _format_response(response)
         except Exception as e:
             return f"Error: {e}"

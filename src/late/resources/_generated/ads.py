@@ -148,6 +148,34 @@ class AdsResource:
             f"/v1/ads/campaigns/{campaign_id}/analytics", params=params
         )
 
+    def generate_ad_previews(
+        self,
+        account_id: str,
+        ad_account_id: str,
+        *,
+        formats: list[str] | None = None,
+        existing_creative_id: str | None = None,
+        creative_spec: dict[str, Any] | None = None,
+    ) -> dict[str, Any]:
+        """Render pre-create ad previews (Meta)"""
+        payload = self._build_payload(
+            account_id=account_id,
+            ad_account_id=ad_account_id,
+            formats=formats,
+            existing_creative_id=existing_creative_id,
+            creative_spec=creative_spec,
+        )
+        return self._client._post("/v1/ads/preview", data=payload)
+
+    def get_ad_previews(
+        self, ad_id: str, *, formats: str | None = None
+    ) -> dict[str, Any]:
+        """Render previews of an existing ad (Meta)"""
+        params = self._build_params(
+            formats=formats,
+        )
+        return self._client._get(f"/v1/ads/{ad_id}/preview", params=params)
+
     def query_ad_insights(
         self,
         account_id: str,
@@ -1008,74 +1036,17 @@ class AdsResource:
             params=params,
         )
 
-    def create_ctwa_ad(
-        self,
-        account_id: str,
-        ad_account_id: str,
-        name: str,
-        budget_amount: float,
-        budget_type: str,
-        *,
-        headline: str | None = None,
-        body: str | None = None,
-        image_url: str | None = None,
-        video: dict[str, Any] | None = None,
-        creatives: list[dict[str, Any]] | None = None,
-        currency: str | None = None,
-        end_date: datetime | str | None = None,
-        countries: list[str] | None = None,
-        cities: list[dict[str, Any]] | None = None,
-        regions: list[dict[str, Any]] | None = None,
-        zips: list[dict[str, Any]] | None = None,
-        metros: list[dict[str, Any]] | None = None,
-        custom_locations: list[dict[str, Any]] | None = None,
-        age_min: int | None = None,
-        age_max: int | None = None,
-        interests: list[dict[str, Any]] | None = None,
-        audience_id: str | None = None,
-        placements: dict[str, Any] | None = None,
-        advantage_audience: int | None = None,
-        objective: str | None = None,
-        bid_strategy: str | None = None,
-        bid_amount: float | None = None,
-        roas_average_floor: float | None = None,
-        dsa_beneficiary: str | None = None,
-        dsa_payor: str | None = None,
-    ) -> dict[str, Any]:
-        """Create Click-to-WhatsApp ad"""
-        payload = self._build_payload(
-            account_id=account_id,
-            ad_account_id=ad_account_id,
-            name=name,
-            headline=headline,
-            body=body,
-            image_url=image_url,
-            video=video,
-            creatives=creatives,
-            budget_amount=budget_amount,
-            budget_type=budget_type,
-            currency=currency,
-            end_date=end_date,
-            countries=countries,
-            cities=cities,
-            regions=regions,
-            zips=zips,
-            metros=metros,
-            custom_locations=custom_locations,
-            age_min=age_min,
-            age_max=age_max,
-            interests=interests,
-            audience_id=audience_id,
-            placements=placements,
-            advantage_audience=advantage_audience,
-            objective=objective,
-            bid_strategy=bid_strategy,
-            bid_amount=bid_amount,
-            roas_average_floor=roas_average_floor,
-            dsa_beneficiary=dsa_beneficiary,
-            dsa_payor=dsa_payor,
-        )
-        return self._client._post("/v1/ads/ctwa", data=payload)
+    def create_messaging_ad(self) -> dict[str, Any]:
+        """Create click-to-message ad (WhatsApp / Messenger / Instagram Direct)"""
+        return self._client._post("/v1/ads/messaging")
+
+    def create_call_ad(self) -> dict[str, Any]:
+        """Create Click-to-Call ad"""
+        return self._client._post("/v1/ads/call")
+
+    def create_ctwa_ad(self) -> dict[str, Any]:
+        """Create Click-to-WhatsApp ad (deprecated)"""
+        return self._client._post("/v1/ads/ctwa")
 
     async def alist_ads(
         self,
@@ -1168,6 +1139,34 @@ class AdsResource:
         return await self._client._aget(
             f"/v1/ads/campaigns/{campaign_id}/analytics", params=params
         )
+
+    async def agenerate_ad_previews(
+        self,
+        account_id: str,
+        ad_account_id: str,
+        *,
+        formats: list[str] | None = None,
+        existing_creative_id: str | None = None,
+        creative_spec: dict[str, Any] | None = None,
+    ) -> dict[str, Any]:
+        """Render pre-create ad previews (Meta) (async)"""
+        payload = self._build_payload(
+            account_id=account_id,
+            ad_account_id=ad_account_id,
+            formats=formats,
+            existing_creative_id=existing_creative_id,
+            creative_spec=creative_spec,
+        )
+        return await self._client._apost("/v1/ads/preview", data=payload)
+
+    async def aget_ad_previews(
+        self, ad_id: str, *, formats: str | None = None
+    ) -> dict[str, Any]:
+        """Render previews of an existing ad (Meta) (async)"""
+        params = self._build_params(
+            formats=formats,
+        )
+        return await self._client._aget(f"/v1/ads/{ad_id}/preview", params=params)
 
     async def aquery_ad_insights(
         self,
@@ -2047,71 +2046,14 @@ class AdsResource:
             params=params,
         )
 
-    async def acreate_ctwa_ad(
-        self,
-        account_id: str,
-        ad_account_id: str,
-        name: str,
-        budget_amount: float,
-        budget_type: str,
-        *,
-        headline: str | None = None,
-        body: str | None = None,
-        image_url: str | None = None,
-        video: dict[str, Any] | None = None,
-        creatives: list[dict[str, Any]] | None = None,
-        currency: str | None = None,
-        end_date: datetime | str | None = None,
-        countries: list[str] | None = None,
-        cities: list[dict[str, Any]] | None = None,
-        regions: list[dict[str, Any]] | None = None,
-        zips: list[dict[str, Any]] | None = None,
-        metros: list[dict[str, Any]] | None = None,
-        custom_locations: list[dict[str, Any]] | None = None,
-        age_min: int | None = None,
-        age_max: int | None = None,
-        interests: list[dict[str, Any]] | None = None,
-        audience_id: str | None = None,
-        placements: dict[str, Any] | None = None,
-        advantage_audience: int | None = None,
-        objective: str | None = None,
-        bid_strategy: str | None = None,
-        bid_amount: float | None = None,
-        roas_average_floor: float | None = None,
-        dsa_beneficiary: str | None = None,
-        dsa_payor: str | None = None,
-    ) -> dict[str, Any]:
-        """Create Click-to-WhatsApp ad (async)"""
-        payload = self._build_payload(
-            account_id=account_id,
-            ad_account_id=ad_account_id,
-            name=name,
-            headline=headline,
-            body=body,
-            image_url=image_url,
-            video=video,
-            creatives=creatives,
-            budget_amount=budget_amount,
-            budget_type=budget_type,
-            currency=currency,
-            end_date=end_date,
-            countries=countries,
-            cities=cities,
-            regions=regions,
-            zips=zips,
-            metros=metros,
-            custom_locations=custom_locations,
-            age_min=age_min,
-            age_max=age_max,
-            interests=interests,
-            audience_id=audience_id,
-            placements=placements,
-            advantage_audience=advantage_audience,
-            objective=objective,
-            bid_strategy=bid_strategy,
-            bid_amount=bid_amount,
-            roas_average_floor=roas_average_floor,
-            dsa_beneficiary=dsa_beneficiary,
-            dsa_payor=dsa_payor,
-        )
-        return await self._client._apost("/v1/ads/ctwa", data=payload)
+    async def acreate_messaging_ad(self) -> dict[str, Any]:
+        """Create click-to-message ad (WhatsApp / Messenger / Instagram Direct) (async)"""
+        return await self._client._apost("/v1/ads/messaging")
+
+    async def acreate_call_ad(self) -> dict[str, Any]:
+        """Create Click-to-Call ad (async)"""
+        return await self._client._apost("/v1/ads/call")
+
+    async def acreate_ctwa_ad(self) -> dict[str, Any]:
+        """Create Click-to-WhatsApp ad (deprecated) (async)"""
+        return await self._client._apost("/v1/ads/ctwa")

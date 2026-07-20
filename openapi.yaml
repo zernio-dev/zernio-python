@@ -605,6 +605,323 @@ components:
                   effective_account_limit: 2000
                   current_account_count: 2000
   schemas:
+    CtwaAdRequestBody:
+      type: object
+      required: [accountId, adAccountId, name, budgetAmount, budgetType]
+      description: |
+        In addition to the `required` list, the request must use
+        EXACTLY ONE of the two shapes:
+
+        - Single-creative: `headline`, `body`, and one of
+          `imageUrl` / `video` (mutually exclusive).
+        - Multi-creative: a non-empty `creatives[]` array. Top-level
+          `headline` / `body` / `imageUrl` / `video` must NOT be set
+          on this shape.
+
+        The route enforces this at the Zod boundary; OpenAPI's
+        `required` cannot express the OR cleanly.
+      properties:
+        accountId:
+          type: string
+          minLength: 1
+          description: Facebook or Instagram SocialAccount ID.
+        adAccountId:
+          type: string
+          minLength: 1
+          description: Meta ad account ID, e.g. `act_123456789`.
+        name:
+          type: string
+          minLength: 1
+          description: |
+            Ad display name. Used to derive campaign / ad set names.
+            On the multi-creative shape, each ad's Meta name gets a
+            " #N" suffix (1-indexed) so Ads Manager shows them as a
+            numbered batch.
+        headline:
+          type: string
+          minLength: 1
+          maxLength: 255
+          description: |
+            Single-creative shape only. Mutually exclusive with
+            `creatives[]`.
+        body:
+          type: string
+          minLength: 1
+          description: |
+            Primary text shown above the image / video. Single-creative
+            shape only. Mutually exclusive with `creatives[]`.
+        imageUrl:
+          type: string
+          format: uri
+          description: |
+            Image asset for single-creative shape. Mutually exclusive
+            with `video` and with `creatives[]`. Required on the
+            single-creative shape if `video` is not supplied.
+        video:
+          type: object
+          required: [url, thumbnailUrl]
+          properties:
+            url: { type: string, format: uri }
+            thumbnailUrl:
+              type: string
+              format: uri
+              description: |
+                Required by Meta for every video creative. Used as the
+                ad thumbnail.
+          description: |
+            Video creative for single-creative shape. Mutually
+            exclusive with `imageUrl` and with `creatives[]`. Required
+            on the single-creative shape if `imageUrl` is not supplied.
+        creatives:
+          type: array
+          minItems: 1
+          description: |
+            Multi-creative shape: N CTWA ads under one campaign + one
+            ad set, sharing budget and targeting. Mutually exclusive
+            with the top-level single-creative fields (`headline` /
+            `body` / `imageUrl` / `video`). Each entry must supply its
+            own headline, body, and exactly one of `imageUrl` /
+            `video`.
+          items:
+            type: object
+            required: [headline, body]
+            description: |
+              Each entry must also include exactly one of `imageUrl`
+              or `video`.
+            properties:
+              headline:
+                type: string
+                minLength: 1
+                maxLength: 255
+              body:
+                type: string
+                minLength: 1
+                description: Primary text shown above the image / video.
+              imageUrl:
+                type: string
+                format: uri
+                description: |
+                  Image asset. Mutually exclusive with this entry's
+                  `video`. Required if `video` is not supplied.
+              video:
+                type: object
+                required: [url, thumbnailUrl]
+                properties:
+                  url: { type: string, format: uri }
+                  thumbnailUrl:
+                    type: string
+                    format: uri
+                    description: |
+                      Required by Meta for every video creative. Used
+                      as the ad thumbnail.
+                description: |
+                  Video creative. Mutually exclusive with this entry's
+                  `imageUrl`. Required if `imageUrl` is not supplied.
+        budgetAmount:
+          type: number
+          exclusiveMinimum: 0
+          description: |
+            Budget amount in the ad account's currency major units
+            (e.g. dollars for USD, not cents). Must be > 0.
+        budgetType:
+          type: string
+          enum: [daily, lifetime]
+        currency:
+          type: string
+          minLength: 3
+          maxLength: 3
+          description: |
+            ISO 4217 currency code matching the ad account's currency
+            (e.g. `USD`). Optional; Meta infers from the ad account
+            when omitted.
+        endDate:
+          type: string
+          format: date-time
+          description: |
+            ISO 8601 datetime. Required when `budgetType` is `lifetime`.
+        countries:
+          type: array
+          items: { type: string, minLength: 2, maxLength: 2 }
+          description: |
+            ISO 3166-1 alpha-2 country codes. Defaults to `["US"]` only
+            when no other geo (`cities`, `regions`, `zips`, `metros`,
+            `customLocations`) is supplied.
+        cities:
+          type: array
+          description: |
+            City-level geo targeting for local CTWA campaigns. Each entry maps to Meta's
+            TargetingGeoLocationCity. `key` is Meta's city ID. `radius`
+            and `distance_unit` are coupled: set both or neither.
+            Meta enforces a minimum city radius (~17 km / 10 mi);
+            smaller values resolve to a 0-size audience and the ad
+            fails at launch. For a tighter catchment use customLocations
+            (lat/lng).
+          items:
+            type: object
+            required: [key]
+            properties:
+              key: { type: string, minLength: 1 }
+              radius: { type: number, exclusiveMinimum: 0 }
+              distance_unit: { type: string, enum: [mile, kilometer] }
+        regions:
+          type: array
+          description: |
+            Region / state-level geo targeting. `key` is Meta's region
+            ID (lookupable via GET /v1/ads/targeting/search?type=region).
+          items:
+            type: object
+            required: [key]
+            properties:
+              key: { type: string, minLength: 1 }
+        zips:
+          type: array
+          description: |
+            ZIP / postal-code geo targeting. `key` is the platform's
+            postal id resolved via /v1/ads/targeting/search.
+          items:
+            type: object
+            required: [key]
+            properties:
+              key: { type: string, minLength: 1 }
+              name: { type: string }
+        metros:
+          type: array
+          description: |
+            DMA / metro-area geo targeting. `key` is Meta's metro id
+            (e.g. `DMA:807`).
+          items:
+            type: object
+            required: [key]
+            properties:
+              key: { type: string, minLength: 1 }
+              name: { type: string }
+        customLocations:
+          type: array
+          description: |
+            Point-radius geo (Meta `geo_locations.custom_locations`).
+            Use for targeting a radius around a specific lat/long when
+            no Meta city/region key fits. `distanceUnit` is required.
+          items:
+            type: object
+            required: [latitude, longitude, radius, distanceUnit]
+            properties:
+              latitude: { type: number, minimum: -90, maximum: 90 }
+              longitude: { type: number, minimum: -180, maximum: 180 }
+              radius: { type: number, exclusiveMinimum: 0 }
+              distanceUnit: { type: string, enum: [mile, kilometer] }
+              name: { type: string }
+              address: { type: string }
+        ageMin: { type: integer, minimum: 13, maximum: 65 }
+        ageMax: { type: integer, minimum: 13, maximum: 65 }
+        interests:
+          type: array
+          items:
+            type: object
+            required: [id]
+            properties:
+              id: { type: string }
+              name: { type: string }
+        audienceId:
+          type: string
+          description: Custom audience ID to target.
+        placements:
+          type: object
+          description: |
+            Manual ad placements on the shared ad set. Omit
+            for automatic placements. When set, restricts delivery to the chosen surfaces,
+            mapped onto the ad set's `targeting.{publisher_platforms, facebook_positions, instagram_positions,
+            messenger_positions, audience_network_positions, threads_positions,
+            whatsapp_positions, device_platforms}`. Enum membership is validated here; Meta
+            additionally enforces co-selection rules and restricts which
+            placements are eligible for click-to-WhatsApp ads, returning an actionable
+            error which we surface.
+          properties:
+            publisherPlatforms:
+              type: array
+              items: { type: string, enum: [facebook, instagram, threads, messenger, audience_network, whatsapp] }
+              description: "Top-level platforms to deliver on. A position field below is only honoured when its parent platform is included here."
+            facebookPositions:
+              type: array
+              items: { type: string, enum: [feed, right_hand_column, marketplace, video_feeds, story, search, instream_video, facebook_reels, facebook_reels_overlay, profile_feed, notification] }
+            instagramPositions:
+              type: array
+              items: { type: string, enum: [stream, story, explore, explore_home, reels, profile_feed, ig_search, profile_reels] }
+            messengerPositions:
+              type: array
+              items: { type: string, enum: [messenger_home, sponsored_messages, story] }
+            audienceNetworkPositions:
+              type: array
+              items: { type: string, enum: [classic, rewarded_video] }
+            threadsPositions:
+              type: array
+              items: { type: string, enum: [threads_stream] }
+            whatsappPositions:
+              type: array
+              items: { type: string, enum: [status] }
+            devicePlatforms:
+              type: array
+              items: { type: string, enum: [mobile, desktop] }
+              description: "Restrict by device. Omit to deliver on both mobile and desktop."
+        advantageAudience:
+          type: integer
+          enum: [0, 1]
+          description: |
+            Meta's Advantage+ audience expansion. `0` (default) keeps
+            targeting strict; `1` lets Meta expand beyond the supplied
+            targeting when its delivery system finds better matches.
+            Always sent on CREATE (Meta requires it).
+        objective:
+          type: string
+          enum: [OUTCOME_ENGAGEMENT, OUTCOME_SALES, OUTCOME_LEADS]
+          description: |
+            Defaults to `OUTCOME_ENGAGEMENT`. `OUTCOME_SALES` and `OUTCOME_LEADS` require
+            additional account configuration (Dataset linked to the WABA
+            for sales) and may be rejected by Meta if missing.
+        bidStrategy:
+          type: string
+          enum:
+            - LOWEST_COST_WITHOUT_CAP
+            - LOWEST_COST_WITH_BID_CAP
+            - COST_CAP
+            - LOWEST_COST_WITH_MIN_ROAS
+          description: |
+            Meta bid strategy applied to the shared ad set. Defaults to
+            `LOWEST_COST_WITHOUT_CAP` (auto-bid) when omitted.
+            `LOWEST_COST_WITH_BID_CAP` and `COST_CAP` require
+            `bidAmount`. `LOWEST_COST_WITH_MIN_ROAS` requires
+            `roasAverageFloor`. CTWA's `optimization_goal` is fixed to
+            `CONVERSATIONS`, but the bid strategy is independent.
+        bidAmount:
+          type: number
+          exclusiveMinimum: 0
+          description: |
+            Whole currency units (e.g. `5` = $5.00 on a USD account).
+            Required when `bidStrategy` is `LOWEST_COST_WITH_BID_CAP`
+            or `COST_CAP`; rejected otherwise.
+        roasAverageFloor:
+          type: number
+          exclusiveMinimum: 0
+          description: |
+            Decimal ROAS multiplier (e.g. `2.0` = 2.0× ROAS floor).
+            Required when `bidStrategy` is `LOWEST_COST_WITH_MIN_ROAS`;
+            rejected otherwise. Meta enforces its own upper bound
+            server-side.
+        dsaBeneficiary:
+          type: string
+          maxLength: 100
+          description: |
+            Legal entity that benefits from the ad. Required when targeting EU users
+            (EU DSA, Article 26). Optional if the ad account has a default beneficiary:
+            set it once via `PATCH /v1/ads/accounts` or in Meta Ads Manager, and Meta
+            fills it in whenever the field is omitted.
+        dsaPayor:
+          type: string
+          maxLength: 100
+          description: |
+            Legal entity that pays for the ad. Can differ from `dsaBeneficiary`
+            (for example, an agency paying for a client's ads). Same rules as
+            `dsaBeneficiary`: required for EU targeting unless the ad account has
+            a default payor.
     WorkflowNode:
       type: object
       required: [id, type]
@@ -33248,6 +33565,95 @@ paths:
           description: Ads access required. Legacy plans need the Ads add-on; included by default on usage-based plans.
         '404': { $ref: '#/components/responses/NotFound' }
 
+  /v1/ads/preview:
+    post:
+      operationId: generateAdPreviews
+      tags: [Ads]
+      summary: Render pre-create ad previews (Meta)
+      description: |
+        Renders how a creative would look per placement BEFORE any ad exists, via Meta's
+        `/generatepreviews`. Provide exactly one creative source: `existingCreativeId` or `creativeSpec`.
+        Each preview is an HTML `<iframe>` snippet embeddable directly. Unknown `formats` values
+        return Meta's 400 verbatim. Meta only.
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [accountId, adAccountId]
+              properties:
+                accountId: { type: string, description: "Zernio SocialAccount id used to resolve the Meta token." }
+                adAccountId: { type: string, description: "Meta ad account id (act_<n>)." }
+                formats:
+                  type: array
+                  minItems: 1
+                  maxItems: 10
+                  items: { type: string }
+                  description: "Meta ad_format values, one preview per format. Defaults to [DESKTOP_FEED_STANDARD]."
+                existingCreativeId: { type: string, description: "Preview an existing ad-account creative by id. Mutually exclusive with creativeSpec." }
+                creativeSpec:
+                  type: object
+                  additionalProperties: true
+                  description: "Raw Meta creative spec forwarded verbatim to /generatepreviews. Mutually exclusive with existingCreativeId."
+      responses:
+        '200':
+          description: Rendered previews
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  previews:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        format: { type: string }
+                        html: { type: [string, "null"], description: "Meta's <iframe> snippet; null when Meta returned no preview for the format." }
+        '400': { description: "Invalid input, or Meta rejected the creative spec / ad_format — message carries Meta's error" }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '429': { description: Meta rate limit reached }
+        '501': { description: Only supported on Meta (facebook/instagram) }
+
+  /v1/ads/{adId}/preview:
+    get:
+      operationId: getAdPreviews
+      tags: [Ads]
+      summary: Render previews of an existing ad (Meta)
+      description: |
+        Renders an EXISTING ad per placement via Meta's `/{ad_id}/previews`. Each preview is an HTML
+        `<iframe>` snippet embeddable directly. Unknown `formats` values return Meta's 400 verbatim.
+        Meta only.
+      security:
+        - bearerAuth: []
+      parameters:
+        - { name: adId, in: path, required: true, schema: { type: string }, description: "Zernio ad id (24-char hex)." }
+        - { name: formats, in: query, schema: { type: string }, description: "Comma-separated Meta ad_format values (max 10), one preview per format. Defaults to DESKTOP_FEED_STANDARD." }
+      responses:
+        '200':
+          description: Rendered previews
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  adId: { type: string }
+                  previews:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        format: { type: string }
+                        html: { type: [string, "null"], description: "Meta's <iframe> snippet; null when Meta returned no preview for the format." }
+        '400': { description: "Invalid input, or Meta rejected the ad_format — message carries Meta's error" }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404': { description: Ad not found }
+        '429': { description: Meta rate limit reached }
+        '501': { description: Only supported on Meta (facebook/instagram) }
+
   /v1/ads/insights:
     get:
       operationId: queryAdInsights
@@ -36884,12 +37290,88 @@ paths:
             it via POST /v1/whatsapp/dataset) OR the resolved conversation has
             no captured `ctwa_clid`.
 
+  /v1/ads/messaging:
+    post:
+      operationId: createMessagingAd
+      tags: [Ads]
+      summary: Create click-to-message ad (WhatsApp / Messenger / Instagram Direct)
+      description: |-
+        Creates a click-to-message ad; `destination` selects where the tapped ad opens a
+        conversation: WhatsApp, the Page's Messenger inbox or the linked Instagram account's Direct inbox.
+        The ad set is created with the matching destination_type and
+        CONVERSATIONS optimization; the campaign objective defaults to OUTCOME_ENGAGEMENT.
+        Supports single-creative and multi-creative shapes. Supersedes POST /v1/ads/ctwa
+        (deprecated, equivalent to `destination: whatsapp`).
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              allOf:
+                - $ref: '#/components/schemas/CtwaAdRequestBody'
+                - type: object
+                  required: [destination]
+                  properties:
+                    destination:
+                      type: string
+                      enum: [whatsapp, messenger, instagram_direct]
+                      description: Where the conversation opens when the ad is tapped.
+      responses:
+        '201':
+          description: Ad(s) created and submitted for review
+        '400': { description: Invalid input }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404': { description: Account not found }
+        '422': { description: "No Facebook Page resolved for the account" }
+
+  /v1/ads/call:
+    post:
+      operationId: createCallAd
+      tags: [Ads]
+      summary: Create Click-to-Call ad
+      description: |-
+        Same shape and flow as POST /v1/ads/ctwa, but the CTA is CALL_NOW dialing `phoneNumber`
+        via a tel: link. The ad set is destination_type PHONE_CALL optimizing QUALITY_CALL
+        and the campaign objective defaults to OUTCOME_LEADS.
+        Supports the same single-creative and multi-creative shapes as CTWA.
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              allOf:
+                - $ref: '#/components/schemas/CtwaAdRequestBody'
+                - type: object
+                  required: [phoneNumber, linkUrl]
+                  properties:
+                    phoneNumber:
+                      type: string
+                      description: 'E.164 number the CALL_NOW CTA dials (e.g. +34600111222).'
+                    linkUrl:
+                      type: string
+                      format: uri
+                      description: "Website shown as the creative's link. Required: Meta rejects tel: as link_data.link; the phone number rides only the CTA."
+      responses:
+        '201':
+          description: Ad(s) created and submitted for review
+        '400': { description: Invalid input }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404': { description: Account not found }
+        '422': { description: "No Facebook Page resolved for the account" }
+
   /v1/ads/ctwa:
     post:
       operationId: createCtwaAd
       tags: [Ads]
-      summary: Create Click-to-WhatsApp ad
+      summary: Create Click-to-WhatsApp ad (deprecated)
+      deprecated: true
       description: |-
+        Deprecated: use POST /v1/ads/messaging with `destination: whatsapp`. This endpoint stays available for back-compat; no removal planned.
+
         Creates one or more Click-to-WhatsApp (CTWA) ads on Meta under a single campaign and ad set. When tapped, each ad opens a WhatsApp conversation with the business attached to the supplied Facebook Page. The full hierarchy (campaign, ad set, creative(s), ad(s)) is created and activated in one call. The CTA is locked to WHATSAPP_MESSAGE and the destination is hard-coded to api.whatsapp.com/send; Meta resolves the actual WhatsApp number from the Page-to-WA pairing configured in Page settings or Business Manager.
 
         Supports two mutually-exclusive shapes:
@@ -36906,325 +37388,7 @@ paths:
         content:
           application/json:
             schema:
-              type: object
-              required: [accountId, adAccountId, name, budgetAmount, budgetType]
-              description: |
-                In addition to the `required` list, the request must use
-                EXACTLY ONE of the two shapes:
-
-                - Single-creative: `headline`, `body`, and one of
-                  `imageUrl` / `video` (mutually exclusive).
-                - Multi-creative: a non-empty `creatives[]` array. Top-level
-                  `headline` / `body` / `imageUrl` / `video` must NOT be set
-                  on this shape.
-
-                The route enforces this at the Zod boundary; OpenAPI's
-                `required` cannot express the OR cleanly.
-              properties:
-                accountId:
-                  type: string
-                  minLength: 1
-                  description: Facebook or Instagram SocialAccount ID.
-                adAccountId:
-                  type: string
-                  minLength: 1
-                  description: Meta ad account ID, e.g. `act_123456789`.
-                name:
-                  type: string
-                  minLength: 1
-                  description: |
-                    Ad display name. Used to derive campaign / ad set names.
-                    On the multi-creative shape, each ad's Meta name gets a
-                    " #N" suffix (1-indexed) so Ads Manager shows them as a
-                    numbered batch.
-                headline:
-                  type: string
-                  minLength: 1
-                  maxLength: 255
-                  description: |
-                    Single-creative shape only. Mutually exclusive with
-                    `creatives[]`.
-                body:
-                  type: string
-                  minLength: 1
-                  description: |
-                    Primary text shown above the image / video. Single-creative
-                    shape only. Mutually exclusive with `creatives[]`.
-                imageUrl:
-                  type: string
-                  format: uri
-                  description: |
-                    Image asset for single-creative shape. Mutually exclusive
-                    with `video` and with `creatives[]`. Required on the
-                    single-creative shape if `video` is not supplied.
-                video:
-                  type: object
-                  required: [url, thumbnailUrl]
-                  properties:
-                    url: { type: string, format: uri }
-                    thumbnailUrl:
-                      type: string
-                      format: uri
-                      description: |
-                        Required by Meta for every video creative. Used as the
-                        ad thumbnail.
-                  description: |
-                    Video creative for single-creative shape. Mutually
-                    exclusive with `imageUrl` and with `creatives[]`. Required
-                    on the single-creative shape if `imageUrl` is not supplied.
-                creatives:
-                  type: array
-                  minItems: 1
-                  description: |
-                    Multi-creative shape: N CTWA ads under one campaign + one
-                    ad set, sharing budget and targeting. Mutually exclusive
-                    with the top-level single-creative fields (`headline` /
-                    `body` / `imageUrl` / `video`). Each entry must supply its
-                    own headline, body, and exactly one of `imageUrl` /
-                    `video`.
-                  items:
-                    type: object
-                    required: [headline, body]
-                    description: |
-                      Each entry must also include exactly one of `imageUrl`
-                      or `video`.
-                    properties:
-                      headline:
-                        type: string
-                        minLength: 1
-                        maxLength: 255
-                      body:
-                        type: string
-                        minLength: 1
-                        description: Primary text shown above the image / video.
-                      imageUrl:
-                        type: string
-                        format: uri
-                        description: |
-                          Image asset. Mutually exclusive with this entry's
-                          `video`. Required if `video` is not supplied.
-                      video:
-                        type: object
-                        required: [url, thumbnailUrl]
-                        properties:
-                          url: { type: string, format: uri }
-                          thumbnailUrl:
-                            type: string
-                            format: uri
-                            description: |
-                              Required by Meta for every video creative. Used
-                              as the ad thumbnail.
-                        description: |
-                          Video creative. Mutually exclusive with this entry's
-                          `imageUrl`. Required if `imageUrl` is not supplied.
-                budgetAmount:
-                  type: number
-                  exclusiveMinimum: 0
-                  description: |
-                    Budget amount in the ad account's currency major units
-                    (e.g. dollars for USD, not cents). Must be > 0.
-                budgetType:
-                  type: string
-                  enum: [daily, lifetime]
-                currency:
-                  type: string
-                  minLength: 3
-                  maxLength: 3
-                  description: |
-                    ISO 4217 currency code matching the ad account's currency
-                    (e.g. `USD`). Optional; Meta infers from the ad account
-                    when omitted.
-                endDate:
-                  type: string
-                  format: date-time
-                  description: |
-                    ISO 8601 datetime. Required when `budgetType` is `lifetime`.
-                countries:
-                  type: array
-                  items: { type: string, minLength: 2, maxLength: 2 }
-                  description: |
-                    ISO 3166-1 alpha-2 country codes. Defaults to `["US"]` only
-                    when no other geo (`cities`, `regions`, `zips`, `metros`,
-                    `customLocations`) is supplied.
-                cities:
-                  type: array
-                  description: |
-                    City-level geo targeting for local CTWA campaigns (e.g.
-                    25km radius around Milan). Each entry maps to Meta's
-                    TargetingGeoLocationCity. `key` is Meta's city ID
-                    (lookupable via GET /v1/ads/targeting/search). `radius`
-                    and `distance_unit` are coupled: set both or neither.
-                    Meta enforces a minimum city radius (~17 km / 10 mi);
-                    smaller values resolve to a 0-size audience and the ad
-                    fails at launch. For a tighter catchment use customLocations
-                    (lat/lng).
-                  items:
-                    type: object
-                    required: [key]
-                    properties:
-                      key: { type: string, minLength: 1 }
-                      radius: { type: number, exclusiveMinimum: 0 }
-                      distance_unit: { type: string, enum: [mile, kilometer] }
-                regions:
-                  type: array
-                  description: |
-                    Region / state-level geo targeting. `key` is Meta's region
-                    ID (lookupable via GET /v1/ads/targeting/search?type=region).
-                  items:
-                    type: object
-                    required: [key]
-                    properties:
-                      key: { type: string, minLength: 1 }
-                zips:
-                  type: array
-                  description: |
-                    ZIP / postal-code geo targeting. `key` is the platform's
-                    postal id resolved via /v1/ads/targeting/search.
-                  items:
-                    type: object
-                    required: [key]
-                    properties:
-                      key: { type: string, minLength: 1 }
-                      name: { type: string }
-                metros:
-                  type: array
-                  description: |
-                    DMA / metro-area geo targeting. `key` is Meta's metro id
-                    (e.g. `DMA:807`).
-                  items:
-                    type: object
-                    required: [key]
-                    properties:
-                      key: { type: string, minLength: 1 }
-                      name: { type: string }
-                customLocations:
-                  type: array
-                  description: |
-                    Point-radius geo (Meta `geo_locations.custom_locations`).
-                    Use for targeting a radius around a specific lat/long when
-                    no Meta city/region key fits. `distanceUnit` is required.
-                  items:
-                    type: object
-                    required: [latitude, longitude, radius, distanceUnit]
-                    properties:
-                      latitude: { type: number, minimum: -90, maximum: 90 }
-                      longitude: { type: number, minimum: -180, maximum: 180 }
-                      radius: { type: number, exclusiveMinimum: 0 }
-                      distanceUnit: { type: string, enum: [mile, kilometer] }
-                      name: { type: string }
-                      address: { type: string }
-                ageMin: { type: integer, minimum: 13, maximum: 65 }
-                ageMax: { type: integer, minimum: 13, maximum: 65 }
-                interests:
-                  type: array
-                  items:
-                    type: object
-                    required: [id]
-                    properties:
-                      id: { type: string }
-                      name: { type: string }
-                audienceId:
-                  type: string
-                  description: Custom audience ID to target.
-                placements:
-                  type: object
-                  description: |
-                    Manual ad placements on the shared ad set. Omit
-                    for automatic placements. When set, restricts delivery to the chosen surfaces,
-                    mapped onto the ad set's `targeting.{publisher_platforms, facebook_positions, instagram_positions,
-                    messenger_positions, audience_network_positions, threads_positions,
-                    whatsapp_positions, device_platforms}`. Enum membership is validated here; Meta
-                    additionally enforces co-selection rules and restricts which
-                    placements are eligible for click-to-WhatsApp ads, returning an actionable
-                    error which we surface.
-                  properties:
-                    publisherPlatforms:
-                      type: array
-                      items: { type: string, enum: [facebook, instagram, threads, messenger, audience_network, whatsapp] }
-                      description: "Top-level platforms to deliver on. A position field below is only honoured when its parent platform is included here."
-                    facebookPositions:
-                      type: array
-                      items: { type: string, enum: [feed, right_hand_column, marketplace, video_feeds, story, search, instream_video, facebook_reels, facebook_reels_overlay, profile_feed, notification] }
-                    instagramPositions:
-                      type: array
-                      items: { type: string, enum: [stream, story, explore, explore_home, reels, profile_feed, ig_search, profile_reels] }
-                    messengerPositions:
-                      type: array
-                      items: { type: string, enum: [messenger_home, sponsored_messages, story] }
-                    audienceNetworkPositions:
-                      type: array
-                      items: { type: string, enum: [classic, rewarded_video] }
-                    threadsPositions:
-                      type: array
-                      items: { type: string, enum: [threads_stream] }
-                    whatsappPositions:
-                      type: array
-                      items: { type: string, enum: [status] }
-                    devicePlatforms:
-                      type: array
-                      items: { type: string, enum: [mobile, desktop] }
-                      description: "Restrict by device. Omit to deliver on both mobile and desktop."
-                advantageAudience:
-                  type: integer
-                  enum: [0, 1]
-                  description: |
-                    Meta's Advantage+ audience expansion. `0` (default) keeps
-                    targeting strict; `1` lets Meta expand beyond the supplied
-                    targeting when its delivery system finds better matches.
-                    Always sent on CREATE (Meta requires it).
-                objective:
-                  type: string
-                  enum: [OUTCOME_ENGAGEMENT, OUTCOME_SALES, OUTCOME_LEADS]
-                  description: |
-                    Defaults to `OUTCOME_ENGAGEMENT` (the broadly-supported CTWA
-                    objective). `OUTCOME_SALES` and `OUTCOME_LEADS` require
-                    additional account configuration (Dataset linked to the WABA
-                    for sales) and may be rejected by Meta if missing.
-                bidStrategy:
-                  type: string
-                  enum:
-                    - LOWEST_COST_WITHOUT_CAP
-                    - LOWEST_COST_WITH_BID_CAP
-                    - COST_CAP
-                    - LOWEST_COST_WITH_MIN_ROAS
-                  description: |
-                    Meta bid strategy applied to the shared ad set. Defaults to
-                    `LOWEST_COST_WITHOUT_CAP` (auto-bid) when omitted.
-                    `LOWEST_COST_WITH_BID_CAP` and `COST_CAP` require
-                    `bidAmount`. `LOWEST_COST_WITH_MIN_ROAS` requires
-                    `roasAverageFloor`. CTWA's `optimization_goal` is fixed to
-                    `CONVERSATIONS`, but the bid strategy is independent.
-                bidAmount:
-                  type: number
-                  exclusiveMinimum: 0
-                  description: |
-                    Whole currency units (e.g. `5` = $5.00 on a USD account).
-                    Required when `bidStrategy` is `LOWEST_COST_WITH_BID_CAP`
-                    or `COST_CAP`; rejected otherwise.
-                roasAverageFloor:
-                  type: number
-                  exclusiveMinimum: 0
-                  description: |
-                    Decimal ROAS multiplier (e.g. `2.0` = 2.0× ROAS floor).
-                    Required when `bidStrategy` is `LOWEST_COST_WITH_MIN_ROAS`;
-                    rejected otherwise. Meta enforces its own upper bound
-                    server-side.
-                dsaBeneficiary:
-                  type: string
-                  maxLength: 100
-                  description: |
-                    Legal entity that benefits from the ad. Required when targeting EU users
-                    (EU DSA, Article 26). Optional if the ad account has a default beneficiary:
-                    set it once via `PATCH /v1/ads/accounts` or in Meta Ads Manager, and Meta
-                    fills it in whenever the field is omitted.
-                dsaPayor:
-                  type: string
-                  maxLength: 100
-                  description: |
-                    Legal entity that pays for the ad. Can differ from `dsaBeneficiary`
-                    (for example, an agency paying for a client's ads). Same rules as
-                    `dsaBeneficiary`: required for EU targeting unless the ad account has
-                    a default payor.
+              $ref: '#/components/schemas/CtwaAdRequestBody'
       responses:
         '201':
           description: |
