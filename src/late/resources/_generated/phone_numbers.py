@@ -227,6 +227,7 @@ class PhoneNumbersResource:
         foc_datetime_requested: datetime | str | None = None,
         customer_reference: str | None = None,
         port_type: str | None = "full",
+        requirements: list[dict[str, Any]] | None = None,
     ) -> dict[str, Any]:
         """Port numbers in"""
         payload = self._build_payload(
@@ -237,6 +238,7 @@ class PhoneNumbersResource:
             foc_datetime_requested=foc_datetime_requested,
             customer_reference=customer_reference,
             port_type=port_type,
+            requirements=requirements,
         )
         return self._client._post("/v1/phone-numbers/port-in", data=payload)
 
@@ -256,6 +258,22 @@ class PhoneNumbersResource:
     def upload_phone_number_port_in_document(self) -> dict[str, Any]:
         """Upload a porting document"""
         return self._client._post("/v1/phone-numbers/port-in/documents")
+
+    def get_phone_number_port_in_requirements(
+        self, country: str, *, number_type: str | None = "local"
+    ) -> dict[str, Any]:
+        """Country porting requirements"""
+        params = self._build_params(
+            country=country,
+            number_type=number_type,
+        )
+        return self._client._get(
+            "/v1/phone-numbers/port-in/requirements", params=params
+        )
+
+    def get_phone_number_port_in_order_requirements(self, id: str) -> dict[str, Any]:
+        """A port-in order's pending requirements"""
+        return self._client._get(f"/v1/phone-numbers/port-in/{id}/requirements")
 
     def cancel_phone_number_port_in(self, id: str) -> dict[str, Any]:
         """Cancel a port-in"""
@@ -473,6 +491,7 @@ class PhoneNumbersResource:
         foc_datetime_requested: datetime | str | None = None,
         customer_reference: str | None = None,
         port_type: str | None = "full",
+        requirements: list[dict[str, Any]] | None = None,
     ) -> dict[str, Any]:
         """Port numbers in (async)"""
         payload = self._build_payload(
@@ -483,6 +502,7 @@ class PhoneNumbersResource:
             foc_datetime_requested=foc_datetime_requested,
             customer_reference=customer_reference,
             port_type=port_type,
+            requirements=requirements,
         )
         return await self._client._apost("/v1/phone-numbers/port-in", data=payload)
 
@@ -504,6 +524,24 @@ class PhoneNumbersResource:
     async def aupload_phone_number_port_in_document(self) -> dict[str, Any]:
         """Upload a porting document (async)"""
         return await self._client._apost("/v1/phone-numbers/port-in/documents")
+
+    async def aget_phone_number_port_in_requirements(
+        self, country: str, *, number_type: str | None = "local"
+    ) -> dict[str, Any]:
+        """Country porting requirements (async)"""
+        params = self._build_params(
+            country=country,
+            number_type=number_type,
+        )
+        return await self._client._aget(
+            "/v1/phone-numbers/port-in/requirements", params=params
+        )
+
+    async def aget_phone_number_port_in_order_requirements(
+        self, id: str
+    ) -> dict[str, Any]:
+        """A port-in order's pending requirements (async)"""
+        return await self._client._aget(f"/v1/phone-numbers/port-in/{id}/requirements")
 
     async def acancel_phone_number_port_in(self, id: str) -> dict[str, Any]:
         """Cancel a port-in (async)"""

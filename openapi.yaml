@@ -28201,10 +28201,18 @@ paths:
 
         Run the portability check (POST /v1/phone-numbers/port-in/check) and
         upload the two documents (POST /v1/phone-numbers/port-in/documents)
-        first. The carrier may split the numbers into several orders (by
-        country, number type, losing carrier); `orders` carries per-order
-        results, and a partial failure still returns 201 with the failed
-        orders' `error` set (they stay as cancellable drafts).
+        first — uploaded documents must be attached to an order within 30
+        minutes or the carrier deletes them, so upload right before this call.
+        The carrier may split the numbers into several orders (by country,
+        number type, losing carrier); `orders` carries per-order results, and a
+        partial failure still returns 201 with the failed orders' `error` set
+        (they stay as cancellable drafts).
+
+        Non-US/CA numbers additionally need the country-specific values from
+        GET /v1/phone-numbers/port-in/requirements, passed via `requirements`,
+        and must be submitted one country per request. When required
+        information is still missing after submission, the order is kept as a
+        resumable draft whose `error` / `declineReason` names the gaps.
       security:
         - bearerAuth: []
       requestBody:
@@ -28228,24 +28236,42 @@ paths:
                     losing carrier matches every field against its records and rejects the
                     whole port on a mismatch — enter values exactly as they appear on the
                     carrier bill.
-                  required: [entityName, authPersonName, accountNumber, streetAddress, locality, administrativeArea, postalCode, countryCode]
+                  required: [entityName, authPersonName, accountNumber, streetAddress, locality, postalCode, countryCode]
                   properties:
                     entityName: { type: string, description: "Account holder / business name, as on the carrier account." }
                     authPersonName: { type: string, description: "Full name (first + last) of the person authorizing the port — must match the LOA signature." }
                     billingPhoneNumber: { type: string, description: "Phone number on the losing carrier's bill. Defaults to the ported number itself on single-number orders. Validated as a real phone number when present." }
                     accountNumber: { type: string, description: "Account number with the losing carrier — required (carriers reject ports without it; on prepaid mobile plans it is often the phone number itself)." }
-                    pinPasscode: { type: string, description: "Transfer PIN. Required for mobile numbers (wireless carriers reject PIN-less ports). Forwarded to the carrier, never stored." }
+                    pinPasscode: { type: string, description: "Transfer PIN. Required for US/CA mobile numbers (wireless carriers reject PIN-less ports). Forwarded to the carrier, never stored. International porting codes (e.g. the UK PAC) go through `requirements` instead." }
+                    taxIdentifier: { type: string, maxLength: 50, description: "Company tax id on the carrier account (EU ports, e.g. Spanish CIF)." }
+                    businessIdentifier: { type: string, maxLength: 50, description: "Business registration id on the carrier account (EU ports)." }
                     streetAddress: { type: string }
                     extendedAddress: { type: string }
                     locality: { type: string }
-                    administrativeArea: { type: string, description: "2-letter US state / CA province code (full names are accepted and normalized)." }
-                    postalCode: { type: string, description: "US ZIP (5 digits) or Canadian postal code, matching countryCode." }
-                    countryCode: { type: string, minLength: 2, maxLength: 2, enum: [US, CA] }
+                    administrativeArea: { type: string, description: "Region. Required for US/CA as the 2-letter state/province code (full names are accepted and normalized); optional elsewhere." }
+                    postalCode: { type: string, description: "Postal code. Validated as a US ZIP / Canadian postal code for US/CA; free-form elsewhere." }
+                    countryCode: { type: string, minLength: 2, maxLength: 2, enum: [US, CA, GB, ES, DE, FR, NL, AU], description: "Service-address country (a supported port-in country)." }
                 loaDocumentId: { type: string, description: Document id from POST /v1/phone-numbers/port-in/documents (kind=loa). }
                 invoiceDocumentId: { type: string, description: Document id from POST /v1/phone-numbers/port-in/documents (kind=invoice). }
-                focDatetimeRequested: { type: string, format: date-time, description: "Requested port date; the carrier confirms the actual FOC later. Defaults to one week out (shifted off weekends) when omitted." }
+                focDatetimeRequested: { type: string, format: date-time, description: "Requested port date; the carrier confirms the actual FOC later. US/CA default is one week out (shifted off weekends); international orders are scheduled into the carrier's next allowed porting window at or after this date." }
                 customerReference: { type: string, maxLength: 100 }
                 portType: { type: string, enum: [full, partial], default: full, description: "Whether the losing account ports all its numbers (full) or keeps some (partial)." }
+                requirements:
+                  type: array
+                  maxItems: 30
+                  description: >-
+                    Country-specific requirement values for international ports
+                    (from GET /v1/phone-numbers/port-in/requirements). Not
+                    needed for US/CA. The LOA and invoice requirements are
+                    satisfied automatically by loaDocumentId/invoiceDocumentId,
+                    and address-type requirements by the endUser service
+                    address.
+                  items:
+                    type: object
+                    required: [requirementTypeId, fieldValue]
+                    properties:
+                      requirementTypeId: { type: string, description: "The requirement's id, from the requirements endpoint." }
+                      fieldValue: { type: string, maxLength: 1000, description: "Text value, ISO datetime, or a documentId from POST /v1/phone-numbers/port-in/documents, per the requirement's kind." }
       responses:
         '201':
           description: Port submitted. Top-level fields mirror the first successfully submitted order; per-order truth (including failures) is in `orders`.
@@ -28268,9 +28294,10 @@ paths:
                         status: { type: string }
                         phoneNumbers: { type: array, items: { type: string } }
                         error: { type: string, description: Present when this split order failed to submit (it stays as a cancellable draft). }
+        '400': { $ref: '#/components/responses/BadRequest' }
         '401': { $ref: '#/components/responses/Unauthorized' }
         '409': { description: "A number is already provisioned, or already in an in-flight port" }
-        '422': { description: "A number is not portable (reason included), or every split order failed to submit" }
+        '422': { description: "A number is not portable (reason included), numbers span multiple non-US/CA countries, or every split order failed to submit" }
     get:
       operationId: listPhoneNumberPortIns
       tags: [Phone Numbers]
@@ -28348,7 +28375,9 @@ paths:
                         phoneNumber: { type: string }
                         portable: { type: boolean }
                         fastPortable: { type: boolean, description: Qualifies for the carrier's accelerated FastPort lane. }
-                        lineType: { type: [string, "null"], description: "Line type when known (mobile, landline, voip…). A mobile number requires the transfer PIN at submit." }
+                        lineType: { type: [string, "null"], description: "Line type when known (mobile, landline, voip…). A US/CA mobile number requires the transfer PIN at submit." }
+                        countryCode: { type: [string, "null"], description: "ISO country of the number — pass it to GET /v1/phone-numbers/port-in/requirements for international numbers." }
+                        phoneNumberType: { type: [string, "null"], description: "Carrier number-type classification (local, mobile, national, toll_free…) — the numberType for the requirements endpoint." }
                         notPortableReason: { type: [string, "null"], description: Carrier reason when not portable; null when portable. }
         '401': { $ref: '#/components/responses/Unauthorized' }
 
@@ -28358,9 +28387,13 @@ paths:
       tags: [Phone Numbers]
       summary: Upload a porting document
       description: |
-        Upload ONE porting document (the signed LOA or a recent carrier invoice)
-        and get back its `documentId`, which the port-in create request takes as
-        `loaDocumentId` / `invoiceDocumentId`. PDF, JPEG, or PNG, 10MB max.
+        Upload ONE porting document and get back its `documentId`. For the
+        signed LOA / carrier invoice the id goes to `loaDocumentId` /
+        `invoiceDocumentId`; for a country-specific document requirement
+        (international ports) it becomes that requirement's `fieldValue`.
+        Requirement documents are normalized to PDF automatically (regulators
+        reject raw images). PDF, JPEG, or PNG, 10MB max. Uploads must be
+        attached to an order within 30 minutes or the carrier deletes them.
       security:
         - bearerAuth: []
       requestBody:
@@ -28372,7 +28405,7 @@ paths:
               required: [file]
               properties:
                 file: { type: string, format: binary, description: "The document (PDF/JPEG/PNG, 10MB max)." }
-                kind: { type: string, enum: [loa, invoice], description: Informational; used for the stored filename. }
+                kind: { type: string, description: "'loa', 'invoice', or any short slug for requirement documents. Informational; used for the stored filename." }
       responses:
         '200':
           description: Document uploaded.
@@ -28384,6 +28417,90 @@ paths:
                   documentId: { type: string }
         '400': { description: "Missing file, file too large, or unsupported type" }
         '401': { $ref: '#/components/responses/Unauthorized' }
+
+  /v1/phone-numbers/port-in/requirements:
+    get:
+      operationId: getPhoneNumberPortInRequirements
+      tags: [Phone Numbers]
+      summary: Country porting requirements
+      description: |
+        The country-specific information a port-in needs BEYOND the LOA,
+        invoice, and account/address details — e.g. an ID copy, proof of
+        address, a tax id, or a porting code. Call it after the portability
+        check (which returns each number's `countryCode` and
+        `phoneNumberType`), render the fields, and pass the collected values as
+        the create request's `requirements`. US/CA return an empty list.
+      security:
+        - bearerAuth: []
+      parameters:
+        - { name: country, in: query, required: true, schema: { type: string, minLength: 2, maxLength: 2 }, description: "ISO country of the numbers being ported (a supported port-in country)." }
+        - { name: numberType, in: query, required: false, schema: { type: string, enum: [local, mobile, national, toll_free], default: local }, description: "The portability check's phoneNumberType — requirements differ by type." }
+      responses:
+        '200':
+          description: Requirement fields for the country/type combination.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  country: { type: string }
+                  numberType: { type: string }
+                  supported: { type: boolean, description: "false when the combination includes a step that can't be completed through the API (e.g. an in-person identity verification) — porting it needs support." }
+                  fields:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        requirementId: { type: string, description: "Pass back as requirements[].requirementTypeId." }
+                        label: { type: string }
+                        kind: { type: string, enum: [text, date, address, file, action], description: "text/date take a string value; file takes a documentId from the documents endpoint; address is satisfied automatically from the end-user service address." }
+                        description: { type: string }
+                        example: { type: string }
+                        acceptableValues: { type: array, items: { type: string }, description: "When present, the value must be one of these." }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '422': { description: "Country not supported for port-in" }
+
+  /v1/phone-numbers/port-in/{id}/requirements:
+    get:
+      operationId: getPhoneNumberPortInOrderRequirements
+      tags: [Phone Numbers]
+      summary: A port-in order's pending requirements
+      description: |
+        The live requirements on an EXISTING porting order: which are filled,
+        which are still pending, and which bounced on review
+        (`requirement-info-exception`). Use it to fix and resubmit a rejected
+        international port. Same field shape as the country-level requirements
+        endpoint, plus per-requirement status.
+      security:
+        - bearerAuth: []
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string }, description: Porting order ID (from the port-in list). }
+      responses:
+        '200':
+          description: The order's requirements with statuses.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  country: { type: string }
+                  requirements:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        requirementId: { type: string }
+                        label: { type: string }
+                        kind: { type: string, enum: [text, date, address, file, action] }
+                        description: { type: string }
+                        example: { type: string }
+                        acceptableValues: { type: array, items: { type: string } }
+                        status: { type: string, description: "requirement-info-pending | requirement-info-under-review | requirement-info-exception | approved" }
+                        filled: { type: boolean }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404': { description: Porting order not found }
 
   /v1/phone-numbers/port-in/{id}:
     delete:

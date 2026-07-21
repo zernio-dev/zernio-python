@@ -656,6 +656,8 @@ Both `from zernio import ...` and `from late import ...` work identically. The `
 | `phone_numbers.create_phone_number_port_in()` | Port numbers in |
 | `phone_numbers.get_phone_number()` | Get phone number |
 | `phone_numbers.get_phone_number_kyc_form()` | Get KYC form spec |
+| `phone_numbers.get_phone_number_port_in_order_requirements()` | A port-in order's pending requirements |
+| `phone_numbers.get_phone_number_port_in_requirements()` | Country porting requirements |
 | `phone_numbers.get_phone_number_remediation()` | Get declined requirements |
 | `phone_numbers.cancel_phone_number_port_in()` | Cancel a port-in |
 | `phone_numbers.check_phone_number_availability()` | Check country availability |

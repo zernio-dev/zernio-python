@@ -10100,6 +10100,7 @@ def register_generated_tools(mcp, _get_client):
         foc_datetime_requested: str | None = None,
         customer_reference: str | None = None,
         port_type: str = "full",
+        requirements: list[dict[str, Any]] | None = None,
     ) -> str:
         """Port numbers in
 
@@ -10112,9 +10113,10 @@ def register_generated_tools(mcp, _get_client):
          (required)
                 loa_document_id: Document id from POST /v1/phone-numbers/port-in/documents (kind=loa). (required)
                 invoice_document_id: Document id from POST /v1/phone-numbers/port-in/documents (kind=invoice). (required)
-                foc_datetime_requested: Requested port date; the carrier confirms the actual FOC later. Defaults to one week out (shifted off weekends) when omitted.
+                foc_datetime_requested: Requested port date; the carrier confirms the actual FOC later. US/CA default is one week out (shifted off weekends); international orders are scheduled into the carrier's next allowed porting window at or after this date.
                 customer_reference
-                port_type: Whether the losing account ports all its numbers (full) or keeps some (partial)."""
+                port_type: Whether the losing account ports all its numbers (full) or keeps some (partial).
+                requirements: Country-specific requirement values for international ports (from GET /v1/phone-numbers/port-in/requirements). Not needed for US/CA. The LOA and invoice requirements are satisfied automatically by loaDocumentId/invoiceDocumentId, and address-type requirements by the endUser service address."""
         client = _get_client()
         try:
             response = client.phone_numbers.create_phone_number_port_in(
@@ -10125,6 +10127,7 @@ def register_generated_tools(mcp, _get_client):
                 foc_datetime_requested=foc_datetime_requested,
                 customer_reference=customer_reference,
                 port_type=port_type,
+                requirements=requirements,
             )
             return _format_response(response)
         except Exception as e:
@@ -10184,6 +10187,53 @@ def register_generated_tools(mcp, _get_client):
         client = _get_client()
         try:
             response = client.phone_numbers.upload_phone_number_port_in_document()
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Country porting requirements",
+            readOnlyHint=True,
+            destructiveHint=False,
+            openWorldHint=False,
+        )
+    )
+    def phone_numbers_get_phone_number_port_in_requirements(
+        country: str, number_type: str = "local"
+    ) -> str:
+        """Country porting requirements
+
+        Args:
+            country: ISO country of the numbers being ported (a supported port-in country). (required)
+            number_type: The portability check's phoneNumberType — requirements differ by type."""
+        client = _get_client()
+        try:
+            response = client.phone_numbers.get_phone_number_port_in_requirements(
+                country=country, number_type=number_type
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="A port-in order's pending requirements",
+            readOnlyHint=True,
+            destructiveHint=False,
+            openWorldHint=False,
+        )
+    )
+    def phone_numbers_get_phone_number_port_in_order_requirements(id: str) -> str:
+        """A port-in order's pending requirements
+
+        Args:
+            id: Porting order ID (from the port-in list). (required)"""
+        client = _get_client()
+        try:
+            response = client.phone_numbers.get_phone_number_port_in_order_requirements(
+                id=id
+            )
             return _format_response(response)
         except Exception as e:
             return f"Error: {e}"
