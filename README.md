@@ -698,12 +698,16 @@ Both `from zernio import ...` and `from late import ...` work identically. The `
 |--------|-------------|
 | `sms.list_sms_opt_outs()` | List SMS opt-outs |
 | `sms.list_sms_registrations()` | List carrier registrations |
+| `sms.list_sms_sender_ids()` | List alphanumeric sender IDs |
+| `sms.create_sms_sender_id()` | Create an alphanumeric sender ID |
 | `sms.get_sms_registration()` | Get a carrier registration |
+| `sms.delete_sms_sender_id()` | Delete an alphanumeric sender ID |
 | `sms.appeal_sms_registration()` | Appeal a rejected campaign |
 | `sms.deactivate_sms_registration()` | Deactivate a brand/campaign registration |
 | `sms.disable_sms_on_number()` | Disable SMS on a number |
 | `sms.enable_sms_on_number()` | Enable SMS on a number |
 | `sms.lookup_sms_number()` | Look up carrier + line type |
+| `sms.request_sms_sender_id_limit_increase()` | Request a higher sender ID daily limit |
 | `sms.resend_sms_registration_otp()` | Re-send the sole-prop OTP |
 | `sms.reuse_sms_registration_for_number()` | Add number to SMS registration |
 | `sms.send_sms()` | Send an SMS/MMS |

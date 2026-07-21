@@ -11517,7 +11517,7 @@ def register_generated_tools(mcp, _get_client):
         """Send an SMS/MMS
 
         Args:
-            from_: One of your SMS-enabled numbers (E.164; formatting is normalized). (required)
+            from_: One of your SMS-enabled numbers (E.164; formatting is normalized), or an approved alphanumeric sender ID (3-11 letters/digits/spaces, created via `/v1/sms/sender-ids`). (required)
             to: Recipient number (E.164). (required)
             text: Message body. Required unless `mediaUrls` is set. Max 10 SMS segments (1530 GSM-7 or 670 unicode characters).
             media_urls: Public media URLs to attach (sends as MMS). Max 10.
@@ -11568,6 +11568,88 @@ def register_generated_tools(mcp, _get_client):
         client = _get_client()
         try:
             response = client.sms.list_sms_opt_outs(format=format, limit=limit)
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Create an alphanumeric sender ID",
+            readOnlyHint=False,
+            destructiveHint=True,
+            openWorldHint=True,
+        )
+    )
+    def sms_create_sms_sender_id(sender_id: str) -> str:
+        """Create an alphanumeric sender ID
+
+        Args:
+            sender_id: The sender ID recipients will see (3-11 letters/digits/spaces, at least one letter, no leading/trailing space). (required)"""
+        client = _get_client()
+        try:
+            response = client.sms.create_sms_sender_id(sender_id=sender_id)
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="List alphanumeric sender IDs",
+            readOnlyHint=True,
+            destructiveHint=False,
+            openWorldHint=False,
+        )
+    )
+    def sms_list_sms_sender_ids() -> str:
+        """List alphanumeric sender IDs"""
+        client = _get_client()
+        try:
+            response = client.sms.list_sms_sender_ids()
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Request a higher sender ID daily limit",
+            readOnlyHint=False,
+            destructiveHint=True,
+            openWorldHint=True,
+        )
+    )
+    def sms_request_sms_sender_id_limit_increase(
+        requested_cap: int, reason: str
+    ) -> str:
+        """Request a higher sender ID daily limit
+
+        Args:
+            requested_cap: Desired daily message cap. Must exceed the current cap. (required)
+            reason: Use case and audience (what you send, to whom, opt-in status). (required)"""
+        client = _get_client()
+        try:
+            response = client.sms.request_sms_sender_id_limit_increase(
+                requested_cap=requested_cap, reason=reason
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Delete an alphanumeric sender ID",
+            readOnlyHint=False,
+            destructiveHint=True,
+            openWorldHint=True,
+        )
+    )
+    def sms_delete_sms_sender_id(id: str) -> str:
+        """Delete an alphanumeric sender ID
+
+        Args:
+            id: Sender ID resource id. (required)"""
+        client = _get_client()
+        try:
+            response = client.sms.delete_sms_sender_id(id=id)
             return _format_response(response)
         except Exception as e:
             return f"Error: {e}"
