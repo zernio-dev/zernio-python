@@ -420,6 +420,7 @@ Both `from zernio import ...` and `from late import ...` work identically. The `
 | `ads.create_ctwa_ad()` | Create Click-to-WhatsApp ad (deprecated) |
 | `ads.create_lead_form()` | Create a lead form |
 | `ads.create_messaging_ad()` | Create click-to-message ad (WhatsApp / Messenger / Instagram Direct) |
+| `ads.create_rf_prediction()` | Create a Reach & Frequency prediction (Meta) |
 | `ads.create_standalone_ad()` | Create standalone ad |
 | `ads.create_test_lead()` | Create a test lead |
 | `ads.get_ad()` | Get ad details |
@@ -439,6 +440,7 @@ Both `from zernio import ...` and `from late import ...` work identically. The `
 | `ads.get_lead_form()` | Get a lead form |
 | `ads.get_linked_in_bid_pricing()` | Suggested bid and budget bounds (LinkedIn) |
 | `ads.get_linked_in_supply_forecast()` | Impressions, clicks and spend forecast (LinkedIn) |
+| `ads.get_rf_prediction()` | Read a Reach & Frequency prediction (Meta) |
 | `ads.update_ad()` | Update ad |
 | `ads.update_ad_account()` | Update ad account settings |
 | `ads.update_ad_status()` | Pause or resume a single ad |
@@ -450,10 +452,12 @@ Both `from zernio import ...` and `from late import ...` work identically. The `
 | `ads.adjust_conversions()` | Adjust uploaded conversions |
 | `ads.archive_lead_form()` | Archive a lead form |
 | `ads.boost_post()` | Boost post as ad |
+| `ads.cancel_rf_reservation()` | Cancel a Reach & Frequency reservation (Meta) |
 | `ads.estimate_ad_reach()` | Estimate audience reach |
 | `ads.generate_ad_previews()` | Render pre-create ad previews (Meta) |
 | `ads.query_ad_insights()` | Flexible live insights query (Meta) |
 | `ads.remove_conversion_associations()` | Remove associated campaigns |
+| `ads.reserve_rf_prediction()` | Reserve a Reach & Frequency prediction (Meta) |
 | `ads.search_ad_interests()` | Search targeting interests |
 | `ads.search_ad_targeting()` | Search targeting options |
 | `ads.send_conversions()` | Send conversion events |

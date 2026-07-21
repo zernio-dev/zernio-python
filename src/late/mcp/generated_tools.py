@@ -2417,6 +2417,138 @@ def register_generated_tools(mcp, _get_client):
 
     @mcp.tool(
         annotations=ToolAnnotations(
+            title="Create a Reach & Frequency prediction (Meta)",
+            readOnlyHint=False,
+            destructiveHint=True,
+            openWorldHint=True,
+        )
+    )
+    def ads_create_rf_prediction(
+        account_id: str,
+        ad_account_id: str,
+        start_date: str,
+        end_date: str,
+        budget_amount: float | None = None,
+        reach: int | None = None,
+        frequency_cap: int | None = None,
+        targeting: dict[str, Any] | None = None,
+        placements: dict[str, Any] | None = None,
+    ) -> str:
+        """Create a Reach & Frequency prediction (Meta)
+
+        Args:
+            account_id: Zernio SocialAccount id (posting or ads variant). (required)
+            ad_account_id: Meta ad account id (act_<n>). (required)
+            budget_amount: Whole currency units. Exactly one of budgetAmount / reach.
+            reach: Target unique reach. Exactly one of budgetAmount / reach.
+            start_date: Campaign window start (must be in the future). (required)
+            end_date: (required)
+            frequency_cap: Max impressions per person over the window.
+            targeting: Canonical camelCase TargetingSpec (same shape as /v1/ads/create's `targeting`). Defaults to countries: [US].
+            placements: Meta placements object (same shape as /v1/ads/create's `placements`)."""
+        client = _get_client()
+        try:
+            response = client.ads.create_rf_prediction(
+                account_id=account_id,
+                ad_account_id=ad_account_id,
+                budget_amount=budget_amount,
+                reach=reach,
+                start_date=start_date,
+                end_date=end_date,
+                frequency_cap=frequency_cap,
+                targeting=targeting,
+                placements=placements,
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Read a Reach & Frequency prediction (Meta)",
+            readOnlyHint=True,
+            destructiveHint=False,
+            openWorldHint=False,
+        )
+    )
+    def ads_get_rf_prediction(
+        prediction_id: str, account_id: str, ad_account_id: str
+    ) -> str:
+        """Read a Reach & Frequency prediction (Meta)
+
+        Args:
+            prediction_id: (required)
+            account_id: (required)
+            ad_account_id: (required)"""
+        client = _get_client()
+        try:
+            response = client.ads.get_rf_prediction(
+                prediction_id=prediction_id,
+                account_id=account_id,
+                ad_account_id=ad_account_id,
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Cancel a Reach & Frequency reservation (Meta)",
+            readOnlyHint=False,
+            destructiveHint=True,
+            openWorldHint=True,
+        )
+    )
+    def ads_cancel_rf_reservation(
+        prediction_id: str, account_id: str, ad_account_id: str
+    ) -> str:
+        """Cancel a Reach & Frequency reservation (Meta)
+
+        Args:
+            prediction_id: (required)
+            account_id: (required)
+            ad_account_id: (required)"""
+        client = _get_client()
+        try:
+            response = client.ads.cancel_rf_reservation(
+                prediction_id=prediction_id,
+                account_id=account_id,
+                ad_account_id=ad_account_id,
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Reserve a Reach & Frequency prediction (Meta)",
+            readOnlyHint=False,
+            destructiveHint=True,
+            openWorldHint=True,
+        )
+    )
+    def ads_reserve_rf_prediction(
+        prediction_id: str, account_id: str, ad_account_id: str
+    ) -> str:
+        """Reserve a Reach & Frequency prediction (Meta)
+
+        Args:
+            prediction_id: (required)
+            account_id: (required)
+            ad_account_id: (required)"""
+        client = _get_client()
+        try:
+            response = client.ads.reserve_rf_prediction(
+                prediction_id=prediction_id,
+                account_id=account_id,
+                ad_account_id=ad_account_id,
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
             title="A/B tests and lift studies (Meta)",
             readOnlyHint=True,
             destructiveHint=False,
@@ -2720,6 +2852,8 @@ def register_generated_tools(mcp, _get_client):
         goal: str | None = None,
         optimization_goal: str | None = None,
         billing_event: str | None = None,
+        buying_type: str | None = None,
+        rf_prediction_id: str | None = None,
         budget_amount: float | None = None,
         budget_type: str | None = None,
         status: str | None = None,
@@ -2811,6 +2945,8 @@ def register_generated_tools(mcp, _get_client):
         - For `lead_generation` or `conversions` on LinkedIn, or to promote an existing post, use POST /v1/ads/boost.
                 optimization_goal: Meta only. Explicit ad-set `optimization_goal` (e.g. `LANDING_PAGE_VIEWS`, `LINK_CLICKS`, `REACH`, `IMPRESSIONS`, `OFFSITE_CONVERSIONS`, `THRUPLAY`, `LEAD_GENERATION`). Overrides the default derived from `goal` (e.g. `traffic` defaults to `LINK_CLICKS`). Forwarded verbatim to Meta, which validates compatibility with the campaign objective and rejects incompatible combinations.
                 billing_event: Meta only. Explicit ad-set `billing_event`. Defaults to `IMPRESSIONS`. Forwarded verbatim to Meta, which validates compatibility with the optimization goal.
+                buying_type: Meta only. RESERVED = Reach & Frequency: requires `rfPredictionId` (a RESERVED prediction from /v1/ads/rf-predictions + /reserve). Budget, schedule and pricing come from the reservation, so budgetAmount/budgetType are not required and bid fields are ignored. Only the plain single-ad shape (no creatives[], adSetId, existingCampaignId or dynamicCreative).
+                rf_prediction_id: Meta only. The RESERVED prediction id the R&F ad set runs on (reserving mints a new id — pass that one). Requires buyingType RESERVED.
                 budget_amount: Required on legacy + multi-creative shapes. Inherited on attach.
                 budget_type: Required on legacy + multi-creative shapes. Inherited on attach.
                 status: Meta and TikTok. Publish state of the created entities. Omitted or ACTIVE publishes live (default, back-compat); PAUSED creates them paused and skips activation, so you can review before they spend. On TikTok the whole campaign > ad group > ad hierarchy stays paused.
@@ -3067,6 +3203,8 @@ def register_generated_tools(mcp, _get_client):
                 goal=goal,
                 optimization_goal=optimization_goal,
                 billing_event=billing_event,
+                buying_type=buying_type,
+                rf_prediction_id=rf_prediction_id,
                 budget_amount=budget_amount,
                 budget_type=budget_type,
                 status=status,

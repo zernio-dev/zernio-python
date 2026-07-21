@@ -605,6 +605,23 @@ components:
                   effective_account_limit: 2000
                   current_account_count: 2000
   schemas:
+    RfPrediction:
+      type: object
+      description: A Meta Reach & Frequency prediction. Money values in whole units of the ad account currency.
+      properties:
+        predictionId: { type: string }
+        status: { type: string, description: "ready | pending | failed:<meta code>" }
+        budget: { type: [number, "null"], description: "Quoted (or provided) lifetime budget for the window." }
+        reach: { type: [integer, "null"], description: "Predicted (or requested) unique reach." }
+        impressions: { type: [integer, "null"] }
+        minBudget: { type: [number, "null"], description: "Meta's allowed lower bound for this spec." }
+        maxBudget: { type: [number, "null"] }
+        minReach: { type: [integer, "null"] }
+        maxReach: { type: [integer, "null"] }
+        frequencyCap: { type: [integer, "null"] }
+        startTime: { type: [integer, "null"], description: "Unix seconds; the reserved window the R&F ad set will run on." }
+        stopTime: { type: [integer, "null"] }
+        expiresAt: { type: [string, "null"], description: "When the reservation's locked price expires (set after reserving)." }
     CtwaAdRequestBody:
       type: object
       required: [accountId, adAccountId, name, budgetAmount, budgetType]
@@ -34182,6 +34199,137 @@ paths:
         '401': { $ref: '#/components/responses/Unauthorized' }
         '501': { description: Only supported on Meta (facebook/instagram) }
 
+  /v1/ads/rf-predictions:
+    post:
+      operationId: createRfPrediction
+      tags: [Ads]
+      summary: Create a Reach & Frequency prediction (Meta)
+      description: |-
+        Creates an R&F prediction — a QUOTE, nothing is bought and no ad entities are created.
+        Provide a date range plus exactly one of `budgetAmount` (Meta predicts reach) or `reach`
+        (Meta predicts the budget). The response carries the estimate and its allowed bounds
+        (min/max budget and reach). Predictions expire on their own; to buy, reserve one via
+        POST /v1/ads/rf-predictions/{predictionId}/reserve and pass the RESERVED id to
+        POST /v1/ads/create with `buyingType: "RESERVED"`.
+
+        Reservation campaigns reject automatic placements, so omitted `placements` default to
+        Facebook feed (+ Instagram stream when a linked IG professional account resolves);
+        Instagram placements require that IG account. Meta only.
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [accountId, adAccountId, startDate, endDate]
+              properties:
+                accountId: { type: string, description: "Zernio SocialAccount id (posting or ads variant)." }
+                adAccountId: { type: string, description: "Meta ad account id (act_<n>)." }
+                budgetAmount: { type: number, description: "Whole currency units. Exactly one of budgetAmount / reach." }
+                reach: { type: integer, description: "Target unique reach. Exactly one of budgetAmount / reach." }
+                startDate: { type: string, format: date-time, description: "Campaign window start (must be in the future)." }
+                endDate: { type: string, format: date-time }
+                frequencyCap: { type: integer, minimum: 1, maximum: 90, description: "Max impressions per person over the window." }
+                targeting: { type: object, description: "Canonical camelCase TargetingSpec (same shape as /v1/ads/create's `targeting`). Defaults to countries: [US]." }
+                placements: { type: object, description: "Meta placements object (same shape as /v1/ads/create's `placements`)." }
+      responses:
+        '201':
+          description: Prediction created (usually ready within seconds)
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  adAccountId: { type: string }
+                  currency: { type: string }
+                  prediction: { $ref: '#/components/schemas/RfPrediction' }
+        '400': { description: "Invalid input, or Meta rejected the prediction — message carries Meta's error" }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '422': { description: "No Facebook Page resolved for the account" }
+        '501': { description: Only supported on Meta (facebook/instagram) }
+
+  /v1/ads/rf-predictions/{predictionId}:
+    get:
+      operationId: getRfPrediction
+      tags: [Ads]
+      summary: Read a Reach & Frequency prediction (Meta)
+      security:
+        - bearerAuth: []
+      parameters:
+        - { name: predictionId, in: path, required: true, schema: { type: string } }
+        - { name: accountId, in: query, required: true, schema: { type: string } }
+        - { name: adAccountId, in: query, required: true, schema: { type: string } }
+      responses:
+        '200':
+          description: Prediction status and estimates
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  adAccountId: { type: string }
+                  currency: { type: string }
+                  prediction: { $ref: '#/components/schemas/RfPrediction' }
+        '400': { description: Invalid input }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '501': { description: Only supported on Meta (facebook/instagram) }
+    delete:
+      operationId: cancelRfReservation
+      tags: [Ads]
+      summary: Cancel a Reach & Frequency reservation (Meta)
+      description: Releases a RESERVATION's locked price and inventory. Unreserved predictions expire on their own.
+      security:
+        - bearerAuth: []
+      parameters:
+        - { name: predictionId, in: path, required: true, schema: { type: string } }
+        - { name: accountId, in: query, required: true, schema: { type: string } }
+        - { name: adAccountId, in: query, required: true, schema: { type: string } }
+      responses:
+        '200':
+          description: Reservation cancelled
+        '400': { description: "Invalid input, or Meta rejected the cancel" }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '501': { description: Only supported on Meta (facebook/instagram) }
+
+  /v1/ads/rf-predictions/{predictionId}/reserve:
+    post:
+      operationId: reserveRfPrediction
+      tags: [Ads]
+      summary: Reserve a Reach & Frequency prediction (Meta)
+      description: |-
+        Locks the quoted price + inventory until the returned `expiresAt` and mints a NEW
+        prediction id — pass that RESERVED id (not the original) as `rfPredictionId` on
+        POST /v1/ads/create. Release an unused reservation via DELETE. Meta only.
+      security:
+        - bearerAuth: []
+      parameters:
+        - { name: predictionId, in: path, required: true, schema: { type: string } }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [accountId, adAccountId]
+              properties:
+                accountId: { type: string }
+                adAccountId: { type: string }
+      responses:
+        '201':
+          description: Reserved; `prediction.predictionId` is the new RESERVED id
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  adAccountId: { type: string }
+                  prediction: { $ref: '#/components/schemas/RfPrediction' }
+        '400': { description: "Invalid input, or Meta rejected the reserve" }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '501': { description: Only supported on Meta (facebook/instagram) }
+
   /v1/ads/studies:
     get:
       operationId: listAdStudies
@@ -34734,6 +34882,8 @@ paths:
                     - For `lead_generation` or `conversions` on LinkedIn, or to promote an existing post, use POST /v1/ads/boost.
                 optimizationGoal: { type: string, description: "Meta only. Explicit ad-set `optimization_goal` (e.g. `LANDING_PAGE_VIEWS`, `LINK_CLICKS`, `REACH`, `IMPRESSIONS`, `OFFSITE_CONVERSIONS`, `THRUPLAY`, `LEAD_GENERATION`). Overrides the default derived from `goal` (e.g. `traffic` defaults to `LINK_CLICKS`). Forwarded verbatim to Meta, which validates compatibility with the campaign objective and rejects incompatible combinations." }
                 billingEvent: { type: string, description: "Meta only. Explicit ad-set `billing_event`. Defaults to `IMPRESSIONS`. Forwarded verbatim to Meta, which validates compatibility with the optimization goal." }
+                buyingType: { type: string, enum: [AUCTION, RESERVED], description: "Meta only. RESERVED = Reach & Frequency: requires `rfPredictionId` (a RESERVED prediction from /v1/ads/rf-predictions + /reserve). Budget, schedule and pricing come from the reservation, so budgetAmount/budgetType are not required and bid fields are ignored. Only the plain single-ad shape (no creatives[], adSetId, existingCampaignId or dynamicCreative)." }
+                rfPredictionId: { type: string, description: "Meta only. The RESERVED prediction id the R&F ad set runs on (reserving mints a new id — pass that one). Requires buyingType RESERVED." }
                 budgetAmount: { type: number, description: "Required on legacy + multi-creative shapes. Inherited on attach." }
                 budgetType: { type: string, enum: [daily, lifetime], description: "Required on legacy + multi-creative shapes. Inherited on attach." }
                 status:

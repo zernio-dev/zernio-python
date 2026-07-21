@@ -360,6 +360,69 @@ class AdsResource:
         )
         return self._client._get("/v1/ads/activity", params=params)
 
+    def create_rf_prediction(
+        self,
+        account_id: str,
+        ad_account_id: str,
+        start_date: datetime | str,
+        end_date: datetime | str,
+        *,
+        budget_amount: float | None = None,
+        reach: int | None = None,
+        frequency_cap: int | None = None,
+        targeting: dict[str, Any] | None = None,
+        placements: dict[str, Any] | None = None,
+    ) -> dict[str, Any]:
+        """Create a Reach & Frequency prediction (Meta)"""
+        payload = self._build_payload(
+            account_id=account_id,
+            ad_account_id=ad_account_id,
+            budget_amount=budget_amount,
+            reach=reach,
+            start_date=start_date,
+            end_date=end_date,
+            frequency_cap=frequency_cap,
+            targeting=targeting,
+            placements=placements,
+        )
+        return self._client._post("/v1/ads/rf-predictions", data=payload)
+
+    def get_rf_prediction(
+        self, prediction_id: str, account_id: str, ad_account_id: str
+    ) -> dict[str, Any]:
+        """Read a Reach & Frequency prediction (Meta)"""
+        params = self._build_params(
+            account_id=account_id,
+            ad_account_id=ad_account_id,
+        )
+        return self._client._get(
+            f"/v1/ads/rf-predictions/{prediction_id}", params=params
+        )
+
+    def cancel_rf_reservation(
+        self, prediction_id: str, account_id: str, ad_account_id: str
+    ) -> dict[str, Any]:
+        """Cancel a Reach & Frequency reservation (Meta)"""
+        params = self._build_params(
+            account_id=account_id,
+            ad_account_id=ad_account_id,
+        )
+        return self._client._delete(
+            f"/v1/ads/rf-predictions/{prediction_id}", params=params
+        )
+
+    def reserve_rf_prediction(
+        self, prediction_id: str, account_id: str, ad_account_id: str
+    ) -> dict[str, Any]:
+        """Reserve a Reach & Frequency prediction (Meta)"""
+        payload = self._build_payload(
+            account_id=account_id,
+            ad_account_id=ad_account_id,
+        )
+        return self._client._post(
+            f"/v1/ads/rf-predictions/{prediction_id}/reserve", data=payload
+        )
+
     def list_ad_studies(
         self,
         account_id: str,
@@ -506,6 +569,8 @@ class AdsResource:
         goal: str | None = None,
         optimization_goal: str | None = None,
         billing_event: str | None = None,
+        buying_type: str | None = None,
+        rf_prediction_id: str | None = None,
         budget_amount: float | None = None,
         budget_type: str | None = None,
         status: str | None = None,
@@ -581,6 +646,8 @@ class AdsResource:
             goal=goal,
             optimization_goal=optimization_goal,
             billing_event=billing_event,
+            buying_type=buying_type,
+            rf_prediction_id=rf_prediction_id,
             budget_amount=budget_amount,
             budget_type=budget_type,
             status=status,
@@ -1423,6 +1490,69 @@ class AdsResource:
         )
         return await self._client._aget("/v1/ads/activity", params=params)
 
+    async def acreate_rf_prediction(
+        self,
+        account_id: str,
+        ad_account_id: str,
+        start_date: datetime | str,
+        end_date: datetime | str,
+        *,
+        budget_amount: float | None = None,
+        reach: int | None = None,
+        frequency_cap: int | None = None,
+        targeting: dict[str, Any] | None = None,
+        placements: dict[str, Any] | None = None,
+    ) -> dict[str, Any]:
+        """Create a Reach & Frequency prediction (Meta) (async)"""
+        payload = self._build_payload(
+            account_id=account_id,
+            ad_account_id=ad_account_id,
+            budget_amount=budget_amount,
+            reach=reach,
+            start_date=start_date,
+            end_date=end_date,
+            frequency_cap=frequency_cap,
+            targeting=targeting,
+            placements=placements,
+        )
+        return await self._client._apost("/v1/ads/rf-predictions", data=payload)
+
+    async def aget_rf_prediction(
+        self, prediction_id: str, account_id: str, ad_account_id: str
+    ) -> dict[str, Any]:
+        """Read a Reach & Frequency prediction (Meta) (async)"""
+        params = self._build_params(
+            account_id=account_id,
+            ad_account_id=ad_account_id,
+        )
+        return await self._client._aget(
+            f"/v1/ads/rf-predictions/{prediction_id}", params=params
+        )
+
+    async def acancel_rf_reservation(
+        self, prediction_id: str, account_id: str, ad_account_id: str
+    ) -> dict[str, Any]:
+        """Cancel a Reach & Frequency reservation (Meta) (async)"""
+        params = self._build_params(
+            account_id=account_id,
+            ad_account_id=ad_account_id,
+        )
+        return await self._client._adelete(
+            f"/v1/ads/rf-predictions/{prediction_id}", params=params
+        )
+
+    async def areserve_rf_prediction(
+        self, prediction_id: str, account_id: str, ad_account_id: str
+    ) -> dict[str, Any]:
+        """Reserve a Reach & Frequency prediction (Meta) (async)"""
+        payload = self._build_payload(
+            account_id=account_id,
+            ad_account_id=ad_account_id,
+        )
+        return await self._client._apost(
+            f"/v1/ads/rf-predictions/{prediction_id}/reserve", data=payload
+        )
+
     async def alist_ad_studies(
         self,
         account_id: str,
@@ -1571,6 +1701,8 @@ class AdsResource:
         goal: str | None = None,
         optimization_goal: str | None = None,
         billing_event: str | None = None,
+        buying_type: str | None = None,
+        rf_prediction_id: str | None = None,
         budget_amount: float | None = None,
         budget_type: str | None = None,
         status: str | None = None,
@@ -1646,6 +1778,8 @@ class AdsResource:
             goal=goal,
             optimization_goal=optimization_goal,
             billing_event=billing_event,
+            buying_type=buying_type,
+            rf_prediction_id=rf_prediction_id,
             budget_amount=budget_amount,
             budget_type=budget_type,
             status=status,
