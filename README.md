@@ -390,6 +390,7 @@ Both `from zernio import ...` and `from late import ...` work identically. The `
 |--------|-------------|
 | `ad_campaigns.list_ad_campaigns()` | List campaigns |
 | `ad_campaigns.bulk_update_ad_campaign_status()` | Pause or resume many campaigns |
+| `ad_campaigns.get_ad_set_details()` | Live ad-set details incl. learning phase (Meta) |
 | `ad_campaigns.get_ad_tree()` | Get campaign tree |
 | `ad_campaigns.get_ads_timeline()` | Get daily account metrics |
 | `ad_campaigns.update_ad_campaign()` | Update a campaign |
@@ -405,6 +406,7 @@ Both `from zernio import ...` and `from late import ...` work identically. The `
 | `ads.list_ad_accounts()` | List ad accounts |
 | `ads.list_ad_catalog_product_sets()` | List a catalog's product sets |
 | `ads.list_ad_catalogs()` | List Meta product catalogs |
+| `ads.list_ad_studies()` | A/B tests and lift studies (Meta) |
 | `ads.list_ads()` | List ads |
 | `ads.list_ads_business_centers()` | List TikTok Business Centers |
 | `ads.list_conversion_associations()` | List associated campaigns |
@@ -421,11 +423,13 @@ Both `from zernio import ...` and `from late import ...` work identically. The `
 | `ads.create_standalone_ad()` | Create standalone ad |
 | `ads.create_test_lead()` | Create a test lead |
 | `ads.get_ad()` | Get ad details |
+| `ads.get_ad_account_finance()` | Ad account finances (Meta) |
 | `ads.get_ad_analytics()` | Get ad analytics |
 | `ads.get_ad_comments()` | List comments on an ad |
 | `ads.get_ad_insights_report()` | Poll an async insights report run (Meta) |
 | `ads.get_ad_previews()` | Render previews of an existing ad (Meta) |
 | `ads.get_ad_tracking_tags()` | Get ad tracking tags |
+| `ads.get_ads_activity_log()` | Ad account change / audit log (Meta) |
 | `ads.get_campaign_analytics()` | Get campaign analytics |
 | `ads.get_conversion_destination()` | Get a conversion destination |
 | `ads.get_conversion_metrics()` | Get attribution metrics |
@@ -453,6 +457,7 @@ Both `from zernio import ...` and `from late import ...` work identically. The `
 | `ads.search_ad_interests()` | Search targeting interests |
 | `ads.search_ad_targeting()` | Search targeting options |
 | `ads.send_conversions()` | Send conversion events |
+| `ads.upload_ad_image()` | Upload an ad image from base64 (Meta) |
 
 ### Broadcasts
 | Method | Description |

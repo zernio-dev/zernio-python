@@ -161,6 +161,16 @@ class AdCampaignsResource:
             f"/v1/ads/campaigns/{campaign_id}/duplicate", data=payload
         )
 
+    def get_ad_set_details(
+        self, ad_set_id: str, account_id: str, *, fields: str | None = None
+    ) -> dict[str, Any]:
+        """Live ad-set details incl. learning phase (Meta)"""
+        params = self._build_params(
+            account_id=account_id,
+            fields=fields,
+        )
+        return self._client._get(f"/v1/ads/ad-sets/{ad_set_id}", params=params)
+
     def update_ad_set(
         self,
         ad_set_id: str,
@@ -361,6 +371,16 @@ class AdCampaignsResource:
         return await self._client._apost(
             f"/v1/ads/campaigns/{campaign_id}/duplicate", data=payload
         )
+
+    async def aget_ad_set_details(
+        self, ad_set_id: str, account_id: str, *, fields: str | None = None
+    ) -> dict[str, Any]:
+        """Live ad-set details incl. learning phase (Meta) (async)"""
+        params = self._build_params(
+            account_id=account_id,
+            fields=fields,
+        )
+        return await self._client._aget(f"/v1/ads/ad-sets/{ad_set_id}", params=params)
 
     async def aupdate_ad_set(
         self,

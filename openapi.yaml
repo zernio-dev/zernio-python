@@ -33029,6 +33029,34 @@ paths:
         '501': { description: Operation not supported on this platform }
 
   /v1/ads/ad-sets/{adSetId}:
+    get:
+      operationId: getAdSetDetails
+      tags: [Ad Campaigns]
+      summary: Live ad-set details incl. learning phase (Meta)
+      description: |-
+        Reads the ad set live from Meta, returned verbatim. The default projection includes
+        `learning_stage_info` (learning-phase status: LEARNING / SUCCESS / FAIL / WAIVING — Meta
+        omits its `status` key on paused ad sets), delivery settings, budgets, schedule and
+        targeting. `fields` is a raw-passthrough override; unknown fields return Meta's 400
+        verbatim. Meta only.
+      security:
+        - bearerAuth: []
+      parameters:
+        - { name: adSetId, in: path, required: true, schema: { type: string }, description: "Meta ad set id (platformAdSetId)." }
+        - { name: accountId, in: query, required: true, schema: { type: string }, description: "Zernio SocialAccount id (posting or ads variant) used to resolve the Meta token." }
+        - { name: fields, in: query, schema: { type: string }, description: "Comma-separated Graph field override (supports nested {} projections)." }
+      responses:
+        '200':
+          description: The ad set as returned by Meta
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  adSet: { type: object, description: "Raw Meta ad set; keys are the requested Graph fields." }
+        '400': { description: "Invalid input, or Meta rejected the query — message carries Meta's error" }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '501': { description: Only supported on Meta (facebook/instagram) }
     put:
       operationId: updateAdSet
       tags: [Ad Campaigns]
@@ -34113,6 +34141,120 @@ paths:
         '404': { description: TikTok account not found }
         '422': { description: TikTok Ads not connected }
 
+  /v1/ads/activity:
+    get:
+      operationId: getAdsActivityLog
+      tags: [Ads]
+      summary: Ad account change / audit log (Meta)
+      description: |-
+        Account-level audit log from Meta's `/act_X/activities`: who changed what and when
+        (creates, edits, status flips, budget changes...) with Meta's translated event names and
+        the structured before/after in `extra_data`. Rows are returned verbatim. Meta has no
+        server-side per-object filter on this edge, so `objectId` filters the returned page
+        client-side (combine with paging to walk history for one campaign/ad set/ad). Meta only.
+      security:
+        - bearerAuth: []
+      parameters:
+        - { name: accountId, in: query, required: true, schema: { type: string }, description: "Zernio SocialAccount id (posting or ads variant) used to resolve the Meta token." }
+        - { name: adAccountId, in: query, required: true, schema: { type: string }, description: "Meta ad account id (act_<n>)." }
+        - { name: since, in: query, schema: { type: string, format: date }, description: "Start of range (YYYY-MM-DD)." }
+        - { name: until, in: query, schema: { type: string, format: date }, description: "End of range (YYYY-MM-DD)." }
+        - { name: objectId, in: query, schema: { type: string }, description: "Client-side filter to one Meta object id (campaign, ad set or ad)." }
+        - { name: limit, in: query, schema: { type: integer, minimum: 1, maximum: 200, default: 50 }, description: Rows per page }
+        - { name: after, in: query, schema: { type: string }, description: "Cursor from paging.after of the previous page." }
+      responses:
+        '200':
+          description: Activity rows (raw Meta shape)
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  adAccountId: { type: string }
+                  data:
+                    type: array
+                    items: { type: object, description: "Raw Meta activity row: event_type, translated_event_type, event_time, actor_name, object_id, object_name, object_type, application_name, extra_data (JSON string with before/after)." }
+                  paging:
+                    type: object
+                    properties:
+                      after: { type: [string, "null"], description: "Cursor for the next page; null when exhausted." }
+        '400': { description: "Invalid input, or Meta rejected the query" }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '501': { description: Only supported on Meta (facebook/instagram) }
+
+  /v1/ads/studies:
+    get:
+      operationId: listAdStudies
+      tags: [Ads]
+      summary: A/B tests and lift studies (Meta)
+      description: |-
+        Lists the ad account's A/B tests and lift studies (Meta's `/act_X/ad_studies`), rows
+        returned verbatim. The default projection covers id, name, type, timing and cells with
+        split percentages; `fields` is a raw-passthrough override. Meta only.
+      security:
+        - bearerAuth: []
+      parameters:
+        - { name: accountId, in: query, required: true, schema: { type: string }, description: "Zernio SocialAccount id (posting or ads variant) used to resolve the Meta token." }
+        - { name: adAccountId, in: query, required: true, schema: { type: string }, description: "Meta ad account id (act_<n>)." }
+        - { name: fields, in: query, schema: { type: string }, description: "Comma-separated Graph field override (supports nested {} projections)." }
+        - { name: limit, in: query, schema: { type: integer, minimum: 1, maximum: 100, default: 25 }, description: Rows per page }
+        - { name: after, in: query, schema: { type: string }, description: "Cursor from paging.after of the previous page." }
+      responses:
+        '200':
+          description: Ad studies (raw Meta shape)
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  adAccountId: { type: string }
+                  data:
+                    type: array
+                    items: { type: object, description: "Raw Meta ad study row." }
+                  paging:
+                    type: object
+                    properties:
+                      after: { type: [string, "null"], description: "Cursor for the next page; null when exhausted." }
+        '400': { description: "Invalid input, or Meta rejected the query" }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '501': { description: Only supported on Meta (facebook/instagram) }
+
+  /v1/ads/accounts/finance:
+    get:
+      operationId: getAdAccountFinance
+      tags: [Ads]
+      summary: Ad account finances (Meta)
+      description: |-
+        Finances of one Meta ad account: prepaid `balance`, lifetime `amountSpent`, account
+        `spendCap` (null = no cap) and the `fundingSource`. Money values are converted from
+        Meta's minor units to whole units of `currency`. Meta only.
+      security:
+        - bearerAuth: []
+      parameters:
+        - { name: accountId, in: query, required: true, schema: { type: string }, description: "Zernio SocialAccount id (posting or ads variant) used to resolve the Meta token." }
+        - { name: adAccountId, in: query, required: true, schema: { type: string }, description: "Meta ad account id (act_<n>)." }
+      responses:
+        '200':
+          description: Account finances
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  adAccountId: { type: string }
+                  currency: { type: string, description: "ISO 4217 code all money values are expressed in." }
+                  balance: { type: number, description: "Outstanding/prepaid balance in whole currency units." }
+                  amountSpent: { type: number, description: "Lifetime amount spent in whole currency units." }
+                  spendCap: { type: [number, "null"], description: "Account spend cap; null when none is set." }
+                  fundingSource:
+                    type: [object, "null"]
+                    properties:
+                      displayString: { type: string, description: "Human-readable payment method, e.g. 'Mastercard *4985'." }
+                      type: { type: integer, description: "Meta funding source type code." }
+        '400': { description: "Invalid input, or Meta rejected the query" }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '501': { description: Only supported on Meta (facebook/instagram) }
+
   /v1/ads/accounts:
     get:
       operationId: listAdAccounts
@@ -34436,7 +34578,7 @@ paths:
                 specialAdCategories:
                   type: array
                   description: "Meta only. Required for housing, employment, credit, or political ads."
-                  items: { type: string, enum: [HOUSING, EMPLOYMENT, CREDIT, ISSUES_ELECTIONS_POLITICS] }
+                  items: { type: string, enum: [HOUSING, EMPLOYMENT, CREDIT, FINANCIAL_PRODUCTS_SERVICES, ISSUES_ELECTIONS_POLITICS, ONLINE_GAMBLING_AND_GAMING] }
                 linkUrl:
                   type: string
                   format: uri
@@ -34616,7 +34758,7 @@ paths:
                 longHeadline: { type: string, maxLength: 90, description: "Google Display only — defaults to `headline` if omitted. On LinkedIn, reused as the optional secondary description text on traffic (link) ads; omitted if not provided." }
                 body: { type: string, description: "Required on legacy + attach shapes. For X/Twitter this is the tweet text (max 280 chars including a ~24-char URL when `linkUrl` is set). On LinkedIn this is the post commentary (the intro text shown above the ad). Max: Google=90, Pinterest=500." }
                 description: { type: string, maxLength: 255, description: "Meta only (facebook/instagram). Link description — the secondary text shown below the headline (Meta's link_data.description; on video creatives mapped to video_data.link_description). When omitted, Meta auto-pulls the destination URL's OpenGraph description. Applies on legacy, attach, and placementAssets shapes; for multi-creative use creatives[].description (this field is the shared fallback). For multi-text variations use dynamicCreative.descriptions instead." }
-                callToAction: { type: string, enum: [LEARN_MORE, SHOP_NOW, SIGN_UP, BOOK_TRAVEL, CONTACT_US, DOWNLOAD, GET_OFFER, GET_QUOTE, SUBSCRIBE, WATCH_MORE, REGISTER, JOIN, ATTEND, REQUEST_DEMO, VIEW_QUOTE, APPLY, SEE_MORE, BUY_NOW], description: "Required on legacy + attach shapes for Meta. Honoured on TikTok (passes through to the Spark Ad creative's `call_to_action`) and on LinkedIn (the CTA button on the ad; defaults to LEARN_MORE when `linkUrl` is set). LinkedIn accepts: LEARN_MORE, SIGN_UP, DOWNLOAD, SUBSCRIBE, REGISTER, JOIN, ATTEND, REQUEST_DEMO, VIEW_QUOTE, APPLY, SEE_MORE, SHOP_NOW, BUY_NOW. Ignored by Google, Pinterest, and X/Twitter." }
+                callToAction: { type: string, enum: [LEARN_MORE, SHOP_NOW, SIGN_UP, BOOK_TRAVEL, CONTACT_US, DOWNLOAD, GET_OFFER, GET_QUOTE, SUBSCRIBE, WATCH_MORE, ADD_TO_CART, APPLY_NOW, BOOK_NOW, BUY_TICKETS, DONATE, DONATE_NOW, GET_DIRECTIONS, GET_SHOWTIMES, LISTEN_NOW, ORDER_NOW, PLAY_GAME, REQUEST_TIME, SEE_MENU, START_ORDER, INSTALL_MOBILE_APP, USE_APP, REGISTER, JOIN, ATTEND, REQUEST_DEMO, VIEW_QUOTE, APPLY, SEE_MORE, BUY_NOW], description: "Required on legacy + attach shapes for Meta. Honoured on TikTok (passes through to the Spark Ad creative's `call_to_action`) and on LinkedIn (the CTA button on the ad; defaults to LEARN_MORE when `linkUrl` is set). LinkedIn accepts: LEARN_MORE, SIGN_UP, DOWNLOAD, SUBSCRIBE, REGISTER, JOIN, ATTEND, REQUEST_DEMO, VIEW_QUOTE, APPLY, SEE_MORE, SHOP_NOW, BUY_NOW. Ignored by Google, Pinterest, and X/Twitter." }
                 linkUrl: { type: string, format: uri, description: "Required on legacy + attach shapes (skip for multi-creative). On LinkedIn it's the ad's destination URL; required for `traffic` ads, optional for `engagement` / `awareness`. NOT required when `goal` is `lead_generation` (the ad opens a Lead Gen form instead of a destination). On LinkedIn, `imageUrl` + `linkUrl` publishes an ARTICLE-content creative; this is LinkedIn's article ad format, with the image as thumbnail and `longHeadline` as description." }
                 leadGenFormId: { type: string, description: "Meta Lead Gen forms only (facebook/instagram). The leadgen_forms ID to attach to the ad's creative — create one via POST /v1/ads/lead-forms. REQUIRED when `goal` is `lead_generation`, and on every ATTACH (`adSetId`) call that targets a lead ad set (the form attaches per-ad; Meta rejects a formless ad in a lead ad set). Ignored otherwise. The ad set's promoted_object.page_id + LEAD_GENERATION optimization + destination_type ON_AD are derived automatically from the goal. Both `placementAssets` (per-placement creative) and `dynamicCreative` (multi-text / multi-asset pool, e.g. multiple headlines and primary texts) ARE supported on instant-form lead ads — the form is attached for you, and for `dynamicCreative` the ad set is created as a Dynamic Creative ad set automatically (Meta requires that for any multi-text feed; there is no non-DCO multi-text path). Send a single `imageUrls` entry plus your text variations to get Meta's \"Multiple Text Options\" behavior on a lead ad." }
                 imageUrl: { type: string, format: uri, description: "Image creative for Meta/Google/Pinterest/LinkedIn on legacy + attach shapes (mutually exclusive with `video`). Required for LinkedIn ads unless `video` is set. Not required for Google Search campaigns. For TikTok, this field carries the VIDEO URL (the TikTok ads endpoint is video-only; the field retains the `imageUrl` name for cross-platform consistency). Ignored for X/Twitter. For Google Display, treated as the landscape image (alias of `images.landscape`); supply `images.square` alongside or the request is rejected. For LinkedIn the image is uploaded to LinkedIn under the authoring Company Page (see `organizationId`); recommended ratio 1.91:1 (e.g. 1200×627)." }
@@ -34659,7 +34801,7 @@ paths:
                           url: { type: string, format: uri }
                           thumbnailUrl: { type: string, format: uri }
                       linkUrl: { type: string, format: uri }
-                      callToAction: { type: string, enum: [LEARN_MORE, SHOP_NOW, SIGN_UP, BOOK_TRAVEL, CONTACT_US, DOWNLOAD, GET_OFFER, GET_QUOTE, SUBSCRIBE, WATCH_MORE] }
+                      callToAction: { type: string, enum: [LEARN_MORE, SHOP_NOW, SIGN_UP, BOOK_TRAVEL, CONTACT_US, DOWNLOAD, GET_OFFER, GET_QUOTE, SUBSCRIBE, WATCH_MORE, ADD_TO_CART, APPLY_NOW, BOOK_NOW, BUY_TICKETS, DONATE, DONATE_NOW, GET_DIRECTIONS, GET_SHOWTIMES, LISTEN_NOW, ORDER_NOW, PLAY_GAME, REQUEST_TIME, SEE_MENU, START_ORDER, INSTALL_MOBILE_APP, USE_APP] }
                 adSetId:
                   type: string
                   description: |
@@ -34872,7 +35014,7 @@ paths:
                     Meta only. Declares the ad's special category, required for housing, employment, credit, or
                     political/social-issue ads (Meta enforces restricted targeting for these). Note: setting a special
                     category disables income/zip targeting on Meta.
-                  items: { type: string, enum: [HOUSING, EMPLOYMENT, CREDIT, ISSUES_ELECTIONS_POLITICS] }
+                  items: { type: string, enum: [HOUSING, EMPLOYMENT, CREDIT, FINANCIAL_PRODUCTS_SERVICES, ISSUES_ELECTIONS_POLITICS, ONLINE_GAMBLING_AND_GAMING] }
                 endDate: { type: string, format: date-time, description: Required for lifetime budgets }
                 startDate:
                   type: string
@@ -34927,7 +35069,7 @@ paths:
                       description: "Destination URL variations. At least one is required unless `goal` is `lead_generation`."
                     callToActionTypes:
                       type: array
-                      items: { type: string, enum: [LEARN_MORE, SHOP_NOW, SIGN_UP, BOOK_TRAVEL, CONTACT_US, DOWNLOAD, GET_OFFER, GET_QUOTE, SUBSCRIBE, WATCH_MORE, REGISTER, JOIN, ATTEND, REQUEST_DEMO, VIEW_QUOTE, APPLY, SEE_MORE, BUY_NOW] }
+                      items: { type: string, enum: [LEARN_MORE, SHOP_NOW, SIGN_UP, BOOK_TRAVEL, CONTACT_US, DOWNLOAD, GET_OFFER, GET_QUOTE, SUBSCRIBE, WATCH_MORE, ADD_TO_CART, APPLY_NOW, BOOK_NOW, BUY_TICKETS, DONATE, DONATE_NOW, GET_DIRECTIONS, GET_SHOWTIMES, LISTEN_NOW, ORDER_NOW, PLAY_GAME, REQUEST_TIME, SEE_MENU, START_ORDER, INSTALL_MOBILE_APP, USE_APP, REGISTER, JOIN, ATTEND, REQUEST_DEMO, VIEW_QUOTE, APPLY, SEE_MORE, BUY_NOW] }
                       description: "CTA-button variations. Required."
                     adFormat:
                       type: string
@@ -35479,6 +35621,48 @@ paths:
             application/json:
               schema: { type: object, properties: { status: { type: string }, testLead: { type: object, properties: { id: { type: string } } } } }
         '401': { $ref: '#/components/responses/Unauthorized' }
+
+  /v1/ads/images:
+    post:
+      operationId: uploadAdImage
+      tags: [Ads]
+      summary: Upload an ad image from base64 (Meta)
+      description: |-
+        Uploads raw image bytes to the Meta ad account's image library — for callers whose
+        creatives aren't hosted at a public URL. Returns the image `hash` (Meta's identifier for
+        the asset) and the Meta-hosted `url`, which can be used directly as `imageUrl` on the
+        create endpoints. Max 30 MB decoded. Meta only.
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [accountId, adAccountId, imageBase64]
+              properties:
+                accountId: { type: string, description: "Zernio SocialAccount id (posting or ads variant) used to resolve the Meta token." }
+                adAccountId: { type: string, description: "Meta ad account id (act_<n>)." }
+                imageBase64: { type: string, description: "Raw base64 image bytes, or a full data URL (the data:image/...;base64, prefix is stripped)." }
+                filename: { type: string, description: "Optional filename shown in Meta's image library. Defaults to ad_image.jpg." }
+      responses:
+        '201':
+          description: Image uploaded
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  adAccountId: { type: string }
+                  image:
+                    type: object
+                    properties:
+                      hash: { type: string, description: "Meta image hash, reusable wherever image_hash is accepted." }
+                      url: { type: string, description: "Meta-hosted image URL; usable as imageUrl on the create endpoints." }
+        '400': { description: "Invalid input, or Meta rejected the image" }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '501': { description: Only supported on Meta (facebook/instagram) }
 
   /v1/ads/interests:
     get:
@@ -36284,8 +36468,12 @@ paths:
                   type: object
                   description: |
                     Batch-level user consent. Required by Google for EEA/UK
-                    events under the Feb 2026 restrictions. Ignored by Meta
-                    and LinkedIn.
+                    events under the Feb 2026 restrictions. On Meta, any
+                    DENIED flag enables Limited Data Use on every event in
+                    the batch (data_processing_options ["LDU"] with
+                    geolocation, country 0 / state 0); GRANTED or absent
+                    consent sends events with Meta's default processing.
+                    Ignored by LinkedIn.
                   properties:
                     adUserData: { type: string, enum: [GRANTED, DENIED] }
                     adPersonalization: { type: string, enum: [GRANTED, DENIED] }

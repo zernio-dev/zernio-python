@@ -1581,6 +1581,32 @@ def register_generated_tools(mcp, _get_client):
 
     @mcp.tool(
         annotations=ToolAnnotations(
+            title="Live ad-set details incl. learning phase (Meta)",
+            readOnlyHint=True,
+            destructiveHint=False,
+            openWorldHint=False,
+        )
+    )
+    def ad_campaigns_get_ad_set_details(
+        ad_set_id: str, account_id: str, fields: str | None = None
+    ) -> str:
+        """Live ad-set details incl. learning phase (Meta)
+
+        Args:
+            ad_set_id: Meta ad set id (platformAdSetId). (required)
+            account_id: Zernio SocialAccount id (posting or ads variant) used to resolve the Meta token. (required)
+            fields: Comma-separated Graph field override (supports nested {} projections)."""
+        client = _get_client()
+        try:
+            response = client.ad_campaigns.get_ad_set_details(
+                ad_set_id=ad_set_id, account_id=account_id, fields=fields
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
             title="Update an ad set",
             readOnlyHint=False,
             destructiveHint=True,
@@ -2343,6 +2369,107 @@ def register_generated_tools(mcp, _get_client):
         client = _get_client()
         try:
             response = client.ads.list_ads_business_centers(account_id=account_id)
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Ad account change / audit log (Meta)",
+            readOnlyHint=True,
+            destructiveHint=False,
+            openWorldHint=False,
+        )
+    )
+    def ads_get_ads_activity_log(
+        account_id: str,
+        ad_account_id: str,
+        since: str | None = None,
+        until: str | None = None,
+        object_id: str | None = None,
+        limit: int = 50,
+        after: str | None = None,
+    ) -> str:
+        """Ad account change / audit log (Meta)
+
+        Args:
+            account_id: Zernio SocialAccount id (posting or ads variant) used to resolve the Meta token. (required)
+            ad_account_id: Meta ad account id (act_<n>). (required)
+            since: Start of range (YYYY-MM-DD).
+            until: End of range (YYYY-MM-DD).
+            object_id: Client-side filter to one Meta object id (campaign, ad set or ad).
+            limit: Rows per page
+            after: Cursor from paging.after of the previous page."""
+        client = _get_client()
+        try:
+            response = client.ads.get_ads_activity_log(
+                account_id=account_id,
+                ad_account_id=ad_account_id,
+                since=since,
+                until=until,
+                object_id=object_id,
+                limit=limit,
+                after=after,
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="A/B tests and lift studies (Meta)",
+            readOnlyHint=True,
+            destructiveHint=False,
+            openWorldHint=False,
+        )
+    )
+    def ads_list_ad_studies(
+        account_id: str,
+        ad_account_id: str,
+        fields: str | None = None,
+        limit: int = 25,
+        after: str | None = None,
+    ) -> str:
+        """A/B tests and lift studies (Meta)
+
+        Args:
+            account_id: Zernio SocialAccount id (posting or ads variant) used to resolve the Meta token. (required)
+            ad_account_id: Meta ad account id (act_<n>). (required)
+            fields: Comma-separated Graph field override (supports nested {} projections).
+            limit: Rows per page
+            after: Cursor from paging.after of the previous page."""
+        client = _get_client()
+        try:
+            response = client.ads.list_ad_studies(
+                account_id=account_id,
+                ad_account_id=ad_account_id,
+                fields=fields,
+                limit=limit,
+                after=after,
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Ad account finances (Meta)",
+            readOnlyHint=True,
+            destructiveHint=False,
+            openWorldHint=False,
+        )
+    )
+    def ads_get_ad_account_finance(account_id: str, ad_account_id: str) -> str:
+        """Ad account finances (Meta)
+
+        Args:
+            account_id: Zernio SocialAccount id (posting or ads variant) used to resolve the Meta token. (required)
+            ad_account_id: Meta ad account id (act_<n>). (required)"""
+        client = _get_client()
+        try:
+            response = client.ads.get_ad_account_finance(
+                account_id=account_id, ad_account_id=ad_account_id
+            )
             return _format_response(response)
         except Exception as e:
             return f"Error: {e}"
@@ -3237,6 +3364,39 @@ def register_generated_tools(mcp, _get_client):
 
     @mcp.tool(
         annotations=ToolAnnotations(
+            title="Upload an ad image from base64 (Meta)",
+            readOnlyHint=False,
+            destructiveHint=True,
+            openWorldHint=True,
+        )
+    )
+    def ads_upload_ad_image(
+        account_id: str,
+        ad_account_id: str,
+        image_base64: str,
+        filename: str | None = None,
+    ) -> str:
+        """Upload an ad image from base64 (Meta)
+
+        Args:
+            account_id: Zernio SocialAccount id (posting or ads variant) used to resolve the Meta token. (required)
+            ad_account_id: Meta ad account id (act_<n>). (required)
+            image_base64: Raw base64 image bytes, or a full data URL (the data:image/...;base64, prefix is stripped). (required)
+            filename: Optional filename shown in Meta's image library. Defaults to ad_image.jpg."""
+        client = _get_client()
+        try:
+            response = client.ads.upload_ad_image(
+                account_id=account_id,
+                ad_account_id=ad_account_id,
+                image_base64=image_base64,
+                filename=filename,
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
             title="Search targeting interests",
             readOnlyHint=True,
             destructiveHint=False,
@@ -3543,8 +3703,12 @@ def register_generated_tools(mcp, _get_client):
                 events: (required)
                 test_code: Meta `test_event_code` passthrough. Ignored by Google and LinkedIn.
                 consent: Batch-level user consent. Required by Google for EEA/UK
-        events under the Feb 2026 restrictions. Ignored by Meta
-        and LinkedIn."""
+        events under the Feb 2026 restrictions. On Meta, any
+        DENIED flag enables Limited Data Use on every event in
+        the batch (data_processing_options ["LDU"] with
+        geolocation, country 0 / state 0); GRANTED or absent
+        consent sends events with Meta's default processing.
+        Ignored by LinkedIn."""
         client = _get_client()
         try:
             response = client.ads.send_conversions(

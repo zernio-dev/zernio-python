@@ -337,6 +337,58 @@ class AdsResource:
         )
         return self._client._get("/v1/ads/business-centers", params=params)
 
+    def get_ads_activity_log(
+        self,
+        account_id: str,
+        ad_account_id: str,
+        *,
+        since: str | None = None,
+        until: str | None = None,
+        object_id: str | None = None,
+        limit: int | None = 50,
+        after: str | None = None,
+    ) -> dict[str, Any]:
+        """Ad account change / audit log (Meta)"""
+        params = self._build_params(
+            account_id=account_id,
+            ad_account_id=ad_account_id,
+            since=since,
+            until=until,
+            object_id=object_id,
+            limit=limit,
+            after=after,
+        )
+        return self._client._get("/v1/ads/activity", params=params)
+
+    def list_ad_studies(
+        self,
+        account_id: str,
+        ad_account_id: str,
+        *,
+        fields: str | None = None,
+        limit: int | None = 25,
+        after: str | None = None,
+    ) -> dict[str, Any]:
+        """A/B tests and lift studies (Meta)"""
+        params = self._build_params(
+            account_id=account_id,
+            ad_account_id=ad_account_id,
+            fields=fields,
+            limit=limit,
+            after=after,
+        )
+        return self._client._get("/v1/ads/studies", params=params)
+
+    def get_ad_account_finance(
+        self, account_id: str, ad_account_id: str
+    ) -> dict[str, Any]:
+        """Ad account finances (Meta)"""
+        params = self._build_params(
+            account_id=account_id,
+            ad_account_id=ad_account_id,
+        )
+        return self._client._get("/v1/ads/accounts/finance", params=params)
+
     def list_ad_accounts(
         self,
         account_id: str,
@@ -702,6 +754,23 @@ class AdsResource:
         return self._client._post(
             f"/v1/ads/lead-forms/{form_id}/test-leads", data=payload
         )
+
+    def upload_ad_image(
+        self,
+        account_id: str,
+        ad_account_id: str,
+        image_base64: str,
+        *,
+        filename: str | None = None,
+    ) -> dict[str, Any]:
+        """Upload an ad image from base64 (Meta)"""
+        payload = self._build_payload(
+            account_id=account_id,
+            ad_account_id=ad_account_id,
+            image_base64=image_base64,
+            filename=filename,
+        )
+        return self._client._post("/v1/ads/images", data=payload)
 
     def search_ad_interests(self, q: str, account_id: str) -> dict[str, Any]:
         """Search targeting interests"""
@@ -1331,6 +1400,58 @@ class AdsResource:
         )
         return await self._client._aget("/v1/ads/business-centers", params=params)
 
+    async def aget_ads_activity_log(
+        self,
+        account_id: str,
+        ad_account_id: str,
+        *,
+        since: str | None = None,
+        until: str | None = None,
+        object_id: str | None = None,
+        limit: int | None = 50,
+        after: str | None = None,
+    ) -> dict[str, Any]:
+        """Ad account change / audit log (Meta) (async)"""
+        params = self._build_params(
+            account_id=account_id,
+            ad_account_id=ad_account_id,
+            since=since,
+            until=until,
+            object_id=object_id,
+            limit=limit,
+            after=after,
+        )
+        return await self._client._aget("/v1/ads/activity", params=params)
+
+    async def alist_ad_studies(
+        self,
+        account_id: str,
+        ad_account_id: str,
+        *,
+        fields: str | None = None,
+        limit: int | None = 25,
+        after: str | None = None,
+    ) -> dict[str, Any]:
+        """A/B tests and lift studies (Meta) (async)"""
+        params = self._build_params(
+            account_id=account_id,
+            ad_account_id=ad_account_id,
+            fields=fields,
+            limit=limit,
+            after=after,
+        )
+        return await self._client._aget("/v1/ads/studies", params=params)
+
+    async def aget_ad_account_finance(
+        self, account_id: str, ad_account_id: str
+    ) -> dict[str, Any]:
+        """Ad account finances (Meta) (async)"""
+        params = self._build_params(
+            account_id=account_id,
+            ad_account_id=ad_account_id,
+        )
+        return await self._client._aget("/v1/ads/accounts/finance", params=params)
+
     async def alist_ad_accounts(
         self,
         account_id: str,
@@ -1702,6 +1823,23 @@ class AdsResource:
         return await self._client._apost(
             f"/v1/ads/lead-forms/{form_id}/test-leads", data=payload
         )
+
+    async def aupload_ad_image(
+        self,
+        account_id: str,
+        ad_account_id: str,
+        image_base64: str,
+        *,
+        filename: str | None = None,
+    ) -> dict[str, Any]:
+        """Upload an ad image from base64 (Meta) (async)"""
+        payload = self._build_payload(
+            account_id=account_id,
+            ad_account_id=ad_account_id,
+            image_base64=image_base64,
+            filename=filename,
+        )
+        return await self._client._apost("/v1/ads/images", data=payload)
 
     async def asearch_ad_interests(self, q: str, account_id: str) -> dict[str, Any]:
         """Search targeting interests (async)"""
