@@ -10306,6 +10306,7 @@ def register_generated_tools(mcp, _get_client):
         number_type: str | None = None,
         connect_whatsapp: bool = True,
         wants_sms: bool = False,
+        wants_whatsapp: bool = False,
         purchase_intent_id: str | None = None,
         allow_multiple: bool = False,
     ) -> str:
@@ -10317,6 +10318,7 @@ def register_generated_tools(mcp, _get_client):
             number_type: Which of the country's offered number types to order (see `types[]` on GET /v1/phone-numbers/countries). Omitted = the country's default type, which is always the WhatsApp-safe choice. Capabilities, price, and KYC requirements are per (country, type): toll_free can never connect WhatsApp (400 when combined with connectWhatsapp:true), and wantsSms:true requires an SMS-capable type.
             connect_whatsapp: A phone number is the unit; WhatsApp is one optional feature. Pass false to buy a STANDALONE number (Calls/SMS only): provisioning skips the Meta pre-verify/OTP steps and the number activates immediately. Omitted defaults to the WhatsApp provisioning path. WhatsApp can be connected to a standalone number later from the connect flow.
             wants_sms: SMS capability is per-number, not per-country. Pass true to provision from the SMS-capable inventory pool so the number can actually text (see also GET /v1/phone-numbers/available with sms=true, and smsAvailable on GET /v1/phone-numbers/countries).
+            wants_whatsapp: Declare WhatsApp intent on a STANDALONE purchase (connectWhatsapp:false). The number still activates and bills immediately, but if WhatsApp's buy-time check rejects the assigned number, it is automatically swapped for a WhatsApp-eligible one during the purchase instead of being delivered with WhatsApp unavailable. Ignored on the WhatsApp provisioning path (connectWhatsapp omitted or true), which always delivers a WhatsApp-verified number.
             purchase_intent_id: Optional idempotency key. Send the same value when retrying a purchase: if a number was already bought under this key, the API returns { status: "already_purchased", numberId, phoneNumber } instead of provisioning a second number. Generate a fresh key for each genuinely new purchase.
             allow_multiple: Any second purchase within 10 minutes of a previous one is rejected with 409 code PURCHASE_VELOCITY as duplicate protection. Pass true to confirm the additional purchase is intentional (e.g. bulk provisioning)."""
         client = _get_client()
@@ -10327,6 +10329,7 @@ def register_generated_tools(mcp, _get_client):
                 number_type=number_type,
                 connect_whatsapp=connect_whatsapp,
                 wants_sms=wants_sms,
+                wants_whatsapp=wants_whatsapp,
                 purchase_intent_id=purchase_intent_id,
                 allow_multiple=allow_multiple,
             )
@@ -13803,7 +13806,7 @@ def register_generated_tools(mcp, _get_client):
                 name: Template name (lowercase, letters/numbers/underscores, must start with a letter) (required)
                 category: Template category (required)
                 language: Template language code (e.g., en_US) (required)
-                components: Template components (header, body, footer, buttons). Required for custom templates, omit when using library_template_name.
+                components: Template components (header, body, footer, buttons, carousel, limited_time_offer). Required for custom templates, omit when using library_template_name.
                 library_template_name: Name of a pre-built template from Meta's template library (e.g., "appointment_reminder",
         "auto_pay_reminder_1", "address_update"). When provided, the template is pre-approved
         by Meta with no review wait. Omit components when using this field.

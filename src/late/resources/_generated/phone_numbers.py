@@ -82,6 +82,7 @@ class PhoneNumbersResource:
         number_type: str | None = None,
         connect_whatsapp: bool | None = True,
         wants_sms: bool | None = False,
+        wants_whatsapp: bool | None = False,
         purchase_intent_id: str | None = None,
         allow_multiple: bool | None = False,
     ) -> dict[str, Any]:
@@ -92,6 +93,7 @@ class PhoneNumbersResource:
             number_type=number_type,
             connect_whatsapp=connect_whatsapp,
             wants_sms=wants_sms,
+            wants_whatsapp=wants_whatsapp,
             purchase_intent_id=purchase_intent_id,
             allow_multiple=allow_multiple,
         )
@@ -344,6 +346,7 @@ class PhoneNumbersResource:
         number_type: str | None = None,
         connect_whatsapp: bool | None = True,
         wants_sms: bool | None = False,
+        wants_whatsapp: bool | None = False,
         purchase_intent_id: str | None = None,
         allow_multiple: bool | None = False,
     ) -> dict[str, Any]:
@@ -354,6 +357,7 @@ class PhoneNumbersResource:
             number_type=number_type,
             connect_whatsapp=connect_whatsapp,
             wants_sms=wants_sms,
+            wants_whatsapp=wants_whatsapp,
             purchase_intent_id=purchase_intent_id,
             allow_multiple=allow_multiple,
         )

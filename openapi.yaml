@@ -1375,6 +1375,8 @@ components:
         - $ref: '#/components/schemas/WhatsAppBodyComponent'
         - $ref: '#/components/schemas/WhatsAppFooterComponent'
         - $ref: '#/components/schemas/WhatsAppButtonsComponent'
+        - $ref: '#/components/schemas/WhatsAppCarouselComponent'
+        - $ref: '#/components/schemas/WhatsAppLimitedTimeOfferComponent'
       discriminator:
         propertyName: type
         mapping:
@@ -1382,6 +1384,8 @@ components:
           body: '#/components/schemas/WhatsAppBodyComponent'
           footer: '#/components/schemas/WhatsAppFooterComponent'
           buttons: '#/components/schemas/WhatsAppButtonsComponent'
+          carousel: '#/components/schemas/WhatsAppCarouselComponent'
+          limited_time_offer: '#/components/schemas/WhatsAppLimitedTimeOfferComponent'
     WhatsAppHeaderComponent:
       type: object
       required: [type, format]
@@ -1458,6 +1462,58 @@ components:
           minItems: 1
           items:
             $ref: '#/components/schemas/WhatsAppTemplateButton'
+    WhatsAppCarouselComponent:
+      type: object
+      required: [type, cards]
+      properties:
+        type:
+          type: string
+          enum: [carousel]
+        cards:
+          type: array
+          minItems: 2
+          maxItems: 10
+          description: '2-10 cards. Meta requires all cards to share the same component structure; a mismatch surfaces as a rejected_reason. MARKETING category only.'
+          items:
+            type: object
+            required: [components]
+            properties:
+              components:
+                type: array
+                minItems: 1
+                description: 'Per-card components. Each card carries its own media header + optional body + up to 2 buttons. Footer and nested carousel are not allowed inside cards.'
+                items:
+                  $ref: '#/components/schemas/WhatsAppCarouselCardComponent'
+    WhatsAppCarouselCardComponent:
+      oneOf:
+        - $ref: '#/components/schemas/WhatsAppHeaderComponent'
+        - $ref: '#/components/schemas/WhatsAppBodyComponent'
+        - $ref: '#/components/schemas/WhatsAppButtonsComponent'
+      discriminator:
+        propertyName: type
+        mapping:
+          header: '#/components/schemas/WhatsAppHeaderComponent'
+          body: '#/components/schemas/WhatsAppBodyComponent'
+          buttons: '#/components/schemas/WhatsAppButtonsComponent'
+    WhatsAppLimitedTimeOfferComponent:
+      type: object
+      required: [type, limited_time_offer]
+      properties:
+        type:
+          type: string
+          enum: [limited_time_offer]
+        limited_time_offer:
+          type: object
+          required: [text]
+          properties:
+            text:
+              type: string
+              minLength: 1
+              maxLength: 16
+              description: 'Short offer label (<=16 chars). MARKETING only.'
+            has_expiration:
+              type: boolean
+              description: 'Toggles the countdown timer. The actual coupon code + expiry are bound at SEND time, not here.'
     WhatsAppSandboxSession:
       type: object
       description: |
@@ -24765,7 +24821,7 @@ paths:
                   description: Template language code (e.g., en_US)
                 components:
                   type: array
-                  description: "Template components (header, body, footer, buttons). Required for custom templates, omit when using library_template_name."
+                  description: "Template components (header, body, footer, buttons, carousel, limited_time_offer). Required for custom templates, omit when using library_template_name."
                   minItems: 1
                   items:
                     $ref: '#/components/schemas/WhatsAppTemplateComponent'
@@ -27672,6 +27728,18 @@ paths:
                     can actually text (see also GET /v1/phone-numbers/available
                     with sms=true, and smsAvailable on GET
                     /v1/phone-numbers/countries).
+                wantsWhatsapp:
+                  type: boolean
+                  default: false
+                  description: >
+                    Declare WhatsApp intent on a STANDALONE purchase
+                    (connectWhatsapp:false). The number still activates and
+                    bills immediately, but if WhatsApp's buy-time check rejects
+                    the assigned number, it is automatically swapped for a
+                    WhatsApp-eligible one during the purchase instead of being
+                    delivered with WhatsApp unavailable. Ignored on the WhatsApp
+                    provisioning path (connectWhatsapp omitted or true), which
+                    always delivers a WhatsApp-verified number.
                 purchaseIntentId:
                   type: string
                   maxLength: 100
