@@ -13231,6 +13231,7 @@ paths:
         '401': { $ref: '#/components/responses/Unauthorized' }
         '402': { $ref: '#/components/responses/PaymentRequired' }
         '403': { description: Profile limit exceeded }
+        '409': { description: "A profile with this name already exists (code: profile_name_conflict)." }
   /v1/profiles/{profileId}:
     get:
       operationId: getProfile
@@ -13305,6 +13306,7 @@ paths:
         '400': { description: Invalid request }
         '401': { $ref: '#/components/responses/Unauthorized' }
         '404': { $ref: '#/components/responses/NotFound' }
+        '409': { description: "A profile with this name already exists (code: profile_name_conflict)." }
     delete:
       operationId: deleteProfile
       tags: [Profiles]
@@ -33214,6 +33216,7 @@ paths:
                   pagination: { $ref: '#/components/schemas/Pagination' }
         '202':
           description: "Part of the requested date range predates the ingested history; a background backfill job has been queued. The body has the same shape as the 200 response, carries the currently-available data, and includes `backfillPending: true`. A `Retry-After` header carries the recommended poll interval in seconds. Allow the job a short time to run (typically 1-3 minutes) and submit the request again; once ingestion completes the same request returns 200 with the full range."
+        '400': { $ref: '#/components/responses/BadRequest' }
         '401': { $ref: '#/components/responses/Unauthorized' }
         '403':
           description: Ads access required. Legacy plans need the Ads add-on; included by default on usage-based plans.
@@ -37165,6 +37168,7 @@ paths:
                         name: { type: string }
                         vertical: { type: [string, "null"], description: "Catalog vertical (e.g. commerce, vehicles, hotels)" }
                         productCount: { type: integer }
+        '400': { $ref: '#/components/responses/BadRequest' }
         '401': { $ref: '#/components/responses/Unauthorized' }
         '403':
           description: Ads access required. Legacy plans need the Ads add-on; included by default on usage-based plans.
@@ -37195,6 +37199,7 @@ paths:
                         id: { type: string }
                         name: { type: string }
                         productCount: { type: integer }
+        '400': { $ref: '#/components/responses/BadRequest' }
         '401': { $ref: '#/components/responses/Unauthorized' }
         '403':
           description: Ads access required. Legacy plans need the Ads add-on; included by default on usage-based plans.
@@ -37574,6 +37579,7 @@ paths:
                               identifier: { type: string }
                               coveragePercentage: { type: number }
                         eventCoveragePercentage: { type: number, description: "Pixel↔CAPI coverage rate for this event." }
+        '400': { $ref: '#/components/responses/BadRequest' }
         '401': { $ref: '#/components/responses/Unauthorized' }
         '405': { description: "Platform does not expose Event Match Quality (non-Meta)." }
   /v1/ads/conversions:
