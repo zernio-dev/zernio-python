@@ -1287,7 +1287,7 @@ def register_generated_tools(mcp, _get_client):
 
     @mcp.tool(
         annotations=ToolAnnotations(
-            title="Update an audience",
+            title="Update saved targeting audience",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
@@ -1299,7 +1299,7 @@ def register_generated_tools(mcp, _get_client):
         description: str | None = None,
         spec: dict[str, Any] | None = None,
     ) -> str:
-        """Update an audience
+        """Update saved targeting audience
 
         Args:
             audience_id: (required)
@@ -1408,51 +1408,6 @@ def register_generated_tools(mcp, _get_client):
                 profile_id=profile_id,
                 from_date=from_date,
                 to_date=to_date,
-            )
-            return _format_response(response)
-        except Exception as e:
-            return f"Error: {e}"
-
-    @mcp.tool(
-        annotations=ToolAnnotations(
-            title="Create a standalone campaign (Meta)",
-            readOnlyHint=False,
-            destructiveHint=True,
-            openWorldHint=True,
-        )
-    )
-    def ad_campaigns_create_ad_campaign(
-        account_id: str,
-        ad_account_id: str,
-        name: str,
-        goal: str,
-        special_ad_categories: list[str] | None = None,
-        budget_amount: float | None = None,
-        budget_type: str | None = None,
-        status: str = "PAUSED",
-    ) -> str:
-        """Create a standalone campaign (Meta)
-
-        Args:
-            account_id: Zernio SocialAccount id (posting or ads variant) used to resolve the Meta token. (required)
-            ad_account_id: Meta ad account id (act_<n>). (required)
-            name: (required)
-            goal: Mapped to the ODAX objective (same mapping as POST /v1/ads/create). (required)
-            special_ad_categories
-            budget_amount: Campaign-level (CBO) budget in whole currency units. Requires budgetType.
-            budget_type
-            status"""
-        client = _get_client()
-        try:
-            response = client.ad_campaigns.create_ad_campaign(
-                account_id=account_id,
-                ad_account_id=ad_account_id,
-                name=name,
-                goal=goal,
-                special_ad_categories=special_ad_categories,
-                budget_amount=budget_amount,
-                budget_type=budget_type,
-                status=status,
             )
             return _format_response(response)
         except Exception as e:
@@ -1611,60 +1566,6 @@ def register_generated_tools(mcp, _get_client):
             response = client.ad_campaigns.duplicate_ad_campaign(
                 campaign_id=campaign_id,
                 platform=platform,
-                deep_copy=deep_copy,
-                status_option=status_option,
-                start_time=start_time,
-                end_time=end_time,
-                rename_strategy=rename_strategy,
-                rename_prefix=rename_prefix,
-                rename_suffix=rename_suffix,
-                sync_after=sync_after,
-            )
-            return _format_response(response)
-        except Exception as e:
-            return f"Error: {e}"
-
-    @mcp.tool(
-        annotations=ToolAnnotations(
-            title="Duplicate an ad set (Meta)",
-            readOnlyHint=False,
-            destructiveHint=True,
-            openWorldHint=True,
-        )
-    )
-    def ad_campaigns_duplicate_ad_set(
-        ad_set_id: str,
-        platform: str,
-        campaign_id: str | None = None,
-        deep_copy: bool = True,
-        status_option: str = "PAUSED",
-        start_time: str | None = None,
-        end_time: str | None = None,
-        rename_strategy: str | None = None,
-        rename_prefix: str | None = None,
-        rename_suffix: str | None = None,
-        sync_after: bool = True,
-    ) -> str:
-        """Duplicate an ad set (Meta)
-
-        Args:
-            ad_set_id: Source platform ad set ID (required)
-            platform: (required)
-            campaign_id: Destination platform campaign id (defaults to the source's campaign)
-            deep_copy: Copy child ads + creatives
-            status_option
-            start_time: Reschedule the copy's start time
-            end_time
-            rename_strategy
-            rename_prefix
-            rename_suffix
-            sync_after"""
-        client = _get_client()
-        try:
-            response = client.ad_campaigns.duplicate_ad_set(
-                ad_set_id=ad_set_id,
-                platform=platform,
-                campaign_id=campaign_id,
                 deep_copy=deep_copy,
                 status_option=status_option,
                 start_time=start_time,
@@ -1945,48 +1846,6 @@ def register_generated_tools(mcp, _get_client):
                 effective_instagram_media_id=effective_instagram_media_id,
                 from_date=from_date,
                 to_date=to_date,
-            )
-            return _format_response(response)
-        except Exception as e:
-            return f"Error: {e}"
-
-    @mcp.tool(
-        annotations=ToolAnnotations(
-            title="Duplicate an ad (Meta)",
-            readOnlyHint=False,
-            destructiveHint=True,
-            openWorldHint=True,
-        )
-    )
-    def ads_duplicate_ad(
-        ad_id: str,
-        ad_set_id: str | None = None,
-        status_option: str = "PAUSED",
-        rename_strategy: str | None = None,
-        rename_prefix: str | None = None,
-        rename_suffix: str | None = None,
-        sync_after: bool = True,
-    ) -> str:
-        """Duplicate an ad (Meta)
-
-        Args:
-            ad_id: Zernio ad ID or platform ad ID (required)
-            ad_set_id: Destination platform ad set id (defaults to the source's ad set)
-            status_option
-            rename_strategy
-            rename_prefix
-            rename_suffix
-            sync_after"""
-        client = _get_client()
-        try:
-            response = client.ads.duplicate_ad(
-                ad_id=ad_id,
-                ad_set_id=ad_set_id,
-                status_option=status_option,
-                rename_strategy=rename_strategy,
-                rename_prefix=rename_prefix,
-                rename_suffix=rename_suffix,
-                sync_after=sync_after,
             )
             return _format_response(response)
         except Exception as e:
@@ -2719,235 +2578,6 @@ def register_generated_tools(mcp, _get_client):
                 fields=fields,
                 limit=limit,
                 after=after,
-            )
-            return _format_response(response)
-        except Exception as e:
-            return f"Error: {e}"
-
-    @mcp.tool(
-        annotations=ToolAnnotations(
-            title="Ad labels (Meta)",
-            readOnlyHint=True,
-            destructiveHint=False,
-            openWorldHint=False,
-        )
-    )
-    def ads_list_ad_labels(
-        account_id: str, ad_account_id: str, limit: int = 25, after: str | None = None
-    ) -> str:
-        """Ad labels (Meta)
-
-        Args:
-            account_id: Zernio SocialAccount id (posting or ads variant) used to resolve the Meta token. (required)
-            ad_account_id: Meta ad account id (act_<n>). (required)
-            limit: Rows per page
-            after: Cursor from paging.after of the previous page."""
-        client = _get_client()
-        try:
-            response = client.ads.list_ad_labels(
-                account_id=account_id,
-                ad_account_id=ad_account_id,
-                limit=limit,
-                after=after,
-            )
-            return _format_response(response)
-        except Exception as e:
-            return f"Error: {e}"
-
-    @mcp.tool(
-        annotations=ToolAnnotations(
-            title="High demand periods / budget schedules (Meta)",
-            readOnlyHint=True,
-            destructiveHint=False,
-            openWorldHint=False,
-        )
-    )
-    def ads_list_high_demand_periods(
-        account_id: str,
-        campaign_id: str | None = None,
-        ad_set_id: str | None = None,
-        limit: int = 25,
-        after: str | None = None,
-    ) -> str:
-        """High demand periods / budget schedules (Meta)
-
-        Args:
-            account_id: Zernio SocialAccount id (posting or ads variant) used to resolve the Meta token. (required)
-            campaign_id: Platform campaign id. Exactly one of campaignId / adSetId.
-            ad_set_id: Platform ad set id. Exactly one of campaignId / adSetId.
-            limit: Rows per page
-            after: Cursor from paging.after of the previous page."""
-        client = _get_client()
-        try:
-            response = client.ads.list_high_demand_periods(
-                account_id=account_id,
-                campaign_id=campaign_id,
-                ad_set_id=ad_set_id,
-                limit=limit,
-                after=after,
-            )
-            return _format_response(response)
-        except Exception as e:
-            return f"Error: {e}"
-
-    @mcp.tool(
-        annotations=ToolAnnotations(
-            title="Creative library (Meta)",
-            readOnlyHint=True,
-            destructiveHint=False,
-            openWorldHint=False,
-        )
-    )
-    def ads_list_ad_creatives(
-        account_id: str,
-        ad_account_id: str,
-        fields: str | None = None,
-        limit: int = 25,
-        after: str | None = None,
-    ) -> str:
-        """Creative library (Meta)
-
-        Args:
-            account_id: Zernio SocialAccount id (posting or ads variant) used to resolve the Meta token. (required)
-            ad_account_id: Meta ad account id (act_<n>). (required)
-            fields: Comma-separated Graph field override (supports nested {} projections).
-            limit: Rows per page
-            after: Cursor from paging.after of the previous page."""
-        client = _get_client()
-        try:
-            response = client.ads.list_ad_creatives(
-                account_id=account_id,
-                ad_account_id=ad_account_id,
-                fields=fields,
-                limit=limit,
-                after=after,
-            )
-            return _format_response(response)
-        except Exception as e:
-            return f"Error: {e}"
-
-    @mcp.tool(
-        annotations=ToolAnnotations(
-            title="Create a standalone creative (Meta)",
-            readOnlyHint=False,
-            destructiveHint=True,
-            openWorldHint=True,
-        )
-    )
-    def ads_create_ad_creative(
-        account_id: str,
-        ad_account_id: str,
-        headline: str,
-        body: str,
-        link_url: str,
-        description: str | None = None,
-        call_to_action: str = "LEARN_MORE",
-        image_url: str | None = None,
-        image_hash: str | None = None,
-        carousel_cards: list[dict[str, Any]] | None = None,
-        url_tags: str | None = None,
-    ) -> str:
-        """Create a standalone creative (Meta)
-
-        Args:
-            account_id: Zernio SocialAccount id (posting or ads variant) used to resolve the Meta token and Page. (required)
-            ad_account_id: Meta ad account id (act_<n>). (required)
-            headline: (required)
-            body: Primary text (required)
-            description: Link description below the headline; omitted = Meta scrapes the destination's OG description.
-            call_to_action: CTA type (same whitelist as POST /v1/ads/create).
-            link_url: (required)
-            image_url: Publicly reachable image; uploaded to the account's library server-side.
-            image_hash: Existing library image hash (POST /v1/ads/images or GET /v1/ads/images).
-            carousel_cards
-            url_tags: Appended to every outbound URL (e.g. utm_source=fb)."""
-        client = _get_client()
-        try:
-            response = client.ads.create_ad_creative(
-                account_id=account_id,
-                ad_account_id=ad_account_id,
-                headline=headline,
-                body=body,
-                description=description,
-                call_to_action=call_to_action,
-                link_url=link_url,
-                image_url=image_url,
-                image_hash=image_hash,
-                carousel_cards=carousel_cards,
-                url_tags=url_tags,
-            )
-            return _format_response(response)
-        except Exception as e:
-            return f"Error: {e}"
-
-    @mcp.tool(
-        annotations=ToolAnnotations(
-            title="Creative details (Meta)",
-            readOnlyHint=True,
-            destructiveHint=False,
-            openWorldHint=False,
-        )
-    )
-    def ads_get_ad_creative(
-        creative_id: str, account_id: str, fields: str | None = None
-    ) -> str:
-        """Creative details (Meta)
-
-        Args:
-            creative_id: Platform creative id (required)
-            account_id: Zernio SocialAccount id (posting or ads variant) used to resolve the Meta token. (required)
-            fields: Comma-separated Graph field override (supports nested {} projections)."""
-        client = _get_client()
-        try:
-            response = client.ads.get_ad_creative(
-                creative_id=creative_id, account_id=account_id, fields=fields
-            )
-            return _format_response(response)
-        except Exception as e:
-            return f"Error: {e}"
-
-    @mcp.tool(
-        annotations=ToolAnnotations(
-            title="Rename a creative (Meta)",
-            readOnlyHint=False,
-            destructiveHint=True,
-            openWorldHint=True,
-        )
-    )
-    def ads_update_ad_creative(creative_id: str, account_id: str, name: str) -> str:
-        """Rename a creative (Meta)
-
-        Args:
-            creative_id: Platform creative id (required)
-            account_id: Zernio SocialAccount id (posting or ads variant) used to resolve the Meta token. (required)
-            name: (required)"""
-        client = _get_client()
-        try:
-            response = client.ads.update_ad_creative(
-                creative_id=creative_id, account_id=account_id, name=name
-            )
-            return _format_response(response)
-        except Exception as e:
-            return f"Error: {e}"
-
-    @mcp.tool(
-        annotations=ToolAnnotations(
-            title="Delete a creative (Meta)",
-            readOnlyHint=False,
-            destructiveHint=True,
-            openWorldHint=True,
-        )
-    )
-    def ads_delete_ad_creative(creative_id: str, account_id: str) -> str:
-        """Delete a creative (Meta)
-
-        Args:
-            creative_id: Platform creative id (required)
-            account_id: Zernio SocialAccount id (posting or ads variant) used to resolve the Meta token. (required)"""
-        client = _get_client()
-        try:
-            response = client.ads.delete_ad_creative(
-                creative_id=creative_id, account_id=account_id
             )
             return _format_response(response)
         except Exception as e:
@@ -3898,42 +3528,6 @@ def register_generated_tools(mcp, _get_client):
                 ad_account_id=ad_account_id,
                 image_base64=image_base64,
                 filename=filename,
-            )
-            return _format_response(response)
-        except Exception as e:
-            return f"Error: {e}"
-
-    @mcp.tool(
-        annotations=ToolAnnotations(
-            title="Ad image library (Meta)",
-            readOnlyHint=True,
-            destructiveHint=False,
-            openWorldHint=False,
-        )
-    )
-    def ads_list_ad_images(
-        account_id: str,
-        ad_account_id: str,
-        fields: str | None = None,
-        limit: int = 25,
-        after: str | None = None,
-    ) -> str:
-        """Ad image library (Meta)
-
-        Args:
-            account_id: Zernio SocialAccount id (posting or ads variant) used to resolve the Meta token. (required)
-            ad_account_id: Meta ad account id (act_<n>). (required)
-            fields: Comma-separated Graph field override (supports nested {} projections).
-            limit: Rows per page
-            after: Cursor from paging.after of the previous page."""
-        client = _get_client()
-        try:
-            response = client.ads.list_ad_images(
-                account_id=account_id,
-                ad_account_id=ad_account_id,
-                fields=fields,
-                limit=limit,
-                after=after,
             )
             return _format_response(response)
         except Exception as e:
@@ -9026,6 +8620,31 @@ def register_generated_tools(mcp, _get_client):
         except Exception as e:
             return f"Error: {e}"
 
+    # INBOX
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Download WhatsApp media",
+            readOnlyHint=True,
+            destructiveHint=False,
+            openWorldHint=False,
+        )
+    )
+    def inbox_get_whats_app_media(media_id: str, account_id: str) -> str:
+        """Download WhatsApp media
+
+        Args:
+            media_id: The media id from `attachments[].payload.id`. (required)
+            account_id: The WhatsApp account that received the media. (required)"""
+        client = _get_client()
+        try:
+            response = client.inbox.get_whats_app_media(
+                media_id=media_id, account_id=account_id
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
     # INBOX_ANALYTICS
 
     @mcp.tool(
@@ -11923,7 +11542,7 @@ def register_generated_tools(mcp, _get_client):
         """Send an SMS/MMS
 
         Args:
-            from_: One of your SMS-enabled numbers (E.164; formatting is normalized), or an approved alphanumeric sender ID (3-11 letters/digits/spaces, created via `/v1/sms/sender-ids`). (required)
+            from_: One of your SMS-enabled numbers (E.164; formatting is normalized). (required)
             to: Recipient number (E.164). (required)
             text: Message body. Required unless `mediaUrls` is set. Max 10 SMS segments (1530 GSM-7 or 670 unicode characters).
             media_urls: Public media URLs to attach (sends as MMS). Max 10.
@@ -11974,88 +11593,6 @@ def register_generated_tools(mcp, _get_client):
         client = _get_client()
         try:
             response = client.sms.list_sms_opt_outs(format=format, limit=limit)
-            return _format_response(response)
-        except Exception as e:
-            return f"Error: {e}"
-
-    @mcp.tool(
-        annotations=ToolAnnotations(
-            title="Create an alphanumeric sender ID",
-            readOnlyHint=False,
-            destructiveHint=True,
-            openWorldHint=True,
-        )
-    )
-    def sms_create_sms_sender_id(sender_id: str) -> str:
-        """Create an alphanumeric sender ID
-
-        Args:
-            sender_id: The sender ID recipients will see (3-11 letters/digits/spaces, at least one letter, no leading/trailing space). (required)"""
-        client = _get_client()
-        try:
-            response = client.sms.create_sms_sender_id(sender_id=sender_id)
-            return _format_response(response)
-        except Exception as e:
-            return f"Error: {e}"
-
-    @mcp.tool(
-        annotations=ToolAnnotations(
-            title="List alphanumeric sender IDs",
-            readOnlyHint=True,
-            destructiveHint=False,
-            openWorldHint=False,
-        )
-    )
-    def sms_list_sms_sender_ids() -> str:
-        """List alphanumeric sender IDs"""
-        client = _get_client()
-        try:
-            response = client.sms.list_sms_sender_ids()
-            return _format_response(response)
-        except Exception as e:
-            return f"Error: {e}"
-
-    @mcp.tool(
-        annotations=ToolAnnotations(
-            title="Request a higher sender ID daily limit",
-            readOnlyHint=False,
-            destructiveHint=True,
-            openWorldHint=True,
-        )
-    )
-    def sms_request_sms_sender_id_limit_increase(
-        requested_cap: int, reason: str
-    ) -> str:
-        """Request a higher sender ID daily limit
-
-        Args:
-            requested_cap: Desired daily message cap. Must exceed the current cap. (required)
-            reason: Use case and audience (what you send, to whom, opt-in status). (required)"""
-        client = _get_client()
-        try:
-            response = client.sms.request_sms_sender_id_limit_increase(
-                requested_cap=requested_cap, reason=reason
-            )
-            return _format_response(response)
-        except Exception as e:
-            return f"Error: {e}"
-
-    @mcp.tool(
-        annotations=ToolAnnotations(
-            title="Delete an alphanumeric sender ID",
-            readOnlyHint=False,
-            destructiveHint=True,
-            openWorldHint=True,
-        )
-    )
-    def sms_delete_sms_sender_id(id: str) -> str:
-        """Delete an alphanumeric sender ID
-
-        Args:
-            id: Sender ID resource id. (required)"""
-        client = _get_client()
-        try:
-            response = client.sms.delete_sms_sender_id(id=id)
             return _format_response(response)
         except Exception as e:
             return f"Error: {e}"

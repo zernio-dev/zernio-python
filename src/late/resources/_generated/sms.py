@@ -93,31 +93,6 @@ class SmsResource:
         )
         return self._client._get("/v1/sms/opt-outs", params=params)
 
-    def create_sms_sender_id(self, sender_id: str) -> dict[str, Any]:
-        """Create an alphanumeric sender ID"""
-        payload = self._build_payload(
-            sender_id=sender_id,
-        )
-        return self._client._post("/v1/sms/sender-ids", data=payload)
-
-    def list_sms_sender_ids(self) -> dict[str, Any]:
-        """List alphanumeric sender IDs"""
-        return self._client._get("/v1/sms/sender-ids")
-
-    def request_sms_sender_id_limit_increase(
-        self, requested_cap: int, reason: str
-    ) -> dict[str, Any]:
-        """Request a higher sender ID daily limit"""
-        payload = self._build_payload(
-            requested_cap=requested_cap,
-            reason=reason,
-        )
-        return self._client._post("/v1/sms/sender-ids/limit-request", data=payload)
-
-    def delete_sms_sender_id(self, id: str) -> dict[str, Any]:
-        """Delete an alphanumeric sender ID"""
-        return self._client._delete(f"/v1/sms/sender-ids/{id}")
-
     def start_sms_registration(
         self,
         registration_type: str,
@@ -252,33 +227,6 @@ class SmsResource:
             limit=limit,
         )
         return await self._client._aget("/v1/sms/opt-outs", params=params)
-
-    async def acreate_sms_sender_id(self, sender_id: str) -> dict[str, Any]:
-        """Create an alphanumeric sender ID (async)"""
-        payload = self._build_payload(
-            sender_id=sender_id,
-        )
-        return await self._client._apost("/v1/sms/sender-ids", data=payload)
-
-    async def alist_sms_sender_ids(self) -> dict[str, Any]:
-        """List alphanumeric sender IDs (async)"""
-        return await self._client._aget("/v1/sms/sender-ids")
-
-    async def arequest_sms_sender_id_limit_increase(
-        self, requested_cap: int, reason: str
-    ) -> dict[str, Any]:
-        """Request a higher sender ID daily limit (async)"""
-        payload = self._build_payload(
-            requested_cap=requested_cap,
-            reason=reason,
-        )
-        return await self._client._apost(
-            "/v1/sms/sender-ids/limit-request", data=payload
-        )
-
-    async def adelete_sms_sender_id(self, id: str) -> dict[str, Any]:
-        """Delete an alphanumeric sender ID (async)"""
-        return await self._client._adelete(f"/v1/sms/sender-ids/{id}")
 
     async def astart_sms_registration(
         self,

@@ -93,28 +93,6 @@ class AdsResource:
         )
         return self._client._get("/v1/ads", params=params)
 
-    def duplicate_ad(
-        self,
-        ad_id: str,
-        *,
-        ad_set_id: str | None = None,
-        status_option: str | None = "PAUSED",
-        rename_strategy: str | None = None,
-        rename_prefix: str | None = None,
-        rename_suffix: str | None = None,
-        sync_after: bool | None = True,
-    ) -> dict[str, Any]:
-        """Duplicate an ad (Meta)"""
-        payload = self._build_payload(
-            ad_set_id=ad_set_id,
-            status_option=status_option,
-            rename_strategy=rename_strategy,
-            rename_prefix=rename_prefix,
-            rename_suffix=rename_suffix,
-            sync_after=sync_after,
-        )
-        return self._client._post(f"/v1/ads/{ad_id}/duplicate", data=payload)
-
     def get_ad(self, ad_id: str) -> dict[str, Any]:
         """Get ad details"""
         return self._client._get(f"/v1/ads/{ad_id}")
@@ -463,119 +441,6 @@ class AdsResource:
             after=after,
         )
         return self._client._get("/v1/ads/studies", params=params)
-
-    def list_ad_labels(
-        self,
-        account_id: str,
-        ad_account_id: str,
-        *,
-        limit: int | None = 25,
-        after: str | None = None,
-    ) -> dict[str, Any]:
-        """Ad labels (Meta)"""
-        params = self._build_params(
-            account_id=account_id,
-            ad_account_id=ad_account_id,
-            limit=limit,
-            after=after,
-        )
-        return self._client._get("/v1/ads/labels", params=params)
-
-    def list_high_demand_periods(
-        self,
-        account_id: str,
-        *,
-        campaign_id: str | None = None,
-        ad_set_id: str | None = None,
-        limit: int | None = 25,
-        after: str | None = None,
-    ) -> dict[str, Any]:
-        """High demand periods / budget schedules (Meta)"""
-        params = self._build_params(
-            account_id=account_id,
-            campaign_id=campaign_id,
-            ad_set_id=ad_set_id,
-            limit=limit,
-            after=after,
-        )
-        return self._client._get("/v1/ads/high-demand-periods", params=params)
-
-    def list_ad_creatives(
-        self,
-        account_id: str,
-        ad_account_id: str,
-        *,
-        fields: str | None = None,
-        limit: int | None = 25,
-        after: str | None = None,
-    ) -> dict[str, Any]:
-        """Creative library (Meta)"""
-        params = self._build_params(
-            account_id=account_id,
-            ad_account_id=ad_account_id,
-            fields=fields,
-            limit=limit,
-            after=after,
-        )
-        return self._client._get("/v1/ads/creatives", params=params)
-
-    def create_ad_creative(
-        self,
-        account_id: str,
-        ad_account_id: str,
-        headline: str,
-        body: str,
-        link_url: str,
-        *,
-        description: str | None = None,
-        call_to_action: str | None = "LEARN_MORE",
-        image_url: str | None = None,
-        image_hash: str | None = None,
-        carousel_cards: list[dict[str, Any]] | None = None,
-        url_tags: str | None = None,
-    ) -> dict[str, Any]:
-        """Create a standalone creative (Meta)"""
-        payload = self._build_payload(
-            account_id=account_id,
-            ad_account_id=ad_account_id,
-            headline=headline,
-            body=body,
-            description=description,
-            call_to_action=call_to_action,
-            link_url=link_url,
-            image_url=image_url,
-            image_hash=image_hash,
-            carousel_cards=carousel_cards,
-            url_tags=url_tags,
-        )
-        return self._client._post("/v1/ads/creatives", data=payload)
-
-    def get_ad_creative(
-        self, creative_id: str, account_id: str, *, fields: str | None = None
-    ) -> dict[str, Any]:
-        """Creative details (Meta)"""
-        params = self._build_params(
-            account_id=account_id,
-            fields=fields,
-        )
-        return self._client._get(f"/v1/ads/creatives/{creative_id}", params=params)
-
-    def update_ad_creative(
-        self, creative_id: str, account_id: str, name: str
-    ) -> dict[str, Any]:
-        """Rename a creative (Meta)"""
-        payload = self._build_payload(
-            account_id=account_id,
-            name=name,
-        )
-        return self._client._put(f"/v1/ads/creatives/{creative_id}", data=payload)
-
-    def delete_ad_creative(self, creative_id: str, account_id: str) -> dict[str, Any]:
-        """Delete a creative (Meta)"""
-        params = self._build_params(
-            account_id=account_id,
-        )
-        return self._client._delete(f"/v1/ads/creatives/{creative_id}", params=params)
 
     def get_ad_account_finance(
         self, account_id: str, ad_account_id: str
@@ -974,25 +839,6 @@ class AdsResource:
         )
         return self._client._post("/v1/ads/images", data=payload)
 
-    def list_ad_images(
-        self,
-        account_id: str,
-        ad_account_id: str,
-        *,
-        fields: str | None = None,
-        limit: int | None = 25,
-        after: str | None = None,
-    ) -> dict[str, Any]:
-        """Ad image library (Meta)"""
-        params = self._build_params(
-            account_id=account_id,
-            ad_account_id=ad_account_id,
-            fields=fields,
-            limit=limit,
-            after=after,
-        )
-        return self._client._get("/v1/ads/images", params=params)
-
     def search_ad_interests(self, q: str, account_id: str) -> dict[str, Any]:
         """Search targeting interests"""
         params = self._build_params(
@@ -1375,28 +1221,6 @@ class AdsResource:
         )
         return await self._client._aget("/v1/ads", params=params)
 
-    async def aduplicate_ad(
-        self,
-        ad_id: str,
-        *,
-        ad_set_id: str | None = None,
-        status_option: str | None = "PAUSED",
-        rename_strategy: str | None = None,
-        rename_prefix: str | None = None,
-        rename_suffix: str | None = None,
-        sync_after: bool | None = True,
-    ) -> dict[str, Any]:
-        """Duplicate an ad (Meta) (async)"""
-        payload = self._build_payload(
-            ad_set_id=ad_set_id,
-            status_option=status_option,
-            rename_strategy=rename_strategy,
-            rename_prefix=rename_prefix,
-            rename_suffix=rename_suffix,
-            sync_after=sync_after,
-        )
-        return await self._client._apost(f"/v1/ads/{ad_id}/duplicate", data=payload)
-
     async def aget_ad(self, ad_id: str) -> dict[str, Any]:
         """Get ad details (async)"""
         return await self._client._aget(f"/v1/ads/{ad_id}")
@@ -1747,127 +1571,6 @@ class AdsResource:
             after=after,
         )
         return await self._client._aget("/v1/ads/studies", params=params)
-
-    async def alist_ad_labels(
-        self,
-        account_id: str,
-        ad_account_id: str,
-        *,
-        limit: int | None = 25,
-        after: str | None = None,
-    ) -> dict[str, Any]:
-        """Ad labels (Meta) (async)"""
-        params = self._build_params(
-            account_id=account_id,
-            ad_account_id=ad_account_id,
-            limit=limit,
-            after=after,
-        )
-        return await self._client._aget("/v1/ads/labels", params=params)
-
-    async def alist_high_demand_periods(
-        self,
-        account_id: str,
-        *,
-        campaign_id: str | None = None,
-        ad_set_id: str | None = None,
-        limit: int | None = 25,
-        after: str | None = None,
-    ) -> dict[str, Any]:
-        """High demand periods / budget schedules (Meta) (async)"""
-        params = self._build_params(
-            account_id=account_id,
-            campaign_id=campaign_id,
-            ad_set_id=ad_set_id,
-            limit=limit,
-            after=after,
-        )
-        return await self._client._aget("/v1/ads/high-demand-periods", params=params)
-
-    async def alist_ad_creatives(
-        self,
-        account_id: str,
-        ad_account_id: str,
-        *,
-        fields: str | None = None,
-        limit: int | None = 25,
-        after: str | None = None,
-    ) -> dict[str, Any]:
-        """Creative library (Meta) (async)"""
-        params = self._build_params(
-            account_id=account_id,
-            ad_account_id=ad_account_id,
-            fields=fields,
-            limit=limit,
-            after=after,
-        )
-        return await self._client._aget("/v1/ads/creatives", params=params)
-
-    async def acreate_ad_creative(
-        self,
-        account_id: str,
-        ad_account_id: str,
-        headline: str,
-        body: str,
-        link_url: str,
-        *,
-        description: str | None = None,
-        call_to_action: str | None = "LEARN_MORE",
-        image_url: str | None = None,
-        image_hash: str | None = None,
-        carousel_cards: list[dict[str, Any]] | None = None,
-        url_tags: str | None = None,
-    ) -> dict[str, Any]:
-        """Create a standalone creative (Meta) (async)"""
-        payload = self._build_payload(
-            account_id=account_id,
-            ad_account_id=ad_account_id,
-            headline=headline,
-            body=body,
-            description=description,
-            call_to_action=call_to_action,
-            link_url=link_url,
-            image_url=image_url,
-            image_hash=image_hash,
-            carousel_cards=carousel_cards,
-            url_tags=url_tags,
-        )
-        return await self._client._apost("/v1/ads/creatives", data=payload)
-
-    async def aget_ad_creative(
-        self, creative_id: str, account_id: str, *, fields: str | None = None
-    ) -> dict[str, Any]:
-        """Creative details (Meta) (async)"""
-        params = self._build_params(
-            account_id=account_id,
-            fields=fields,
-        )
-        return await self._client._aget(
-            f"/v1/ads/creatives/{creative_id}", params=params
-        )
-
-    async def aupdate_ad_creative(
-        self, creative_id: str, account_id: str, name: str
-    ) -> dict[str, Any]:
-        """Rename a creative (Meta) (async)"""
-        payload = self._build_payload(
-            account_id=account_id,
-            name=name,
-        )
-        return await self._client._aput(
-            f"/v1/ads/creatives/{creative_id}", data=payload
-        )
-
-    async def adelete_ad_creative(
-        self, creative_id: str, account_id: str
-    ) -> dict[str, Any]:
-        """Delete a creative (Meta) (async)"""
-        params = self._build_params(
-            account_id=account_id,
-        )
-        return await self._client._adelete(
-            f"/v1/ads/creatives/{creative_id}", params=params
-        )
 
     async def aget_ad_account_finance(
         self, account_id: str, ad_account_id: str
@@ -2271,25 +1974,6 @@ class AdsResource:
             filename=filename,
         )
         return await self._client._apost("/v1/ads/images", data=payload)
-
-    async def alist_ad_images(
-        self,
-        account_id: str,
-        ad_account_id: str,
-        *,
-        fields: str | None = None,
-        limit: int | None = 25,
-        after: str | None = None,
-    ) -> dict[str, Any]:
-        """Ad image library (Meta) (async)"""
-        params = self._build_params(
-            account_id=account_id,
-            ad_account_id=ad_account_id,
-            fields=fields,
-            limit=limit,
-            after=after,
-        )
-        return await self._client._aget("/v1/ads/images", params=params)
 
     async def asearch_ad_interests(self, q: str, account_id: str) -> dict[str, Any]:
         """Search targeting interests (async)"""
