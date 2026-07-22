@@ -85,6 +85,31 @@ class AdCampaignsResource:
         )
         return self._client._get("/v1/ads/campaigns", params=params)
 
+    def create_ad_campaign(
+        self,
+        account_id: str,
+        ad_account_id: str,
+        name: str,
+        goal: str,
+        *,
+        special_ad_categories: list[str] | None = None,
+        budget_amount: float | None = None,
+        budget_type: str | None = None,
+        status: str | None = "PAUSED",
+    ) -> dict[str, Any]:
+        """Create a standalone campaign (Meta)"""
+        payload = self._build_payload(
+            account_id=account_id,
+            ad_account_id=ad_account_id,
+            name=name,
+            goal=goal,
+            special_ad_categories=special_ad_categories,
+            budget_amount=budget_amount,
+            budget_type=budget_type,
+            status=status,
+        )
+        return self._client._post("/v1/ads/campaigns", data=payload)
+
     def update_ad_campaign_status(
         self, campaign_id: str, status: str, platform: str
     ) -> dict[str, Any]:
@@ -159,6 +184,38 @@ class AdCampaignsResource:
         )
         return self._client._post(
             f"/v1/ads/campaigns/{campaign_id}/duplicate", data=payload
+        )
+
+    def duplicate_ad_set(
+        self,
+        ad_set_id: str,
+        platform: str,
+        *,
+        campaign_id: str | None = None,
+        deep_copy: bool | None = True,
+        status_option: str | None = "PAUSED",
+        start_time: datetime | str | None = None,
+        end_time: datetime | str | None = None,
+        rename_strategy: str | None = None,
+        rename_prefix: str | None = None,
+        rename_suffix: str | None = None,
+        sync_after: bool | None = True,
+    ) -> dict[str, Any]:
+        """Duplicate an ad set (Meta)"""
+        payload = self._build_payload(
+            platform=platform,
+            campaign_id=campaign_id,
+            deep_copy=deep_copy,
+            status_option=status_option,
+            start_time=start_time,
+            end_time=end_time,
+            rename_strategy=rename_strategy,
+            rename_prefix=rename_prefix,
+            rename_suffix=rename_suffix,
+            sync_after=sync_after,
+        )
+        return self._client._post(
+            f"/v1/ads/ad-sets/{ad_set_id}/duplicate", data=payload
         )
 
     def get_ad_set_details(
@@ -292,6 +349,31 @@ class AdCampaignsResource:
         )
         return await self._client._aget("/v1/ads/campaigns", params=params)
 
+    async def acreate_ad_campaign(
+        self,
+        account_id: str,
+        ad_account_id: str,
+        name: str,
+        goal: str,
+        *,
+        special_ad_categories: list[str] | None = None,
+        budget_amount: float | None = None,
+        budget_type: str | None = None,
+        status: str | None = "PAUSED",
+    ) -> dict[str, Any]:
+        """Create a standalone campaign (Meta) (async)"""
+        payload = self._build_payload(
+            account_id=account_id,
+            ad_account_id=ad_account_id,
+            name=name,
+            goal=goal,
+            special_ad_categories=special_ad_categories,
+            budget_amount=budget_amount,
+            budget_type=budget_type,
+            status=status,
+        )
+        return await self._client._apost("/v1/ads/campaigns", data=payload)
+
     async def aupdate_ad_campaign_status(
         self, campaign_id: str, status: str, platform: str
     ) -> dict[str, Any]:
@@ -370,6 +452,38 @@ class AdCampaignsResource:
         )
         return await self._client._apost(
             f"/v1/ads/campaigns/{campaign_id}/duplicate", data=payload
+        )
+
+    async def aduplicate_ad_set(
+        self,
+        ad_set_id: str,
+        platform: str,
+        *,
+        campaign_id: str | None = None,
+        deep_copy: bool | None = True,
+        status_option: str | None = "PAUSED",
+        start_time: datetime | str | None = None,
+        end_time: datetime | str | None = None,
+        rename_strategy: str | None = None,
+        rename_prefix: str | None = None,
+        rename_suffix: str | None = None,
+        sync_after: bool | None = True,
+    ) -> dict[str, Any]:
+        """Duplicate an ad set (Meta) (async)"""
+        payload = self._build_payload(
+            platform=platform,
+            campaign_id=campaign_id,
+            deep_copy=deep_copy,
+            status_option=status_option,
+            start_time=start_time,
+            end_time=end_time,
+            rename_strategy=rename_strategy,
+            rename_prefix=rename_prefix,
+            rename_suffix=rename_suffix,
+            sync_after=sync_after,
+        )
+        return await self._client._apost(
+            f"/v1/ads/ad-sets/{ad_set_id}/duplicate", data=payload
         )
 
     async def aget_ad_set_details(

@@ -381,7 +381,7 @@ Both `from zernio import ...` and `from late import ...` work identically. The `
 | `ad_audiences.list_ad_audiences()` | List custom audiences |
 | `ad_audiences.create_ad_audience()` | Create custom audience |
 | `ad_audiences.get_ad_audience()` | Get audience details |
-| `ad_audiences.update_ad_audience()` | Update saved targeting audience |
+| `ad_audiences.update_ad_audience()` | Update an audience |
 | `ad_audiences.delete_ad_audience()` | Delete custom audience |
 | `ad_audiences.add_users_to_ad_audience()` | Add users to audience |
 
@@ -390,6 +390,7 @@ Both `from zernio import ...` and `from late import ...` work identically. The `
 |--------|-------------|
 | `ad_campaigns.list_ad_campaigns()` | List campaigns |
 | `ad_campaigns.bulk_update_ad_campaign_status()` | Pause or resume many campaigns |
+| `ad_campaigns.create_ad_campaign()` | Create a standalone campaign (Meta) |
 | `ad_campaigns.get_ad_set_details()` | Live ad-set details incl. learning phase (Meta) |
 | `ad_campaigns.get_ad_tree()` | Get campaign tree |
 | `ad_campaigns.get_ads_timeline()` | Get daily account metrics |
@@ -399,6 +400,7 @@ Both `from zernio import ...` and `from late import ...` work identically. The `
 | `ad_campaigns.update_ad_set_status()` | Pause or resume a single ad set |
 | `ad_campaigns.delete_ad_campaign()` | Delete a campaign |
 | `ad_campaigns.duplicate_ad_campaign()` | Duplicate a campaign |
+| `ad_campaigns.duplicate_ad_set()` | Duplicate an ad set (Meta) |
 
 ### Ads
 | Method | Description |
@@ -406,14 +408,19 @@ Both `from zernio import ...` and `from late import ...` work identically. The `
 | `ads.list_ad_accounts()` | List ad accounts |
 | `ads.list_ad_catalog_product_sets()` | List a catalog's product sets |
 | `ads.list_ad_catalogs()` | List Meta product catalogs |
+| `ads.list_ad_creatives()` | Creative library (Meta) |
+| `ads.list_ad_images()` | Ad image library (Meta) |
+| `ads.list_ad_labels()` | Ad labels (Meta) |
 | `ads.list_ad_studies()` | A/B tests and lift studies (Meta) |
 | `ads.list_ads()` | List ads |
 | `ads.list_ads_business_centers()` | List TikTok Business Centers |
 | `ads.list_conversion_associations()` | List associated campaigns |
 | `ads.list_conversion_destinations()` | List conversion destinations |
 | `ads.list_form_leads()` | List leads for a single form |
+| `ads.list_high_demand_periods()` | High demand periods / budget schedules (Meta) |
 | `ads.list_lead_forms()` | List lead forms |
 | `ads.list_leads()` | List submitted leads |
+| `ads.create_ad_creative()` | Create a standalone creative (Meta) |
 | `ads.create_ad_insights_report()` | Submit an async insights report run (Meta) |
 | `ads.create_call_ad()` | Create Click-to-Call ad |
 | `ads.create_conversion_destination()` | Create a conversion destination |
@@ -427,6 +434,7 @@ Both `from zernio import ...` and `from late import ...` work identically. The `
 | `ads.get_ad_account_finance()` | Ad account finances (Meta) |
 | `ads.get_ad_analytics()` | Get ad analytics |
 | `ads.get_ad_comments()` | List comments on an ad |
+| `ads.get_ad_creative()` | Creative details (Meta) |
 | `ads.get_ad_insights_report()` | Poll an async insights report run (Meta) |
 | `ads.get_ad_previews()` | Render previews of an existing ad (Meta) |
 | `ads.get_ad_tracking_tags()` | Get ad tracking tags |
@@ -443,16 +451,19 @@ Both `from zernio import ...` and `from late import ...` work identically. The `
 | `ads.get_rf_prediction()` | Read a Reach & Frequency prediction (Meta) |
 | `ads.update_ad()` | Update ad |
 | `ads.update_ad_account()` | Update ad account settings |
+| `ads.update_ad_creative()` | Rename a creative (Meta) |
 | `ads.update_ad_status()` | Pause or resume a single ad |
 | `ads.update_ad_tracking_tags()` | Set ad tracking tags |
 | `ads.update_conversion_destination()` | Update a conversion destination |
 | `ads.delete_ad()` | Cancel an ad |
+| `ads.delete_ad_creative()` | Delete a creative (Meta) |
 | `ads.delete_conversion_destination()` | Delete a conversion destination |
 | `ads.add_conversion_associations()` | Associate campaigns |
 | `ads.adjust_conversions()` | Adjust uploaded conversions |
 | `ads.archive_lead_form()` | Archive a lead form |
 | `ads.boost_post()` | Boost post as ad |
 | `ads.cancel_rf_reservation()` | Cancel a Reach & Frequency reservation (Meta) |
+| `ads.duplicate_ad()` | Duplicate an ad (Meta) |
 | `ads.estimate_ad_reach()` | Estimate audience reach |
 | `ads.generate_ad_previews()` | Render pre-create ad previews (Meta) |
 | `ads.query_ad_insights()` | Flexible live insights query (Meta) |

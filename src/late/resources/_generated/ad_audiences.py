@@ -87,7 +87,7 @@ class AdAudiencesResource:
         description: str | None = None,
         spec: Any | None = None,
     ) -> dict[str, Any]:
-        """Update saved targeting audience"""
+        """Update an audience"""
         payload = self._build_payload(
             name=name,
             description=description,
@@ -143,7 +143,7 @@ class AdAudiencesResource:
         description: str | None = None,
         spec: Any | None = None,
     ) -> dict[str, Any]:
-        """Update saved targeting audience (async)"""
+        """Update an audience (async)"""
         payload = self._build_payload(
             name=name,
             description=description,
