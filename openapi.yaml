@@ -22627,7 +22627,7 @@ paths:
   /v1/whatsapp/media/{mediaId}:
     get:
       operationId: getWhatsAppMedia
-      tags: [Inbox]
+      tags: [WhatsApp]
       summary: Download WhatsApp media
       description: |
         Streams the binary for a WhatsApp attachment. This is the endpoint the

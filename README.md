@@ -604,11 +604,6 @@ Both `from zernio import ...` and `from late import ...` work identically. The `
 | `gmb_verifications.fetch_google_business_verification_options()` | Fetch verification options |
 | `gmb_verifications.start_google_business_verification()` | Start a verification |
 
-### Inbox
-| Method | Description |
-|--------|-------------|
-| `inbox.get_whats_app_media()` | Download WhatsApp media |
-
 ### Inbox Analytics
 | Method | Description |
 |--------|-------------|
@@ -786,6 +781,7 @@ Both `from zernio import ...` and `from late import ...` work identically. The `
 | `whatsapp.get_whats_app_dataset()` | Get CTWA conversions dataset |
 | `whatsapp.get_whats_app_display_name()` | Get display name status |
 | `whatsapp.get_whats_app_group_chat()` | Get group info |
+| `whatsapp.get_whats_app_media()` | Download WhatsApp media |
 | `whatsapp.get_whats_app_template()` | Get template |
 | `whatsapp.get_whats_app_templates()` | List templates |
 | `whatsapp.get_whatsapp_business_username()` | Get business username |

@@ -8620,31 +8620,6 @@ def register_generated_tools(mcp, _get_client):
         except Exception as e:
             return f"Error: {e}"
 
-    # INBOX
-
-    @mcp.tool(
-        annotations=ToolAnnotations(
-            title="Download WhatsApp media",
-            readOnlyHint=True,
-            destructiveHint=False,
-            openWorldHint=False,
-        )
-    )
-    def inbox_get_whats_app_media(media_id: str, account_id: str) -> str:
-        """Download WhatsApp media
-
-        Args:
-            media_id: The media id from `attachments[].payload.id`. (required)
-            account_id: The WhatsApp account that received the media. (required)"""
-        client = _get_client()
-        try:
-            response = client.inbox.get_whats_app_media(
-                media_id=media_id, account_id=account_id
-            )
-            return _format_response(response)
-        except Exception as e:
-            return f"Error: {e}"
-
     # INBOX_ANALYTICS
 
     @mcp.tool(
@@ -13175,6 +13150,29 @@ def register_generated_tools(mcp, _get_client):
             return f"Error: {e}"
 
     # WHATSAPP
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Download WhatsApp media",
+            readOnlyHint=True,
+            destructiveHint=False,
+            openWorldHint=False,
+        )
+    )
+    def whatsapp_get_whats_app_media(media_id: str, account_id: str) -> str:
+        """Download WhatsApp media
+
+        Args:
+            media_id: The media id from `attachments[].payload.id`. (required)
+            account_id: The WhatsApp account that received the media. (required)"""
+        client = _get_client()
+        try:
+            response = client.whatsapp.get_whats_app_media(
+                media_id=media_id, account_id=account_id
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
 
     @mcp.tool(
         annotations=ToolAnnotations(

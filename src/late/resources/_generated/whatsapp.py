@@ -54,6 +54,13 @@ class WhatsappResource:
                 result[to_camel(k)] = v
         return result
 
+    def get_whats_app_media(self, media_id: str, account_id: str) -> dict[str, Any]:
+        """Download WhatsApp media"""
+        params = self._build_params(
+            account_id=account_id,
+        )
+        return self._client._get(f"/v1/whatsapp/media/{media_id}", params=params)
+
     def get_whats_app_templates(self, account_id: str) -> dict[str, Any]:
         """List templates"""
         params = self._build_params(
@@ -455,6 +462,15 @@ class WhatsappResource:
             test_code=test_code,
         )
         return self._client._post("/v1/whatsapp/conversions", data=payload)
+
+    async def aget_whats_app_media(
+        self, media_id: str, account_id: str
+    ) -> dict[str, Any]:
+        """Download WhatsApp media (async)"""
+        params = self._build_params(
+            account_id=account_id,
+        )
+        return await self._client._aget(f"/v1/whatsapp/media/{media_id}", params=params)
 
     async def aget_whats_app_templates(self, account_id: str) -> dict[str, Any]:
         """List templates (async)"""
