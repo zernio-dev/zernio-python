@@ -492,6 +492,22 @@ components:
               error:
                 type: string
                 example: Not found
+    RateLimited:
+      description: |
+        The connected account's upstream platform quota is exhausted.
+
+        Reddit rate-limits per connected Reddit user (1000 requests per
+        10-minute window), and that budget is shared by every operation using
+        that account. Retry after the window resets rather than retrying
+        immediately; repeated calls while exhausted do not succeed and keep the
+        budget spent.
+      headers:
+        Retry-After:
+          description: 'Seconds remaining until the upstream quota resets.'
+          schema: { type: integer }
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/ErrorResponse' }
     PaymentRequired:
       description: |
         Payment method or enterprise contract required. The authenticated
@@ -11276,9 +11292,18 @@ paths:
                     isGallery: false
                 after: "t3_1abc234"
                 before: null
-        '400': { description: Missing params }
+        '400': { $ref: '#/components/responses/BadRequest' }
         '401': { $ref: '#/components/responses/Unauthorized' }
-        '404': { description: Account not found }
+        '404':
+          description: |
+            No active Reddit account with this ID is available to the API key.
+            It may have been disconnected or deleted, or it belongs to a profile
+            the key cannot access. Re-connecting an account issues a NEW account
+            ID, so an ID stored from before a reconnect will not resolve.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ErrorResponse' }
+        '429': { $ref: '#/components/responses/RateLimited' }
   /v1/reddit/feed:
     get:
       operationId: getRedditFeed
@@ -11354,9 +11379,18 @@ paths:
                       - "https://i.redd.it/def456.jpg"
                 after: "t3_1def456"
                 before: null
-        '400': { description: Missing params }
+        '400': { $ref: '#/components/responses/BadRequest' }
         '401': { $ref: '#/components/responses/Unauthorized' }
-        '404': { description: Account not found }
+        '404':
+          description: |
+            No active Reddit account with this ID is available to the API key.
+            It may have been disconnected or deleted, or it belongs to a profile
+            the key cannot access. Re-connecting an account issues a NEW account
+            ID, so an ID stored from before a reconnect will not resolve.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ErrorResponse' }
+        '429': { $ref: '#/components/responses/RateLimited' }
   /v1/billing:
     get:
       operationId: getBilling
@@ -26101,6 +26135,7 @@ paths:
                         brandId: { type: [string, "null"], description: "TCR brand id, useful when referencing the brand in carrier support threads." }
                         campaignId: { type: [string, "null"], description: TCR campaign id. }
                         declineReason: { type: [string, "null"] }
+                        tfActionRequiredAt: { type: [string, "null"], format: date-time, description: 'Toll-free only: when the carrier requested changes ("Waiting For Customer"). The request must be resubmitted within 7 days of this timestamp or it expires.' }
                         phoneNumbers: { type: array, items: { type: string } }
                         awaitingOtp: { type: boolean, description: Sole-prop 10DLC only; the OTP step is still pending. }
                         trustScore: { type: [number, "null"], description: Carrier-assigned brand trust score; drives throughput. }
