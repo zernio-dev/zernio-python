@@ -13040,6 +13040,90 @@ def register_generated_tools(mcp, _get_client):
         except Exception as e:
             return f"Error: {e}"
 
+    # VERIFY
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Send a verification code",
+            readOnlyHint=False,
+            destructiveHint=True,
+            openWorldHint=True,
+        )
+    )
+    def verify_create_verification(
+        channel: str,
+        to: str,
+        from_: str | None = None,
+        brand_name: str | None = None,
+        code_length: int = 6,
+        ttl_minutes: int = 10,
+    ) -> str:
+        """Send a verification code
+
+        Args:
+            channel: SMS-only for now. (required)
+            to: E.164 phone number. (required)
+            from_: The SMS-enabled number on your account to send from. Defaults to your only SMS number.
+            brand_name: Your app or business name, rendered in the message. Defaults to your account name. Letters, numbers, and basic punctuation only.
+            code_length
+            ttl_minutes"""
+        client = _get_client()
+        try:
+            response = client.verify.create_verification(
+                channel=channel,
+                to=to,
+                from_=from_,
+                brand_name=brand_name,
+                code_length=code_length,
+                ttl_minutes=ttl_minutes,
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Get a verification",
+            readOnlyHint=True,
+            destructiveHint=False,
+            openWorldHint=False,
+        )
+    )
+    def verify_get_verification(verification_id: str) -> str:
+        """Get a verification
+
+        Args:
+            verification_id: (required)"""
+        client = _get_client()
+        try:
+            response = client.verify.get_verification(verification_id=verification_id)
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Check a verification code",
+            readOnlyHint=False,
+            destructiveHint=True,
+            openWorldHint=True,
+        )
+    )
+    def verify_check_verification(verification_id: str, code: str) -> str:
+        """Check a verification code
+
+        Args:
+            verification_id: (required)
+            code: (required)"""
+        client = _get_client()
+        try:
+            response = client.verify.check_verification(
+                verification_id=verification_id, code=code
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
     # VOICE
 
     @mcp.tool(

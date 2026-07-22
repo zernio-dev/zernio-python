@@ -758,6 +758,13 @@ Both `from zernio import ...` and `from late import ...` work identically. The `
 | `validate.validate_post_length()` | Validate character count |
 | `validate.validate_subreddit()` | Check subreddit existence |
 
+### Verify
+| Method | Description |
+|--------|-------------|
+| `verify.create_verification()` | Send a verification code |
+| `verify.get_verification()` | Get a verification |
+| `verify.check_verification()` | Check a verification code |
+
 ### Voice
 | Method | Description |
 |--------|-------------|

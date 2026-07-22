@@ -40,6 +40,7 @@ from .twitter_engagement import TwitterEngagementResource
 from .usage import UsageResource
 from .users import UsersResource
 from .validate import ValidateResource
+from .verify import VerifyResource
 from .voice import VoiceResource
 from .webhooks import WebhooksResource
 from .whatsapp import WhatsappResource
@@ -89,6 +90,7 @@ __all__ = [
     "UsageResource",
     "UsersResource",
     "ValidateResource",
+    "VerifyResource",
     "VoiceResource",
     "WebhooksResource",
     "WhatsappResource",

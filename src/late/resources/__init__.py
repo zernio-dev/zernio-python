@@ -37,6 +37,7 @@ from ._generated.tracking_tags import TrackingTagsResource
 from ._generated.twitter_engagement import TwitterEngagementResource
 from ._generated.usage import UsageResource
 from ._generated.validate import ValidateResource
+from ._generated.verify import VerifyResource
 from ._generated.voice import VoiceResource
 from ._generated.webhooks import WebhooksResource
 from ._generated.whatsapp import WhatsappResource
@@ -95,6 +96,7 @@ __all__ = [
     "UsageResource",
     "UsersResource",
     "ValidateResource",
+    "VerifyResource",
     "VoiceResource",
     "WebhooksResource",
     "WhatsappResource",
