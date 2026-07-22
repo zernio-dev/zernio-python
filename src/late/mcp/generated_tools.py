@@ -3136,6 +3136,7 @@ def register_generated_tools(mcp, _get_client):
         platform_specific_data: dict[str, Any] | None = None,
         tracking: dict[str, Any] | None = None,
         special_ad_categories: list[str] | None = None,
+        special_ad_category_country: list[str] | None = None,
         link_url: str | None = None,
         call_to_action: str | None = None,
         spark_auth_code: str | None = None,
@@ -3178,6 +3179,7 @@ def register_generated_tools(mcp, _get_client):
         options today.
                 tracking: Meta only. Tracking specs (pixel, URL tags).
                 special_ad_categories: Meta only. Required for housing, employment, credit, or political ads.
+                special_ad_category_country: Meta (metaads) only. 2-letter ISO country codes the special ad category applies to. Requires specialAdCategories to be set (400 otherwise).
                 link_url: TikTok-only. Custom destination URL for the Spark Ad. Without this, TikTok
         Spark Ads have no clickable destination — required for traffic / conversion
         objectives. Maps to `landing_page_url` on the creative entry of /v2/ad/create/
@@ -3222,6 +3224,7 @@ def register_generated_tools(mcp, _get_client):
                 platform_specific_data=platform_specific_data,
                 tracking=tracking,
                 special_ad_categories=special_ad_categories,
+                special_ad_category_country=special_ad_category_country,
                 link_url=link_url,
                 call_to_action=call_to_action,
                 spark_auth_code=spark_auth_code,
@@ -3294,6 +3297,7 @@ def register_generated_tools(mcp, _get_client):
         saved_targeting_id: str | None = None,
         raw_targeting: dict[str, Any] | None = None,
         special_ad_categories: list[str] | None = None,
+        special_ad_category_country: list[str] | None = None,
         end_date: str | None = None,
         start_date: str | None = None,
         instagram_account_id: str | None = None,
@@ -3469,6 +3473,9 @@ def register_generated_tools(mcp, _get_client):
                 special_ad_categories: Meta only. Declares the ad's special category, required for housing, employment, credit, or
         political/social-issue ads (Meta enforces restricted targeting for these). Note: setting a special
         category disables income/zip targeting on Meta.
+                special_ad_category_country: Meta (metaads) only. 2-letter ISO country codes the special ad category applies to. Requires
+        specialAdCategories to be set (400 otherwise). Ignored when joining an existing campaign via
+        existingCampaignId (the existing campaign's category/country already governs it).
                 end_date: Required for lifetime budgets
                 start_date: Meta only. Ad-set start time (ISO 8601, e.g. "2026-06-10T09:00:00Z"), mapped to the
         ad set's `start_time`. When omitted the ad starts delivering immediately. For lifetime
@@ -3649,6 +3656,7 @@ def register_generated_tools(mcp, _get_client):
                 saved_targeting_id=saved_targeting_id,
                 raw_targeting=raw_targeting,
                 special_ad_categories=special_ad_categories,
+                special_ad_category_country=special_ad_category_country,
                 end_date=end_date,
                 start_date=start_date,
                 instagram_account_id=instagram_account_id,

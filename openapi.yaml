@@ -33787,7 +33787,7 @@ paths:
                     endDate: { type: string, description: "Ad set end_time (ISO 8601)." }
                     promotedObject:
                       type: object
-                      description: "Meta ad-set promoted_object, forwarded verbatim (same shape as /v1/ads/create)."
+                      description: "Meta ad-set promoted_object, forwarded verbatim (same shape as /v1/ads/create). Unknown keys are rejected with 400."
                       properties:
                         pixelId: { type: string }
                         customEventType: { type: string }
@@ -33797,6 +33797,9 @@ paths:
                         customConversionId: { type: string }
                         productCatalogId: { type: string }
                         productSetId: { type: string }
+                        offlineConversionDataSetId: { type: string }
+                        whatsappPhoneNumber: { type: string }
+                      additionalProperties: false
       responses:
         '200':
           description: Ad set updated
@@ -35662,6 +35665,10 @@ paths:
                   type: array
                   description: "Meta only. Required for housing, employment, credit, or political ads."
                   items: { type: string, enum: [HOUSING, EMPLOYMENT, CREDIT, FINANCIAL_PRODUCTS_SERVICES, ISSUES_ELECTIONS_POLITICS, ONLINE_GAMBLING_AND_GAMING] }
+                specialAdCategoryCountry:
+                  type: array
+                  description: 'Meta (metaads) only. 2-letter ISO country codes the special ad category applies to. Requires specialAdCategories to be set (400 otherwise).'
+                  items: { type: string }
                 linkUrl:
                   type: string
                   format: uri
@@ -36107,6 +36114,13 @@ paths:
                     political/social-issue ads (Meta enforces restricted targeting for these). Note: setting a special
                     category disables income/zip targeting on Meta.
                   items: { type: string, enum: [HOUSING, EMPLOYMENT, CREDIT, FINANCIAL_PRODUCTS_SERVICES, ISSUES_ELECTIONS_POLITICS, ONLINE_GAMBLING_AND_GAMING] }
+                specialAdCategoryCountry:
+                  type: array
+                  description: |
+                    Meta (metaads) only. 2-letter ISO country codes the special ad category applies to. Requires
+                    specialAdCategories to be set (400 otherwise). Ignored when joining an existing campaign via
+                    existingCampaignId (the existing campaign's category/country already governs it).
+                  items: { type: string }
                 endDate: { type: string, format: date-time, description: Required for lifetime budgets }
                 startDate:
                   type: string
@@ -36454,6 +36468,13 @@ paths:
                     productSetId:
                       type: string
                       description: Product Set ID inside the catalog.
+                    offlineConversionDataSetId:
+                      type: string
+                      description: 'Meta only. Offline event set (dataset) to optimise toward. Post-merger these are datasets: the id is the dataset id (for pixel-backed datasets, the pixel id).'
+                    whatsappPhoneNumber:
+                      type: string
+                      description: 'Meta only. WhatsApp number on messaging-destination ad sets.'
+                  additionalProperties: false
       responses:
         '200':
           description: 'validateOnly dry-run passed — nothing was created'
@@ -37189,7 +37210,7 @@ paths:
         - { name: accountId, in: query, required: true, schema: { type: string }, description: Social account ID }
         - { name: adAccountId, in: query, required: true, schema: { type: string }, description: Platform ad account ID }
         - { name: platform, in: query, schema: { type: string, enum: [facebook, instagram, googleads, tiktok, tiktokads, pinterest, linkedin, linkedinads, twitter, xads] } }
-        - { name: type, in: query, required: false, schema: { type: string, enum: [customer_list, company_list, engagement, website, website_retargeting, lookalike, saved_targeting] }, description: "Filter to one audience type. `saved_targeting` returns stored TargetingSpec audiences; the other types return uploaded/derived audiences." }
+        - { name: type, in: query, required: false, schema: { type: string, enum: [customer_list, company_list, engagement, meta_engagement, website, website_retargeting, lookalike, saved_targeting] }, description: "Filter to one audience type. `saved_targeting` returns stored TargetingSpec audiences; the other types return uploaded/derived audiences." }
       responses:
         '200':
           description: Audiences
@@ -37208,7 +37229,7 @@ paths:
                         platformAudienceId: { type: string }
                         name: { type: string }
                         description: { type: string }
-                        type: { type: string, enum: [customer_list, company_list, engagement, website, website_retargeting, lookalike, saved_targeting] }
+                        type: { type: string, enum: [customer_list, company_list, engagement, meta_engagement, website, website_retargeting, lookalike, saved_targeting] }
                         spec:
                           anyOf:
                             - $ref: '#/components/schemas/TargetingSpec'
@@ -37248,7 +37269,7 @@ paths:
                     adAccountId: { type: string, description: "Platform ad account ID. Must start with act_ for Meta; bare platform id for others (Google customer id, X/TikTok/LinkedIn/Pinterest account id)." }
                     name: { type: string, maxLength: 255 }
                     description: { type: string }
-                    type: { type: string, enum: [customer_list, company_list, engagement, website, website_retargeting, lookalike] }
+                    type: { type: string, enum: [customer_list, company_list, engagement, meta_engagement, website, website_retargeting, lookalike] }
                     matchRules:
                       type: array
                       minItems: 1
@@ -37319,11 +37340,27 @@ paths:
                           website: { type: string, maxLength: 100 }
                           linkedinPageUrl: { type: string }
                     pixelId: { type: string, description: Required for website audiences }
-                    retentionDays: { type: integer, minimum: 1, maximum: 180, description: Required for website audiences }
+                    retentionDays: { type: integer, minimum: 1, maximum: 365, description: "Required for website (max 180) and meta_engagement (max 365) audiences." }
+                    engagementSource:
+                      type: string
+                      enum: [page, instagram, video]
+                      description: |
+                        Required for meta_engagement audiences (Meta only): what people
+                        engaged with. `page` = a Facebook Page, `instagram` = an IG
+                        professional account, `video` = a video. The source object must be
+                        eligible for engagement audiences or Meta rejects with subcode
+                        1713151 ("Invalid Event Name"), surfaced verbatim.
+                    sourceId: { type: string, description: "Required for meta_engagement: the Page / IG account / video id." }
+                    event:
+                      type: string
+                      description: |
+                        meta_engagement only. The engagement event; defaults per source
+                        (page → page_engaged, instagram → ig_business_profile_all,
+                        video → video_watched). Ignored when `rule` is provided.
                     sourceAudienceId: { type: string, description: Required for lookalike audiences }
                     country: { type: string, description: "2-letter code, required for lookalike audiences" }
                     ratio: { type: number, minimum: 0.01, maximum: 0.20, description: Required for lookalike audiences }
-                    rule: { type: object, description: "Pixel event rule for website audiences (optional)" }
+                    rule: { type: object, description: "Optional raw Meta rule, forwarded verbatim: pixel event rule for website audiences, or the engagement rule for meta_engagement (overrides the built rule, e.g. for event/canvas/lead-form sources)." }
                     customerFileSource: { type: string, description: "Data source declaration for GDPR compliance (customer_list only)" }
                 - type: object
                   title: SavedTargetingAudience
