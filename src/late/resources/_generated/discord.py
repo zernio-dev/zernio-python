@@ -196,6 +196,30 @@ class DiscordResource:
             f"/v1/discord/guilds/{guild_id}/members", params=params
         )
 
+    def search_discord_guild_members(
+        self, guild_id: str, account_id: str, query: str, *, limit: int | None = 25
+    ) -> dict[str, Any]:
+        """Search Discord guild members"""
+        params = self._build_params(
+            account_id=account_id,
+            query=query,
+            limit=limit,
+        )
+        return self._client._get(
+            f"/v1/discord/guilds/{guild_id}/members/search", params=params
+        )
+
+    def get_discord_guild_member(
+        self, guild_id: str, user_id: str, account_id: str
+    ) -> dict[str, Any]:
+        """Get a Discord guild member"""
+        params = self._build_params(
+            account_id=account_id,
+        )
+        return self._client._get(
+            f"/v1/discord/guilds/{guild_id}/members/{user_id}", params=params
+        )
+
     def add_discord_member_role(
         self, guild_id: str, user_id: str, role_id: str, account_id: str
     ) -> dict[str, Any]:
@@ -521,6 +545,30 @@ class DiscordResource:
         )
         return await self._client._aget(
             f"/v1/discord/guilds/{guild_id}/members", params=params
+        )
+
+    async def asearch_discord_guild_members(
+        self, guild_id: str, account_id: str, query: str, *, limit: int | None = 25
+    ) -> dict[str, Any]:
+        """Search Discord guild members (async)"""
+        params = self._build_params(
+            account_id=account_id,
+            query=query,
+            limit=limit,
+        )
+        return await self._client._aget(
+            f"/v1/discord/guilds/{guild_id}/members/search", params=params
+        )
+
+    async def aget_discord_guild_member(
+        self, guild_id: str, user_id: str, account_id: str
+    ) -> dict[str, Any]:
+        """Get a Discord guild member (async)"""
+        params = self._build_params(
+            account_id=account_id,
+        )
+        return await self._client._aget(
+            f"/v1/discord/guilds/{guild_id}/members/{user_id}", params=params
         )
 
     async def aadd_discord_member_role(

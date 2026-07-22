@@ -381,7 +381,7 @@ Both `from zernio import ...` and `from late import ...` work identically. The `
 | `ad_audiences.list_ad_audiences()` | List custom audiences |
 | `ad_audiences.create_ad_audience()` | Create custom audience |
 | `ad_audiences.get_ad_audience()` | Get audience details |
-| `ad_audiences.update_ad_audience()` | Update saved targeting audience |
+| `ad_audiences.update_ad_audience()` | Update an audience |
 | `ad_audiences.delete_ad_audience()` | Delete custom audience |
 | `ad_audiences.add_users_to_ad_audience()` | Add users to audience |
 
@@ -390,6 +390,7 @@ Both `from zernio import ...` and `from late import ...` work identically. The `
 |--------|-------------|
 | `ad_campaigns.list_ad_campaigns()` | List campaigns |
 | `ad_campaigns.bulk_update_ad_campaign_status()` | Pause or resume many campaigns |
+| `ad_campaigns.create_ad_campaign()` | Create a standalone campaign (Meta) |
 | `ad_campaigns.get_ad_set_details()` | Live ad-set details incl. learning phase (Meta) |
 | `ad_campaigns.get_ad_tree()` | Get campaign tree |
 | `ad_campaigns.get_ads_timeline()` | Get daily account metrics |
@@ -399,6 +400,7 @@ Both `from zernio import ...` and `from late import ...` work identically. The `
 | `ad_campaigns.update_ad_set_status()` | Pause or resume a single ad set |
 | `ad_campaigns.delete_ad_campaign()` | Delete a campaign |
 | `ad_campaigns.duplicate_ad_campaign()` | Duplicate a campaign |
+| `ad_campaigns.duplicate_ad_set()` | Duplicate an ad set (Meta) |
 
 ### Ads
 | Method | Description |
@@ -406,14 +408,20 @@ Both `from zernio import ...` and `from late import ...` work identically. The `
 | `ads.list_ad_accounts()` | List ad accounts |
 | `ads.list_ad_catalog_product_sets()` | List a catalog's product sets |
 | `ads.list_ad_catalogs()` | List Meta product catalogs |
+| `ads.list_ad_creatives()` | Creative library (Meta) |
+| `ads.list_ad_images()` | Ad image library (Meta) |
+| `ads.list_ad_labels()` | Ad labels (Meta) |
 | `ads.list_ad_studies()` | A/B tests and lift studies (Meta) |
 | `ads.list_ads()` | List ads |
 | `ads.list_ads_business_centers()` | List TikTok Business Centers |
 | `ads.list_conversion_associations()` | List associated campaigns |
 | `ads.list_conversion_destinations()` | List conversion destinations |
 | `ads.list_form_leads()` | List leads for a single form |
+| `ads.list_high_demand_periods()` | High demand periods / budget schedules (Meta) |
 | `ads.list_lead_forms()` | List lead forms |
 | `ads.list_leads()` | List submitted leads |
+| `ads.list_meta_businesses()` | Businesses list (Meta) |
+| `ads.create_ad_creative()` | Create a standalone creative (Meta) |
 | `ads.create_ad_insights_report()` | Submit an async insights report run (Meta) |
 | `ads.create_call_ad()` | Create Click-to-Call ad |
 | `ads.create_conversion_destination()` | Create a conversion destination |
@@ -427,6 +435,7 @@ Both `from zernio import ...` and `from late import ...` work identically. The `
 | `ads.get_ad_account_finance()` | Ad account finances (Meta) |
 | `ads.get_ad_analytics()` | Get ad analytics |
 | `ads.get_ad_comments()` | List comments on an ad |
+| `ads.get_ad_creative()` | Creative details (Meta) |
 | `ads.get_ad_insights_report()` | Poll an async insights report run (Meta) |
 | `ads.get_ad_previews()` | Render previews of an existing ad (Meta) |
 | `ads.get_ad_tracking_tags()` | Get ad tracking tags |
@@ -443,16 +452,19 @@ Both `from zernio import ...` and `from late import ...` work identically. The `
 | `ads.get_rf_prediction()` | Read a Reach & Frequency prediction (Meta) |
 | `ads.update_ad()` | Update ad |
 | `ads.update_ad_account()` | Update ad account settings |
+| `ads.update_ad_creative()` | Rename a creative (Meta) |
 | `ads.update_ad_status()` | Pause or resume a single ad |
 | `ads.update_ad_tracking_tags()` | Set ad tracking tags |
 | `ads.update_conversion_destination()` | Update a conversion destination |
 | `ads.delete_ad()` | Cancel an ad |
+| `ads.delete_ad_creative()` | Delete a creative (Meta) |
 | `ads.delete_conversion_destination()` | Delete a conversion destination |
 | `ads.add_conversion_associations()` | Associate campaigns |
 | `ads.adjust_conversions()` | Adjust uploaded conversions |
 | `ads.archive_lead_form()` | Archive a lead form |
 | `ads.boost_post()` | Boost post as ad |
 | `ads.cancel_rf_reservation()` | Cancel a Reach & Frequency reservation (Meta) |
+| `ads.duplicate_ad()` | Duplicate an ad (Meta) |
 | `ads.estimate_ad_reach()` | Estimate audience reach |
 | `ads.generate_ad_previews()` | Render pre-create ad previews (Meta) |
 | `ads.query_ad_insights()` | Flexible live insights query (Meta) |
@@ -541,6 +553,7 @@ Both `from zernio import ...` and `from late import ...` work identically. The `
 | `discord.create_discord_scheduled_event()` | Create a Discord scheduled event |
 | `discord.create_discord_thread()` | Create a Discord public thread |
 | `discord.get_discord_channels()` | List Discord guild channels |
+| `discord.get_discord_guild_member()` | Get a Discord guild member |
 | `discord.get_discord_scheduled_event()` | Get a Discord scheduled event |
 | `discord.get_discord_settings()` | Get Discord account settings |
 | `discord.update_discord_scheduled_event()` | Update a Discord scheduled event |
@@ -553,6 +566,7 @@ Both `from zernio import ...` and `from late import ...` work identically. The `
 | `discord.edit_discord_guild_role()` | Edit a Discord guild role |
 | `discord.pin_discord_message()` | Pin a Discord message |
 | `discord.remove_discord_member_role()` | Remove a role from a guild member |
+| `discord.search_discord_guild_members()` | Search Discord guild members |
 | `discord.send_discord_direct_message()` | Send a Discord Direct Message |
 | `discord.unpin_discord_message()` | Unpin a Discord message |
 
@@ -698,12 +712,16 @@ Both `from zernio import ...` and `from late import ...` work identically. The `
 |--------|-------------|
 | `sms.list_sms_opt_outs()` | List SMS opt-outs |
 | `sms.list_sms_registrations()` | List carrier registrations |
+| `sms.list_sms_sender_ids()` | List alphanumeric sender IDs |
+| `sms.create_sms_sender_id()` | Create an alphanumeric sender ID |
 | `sms.get_sms_registration()` | Get a carrier registration |
+| `sms.delete_sms_sender_id()` | Delete an alphanumeric sender ID |
 | `sms.appeal_sms_registration()` | Appeal a rejected campaign |
 | `sms.deactivate_sms_registration()` | Deactivate a brand/campaign registration |
 | `sms.disable_sms_on_number()` | Disable SMS on a number |
 | `sms.enable_sms_on_number()` | Enable SMS on a number |
 | `sms.lookup_sms_number()` | Look up carrier + line type |
+| `sms.request_sms_sender_id_limit_increase()` | Request a higher sender ID daily limit |
 | `sms.resend_sms_registration_otp()` | Re-send the sole-prop OTP |
 | `sms.reuse_sms_registration_for_number()` | Add number to SMS registration |
 | `sms.send_sms()` | Send an SMS/MMS |
