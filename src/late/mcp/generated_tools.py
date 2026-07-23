@@ -2688,14 +2688,17 @@ def register_generated_tools(mcp, _get_client):
         - `engagement`, `traffic`, `awareness` and `video_views` create standalone Direct Sponsored Content ads. `traffic` requires `linkUrl`; `video_views` requires `video`.
         - `job_applicants` requires a `platformSpecificData.jobs` creative.
         - For `lead_generation` or `conversions` on LinkedIn, or to promote an existing post, use POST /v1/ads/boost.
+
+        **OpenAI Ads**
+        - Only `traffic`, `awareness`, and `conversions` are supported (other goals return 400). Maps to OpenAI's `bidding_type` (clicks, impressions, conversions respectively). `conversions` requires an active conversion event setting on the account; create a tracking tag with `defaultEventType` via the tracking-tags API (`POST /v1/accounts/{accountId}/tracking-tags`), or configure a conversion event in OpenAI Ads Manager, or the request returns 422.
                 optimization_goal: Meta only. Explicit ad-set `optimization_goal` (e.g. `LANDING_PAGE_VIEWS`, `LINK_CLICKS`, `REACH`, `IMPRESSIONS`, `OFFSITE_CONVERSIONS`, `THRUPLAY`, `LEAD_GENERATION`). Overrides the default derived from `goal` (e.g. `traffic` defaults to `LINK_CLICKS`). Forwarded verbatim to Meta, which validates compatibility with the campaign objective and rejects incompatible combinations.
                 billing_event: Meta only. Explicit ad-set `billing_event`. Defaults to `IMPRESSIONS`. Forwarded verbatim to Meta, which validates compatibility with the optimization goal.
                 buying_type: Meta only. RESERVED = Reach & Frequency: requires `rfPredictionId` (a RESERVED prediction from /v1/ads/rf-predictions + /reserve). Budget, schedule and pricing come from the reservation, so budgetAmount/budgetType are not required and bid fields are ignored. Only the plain single-ad shape (no creatives[], adSetId, existingCampaignId or dynamicCreative).
                 rf_prediction_id: Meta only. The RESERVED prediction id the R&F ad set runs on (reserving mints a new id — pass that one). Requires buyingType RESERVED.
                 creative_features: Meta only. Advantage+ creative enhancements: a partial map of Meta creative feature keys (snake_case, e.g. enhance_cta, image_brightness_and_contrast, text_optimizations) to enroll status, forwarded as degrees_of_freedom_spec.creative_features_spec. Meta validates the keys; unspecified features default to OPT_OUT. The legacy standard_enhancements bundle is deprecated by Meta and rejected.
                 validate_only: Meta only, single standalone shape only (no creatives[], adSetId, or RESERVED). Dry-run: each node runs Meta's execution_options validate_only and NOTHING is created or persisted. Children need real parents, so a fresh tree validates the campaign + creative (the ad set needs its campaign to exist — pass existingCampaignId to validate it too; the ad itself is never validatable pre-create). A Meta validation failure returns the 400 verbatim; success returns 200 with per-node results instead of an ad.
-                budget_amount: Required on legacy + multi-creative shapes. Inherited on attach.
-                budget_type: Required on legacy + multi-creative shapes. Inherited on attach.
+                budget_amount: Required on legacy + multi-creative shapes. Inherited on attach. OpenAI Ads requires a $1 minimum (its budget is lifetime-only, see budgetType).
+                budget_type: Required on legacy + multi-creative shapes. Inherited on attach. OpenAI Ads accepts lifetime only (no daily-budget concept on the platform); sending daily returns 422. OpenAI Ads lifetime budgets require `endDate` to give the lifetime cap a spend window.
                 status: Meta and TikTok. Publish state of the created entities. Omitted or ACTIVE publishes live (default, back-compat); PAUSED creates them paused and skips activation, so you can review before they spend. On TikTok the whole campaign > ad group > ad hierarchy stays paused.
                 budget_level: Meta only. Where the budget lives, which selects the Meta budget model:
           - `adset` (default): ABO (Ad-set Budget Optimization). The budget is set on the
@@ -2706,14 +2709,14 @@ def register_generated_tools(mcp, _get_client):
         Meta requires the budget at exactly one level, never both. Non-Meta platforms ignore
         this field. Ignored on the attach shape (`adSetId`), which inherits the existing budget.
                 currency
-                headline: Required for Meta, Google, Pinterest, and LinkedIn on legacy + attach shapes (skip for multi-creative — use `creatives[].headline`). Ignored for TikTok and X/Twitter. Max: Meta=255, Google=30, Pinterest=100, LinkedIn=400. On LinkedIn this is the ad's headline (the bold text on the creative); for traffic ads it's the link card title.
+                headline: Required for Meta, Google, Pinterest, LinkedIn, and OpenAI Ads on legacy + attach shapes (skip for multi-creative — use `creatives[].headline`). Ignored for TikTok and X/Twitter. Max: Meta=255, Google=30, Pinterest=100, LinkedIn=400, OpenAI=50 (min 3). On LinkedIn this is the ad's headline (the bold text on the creative); for traffic ads it's the link card title. On OpenAI Ads this is the chat card's title.
                 long_headline: Google Display only — defaults to `headline` if omitted. On LinkedIn, reused as the optional secondary description text on traffic (link) ads; omitted if not provided.
-                body: Required on legacy + attach shapes. For X/Twitter this is the tweet text (max 280 chars including a ~24-char URL when `linkUrl` is set). On LinkedIn this is the post commentary (the intro text shown above the ad). Max: Google=90, Pinterest=500.
+                body: Required on legacy + attach shapes. For X/Twitter this is the tweet text (max 280 chars including a ~24-char URL when `linkUrl` is set). On LinkedIn this is the post commentary (the intro text shown above the ad). On OpenAI Ads this is the chat card's body text. Max: Google=90, Pinterest=500, OpenAI=100.
                 description: Meta only (facebook/instagram). Link description — the secondary text shown below the headline (Meta's link_data.description; on video creatives mapped to video_data.link_description). When omitted, Meta auto-pulls the destination URL's OpenGraph description. Applies on legacy, attach, and placementAssets shapes; for multi-creative use creatives[].description (this field is the shared fallback). For multi-text variations use dynamicCreative.descriptions instead.
                 call_to_action: Required on legacy + attach shapes for Meta. Honoured on TikTok (passes through to the Spark Ad creative's `call_to_action`) and on LinkedIn (the CTA button on the ad; defaults to LEARN_MORE when `linkUrl` is set). LinkedIn accepts: LEARN_MORE, SIGN_UP, DOWNLOAD, SUBSCRIBE, REGISTER, JOIN, ATTEND, REQUEST_DEMO, VIEW_QUOTE, APPLY, SEE_MORE, SHOP_NOW, BUY_NOW. Ignored by Google, Pinterest, and X/Twitter.
-                link_url: Required on legacy + attach shapes (skip for multi-creative). On LinkedIn it's the ad's destination URL; required for `traffic` ads, optional for `engagement` / `awareness`. NOT required when `goal` is `lead_generation` (the ad opens a Lead Gen form instead of a destination). On LinkedIn, `imageUrl` + `linkUrl` publishes an ARTICLE-content creative; this is LinkedIn's article ad format, with the image as thumbnail and `longHeadline` as description.
+                link_url: Required on legacy + attach shapes (skip for multi-creative). On LinkedIn it's the ad's destination URL; required for `traffic` ads, optional for `engagement` / `awareness`. NOT required when `goal` is `lead_generation` (the ad opens a Lead Gen form instead of a destination). On LinkedIn, `imageUrl` + `linkUrl` publishes an ARTICLE-content creative; this is LinkedIn's article ad format, with the image as thumbnail and `longHeadline` as description. Required for OpenAI Ads (the chat card's target_url).
                 lead_gen_form_id: Meta Lead Gen forms only (facebook/instagram). The leadgen_forms ID to attach to the ad's creative — create one via POST /v1/ads/lead-forms. REQUIRED when `goal` is `lead_generation`, and on every ATTACH (`adSetId`) call that targets a lead ad set (the form attaches per-ad; Meta rejects a formless ad in a lead ad set). Ignored otherwise. The ad set's promoted_object.page_id + LEAD_GENERATION optimization + destination_type ON_AD are derived automatically from the goal. Both `placementAssets` (per-placement creative) and `dynamicCreative` (multi-text / multi-asset pool, e.g. multiple headlines and primary texts) ARE supported on instant-form lead ads — the form is attached for you, and for `dynamicCreative` the ad set is created as a Dynamic Creative ad set automatically (Meta requires that for any multi-text feed; there is no non-DCO multi-text path). Send a single `imageUrls` entry plus your text variations to get Meta's "Multiple Text Options" behavior on a lead ad.
-                image_url: Image creative for Meta/Google/Pinterest/LinkedIn on legacy + attach shapes (mutually exclusive with `video`). Required for LinkedIn ads unless `video` is set. Not required for Google Search campaigns. For TikTok, this field carries the VIDEO URL (the TikTok ads endpoint is video-only; the field retains the `imageUrl` name for cross-platform consistency). Ignored for X/Twitter. For Google Display, treated as the landscape image (alias of `images.landscape`); supply `images.square` alongside or the request is rejected. For LinkedIn the image is uploaded to LinkedIn under the authoring Company Page (see `organizationId`); recommended ratio 1.91:1 (e.g. 1200×627).
+                image_url: Image creative for Meta/Google/Pinterest/LinkedIn on legacy + attach shapes (mutually exclusive with `video`). Required for LinkedIn ads unless `video` is set. Not required for Google Search campaigns. For TikTok, this field carries the VIDEO URL (the TikTok ads endpoint is video-only; the field retains the `imageUrl` name for cross-platform consistency). Ignored for X/Twitter. For Google Display, treated as the landscape image (alias of `images.landscape`); supply `images.square` alongside or the request is rejected. For LinkedIn the image is uploaded to LinkedIn under the authoring Company Page (see `organizationId`); recommended ratio 1.91:1 (e.g. 1200×627). Required for OpenAI Ads (uploaded as the chat card's image; OpenAI has no video ad format).
                 images: Google Display (Responsive Display Ads) only. Google RDA requires both a landscape (1.91:1) and a square (1:1) marketing image; sending only one is rejected upstream as 'Too few.' (NOT_ENOUGH_*_MARKETING_IMAGE_ASSET). Supply both URLs here. Either this field or the legacy `imageUrl` can provide the landscape, but `square` has no legacy counterpart so it must be set here for Display.
                 video: Meta (facebook, instagram) and LinkedIn. When set, creates a VIDEO ad on the legacy (or, for Meta, attach) shape. Mutually exclusive with `imageUrl`. For Meta multi-creative, set `video` per entry inside `creatives[]` instead. For LinkedIn the video is uploaded to LinkedIn under the authoring Company Page (see `organizationId`) and the campaign format is set to SINGLE_VIDEO; LinkedIn ignores `thumbnailUrl` (it auto-generates the poster frame) — supply MP4 H.264/AAC, 3s-30min, 75KB-500MB.
                 creatives: Meta-only. When present, switches to the multi-creative shape:
@@ -2774,7 +2777,7 @@ def register_generated_tools(mcp, _get_client):
         UNDER the flat inline targeting fields below: `savedTargetingId` < `targeting` <
         flat fields (a flat field present on the body replaces the nested value entirely).
         Both forms are equivalent; use whichever your integration already builds.
-                countries: ISO 3166-1 alpha-2 country codes (e.g. ['NL']). Defaults to ['US'] when no other geo targeting (flat or nested `targeting`) is provided. (LinkedIn currently honours country-level targeting only.)
+                countries: ISO 3166-1 alpha-2 country codes (e.g. ['NL']). Defaults to ['US'] when no other geo targeting (flat or nested `targeting`) is provided. (LinkedIn and OpenAI Ads currently honour country-level targeting only; any other targeting field returns 400 for OpenAI Ads.)
                 cities: City-level geo targeting (Meta and TikTok). Each city is targeted by the platform's opaque `key` (the city ID) which can be looked up via `GET /v1/ads/targeting/search?dimension=geo&q=<name>&countryCode=<ISO>`. Optional `radius` + `distance_unit` (Meta only) extend the targeting beyond the city limits (e.g. radius 25 km around the city center). Both must be set together, or both omitted (Meta defaults to ~16 km when omitted).
 
         On Meta, cannot overlap with the same country in `countries` (Meta returns a "locations overlap" error). Either drop the country or scope it to a different country. On TikTok, keys are numeric location ids and can be sent without `countries`.
@@ -6292,6 +6295,39 @@ def register_generated_tools(mcp, _get_client):
 
     @mcp.tool(
         annotations=ToolAnnotations(
+            title="Connect an OpenAI Ads account",
+            readOnlyHint=False,
+            destructiveHint=True,
+            openWorldHint=True,
+        )
+    )
+    def connect_open_ai_ads_credentials(
+        api_key: str,
+        profile_id: str,
+        state: str | None = None,
+        redirect_uri: str | None = None,
+    ) -> str:
+        """Connect an OpenAI Ads account
+
+        Args:
+            api_key: API key from ChatGPT Ads Manager (Settings). Grants full read/write access on OpenAI's side; Zernio only ever reads with it. (required)
+            profile_id: Your Zernio profile ID (required)
+            state: Optional state passthrough for the connect flow.
+            redirect_uri: Optional URL to redirect to after successful connection"""
+        client = _get_client()
+        try:
+            response = client.connect.connect_open_ai_ads_credentials(
+                api_key=api_key,
+                profile_id=profile_id,
+                state=state,
+                redirect_uri=redirect_uri,
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
             title="Connect WhatsApp via credentials",
             readOnlyHint=False,
             destructiveHint=True,
@@ -7201,14 +7237,15 @@ def register_generated_tools(mcp, _get_client):
         """Send conversion events
 
             Args:
-                account_id: SocialAccount ID (metaads, googleads, linkedinads, or tiktokads). (required)
+                account_id: SocialAccount ID (metaads, googleads, linkedinads, tiktokads, or openaiads). (required)
                 destination_id: Platform destination identifier. For Meta, the pixel/dataset
         ID. For Google, the conversion action resource name. For
         LinkedIn, the conversion rule ID or full
-        `urn:lla:llaPartnerConversion:{id}` URN.
+        `urn:lla:llaPartnerConversion:{id}` URN. For OpenAI Ads, the
+        pixel wire id.
          (required)
                 events: (required)
-                test_code: Meta `test_event_code` passthrough. Ignored by Google and LinkedIn.
+                test_code: Meta `test_event_code` passthrough. Ignored by Google, LinkedIn, and OpenAI Ads.
                 consent: Batch-level user consent. Required by Google for EEA/UK
         events under the Feb 2026 restrictions. On Meta, any
         DENIED flag enables Limited Data Use on every event in
@@ -7269,7 +7306,7 @@ def register_generated_tools(mcp, _get_client):
         """List conversion destinations
 
         Args:
-            account_id: SocialAccount ID (metaads, googleads, linkedinads, or tiktokads). (required)"""
+            account_id: SocialAccount ID (metaads, googleads, linkedinads, tiktokads, or openaiads). (required)"""
         client = _get_client()
         try:
             response = client.conversions.list_conversion_destinations(
@@ -12518,8 +12555,8 @@ def register_generated_tools(mcp, _get_client):
         """List tracking tags
 
         Args:
-            account_id: Meta ads SocialAccount id (platform `metaads`). (required)
-            ad_account_id: Optional. Scope to one ad account, e.g. `act_123456789`."""
+            account_id: Ads SocialAccount id (platform `metaads` or `openaiads`). (required)
+            ad_account_id: Optional, Meta only. Scope to one ad account, e.g. `act_123456789`. Ignored for OpenAI Ads."""
         client = _get_client()
         try:
             response = client.tracking_tags.list_tracking_tags(
@@ -12543,8 +12580,8 @@ def register_generated_tools(mcp, _get_client):
         """Create a tracking tag
 
         Args:
-            account_id: Meta ads SocialAccount id (platform `metaads`). (required)
-            ad_account_id: Meta ad account id, e.g. `act_123456789`. (required)
+            account_id: Ads SocialAccount id (platform `metaads` or `openaiads`). (required)
+            ad_account_id: Meta ad account id, e.g. `act_123456789`. Required by this endpoint but ignored for OpenAI Ads. (required)
             name: (required)"""
         client = _get_client()
         try:

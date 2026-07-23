@@ -309,6 +309,23 @@ class ConnectResource:
         )
         return self._client._post("/v1/connect/bluesky/credentials", data=payload)
 
+    def connect_open_ai_ads_credentials(
+        self,
+        api_key: str,
+        profile_id: str,
+        *,
+        state: str | None = None,
+        redirect_uri: str | None = None,
+    ) -> dict[str, Any]:
+        """Connect an OpenAI Ads account"""
+        payload = self._build_payload(
+            api_key=api_key,
+            profile_id=profile_id,
+            state=state,
+            redirect_uri=redirect_uri,
+        )
+        return self._client._post("/v1/connect/openai-ads/credentials", data=payload)
+
     def connect_whats_app_credentials(
         self, profile_id: str, access_token: str, waba_id: str, phone_number_id: str
     ) -> dict[str, Any]:
@@ -868,6 +885,25 @@ class ConnectResource:
         )
         return await self._client._apost(
             "/v1/connect/bluesky/credentials", data=payload
+        )
+
+    async def aconnect_open_ai_ads_credentials(
+        self,
+        api_key: str,
+        profile_id: str,
+        *,
+        state: str | None = None,
+        redirect_uri: str | None = None,
+    ) -> dict[str, Any]:
+        """Connect an OpenAI Ads account (async)"""
+        payload = self._build_payload(
+            api_key=api_key,
+            profile_id=profile_id,
+            state=state,
+            redirect_uri=redirect_uri,
+        )
+        return await self._client._apost(
+            "/v1/connect/openai-ads/credentials", data=payload
         )
 
     async def aconnect_whats_app_credentials(

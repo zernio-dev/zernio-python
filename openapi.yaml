@@ -5393,7 +5393,7 @@ components:
         _id: { type: string }
         platform:
           type: string
-          enum: [tiktok, instagram, facebook, youtube, linkedin, twitter, threads, pinterest, reddit, bluesky, googlebusiness, telegram, snapchat, discord, whatsapp, linkedinads, metaads, pinterestads, tiktokads, xads, googleads]
+          enum: [tiktok, instagram, facebook, youtube, linkedin, twitter, threads, pinterest, reddit, bluesky, googlebusiness, telegram, snapchat, discord, whatsapp, linkedinads, metaads, pinterestads, tiktokads, xads, googleads, openaiads]
         profileId:
           oneOf:
             - type: string
@@ -6567,7 +6567,7 @@ components:
       properties:
         _id: { type: string }
         name: { type: string }
-        platform: { type: string, enum: [facebook, instagram, tiktok, linkedin, pinterest, google, twitter] }
+        platform: { type: string, enum: [facebook, instagram, tiktok, linkedin, pinterest, google, twitter, openai] }
         status: { $ref: '#/components/schemas/AdStatus' }
         adType: { type: string, enum: [boost, standalone] }
         goal: { type: string, enum: [engagement, traffic, awareness, video_views, lead_generation, lead_conversion, conversions, app_promotion, catalog_sales, job_applicants], description: "Available goals vary by platform. Meta (Facebook/Instagram) supports all 9 (incl. `lead_conversion` = website pixel lead optimization and `catalog_sales` = Advantage+ catalog ads). TikTok supports the 7 non-`lead_conversion` goals. LinkedIn supports all except app_promotion / lead_conversion. Twitter/X supports engagement, traffic, awareness, video_views, app_promotion. Pinterest and Google Ads support only engagement, traffic, awareness, video_views." }
@@ -6748,7 +6748,7 @@ components:
       description: Campaign with nested ad sets and rolled-up metrics
       properties:
         platformCampaignId: { type: string }
-        platform: { type: string, enum: [facebook, instagram, tiktok, linkedin, pinterest, google, twitter] }
+        platform: { type: string, enum: [facebook, instagram, tiktok, linkedin, pinterest, google, twitter, openai] }
         campaignName: { type: string }
         status: { allOf: [{ $ref: '#/components/schemas/AdStatus' }], description: "Delivery status derived from child ad statuses. Distinct from `reviewStatus`, which reflects the platform-side review state." }
         reviewStatus:
@@ -6831,7 +6831,7 @@ components:
       type: object
       properties:
         platformCampaignId: { type: string }
-        platform: { type: string, enum: [facebook, instagram, tiktok, linkedin, pinterest, google, twitter] }
+        platform: { type: string, enum: [facebook, instagram, tiktok, linkedin, pinterest, google, twitter, openai] }
         campaignName: { type: string }
         status: { allOf: [{ $ref: '#/components/schemas/AdStatus' }], description: "Delivery status derived from child ad statuses. Distinct from `reviewStatus`." }
         reviewStatus:
@@ -6913,12 +6913,14 @@ components:
             Standard event name (Purchase, Lead, CompleteRegistration, AddToCart,
             InitiateCheckout, AddPaymentInfo, Subscribe, StartTrial, ViewContent,
             Search, Contact, SubmitApplication, Schedule) or a custom string
-            (only supported on platforms that accept custom events — Meta).
+            (only supported on platforms that accept custom events — Meta and
+            OpenAI Ads).
 
             Per-platform behavior:
             - Meta: free-form; standard names match Meta's built-ins.
             - Google: ignored — the conversion action's category determines the type.
             - LinkedIn: ignored — the conversion rule's `type` is locked to the destination.
+            - OpenAI Ads: a fixed subset of standard names (Purchase, Lead, AddToCart, ViewContent, InitiateCheckout, CompleteRegistration, Subscribe, StartTrial, Schedule) maps 1:1 onto OpenAI's own event-type enum; anything else is sent as a custom event with the name preserved.
           example: Purchase
         eventTime:
           type: integer
@@ -17551,6 +17553,63 @@ paths:
         '400': { description: Invalid request - missing fields or invalid state format }
         '401': { $ref: '#/components/responses/Unauthorized' }
         '500': { description: Internal error }
+
+  /v1/connect/openai-ads/credentials:
+    post:
+      operationId: connectOpenAIAdsCredentials
+      tags: [Connect]
+      summary: Connect an OpenAI Ads account
+      description: |
+        Connect an OpenAI Ads account using an API key from ChatGPT Ads Manager.
+
+        The key grants full campaign write access on OpenAI's side (OpenAI does
+        not offer a read-only key scope). Zernio uses it to read ads and
+        performance, and to create and manage campaigns you set up through
+        Zernio (create, status, budget, and cancel). Campaigns created
+        directly in ChatGPT Ads Manager can still be managed there.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [apiKey, profileId]
+              properties:
+                apiKey:
+                  type: string
+                  description: "API key from ChatGPT Ads Manager (Settings). Grants full read/write access on OpenAI's side; Zernio only ever reads with it."
+                profileId:
+                  type: string
+                  description: Your Zernio profile ID
+                state:
+                  type: string
+                  description: Optional state passthrough for the connect flow.
+                redirectUri:
+                  type: string
+                  format: uri
+                  description: Optional URL to redirect to after successful connection
+            example:
+              apiKey: "sk-ads-xxxxxxxxxxxxxxxxxxxx"
+              profileId: "6507a1b2c3d4e5f6a7b8c9d0"
+      responses:
+        '200':
+          description: OpenAI Ads connected successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  accountId: { type: string }
+                  adAccountName: { type: string }
+                  redirectUrl: { type: string }
+              example:
+                accountId: "6507a1b2c3d4e5f6a7b8c9d0"
+                adAccountName: "Acme US"
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401':
+          description: "Unauthorized, or the API key could not read an OpenAI ad account (code invalid_credentials)."
+        '403':
+          description: Ads add-on required.
 
   /v1/connect/whatsapp/credentials:
     post:
@@ -33322,7 +33381,7 @@ paths:
         - { name: limit, in: query, schema: { type: integer, minimum: 1, maximum: 500, default: 50 } }
         - { name: source, in: query, schema: { type: string, enum: [zernio, all], default: all }, description: "all (default) = Zernio-created + platform-discovered ads. zernio = restrict to Zernio-created only." }
         - { name: status, in: query, schema: { $ref: '#/components/schemas/AdStatus' } }
-        - { name: platform, in: query, schema: { type: string, enum: [facebook, instagram, tiktok, linkedin, pinterest, google, twitter] } }
+        - { name: platform, in: query, schema: { type: string, enum: [facebook, instagram, tiktok, linkedin, pinterest, google, twitter, openai] } }
         - { name: accountId, in: query, schema: { type: string }, description: Social account ID }
         - { name: adAccountId, in: query, schema: { type: string }, description: "Platform ad account ID (e.g. act_123 for Meta). Mirrors the same filter on /v1/ads/campaigns and /v1/ads/tree." }
         - { name: profileId, in: query, schema: { type: string }, description: Profile ID }
@@ -33370,7 +33429,7 @@ paths:
         - $ref: '#/components/parameters/PageParam'
         - { name: limit, in: query, schema: { type: integer, minimum: 1, maximum: 100, default: 20 } }
         - { name: source, in: query, schema: { type: string, enum: [zernio, all], default: all }, description: "`all` (default) returns both Zernio-created ads and those discovered from the platform's ad manager — matches the web UI's default view. Pass `zernio` to restrict to isExternal=false only. Status is NOT filtered by default — use the `status` param for that." }
-        - { name: platform, in: query, schema: { type: string, enum: [facebook, instagram, tiktok, linkedin, pinterest, google, twitter] } }
+        - { name: platform, in: query, schema: { type: string, enum: [facebook, instagram, tiktok, linkedin, pinterest, google, twitter, openai] } }
         - { name: status, in: query, schema: { $ref: '#/components/schemas/AdStatus' }, description: Filter by derived campaign status (post-aggregation) }
         - { name: adAccountId, in: query, schema: { type: string }, description: Platform ad account ID (e.g. act_123 for Meta) }
         - { name: accountId, in: query, schema: { type: string }, description: Social account ID }
@@ -33465,7 +33524,7 @@ paths:
               required: [status, platform]
               properties:
                 status: { type: string, enum: [active, paused] }
-                platform: { type: string, enum: [facebook, instagram, tiktok, linkedin, pinterest, google, twitter] }
+                platform: { type: string, enum: [facebook, instagram, tiktok, linkedin, pinterest, google, twitter, openai] }
       responses:
         '200':
           description: Campaign status updated
@@ -33620,7 +33679,7 @@ paths:
                     required: [platformCampaignId, platform]
                     properties:
                       platformCampaignId: { type: string }
-                      platform: { type: string, enum: [facebook, instagram, tiktok, linkedin, pinterest, google, twitter] }
+                      platform: { type: string, enum: [facebook, instagram, tiktok, linkedin, pinterest, google, twitter, openai] }
       responses:
         '200':
           description: Per-campaign results
@@ -33894,7 +33953,7 @@ paths:
               type: object
               required: [platform]
               properties:
-                platform: { type: string, enum: [facebook, instagram, tiktok, linkedin, pinterest, google, twitter] }
+                platform: { type: string, enum: [facebook, instagram, tiktok, linkedin, pinterest, google, twitter, openai] }
                 budget:
                   type: object
                   description: Omit if not updating budget
@@ -33994,7 +34053,7 @@ paths:
               required: [status, platform]
               properties:
                 status: { type: string, enum: [active, paused] }
-                platform: { type: string, enum: [facebook, instagram, tiktok, linkedin, pinterest, google, twitter] }
+                platform: { type: string, enum: [facebook, instagram, tiktok, linkedin, pinterest, google, twitter, openai] }
       responses:
         '200':
           description: Ad set status updated
@@ -34033,7 +34092,7 @@ paths:
         - $ref: '#/components/parameters/PageParam'
         - { name: limit, in: query, schema: { type: integer, minimum: 1, maximum: 100, default: 20 }, description: Campaigns per page }
         - { name: source, in: query, schema: { type: string, enum: [zernio, all], default: all }, description: "`all` (default) returns both Zernio-created ads and those discovered from the platform's ad manager — matches the web UI's default view. Pass `zernio` to restrict to isExternal=false only. Status is NOT filtered by default — use the `status` param for that." }
-        - { name: platform, in: query, schema: { type: string, enum: [facebook, instagram, tiktok, linkedin, pinterest, google, twitter] } }
+        - { name: platform, in: query, schema: { type: string, enum: [facebook, instagram, tiktok, linkedin, pinterest, google, twitter, openai] } }
         - { name: status, in: query, schema: { $ref: '#/components/schemas/AdStatus' }, description: Filter by derived campaign status (post-aggregation) }
         - { name: adAccountId, in: query, schema: { type: string }, description: Platform ad account ID }
         - { name: accountId, in: query, schema: { type: string }, description: Social account ID }
@@ -34092,7 +34151,7 @@ paths:
         - { name: adAccountId, in: query, schema: { type: string }, description: "Optional platform-native ad account ID (e.g. Meta `act_…`, TikTok advertiser ID). Use when the connection wraps multiple platform ad accounts and the chart should show one only. Note: rows ingested before 2026-05-13 don't carry this column; the recurring 7-day re-sync repopulates them naturally." }
         - { name: fromDate, in: query, schema: { type: string, format: date }, description: "Inclusive start of metrics range (YYYY-MM-DD). Defaults to 90 days ago." }
         - { name: toDate, in: query, schema: { type: string, format: date }, description: "Inclusive end of metrics range (YYYY-MM-DD). Defaults to today. Max 730-day range." }
-        - { name: platform, in: query, schema: { type: string, enum: [facebook, instagram, tiktok, linkedin, pinterest, google, twitter] }, description: Restrict to one platform. }
+        - { name: platform, in: query, schema: { type: string, enum: [facebook, instagram, tiktok, linkedin, pinterest, google, twitter, openai] }, description: Restrict to one platform. }
       responses:
         '200':
           description: Daily time series of aggregate metrics. Empty `rows` means the account has no ad activity in the range.
@@ -34185,8 +34244,9 @@ paths:
         - **Meta** (Facebook + Instagram): all fields supported.
         - **TikTok**: status, budget, targeting (via `/v2/adgroup/update/`), and creative
           (via `/v2/ad/update/` patch-style — `headline` is ignored, `body` becomes `ad_text`).
-        - **Pinterest / X / LinkedIn / Google**: status + budget only. Sending `targeting`
-          or `creative` returns 501 with code `unsupported_platform_operation`.
+        - **Pinterest / X / LinkedIn / Google / OpenAI Ads**: status + budget only. Sending
+          `targeting` or `creative` returns 501 with code `unsupported_platform_operation`.
+          OpenAI Ads budget is lifetime-only (see `budget.type` below).
       security:
         - bearerAuth: []
       parameters:
@@ -34203,7 +34263,7 @@ paths:
                   type: object
                   properties:
                     amount: { type: number, description: "Minimum varies by platform: TikTok=$20, Pinterest=$5, others=$1" }
-                    type: { type: string, enum: [daily, lifetime] }
+                    type: { type: string, enum: [daily, lifetime], description: "OpenAI Ads accepts lifetime only; sending daily returns 422." }
                 targeting:
                   type: object
                   description: |
@@ -34261,7 +34321,7 @@ paths:
       tags: ["Ad Campaigns"]
       x-platforms: ["meta", "google", "tiktok", "linkedin", "pinterest", "x"]
       summary: Cancel an ad
-      description: Cancels the ad on the platform and marks it as cancelled in the database. The ad is preserved for history.
+      description: Cancels the ad on the platform and marks it as cancelled in the database. The ad is preserved for history. OpenAI Ads has no delete API; the ad is archived instead (a terminal state, the closest equivalent).
       security:
         - bearerAuth: []
       parameters:
@@ -35933,9 +35993,9 @@ paths:
       summary: Create standalone ad
       description: >-
         Creates a paid ad with custom creative across Meta, Google Ads,
-        Pinterest, TikTok, X/Twitter, and LinkedIn. Supports three
-        mutually-exclusive request shapes selected by the body, a legacy
-        single-creative shape (all platforms, default), a Meta-only
+        Pinterest, TikTok, X/Twitter, LinkedIn, and OpenAI Ads (ChatGPT Ads).
+        Supports three mutually-exclusive request shapes selected by the body,
+        a legacy single-creative shape (all platforms, default), a Meta-only
         multi-creative shape via the creatives array (one ad set with N ads
         sharing budget and targeting), and a Meta-only attach shape via adSetId
         (adds one new ad to an existing ad set). Per-platform required fields,
@@ -36014,6 +36074,9 @@ paths:
                     - `engagement`, `traffic`, `awareness` and `video_views` create standalone Direct Sponsored Content ads. `traffic` requires `linkUrl`; `video_views` requires `video`.
                     - `job_applicants` requires a `platformSpecificData.jobs` creative.
                     - For `lead_generation` or `conversions` on LinkedIn, or to promote an existing post, use POST /v1/ads/boost.
+
+                    **OpenAI Ads**
+                    - Only `traffic`, `awareness`, and `conversions` are supported (other goals return 400). Maps to OpenAI's `bidding_type` (clicks, impressions, conversions respectively). `conversions` requires an active conversion event setting on the account; create a tracking tag with `defaultEventType` via the tracking-tags API (`POST /v1/accounts/{accountId}/tracking-tags`), or configure a conversion event in OpenAI Ads Manager, or the request returns 422.
                 optimizationGoal: { type: string, description: "Meta only. Explicit ad-set `optimization_goal` (e.g. `LANDING_PAGE_VIEWS`, `LINK_CLICKS`, `REACH`, `IMPRESSIONS`, `OFFSITE_CONVERSIONS`, `THRUPLAY`, `LEAD_GENERATION`). Overrides the default derived from `goal` (e.g. `traffic` defaults to `LINK_CLICKS`). Forwarded verbatim to Meta, which validates compatibility with the campaign objective and rejects incompatible combinations." }
                 billingEvent: { type: string, description: "Meta only. Explicit ad-set `billing_event`. Defaults to `IMPRESSIONS`. Forwarded verbatim to Meta, which validates compatibility with the optimization goal." }
                 buyingType: { type: string, enum: [AUCTION, RESERVED], description: "Meta only. RESERVED = Reach & Frequency: requires `rfPredictionId` (a RESERVED prediction from /v1/ads/rf-predictions + /reserve). Budget, schedule and pricing come from the reservation, so budgetAmount/budgetType are not required and bid fields are ignored. Only the plain single-ad shape (no creatives[], adSetId, existingCampaignId or dynamicCreative)." }
@@ -36025,8 +36088,8 @@ paths:
                 validateOnly:
                   type: boolean
                   description: 'Meta only, single standalone shape only (no creatives[], adSetId, or RESERVED). Dry-run: each node runs Meta''s execution_options validate_only and NOTHING is created or persisted. Children need real parents, so a fresh tree validates the campaign + creative (the ad set needs its campaign to exist — pass existingCampaignId to validate it too; the ad itself is never validatable pre-create). A Meta validation failure returns the 400 verbatim; success returns 200 with per-node results instead of an ad.'
-                budgetAmount: { type: number, description: "Required on legacy + multi-creative shapes. Inherited on attach." }
-                budgetType: { type: string, enum: [daily, lifetime], description: "Required on legacy + multi-creative shapes. Inherited on attach." }
+                budgetAmount: { type: number, description: "Required on legacy + multi-creative shapes. Inherited on attach. OpenAI Ads requires a $1 minimum (its budget is lifetime-only, see budgetType)." }
+                budgetType: { type: string, enum: [daily, lifetime], description: "Required on legacy + multi-creative shapes. Inherited on attach. OpenAI Ads accepts lifetime only (no daily-budget concept on the platform); sending daily returns 422. OpenAI Ads lifetime budgets require `endDate` to give the lifetime cap a spend window." }
                 status:
                   type: string
                   enum: [ACTIVE, PAUSED]
@@ -36045,14 +36108,14 @@ paths:
                     Meta requires the budget at exactly one level, never both. Non-Meta platforms ignore
                     this field. Ignored on the attach shape (`adSetId`), which inherits the existing budget.
                 currency: { type: string }
-                headline: { type: string, description: "Required for Meta, Google, Pinterest, and LinkedIn on legacy + attach shapes (skip for multi-creative — use `creatives[].headline`). Ignored for TikTok and X/Twitter. Max: Meta=255, Google=30, Pinterest=100, LinkedIn=400. On LinkedIn this is the ad's headline (the bold text on the creative); for traffic ads it's the link card title." }
+                headline: { type: string, description: "Required for Meta, Google, Pinterest, LinkedIn, and OpenAI Ads on legacy + attach shapes (skip for multi-creative — use `creatives[].headline`). Ignored for TikTok and X/Twitter. Max: Meta=255, Google=30, Pinterest=100, LinkedIn=400, OpenAI=50 (min 3). On LinkedIn this is the ad's headline (the bold text on the creative); for traffic ads it's the link card title. On OpenAI Ads this is the chat card's title." }
                 longHeadline: { type: string, maxLength: 90, description: "Google Display only — defaults to `headline` if omitted. On LinkedIn, reused as the optional secondary description text on traffic (link) ads; omitted if not provided." }
-                body: { type: string, description: "Required on legacy + attach shapes. For X/Twitter this is the tweet text (max 280 chars including a ~24-char URL when `linkUrl` is set). On LinkedIn this is the post commentary (the intro text shown above the ad). Max: Google=90, Pinterest=500." }
+                body: { type: string, description: "Required on legacy + attach shapes. For X/Twitter this is the tweet text (max 280 chars including a ~24-char URL when `linkUrl` is set). On LinkedIn this is the post commentary (the intro text shown above the ad). On OpenAI Ads this is the chat card's body text. Max: Google=90, Pinterest=500, OpenAI=100." }
                 description: { type: string, maxLength: 255, description: "Meta only (facebook/instagram). Link description — the secondary text shown below the headline (Meta's link_data.description; on video creatives mapped to video_data.link_description). When omitted, Meta auto-pulls the destination URL's OpenGraph description. Applies on legacy, attach, and placementAssets shapes; for multi-creative use creatives[].description (this field is the shared fallback). For multi-text variations use dynamicCreative.descriptions instead." }
                 callToAction: { type: string, enum: [LEARN_MORE, SHOP_NOW, SIGN_UP, BOOK_TRAVEL, CONTACT_US, DOWNLOAD, GET_OFFER, GET_QUOTE, SUBSCRIBE, WATCH_MORE, ADD_TO_CART, APPLY_NOW, BOOK_NOW, BUY_TICKETS, DONATE, DONATE_NOW, GET_DIRECTIONS, GET_SHOWTIMES, LISTEN_NOW, ORDER_NOW, PLAY_GAME, REQUEST_TIME, SEE_MENU, START_ORDER, INSTALL_MOBILE_APP, USE_APP, REGISTER, JOIN, ATTEND, REQUEST_DEMO, VIEW_QUOTE, APPLY, SEE_MORE, BUY_NOW], description: "Required on legacy + attach shapes for Meta. Honoured on TikTok (passes through to the Spark Ad creative's `call_to_action`) and on LinkedIn (the CTA button on the ad; defaults to LEARN_MORE when `linkUrl` is set). LinkedIn accepts: LEARN_MORE, SIGN_UP, DOWNLOAD, SUBSCRIBE, REGISTER, JOIN, ATTEND, REQUEST_DEMO, VIEW_QUOTE, APPLY, SEE_MORE, SHOP_NOW, BUY_NOW. Ignored by Google, Pinterest, and X/Twitter." }
-                linkUrl: { type: string, format: uri, description: "Required on legacy + attach shapes (skip for multi-creative). On LinkedIn it's the ad's destination URL; required for `traffic` ads, optional for `engagement` / `awareness`. NOT required when `goal` is `lead_generation` (the ad opens a Lead Gen form instead of a destination). On LinkedIn, `imageUrl` + `linkUrl` publishes an ARTICLE-content creative; this is LinkedIn's article ad format, with the image as thumbnail and `longHeadline` as description." }
+                linkUrl: { type: string, format: uri, description: "Required on legacy + attach shapes (skip for multi-creative). On LinkedIn it's the ad's destination URL; required for `traffic` ads, optional for `engagement` / `awareness`. NOT required when `goal` is `lead_generation` (the ad opens a Lead Gen form instead of a destination). On LinkedIn, `imageUrl` + `linkUrl` publishes an ARTICLE-content creative; this is LinkedIn's article ad format, with the image as thumbnail and `longHeadline` as description. Required for OpenAI Ads (the chat card's target_url)." }
                 leadGenFormId: { type: string, description: "Meta Lead Gen forms only (facebook/instagram). The leadgen_forms ID to attach to the ad's creative — create one via POST /v1/ads/lead-forms. REQUIRED when `goal` is `lead_generation`, and on every ATTACH (`adSetId`) call that targets a lead ad set (the form attaches per-ad; Meta rejects a formless ad in a lead ad set). Ignored otherwise. The ad set's promoted_object.page_id + LEAD_GENERATION optimization + destination_type ON_AD are derived automatically from the goal. Both `placementAssets` (per-placement creative) and `dynamicCreative` (multi-text / multi-asset pool, e.g. multiple headlines and primary texts) ARE supported on instant-form lead ads — the form is attached for you, and for `dynamicCreative` the ad set is created as a Dynamic Creative ad set automatically (Meta requires that for any multi-text feed; there is no non-DCO multi-text path). Send a single `imageUrls` entry plus your text variations to get Meta's \"Multiple Text Options\" behavior on a lead ad." }
-                imageUrl: { type: string, format: uri, description: "Image creative for Meta/Google/Pinterest/LinkedIn on legacy + attach shapes (mutually exclusive with `video`). Required for LinkedIn ads unless `video` is set. Not required for Google Search campaigns. For TikTok, this field carries the VIDEO URL (the TikTok ads endpoint is video-only; the field retains the `imageUrl` name for cross-platform consistency). Ignored for X/Twitter. For Google Display, treated as the landscape image (alias of `images.landscape`); supply `images.square` alongside or the request is rejected. For LinkedIn the image is uploaded to LinkedIn under the authoring Company Page (see `organizationId`); recommended ratio 1.91:1 (e.g. 1200×627)." }
+                imageUrl: { type: string, format: uri, description: "Image creative for Meta/Google/Pinterest/LinkedIn on legacy + attach shapes (mutually exclusive with `video`). Required for LinkedIn ads unless `video` is set. Not required for Google Search campaigns. For TikTok, this field carries the VIDEO URL (the TikTok ads endpoint is video-only; the field retains the `imageUrl` name for cross-platform consistency). Ignored for X/Twitter. For Google Display, treated as the landscape image (alias of `images.landscape`); supply `images.square` alongside or the request is rejected. For LinkedIn the image is uploaded to LinkedIn under the authoring Company Page (see `organizationId`); recommended ratio 1.91:1 (e.g. 1200×627). Required for OpenAI Ads (uploaded as the chat card's image; OpenAI has no video ad format)." }
                 images:
                   type: object
                   description: "Google Display (Responsive Display Ads) only. Google RDA requires both a landscape (1.91:1) and a square (1:1) marketing image; sending only one is rejected upstream as 'Too few.' (NOT_ENOUGH_*_MARKETING_IMAGE_ASSET). Supply both URLs here. Either this field or the legacy `imageUrl` can provide the landscape, but `square` has no legacy counterpart so it must be set here for Display."
@@ -36160,7 +36223,7 @@ paths:
                     Both forms are equivalent; use whichever your integration already builds.
                   allOf:
                     - $ref: '#/components/schemas/TargetingSpec'
-                countries: { type: array, items: { type: string }, description: "ISO 3166-1 alpha-2 country codes (e.g. ['NL']). Defaults to ['US'] when no other geo targeting (flat or nested `targeting`) is provided. (LinkedIn currently honours country-level targeting only.)" }
+                countries: { type: array, items: { type: string }, description: "ISO 3166-1 alpha-2 country codes (e.g. ['NL']). Defaults to ['US'] when no other geo targeting (flat or nested `targeting`) is provided. (LinkedIn and OpenAI Ads currently honour country-level targeting only; any other targeting field returns 400 for OpenAI Ads.)" }
                 cities:
                   type: array
                   description: |
@@ -37810,6 +37873,7 @@ paths:
         - Google Ads (`googleads`) via Data Manager API `ingestEvents`
         - LinkedIn (`linkedinads`) via `/rest/conversionEvents`
         - TikTok (`tiktokads`) via the Offline Events API `/offline/batch/` — OFFLINE conversions only
+        - OpenAI Ads (`openaiads`) via its Conversions API (a separate host, `bzr.openai.com`)
 
         `destinationId` semantics differ per platform:
 
@@ -37817,10 +37881,15 @@ paths:
         - Google: conversion action resource name, e.g. `customers/1234567890/conversionActions/987654321`
         - LinkedIn: conversion rule ID or URN, e.g. `104012` or `urn:lla:llaPartnerConversion:104012`
         - TikTok: Offline Event Set ID, e.g. `7057103914977558530`
+        - OpenAI Ads: pixel wire id (numeric `pixel_id`, distinct from the internal pixel id), as returned by `GET /v1/accounts/{accountId}/conversion-destinations`
 
         TikTok notes: this path sends OFFLINE conversions (in-store / CRM / call-center), not web-pixel
         events. Each event must carry an email or phone (TikTok requires at least one). The connected
         TikTok ads account must have granted the Offline Events permission; older grants must reconnect.
+
+        OpenAI Ads notes: requires a tracking tag (pixel) to already exist on the account — returns 422
+        with code `TRACKING_TAG_REQUIRED` if `POST /v1/accounts/{accountId}/tracking-tags` hasn't been
+        called yet.
 
         Callers can list valid destinations via `GET /v1/accounts/{accountId}/conversion-destinations`.
 
@@ -37834,7 +37903,9 @@ paths:
 
         Batching is handled automatically. Meta caps at 1000 events per request and rejects the
         entire batch if any event is malformed. Google caps at 2000. LinkedIn caps at 5000 and is
-        also all-or-nothing per chunk.
+        also all-or-nothing per chunk. OpenAI Ads caps at 1000 per request; larger submissions are
+        split into 1000-event chunks, each all-or-nothing (a malformed event fails every event in
+        that chunk, not the whole request).
 
         Dedup: pass a stable `eventId` on every event. Meta and LinkedIn use it to dedupe against
         browser-side pixel/Insight Tag events; Google maps it to `transactionId`.
@@ -37844,6 +37915,7 @@ paths:
         - Meta: free-form. Standard names (Purchase, Lead, ...) match Meta's built-in events; custom strings are accepted.
         - Google: ignored. The conversion action's category determines the event type. Send the standard name closest to your action for documentation, but the platform will not branch on it.
         - LinkedIn: ignored. The conversion rule's `type` (LEAD, PURCHASE, etc.) is locked to the destination at rule-creation time. Send the standard name for documentation; LinkedIn does not branch on it.
+        - OpenAI Ads: a fixed subset of standard names (Purchase, Lead, AddToCart, ViewContent, InitiateCheckout, CompleteRegistration, Subscribe, StartTrial, Schedule) maps 1:1 onto OpenAI's own event-type enum; any other standard name or custom string is sent as `type: custom` with the name preserved.
       security:
         - bearerAuth: []
       requestBody:
@@ -37856,21 +37928,22 @@ paths:
               properties:
                 accountId:
                   type: string
-                  description: SocialAccount ID (metaads, googleads, linkedinads, or tiktokads).
+                  description: SocialAccount ID (metaads, googleads, linkedinads, tiktokads, or openaiads).
                 destinationId:
                   type: string
                   description: |
                     Platform destination identifier. For Meta, the pixel/dataset
                     ID. For Google, the conversion action resource name. For
                     LinkedIn, the conversion rule ID or full
-                    `urn:lla:llaPartnerConversion:{id}` URN.
+                    `urn:lla:llaPartnerConversion:{id}` URN. For OpenAI Ads, the
+                    pixel wire id.
                 events:
                   type: array
                   minItems: 1
                   items: { $ref: '#/components/schemas/ConversionEvent' }
                 testCode:
                   type: string
-                  description: Meta `test_event_code` passthrough. Ignored by Google and LinkedIn.
+                  description: Meta `test_event_code` passthrough. Ignored by Google, LinkedIn, and OpenAI Ads.
                 consent:
                   type: object
                   description: |
@@ -37891,13 +37964,14 @@ paths:
             partial failure. For Meta, a batch is all-or-nothing (either every
             event in a chunk succeeds, or every event in the chunk is listed
             in failures). For Google, the API returns success/failure at the
-            request level only.
+            request level only. For OpenAI Ads, each 1000-event chunk is
+            all-or-nothing, same as Meta.
           content:
             application/json:
               schema:
                 type: object
                 properties:
-                  platform: { type: string, enum: [metaads, googleads, linkedinads, tiktokads] }
+                  platform: { type: string, enum: [metaads, googleads, linkedinads, tiktokads, openaiads] }
                   eventsReceived: { type: integer, description: Events accepted by the platform. }
                   eventsFailed: { type: integer, description: Events rejected (see failures). }
                   failures:
@@ -37914,7 +37988,8 @@ paths:
                     description: |
                       Platform trace ID for debugging. fbtrace_id for Meta,
                       requestId for Google. Absent for LinkedIn (LinkedIn's
-                      conversionEvents endpoint does not surface a trace ID).
+                      conversionEvents endpoint does not surface a trace ID)
+                      and OpenAI Ads (no trace ID surfaced).
         '400':
           description: Invalid body (missing accountId/destinationId/events, malformed event shape).
         '401': { $ref: '#/components/responses/Unauthorized' }
@@ -37924,6 +37999,8 @@ paths:
             OR (for LinkedIn) the connected account lacks the `rw_conversions` scope and must be reconnected.
         '404':
           description: Account not found or not accessible.
+        '422':
+          description: 'OpenAI Ads only: no tracking tag (pixel) exists yet for this account. Code `TRACKING_TAG_REQUIRED` — create one via `POST /v1/accounts/{accountId}/tracking-tags` first.'
         '429':
           description: |
             LinkedIn token-level rate limit hit (600 requests/min, 300k/day
@@ -38058,15 +38135,15 @@ paths:
       x-platforms: ["meta", "google", "tiktok", "linkedin"]
       summary: List conversion destinations
       description: |
-        Returns the list of pixels (Meta), conversion actions (Google), or
-        conversion rules (LinkedIn) accessible to the connected ads account.
-        Use the returned `id` as `destinationId` when posting to
-        `POST /v1/ads/conversions`.
+        Returns the list of pixels (Meta), conversion actions (Google),
+        conversion rules (LinkedIn), or pixels (OpenAI Ads) accessible to the
+        connected ads account. Use the returned `id` as `destinationId` when
+        posting to `POST /v1/ads/conversions`.
 
         For Google and LinkedIn, each destination's `type` reflects the
         conversion type (PURCHASE, LEAD, SIGN_UP, etc.) — the event type is
-        locked to the destination. For Meta, `type` is absent: pixels accept
-        any event name per request.
+        locked to the destination. For Meta and OpenAI Ads, `type` is absent:
+        pixels accept any event name per request.
 
         For LinkedIn, destinations are returned across every sponsored ad
         account the connected token can access; the `adAccountId` field on
@@ -38079,7 +38156,7 @@ paths:
           in: path
           required: true
           schema: { type: string }
-          description: SocialAccount ID (metaads, googleads, linkedinads, or tiktokads).
+          description: SocialAccount ID (metaads, googleads, linkedinads, tiktokads, or openaiads).
       responses:
         '200':
           description: Destinations listed
@@ -38088,7 +38165,7 @@ paths:
               schema:
                 type: object
                 properties:
-                  platform: { type: string, enum: [metaads, googleads, linkedinads, tiktokads] }
+                  platform: { type: string, enum: [metaads, googleads, linkedinads, tiktokads, openaiads] }
                   destinations:
                     type: array
                     items:
@@ -38099,7 +38176,8 @@ paths:
                           description: |
                             Destination identifier. Meta: pixel ID. Google:
                             conversion action resource name. LinkedIn:
-                            numeric conversion rule ID.
+                            numeric conversion rule ID. OpenAI Ads: pixel wire
+                            id.
                         name: { type: string }
                         type:
                           type: string
@@ -38134,7 +38212,9 @@ paths:
       description: |
         Create a new conversion destination on the platform. Supported for
         LinkedIn (conversion rule) and Google Ads (conversion action). Meta
-        manages destinations in its own UI and returns 405.
+        and OpenAI Ads pixels are created via their own tracking-tags flow
+        instead (`POST /v1/accounts/{accountId}/tracking-tags`); this endpoint
+        returns 405 for both.
 
         **LinkedIn:** creation is NOT idempotent. A retry creates a second
         destination. Deduplicate before retrying.
@@ -39041,22 +39121,25 @@ paths:
       x-platforms: ["meta"]
       summary: List tracking tags
       description: |
-        Returns the tracking tags (Meta Pixels) the connected ads account can
-        see. Pass `?adAccountId=act_...` to scope the list to a single ad
-        account; omit it to list every pixel reachable by the token (the name
-        is then suffixed with the ad account it was discovered on, for
-        disambiguation). The list view omits `code` — call `getTrackingTag` for
-        the install snippet and full detail.
+        Returns the tracking tags (Meta Pixels, or OpenAI Ads pixels) the
+        connected ads account can see. Pass `?adAccountId=act_...` (Meta only)
+        to scope the list to a single ad account; omit it to list every pixel
+        reachable by the token (the name is then suffixed with the ad account
+        it was discovered on, for disambiguation). The list view omits `code`
+        — call `getTrackingTag` for the install snippet and full detail (Meta
+        only; OpenAI Ads has no get-by-id endpoint).
 
-        Meta only today (platform `metaads`); other platforms return 405. The
-        `accountId` must be the Meta *ads* SocialAccount created by the Ads
-        add-on connect flow, not a Facebook/Instagram posting account. Get your
-        `act_...` ids from `GET /v1/ads/accounts`.
+        Meta (platform `metaads`) and OpenAI Ads (platform `openaiads`); other
+        platforms return 405. The `accountId` must be the ads SocialAccount
+        created by the Ads add-on connect flow (Meta) or the OpenAI Ads
+        connect flow, not a Facebook/Instagram posting account. Get your Meta
+        `act_...` ids from `GET /v1/ads/accounts`; `adAccountId` is ignored for
+        OpenAI Ads (one API key maps to exactly one ad account).
       security:
         - bearerAuth: []
       parameters:
-        - { name: accountId, in: path, required: true, schema: { type: string }, description: 'Meta ads SocialAccount id (platform `metaads`).' }
-        - { name: adAccountId, in: query, required: false, schema: { type: string }, description: 'Optional. Scope to one ad account, e.g. `act_123456789`.' }
+        - { name: accountId, in: path, required: true, schema: { type: string }, description: 'Ads SocialAccount id (platform `metaads` or `openaiads`).' }
+        - { name: adAccountId, in: query, required: false, schema: { type: string }, description: 'Optional, Meta only. Scope to one ad account, e.g. `act_123456789`. Ignored for OpenAI Ads.' }
       responses:
         '200':
           description: Tracking tags listed
@@ -39065,7 +39148,7 @@ paths:
               schema:
                 type: object
                 properties:
-                  platform: { type: string, enum: [metaads] }
+                  platform: { type: string, enum: [metaads, openaiads] }
                   tags:
                     type: array
                     items: { $ref: '#/components/schemas/TrackingTag' }
@@ -39081,23 +39164,37 @@ paths:
       x-platforms: ["meta"]
       summary: Create a tracking tag
       description: |
-        Creates a Meta Pixel on the given ad account (`POST /act_{id}/adspixels`
+        Meta: creates a Meta Pixel on the given ad account (`POST /act_{id}/adspixels`
         — `name` is the only input). Returns the created tag including its
         install `code`. The pixel is owned by the Business Manager that owns the
         ad account; a pixel created on a personal (non-BM) ad account ends up
         with `ownerBusinessId: null` and can't be shared with other ad accounts.
 
-        Creating a pixel does NOT install it — install the returned `code`
+        Creating a Meta pixel does NOT install it — install the returned `code`
         snippet on the site, or send events server-side via
         `POST /v1/ads/conversions`. The check `installed` is derived from
         `lastFiredTime`.
 
-        NOT idempotent: each call creates a new pixel. Do not retry blindly on
-        timeout. Meta only (platform `metaads`); other platforms return 405.
+        OpenAI Ads: creates an OpenAI pixel AND provisions a Conversions API
+        key for it in the same call (`adAccountId` is required by this
+        endpoint but ignored — one API key maps to exactly one ad account, so
+        there's nothing to select). Returns 422 (`FEATURE_NOT_AVAILABLE`) if
+        the ad account isn't enabled for pixel management; contact your OpenAI
+        partner representative to enable it. There is no delete API for
+        OpenAI pixels. If the pixel is created but the Conversions API key
+        provisioning then fails, the pixel is left live on OpenAI (it cannot
+        be cleaned up) and the error message names the surviving pixel id and
+        warns against retrying, since a retry would create a second, orphaned
+        pixel.
+
+        NOT idempotent on either platform: each call creates a new pixel (and,
+        for OpenAI, a new Conversions API key). Do not retry blindly on
+        timeout. Meta (platform `metaads`) and OpenAI Ads (platform
+        `openaiads`); other platforms return 405.
       security:
         - bearerAuth: []
       parameters:
-        - { name: accountId, in: path, required: true, schema: { type: string }, description: 'Meta ads SocialAccount id (platform `metaads`).' }
+        - { name: accountId, in: path, required: true, schema: { type: string }, description: 'Ads SocialAccount id (platform `metaads` or `openaiads`).' }
       requestBody:
         required: true
         content:
@@ -39106,7 +39203,7 @@ paths:
               type: object
               required: [adAccountId, name]
               properties:
-                adAccountId: { type: string, description: 'Meta ad account id, e.g. `act_123456789`.' }
+                adAccountId: { type: string, description: 'Meta ad account id, e.g. `act_123456789`. Required by this endpoint but ignored for OpenAI Ads.' }
                 name: { type: string, minLength: 1, maxLength: 200 }
       responses:
         '201':
@@ -39116,13 +39213,14 @@ paths:
               schema:
                 type: object
                 properties:
-                  platform: { type: string, enum: [metaads] }
+                  platform: { type: string, enum: [metaads, openaiads] }
                   tag: { $ref: '#/components/schemas/TrackingTag' }
         '400': { description: 'Invalid body, invalid `adAccountId`, over the per-business pixel cap, or ad account not in a Business Manager.' }
         '401': { $ref: '#/components/responses/Unauthorized' }
         '403': { description: 'Ads access required (Ads add-on on legacy plans, included on usage-based plans), or the Meta token lacks ads permissions (reconnect required).' }
         '404': { description: Account not found or not accessible. }
         '405': { description: Platform does not support creating tracking tags. }
+        '422': { description: 'OpenAI Ads only: the ad account is not enabled for pixel management. Contact your OpenAI partner representative.' }
 
   /v1/accounts/{accountId}/tracking-tags/{tagId}:
     get:
@@ -39133,7 +39231,9 @@ paths:
       description: |
         Returns the full tag record including the base-code `code` snippet,
         `lastFiredTime`, `ownerBusinessId`, `isUnavailable`, etc. Meta only
-        (platform `metaads`); other platforms return 405.
+        (platform `metaads`); other platforms return 405. OpenAI Ads has no
+        get-by-id endpoint, so it 405s here too — use
+        `GET /v1/accounts/{accountId}/tracking-tags` (list) instead.
       security:
         - bearerAuth: []
       parameters:
