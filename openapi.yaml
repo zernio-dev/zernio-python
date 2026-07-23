@@ -28469,7 +28469,7 @@ paths:
                         localTo: { type: [string, "null"], description: ISO country the value must be local to }
                   reusable:
                     type: [object, "null"]
-                    description: Present when this account already has an approved verification for the country that can be reused (skip the form). `fromPhoneNumber`/`details` mirror the newest option; `options` lists ALL approved verifications (agencies hold one per end client) — pass the chosen option's `fromPhoneNumber` as `reuseFrom` on POST.
+                    description: 'Present when this account already has a reusable verification for the country (skip the form). `fromPhoneNumber`/`details` mirror the first option; `options` lists ALL reusable verifications (agencies hold one per end client), approved-first. Pass the chosen option''s `id` as `reuseOptionId` on POST. Each option''s `instant` says whether it activates in minutes (group-approved) or still queues for carrier review (1-3 days).'
                     properties:
                       available: { type: boolean }
                       fromPhoneNumber: { type: string }
@@ -28487,7 +28487,9 @@ paths:
                         items:
                           type: object
                           properties:
-                            fromPhoneNumber: { type: string }
+                            id: { type: string, description: 'Opaque option id — pass as `reuseOptionId` on POST. Stable selection key (a phone number is not unique across verifications).' }
+                            fromPhoneNumber: { type: string, description: Display only — the number this verification was submitted for. Not a selection key. }
+                            instant: { type: boolean, description: 'true = group-approved, a new order activates in minutes; false = documents are reused but the order still queues for carrier review (1-3 days).' }
                             details:
                               type: array
                               items:
@@ -28534,7 +28536,8 @@ paths:
                 submissionId: { type: string, description: Idempotency token for this submission attempt. A retry/double-submit with the same token returns the same number; omit and each call creates a new number. }
                 quantity: { type: integer, minimum: 1, maximum: 5, default: 1, description: 'Provision several same-country numbers from one submission (1-5). The single verification covers all of them; each number is billed only when it activates. Numbers that fail to order are skipped (best-effort).' }
                 reuse: { type: boolean, description: Reuse a prior approved verification for this country (skips document/field collection; places the order immediately). }
-                reuseFrom: { type: string, description: 'Which approved verification to reuse when several exist: the phone number it was originally approved for (GET reusable.options[].fromPhoneNumber). Omitted = newest. No match = 409.' }
+                reuseOptionId: { type: string, description: 'Which reusable verification to use (GET reusable.options[].id). The unambiguous selection key. Omitted = the approved default. No match = 409.' }
+                reuseFrom: { type: string, description: 'Legacy fallback for `reuseOptionId`: the source phone number (GET reusable.options[].fromPhoneNumber). Ambiguous when a number labels two verifications — prefer `reuseOptionId`. Omitted = the approved default. No match = 409.' }
                 endUserFirstName: { type: string, description: End user's legal first name. Required when the country has an action/ID-verification (Onfido) requirement. }
                 endUserLastName: { type: string, description: End user's legal last name. Same condition as endUserFirstName. }
                 values:
@@ -29274,7 +29277,7 @@ paths:
                         audience: { type: [string, "null"], enum: [business, individual, null], description: 'When set, the requirement applies ONLY to this end-user type — provide it for that type and OMIT it for the other (e.g. Brazil: "Cartão CNPJ" is business-only, "CPF" and "ID/Passport Copy" are personal-only). Submitting both sets makes the regulator ask whether the number is for personal or business use and stalls the review. Pass `entityType` on POST so the server drops the inapplicable set.' }
                   reusable:
                     type: [object, "null"]
-                    description: Present when this account already has an approved verification for the country that can be reused (skip the form). `fromPhoneNumber`/`details` mirror the newest option; `options` lists ALL approved verifications (agencies hold one per end client) — pass the chosen option's `fromPhoneNumber` as `reuseFrom` on POST.
+                    description: 'Present when this account already has a reusable verification for the country (skip the form). `fromPhoneNumber`/`details` mirror the first option; `options` lists ALL reusable verifications (agencies hold one per end client), approved-first. Pass the chosen option''s `id` as `reuseOptionId` on POST. Each option''s `instant` says whether it activates in minutes (group-approved) or still queues for carrier review (1-3 days).'
                     properties:
                       available: { type: boolean }
                       fromPhoneNumber: { type: string }
@@ -29292,7 +29295,9 @@ paths:
                         items:
                           type: object
                           properties:
-                            fromPhoneNumber: { type: string }
+                            id: { type: string, description: 'Opaque option id — pass as `reuseOptionId` on POST. Stable selection key (a phone number is not unique across verifications).' }
+                            fromPhoneNumber: { type: string, description: Display only — the number this verification was submitted for. Not a selection key. }
+                            instant: { type: boolean, description: 'true = group-approved, a new order activates in minutes; false = documents are reused but the order still queues for carrier review (1-3 days).' }
                             details:
                               type: array
                               items:
@@ -29343,7 +29348,8 @@ paths:
                 submissionId: { type: string, description: Idempotency token for this submission attempt. A retry/double-submit with the same token returns the same number; omit and each call creates a new number. }
                 quantity: { type: integer, minimum: 1, maximum: 5, default: 1, description: 'Provision several same-country numbers from one submission (1-5). The single verification covers all of them; each number is billed only when it activates. Numbers that fail to order are skipped (best-effort).' }
                 reuse: { type: boolean, description: Reuse a prior approved verification for this country (skips document/field collection; places the order immediately). }
-                reuseFrom: { type: string, description: 'Which approved verification to reuse when several exist: the phone number it was originally approved for (GET reusable.options[].fromPhoneNumber). Omitted = newest. No match = 409.' }
+                reuseOptionId: { type: string, description: 'Which reusable verification to use (GET reusable.options[].id). The unambiguous selection key. Omitted = the approved default. No match = 409.' }
+                reuseFrom: { type: string, description: 'Legacy fallback for `reuseOptionId`: the source phone number (GET reusable.options[].fromPhoneNumber). Ambiguous when a number labels two verifications — prefer `reuseOptionId`. Omitted = the approved default. No match = 409.' }
                 endUserFirstName: { type: string, description: End user's legal first name. Required when the country has an action/ID-verification (Onfido) requirement. }
                 endUserLastName: { type: string, description: End user's legal last name. Same condition as endUserFirstName. }
                 values:
