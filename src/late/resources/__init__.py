@@ -55,6 +55,7 @@ from ._generated.whatsapp_sandbox import WhatsappSandboxResource
 from ._generated.whatsapp_templates import WhatsappTemplatesResource
 from ._generated.workflows import WorkflowsResource
 from .accounts import AccountsResource
+from .ads import AdsResource
 from .analytics import AnalyticsResource
 from .media import MediaResource
 from .posts import PostsResource
@@ -73,6 +74,7 @@ __all__ = [
     "AdCreativesResource",
     "AdInsightsResource",
     "AdTargetingResource",
+    "AdsResource",
     "AnalyticsResource",
     "ApiKeysResource",
     "BroadcastsResource",
