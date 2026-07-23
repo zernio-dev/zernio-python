@@ -33536,6 +33536,7 @@ paths:
                     type: array
                     items: { $ref: '#/components/schemas/AdCampaign' }
                   pagination: { $ref: '#/components/schemas/Pagination' }
+        '400': { $ref: '#/components/responses/BadRequest' }
         '401': { $ref: '#/components/responses/Unauthorized' }
         '403':
           description: Ads access required. Legacy plans need the Ads add-on; included by default on usage-based plans.
