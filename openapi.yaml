@@ -35844,7 +35844,14 @@ paths:
                   description: "Meta only. Tracking specs (pixel, URL tags)."
                   properties:
                     pixelId: { type: string }
-                    urlTags: { type: string }
+                    urlTags:
+                      type: array
+                      description: 'URL parameters appended to the ad link, rendered as `key=value` pairs joined with `&`.'
+                      items:
+                        type: object
+                        properties:
+                          key: { type: string }
+                          value: { type: string }
                 specialAdCategories:
                   type: array
                   description: "Meta only. Required for housing, employment, credit, or political ads."
