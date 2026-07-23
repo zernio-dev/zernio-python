@@ -342,6 +342,28 @@ class PhoneNumbersResource:
             f"/v1/phone-numbers/{id}/remediate/reply", data=payload
         )
 
+    def respond_to_phone_number_reviewer(
+        self,
+        id: str,
+        *,
+        message: str | None = None,
+        documents: list[dict[str, Any]] | None = None,
+        address: dict[str, Any] | None = None,
+        entity_type: Any | None = None,
+        attachments: list[dict[str, Any]] | None = None,
+    ) -> dict[str, Any]:
+        """Respond to the regulatory reviewer (message + corrections)"""
+        payload = self._build_payload(
+            message=message,
+            documents=documents,
+            address=address,
+            entity_type=entity_type,
+            attachments=attachments,
+        )
+        return self._client._post(
+            f"/v1/phone-numbers/{id}/remediate/respond", data=payload
+        )
+
     async def alist_phone_numbers(
         self, *, status: str | None = None, profile_id: str | None = None
     ) -> dict[str, Any]:
@@ -636,4 +658,26 @@ class PhoneNumbersResource:
         )
         return await self._client._apost(
             f"/v1/phone-numbers/{id}/remediate/reply", data=payload
+        )
+
+    async def arespond_to_phone_number_reviewer(
+        self,
+        id: str,
+        *,
+        message: str | None = None,
+        documents: list[dict[str, Any]] | None = None,
+        address: dict[str, Any] | None = None,
+        entity_type: Any | None = None,
+        attachments: list[dict[str, Any]] | None = None,
+    ) -> dict[str, Any]:
+        """Respond to the regulatory reviewer (message + corrections) (async)"""
+        payload = self._build_payload(
+            message=message,
+            documents=documents,
+            address=address,
+            entity_type=entity_type,
+            attachments=attachments,
+        )
+        return await self._client._apost(
+            f"/v1/phone-numbers/{id}/remediate/respond", data=payload
         )

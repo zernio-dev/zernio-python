@@ -10785,6 +10785,45 @@ def register_generated_tools(mcp, _get_client):
         except Exception as e:
             return f"Error: {e}"
 
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Respond to the regulatory reviewer (message + corrections)",
+            readOnlyHint=False,
+            destructiveHint=True,
+            openWorldHint=True,
+        )
+    )
+    def phone_numbers_respond_to_phone_number_reviewer(
+        id: str,
+        message: str | None = None,
+        documents: list[dict[str, Any]] | None = None,
+        address: dict[str, Any] | None = None,
+        entity_type: str | None = None,
+        attachments: list[dict[str, Any]] | None = None,
+    ) -> str:
+        """Respond to the regulatory reviewer (message + corrections)
+
+        Args:
+            id: (required)
+            message: Your message to the reviewer.
+            documents: Corrected requirement documents, each keyed to its requirement.
+            address: A corrected address record, keyed to its requirement.
+            entity_type
+            attachments: Loose files (PDF/JPG/PNG/WEBP, max 10 MB each) whose links are added to your message."""
+        client = _get_client()
+        try:
+            response = client.phone_numbers.respond_to_phone_number_reviewer(
+                id=id,
+                message=message,
+                documents=documents,
+                address=address,
+                entity_type=entity_type,
+                attachments=attachments,
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
     # POSTS
 
     @mcp.tool(

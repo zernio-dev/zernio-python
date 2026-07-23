@@ -29363,6 +29363,83 @@ paths:
         '404': { description: Number not found }
         '502': { description: Couldn't deliver the reply to the reviewer; retry. }
 
+  /v1/phone-numbers/{id}/remediate/respond:
+    post:
+      operationId: respondToPhoneNumberReviewer
+      tags: [Phone Numbers]
+      summary: Respond to the regulatory reviewer (message + corrections)
+      description: |
+        Send a single response to the reviewer on a number awaiting remediation:
+        a free-text message and/or corrected requirement documents, in one call.
+        If corrections are present they are PATCHed onto the requirement group and
+        re-submitted (the number goes back to "in review"); if a message or file
+        attachments are present they are posted to the reviewer's comment thread.
+        When both are present, your message is the thread comment and the resubmit
+        drives the state change. At least one of message, corrections, or
+        attachments is required. `documents` correct requirement slots; `attachments`
+        are loose files (their links are added to your message).
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                message: { type: string, maxLength: 2000, description: Your message to the reviewer. }
+                documents:
+                  type: array
+                  description: 'Corrected requirement documents, each keyed to its requirement.'
+                  items:
+                    type: object
+                    required: [requirementId]
+                    properties:
+                      requirementId: { type: string }
+                      filename: { type: string }
+                      base64: { type: string, description: Base64-encoded file bytes (or supply documentId instead). }
+                      documentId: { type: string, description: Id of a document already uploaded out-of-band. }
+                address:
+                  type: object
+                  description: A corrected address record, keyed to its requirement.
+                entityType:
+                  type: [string, 'null']
+                  enum: [individual, business, null]
+                attachments:
+                  type: array
+                  maxItems: 5
+                  description: 'Loose files (PDF/JPG/PNG/WEBP, max 10 MB each) whose links are added to your message.'
+                  items:
+                    type: object
+                    required: [filename, base64]
+                    properties:
+                      filename: { type: string }
+                      base64: { type: string, description: Base64-encoded file bytes. }
+      responses:
+        '200':
+          description: Response sent.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status: { type: string, enum: [resubmitted, replied], description: '`resubmitted` when corrections were submitted, `replied` when it was message-only.' }
+                  posted: { type: boolean, description: Whether a message/attachments were posted to the reviewer. }
+                  phoneNumber:
+                    type: object
+                    properties:
+                      id: { type: string }
+                      status: { type: string }
+                  siblingsResubmitted: { type: integer, description: Other numbers on the same registration the correction fanned out to. }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404': { description: Number not found }
+        '409': { description: Number's registration is held under our own carrier registration; nothing for you to correct. }
+        '502': { description: Couldn't deliver your response to the reviewer; retry. }
+
   /v1/whatsapp/phone-numbers/kyc:
     get:
       operationId: getWhatsAppNumberKycForm
