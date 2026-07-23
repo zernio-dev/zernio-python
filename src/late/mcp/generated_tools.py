@@ -1213,6 +1213,358 @@ def register_generated_tools(mcp, _get_client):
         except Exception as e:
             return f"Error: {e}"
 
+    # AD_ACCOUNTS
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="List comments on an ad",
+            readOnlyHint=True,
+            destructiveHint=False,
+            openWorldHint=False,
+        )
+    )
+    def ad_accounts_get_ad_comments(
+        ad_id: str,
+        placement: str | None = None,
+        limit: int = 25,
+        cursor: str | None = None,
+    ) -> str:
+        """List comments on an ad
+
+        Args:
+            ad_id: Internal Zernio ad ID (ObjectId). (required)
+            placement: Which side of the ad to return comments for. Omit to default to the Instagram side when present, else Facebook. Returns ad_not_commentable if the ad has no such placement.
+            limit
+            cursor: Pagination cursor from a previous response."""
+        client = _get_client()
+        try:
+            response = client.ad_accounts.get_ad_comments(
+                ad_id=ad_id, placement=placement, limit=limit, cursor=cursor
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="List TikTok Business Centers",
+            readOnlyHint=True,
+            destructiveHint=False,
+            openWorldHint=False,
+        )
+    )
+    def ad_accounts_list_ads_business_centers(account_id: str) -> str:
+        """List TikTok Business Centers
+
+        Args:
+            account_id: ID of the `tiktokads` (or parent `tiktok` posting) SocialAccount (required)"""
+        client = _get_client()
+        try:
+            response = client.ad_accounts.list_ads_business_centers(
+                account_id=account_id
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Ad account change / audit log",
+            readOnlyHint=True,
+            destructiveHint=False,
+            openWorldHint=False,
+        )
+    )
+    def ad_accounts_get_ads_activity_log(
+        account_id: str,
+        ad_account_id: str,
+        since: str | None = None,
+        until: str | None = None,
+        object_id: str | None = None,
+        limit: int = 50,
+        after: str | None = None,
+    ) -> str:
+        """Ad account change / audit log
+
+        Args:
+            account_id: Zernio SocialAccount id (posting or ads variant) used to resolve the Meta token. (required)
+            ad_account_id: Meta ad account id (act_<n>). (required)
+            since: Start of range (YYYY-MM-DD).
+            until: End of range (YYYY-MM-DD).
+            object_id: Client-side filter to one Meta object id (campaign, ad set or ad).
+            limit: Rows per page
+            after: Cursor from paging.after of the previous page."""
+        client = _get_client()
+        try:
+            response = client.ad_accounts.get_ads_activity_log(
+                account_id=account_id,
+                ad_account_id=ad_account_id,
+                since=since,
+                until=until,
+                object_id=object_id,
+                limit=limit,
+                after=after,
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="A/B tests and lift studies",
+            readOnlyHint=True,
+            destructiveHint=False,
+            openWorldHint=False,
+        )
+    )
+    def ad_accounts_list_ad_studies(
+        account_id: str,
+        ad_account_id: str,
+        fields: str | None = None,
+        limit: int = 25,
+        after: str | None = None,
+    ) -> str:
+        """A/B tests and lift studies
+
+        Args:
+            account_id: Zernio SocialAccount id (posting or ads variant) used to resolve the Meta token. (required)
+            ad_account_id: Meta ad account id (act_<n>). (required)
+            fields: Comma-separated Graph field override (supports nested {} projections).
+            limit: Rows per page
+            after: Cursor from paging.after of the previous page."""
+        client = _get_client()
+        try:
+            response = client.ad_accounts.list_ad_studies(
+                account_id=account_id,
+                ad_account_id=ad_account_id,
+                fields=fields,
+                limit=limit,
+                after=after,
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Businesses list",
+            readOnlyHint=True,
+            destructiveHint=False,
+            openWorldHint=False,
+        )
+    )
+    def ad_accounts_list_meta_businesses(
+        account_id: str, limit: int = 25, after: str | None = None
+    ) -> str:
+        """Businesses list
+
+        Args:
+            account_id: Zernio SocialAccount id (posting or ads variant) used to resolve the Meta token. (required)
+            limit: Rows per page
+            after: Cursor from paging.after of the previous page."""
+        client = _get_client()
+        try:
+            response = client.ad_accounts.list_meta_businesses(
+                account_id=account_id, limit=limit, after=after
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Ad labels",
+            readOnlyHint=True,
+            destructiveHint=False,
+            openWorldHint=False,
+        )
+    )
+    def ad_accounts_list_ad_labels(
+        account_id: str, ad_account_id: str, limit: int = 25, after: str | None = None
+    ) -> str:
+        """Ad labels
+
+        Args:
+            account_id: Zernio SocialAccount id (posting or ads variant) used to resolve the Meta token. (required)
+            ad_account_id: Meta ad account id (act_<n>). (required)
+            limit: Rows per page
+            after: Cursor from paging.after of the previous page."""
+        client = _get_client()
+        try:
+            response = client.ad_accounts.list_ad_labels(
+                account_id=account_id,
+                ad_account_id=ad_account_id,
+                limit=limit,
+                after=after,
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="High demand periods / budget schedules",
+            readOnlyHint=True,
+            destructiveHint=False,
+            openWorldHint=False,
+        )
+    )
+    def ad_accounts_list_high_demand_periods(
+        account_id: str,
+        campaign_id: str | None = None,
+        ad_set_id: str | None = None,
+        limit: int = 25,
+        after: str | None = None,
+    ) -> str:
+        """High demand periods / budget schedules
+
+        Args:
+            account_id: Zernio SocialAccount id (posting or ads variant) used to resolve the Meta token. (required)
+            campaign_id: Platform campaign id. Exactly one of campaignId / adSetId.
+            ad_set_id: Platform ad set id. Exactly one of campaignId / adSetId.
+            limit: Rows per page
+            after: Cursor from paging.after of the previous page."""
+        client = _get_client()
+        try:
+            response = client.ad_accounts.list_high_demand_periods(
+                account_id=account_id,
+                campaign_id=campaign_id,
+                ad_set_id=ad_set_id,
+                limit=limit,
+                after=after,
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Ad account finances",
+            readOnlyHint=True,
+            destructiveHint=False,
+            openWorldHint=False,
+        )
+    )
+    def ad_accounts_get_ad_account_finance(account_id: str, ad_account_id: str) -> str:
+        """Ad account finances
+
+        Args:
+            account_id: Zernio SocialAccount id (posting or ads variant) used to resolve the Meta token. (required)
+            ad_account_id: Meta ad account id (act_<n>). (required)"""
+        client = _get_client()
+        try:
+            response = client.ad_accounts.get_ad_account_finance(
+                account_id=account_id, ad_account_id=ad_account_id
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="List ad accounts",
+            readOnlyHint=True,
+            destructiveHint=False,
+            openWorldHint=False,
+        )
+    )
+    def ad_accounts_list_ad_accounts(
+        account_id: str, ad_account_id: str | None = None, limit: int | None = None
+    ) -> str:
+        """List ad accounts
+
+        Args:
+            account_id: Social account ID (required)
+            ad_account_id: Filter response to a single platform ad account ID (e.g. `act_123` for Meta, advertiser_id for TikTok). Returns at most one item.
+            limit: Clamp the returned `accounts[]` length. Useful for typeahead pickers on agency tokens with hundreds of advertisers."""
+        client = _get_client()
+        try:
+            response = client.ad_accounts.list_ad_accounts(
+                account_id=account_id, ad_account_id=ad_account_id, limit=limit
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Update ad account settings",
+            readOnlyHint=False,
+            destructiveHint=True,
+            openWorldHint=True,
+        )
+    )
+    def ad_accounts_update_ad_account(
+        account_id: str,
+        ad_account_id: str,
+        default_dsa_beneficiary: str,
+        default_dsa_payor: str | None = None,
+    ) -> str:
+        """Update ad account settings
+
+        Args:
+            account_id: Social account ID (metaads, or a facebook/instagram posting account) (required)
+            ad_account_id: Meta ad account ID (act_...) (required)
+            default_dsa_beneficiary: Legal entity benefiting from ads on this ad account (required)
+            default_dsa_payor: Legal entity paying for ads on this ad account. Defaults to defaultDsaBeneficiary when omitted."""
+        client = _get_client()
+        try:
+            response = client.ad_accounts.update_ad_account(
+                account_id=account_id,
+                ad_account_id=ad_account_id,
+                default_dsa_beneficiary=default_dsa_beneficiary,
+                default_dsa_payor=default_dsa_payor,
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Get ad account DSA defaults",
+            readOnlyHint=True,
+            destructiveHint=False,
+            openWorldHint=False,
+        )
+    )
+    def ad_accounts_get_dsa_defaults(account_id: str, ad_account_id: str) -> str:
+        """Get ad account DSA defaults
+
+        Args:
+            account_id: Social account ID (metaads, or a facebook/instagram posting account) (required)
+            ad_account_id: Meta ad account ID (act_...) (required)"""
+        client = _get_client()
+        try:
+            response = client.ad_accounts.get_dsa_defaults(
+                account_id=account_id, ad_account_id=ad_account_id
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="List DSA beneficiary/payor suggestions",
+            readOnlyHint=True,
+            destructiveHint=False,
+            openWorldHint=False,
+        )
+    )
+    def ad_accounts_get_dsa_recommendations(account_id: str, ad_account_id: str) -> str:
+        """List DSA beneficiary/payor suggestions
+
+        Args:
+            account_id: Social account ID (metaads, or a facebook/instagram posting account) (required)
+            ad_account_id: Meta ad account ID (act_...) (required)"""
+        client = _get_client()
+        try:
+            response = client.ad_accounts.get_dsa_recommendations(
+                account_id=account_id, ad_account_id=ad_account_id
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
     # AD_AUDIENCES
 
     @mcp.tool(
@@ -1364,6 +1716,69 @@ def register_generated_tools(mcp, _get_client):
 
     @mcp.tool(
         annotations=ToolAnnotations(
+            title="List ads",
+            readOnlyHint=True,
+            destructiveHint=False,
+            openWorldHint=False,
+        )
+    )
+    def ad_campaigns_list_ads(
+        page: int = 1,
+        limit: int = 50,
+        source: str = "all",
+        status: str | None = None,
+        platform: str | None = None,
+        account_id: str | None = None,
+        ad_account_id: str | None = None,
+        profile_id: str | None = None,
+        campaign_id: str | None = None,
+        platform_ad_id: str | None = None,
+        effective_object_story_id: str | None = None,
+        effective_instagram_media_id: str | None = None,
+        from_date: str | None = None,
+        to_date: str | None = None,
+    ) -> str:
+        """List ads
+
+        Args:
+            page: Page number
+            limit
+            source: all (default) = Zernio-created + platform-discovered ads. zernio = restrict to Zernio-created only.
+            status
+            platform
+            account_id: Social account ID
+            ad_account_id: Platform ad account ID (e.g. act_123 for Meta). Mirrors the same filter on /v1/ads/campaigns and /v1/ads/tree.
+            profile_id: Profile ID
+            campaign_id: Platform campaign ID (filter ads within a campaign)
+            platform_ad_id: Meta ad ID. Returns the ad with this platform-side ad ID.
+            effective_object_story_id: Facebook `{pageId}_{postId}` of the post the ad's engagement lives on (Meta `effective_object_story_id`). Use to map a Business-Manager-visible post back to the Zernio ad.
+            effective_instagram_media_id: Instagram media ID of the boosted post (Meta `effective_instagram_media_id`). Use to map a Business-Manager-visible IG post back to the Zernio ad.
+            from_date: Start of metrics date range (YYYY-MM-DD). Defaults to 90 days ago.
+            to_date: End of metrics date range (YYYY-MM-DD). Defaults to today. Max 730-day range."""
+        client = _get_client()
+        try:
+            response = client.ad_campaigns.list_ads(
+                page=page,
+                limit=limit,
+                source=source,
+                status=status,
+                platform=platform,
+                account_id=account_id,
+                ad_account_id=ad_account_id,
+                profile_id=profile_id,
+                campaign_id=campaign_id,
+                platform_ad_id=platform_ad_id,
+                effective_object_story_id=effective_object_story_id,
+                effective_instagram_media_id=effective_instagram_media_id,
+                from_date=from_date,
+                to_date=to_date,
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
             title="List campaigns",
             readOnlyHint=True,
             destructiveHint=False,
@@ -1415,7 +1830,7 @@ def register_generated_tools(mcp, _get_client):
 
     @mcp.tool(
         annotations=ToolAnnotations(
-            title="Create a standalone campaign (Meta)",
+            title="Create a standalone campaign",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
@@ -1431,7 +1846,7 @@ def register_generated_tools(mcp, _get_client):
         budget_type: str | None = None,
         status: str = "PAUSED",
     ) -> str:
-        """Create a standalone campaign (Meta)
+        """Create a standalone campaign
 
         Args:
             account_id: Zernio SocialAccount id (posting or ads variant) used to resolve the Meta token. (required)
@@ -1626,7 +2041,7 @@ def register_generated_tools(mcp, _get_client):
 
     @mcp.tool(
         annotations=ToolAnnotations(
-            title="Duplicate an ad set (Meta)",
+            title="Duplicate an ad set",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
@@ -1645,7 +2060,7 @@ def register_generated_tools(mcp, _get_client):
         rename_suffix: str | None = None,
         sync_after: bool = True,
     ) -> str:
-        """Duplicate an ad set (Meta)
+        """Duplicate an ad set
 
         Args:
             ad_set_id: Source platform ad set ID (required)
@@ -1680,7 +2095,49 @@ def register_generated_tools(mcp, _get_client):
 
     @mcp.tool(
         annotations=ToolAnnotations(
-            title="Live ad-set details incl. learning phase (Meta)",
+            title="Duplicate an ad",
+            readOnlyHint=False,
+            destructiveHint=True,
+            openWorldHint=True,
+        )
+    )
+    def ad_campaigns_duplicate_ad(
+        ad_id: str,
+        ad_set_id: str | None = None,
+        status_option: str = "PAUSED",
+        rename_strategy: str | None = None,
+        rename_prefix: str | None = None,
+        rename_suffix: str | None = None,
+        sync_after: bool = True,
+    ) -> str:
+        """Duplicate an ad
+
+        Args:
+            ad_id: Zernio ad ID or platform ad ID (required)
+            ad_set_id: Destination platform ad set id (defaults to the source's ad set)
+            status_option
+            rename_strategy
+            rename_prefix
+            rename_suffix
+            sync_after"""
+        client = _get_client()
+        try:
+            response = client.ad_campaigns.duplicate_ad(
+                ad_id=ad_id,
+                ad_set_id=ad_set_id,
+                status_option=status_option,
+                rename_strategy=rename_strategy,
+                rename_prefix=rename_prefix,
+                rename_suffix=rename_suffix,
+                sync_after=sync_after,
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Live ad-set details incl. learning phase",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
@@ -1689,7 +2146,7 @@ def register_generated_tools(mcp, _get_client):
     def ad_campaigns_get_ad_set_details(
         ad_set_id: str, account_id: str, fields: str | None = None
     ) -> str:
-        """Live ad-set details incl. learning phase (Meta)
+        """Live ad-set details incl. learning phase
 
         Args:
             ad_set_id: Meta ad set id (platformAdSetId). (required)
@@ -1885,113 +2342,6 @@ def register_generated_tools(mcp, _get_client):
         except Exception as e:
             return f"Error: {e}"
 
-    # ADS
-
-    @mcp.tool(
-        annotations=ToolAnnotations(
-            title="List ads",
-            readOnlyHint=True,
-            destructiveHint=False,
-            openWorldHint=False,
-        )
-    )
-    def ads_list_ads(
-        page: int = 1,
-        limit: int = 50,
-        source: str = "all",
-        status: str | None = None,
-        platform: str | None = None,
-        account_id: str | None = None,
-        ad_account_id: str | None = None,
-        profile_id: str | None = None,
-        campaign_id: str | None = None,
-        platform_ad_id: str | None = None,
-        effective_object_story_id: str | None = None,
-        effective_instagram_media_id: str | None = None,
-        from_date: str | None = None,
-        to_date: str | None = None,
-    ) -> str:
-        """List ads
-
-        Args:
-            page: Page number
-            limit
-            source: all (default) = Zernio-created + platform-discovered ads. zernio = restrict to Zernio-created only.
-            status
-            platform
-            account_id: Social account ID
-            ad_account_id: Platform ad account ID (e.g. act_123 for Meta). Mirrors the same filter on /v1/ads/campaigns and /v1/ads/tree.
-            profile_id: Profile ID
-            campaign_id: Platform campaign ID (filter ads within a campaign)
-            platform_ad_id: Meta ad ID. Returns the ad with this platform-side ad ID.
-            effective_object_story_id: Facebook `{pageId}_{postId}` of the post the ad's engagement lives on (Meta `effective_object_story_id`). Use to map a Business-Manager-visible post back to the Zernio ad.
-            effective_instagram_media_id: Instagram media ID of the boosted post (Meta `effective_instagram_media_id`). Use to map a Business-Manager-visible IG post back to the Zernio ad.
-            from_date: Start of metrics date range (YYYY-MM-DD). Defaults to 90 days ago.
-            to_date: End of metrics date range (YYYY-MM-DD). Defaults to today. Max 730-day range."""
-        client = _get_client()
-        try:
-            response = client.ads.list_ads(
-                page=page,
-                limit=limit,
-                source=source,
-                status=status,
-                platform=platform,
-                account_id=account_id,
-                ad_account_id=ad_account_id,
-                profile_id=profile_id,
-                campaign_id=campaign_id,
-                platform_ad_id=platform_ad_id,
-                effective_object_story_id=effective_object_story_id,
-                effective_instagram_media_id=effective_instagram_media_id,
-                from_date=from_date,
-                to_date=to_date,
-            )
-            return _format_response(response)
-        except Exception as e:
-            return f"Error: {e}"
-
-    @mcp.tool(
-        annotations=ToolAnnotations(
-            title="Duplicate an ad (Meta)",
-            readOnlyHint=False,
-            destructiveHint=True,
-            openWorldHint=True,
-        )
-    )
-    def ads_duplicate_ad(
-        ad_id: str,
-        ad_set_id: str | None = None,
-        status_option: str = "PAUSED",
-        rename_strategy: str | None = None,
-        rename_prefix: str | None = None,
-        rename_suffix: str | None = None,
-        sync_after: bool = True,
-    ) -> str:
-        """Duplicate an ad (Meta)
-
-        Args:
-            ad_id: Zernio ad ID or platform ad ID (required)
-            ad_set_id: Destination platform ad set id (defaults to the source's ad set)
-            status_option
-            rename_strategy
-            rename_prefix
-            rename_suffix
-            sync_after"""
-        client = _get_client()
-        try:
-            response = client.ads.duplicate_ad(
-                ad_id=ad_id,
-                ad_set_id=ad_set_id,
-                status_option=status_option,
-                rename_strategy=rename_strategy,
-                rename_prefix=rename_prefix,
-                rename_suffix=rename_suffix,
-                sync_after=sync_after,
-            )
-            return _format_response(response)
-        except Exception as e:
-            return f"Error: {e}"
-
     @mcp.tool(
         annotations=ToolAnnotations(
             title="Get ad details",
@@ -2000,7 +2350,7 @@ def register_generated_tools(mcp, _get_client):
             openWorldHint=False,
         )
     )
-    def ads_get_ad(ad_id: str) -> str:
+    def ad_campaigns_get_ad(ad_id: str) -> str:
         """Get ad details
 
            Args:
@@ -2008,7 +2358,7 @@ def register_generated_tools(mcp, _get_client):
         (required)"""
         client = _get_client()
         try:
-            response = client.ads.get_ad(ad_id=ad_id)
+            response = client.ad_campaigns.get_ad(ad_id=ad_id)
             return _format_response(response)
         except Exception as e:
             return f"Error: {e}"
@@ -2021,7 +2371,7 @@ def register_generated_tools(mcp, _get_client):
             openWorldHint=True,
         )
     )
-    def ads_update_ad(
+    def ad_campaigns_update_ad(
         ad_id: str,
         status: str | None = None,
         budget: dict[str, Any] | None = None,
@@ -2047,7 +2397,7 @@ def register_generated_tools(mcp, _get_client):
                 name: Rename the ad. Now propagated to Meta (POST /{ad-id}); non-Meta platforms return 501."""
         client = _get_client()
         try:
-            response = client.ads.update_ad(
+            response = client.ad_campaigns.update_ad(
                 ad_id=ad_id,
                 status=status,
                 budget=budget,
@@ -2067,14 +2417,14 @@ def register_generated_tools(mcp, _get_client):
             openWorldHint=True,
         )
     )
-    def ads_delete_ad(ad_id: str) -> str:
+    def ad_campaigns_delete_ad(ad_id: str) -> str:
         """Cancel an ad
 
         Args:
             ad_id: (required)"""
         client = _get_client()
         try:
-            response = client.ads.delete_ad(ad_id=ad_id)
+            response = client.ad_campaigns.delete_ad(ad_id=ad_id)
             return _format_response(response)
         except Exception as e:
             return f"Error: {e}"
@@ -2087,7 +2437,7 @@ def register_generated_tools(mcp, _get_client):
             openWorldHint=True,
         )
     )
-    def ads_update_ad_status(ad_id: str, status: str) -> str:
+    def ad_campaigns_update_ad_status(ad_id: str, status: str) -> str:
         """Pause or resume a single ad
 
         Args:
@@ -2095,1017 +2445,7 @@ def register_generated_tools(mcp, _get_client):
             status: (required)"""
         client = _get_client()
         try:
-            response = client.ads.update_ad_status(ad_id=ad_id, status=status)
-            return _format_response(response)
-        except Exception as e:
-            return f"Error: {e}"
-
-    @mcp.tool(
-        annotations=ToolAnnotations(
-            title="Get campaign analytics",
-            readOnlyHint=True,
-            destructiveHint=False,
-            openWorldHint=False,
-        )
-    )
-    def ads_get_campaign_analytics(
-        campaign_id: str,
-        platform: str | None = None,
-        from_date: str | None = None,
-        to_date: str | None = None,
-        breakdowns: str | None = None,
-    ) -> str:
-        """Get campaign analytics
-
-            Args:
-                campaign_id: Platform campaign id (platformCampaignId). (required)
-                platform: Disambiguate when the campaign id exists across platforms (e.g. facebook, instagram).
-                from_date: Start of date range (YYYY-MM-DD). Defaults to 90 days ago.
-                to_date: End of date range (YYYY-MM-DD). Defaults to today. Max 730-day range.
-                breakdowns: Comma-separated breakdown dimensions.
-
-        **Meta**: age, gender, country, publisher_platform, device_platform, region,
-        platform_position, impression_device, video_asset, image_asset, body_asset, title_asset.
-
-        **LinkedIn** (firmographics): job_title, job_function, seniority, industry,
-        company, company_size, country, region. Rows carry the raw pivot `value`
-        plus a resolved `name`. LinkedIn serves these aggregated over the whole
-        range, delays the data 12-24h, and omits segments with fewer than 3 events."""
-        client = _get_client()
-        try:
-            response = client.ads.get_campaign_analytics(
-                campaign_id=campaign_id,
-                platform=platform,
-                from_date=from_date,
-                to_date=to_date,
-                breakdowns=breakdowns,
-            )
-            return _format_response(response)
-        except Exception as e:
-            return f"Error: {e}"
-
-    @mcp.tool(
-        annotations=ToolAnnotations(
-            title="Render pre-create ad previews (Meta)",
-            readOnlyHint=False,
-            destructiveHint=True,
-            openWorldHint=True,
-        )
-    )
-    def ads_generate_ad_previews(
-        account_id: str,
-        ad_account_id: str,
-        formats: list[str] | None = None,
-        existing_creative_id: str | None = None,
-        creative_spec: dict[str, Any] | None = None,
-    ) -> str:
-        """Render pre-create ad previews (Meta)
-
-        Args:
-            account_id: Zernio SocialAccount id used to resolve the Meta token. (required)
-            ad_account_id: Meta ad account id (act_<n>). (required)
-            formats: Meta ad_format values, one preview per format. Defaults to [DESKTOP_FEED_STANDARD].
-            existing_creative_id: Preview an existing ad-account creative by id. Mutually exclusive with creativeSpec.
-            creative_spec: Raw Meta creative spec forwarded verbatim to /generatepreviews. Mutually exclusive with existingCreativeId."""
-        client = _get_client()
-        try:
-            response = client.ads.generate_ad_previews(
-                account_id=account_id,
-                ad_account_id=ad_account_id,
-                formats=formats,
-                existing_creative_id=existing_creative_id,
-                creative_spec=creative_spec,
-            )
-            return _format_response(response)
-        except Exception as e:
-            return f"Error: {e}"
-
-    @mcp.tool(
-        annotations=ToolAnnotations(
-            title="Render previews of an existing ad (Meta)",
-            readOnlyHint=True,
-            destructiveHint=False,
-            openWorldHint=False,
-        )
-    )
-    def ads_get_ad_previews(ad_id: str, formats: str | None = None) -> str:
-        """Render previews of an existing ad (Meta)
-
-        Args:
-            ad_id: Zernio ad id (24-char hex). (required)
-            formats: Comma-separated Meta ad_format values (max 10), one preview per format. Defaults to DESKTOP_FEED_STANDARD."""
-        client = _get_client()
-        try:
-            response = client.ads.get_ad_previews(ad_id=ad_id, formats=formats)
-            return _format_response(response)
-        except Exception as e:
-            return f"Error: {e}"
-
-    @mcp.tool(
-        annotations=ToolAnnotations(
-            title="Flexible live insights query (Meta)",
-            readOnlyHint=True,
-            destructiveHint=False,
-            openWorldHint=False,
-        )
-    )
-    def ads_query_ad_insights(
-        account_id: str,
-        object_id: str,
-        level: str | None = None,
-        fields: str | None = None,
-        breakdowns: str | None = None,
-        action_breakdowns: str | None = None,
-        action_attribution_windows: str | None = None,
-        action_report_time: str | None = None,
-        use_unified_attribution_setting: bool | None = None,
-        filtering: str | None = None,
-        date_preset: str | None = None,
-        from_date: str | None = None,
-        to_date: str | None = None,
-        time_increment: str | None = None,
-        limit: int = 25,
-        after: str | None = None,
-    ) -> str:
-        """Flexible live insights query (Meta)
-
-        Args:
-            account_id: Zernio SocialAccount id (posting or ads variant) used to resolve the Meta token. (required)
-            object_id: Meta insights node: act_<n>, campaign id, ad set id or ad id. (required)
-            level: Row granularity
-            fields: Comma-separated Graph insights fields (e.g. spend,impressions,frequency,website_purchase_roas). Omitted = Meta's default set.
-            breakdowns: Comma-separated Graph breakdowns (e.g. age,gender or publisher_platform).
-            action_breakdowns: Comma-separated Graph action breakdowns. Segments the actions[] arrays in each row.
-            action_attribution_windows: Comma-separated Meta attribution windows. Action values are returned keyed per window.
-            action_report_time: When actions are counted: impression, conversion or mixed.
-            use_unified_attribution_setting: Use the ad sets' own attribution settings for action counting.
-            filtering: JSON array of Meta filter objects: [{"field", "operator", "value"}]. Applied server-side by Meta.
-            date_preset: Meta date_preset (e.g. last_7d, last_30d, this_month). Mutually exclusive with fromDate/toDate.
-            from_date: Start of range (YYYY-MM-DD); requires toDate.
-            to_date: End of range (YYYY-MM-DD); requires fromDate.
-            time_increment: Days per row (1-90), monthly, or all_days.
-            limit: Rows per page
-            after: Cursor from paging.after of the previous page."""
-        client = _get_client()
-        try:
-            response = client.ads.query_ad_insights(
-                account_id=account_id,
-                object_id=object_id,
-                level=level,
-                fields=fields,
-                breakdowns=breakdowns,
-                action_breakdowns=action_breakdowns,
-                action_attribution_windows=action_attribution_windows,
-                action_report_time=action_report_time,
-                use_unified_attribution_setting=use_unified_attribution_setting,
-                filtering=filtering,
-                date_preset=date_preset,
-                from_date=from_date,
-                to_date=to_date,
-                time_increment=time_increment,
-                limit=limit,
-                after=after,
-            )
-            return _format_response(response)
-        except Exception as e:
-            return f"Error: {e}"
-
-    @mcp.tool(
-        annotations=ToolAnnotations(
-            title="Submit an async insights report run (Meta)",
-            readOnlyHint=False,
-            destructiveHint=True,
-            openWorldHint=True,
-        )
-    )
-    def ads_create_ad_insights_report(
-        account_id: str,
-        object_id: str,
-        level: str | None = None,
-        fields: str | None = None,
-        breakdowns: str | None = None,
-        action_breakdowns: str | None = None,
-        action_attribution_windows: list[str] | None = None,
-        action_report_time: str | None = None,
-        use_unified_attribution_setting: bool | None = None,
-        filtering: list[dict[str, Any]] | None = None,
-        date_preset: str | None = None,
-        from_date: str | None = None,
-        to_date: str | None = None,
-        time_increment: str | None = None,
-    ) -> str:
-        """Submit an async insights report run (Meta)
-
-        Args:
-            account_id: Zernio SocialAccount id (posting or ads variant). (required)
-            object_id: Meta insights node: act_<n>, campaign id, ad set id or ad id. (required)
-            level
-            fields: Comma-separated Graph insights fields.
-            breakdowns: Comma-separated Graph breakdowns.
-            action_breakdowns: Comma-separated Graph action breakdowns (e.g. action_type,action_destination).
-            action_attribution_windows: Meta attribution windows (e.g. ["7d_click", "1d_view"]). Action values are returned keyed per window.
-            action_report_time: When actions are counted: impression, conversion or mixed.
-            use_unified_attribution_setting: Use the ad sets' own attribution settings for action counting.
-            filtering: Meta filter objects, applied server-side.
-            date_preset: Mutually exclusive with fromDate/toDate.
-            from_date
-            to_date
-            time_increment"""
-        client = _get_client()
-        try:
-            response = client.ads.create_ad_insights_report(
-                account_id=account_id,
-                object_id=object_id,
-                level=level,
-                fields=fields,
-                breakdowns=breakdowns,
-                action_breakdowns=action_breakdowns,
-                action_attribution_windows=action_attribution_windows,
-                action_report_time=action_report_time,
-                use_unified_attribution_setting=use_unified_attribution_setting,
-                filtering=filtering,
-                date_preset=date_preset,
-                from_date=from_date,
-                to_date=to_date,
-                time_increment=time_increment,
-            )
-            return _format_response(response)
-        except Exception as e:
-            return f"Error: {e}"
-
-    @mcp.tool(
-        annotations=ToolAnnotations(
-            title="Poll an async insights report run (Meta)",
-            readOnlyHint=True,
-            destructiveHint=False,
-            openWorldHint=False,
-        )
-    )
-    def ads_get_ad_insights_report(
-        report_run_id: str, account_id: str, limit: int = 25, after: str | None = None
-    ) -> str:
-        """Poll an async insights report run (Meta)
-
-        Args:
-            report_run_id: (required)
-            account_id: Zernio SocialAccount id used to resolve the Meta token (must be the same connection that created the run). (required)
-            limit
-            after"""
-        client = _get_client()
-        try:
-            response = client.ads.get_ad_insights_report(
-                report_run_id=report_run_id,
-                account_id=account_id,
-                limit=limit,
-                after=after,
-            )
-            return _format_response(response)
-        except Exception as e:
-            return f"Error: {e}"
-
-    @mcp.tool(
-        annotations=ToolAnnotations(
-            title="Get ad analytics",
-            readOnlyHint=True,
-            destructiveHint=False,
-            openWorldHint=False,
-        )
-    )
-    def ads_get_ad_analytics(
-        ad_id: str,
-        from_date: str | None = None,
-        to_date: str | None = None,
-        breakdowns: str | None = None,
-    ) -> str:
-        """Get ad analytics
-
-            Args:
-                ad_id: (required)
-                from_date: Start of date range (YYYY-MM-DD). Defaults to 90 days ago.
-                to_date: End of date range (YYYY-MM-DD). Defaults to today. Max 730-day range.
-                breakdowns: Comma-separated breakdown dimensions.
-
-        **Meta**: age, gender, country, publisher_platform, device_platform, region.
-
-        **TikTok**: gender, age, country_code, platform, ac, language.
-
-        **LinkedIn** (firmographics): job_title, job_function, seniority, industry,
-        company, company_size, country, region. Rows carry the raw pivot `value`
-        plus a resolved `name`. LinkedIn serves these aggregated over the whole
-        range, delays the data 12-24h, and omits segments with fewer than 3 events."""
-        client = _get_client()
-        try:
-            response = client.ads.get_ad_analytics(
-                ad_id=ad_id, from_date=from_date, to_date=to_date, breakdowns=breakdowns
-            )
-            return _format_response(response)
-        except Exception as e:
-            return f"Error: {e}"
-
-    @mcp.tool(
-        annotations=ToolAnnotations(
-            title="Get ad tracking tags",
-            readOnlyHint=True,
-            destructiveHint=False,
-            openWorldHint=False,
-        )
-    )
-    def ads_get_ad_tracking_tags(ad_id: str) -> str:
-        """Get ad tracking tags
-
-        Args:
-            ad_id: Ad id (hex _id, platformAdId, or effective story/media id). (required)"""
-        client = _get_client()
-        try:
-            response = client.ads.get_ad_tracking_tags(ad_id=ad_id)
-            return _format_response(response)
-        except Exception as e:
-            return f"Error: {e}"
-
-    @mcp.tool(
-        annotations=ToolAnnotations(
-            title="Set ad tracking tags",
-            readOnlyHint=False,
-            destructiveHint=True,
-            openWorldHint=True,
-        )
-    )
-    def ads_update_ad_tracking_tags(
-        ad_id: str,
-        url_tags: list[dict[str, Any]] | None = None,
-        creative: dict[str, Any] | None = None,
-        tracking_url_template: str | None = None,
-        final_url_suffix: str | None = None,
-        dynamic_value_parameters: dict[str, Any] | None = None,
-        custom_value_parameters: dict[str, Any] | None = None,
-    ) -> str:
-        """Set ad tracking tags
-
-        Args:
-            ad_id: (required)
-            url_tags: Meta only. Click-URL params appended to a freshly-rebuilt creative.
-            creative: Meta only. OPTIONAL — omit to preserve the existing creative verbatim (default). Provide it only to rebuild the creative explicitly, or for creatives whose object_story_spec Meta strips.
-            tracking_url_template: Google only. Full tracking template (must contain {lpurl}).
-            final_url_suffix: Google only. Parse-only key=value params.
-            dynamic_value_parameters: LinkedIn only. key -> dynamic value enum (CAMPAIGN_ID, CAMPAIGN_NAME, CREATIVE_ID, ...).
-            custom_value_parameters: LinkedIn only. key -> static value."""
-        client = _get_client()
-        try:
-            response = client.ads.update_ad_tracking_tags(
-                ad_id=ad_id,
-                url_tags=url_tags,
-                creative=creative,
-                tracking_url_template=tracking_url_template,
-                final_url_suffix=final_url_suffix,
-                dynamic_value_parameters=dynamic_value_parameters,
-                custom_value_parameters=custom_value_parameters,
-            )
-            return _format_response(response)
-        except Exception as e:
-            return f"Error: {e}"
-
-    @mcp.tool(
-        annotations=ToolAnnotations(
-            title="List comments on an ad",
-            readOnlyHint=True,
-            destructiveHint=False,
-            openWorldHint=False,
-        )
-    )
-    def ads_get_ad_comments(
-        ad_id: str,
-        placement: str | None = None,
-        limit: int = 25,
-        cursor: str | None = None,
-    ) -> str:
-        """List comments on an ad
-
-        Args:
-            ad_id: Internal Zernio ad ID (ObjectId). (required)
-            placement: Which side of the ad to return comments for. Omit to default to the Instagram side when present, else Facebook. Returns ad_not_commentable if the ad has no such placement.
-            limit
-            cursor: Pagination cursor from a previous response."""
-        client = _get_client()
-        try:
-            response = client.ads.get_ad_comments(
-                ad_id=ad_id, placement=placement, limit=limit, cursor=cursor
-            )
-            return _format_response(response)
-        except Exception as e:
-            return f"Error: {e}"
-
-    @mcp.tool(
-        annotations=ToolAnnotations(
-            title="List TikTok Business Centers",
-            readOnlyHint=True,
-            destructiveHint=False,
-            openWorldHint=False,
-        )
-    )
-    def ads_list_ads_business_centers(account_id: str) -> str:
-        """List TikTok Business Centers
-
-        Args:
-            account_id: ID of the `tiktokads` (or parent `tiktok` posting) SocialAccount (required)"""
-        client = _get_client()
-        try:
-            response = client.ads.list_ads_business_centers(account_id=account_id)
-            return _format_response(response)
-        except Exception as e:
-            return f"Error: {e}"
-
-    @mcp.tool(
-        annotations=ToolAnnotations(
-            title="Ad account change / audit log (Meta)",
-            readOnlyHint=True,
-            destructiveHint=False,
-            openWorldHint=False,
-        )
-    )
-    def ads_get_ads_activity_log(
-        account_id: str,
-        ad_account_id: str,
-        since: str | None = None,
-        until: str | None = None,
-        object_id: str | None = None,
-        limit: int = 50,
-        after: str | None = None,
-    ) -> str:
-        """Ad account change / audit log (Meta)
-
-        Args:
-            account_id: Zernio SocialAccount id (posting or ads variant) used to resolve the Meta token. (required)
-            ad_account_id: Meta ad account id (act_<n>). (required)
-            since: Start of range (YYYY-MM-DD).
-            until: End of range (YYYY-MM-DD).
-            object_id: Client-side filter to one Meta object id (campaign, ad set or ad).
-            limit: Rows per page
-            after: Cursor from paging.after of the previous page."""
-        client = _get_client()
-        try:
-            response = client.ads.get_ads_activity_log(
-                account_id=account_id,
-                ad_account_id=ad_account_id,
-                since=since,
-                until=until,
-                object_id=object_id,
-                limit=limit,
-                after=after,
-            )
-            return _format_response(response)
-        except Exception as e:
-            return f"Error: {e}"
-
-    @mcp.tool(
-        annotations=ToolAnnotations(
-            title="Create a Reach & Frequency prediction (Meta)",
-            readOnlyHint=False,
-            destructiveHint=True,
-            openWorldHint=True,
-        )
-    )
-    def ads_create_rf_prediction(
-        account_id: str,
-        ad_account_id: str,
-        start_date: str,
-        end_date: str,
-        budget_amount: float | None = None,
-        reach: int | None = None,
-        frequency_cap: int | None = None,
-        targeting: dict[str, Any] | None = None,
-        placements: dict[str, Any] | None = None,
-    ) -> str:
-        """Create a Reach & Frequency prediction (Meta)
-
-        Args:
-            account_id: Zernio SocialAccount id (posting or ads variant). (required)
-            ad_account_id: Meta ad account id (act_<n>). (required)
-            budget_amount: Whole currency units. Exactly one of budgetAmount / reach.
-            reach: Target unique reach. Exactly one of budgetAmount / reach.
-            start_date: Campaign window start (must be in the future). (required)
-            end_date: (required)
-            frequency_cap: Max impressions per person over the window.
-            targeting: Canonical camelCase TargetingSpec (same shape as /v1/ads/create's `targeting`). Defaults to countries: [US].
-            placements: Meta placements object (same shape as /v1/ads/create's `placements`)."""
-        client = _get_client()
-        try:
-            response = client.ads.create_rf_prediction(
-                account_id=account_id,
-                ad_account_id=ad_account_id,
-                budget_amount=budget_amount,
-                reach=reach,
-                start_date=start_date,
-                end_date=end_date,
-                frequency_cap=frequency_cap,
-                targeting=targeting,
-                placements=placements,
-            )
-            return _format_response(response)
-        except Exception as e:
-            return f"Error: {e}"
-
-    @mcp.tool(
-        annotations=ToolAnnotations(
-            title="Read a Reach & Frequency prediction (Meta)",
-            readOnlyHint=True,
-            destructiveHint=False,
-            openWorldHint=False,
-        )
-    )
-    def ads_get_rf_prediction(
-        prediction_id: str, account_id: str, ad_account_id: str
-    ) -> str:
-        """Read a Reach & Frequency prediction (Meta)
-
-        Args:
-            prediction_id: (required)
-            account_id: (required)
-            ad_account_id: (required)"""
-        client = _get_client()
-        try:
-            response = client.ads.get_rf_prediction(
-                prediction_id=prediction_id,
-                account_id=account_id,
-                ad_account_id=ad_account_id,
-            )
-            return _format_response(response)
-        except Exception as e:
-            return f"Error: {e}"
-
-    @mcp.tool(
-        annotations=ToolAnnotations(
-            title="Cancel a Reach & Frequency reservation (Meta)",
-            readOnlyHint=False,
-            destructiveHint=True,
-            openWorldHint=True,
-        )
-    )
-    def ads_cancel_rf_reservation(
-        prediction_id: str, account_id: str, ad_account_id: str
-    ) -> str:
-        """Cancel a Reach & Frequency reservation (Meta)
-
-        Args:
-            prediction_id: (required)
-            account_id: (required)
-            ad_account_id: (required)"""
-        client = _get_client()
-        try:
-            response = client.ads.cancel_rf_reservation(
-                prediction_id=prediction_id,
-                account_id=account_id,
-                ad_account_id=ad_account_id,
-            )
-            return _format_response(response)
-        except Exception as e:
-            return f"Error: {e}"
-
-    @mcp.tool(
-        annotations=ToolAnnotations(
-            title="Reserve a Reach & Frequency prediction (Meta)",
-            readOnlyHint=False,
-            destructiveHint=True,
-            openWorldHint=True,
-        )
-    )
-    def ads_reserve_rf_prediction(
-        prediction_id: str, account_id: str, ad_account_id: str
-    ) -> str:
-        """Reserve a Reach & Frequency prediction (Meta)
-
-        Args:
-            prediction_id: (required)
-            account_id: (required)
-            ad_account_id: (required)"""
-        client = _get_client()
-        try:
-            response = client.ads.reserve_rf_prediction(
-                prediction_id=prediction_id,
-                account_id=account_id,
-                ad_account_id=ad_account_id,
-            )
-            return _format_response(response)
-        except Exception as e:
-            return f"Error: {e}"
-
-    @mcp.tool(
-        annotations=ToolAnnotations(
-            title="A/B tests and lift studies (Meta)",
-            readOnlyHint=True,
-            destructiveHint=False,
-            openWorldHint=False,
-        )
-    )
-    def ads_list_ad_studies(
-        account_id: str,
-        ad_account_id: str,
-        fields: str | None = None,
-        limit: int = 25,
-        after: str | None = None,
-    ) -> str:
-        """A/B tests and lift studies (Meta)
-
-        Args:
-            account_id: Zernio SocialAccount id (posting or ads variant) used to resolve the Meta token. (required)
-            ad_account_id: Meta ad account id (act_<n>). (required)
-            fields: Comma-separated Graph field override (supports nested {} projections).
-            limit: Rows per page
-            after: Cursor from paging.after of the previous page."""
-        client = _get_client()
-        try:
-            response = client.ads.list_ad_studies(
-                account_id=account_id,
-                ad_account_id=ad_account_id,
-                fields=fields,
-                limit=limit,
-                after=after,
-            )
-            return _format_response(response)
-        except Exception as e:
-            return f"Error: {e}"
-
-    @mcp.tool(
-        annotations=ToolAnnotations(
-            title="Businesses list (Meta)",
-            readOnlyHint=True,
-            destructiveHint=False,
-            openWorldHint=False,
-        )
-    )
-    def ads_list_meta_businesses(
-        account_id: str, limit: int = 25, after: str | None = None
-    ) -> str:
-        """Businesses list (Meta)
-
-        Args:
-            account_id: Zernio SocialAccount id (posting or ads variant) used to resolve the Meta token. (required)
-            limit: Rows per page
-            after: Cursor from paging.after of the previous page."""
-        client = _get_client()
-        try:
-            response = client.ads.list_meta_businesses(
-                account_id=account_id, limit=limit, after=after
-            )
-            return _format_response(response)
-        except Exception as e:
-            return f"Error: {e}"
-
-    @mcp.tool(
-        annotations=ToolAnnotations(
-            title="Ad labels (Meta)",
-            readOnlyHint=True,
-            destructiveHint=False,
-            openWorldHint=False,
-        )
-    )
-    def ads_list_ad_labels(
-        account_id: str, ad_account_id: str, limit: int = 25, after: str | None = None
-    ) -> str:
-        """Ad labels (Meta)
-
-        Args:
-            account_id: Zernio SocialAccount id (posting or ads variant) used to resolve the Meta token. (required)
-            ad_account_id: Meta ad account id (act_<n>). (required)
-            limit: Rows per page
-            after: Cursor from paging.after of the previous page."""
-        client = _get_client()
-        try:
-            response = client.ads.list_ad_labels(
-                account_id=account_id,
-                ad_account_id=ad_account_id,
-                limit=limit,
-                after=after,
-            )
-            return _format_response(response)
-        except Exception as e:
-            return f"Error: {e}"
-
-    @mcp.tool(
-        annotations=ToolAnnotations(
-            title="High demand periods / budget schedules (Meta)",
-            readOnlyHint=True,
-            destructiveHint=False,
-            openWorldHint=False,
-        )
-    )
-    def ads_list_high_demand_periods(
-        account_id: str,
-        campaign_id: str | None = None,
-        ad_set_id: str | None = None,
-        limit: int = 25,
-        after: str | None = None,
-    ) -> str:
-        """High demand periods / budget schedules (Meta)
-
-        Args:
-            account_id: Zernio SocialAccount id (posting or ads variant) used to resolve the Meta token. (required)
-            campaign_id: Platform campaign id. Exactly one of campaignId / adSetId.
-            ad_set_id: Platform ad set id. Exactly one of campaignId / adSetId.
-            limit: Rows per page
-            after: Cursor from paging.after of the previous page."""
-        client = _get_client()
-        try:
-            response = client.ads.list_high_demand_periods(
-                account_id=account_id,
-                campaign_id=campaign_id,
-                ad_set_id=ad_set_id,
-                limit=limit,
-                after=after,
-            )
-            return _format_response(response)
-        except Exception as e:
-            return f"Error: {e}"
-
-    @mcp.tool(
-        annotations=ToolAnnotations(
-            title="Creative library (Meta)",
-            readOnlyHint=True,
-            destructiveHint=False,
-            openWorldHint=False,
-        )
-    )
-    def ads_list_ad_creatives(
-        account_id: str,
-        ad_account_id: str,
-        fields: str | None = None,
-        limit: int = 25,
-        after: str | None = None,
-    ) -> str:
-        """Creative library (Meta)
-
-        Args:
-            account_id: Zernio SocialAccount id (posting or ads variant) used to resolve the Meta token. (required)
-            ad_account_id: Meta ad account id (act_<n>). (required)
-            fields: Comma-separated Graph field override (supports nested {} projections).
-            limit: Rows per page
-            after: Cursor from paging.after of the previous page."""
-        client = _get_client()
-        try:
-            response = client.ads.list_ad_creatives(
-                account_id=account_id,
-                ad_account_id=ad_account_id,
-                fields=fields,
-                limit=limit,
-                after=after,
-            )
-            return _format_response(response)
-        except Exception as e:
-            return f"Error: {e}"
-
-    @mcp.tool(
-        annotations=ToolAnnotations(
-            title="Create a standalone creative (Meta)",
-            readOnlyHint=False,
-            destructiveHint=True,
-            openWorldHint=True,
-        )
-    )
-    def ads_create_ad_creative(
-        account_id: str,
-        ad_account_id: str,
-        headline: str,
-        body: str,
-        link_url: str,
-        description: str | None = None,
-        call_to_action: str = "LEARN_MORE",
-        image_url: str | None = None,
-        image_hash: str | None = None,
-        carousel_cards: list[dict[str, Any]] | None = None,
-        url_tags: str | None = None,
-        creative_features: dict[str, Any] | None = None,
-    ) -> str:
-        """Create a standalone creative (Meta)
-
-        Args:
-            account_id: Zernio SocialAccount id (posting or ads variant) used to resolve the Meta token and Page. (required)
-            ad_account_id: Meta ad account id (act_<n>). (required)
-            headline: (required)
-            body: Primary text (required)
-            description: Link description below the headline; omitted = Meta scrapes the destination's OG description.
-            call_to_action: CTA type (same whitelist as POST /v1/ads/create).
-            link_url: (required)
-            image_url: Publicly reachable image; uploaded to the account's library server-side.
-            image_hash: Existing library image hash (POST /v1/ads/images or GET /v1/ads/images).
-            carousel_cards
-            url_tags: Appended to every outbound URL (e.g. utm_source=fb).
-            creative_features: Advantage+ creative enhancements: partial map of Meta creative feature keys (snake_case) to enroll status, forwarded as degrees_of_freedom_spec.creative_features_spec. Unspecified features default to OPT_OUT."""
-        client = _get_client()
-        try:
-            response = client.ads.create_ad_creative(
-                account_id=account_id,
-                ad_account_id=ad_account_id,
-                headline=headline,
-                body=body,
-                description=description,
-                call_to_action=call_to_action,
-                link_url=link_url,
-                image_url=image_url,
-                image_hash=image_hash,
-                carousel_cards=carousel_cards,
-                url_tags=url_tags,
-                creative_features=creative_features,
-            )
-            return _format_response(response)
-        except Exception as e:
-            return f"Error: {e}"
-
-    @mcp.tool(
-        annotations=ToolAnnotations(
-            title="Creative details (Meta)",
-            readOnlyHint=True,
-            destructiveHint=False,
-            openWorldHint=False,
-        )
-    )
-    def ads_get_ad_creative(
-        creative_id: str, account_id: str, fields: str | None = None
-    ) -> str:
-        """Creative details (Meta)
-
-        Args:
-            creative_id: Platform creative id (required)
-            account_id: Zernio SocialAccount id (posting or ads variant) used to resolve the Meta token. (required)
-            fields: Comma-separated Graph field override (supports nested {} projections)."""
-        client = _get_client()
-        try:
-            response = client.ads.get_ad_creative(
-                creative_id=creative_id, account_id=account_id, fields=fields
-            )
-            return _format_response(response)
-        except Exception as e:
-            return f"Error: {e}"
-
-    @mcp.tool(
-        annotations=ToolAnnotations(
-            title="Rename a creative (Meta)",
-            readOnlyHint=False,
-            destructiveHint=True,
-            openWorldHint=True,
-        )
-    )
-    def ads_update_ad_creative(creative_id: str, account_id: str, name: str) -> str:
-        """Rename a creative (Meta)
-
-        Args:
-            creative_id: Platform creative id (required)
-            account_id: Zernio SocialAccount id (posting or ads variant) used to resolve the Meta token. (required)
-            name: (required)"""
-        client = _get_client()
-        try:
-            response = client.ads.update_ad_creative(
-                creative_id=creative_id, account_id=account_id, name=name
-            )
-            return _format_response(response)
-        except Exception as e:
-            return f"Error: {e}"
-
-    @mcp.tool(
-        annotations=ToolAnnotations(
-            title="Delete a creative (Meta)",
-            readOnlyHint=False,
-            destructiveHint=True,
-            openWorldHint=True,
-        )
-    )
-    def ads_delete_ad_creative(creative_id: str, account_id: str) -> str:
-        """Delete a creative (Meta)
-
-        Args:
-            creative_id: Platform creative id (required)
-            account_id: Zernio SocialAccount id (posting or ads variant) used to resolve the Meta token. (required)"""
-        client = _get_client()
-        try:
-            response = client.ads.delete_ad_creative(
-                creative_id=creative_id, account_id=account_id
-            )
-            return _format_response(response)
-        except Exception as e:
-            return f"Error: {e}"
-
-    @mcp.tool(
-        annotations=ToolAnnotations(
-            title="Ad account finances (Meta)",
-            readOnlyHint=True,
-            destructiveHint=False,
-            openWorldHint=False,
-        )
-    )
-    def ads_get_ad_account_finance(account_id: str, ad_account_id: str) -> str:
-        """Ad account finances (Meta)
-
-        Args:
-            account_id: Zernio SocialAccount id (posting or ads variant) used to resolve the Meta token. (required)
-            ad_account_id: Meta ad account id (act_<n>). (required)"""
-        client = _get_client()
-        try:
-            response = client.ads.get_ad_account_finance(
-                account_id=account_id, ad_account_id=ad_account_id
-            )
-            return _format_response(response)
-        except Exception as e:
-            return f"Error: {e}"
-
-    @mcp.tool(
-        annotations=ToolAnnotations(
-            title="List ad accounts",
-            readOnlyHint=True,
-            destructiveHint=False,
-            openWorldHint=False,
-        )
-    )
-    def ads_list_ad_accounts(
-        account_id: str, ad_account_id: str | None = None, limit: int | None = None
-    ) -> str:
-        """List ad accounts
-
-        Args:
-            account_id: Social account ID (required)
-            ad_account_id: Filter response to a single platform ad account ID (e.g. `act_123` for Meta, advertiser_id for TikTok). Returns at most one item.
-            limit: Clamp the returned `accounts[]` length. Useful for typeahead pickers on agency tokens with hundreds of advertisers."""
-        client = _get_client()
-        try:
-            response = client.ads.list_ad_accounts(
-                account_id=account_id, ad_account_id=ad_account_id, limit=limit
-            )
-            return _format_response(response)
-        except Exception as e:
-            return f"Error: {e}"
-
-    @mcp.tool(
-        annotations=ToolAnnotations(
-            title="Update ad account settings",
-            readOnlyHint=False,
-            destructiveHint=True,
-            openWorldHint=True,
-        )
-    )
-    def ads_update_ad_account(
-        account_id: str,
-        ad_account_id: str,
-        default_dsa_beneficiary: str,
-        default_dsa_payor: str | None = None,
-    ) -> str:
-        """Update ad account settings
-
-        Args:
-            account_id: Social account ID (metaads, or a facebook/instagram posting account) (required)
-            ad_account_id: Meta ad account ID (act_...) (required)
-            default_dsa_beneficiary: Legal entity benefiting from ads on this ad account (required)
-            default_dsa_payor: Legal entity paying for ads on this ad account. Defaults to defaultDsaBeneficiary when omitted."""
-        client = _get_client()
-        try:
-            response = client.ads.update_ad_account(
-                account_id=account_id,
-                ad_account_id=ad_account_id,
-                default_dsa_beneficiary=default_dsa_beneficiary,
-                default_dsa_payor=default_dsa_payor,
-            )
-            return _format_response(response)
-        except Exception as e:
-            return f"Error: {e}"
-
-    @mcp.tool(
-        annotations=ToolAnnotations(
-            title="Get ad account DSA defaults",
-            readOnlyHint=True,
-            destructiveHint=False,
-            openWorldHint=False,
-        )
-    )
-    def ads_get_dsa_defaults(account_id: str, ad_account_id: str) -> str:
-        """Get ad account DSA defaults
-
-        Args:
-            account_id: Social account ID (metaads, or a facebook/instagram posting account) (required)
-            ad_account_id: Meta ad account ID (act_...) (required)"""
-        client = _get_client()
-        try:
-            response = client.ads.get_dsa_defaults(
-                account_id=account_id, ad_account_id=ad_account_id
-            )
-            return _format_response(response)
-        except Exception as e:
-            return f"Error: {e}"
-
-    @mcp.tool(
-        annotations=ToolAnnotations(
-            title="List DSA beneficiary/payor suggestions",
-            readOnlyHint=True,
-            destructiveHint=False,
-            openWorldHint=False,
-        )
-    )
-    def ads_get_dsa_recommendations(account_id: str, ad_account_id: str) -> str:
-        """List DSA beneficiary/payor suggestions
-
-        Args:
-            account_id: Social account ID (metaads, or a facebook/instagram posting account) (required)
-            ad_account_id: Meta ad account ID (act_...) (required)"""
-        client = _get_client()
-        try:
-            response = client.ads.get_dsa_recommendations(
-                account_id=account_id, ad_account_id=ad_account_id
-            )
+            response = client.ad_campaigns.update_ad_status(ad_id=ad_id, status=status)
             return _format_response(response)
         except Exception as e:
             return f"Error: {e}"
@@ -3118,7 +2458,7 @@ def register_generated_tools(mcp, _get_client):
             openWorldHint=True,
         )
     )
-    def ads_boost_post(
+    def ad_campaigns_boost_post(
         account_id: str,
         ad_account_id: str,
         name: str,
@@ -3206,7 +2546,7 @@ def register_generated_tools(mcp, _get_client):
         a default payor."""
         client = _get_client()
         try:
-            response = client.ads.boost_post(
+            response = client.ad_campaigns.boost_post(
                 post_id=post_id,
                 platform_post_id=platform_post_id,
                 account_id=account_id,
@@ -3243,7 +2583,7 @@ def register_generated_tools(mcp, _get_client):
             openWorldHint=True,
         )
     )
-    def ads_create_standalone_ad(
+    def ad_campaigns_create_standalone_ad(
         account_id: str,
         ad_account_id: str,
         name: str,
@@ -3602,7 +2942,7 @@ def register_generated_tools(mcp, _get_client):
         Meta and TikTok ignore `promotedObject` entirely."""
         client = _get_client()
         try:
-            response = client.ads.create_standalone_ad(
+            response = client.ad_campaigns.create_standalone_ad(
                 account_id=account_id,
                 ad_account_id=ad_account_id,
                 name=name,
@@ -3685,262 +3025,39 @@ def register_generated_tools(mcp, _get_client):
         except Exception as e:
             return f"Error: {e}"
 
-    @mcp.tool(
-        annotations=ToolAnnotations(
-            title="List submitted leads",
-            readOnlyHint=True,
-            destructiveHint=False,
-            openWorldHint=False,
-        )
-    )
-    def ads_list_leads(
-        form_id: str | None = None,
-        account_id: str | None = None,
-        limit: int = 25,
-        since: int | None = None,
-        cursor: str | None = None,
-    ) -> str:
-        """List submitted leads
-
-        Args:
-            form_id: Filter to a single lead form.
-            account_id: Filter to a single connected account.
-            limit
-            since: Unix seconds; only leads created at/after this Meta timestamp.
-            cursor: Keyset cursor from a previous response's pagination.cursor."""
-        client = _get_client()
-        try:
-            response = client.ads.list_leads(
-                form_id=form_id,
-                account_id=account_id,
-                limit=limit,
-                since=since,
-                cursor=cursor,
-            )
-            return _format_response(response)
-        except Exception as e:
-            return f"Error: {e}"
+    # AD_CREATIVES
 
     @mcp.tool(
         annotations=ToolAnnotations(
-            title="List lead forms",
-            readOnlyHint=True,
-            destructiveHint=False,
-            openWorldHint=False,
-        )
-    )
-    def ads_list_lead_forms(
-        account_id: str, limit: int = 25, cursor: str | None = None
-    ) -> str:
-        """List lead forms
-
-        Args:
-            account_id: Connected facebook account id. (required)
-            limit
-            cursor"""
-        client = _get_client()
-        try:
-            response = client.ads.list_lead_forms(
-                account_id=account_id, limit=limit, cursor=cursor
-            )
-            return _format_response(response)
-        except Exception as e:
-            return f"Error: {e}"
-
-    @mcp.tool(
-        annotations=ToolAnnotations(
-            title="Create a lead form",
+            title="Render pre-create ad previews",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
         )
     )
-    def ads_create_lead_form(
-        account_id: str,
-        name: str,
-        questions: list[dict[str, Any]] | None,
-        privacy_policy_url: str,
-        privacy_policy_link_text: str | None = None,
-        follow_up_action_url: str | None = None,
-        locale: str | None = None,
-        thank_you_title: str | None = None,
-        thank_you_body: str | None = None,
-        thank_you_button_text: str | None = None,
-        thank_you_button_type: str | None = None,
-        thank_you_website_url: str | None = None,
-        is_optimized_for_quality: bool | None = None,
-    ) -> str:
-        """Create a lead form
-
-        Args:
-            account_id: (required)
-            name: (required)
-            questions: (required)
-            privacy_policy_url: (required)
-            privacy_policy_link_text
-            follow_up_action_url
-            locale
-            thank_you_title
-            thank_you_body
-            thank_you_button_text
-            thank_you_button_type
-            thank_you_website_url
-            is_optimized_for_quality"""
-        client = _get_client()
-        try:
-            response = client.ads.create_lead_form(
-                account_id=account_id,
-                name=name,
-                questions=questions,
-                privacy_policy_url=privacy_policy_url,
-                privacy_policy_link_text=privacy_policy_link_text,
-                follow_up_action_url=follow_up_action_url,
-                locale=locale,
-                thank_you_title=thank_you_title,
-                thank_you_body=thank_you_body,
-                thank_you_button_text=thank_you_button_text,
-                thank_you_button_type=thank_you_button_type,
-                thank_you_website_url=thank_you_website_url,
-                is_optimized_for_quality=is_optimized_for_quality,
-            )
-            return _format_response(response)
-        except Exception as e:
-            return f"Error: {e}"
-
-    @mcp.tool(
-        annotations=ToolAnnotations(
-            title="Get a lead form",
-            readOnlyHint=True,
-            destructiveHint=False,
-            openWorldHint=False,
-        )
-    )
-    def ads_get_lead_form(form_id: str, account_id: str) -> str:
-        """Get a lead form
-
-        Args:
-            form_id: (required)
-            account_id: (required)"""
-        client = _get_client()
-        try:
-            response = client.ads.get_lead_form(form_id=form_id, account_id=account_id)
-            return _format_response(response)
-        except Exception as e:
-            return f"Error: {e}"
-
-    @mcp.tool(
-        annotations=ToolAnnotations(
-            title="Archive a lead form",
-            readOnlyHint=False,
-            destructiveHint=True,
-            openWorldHint=True,
-        )
-    )
-    def ads_archive_lead_form(form_id: str, account_id: str) -> str:
-        """Archive a lead form
-
-        Args:
-            form_id: (required)
-            account_id: (required)"""
-        client = _get_client()
-        try:
-            response = client.ads.archive_lead_form(
-                form_id=form_id, account_id=account_id
-            )
-            return _format_response(response)
-        except Exception as e:
-            return f"Error: {e}"
-
-    @mcp.tool(
-        annotations=ToolAnnotations(
-            title="List leads for a single form",
-            readOnlyHint=True,
-            destructiveHint=False,
-            openWorldHint=False,
-        )
-    )
-    def ads_list_form_leads(
-        form_id: str,
-        account_id: str,
-        limit: int = 25,
-        cursor: str | None = None,
-        since: int | None = None,
-    ) -> str:
-        """List leads for a single form
-
-        Args:
-            form_id: (required)
-            account_id: (required)
-            limit
-            cursor
-            since: Unix seconds."""
-        client = _get_client()
-        try:
-            response = client.ads.list_form_leads(
-                form_id=form_id,
-                account_id=account_id,
-                limit=limit,
-                cursor=cursor,
-                since=since,
-            )
-            return _format_response(response)
-        except Exception as e:
-            return f"Error: {e}"
-
-    @mcp.tool(
-        annotations=ToolAnnotations(
-            title="Create a test lead",
-            readOnlyHint=False,
-            destructiveHint=True,
-            openWorldHint=True,
-        )
-    )
-    def ads_create_test_lead(
-        form_id: str, account_id: str, field_data: list[dict[str, Any]] | None
-    ) -> str:
-        """Create a test lead
-
-        Args:
-            form_id: (required)
-            account_id: (required)
-            field_data: (required)"""
-        client = _get_client()
-        try:
-            response = client.ads.create_test_lead(
-                form_id=form_id, account_id=account_id, field_data=field_data
-            )
-            return _format_response(response)
-        except Exception as e:
-            return f"Error: {e}"
-
-    @mcp.tool(
-        annotations=ToolAnnotations(
-            title="Upload an ad image from base64 (Meta)",
-            readOnlyHint=False,
-            destructiveHint=True,
-            openWorldHint=True,
-        )
-    )
-    def ads_upload_ad_image(
+    def ad_creatives_generate_ad_previews(
         account_id: str,
         ad_account_id: str,
-        image_base64: str,
-        filename: str | None = None,
+        formats: list[str] | None = None,
+        existing_creative_id: str | None = None,
+        creative_spec: dict[str, Any] | None = None,
     ) -> str:
-        """Upload an ad image from base64 (Meta)
+        """Render pre-create ad previews
 
         Args:
-            account_id: Zernio SocialAccount id (posting or ads variant) used to resolve the Meta token. (required)
+            account_id: Zernio SocialAccount id used to resolve the Meta token. (required)
             ad_account_id: Meta ad account id (act_<n>). (required)
-            image_base64: Raw base64 image bytes, or a full data URL (the data:image/...;base64, prefix is stripped). (required)
-            filename: Optional filename shown in Meta's image library. Defaults to ad_image.jpg."""
+            formats: Meta ad_format values, one preview per format. Defaults to [DESKTOP_FEED_STANDARD].
+            existing_creative_id: Preview an existing ad-account creative by id. Mutually exclusive with creativeSpec.
+            creative_spec: Raw Meta creative spec forwarded verbatim to /generatepreviews. Mutually exclusive with existingCreativeId."""
         client = _get_client()
         try:
-            response = client.ads.upload_ad_image(
+            response = client.ad_creatives.generate_ad_previews(
                 account_id=account_id,
                 ad_account_id=ad_account_id,
-                image_base64=image_base64,
-                filename=filename,
+                formats=formats,
+                existing_creative_id=existing_creative_id,
+                creative_spec=creative_spec,
             )
             return _format_response(response)
         except Exception as e:
@@ -3948,20 +3065,41 @@ def register_generated_tools(mcp, _get_client):
 
     @mcp.tool(
         annotations=ToolAnnotations(
-            title="Ad image library (Meta)",
+            title="Render previews of an existing ad",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
         )
     )
-    def ads_list_ad_images(
+    def ad_creatives_get_ad_previews(ad_id: str, formats: str | None = None) -> str:
+        """Render previews of an existing ad
+
+        Args:
+            ad_id: Zernio ad id (24-char hex). (required)
+            formats: Comma-separated Meta ad_format values (max 10), one preview per format. Defaults to DESKTOP_FEED_STANDARD."""
+        client = _get_client()
+        try:
+            response = client.ad_creatives.get_ad_previews(ad_id=ad_id, formats=formats)
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Creative library",
+            readOnlyHint=True,
+            destructiveHint=False,
+            openWorldHint=False,
+        )
+    )
+    def ad_creatives_list_ad_creatives(
         account_id: str,
         ad_account_id: str,
         fields: str | None = None,
         limit: int = 25,
         after: str | None = None,
     ) -> str:
-        """Ad image library (Meta)
+        """Creative library
 
         Args:
             account_id: Zernio SocialAccount id (posting or ads variant) used to resolve the Meta token. (required)
@@ -3971,7 +3109,7 @@ def register_generated_tools(mcp, _get_client):
             after: Cursor from paging.after of the previous page."""
         client = _get_client()
         try:
-            response = client.ads.list_ad_images(
+            response = client.ad_creatives.list_ad_creatives(
                 account_id=account_id,
                 ad_account_id=ad_account_id,
                 fields=fields,
@@ -3984,13 +3122,511 @@ def register_generated_tools(mcp, _get_client):
 
     @mcp.tool(
         annotations=ToolAnnotations(
+            title="Create a standalone creative",
+            readOnlyHint=False,
+            destructiveHint=True,
+            openWorldHint=True,
+        )
+    )
+    def ad_creatives_create_ad_creative(
+        account_id: str,
+        ad_account_id: str,
+        headline: str,
+        body: str,
+        link_url: str,
+        description: str | None = None,
+        call_to_action: str = "LEARN_MORE",
+        image_url: str | None = None,
+        image_hash: str | None = None,
+        carousel_cards: list[dict[str, Any]] | None = None,
+        url_tags: str | None = None,
+        creative_features: dict[str, Any] | None = None,
+    ) -> str:
+        """Create a standalone creative
+
+        Args:
+            account_id: Zernio SocialAccount id (posting or ads variant) used to resolve the Meta token and Page. (required)
+            ad_account_id: Meta ad account id (act_<n>). (required)
+            headline: (required)
+            body: Primary text (required)
+            description: Link description below the headline; omitted = Meta scrapes the destination's OG description.
+            call_to_action: CTA type (same whitelist as POST /v1/ads/create).
+            link_url: (required)
+            image_url: Publicly reachable image; uploaded to the account's library server-side.
+            image_hash: Existing library image hash (POST /v1/ads/images or GET /v1/ads/images).
+            carousel_cards
+            url_tags: Appended to every outbound URL (e.g. utm_source=fb).
+            creative_features: Advantage+ creative enhancements: partial map of Meta creative feature keys (snake_case) to enroll status, forwarded as degrees_of_freedom_spec.creative_features_spec. Unspecified features default to OPT_OUT."""
+        client = _get_client()
+        try:
+            response = client.ad_creatives.create_ad_creative(
+                account_id=account_id,
+                ad_account_id=ad_account_id,
+                headline=headline,
+                body=body,
+                description=description,
+                call_to_action=call_to_action,
+                link_url=link_url,
+                image_url=image_url,
+                image_hash=image_hash,
+                carousel_cards=carousel_cards,
+                url_tags=url_tags,
+                creative_features=creative_features,
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Creative details",
+            readOnlyHint=True,
+            destructiveHint=False,
+            openWorldHint=False,
+        )
+    )
+    def ad_creatives_get_ad_creative(
+        creative_id: str, account_id: str, fields: str | None = None
+    ) -> str:
+        """Creative details
+
+        Args:
+            creative_id: Platform creative id (required)
+            account_id: Zernio SocialAccount id (posting or ads variant) used to resolve the Meta token. (required)
+            fields: Comma-separated Graph field override (supports nested {} projections)."""
+        client = _get_client()
+        try:
+            response = client.ad_creatives.get_ad_creative(
+                creative_id=creative_id, account_id=account_id, fields=fields
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Rename a creative",
+            readOnlyHint=False,
+            destructiveHint=True,
+            openWorldHint=True,
+        )
+    )
+    def ad_creatives_update_ad_creative(
+        creative_id: str, account_id: str, name: str
+    ) -> str:
+        """Rename a creative
+
+        Args:
+            creative_id: Platform creative id (required)
+            account_id: Zernio SocialAccount id (posting or ads variant) used to resolve the Meta token. (required)
+            name: (required)"""
+        client = _get_client()
+        try:
+            response = client.ad_creatives.update_ad_creative(
+                creative_id=creative_id, account_id=account_id, name=name
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Delete a creative",
+            readOnlyHint=False,
+            destructiveHint=True,
+            openWorldHint=True,
+        )
+    )
+    def ad_creatives_delete_ad_creative(creative_id: str, account_id: str) -> str:
+        """Delete a creative
+
+        Args:
+            creative_id: Platform creative id (required)
+            account_id: Zernio SocialAccount id (posting or ads variant) used to resolve the Meta token. (required)"""
+        client = _get_client()
+        try:
+            response = client.ad_creatives.delete_ad_creative(
+                creative_id=creative_id, account_id=account_id
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Upload an ad image from base64",
+            readOnlyHint=False,
+            destructiveHint=True,
+            openWorldHint=True,
+        )
+    )
+    def ad_creatives_upload_ad_image(
+        account_id: str,
+        ad_account_id: str,
+        image_base64: str,
+        filename: str | None = None,
+    ) -> str:
+        """Upload an ad image from base64
+
+        Args:
+            account_id: Zernio SocialAccount id (posting or ads variant) used to resolve the Meta token. (required)
+            ad_account_id: Meta ad account id (act_<n>). (required)
+            image_base64: Raw base64 image bytes, or a full data URL (the data:image/...;base64, prefix is stripped). (required)
+            filename: Optional filename shown in Meta's image library. Defaults to ad_image.jpg."""
+        client = _get_client()
+        try:
+            response = client.ad_creatives.upload_ad_image(
+                account_id=account_id,
+                ad_account_id=ad_account_id,
+                image_base64=image_base64,
+                filename=filename,
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Ad image library",
+            readOnlyHint=True,
+            destructiveHint=False,
+            openWorldHint=False,
+        )
+    )
+    def ad_creatives_list_ad_images(
+        account_id: str,
+        ad_account_id: str,
+        fields: str | None = None,
+        limit: int = 25,
+        after: str | None = None,
+    ) -> str:
+        """Ad image library
+
+        Args:
+            account_id: Zernio SocialAccount id (posting or ads variant) used to resolve the Meta token. (required)
+            ad_account_id: Meta ad account id (act_<n>). (required)
+            fields: Comma-separated Graph field override (supports nested {} projections).
+            limit: Rows per page
+            after: Cursor from paging.after of the previous page."""
+        client = _get_client()
+        try:
+            response = client.ad_creatives.list_ad_images(
+                account_id=account_id,
+                ad_account_id=ad_account_id,
+                fields=fields,
+                limit=limit,
+                after=after,
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="List Meta product catalogs",
+            readOnlyHint=True,
+            destructiveHint=False,
+            openWorldHint=False,
+        )
+    )
+    def ad_creatives_list_ad_catalogs(account_id: str, ad_account_id: str) -> str:
+        """List Meta product catalogs
+
+        Args:
+            account_id: A facebook, instagram, or metaads social account ID (required)
+            ad_account_id: Meta ad account ID (act_...) (required)"""
+        client = _get_client()
+        try:
+            response = client.ad_creatives.list_ad_catalogs(
+                account_id=account_id, ad_account_id=ad_account_id
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="List a catalog's product sets",
+            readOnlyHint=True,
+            destructiveHint=False,
+            openWorldHint=False,
+        )
+    )
+    def ad_creatives_list_ad_catalog_product_sets(
+        catalog_id: str, account_id: str
+    ) -> str:
+        """List a catalog's product sets
+
+        Args:
+            catalog_id: Meta product catalog ID (from GET /v1/ads/catalogs) (required)
+            account_id: A facebook, instagram, or metaads social account ID (required)"""
+        client = _get_client()
+        try:
+            response = client.ad_creatives.list_ad_catalog_product_sets(
+                catalog_id=catalog_id, account_id=account_id
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    # AD_INSIGHTS
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Get campaign analytics",
+            readOnlyHint=True,
+            destructiveHint=False,
+            openWorldHint=False,
+        )
+    )
+    def ad_insights_get_campaign_analytics(
+        campaign_id: str,
+        platform: str | None = None,
+        from_date: str | None = None,
+        to_date: str | None = None,
+        breakdowns: str | None = None,
+    ) -> str:
+        """Get campaign analytics
+
+            Args:
+                campaign_id: Platform campaign id (platformCampaignId). (required)
+                platform: Disambiguate when the campaign id exists across platforms (e.g. facebook, instagram).
+                from_date: Start of date range (YYYY-MM-DD). Defaults to 90 days ago.
+                to_date: End of date range (YYYY-MM-DD). Defaults to today. Max 730-day range.
+                breakdowns: Comma-separated breakdown dimensions.
+
+        **Meta**: age, gender, country, publisher_platform, device_platform, region,
+        platform_position, impression_device, video_asset, image_asset, body_asset, title_asset.
+
+        **LinkedIn** (firmographics): job_title, job_function, seniority, industry,
+        company, company_size, country, region. Rows carry the raw pivot `value`
+        plus a resolved `name`. LinkedIn serves these aggregated over the whole
+        range, delays the data 12-24h, and omits segments with fewer than 3 events."""
+        client = _get_client()
+        try:
+            response = client.ad_insights.get_campaign_analytics(
+                campaign_id=campaign_id,
+                platform=platform,
+                from_date=from_date,
+                to_date=to_date,
+                breakdowns=breakdowns,
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Flexible live insights query",
+            readOnlyHint=True,
+            destructiveHint=False,
+            openWorldHint=False,
+        )
+    )
+    def ad_insights_query_ad_insights(
+        account_id: str,
+        object_id: str,
+        level: str | None = None,
+        fields: str | None = None,
+        breakdowns: str | None = None,
+        action_breakdowns: str | None = None,
+        action_attribution_windows: str | None = None,
+        action_report_time: str | None = None,
+        use_unified_attribution_setting: bool | None = None,
+        filtering: str | None = None,
+        date_preset: str | None = None,
+        from_date: str | None = None,
+        to_date: str | None = None,
+        time_increment: str | None = None,
+        limit: int = 25,
+        after: str | None = None,
+    ) -> str:
+        """Flexible live insights query
+
+        Args:
+            account_id: Zernio SocialAccount id (posting or ads variant) used to resolve the Meta token. (required)
+            object_id: Meta insights node: act_<n>, campaign id, ad set id or ad id. (required)
+            level: Row granularity
+            fields: Comma-separated Graph insights fields (e.g. spend,impressions,frequency,website_purchase_roas). Omitted = Meta's default set.
+            breakdowns: Comma-separated Graph breakdowns (e.g. age,gender or publisher_platform).
+            action_breakdowns: Comma-separated Graph action breakdowns. Segments the actions[] arrays in each row.
+            action_attribution_windows: Comma-separated Meta attribution windows. Action values are returned keyed per window.
+            action_report_time: When actions are counted: impression, conversion or mixed.
+            use_unified_attribution_setting: Use the ad sets' own attribution settings for action counting.
+            filtering: JSON array of Meta filter objects: [{"field", "operator", "value"}]. Applied server-side by Meta.
+            date_preset: Meta date_preset (e.g. last_7d, last_30d, this_month). Mutually exclusive with fromDate/toDate.
+            from_date: Start of range (YYYY-MM-DD); requires toDate.
+            to_date: End of range (YYYY-MM-DD); requires fromDate.
+            time_increment: Days per row (1-90), monthly, or all_days.
+            limit: Rows per page
+            after: Cursor from paging.after of the previous page."""
+        client = _get_client()
+        try:
+            response = client.ad_insights.query_ad_insights(
+                account_id=account_id,
+                object_id=object_id,
+                level=level,
+                fields=fields,
+                breakdowns=breakdowns,
+                action_breakdowns=action_breakdowns,
+                action_attribution_windows=action_attribution_windows,
+                action_report_time=action_report_time,
+                use_unified_attribution_setting=use_unified_attribution_setting,
+                filtering=filtering,
+                date_preset=date_preset,
+                from_date=from_date,
+                to_date=to_date,
+                time_increment=time_increment,
+                limit=limit,
+                after=after,
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Submit an async insights report run",
+            readOnlyHint=False,
+            destructiveHint=True,
+            openWorldHint=True,
+        )
+    )
+    def ad_insights_create_ad_insights_report(
+        account_id: str,
+        object_id: str,
+        level: str | None = None,
+        fields: str | None = None,
+        breakdowns: str | None = None,
+        action_breakdowns: str | None = None,
+        action_attribution_windows: list[str] | None = None,
+        action_report_time: str | None = None,
+        use_unified_attribution_setting: bool | None = None,
+        filtering: list[dict[str, Any]] | None = None,
+        date_preset: str | None = None,
+        from_date: str | None = None,
+        to_date: str | None = None,
+        time_increment: str | None = None,
+    ) -> str:
+        """Submit an async insights report run
+
+        Args:
+            account_id: Zernio SocialAccount id (posting or ads variant). (required)
+            object_id: Meta insights node: act_<n>, campaign id, ad set id or ad id. (required)
+            level
+            fields: Comma-separated Graph insights fields.
+            breakdowns: Comma-separated Graph breakdowns.
+            action_breakdowns: Comma-separated Graph action breakdowns (e.g. action_type,action_destination).
+            action_attribution_windows: Meta attribution windows (e.g. ["7d_click", "1d_view"]). Action values are returned keyed per window.
+            action_report_time: When actions are counted: impression, conversion or mixed.
+            use_unified_attribution_setting: Use the ad sets' own attribution settings for action counting.
+            filtering: Meta filter objects, applied server-side.
+            date_preset: Mutually exclusive with fromDate/toDate.
+            from_date
+            to_date
+            time_increment"""
+        client = _get_client()
+        try:
+            response = client.ad_insights.create_ad_insights_report(
+                account_id=account_id,
+                object_id=object_id,
+                level=level,
+                fields=fields,
+                breakdowns=breakdowns,
+                action_breakdowns=action_breakdowns,
+                action_attribution_windows=action_attribution_windows,
+                action_report_time=action_report_time,
+                use_unified_attribution_setting=use_unified_attribution_setting,
+                filtering=filtering,
+                date_preset=date_preset,
+                from_date=from_date,
+                to_date=to_date,
+                time_increment=time_increment,
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Poll an async insights report run",
+            readOnlyHint=True,
+            destructiveHint=False,
+            openWorldHint=False,
+        )
+    )
+    def ad_insights_get_ad_insights_report(
+        report_run_id: str, account_id: str, limit: int = 25, after: str | None = None
+    ) -> str:
+        """Poll an async insights report run
+
+        Args:
+            report_run_id: (required)
+            account_id: Zernio SocialAccount id used to resolve the Meta token (must be the same connection that created the run). (required)
+            limit
+            after"""
+        client = _get_client()
+        try:
+            response = client.ad_insights.get_ad_insights_report(
+                report_run_id=report_run_id,
+                account_id=account_id,
+                limit=limit,
+                after=after,
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Get ad analytics",
+            readOnlyHint=True,
+            destructiveHint=False,
+            openWorldHint=False,
+        )
+    )
+    def ad_insights_get_ad_analytics(
+        ad_id: str,
+        from_date: str | None = None,
+        to_date: str | None = None,
+        breakdowns: str | None = None,
+    ) -> str:
+        """Get ad analytics
+
+            Args:
+                ad_id: (required)
+                from_date: Start of date range (YYYY-MM-DD). Defaults to 90 days ago.
+                to_date: End of date range (YYYY-MM-DD). Defaults to today. Max 730-day range.
+                breakdowns: Comma-separated breakdown dimensions.
+
+        **Meta**: age, gender, country, publisher_platform, device_platform, region.
+
+        **TikTok**: gender, age, country_code, platform, ac, language.
+
+        **LinkedIn** (firmographics): job_title, job_function, seniority, industry,
+        company, company_size, country, region. Rows carry the raw pivot `value`
+        plus a resolved `name`. LinkedIn serves these aggregated over the whole
+        range, delays the data 12-24h, and omits segments with fewer than 3 events."""
+        client = _get_client()
+        try:
+            response = client.ad_insights.get_ad_analytics(
+                ad_id=ad_id, from_date=from_date, to_date=to_date, breakdowns=breakdowns
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    # AD_TARGETING
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
             title="Search targeting interests",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
         )
     )
-    def ads_search_ad_interests(q: str, account_id: str) -> str:
+    def ad_targeting_search_ad_interests(q: str, account_id: str) -> str:
         """Search targeting interests
 
         Args:
@@ -3998,7 +3634,9 @@ def register_generated_tools(mcp, _get_client):
             account_id: Social account ID (required)"""
         client = _get_client()
         try:
-            response = client.ads.search_ad_interests(q=q, account_id=account_id)
+            response = client.ad_targeting.search_ad_interests(
+                q=q, account_id=account_id
+            )
             return _format_response(response)
         except Exception as e:
             return f"Error: {e}"
@@ -4011,7 +3649,7 @@ def register_generated_tools(mcp, _get_client):
             openWorldHint=False,
         )
     )
-    def ads_search_ad_targeting(
+    def ad_targeting_search_ad_targeting(
         account_id: str,
         q: str,
         dimension: str = "interest",
@@ -4030,7 +3668,7 @@ def register_generated_tools(mcp, _get_client):
             limit: Maximum results to return."""
         client = _get_client()
         try:
-            response = client.ads.search_ad_targeting(
+            response = client.ad_targeting.search_ad_targeting(
                 account_id=account_id,
                 q=q,
                 dimension=dimension,
@@ -4050,7 +3688,7 @@ def register_generated_tools(mcp, _get_client):
             openWorldHint=True,
         )
     )
-    def ads_estimate_ad_reach(
+    def ad_targeting_estimate_ad_reach(
         account_id: str,
         ad_account_id: str,
         spec: dict[str, Any] | None,
@@ -4067,7 +3705,7 @@ def register_generated_tools(mcp, _get_client):
         Some platforms vary the estimate by goal; omit to use the platform default."""
         client = _get_client()
         try:
-            response = client.ads.estimate_ad_reach(
+            response = client.ad_targeting.estimate_ad_reach(
                 account_id=account_id,
                 ad_account_id=ad_account_id,
                 spec=spec,
@@ -4079,13 +3717,13 @@ def register_generated_tools(mcp, _get_client):
 
     @mcp.tool(
         annotations=ToolAnnotations(
-            title="Suggested bid and budget bounds (LinkedIn)",
+            title="Suggested bid and budget bounds",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
         )
     )
-    def ads_get_linked_in_bid_pricing(
+    def ad_targeting_get_linked_in_bid_pricing(
         account_id: str,
         ad_account_id: str,
         spec: dict[str, Any] | None,
@@ -4097,7 +3735,7 @@ def register_generated_tools(mcp, _get_client):
         optimization_target_type: str | None = None,
         daily_budget: float | None = None,
     ) -> str:
-        """Suggested bid and budget bounds (LinkedIn)
+        """Suggested bid and budget bounds
 
         Args:
             account_id: Zernio social account ID (LinkedIn). (required)
@@ -4112,7 +3750,7 @@ def register_generated_tools(mcp, _get_client):
             daily_budget: Optional daily budget in whole account-currency units. LinkedIn refines the suggested bid to this budget."""
         client = _get_client()
         try:
-            response = client.ads.get_linked_in_bid_pricing(
+            response = client.ad_targeting.get_linked_in_bid_pricing(
                 account_id=account_id,
                 ad_account_id=ad_account_id,
                 spec=spec,
@@ -4130,13 +3768,13 @@ def register_generated_tools(mcp, _get_client):
 
     @mcp.tool(
         annotations=ToolAnnotations(
-            title="Impressions, clicks and spend forecast (LinkedIn)",
+            title="Impressions, clicks and spend forecast",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
         )
     )
-    def ads_get_linked_in_supply_forecast(
+    def ad_targeting_get_linked_in_supply_forecast(
         account_id: str,
         ad_account_id: str,
         spec: dict[str, Any] | None,
@@ -4153,7 +3791,7 @@ def register_generated_tools(mcp, _get_client):
         enable_audience_expansion: bool | None = None,
         connected_television_only: bool | None = None,
     ) -> str:
-        """Impressions, clicks and spend forecast (LinkedIn)
+        """Impressions, clicks and spend forecast
 
         Args:
             account_id: (required)
@@ -4173,7 +3811,7 @@ def register_generated_tools(mcp, _get_client):
             connected_television_only: Defaults to false."""
         client = _get_client()
         try:
-            response = client.ads.get_linked_in_supply_forecast(
+            response = client.ad_targeting.get_linked_in_supply_forecast(
                 account_id=account_id,
                 ad_account_id=ad_account_id,
                 spec=spec,
@@ -4190,551 +3828,6 @@ def register_generated_tools(mcp, _get_client):
                 enable_audience_expansion=enable_audience_expansion,
                 connected_television_only=connected_television_only,
             )
-            return _format_response(response)
-        except Exception as e:
-            return f"Error: {e}"
-
-    @mcp.tool(
-        annotations=ToolAnnotations(
-            title="List Meta product catalogs",
-            readOnlyHint=True,
-            destructiveHint=False,
-            openWorldHint=False,
-        )
-    )
-    def ads_list_ad_catalogs(account_id: str, ad_account_id: str) -> str:
-        """List Meta product catalogs
-
-        Args:
-            account_id: A facebook, instagram, or metaads social account ID (required)
-            ad_account_id: Meta ad account ID (act_...) (required)"""
-        client = _get_client()
-        try:
-            response = client.ads.list_ad_catalogs(
-                account_id=account_id, ad_account_id=ad_account_id
-            )
-            return _format_response(response)
-        except Exception as e:
-            return f"Error: {e}"
-
-    @mcp.tool(
-        annotations=ToolAnnotations(
-            title="List a catalog's product sets",
-            readOnlyHint=True,
-            destructiveHint=False,
-            openWorldHint=False,
-        )
-    )
-    def ads_list_ad_catalog_product_sets(catalog_id: str, account_id: str) -> str:
-        """List a catalog's product sets
-
-        Args:
-            catalog_id: Meta product catalog ID (from GET /v1/ads/catalogs) (required)
-            account_id: A facebook, instagram, or metaads social account ID (required)"""
-        client = _get_client()
-        try:
-            response = client.ads.list_ad_catalog_product_sets(
-                catalog_id=catalog_id, account_id=account_id
-            )
-            return _format_response(response)
-        except Exception as e:
-            return f"Error: {e}"
-
-    @mcp.tool(
-        annotations=ToolAnnotations(
-            title="Get Event Match Quality",
-            readOnlyHint=True,
-            destructiveHint=False,
-            openWorldHint=False,
-        )
-    )
-    def ads_get_conversions_quality(account_id: str, destination_id: str) -> str:
-        """Get Event Match Quality
-
-        Args:
-            account_id: SocialAccount _id (must be a metaads account). (required)
-            destination_id: Meta pixel/dataset ID. (required)"""
-        client = _get_client()
-        try:
-            response = client.ads.get_conversions_quality(
-                account_id=account_id, destination_id=destination_id
-            )
-            return _format_response(response)
-        except Exception as e:
-            return f"Error: {e}"
-
-    @mcp.tool(
-        annotations=ToolAnnotations(
-            title="Send conversion events",
-            readOnlyHint=False,
-            destructiveHint=True,
-            openWorldHint=True,
-        )
-    )
-    def ads_send_conversions(
-        account_id: str,
-        destination_id: str,
-        events: list[dict[str, Any]] | None,
-        test_code: str | None = None,
-        consent: dict[str, Any] | None = None,
-    ) -> str:
-        """Send conversion events
-
-            Args:
-                account_id: SocialAccount ID (metaads, googleads, linkedinads, or tiktokads). (required)
-                destination_id: Platform destination identifier. For Meta, the pixel/dataset
-        ID. For Google, the conversion action resource name. For
-        LinkedIn, the conversion rule ID or full
-        `urn:lla:llaPartnerConversion:{id}` URN.
-         (required)
-                events: (required)
-                test_code: Meta `test_event_code` passthrough. Ignored by Google and LinkedIn.
-                consent: Batch-level user consent. Required by Google for EEA/UK
-        events under the Feb 2026 restrictions. On Meta, any
-        DENIED flag enables Limited Data Use on every event in
-        the batch (data_processing_options ["LDU"] with
-        geolocation, country 0 / state 0); GRANTED or absent
-        consent sends events with Meta's default processing.
-        Ignored by LinkedIn."""
-        client = _get_client()
-        try:
-            response = client.ads.send_conversions(
-                account_id=account_id,
-                destination_id=destination_id,
-                events=events,
-                test_code=test_code,
-                consent=consent,
-            )
-            return _format_response(response)
-        except Exception as e:
-            return f"Error: {e}"
-
-    @mcp.tool(
-        annotations=ToolAnnotations(
-            title="Adjust uploaded conversions",
-            readOnlyHint=False,
-            destructiveHint=True,
-            openWorldHint=True,
-        )
-    )
-    def ads_adjust_conversions(
-        account_id: str, destination_id: str, adjustments: list[dict[str, Any]] | None
-    ) -> str:
-        """Adjust uploaded conversions
-
-        Args:
-            account_id: SocialAccount ID. Must be a `googleads` account. (required)
-            destination_id: Conversion action resource name, e.g. `customers/1234567890/conversionActions/987654321`. (required)
-            adjustments: (required)"""
-        client = _get_client()
-        try:
-            response = client.ads.adjust_conversions(
-                account_id=account_id,
-                destination_id=destination_id,
-                adjustments=adjustments,
-            )
-            return _format_response(response)
-        except Exception as e:
-            return f"Error: {e}"
-
-    @mcp.tool(
-        annotations=ToolAnnotations(
-            title="List conversion destinations",
-            readOnlyHint=True,
-            destructiveHint=False,
-            openWorldHint=False,
-        )
-    )
-    def ads_list_conversion_destinations(account_id: str) -> str:
-        """List conversion destinations
-
-        Args:
-            account_id: SocialAccount ID (metaads, googleads, linkedinads, or tiktokads). (required)"""
-        client = _get_client()
-        try:
-            response = client.ads.list_conversion_destinations(account_id=account_id)
-            return _format_response(response)
-        except Exception as e:
-            return f"Error: {e}"
-
-    @mcp.tool(
-        annotations=ToolAnnotations(
-            title="Create a conversion destination",
-            readOnlyHint=False,
-            destructiveHint=True,
-            openWorldHint=True,
-        )
-    )
-    def ads_create_conversion_destination(
-        account_id: str,
-        ad_account_id: str,
-        name: str,
-        type: str,
-        attribution_type: str | None = None,
-        post_click_attribution_window_size: int | None = None,
-        view_through_attribution_window_size: int | None = None,
-        value_type: str | None = None,
-        value: dict[str, Any] | None = None,
-        auto_association_type: str = "ALL_CAMPAIGNS",
-        counting_type: str | None = None,
-        primary_for_goal: bool | None = None,
-    ) -> str:
-        """Create a conversion destination
-
-            Args:
-                account_id: SocialAccount ID (linkedinads or googleads). (required)
-                ad_account_id: Ad account ID. For LinkedIn: numeric (e.g. "5123456") or
-        full `urn:li:sponsoredAccount:{id}` URN. For Google: numeric
-        customer ID (e.g. "1234567890") or `customers/{id}` form.
-         (required)
-                name: (required)
-                type: Conversion type. For LinkedIn: a unified standard event name
-        (e.g. "Purchase", "Lead", "AddToCart") or a LinkedIn rule
-        type enum (e.g. "PURCHASE", "QUALIFIED_LEAD"). For Google:
-        a unified standard event name (Purchase, Subscribe,
-        CompleteRegistration, Lead, Schedule) or a Google
-        ConversionActionCategory enum value directly (e.g.
-        "PURCHASE", "SUBSCRIBE_PAID", "SIGNUP", "IMPORTED_LEAD",
-        "BOOK_APPOINTMENT"). Unknown values pass through to the
-        platform.
-         (required)
-                attribution_type: LinkedIn only.
-                post_click_attribution_window_size: LinkedIn only. Default 30. 365 only allowed for LEAD,
-        PURCHASE, ADD_TO_CART, QUALIFIED_LEAD, SUBMIT_APPLICATION
-        rule types; the API rejects other combinations locally.
-                view_through_attribution_window_size: LinkedIn only. Default 7. Same 365-day-window type
-        restriction applies as `postClickAttributionWindowSize`.
-                value_type: LinkedIn only. DYNAMIC (default) uses the per-event `value`
-        from `sendConversions`. FIXED uses the rule's `value` field.
-        NO_VALUE drops monetary value entirely.
-                value: LinkedIn only. Static conversion value. Used when
-        `valueType=FIXED`. The currency should match the ad
-        account's currency.
-                auto_association_type: LinkedIn only. Controls campaign association at rule-creation
-        time:
-        - ALL_CAMPAIGNS: associate the rule with every active,
-          paused, and draft campaign in the ad account
-        - OBJECTIVE_BASED: associate only campaigns whose
-          objective matches the rule's type
-        - NONE: don't auto-associate. Manage associations via
-          the `/associations` endpoints below.
-        Note: auto-association runs once at create time; new
-        campaigns added after the rule still need explicit
-        association.
-                counting_type: Google Ads only. Whether to count multiple conversions from
-        the same click (MANY_PER_CLICK) or at most one
-        (ONE_PER_CLICK). Defaults to MANY_PER_CLICK if omitted.
-                primary_for_goal: Google Ads only. When true, the conversion action is marked
-        as primary and immediately influences Smart Bidding. Defaults
-        to false (secondary, record-only) to avoid unintentionally
-        steering the customer's campaigns on creation."""
-        client = _get_client()
-        try:
-            response = client.ads.create_conversion_destination(
-                account_id=account_id,
-                ad_account_id=ad_account_id,
-                name=name,
-                type=type,
-                attribution_type=attribution_type,
-                post_click_attribution_window_size=post_click_attribution_window_size,
-                view_through_attribution_window_size=view_through_attribution_window_size,
-                value_type=value_type,
-                value=value,
-                auto_association_type=auto_association_type,
-                counting_type=counting_type,
-                primary_for_goal=primary_for_goal,
-            )
-            return _format_response(response)
-        except Exception as e:
-            return f"Error: {e}"
-
-    @mcp.tool(
-        annotations=ToolAnnotations(
-            title="Get a conversion destination",
-            readOnlyHint=True,
-            destructiveHint=False,
-            openWorldHint=False,
-        )
-    )
-    def ads_get_conversion_destination(
-        account_id: str, destination_id: str, ad_account_id: str
-    ) -> str:
-        """Get a conversion destination
-
-        Args:
-            account_id: (required)
-            destination_id: (required)
-            ad_account_id: Numeric ID or full `urn:li:sponsoredAccount:{id}` URN. (required)"""
-        client = _get_client()
-        try:
-            response = client.ads.get_conversion_destination(
-                account_id=account_id,
-                destination_id=destination_id,
-                ad_account_id=ad_account_id,
-            )
-            return _format_response(response)
-        except Exception as e:
-            return f"Error: {e}"
-
-    @mcp.tool(
-        annotations=ToolAnnotations(
-            title="Update a conversion destination",
-            readOnlyHint=False,
-            destructiveHint=True,
-            openWorldHint=True,
-        )
-    )
-    def ads_update_conversion_destination(
-        account_id: str,
-        destination_id: str,
-        ad_account_id: str,
-        name: str | None = None,
-        enabled: bool | None = None,
-        attribution_type: str | None = None,
-        post_click_attribution_window_size: int | None = None,
-        view_through_attribution_window_size: int | None = None,
-        value_type: str | None = None,
-        value: dict[str, Any] | None = None,
-    ) -> str:
-        """Update a conversion destination
-
-            Args:
-                account_id: (required)
-                destination_id: (required)
-                ad_account_id: (required)
-                name
-                enabled: Setting `false` is equivalent to calling DELETE — the
-        rule will appear as `inactive` afterwards.
-                attribution_type
-                post_click_attribution_window_size: 365 only allowed for LEAD, PURCHASE, ADD_TO_CART,
-        QUALIFIED_LEAD, SUBMIT_APPLICATION rule types.
-                view_through_attribution_window_size: 365 only allowed for LEAD, PURCHASE, ADD_TO_CART,
-        QUALIFIED_LEAD, SUBMIT_APPLICATION rule types.
-                value_type
-                value: Used when `valueType=FIXED`."""
-        client = _get_client()
-        try:
-            response = client.ads.update_conversion_destination(
-                account_id=account_id,
-                destination_id=destination_id,
-                ad_account_id=ad_account_id,
-                name=name,
-                enabled=enabled,
-                attribution_type=attribution_type,
-                post_click_attribution_window_size=post_click_attribution_window_size,
-                view_through_attribution_window_size=view_through_attribution_window_size,
-                value_type=value_type,
-                value=value,
-            )
-            return _format_response(response)
-        except Exception as e:
-            return f"Error: {e}"
-
-    @mcp.tool(
-        annotations=ToolAnnotations(
-            title="Delete a conversion destination",
-            readOnlyHint=False,
-            destructiveHint=True,
-            openWorldHint=True,
-        )
-    )
-    def ads_delete_conversion_destination(
-        account_id: str, destination_id: str, ad_account_id: str | None = None
-    ) -> str:
-        """Delete a conversion destination
-
-        Args:
-            account_id: (required)
-            destination_id: (required)
-            ad_account_id: Required as query OR in JSON body."""
-        client = _get_client()
-        try:
-            response = client.ads.delete_conversion_destination(
-                account_id=account_id,
-                destination_id=destination_id,
-                ad_account_id=ad_account_id,
-            )
-            return _format_response(response)
-        except Exception as e:
-            return f"Error: {e}"
-
-    @mcp.tool(
-        annotations=ToolAnnotations(
-            title="List associated campaigns",
-            readOnlyHint=True,
-            destructiveHint=False,
-            openWorldHint=False,
-        )
-    )
-    def ads_list_conversion_associations(
-        account_id: str, destination_id: str, ad_account_id: str
-    ) -> str:
-        """List associated campaigns
-
-        Args:
-            account_id: (required)
-            destination_id: (required)
-            ad_account_id: (required)"""
-        client = _get_client()
-        try:
-            response = client.ads.list_conversion_associations(
-                account_id=account_id,
-                destination_id=destination_id,
-                ad_account_id=ad_account_id,
-            )
-            return _format_response(response)
-        except Exception as e:
-            return f"Error: {e}"
-
-    @mcp.tool(
-        annotations=ToolAnnotations(
-            title="Associate campaigns",
-            readOnlyHint=False,
-            destructiveHint=True,
-            openWorldHint=True,
-        )
-    )
-    def ads_add_conversion_associations(
-        account_id: str,
-        destination_id: str,
-        ad_account_id: str,
-        campaign_ids: list[str] | None,
-    ) -> str:
-        """Associate campaigns
-
-        Args:
-            account_id: (required)
-            destination_id: (required)
-            ad_account_id: (required)
-            campaign_ids: (required)"""
-        client = _get_client()
-        try:
-            response = client.ads.add_conversion_associations(
-                account_id=account_id,
-                destination_id=destination_id,
-                ad_account_id=ad_account_id,
-                campaign_ids=campaign_ids,
-            )
-            return _format_response(response)
-        except Exception as e:
-            return f"Error: {e}"
-
-    @mcp.tool(
-        annotations=ToolAnnotations(
-            title="Remove associated campaigns",
-            readOnlyHint=False,
-            destructiveHint=True,
-            openWorldHint=True,
-        )
-    )
-    def ads_remove_conversion_associations(
-        account_id: str, destination_id: str, ad_account_id: str, campaign_ids: str
-    ) -> str:
-        """Remove associated campaigns
-
-        Args:
-            account_id: (required)
-            destination_id: (required)
-            ad_account_id: (required)
-            campaign_ids: Comma-separated list of campaign IDs. (required)"""
-        client = _get_client()
-        try:
-            response = client.ads.remove_conversion_associations(
-                account_id=account_id,
-                destination_id=destination_id,
-                ad_account_id=ad_account_id,
-                campaign_ids=campaign_ids,
-            )
-            return _format_response(response)
-        except Exception as e:
-            return f"Error: {e}"
-
-    @mcp.tool(
-        annotations=ToolAnnotations(
-            title="Get attribution metrics",
-            readOnlyHint=True,
-            destructiveHint=False,
-            openWorldHint=False,
-        )
-    )
-    def ads_get_conversion_metrics(
-        account_id: str,
-        destination_id: str,
-        ad_account_id: str,
-        start_date: str,
-        end_date: str | None = None,
-        granularity: str = "DAILY",
-    ) -> str:
-        """Get attribution metrics
-
-        Args:
-            account_id: (required)
-            destination_id: (required)
-            ad_account_id: (required)
-            start_date: (required)
-            end_date
-            granularity"""
-        client = _get_client()
-        try:
-            response = client.ads.get_conversion_metrics(
-                account_id=account_id,
-                destination_id=destination_id,
-                ad_account_id=ad_account_id,
-                start_date=start_date,
-                end_date=end_date,
-                granularity=granularity,
-            )
-            return _format_response(response)
-        except Exception as e:
-            return f"Error: {e}"
-
-    @mcp.tool(
-        annotations=ToolAnnotations(
-            title="Create click-to-message ad (WhatsApp / Messenger / Instagram Direct)",
-            readOnlyHint=False,
-            destructiveHint=True,
-            openWorldHint=True,
-        )
-    )
-    def ads_create_messaging_ad() -> str:
-        """Create click-to-message ad (WhatsApp / Messenger / Instagram Direct)"""
-        client = _get_client()
-        try:
-            response = client.ads.create_messaging_ad()
-            return _format_response(response)
-        except Exception as e:
-            return f"Error: {e}"
-
-    @mcp.tool(
-        annotations=ToolAnnotations(
-            title="Create Click-to-Call ad",
-            readOnlyHint=False,
-            destructiveHint=True,
-            openWorldHint=True,
-        )
-    )
-    def ads_create_call_ad() -> str:
-        """Create Click-to-Call ad"""
-        client = _get_client()
-        try:
-            response = client.ads.create_call_ad()
-            return _format_response(response)
-        except Exception as e:
-            return f"Error: {e}"
-
-    @mcp.tool(
-        annotations=ToolAnnotations(
-            title="Create Click-to-WhatsApp ad (deprecated)",
-            readOnlyHint=False,
-            destructiveHint=True,
-            openWorldHint=True,
-        )
-    )
-    def ads_create_ctwa_ad() -> str:
-        """Create Click-to-WhatsApp ad (deprecated)"""
-        client = _get_client()
-        try:
-            response = client.ads.create_ctwa_ad()
             return _format_response(response)
         except Exception as e:
             return f"Error: {e}"
@@ -4971,11 +4064,15 @@ def register_generated_tools(mcp, _get_client):
     ) -> str:
         """Get YouTube daily views
 
-        Args:
-            video_id: The YouTube video ID (e.g., "dQw4w9WgXcQ") (required)
-            account_id: The Zernio account ID for the YouTube account (required)
-            start_date: Start date (YYYY-MM-DD). Defaults to 30 days ago.
-            end_date: End date (YYYY-MM-DD). Defaults to 3 days ago (YouTube data latency)."""
+            Args:
+                video_id: The YouTube video ID (e.g., "dQw4w9WgXcQ") (required)
+                account_id: The Zernio account ID for the YouTube account (required)
+                start_date: Start date (YYYY-MM-DD). Defaults to 30 days ago.
+                end_date: End date (YYYY-MM-DD). Defaults to 3 days ago, the newest fully finalized day
+        (YouTube finalizes analytics with a ~3-day delay). An explicit endDate is honored
+        up to today: days inside the delay window are provisional and may still be revised
+        by YouTube (see provisionalSince in the response), and days YouTube has not
+        processed yet are omitted from dailyViews."""
         client = _get_client()
         try:
             response = client.analytics.get_you_tube_daily_views(
@@ -5004,11 +4101,14 @@ def register_generated_tools(mcp, _get_client):
     ) -> str:
         """Get YouTube video retention curve
 
-        Args:
-            video_id: The YouTube video ID (e.g., "dQw4w9WgXcQ") (required)
-            account_id: The Zernio account ID for the YouTube account (required)
-            start_date: Start date (YYYY-MM-DD). Defaults to the video's publish date (lifetime curve).
-            end_date: End date (YYYY-MM-DD). Defaults to 3 days ago (YouTube data latency)."""
+            Args:
+                video_id: The YouTube video ID (e.g., "dQw4w9WgXcQ") (required)
+                account_id: The Zernio account ID for the YouTube account (required)
+                start_date: Start date (YYYY-MM-DD). Defaults to the video's publish date (lifetime curve).
+                end_date: End date (YYYY-MM-DD). Defaults to 3 days ago, the newest fully finalized day
+        (YouTube finalizes analytics with a ~3-day delay). An explicit endDate is honored
+        up to today: days inside the delay window are provisional and may still be revised
+        by YouTube (see provisionalSince in the response)."""
         client = _get_client()
         try:
             response = client.analytics.get_you_tube_video_retention(
@@ -5218,7 +4318,10 @@ def register_generated_tools(mcp, _get_client):
         Defaults to all three if omitted.
                 start_date: Start date in YYYY-MM-DD format. Defaults to 90 days ago, or to the video's
         publish date (lifetime) when videoId is provided.
-                end_date: End date in YYYY-MM-DD format. Defaults to 3 days ago (YouTube data latency)."""
+                end_date: End date (YYYY-MM-DD). Defaults to 3 days ago, the newest fully finalized day
+        (YouTube finalizes analytics with a ~3-day delay). An explicit endDate is honored
+        up to today: days inside the delay window are provisional and may still be revised
+        by YouTube (see provisionalSince in the response)."""
         client = _get_client()
         try:
             response = client.analytics.get_you_tube_demographics(
@@ -8053,6 +7156,460 @@ def register_generated_tools(mcp, _get_client):
         except Exception as e:
             return f"Error: {e}"
 
+    # CONVERSIONS
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Get Event Match Quality",
+            readOnlyHint=True,
+            destructiveHint=False,
+            openWorldHint=False,
+        )
+    )
+    def conversions_get_conversions_quality(
+        account_id: str, destination_id: str
+    ) -> str:
+        """Get Event Match Quality
+
+        Args:
+            account_id: SocialAccount _id (must be a metaads account). (required)
+            destination_id: Meta pixel/dataset ID. (required)"""
+        client = _get_client()
+        try:
+            response = client.conversions.get_conversions_quality(
+                account_id=account_id, destination_id=destination_id
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Send conversion events",
+            readOnlyHint=False,
+            destructiveHint=True,
+            openWorldHint=True,
+        )
+    )
+    def conversions_send_conversions(
+        account_id: str,
+        destination_id: str,
+        events: list[dict[str, Any]] | None,
+        test_code: str | None = None,
+        consent: dict[str, Any] | None = None,
+    ) -> str:
+        """Send conversion events
+
+            Args:
+                account_id: SocialAccount ID (metaads, googleads, linkedinads, or tiktokads). (required)
+                destination_id: Platform destination identifier. For Meta, the pixel/dataset
+        ID. For Google, the conversion action resource name. For
+        LinkedIn, the conversion rule ID or full
+        `urn:lla:llaPartnerConversion:{id}` URN.
+         (required)
+                events: (required)
+                test_code: Meta `test_event_code` passthrough. Ignored by Google and LinkedIn.
+                consent: Batch-level user consent. Required by Google for EEA/UK
+        events under the Feb 2026 restrictions. On Meta, any
+        DENIED flag enables Limited Data Use on every event in
+        the batch (data_processing_options ["LDU"] with
+        geolocation, country 0 / state 0); GRANTED or absent
+        consent sends events with Meta's default processing.
+        Ignored by LinkedIn."""
+        client = _get_client()
+        try:
+            response = client.conversions.send_conversions(
+                account_id=account_id,
+                destination_id=destination_id,
+                events=events,
+                test_code=test_code,
+                consent=consent,
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Adjust uploaded conversions",
+            readOnlyHint=False,
+            destructiveHint=True,
+            openWorldHint=True,
+        )
+    )
+    def conversions_adjust_conversions(
+        account_id: str, destination_id: str, adjustments: list[dict[str, Any]] | None
+    ) -> str:
+        """Adjust uploaded conversions
+
+        Args:
+            account_id: SocialAccount ID. Must be a `googleads` account. (required)
+            destination_id: Conversion action resource name, e.g. `customers/1234567890/conversionActions/987654321`. (required)
+            adjustments: (required)"""
+        client = _get_client()
+        try:
+            response = client.conversions.adjust_conversions(
+                account_id=account_id,
+                destination_id=destination_id,
+                adjustments=adjustments,
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="List conversion destinations",
+            readOnlyHint=True,
+            destructiveHint=False,
+            openWorldHint=False,
+        )
+    )
+    def conversions_list_conversion_destinations(account_id: str) -> str:
+        """List conversion destinations
+
+        Args:
+            account_id: SocialAccount ID (metaads, googleads, linkedinads, or tiktokads). (required)"""
+        client = _get_client()
+        try:
+            response = client.conversions.list_conversion_destinations(
+                account_id=account_id
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Create a conversion destination",
+            readOnlyHint=False,
+            destructiveHint=True,
+            openWorldHint=True,
+        )
+    )
+    def conversions_create_conversion_destination(
+        account_id: str,
+        ad_account_id: str,
+        name: str,
+        type: str,
+        attribution_type: str | None = None,
+        post_click_attribution_window_size: int | None = None,
+        view_through_attribution_window_size: int | None = None,
+        value_type: str | None = None,
+        value: dict[str, Any] | None = None,
+        auto_association_type: str = "ALL_CAMPAIGNS",
+        counting_type: str | None = None,
+        primary_for_goal: bool | None = None,
+    ) -> str:
+        """Create a conversion destination
+
+            Args:
+                account_id: SocialAccount ID (linkedinads or googleads). (required)
+                ad_account_id: Ad account ID. For LinkedIn: numeric (e.g. "5123456") or
+        full `urn:li:sponsoredAccount:{id}` URN. For Google: numeric
+        customer ID (e.g. "1234567890") or `customers/{id}` form.
+         (required)
+                name: (required)
+                type: Conversion type. For LinkedIn: a unified standard event name
+        (e.g. "Purchase", "Lead", "AddToCart") or a LinkedIn rule
+        type enum (e.g. "PURCHASE", "QUALIFIED_LEAD"). For Google:
+        a unified standard event name (Purchase, Subscribe,
+        CompleteRegistration, Lead, Schedule) or a Google
+        ConversionActionCategory enum value directly (e.g.
+        "PURCHASE", "SUBSCRIBE_PAID", "SIGNUP", "IMPORTED_LEAD",
+        "BOOK_APPOINTMENT"). Unknown values pass through to the
+        platform.
+         (required)
+                attribution_type: LinkedIn only.
+                post_click_attribution_window_size: LinkedIn only. Default 30. 365 only allowed for LEAD,
+        PURCHASE, ADD_TO_CART, QUALIFIED_LEAD, SUBMIT_APPLICATION
+        rule types; the API rejects other combinations locally.
+                view_through_attribution_window_size: LinkedIn only. Default 7. Same 365-day-window type
+        restriction applies as `postClickAttributionWindowSize`.
+                value_type: LinkedIn only. DYNAMIC (default) uses the per-event `value`
+        from `sendConversions`. FIXED uses the rule's `value` field.
+        NO_VALUE drops monetary value entirely.
+                value: LinkedIn only. Static conversion value. Used when
+        `valueType=FIXED`. The currency should match the ad
+        account's currency.
+                auto_association_type: LinkedIn only. Controls campaign association at rule-creation
+        time:
+        - ALL_CAMPAIGNS: associate the rule with every active,
+          paused, and draft campaign in the ad account
+        - OBJECTIVE_BASED: associate only campaigns whose
+          objective matches the rule's type
+        - NONE: don't auto-associate. Manage associations via
+          the `/associations` endpoints below.
+        Note: auto-association runs once at create time; new
+        campaigns added after the rule still need explicit
+        association.
+                counting_type: Google Ads only. Whether to count multiple conversions from
+        the same click (MANY_PER_CLICK) or at most one
+        (ONE_PER_CLICK). Defaults to MANY_PER_CLICK if omitted.
+                primary_for_goal: Google Ads only. When true, the conversion action is marked
+        as primary and immediately influences Smart Bidding. Defaults
+        to false (secondary, record-only) to avoid unintentionally
+        steering the customer's campaigns on creation."""
+        client = _get_client()
+        try:
+            response = client.conversions.create_conversion_destination(
+                account_id=account_id,
+                ad_account_id=ad_account_id,
+                name=name,
+                type=type,
+                attribution_type=attribution_type,
+                post_click_attribution_window_size=post_click_attribution_window_size,
+                view_through_attribution_window_size=view_through_attribution_window_size,
+                value_type=value_type,
+                value=value,
+                auto_association_type=auto_association_type,
+                counting_type=counting_type,
+                primary_for_goal=primary_for_goal,
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Get a conversion destination",
+            readOnlyHint=True,
+            destructiveHint=False,
+            openWorldHint=False,
+        )
+    )
+    def conversions_get_conversion_destination(
+        account_id: str, destination_id: str, ad_account_id: str
+    ) -> str:
+        """Get a conversion destination
+
+        Args:
+            account_id: (required)
+            destination_id: (required)
+            ad_account_id: Numeric ID or full `urn:li:sponsoredAccount:{id}` URN. (required)"""
+        client = _get_client()
+        try:
+            response = client.conversions.get_conversion_destination(
+                account_id=account_id,
+                destination_id=destination_id,
+                ad_account_id=ad_account_id,
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Update a conversion destination",
+            readOnlyHint=False,
+            destructiveHint=True,
+            openWorldHint=True,
+        )
+    )
+    def conversions_update_conversion_destination(
+        account_id: str,
+        destination_id: str,
+        ad_account_id: str,
+        name: str | None = None,
+        enabled: bool | None = None,
+        attribution_type: str | None = None,
+        post_click_attribution_window_size: int | None = None,
+        view_through_attribution_window_size: int | None = None,
+        value_type: str | None = None,
+        value: dict[str, Any] | None = None,
+    ) -> str:
+        """Update a conversion destination
+
+            Args:
+                account_id: (required)
+                destination_id: (required)
+                ad_account_id: (required)
+                name
+                enabled: Setting `false` is equivalent to calling DELETE — the
+        rule will appear as `inactive` afterwards.
+                attribution_type
+                post_click_attribution_window_size: 365 only allowed for LEAD, PURCHASE, ADD_TO_CART,
+        QUALIFIED_LEAD, SUBMIT_APPLICATION rule types.
+                view_through_attribution_window_size: 365 only allowed for LEAD, PURCHASE, ADD_TO_CART,
+        QUALIFIED_LEAD, SUBMIT_APPLICATION rule types.
+                value_type
+                value: Used when `valueType=FIXED`."""
+        client = _get_client()
+        try:
+            response = client.conversions.update_conversion_destination(
+                account_id=account_id,
+                destination_id=destination_id,
+                ad_account_id=ad_account_id,
+                name=name,
+                enabled=enabled,
+                attribution_type=attribution_type,
+                post_click_attribution_window_size=post_click_attribution_window_size,
+                view_through_attribution_window_size=view_through_attribution_window_size,
+                value_type=value_type,
+                value=value,
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Delete a conversion destination",
+            readOnlyHint=False,
+            destructiveHint=True,
+            openWorldHint=True,
+        )
+    )
+    def conversions_delete_conversion_destination(
+        account_id: str, destination_id: str, ad_account_id: str | None = None
+    ) -> str:
+        """Delete a conversion destination
+
+        Args:
+            account_id: (required)
+            destination_id: (required)
+            ad_account_id: Required as query OR in JSON body."""
+        client = _get_client()
+        try:
+            response = client.conversions.delete_conversion_destination(
+                account_id=account_id,
+                destination_id=destination_id,
+                ad_account_id=ad_account_id,
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="List associated campaigns",
+            readOnlyHint=True,
+            destructiveHint=False,
+            openWorldHint=False,
+        )
+    )
+    def conversions_list_conversion_associations(
+        account_id: str, destination_id: str, ad_account_id: str
+    ) -> str:
+        """List associated campaigns
+
+        Args:
+            account_id: (required)
+            destination_id: (required)
+            ad_account_id: (required)"""
+        client = _get_client()
+        try:
+            response = client.conversions.list_conversion_associations(
+                account_id=account_id,
+                destination_id=destination_id,
+                ad_account_id=ad_account_id,
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Associate campaigns",
+            readOnlyHint=False,
+            destructiveHint=True,
+            openWorldHint=True,
+        )
+    )
+    def conversions_add_conversion_associations(
+        account_id: str,
+        destination_id: str,
+        ad_account_id: str,
+        campaign_ids: list[str] | None,
+    ) -> str:
+        """Associate campaigns
+
+        Args:
+            account_id: (required)
+            destination_id: (required)
+            ad_account_id: (required)
+            campaign_ids: (required)"""
+        client = _get_client()
+        try:
+            response = client.conversions.add_conversion_associations(
+                account_id=account_id,
+                destination_id=destination_id,
+                ad_account_id=ad_account_id,
+                campaign_ids=campaign_ids,
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Remove associated campaigns",
+            readOnlyHint=False,
+            destructiveHint=True,
+            openWorldHint=True,
+        )
+    )
+    def conversions_remove_conversion_associations(
+        account_id: str, destination_id: str, ad_account_id: str, campaign_ids: str
+    ) -> str:
+        """Remove associated campaigns
+
+        Args:
+            account_id: (required)
+            destination_id: (required)
+            ad_account_id: (required)
+            campaign_ids: Comma-separated list of campaign IDs. (required)"""
+        client = _get_client()
+        try:
+            response = client.conversions.remove_conversion_associations(
+                account_id=account_id,
+                destination_id=destination_id,
+                ad_account_id=ad_account_id,
+                campaign_ids=campaign_ids,
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Get attribution metrics",
+            readOnlyHint=True,
+            destructiveHint=False,
+            openWorldHint=False,
+        )
+    )
+    def conversions_get_conversion_metrics(
+        account_id: str,
+        destination_id: str,
+        ad_account_id: str,
+        start_date: str,
+        end_date: str | None = None,
+        granularity: str = "DAILY",
+    ) -> str:
+        """Get attribution metrics
+
+        Args:
+            account_id: (required)
+            destination_id: (required)
+            ad_account_id: (required)
+            start_date: (required)
+            end_date
+            granularity"""
+        client = _get_client()
+        try:
+            response = client.conversions.get_conversion_metrics(
+                account_id=account_id,
+                destination_id=destination_id,
+                ad_account_id=ad_account_id,
+                start_date=start_date,
+                end_date=end_date,
+                granularity=granularity,
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
     # CUSTOM_FIELDS
 
     @mcp.tool(
@@ -9492,6 +9049,238 @@ def register_generated_tools(mcp, _get_client):
         except Exception as e:
             return f"Error: {e}"
 
+    # LEAD_GEN
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="List submitted leads",
+            readOnlyHint=True,
+            destructiveHint=False,
+            openWorldHint=False,
+        )
+    )
+    def lead_gen_list_leads(
+        form_id: str | None = None,
+        account_id: str | None = None,
+        limit: int = 25,
+        since: int | None = None,
+        cursor: str | None = None,
+    ) -> str:
+        """List submitted leads
+
+        Args:
+            form_id: Filter to a single lead form.
+            account_id: Filter to a single connected account.
+            limit
+            since: Unix seconds; only leads created at/after this Meta timestamp.
+            cursor: Keyset cursor from a previous response's pagination.cursor."""
+        client = _get_client()
+        try:
+            response = client.lead_gen.list_leads(
+                form_id=form_id,
+                account_id=account_id,
+                limit=limit,
+                since=since,
+                cursor=cursor,
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="List lead forms",
+            readOnlyHint=True,
+            destructiveHint=False,
+            openWorldHint=False,
+        )
+    )
+    def lead_gen_list_lead_forms(
+        account_id: str, limit: int = 25, cursor: str | None = None
+    ) -> str:
+        """List lead forms
+
+        Args:
+            account_id: Connected facebook account id. (required)
+            limit
+            cursor"""
+        client = _get_client()
+        try:
+            response = client.lead_gen.list_lead_forms(
+                account_id=account_id, limit=limit, cursor=cursor
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Create a lead form",
+            readOnlyHint=False,
+            destructiveHint=True,
+            openWorldHint=True,
+        )
+    )
+    def lead_gen_create_lead_form(
+        account_id: str,
+        name: str,
+        questions: list[dict[str, Any]] | None,
+        privacy_policy_url: str,
+        privacy_policy_link_text: str | None = None,
+        follow_up_action_url: str | None = None,
+        locale: str | None = None,
+        thank_you_title: str | None = None,
+        thank_you_body: str | None = None,
+        thank_you_button_text: str | None = None,
+        thank_you_button_type: str | None = None,
+        thank_you_website_url: str | None = None,
+        is_optimized_for_quality: bool | None = None,
+    ) -> str:
+        """Create a lead form
+
+        Args:
+            account_id: (required)
+            name: (required)
+            questions: (required)
+            privacy_policy_url: (required)
+            privacy_policy_link_text
+            follow_up_action_url
+            locale
+            thank_you_title
+            thank_you_body
+            thank_you_button_text
+            thank_you_button_type
+            thank_you_website_url
+            is_optimized_for_quality"""
+        client = _get_client()
+        try:
+            response = client.lead_gen.create_lead_form(
+                account_id=account_id,
+                name=name,
+                questions=questions,
+                privacy_policy_url=privacy_policy_url,
+                privacy_policy_link_text=privacy_policy_link_text,
+                follow_up_action_url=follow_up_action_url,
+                locale=locale,
+                thank_you_title=thank_you_title,
+                thank_you_body=thank_you_body,
+                thank_you_button_text=thank_you_button_text,
+                thank_you_button_type=thank_you_button_type,
+                thank_you_website_url=thank_you_website_url,
+                is_optimized_for_quality=is_optimized_for_quality,
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Get a lead form",
+            readOnlyHint=True,
+            destructiveHint=False,
+            openWorldHint=False,
+        )
+    )
+    def lead_gen_get_lead_form(form_id: str, account_id: str) -> str:
+        """Get a lead form
+
+        Args:
+            form_id: (required)
+            account_id: (required)"""
+        client = _get_client()
+        try:
+            response = client.lead_gen.get_lead_form(
+                form_id=form_id, account_id=account_id
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Archive a lead form",
+            readOnlyHint=False,
+            destructiveHint=True,
+            openWorldHint=True,
+        )
+    )
+    def lead_gen_archive_lead_form(form_id: str, account_id: str) -> str:
+        """Archive a lead form
+
+        Args:
+            form_id: (required)
+            account_id: (required)"""
+        client = _get_client()
+        try:
+            response = client.lead_gen.archive_lead_form(
+                form_id=form_id, account_id=account_id
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="List leads for a single form",
+            readOnlyHint=True,
+            destructiveHint=False,
+            openWorldHint=False,
+        )
+    )
+    def lead_gen_list_form_leads(
+        form_id: str,
+        account_id: str,
+        limit: int = 25,
+        cursor: str | None = None,
+        since: int | None = None,
+    ) -> str:
+        """List leads for a single form
+
+        Args:
+            form_id: (required)
+            account_id: (required)
+            limit
+            cursor
+            since: Unix seconds."""
+        client = _get_client()
+        try:
+            response = client.lead_gen.list_form_leads(
+                form_id=form_id,
+                account_id=account_id,
+                limit=limit,
+                cursor=cursor,
+                since=since,
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Create a test lead",
+            readOnlyHint=False,
+            destructiveHint=True,
+            openWorldHint=True,
+        )
+    )
+    def lead_gen_create_test_lead(
+        form_id: str, account_id: str, field_data: list[dict[str, Any]] | None
+    ) -> str:
+        """Create a test lead
+
+        Args:
+            form_id: (required)
+            account_id: (required)
+            field_data: (required)"""
+        client = _get_client()
+        try:
+            response = client.lead_gen.create_test_lead(
+                form_id=form_id, account_id=account_id, field_data=field_data
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
     # LOGS
 
     @mcp.tool(
@@ -10213,6 +10002,59 @@ def register_generated_tools(mcp, _get_client):
         client = _get_client()
         try:
             response = client.messages.upload_media_direct()
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    # MESSAGING_ADS
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Create click-to-message ad (WhatsApp / Messenger / Instagram Direct)",
+            readOnlyHint=False,
+            destructiveHint=True,
+            openWorldHint=True,
+        )
+    )
+    def messaging_ads_create_messaging_ad() -> str:
+        """Create click-to-message ad (WhatsApp / Messenger / Instagram Direct)"""
+        client = _get_client()
+        try:
+            response = client.messaging_ads.create_messaging_ad()
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Create Click-to-Call ad",
+            readOnlyHint=False,
+            destructiveHint=True,
+            openWorldHint=True,
+        )
+    )
+    def messaging_ads_create_call_ad() -> str:
+        """Create Click-to-Call ad"""
+        client = _get_client()
+        try:
+            response = client.messaging_ads.create_call_ad()
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Create Click-to-WhatsApp ad (deprecated)",
+            readOnlyHint=False,
+            destructiveHint=True,
+            openWorldHint=True,
+        )
+    )
+    def messaging_ads_create_ctwa_ad() -> str:
+        """Create Click-to-WhatsApp ad (deprecated)"""
+        client = _get_client()
+        try:
+            response = client.messaging_ads.create_ctwa_ad()
             return _format_response(response)
         except Exception as e:
             return f"Error: {e}"
@@ -11541,6 +11383,140 @@ def register_generated_tools(mcp, _get_client):
         except Exception as e:
             return f"Error: {e}"
 
+    # REACH_AND_FREQUENCY
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Create a Reach & Frequency prediction",
+            readOnlyHint=False,
+            destructiveHint=True,
+            openWorldHint=True,
+        )
+    )
+    def reach_and_frequency_create_rf_prediction(
+        account_id: str,
+        ad_account_id: str,
+        start_date: str,
+        end_date: str,
+        budget_amount: float | None = None,
+        reach: int | None = None,
+        frequency_cap: int | None = None,
+        targeting: dict[str, Any] | None = None,
+        placements: dict[str, Any] | None = None,
+    ) -> str:
+        """Create a Reach & Frequency prediction
+
+        Args:
+            account_id: Zernio SocialAccount id (posting or ads variant). (required)
+            ad_account_id: Meta ad account id (act_<n>). (required)
+            budget_amount: Whole currency units. Exactly one of budgetAmount / reach.
+            reach: Target unique reach. Exactly one of budgetAmount / reach.
+            start_date: Campaign window start (must be in the future). (required)
+            end_date: (required)
+            frequency_cap: Max impressions per person over the window.
+            targeting: Canonical camelCase TargetingSpec (same shape as /v1/ads/create's `targeting`). Defaults to countries: [US].
+            placements: Meta placements object (same shape as /v1/ads/create's `placements`)."""
+        client = _get_client()
+        try:
+            response = client.reach_and_frequency.create_rf_prediction(
+                account_id=account_id,
+                ad_account_id=ad_account_id,
+                budget_amount=budget_amount,
+                reach=reach,
+                start_date=start_date,
+                end_date=end_date,
+                frequency_cap=frequency_cap,
+                targeting=targeting,
+                placements=placements,
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Read a Reach & Frequency prediction",
+            readOnlyHint=True,
+            destructiveHint=False,
+            openWorldHint=False,
+        )
+    )
+    def reach_and_frequency_get_rf_prediction(
+        prediction_id: str, account_id: str, ad_account_id: str
+    ) -> str:
+        """Read a Reach & Frequency prediction
+
+        Args:
+            prediction_id: (required)
+            account_id: (required)
+            ad_account_id: (required)"""
+        client = _get_client()
+        try:
+            response = client.reach_and_frequency.get_rf_prediction(
+                prediction_id=prediction_id,
+                account_id=account_id,
+                ad_account_id=ad_account_id,
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Cancel a Reach & Frequency reservation",
+            readOnlyHint=False,
+            destructiveHint=True,
+            openWorldHint=True,
+        )
+    )
+    def reach_and_frequency_cancel_rf_reservation(
+        prediction_id: str, account_id: str, ad_account_id: str
+    ) -> str:
+        """Cancel a Reach & Frequency reservation
+
+        Args:
+            prediction_id: (required)
+            account_id: (required)
+            ad_account_id: (required)"""
+        client = _get_client()
+        try:
+            response = client.reach_and_frequency.cancel_rf_reservation(
+                prediction_id=prediction_id,
+                account_id=account_id,
+                ad_account_id=ad_account_id,
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Reserve a Reach & Frequency prediction",
+            readOnlyHint=False,
+            destructiveHint=True,
+            openWorldHint=True,
+        )
+    )
+    def reach_and_frequency_reserve_rf_prediction(
+        prediction_id: str, account_id: str, ad_account_id: str
+    ) -> str:
+        """Reserve a Reach & Frequency prediction
+
+        Args:
+            prediction_id: (required)
+            account_id: (required)
+            ad_account_id: (required)"""
+        client = _get_client()
+        try:
+            response = client.reach_and_frequency.reserve_rf_prediction(
+                prediction_id=prediction_id,
+                account_id=account_id,
+                ad_account_id=ad_account_id,
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
     # REDDIT
 
     @mcp.tool(
@@ -12465,6 +12441,68 @@ def register_generated_tools(mcp, _get_client):
             return f"Error: {e}"
 
     # TRACKING_TAGS
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Get ad tracking tags",
+            readOnlyHint=True,
+            destructiveHint=False,
+            openWorldHint=False,
+        )
+    )
+    def tracking_tags_get_ad_tracking_tags(ad_id: str) -> str:
+        """Get ad tracking tags
+
+        Args:
+            ad_id: Ad id (hex _id, platformAdId, or effective story/media id). (required)"""
+        client = _get_client()
+        try:
+            response = client.tracking_tags.get_ad_tracking_tags(ad_id=ad_id)
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Set ad tracking tags",
+            readOnlyHint=False,
+            destructiveHint=True,
+            openWorldHint=True,
+        )
+    )
+    def tracking_tags_update_ad_tracking_tags(
+        ad_id: str,
+        url_tags: list[dict[str, Any]] | None = None,
+        creative: dict[str, Any] | None = None,
+        tracking_url_template: str | None = None,
+        final_url_suffix: str | None = None,
+        dynamic_value_parameters: dict[str, Any] | None = None,
+        custom_value_parameters: dict[str, Any] | None = None,
+    ) -> str:
+        """Set ad tracking tags
+
+        Args:
+            ad_id: (required)
+            url_tags: Meta only. Click-URL params appended to a freshly-rebuilt creative.
+            creative: Meta only. OPTIONAL — omit to preserve the existing creative verbatim (default). Provide it only to rebuild the creative explicitly, or for creatives whose object_story_spec Meta strips.
+            tracking_url_template: Google only. Full tracking template (must contain {lpurl}).
+            final_url_suffix: Google only. Parse-only key=value params.
+            dynamic_value_parameters: LinkedIn only. key -> dynamic value enum (CAMPAIGN_ID, CAMPAIGN_NAME, CREATIVE_ID, ...).
+            custom_value_parameters: LinkedIn only. key -> static value."""
+        client = _get_client()
+        try:
+            response = client.tracking_tags.update_ad_tracking_tags(
+                ad_id=ad_id,
+                url_tags=url_tags,
+                creative=creative,
+                tracking_url_template=tracking_url_template,
+                final_url_suffix=final_url_suffix,
+                dynamic_value_parameters=dynamic_value_parameters,
+                custom_value_parameters=custom_value_parameters,
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
 
     @mcp.tool(
         annotations=ToolAnnotations(

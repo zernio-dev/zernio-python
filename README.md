@@ -375,6 +375,22 @@ Both `from zernio import ...` and `from late import ...` work identically. The `
 | `account_settings.set_messenger_menu()` | Set FB persistent menu |
 | `account_settings.set_telegram_commands()` | Set TG bot commands |
 
+### Ad Accounts
+| Method | Description |
+|--------|-------------|
+| `ad_accounts.list_ad_accounts()` | List ad accounts |
+| `ad_accounts.list_ad_labels()` | Ad labels |
+| `ad_accounts.list_ad_studies()` | A/B tests and lift studies |
+| `ad_accounts.list_ads_business_centers()` | List TikTok Business Centers |
+| `ad_accounts.list_high_demand_periods()` | High demand periods / budget schedules |
+| `ad_accounts.list_meta_businesses()` | Businesses list |
+| `ad_accounts.get_ad_account_finance()` | Ad account finances |
+| `ad_accounts.get_ad_comments()` | List comments on an ad |
+| `ad_accounts.get_ads_activity_log()` | Ad account change / audit log |
+| `ad_accounts.get_dsa_defaults()` | Get ad account DSA defaults |
+| `ad_accounts.get_dsa_recommendations()` | List DSA beneficiary/payor suggestions |
+| `ad_accounts.update_ad_account()` | Update ad account settings |
+
 ### Ad Audiences
 | Method | Description |
 |--------|-------------|
@@ -389,91 +405,59 @@ Both `from zernio import ...` and `from late import ...` work identically. The `
 | Method | Description |
 |--------|-------------|
 | `ad_campaigns.list_ad_campaigns()` | List campaigns |
+| `ad_campaigns.list_ads()` | List ads |
 | `ad_campaigns.bulk_update_ad_campaign_status()` | Pause or resume many campaigns |
-| `ad_campaigns.create_ad_campaign()` | Create a standalone campaign (Meta) |
-| `ad_campaigns.get_ad_set_details()` | Live ad-set details incl. learning phase (Meta) |
+| `ad_campaigns.create_ad_campaign()` | Create a standalone campaign |
+| `ad_campaigns.create_standalone_ad()` | Create standalone ad |
+| `ad_campaigns.get_ad()` | Get ad details |
+| `ad_campaigns.get_ad_set_details()` | Live ad-set details incl. learning phase |
 | `ad_campaigns.get_ad_tree()` | Get campaign tree |
 | `ad_campaigns.get_ads_timeline()` | Get daily account metrics |
+| `ad_campaigns.update_ad()` | Update ad |
 | `ad_campaigns.update_ad_campaign()` | Update a campaign |
 | `ad_campaigns.update_ad_campaign_status()` | Pause or resume a campaign |
 | `ad_campaigns.update_ad_set()` | Update an ad set |
 | `ad_campaigns.update_ad_set_status()` | Pause or resume a single ad set |
+| `ad_campaigns.update_ad_status()` | Pause or resume a single ad |
+| `ad_campaigns.delete_ad()` | Cancel an ad |
 | `ad_campaigns.delete_ad_campaign()` | Delete a campaign |
+| `ad_campaigns.boost_post()` | Boost post as ad |
+| `ad_campaigns.duplicate_ad()` | Duplicate an ad |
 | `ad_campaigns.duplicate_ad_campaign()` | Duplicate a campaign |
-| `ad_campaigns.duplicate_ad_set()` | Duplicate an ad set (Meta) |
+| `ad_campaigns.duplicate_ad_set()` | Duplicate an ad set |
 
-### Ads
+### Ad Creatives
 | Method | Description |
 |--------|-------------|
-| `ads.list_ad_accounts()` | List ad accounts |
-| `ads.list_ad_catalog_product_sets()` | List a catalog's product sets |
-| `ads.list_ad_catalogs()` | List Meta product catalogs |
-| `ads.list_ad_creatives()` | Creative library (Meta) |
-| `ads.list_ad_images()` | Ad image library (Meta) |
-| `ads.list_ad_labels()` | Ad labels (Meta) |
-| `ads.list_ad_studies()` | A/B tests and lift studies (Meta) |
-| `ads.list_ads()` | List ads |
-| `ads.list_ads_business_centers()` | List TikTok Business Centers |
-| `ads.list_conversion_associations()` | List associated campaigns |
-| `ads.list_conversion_destinations()` | List conversion destinations |
-| `ads.list_form_leads()` | List leads for a single form |
-| `ads.list_high_demand_periods()` | High demand periods / budget schedules (Meta) |
-| `ads.list_lead_forms()` | List lead forms |
-| `ads.list_leads()` | List submitted leads |
-| `ads.list_meta_businesses()` | Businesses list (Meta) |
-| `ads.create_ad_creative()` | Create a standalone creative (Meta) |
-| `ads.create_ad_insights_report()` | Submit an async insights report run (Meta) |
-| `ads.create_call_ad()` | Create Click-to-Call ad |
-| `ads.create_conversion_destination()` | Create a conversion destination |
-| `ads.create_ctwa_ad()` | Create Click-to-WhatsApp ad (deprecated) |
-| `ads.create_lead_form()` | Create a lead form |
-| `ads.create_messaging_ad()` | Create click-to-message ad (WhatsApp / Messenger / Instagram Direct) |
-| `ads.create_rf_prediction()` | Create a Reach & Frequency prediction (Meta) |
-| `ads.create_standalone_ad()` | Create standalone ad |
-| `ads.create_test_lead()` | Create a test lead |
-| `ads.get_ad()` | Get ad details |
-| `ads.get_ad_account_finance()` | Ad account finances (Meta) |
-| `ads.get_ad_analytics()` | Get ad analytics |
-| `ads.get_ad_comments()` | List comments on an ad |
-| `ads.get_ad_creative()` | Creative details (Meta) |
-| `ads.get_ad_insights_report()` | Poll an async insights report run (Meta) |
-| `ads.get_ad_previews()` | Render previews of an existing ad (Meta) |
-| `ads.get_ad_tracking_tags()` | Get ad tracking tags |
-| `ads.get_ads_activity_log()` | Ad account change / audit log (Meta) |
-| `ads.get_campaign_analytics()` | Get campaign analytics |
-| `ads.get_conversion_destination()` | Get a conversion destination |
-| `ads.get_conversion_metrics()` | Get attribution metrics |
-| `ads.get_conversions_quality()` | Get Event Match Quality |
-| `ads.get_dsa_defaults()` | Get ad account DSA defaults |
-| `ads.get_dsa_recommendations()` | List DSA beneficiary/payor suggestions |
-| `ads.get_lead_form()` | Get a lead form |
-| `ads.get_linked_in_bid_pricing()` | Suggested bid and budget bounds (LinkedIn) |
-| `ads.get_linked_in_supply_forecast()` | Impressions, clicks and spend forecast (LinkedIn) |
-| `ads.get_rf_prediction()` | Read a Reach & Frequency prediction (Meta) |
-| `ads.update_ad()` | Update ad |
-| `ads.update_ad_account()` | Update ad account settings |
-| `ads.update_ad_creative()` | Rename a creative (Meta) |
-| `ads.update_ad_status()` | Pause or resume a single ad |
-| `ads.update_ad_tracking_tags()` | Set ad tracking tags |
-| `ads.update_conversion_destination()` | Update a conversion destination |
-| `ads.delete_ad()` | Cancel an ad |
-| `ads.delete_ad_creative()` | Delete a creative (Meta) |
-| `ads.delete_conversion_destination()` | Delete a conversion destination |
-| `ads.add_conversion_associations()` | Associate campaigns |
-| `ads.adjust_conversions()` | Adjust uploaded conversions |
-| `ads.archive_lead_form()` | Archive a lead form |
-| `ads.boost_post()` | Boost post as ad |
-| `ads.cancel_rf_reservation()` | Cancel a Reach & Frequency reservation (Meta) |
-| `ads.duplicate_ad()` | Duplicate an ad (Meta) |
-| `ads.estimate_ad_reach()` | Estimate audience reach |
-| `ads.generate_ad_previews()` | Render pre-create ad previews (Meta) |
-| `ads.query_ad_insights()` | Flexible live insights query (Meta) |
-| `ads.remove_conversion_associations()` | Remove associated campaigns |
-| `ads.reserve_rf_prediction()` | Reserve a Reach & Frequency prediction (Meta) |
-| `ads.search_ad_interests()` | Search targeting interests |
-| `ads.search_ad_targeting()` | Search targeting options |
-| `ads.send_conversions()` | Send conversion events |
-| `ads.upload_ad_image()` | Upload an ad image from base64 (Meta) |
+| `ad_creatives.list_ad_catalog_product_sets()` | List a catalog's product sets |
+| `ad_creatives.list_ad_catalogs()` | List Meta product catalogs |
+| `ad_creatives.list_ad_creatives()` | Creative library |
+| `ad_creatives.list_ad_images()` | Ad image library |
+| `ad_creatives.create_ad_creative()` | Create a standalone creative |
+| `ad_creatives.get_ad_creative()` | Creative details |
+| `ad_creatives.get_ad_previews()` | Render previews of an existing ad |
+| `ad_creatives.update_ad_creative()` | Rename a creative |
+| `ad_creatives.delete_ad_creative()` | Delete a creative |
+| `ad_creatives.generate_ad_previews()` | Render pre-create ad previews |
+| `ad_creatives.upload_ad_image()` | Upload an ad image from base64 |
+
+### Ad Insights
+| Method | Description |
+|--------|-------------|
+| `ad_insights.create_ad_insights_report()` | Submit an async insights report run |
+| `ad_insights.get_ad_analytics()` | Get ad analytics |
+| `ad_insights.get_ad_insights_report()` | Poll an async insights report run |
+| `ad_insights.get_campaign_analytics()` | Get campaign analytics |
+| `ad_insights.query_ad_insights()` | Flexible live insights query |
+
+### Ad Targeting
+| Method | Description |
+|--------|-------------|
+| `ad_targeting.get_linked_in_bid_pricing()` | Suggested bid and budget bounds |
+| `ad_targeting.get_linked_in_supply_forecast()` | Impressions, clicks and spend forecast |
+| `ad_targeting.estimate_ad_reach()` | Estimate audience reach |
+| `ad_targeting.search_ad_interests()` | Search targeting interests |
+| `ad_targeting.search_ad_targeting()` | Search targeting options |
 
 ### Broadcasts
 | Method | Description |
@@ -531,6 +515,22 @@ Both `from zernio import ...` and `from late import ...` work identically. The `
 | `contacts.get_contact_channels()` | List channels for a contact |
 | `contacts.update_contact()` | Update contact |
 | `contacts.delete_contact()` | Delete contact |
+
+### Conversions
+| Method | Description |
+|--------|-------------|
+| `conversions.list_conversion_associations()` | List associated campaigns |
+| `conversions.list_conversion_destinations()` | List conversion destinations |
+| `conversions.create_conversion_destination()` | Create a conversion destination |
+| `conversions.get_conversion_destination()` | Get a conversion destination |
+| `conversions.get_conversion_metrics()` | Get attribution metrics |
+| `conversions.get_conversions_quality()` | Get Event Match Quality |
+| `conversions.update_conversion_destination()` | Update a conversion destination |
+| `conversions.delete_conversion_destination()` | Delete a conversion destination |
+| `conversions.add_conversion_associations()` | Associate campaigns |
+| `conversions.adjust_conversions()` | Adjust uploaded conversions |
+| `conversions.remove_conversion_associations()` | Remove associated campaigns |
+| `conversions.send_conversions()` | Send conversion events |
 
 ### Custom Fields
 | Method | Description |
@@ -636,6 +636,17 @@ Both `from zernio import ...` and `from late import ...` work identically. The `
 | `instagram.get_instagram_publishing_limit()` | Get Instagram publishing limit |
 | `instagram.get_instagram_story_insights()` | Get Instagram story insights |
 
+### Lead Gen
+| Method | Description |
+|--------|-------------|
+| `lead_gen.list_form_leads()` | List leads for a single form |
+| `lead_gen.list_lead_forms()` | List lead forms |
+| `lead_gen.list_leads()` | List submitted leads |
+| `lead_gen.create_lead_form()` | Create a lead form |
+| `lead_gen.create_test_lead()` | Create a test lead |
+| `lead_gen.get_lead_form()` | Get a lead form |
+| `lead_gen.archive_lead_form()` | Archive a lead form |
+
 ### Mentions
 | Method | Description |
 |--------|-------------|
@@ -659,6 +670,13 @@ Both `from zernio import ...` and `from late import ...` work identically. The `
 | `messages.send_inbox_message()` | Send message |
 | `messages.send_typing_indicator()` | Send typing indicator |
 | `messages.upload_media_direct()` | Upload media file |
+
+### Messaging Ads
+| Method | Description |
+|--------|-------------|
+| `messaging_ads.create_call_ad()` | Create Click-to-Call ad |
+| `messaging_ads.create_ctwa_ad()` | Create Click-to-WhatsApp ad (deprecated) |
+| `messaging_ads.create_messaging_ad()` | Create click-to-message ad (WhatsApp / Messenger / Instagram Direct) |
 
 ### Phone Numbers
 | Method | Description |
@@ -685,6 +703,14 @@ Both `from zernio import ...` and `from late import ...` work identically. The `
 | `phone_numbers.upload_phone_number_kyc_document()` | Upload a KYC document |
 | `phone_numbers.upload_phone_number_port_in_document()` | Upload a porting document |
 | `phone_numbers.validate_phone_number_kyc_address()` | Pre-validate KYC address |
+
+### Reach and Frequency
+| Method | Description |
+|--------|-------------|
+| `reach_and_frequency.create_rf_prediction()` | Create a Reach & Frequency prediction |
+| `reach_and_frequency.get_rf_prediction()` | Read a Reach & Frequency prediction |
+| `reach_and_frequency.cancel_rf_reservation()` | Cancel a Reach & Frequency reservation |
+| `reach_and_frequency.reserve_rf_prediction()` | Reserve a Reach & Frequency prediction |
 
 ### Reviews (Inbox)
 | Method | Description |
@@ -737,8 +763,10 @@ Both `from zernio import ...` and `from late import ...` work identically. The `
 | `tracking_tags.list_tracking_tag_shared_accounts()` | List accounts it is shared with |
 | `tracking_tags.list_tracking_tags()` | List tracking tags |
 | `tracking_tags.create_tracking_tag()` | Create a tracking tag |
+| `tracking_tags.get_ad_tracking_tags()` | Get ad tracking tags |
 | `tracking_tags.get_tracking_tag()` | Get a tracking tag |
 | `tracking_tags.get_tracking_tag_stats()` | Get aggregated event stats |
+| `tracking_tags.update_ad_tracking_tags()` | Set ad tracking tags |
 | `tracking_tags.update_tracking_tag()` | Update a tracking tag |
 | `tracking_tags.add_tracking_tag_shared_account()` | Share with an ad account |
 | `tracking_tags.remove_tracking_tag_shared_account()` | Stop sharing with an account |

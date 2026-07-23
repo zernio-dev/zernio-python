@@ -5,9 +5,12 @@ from __future__ import annotations
 from .account_groups import AccountGroupsResource
 from .account_settings import AccountSettingsResource
 from .accounts import AccountsResource
+from .ad_accounts import AdAccountsResource
 from .ad_audiences import AdAudiencesResource
 from .ad_campaigns import AdCampaignsResource
-from .ads import AdsResource
+from .ad_creatives import AdCreativesResource
+from .ad_insights import AdInsightsResource
+from .ad_targeting import AdTargetingResource
 from .analytics import AnalyticsResource
 from .api_keys import ApiKeysResource
 from .broadcasts import BroadcastsResource
@@ -16,6 +19,7 @@ from .comment_automations import CommentAutomationsResource
 from .comments import CommentsResource
 from .connect import ConnectResource
 from .contacts import ContactsResource
+from .conversions import ConversionsResource
 from .custom_fields import CustomFieldsResource
 from .discord import DiscordResource
 from .gmb_services import GmbServicesResource
@@ -23,14 +27,17 @@ from .gmb_verifications import GmbVerificationsResource
 from .inbox_analytics import InboxAnalyticsResource
 from .instagram import InstagramResource
 from .invites import InvitesResource
+from .lead_gen import LeadGenResource
 from .logs import LogsResource
 from .media import MediaResource
 from .mentions import MentionsResource
 from .messages import MessagesResource
+from .messaging_ads import MessagingAdsResource
 from .phone_numbers import PhoneNumbersResource
 from .posts import PostsResource
 from .profiles import ProfilesResource
 from .queue import QueueResource
+from .reach_and_frequency import ReachAndFrequencyResource
 from .reddit import RedditResource
 from .reviews import ReviewsResource
 from .sequences import SequencesResource
@@ -55,9 +62,12 @@ __all__ = [
     "AccountGroupsResource",
     "AccountSettingsResource",
     "AccountsResource",
+    "AdAccountsResource",
     "AdAudiencesResource",
     "AdCampaignsResource",
-    "AdsResource",
+    "AdCreativesResource",
+    "AdInsightsResource",
+    "AdTargetingResource",
     "AnalyticsResource",
     "ApiKeysResource",
     "BroadcastsResource",
@@ -66,6 +76,7 @@ __all__ = [
     "CommentsResource",
     "ConnectResource",
     "ContactsResource",
+    "ConversionsResource",
     "CustomFieldsResource",
     "DiscordResource",
     "GmbServicesResource",
@@ -73,14 +84,17 @@ __all__ = [
     "InboxAnalyticsResource",
     "InstagramResource",
     "InvitesResource",
+    "LeadGenResource",
     "LogsResource",
     "MediaResource",
     "MentionsResource",
     "MessagesResource",
+    "MessagingAdsResource",
     "PhoneNumbersResource",
     "PostsResource",
     "ProfilesResource",
     "QueueResource",
+    "ReachAndFrequencyResource",
     "RedditResource",
     "ReviewsResource",
     "SequencesResource",

@@ -12,9 +12,12 @@ from ..resources import (
     AccountGroupsResource,
     AccountSettingsResource,
     AccountsResource,
+    AdAccountsResource,
     AdAudiencesResource,
     AdCampaignsResource,
-    AdsResource,
+    AdCreativesResource,
+    AdInsightsResource,
+    AdTargetingResource,
     AnalyticsResource,
     ApiKeysResource,
     BroadcastsResource,
@@ -23,6 +26,7 @@ from ..resources import (
     CommentsResource,
     ConnectResource,
     ContactsResource,
+    ConversionsResource,
     CustomFieldsResource,
     DiscordResource,
     GmbServicesResource,
@@ -30,14 +34,17 @@ from ..resources import (
     InboxAnalyticsResource,
     InstagramResource,
     InvitesResource,
+    LeadGenResource,
     LogsResource,
     MediaResource,
     MentionsResource,
     MessagesResource,
+    MessagingAdsResource,
     PhoneNumbersResource,
     PostsResource,
     ProfilesResource,
     QueueResource,
+    ReachAndFrequencyResource,
     RedditResource,
     ReviewsResource,
     SequencesResource,
@@ -133,9 +140,12 @@ class Zernio(BaseClient):
         self.account_groups = AccountGroupsResource(self)
         self.account_settings = AccountSettingsResource(self)
         self.accounts = AccountsResource(self)
+        self.ad_accounts = AdAccountsResource(self)
         self.ad_audiences = AdAudiencesResource(self)
         self.ad_campaigns = AdCampaignsResource(self)
-        self.ads = AdsResource(self)
+        self.ad_creatives = AdCreativesResource(self)
+        self.ad_insights = AdInsightsResource(self)
+        self.ad_targeting = AdTargetingResource(self)
         self.analytics = AnalyticsResource(self)
         self.api_keys = ApiKeysResource(self)
         self.broadcasts = BroadcastsResource(self)
@@ -144,6 +154,7 @@ class Zernio(BaseClient):
         self.comments = CommentsResource(self)
         self.connect = ConnectResource(self)
         self.contacts = ContactsResource(self)
+        self.conversions = ConversionsResource(self)
         self.custom_fields = CustomFieldsResource(self)
         self.discord = DiscordResource(self)
         self.gmb_services = GmbServicesResource(self)
@@ -151,14 +162,17 @@ class Zernio(BaseClient):
         self.inbox_analytics = InboxAnalyticsResource(self)
         self.instagram = InstagramResource(self)
         self.invites = InvitesResource(self)
+        self.lead_gen = LeadGenResource(self)
         self.logs = LogsResource(self)
         self.media = MediaResource(self)
         self.mentions = MentionsResource(self)
         self.messages = MessagesResource(self)
+        self.messaging_ads = MessagingAdsResource(self)
         self.phone_numbers = PhoneNumbersResource(self)
         self.posts = PostsResource(self)
         self.profiles = ProfilesResource(self)
         self.queue = QueueResource(self)
+        self.reach_and_frequency = ReachAndFrequencyResource(self)
         self.reddit = RedditResource(self)
         self.reviews = ReviewsResource(self)
         self.sequences = SequencesResource(self)

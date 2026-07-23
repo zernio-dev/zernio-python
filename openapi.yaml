@@ -338,21 +338,59 @@ tags:
       `platformPostId` to match comments on every post on the account, with unlimited
       automations stacked per account). Supports dedup, optional public comment reply, and
       auto-creates contacts.
-  - name: Ads
-    description: |
-      Paid advertising management across Meta (Facebook/Instagram), Google, TikTok, LinkedIn, Pinterest, and X/Twitter.
-      Create, boost, pause/resume ads and campaigns, view metrics, and manage audiences.
-      Requires the Ads add-on.
   - name: Ad Campaigns
     description: |
-      Campaign-level operations. Campaigns are virtual aggregations of ads grouped by their platform campaign ID.
-      List campaigns with aggregate metrics, or pause/resume all ads in a campaign at once.
+      The advertising structure: campaigns, ad sets, and ads. Create standalone campaigns/ads, boost an
+      organic post, duplicate at any level, pause/resume, and read the full tree and timeline. Campaigns
+      are virtual aggregations of ads grouped by their platform campaign ID.
+      Per-operation platform support is shown by the platform badges. Requires the Ads add-on.
+  - name: Ad Creatives
+    description: |
+      Creative assets: the standalone creative library (create/reuse/rename), the ad-account image library
+      (list + base64 upload), rendered ad previews, and product catalogs for Advantage+/dynamic ads. Meta only.
       Requires the Ads add-on.
   - name: Ad Audiences
     description: |
-      Custom audience management for ad targeting. Create customer lists, website retargeting audiences,
-      and lookalike audiences. Upload user data (hashed server-side). Currently Meta-only for creation,
-      read-only for other platforms.
+      Custom audiences for targeting: customer lists (hashed upload), website + engagement + lookalike
+      audiences, and reusable saved-targeting presets. Creation support varies by platform (badges show which);
+      LinkedIn adds company-list and engagement segments.
+      Requires the Ads add-on.
+  - name: Ad Targeting
+    description: |
+      Targeting discovery: search interests/behaviors/geo/demographics, estimate reach, and (LinkedIn)
+      bid pricing and supply forecasts. Feeds the targeting fields on create.
+      Requires the Ads add-on.
+  - name: Ad Insights
+    description: |
+      Measurement: cached aggregate analytics per ad/campaign, plus live Meta Graph insight queries
+      (arbitrary fields, breakdowns, filtering, attribution windows) and async report runs.
+      Requires the Ads add-on.
+  - name: Conversions
+    description: |
+      Server-side Conversions API: send + adjust conversion events (with hashed matching and consent/LDU
+      forwarding), read Event Match Quality, and manage conversion destinations (pixels/datasets) and their
+      ad-account associations. Supported on Meta, Google, TikTok and LinkedIn (badges show per operation).
+      Requires the Ads add-on.
+  - name: Messaging Ads
+    description: |
+      Click-to-message and click-to-call destination ads: WhatsApp (CTWA), Messenger, Instagram Direct,
+      and Call ads. Meta only.
+      Requires the Ads add-on.
+  - name: Reach and Frequency
+    description: |
+      Fixed-price reserved (Reach & Frequency) buying: quote a prediction, reserve price + inventory, and
+      buy via a RESERVED campaign. Meta only.
+      Requires the Ads add-on.
+  - name: Lead Gen
+    description: |
+      Instant lead forms on Facebook Pages: create/list/archive forms and retrieve (or test) their leads.
+      Meta only.
+      Requires the Ads add-on.
+  - name: Ad Accounts
+    description: |
+      Ad accounts and operational/diagnostic reads: list accounts, account finances, change/audit log,
+      A/B studies, high-demand periods, ad labels, DSA defaults + recommendations, and Business Managers
+      (Meta) / Business Centers (TikTok).
       Requires the Ads add-on.
   - name: Tracking Tags
     description: |
@@ -1657,6 +1695,10 @@ components:
             endDate:
               type: string
               format: date
+        provisionalSince:
+          type: string
+          format: date
+          description: 'Present only when the range reaches into YouTube''s ~3-day processing window: the first date whose numbers are provisional and may still be revised by YouTube.'
         totalViews:
           type: integer
           description: Sum of views across all days in the range
@@ -1728,6 +1770,10 @@ components:
             endDate:
               type: string
               format: date
+        provisionalSince:
+          type: string
+          format: date
+          description: 'Present only when the range reaches into YouTube''s ~3-day processing window: the first date whose numbers are provisional and may still be revised by YouTube.'
         retentionCurve:
           type: array
           description: Up to 100 points covering the video timeline, aggregated over the date range. Empty for videos with very few views.
@@ -1935,6 +1981,10 @@ components:
             endDate:
               type: string
               example: "2026-03-31"
+        provisionalSince:
+          type: string
+          format: date
+          description: 'Present only when the range reaches into YouTube''s ~3-day processing window: the first date whose numbers are provisional and may still be revised by YouTube.'
         note:
           type: string
           example: "Age/gender values are viewer percentages (0-100). Country values are view counts. Data based on signed-in viewers only, with 2-3 day delay."
@@ -8895,7 +8945,9 @@ paths:
       summary: Get YouTube daily views
       description: |
         Returns daily view counts for a YouTube video including views, watch time, and subscriber changes.
-        Requires yt-analytics.readonly scope (re-authorization may be needed). Data has a 2-3 day delay. Max 90 days, defaults to last 30 days.
+        Requires yt-analytics.readonly scope (re-authorization may be needed). YouTube finalizes analytics
+        with a ~3-day delay; by default only finalized days are returned, and an explicit endDate can reach
+        into the delay window (see the endDate parameter). Max 90 days, defaults to last 30 days.
       parameters:
         - name: videoId
           in: query
@@ -8914,7 +8966,12 @@ paths:
         - name: endDate
           in: query
           schema: { type: string, format: date }
-          description: End date (YYYY-MM-DD). Defaults to 3 days ago (YouTube data latency).
+          description: |
+            End date (YYYY-MM-DD). Defaults to 3 days ago, the newest fully finalized day
+            (YouTube finalizes analytics with a ~3-day delay). An explicit endDate is honored
+            up to today: days inside the delay window are provisional and may still be revised
+            by YouTube (see provisionalSince in the response), and days YouTube has not
+            processed yet are omitted from dailyViews.
       responses:
         '200':
           description: Daily views breakdown
@@ -9053,7 +9110,11 @@ paths:
         - name: endDate
           in: query
           schema: { type: string, format: date }
-          description: End date (YYYY-MM-DD). Defaults to 3 days ago (YouTube data latency).
+          description: |
+            End date (YYYY-MM-DD). Defaults to 3 days ago, the newest fully finalized day
+            (YouTube finalizes analytics with a ~3-day delay). An explicit endDate is honored
+            up to today: days inside the delay window are provisional and may still be revised
+            by YouTube (see provisionalSince in the response).
       responses:
         '200':
           description: Audience retention curve
@@ -9624,7 +9685,10 @@ paths:
           in: query
           schema: { type: string, format: date }
           description: |
-            End date in YYYY-MM-DD format. Defaults to 3 days ago (YouTube data latency).
+            End date (YYYY-MM-DD). Defaults to 3 days ago, the newest fully finalized day
+            (YouTube finalizes analytics with a ~3-day delay). An explicit endDate is honored
+            up to today: days inside the delay window are provisional and may still be revised
+            by YouTube (see provisionalSince in the response).
       responses:
         '200':
           description: Demographic insights data
@@ -33238,7 +33302,8 @@ paths:
   /v1/ads:
     get:
       operationId: listAds
-      tags: [Ads]
+      tags: ["Ad Campaigns"]
+      x-platforms: ["meta", "google", "tiktok", "linkedin", "pinterest", "x"]
       summary: List ads
       description: |
         Returns a paginated list of ads with metrics computed over an optional date range.
@@ -33292,7 +33357,8 @@ paths:
   /v1/ads/campaigns:
     get:
       operationId: listAdCampaigns
-      tags: [Ad Campaigns]
+      tags: ["Ad Campaigns"]
+      x-platforms: ["meta", "google", "tiktok", "linkedin", "pinterest", "x"]
       summary: List campaigns
       description: |
         Returns campaigns as virtual aggregations over ad documents grouped by platform campaign ID.
@@ -33329,14 +33395,15 @@ paths:
 
     post:
       operationId: createAdCampaign
-      tags: [Ad Campaigns]
-      summary: Create a standalone campaign (Meta)
+      tags: ["Ad Campaigns"]
+      x-platforms: ["meta"]
+      summary: Create a standalone campaign
       description: |-
         Creates a campaign WITHOUT its first ad set / ad (the ODAX shell only). Ad sets join it
         later via `existingCampaignId` on the create endpoints. A budget here is campaign-level
         (CBO) by definition; omit it for ABO (each ad set carries its own budget). Created
         `PAUSED` unless `status: ACTIVE`. The campaign materializes in `/v1/ads/tree` via the
-        next sync discovery pass. Meta only.
+        next sync discovery pass.
       security:
         - bearerAuth: []
       requestBody:
@@ -33379,7 +33446,8 @@ paths:
   /v1/ads/campaigns/{campaignId}/status:
     put:
       operationId: updateAdCampaignStatus
-      tags: [Ad Campaigns]
+      tags: ["Ad Campaigns"]
+      x-platforms: ["meta", "google", "tiktok", "linkedin", "pinterest", "x"]
       summary: Pause or resume a campaign
       description: |
         Updates the status of all ads in a campaign. Makes one platform API call (not per-ad) since status cascades through the campaign hierarchy.
@@ -33419,7 +33487,8 @@ paths:
   /v1/ads/campaigns/{campaignId}:
     put:
       operationId: updateAdCampaign
-      tags: [Ad Campaigns]
+      tags: ["Ad Campaigns"]
+      x-platforms: ["meta", "google", "tiktok", "linkedin", "pinterest", "x"]
       summary: Update a campaign
       description: |
         Campaign-level edits. At least one of `budget`, `bidStrategy`, `name` or `platformSpecificData` is required.
@@ -33485,7 +33554,8 @@ paths:
 
     delete:
       operationId: deleteAdCampaign
-      tags: [Ad Campaigns]
+      tags: ["Ad Campaigns"]
+      x-platforms: ["meta", "google", "tiktok", "linkedin", "pinterest", "x"]
       summary: Delete a campaign
       description: |
         Deletes the whole campaign on the platform, cascading to its ad sets
@@ -33524,7 +33594,8 @@ paths:
   /v1/ads/campaigns/bulk-status:
     post:
       operationId: bulkUpdateAdCampaignStatus
-      tags: [Ad Campaigns]
+      tags: ["Ad Campaigns"]
+      x-platforms: ["meta", "google", "tiktok", "linkedin", "pinterest", "x"]
       summary: Pause or resume many campaigns
       description: |
         Process up to 50 campaigns in one call. Each campaign is updated
@@ -33581,7 +33652,8 @@ paths:
   /v1/ads/campaigns/{campaignId}/duplicate:
     post:
       operationId: duplicateAdCampaign
-      tags: [Ad Campaigns]
+      tags: ["Ad Campaigns"]
+      x-platforms: ["meta", "tiktok", "linkedin"]
       summary: Duplicate a campaign
       description: |
         Duplicates a campaign, including its ad sets, ads, creatives, and
@@ -33666,14 +33738,15 @@ paths:
   /v1/ads/ad-sets/{adSetId}/duplicate:
     post:
       operationId: duplicateAdSet
-      tags: [Ad Campaigns]
-      summary: Duplicate an ad set (Meta)
+      tags: ["Ad Campaigns"]
+      x-platforms: ["meta"]
+      summary: Duplicate an ad set
       description: |-
         Duplicates an ad set, including its ads and creatives by default (`deepCopy: true`),
         via Meta's native `POST /{adset-id}/copies`. The copy is created paused so callers can
         review before launching. `campaignId` retargets the copy into another campaign; omitted
         = the source's own campaign. The new hierarchy materializes asynchronously — sync
-        discovery is triggered automatically (`syncAfter: false` to skip). Meta only.
+        discovery is triggered automatically (`syncAfter: false` to skip).
       security:
         - bearerAuth: []
       parameters:
@@ -33715,13 +33788,14 @@ paths:
   /v1/ads/{adId}/duplicate:
     post:
       operationId: duplicateAd
-      tags: [Ads]
-      summary: Duplicate an ad (Meta)
+      tags: ["Ad Campaigns"]
+      x-platforms: ["meta"]
+      summary: Duplicate an ad
       description: |-
         Duplicates a single ad via Meta's native `POST /{ad-id}/copies`. The copy is created
         paused. `adSetId` retargets the copy into another ad set; omitted = the source's own ad
         set. Accepts the Zernio ad id or the platform ad id. Sync discovery is triggered
-        automatically (`syncAfter: false` to skip). Meta only.
+        automatically (`syncAfter: false` to skip).
       security:
         - bearerAuth: []
       parameters:
@@ -33758,14 +33832,15 @@ paths:
   /v1/ads/ad-sets/{adSetId}:
     get:
       operationId: getAdSetDetails
-      tags: [Ad Campaigns]
-      summary: Live ad-set details incl. learning phase (Meta)
+      tags: ["Ad Campaigns"]
+      x-platforms: ["meta"]
+      summary: Live ad-set details incl. learning phase
       description: |-
         Reads the ad set live from Meta, returned verbatim. The default projection includes
         `learning_stage_info` (learning-phase status: LEARNING / SUCCESS / FAIL / WAIVING — Meta
         omits its `status` key on paused ad sets), delivery settings, budgets, schedule and
         targeting. `fields` is a raw-passthrough override; unknown fields return Meta's 400
-        verbatim. Meta only.
+        verbatim.
       security:
         - bearerAuth: []
       parameters:
@@ -33786,7 +33861,8 @@ paths:
         '501': { description: Only supported on Meta (facebook/instagram) }
     put:
       operationId: updateAdSet
-      tags: [Ad Campaigns]
+      tags: ["Ad Campaigns"]
+      x-platforms: ["meta", "tiktok"]
       summary: Update an ad set
       description: |
         Ad-set-level writes. Use this for ABO budget updates, ad-set-scoped
@@ -33897,7 +33973,8 @@ paths:
   /v1/ads/ad-sets/{adSetId}/status:
     put:
       operationId: updateAdSetStatus
-      tags: [Ad Campaigns]
+      tags: ["Ad Campaigns"]
+      x-platforms: ["meta", "tiktok"]
       summary: Pause or resume a single ad set
       description: |
         Ad-set-scoped pause/resume (doesn't touch sibling ad sets). Thin wrapper
@@ -33935,7 +34012,8 @@ paths:
   /v1/ads/tree:
     get:
       operationId: getAdTree
-      tags: [Ad Campaigns]
+      tags: ["Ad Campaigns"]
+      x-platforms: ["meta", "google", "tiktok", "linkedin", "pinterest", "x"]
       summary: Get campaign tree
       description: |
         Returns a nested Campaign > Ad Set > Ad hierarchy with rolled-up metrics at each level.
@@ -33990,7 +34068,8 @@ paths:
   /v1/ads/timeline:
     get:
       operationId: getAdsTimeline
-      tags: [Ad Campaigns]
+      tags: ["Ad Campaigns"]
+      x-platforms: ["meta", "google", "tiktok", "linkedin", "pinterest", "x"]
       summary: Get daily account metrics
       description: |
         Returns daily aggregate metrics across all ads in a SocialAccount as a single
@@ -34060,7 +34139,8 @@ paths:
   /v1/ads/{adId}:
     get:
       operationId: getAd
-      tags: [Ads]
+      tags: ["Ad Campaigns"]
+      x-platforms: ["meta", "google", "tiktok", "linkedin", "pinterest", "x"]
       summary: Get ad details
       description: |
         Returns an ad with its creative, targeting, status, and performance metrics.
@@ -34094,7 +34174,8 @@ paths:
         '404': { $ref: '#/components/responses/NotFound' }
     put:
       operationId: updateAd
-      tags: [Ads]
+      tags: ["Ad Campaigns"]
+      x-platforms: ["meta", "google", "tiktok", "linkedin", "pinterest", "x"]
       summary: Update ad
       description: |
         Patch one or more fields on an ad. Status, budget, targeting, and creative changes
@@ -34177,7 +34258,8 @@ paths:
         '501': { description: "targeting or creative not supported on the platform (Meta + TikTok only)" }
     delete:
       operationId: deleteAd
-      tags: [Ads]
+      tags: ["Ad Campaigns"]
+      x-platforms: ["meta", "google", "tiktok", "linkedin", "pinterest", "x"]
       summary: Cancel an ad
       description: Cancels the ad on the platform and marks it as cancelled in the database. The ad is preserved for history.
       security:
@@ -34199,7 +34281,8 @@ paths:
   /v1/ads/{adId}/status:
     put:
       operationId: updateAdStatus
-      tags: [Ads]
+      tags: ["Ad Campaigns"]
+      x-platforms: ["meta", "google", "tiktok", "linkedin", "pinterest", "x"]
       summary: Pause or resume a single ad
       description: |
         Ad-scoped pause/resume — touches ONLY this ad, never its parent ad set or
@@ -34243,7 +34326,8 @@ paths:
   /v1/ads/campaigns/{campaignId}/analytics:
     get:
       operationId: getCampaignAnalytics
-      tags: [Ads]
+      tags: ["Ad Insights"]
+      x-platforms: ["meta", "google", "tiktok", "linkedin", "pinterest", "x"]
       summary: Get campaign analytics
       description: |
         Returns performance analytics for a whole campaign in one call: summary metrics, a daily
@@ -34326,13 +34410,14 @@ paths:
   /v1/ads/preview:
     post:
       operationId: generateAdPreviews
-      tags: [Ads]
-      summary: Render pre-create ad previews (Meta)
+      tags: ["Ad Creatives"]
+      x-platforms: ["meta"]
+      summary: Render pre-create ad previews
       description: |
         Renders how a creative would look per placement BEFORE any ad exists, via Meta's
         `/generatepreviews`. Provide exactly one creative source: `existingCreativeId` or `creativeSpec`.
         Each preview is an HTML `<iframe>` snippet embeddable directly. Unknown `formats` values
-        return Meta's 400 verbatim. Meta only.
+        return Meta's 400 verbatim.
       security:
         - bearerAuth: []
       requestBody:
@@ -34379,12 +34464,12 @@ paths:
   /v1/ads/{adId}/preview:
     get:
       operationId: getAdPreviews
-      tags: [Ads]
-      summary: Render previews of an existing ad (Meta)
+      tags: ["Ad Creatives"]
+      x-platforms: ["meta"]
+      summary: Render previews of an existing ad
       description: |
         Renders an EXISTING ad per placement via Meta's `/{ad_id}/previews`. Each preview is an HTML
         `<iframe>` snippet embeddable directly. Unknown `formats` values return Meta's 400 verbatim.
-        Meta only.
       security:
         - bearerAuth: []
       parameters:
@@ -34415,8 +34500,9 @@ paths:
   /v1/ads/insights:
     get:
       operationId: queryAdInsights
-      tags: [Ads]
-      summary: Flexible live insights query (Meta)
+      tags: ["Ad Insights"]
+      x-platforms: ["meta"]
+      summary: Flexible live insights query
       description: |
         Live, flexible insights query against Meta's Graph API. Unlike GET /v1/ads/{adId}/analytics
         (fixed metric set, cached), this forwards caller-chosen `fields`, `breakdowns` and `filtering`
@@ -34427,7 +34513,7 @@ paths:
 
         Semantic validation is Meta's: an unknown field or invalid breakdown combination returns a 400
         carrying Meta's message. For long ranges or agency-scale accounts prefer the async variant
-        (POST /v1/ads/insights/reports). Meta only.
+        (POST /v1/ads/insights/reports).
       security:
         - bearerAuth: []
       parameters:
@@ -34471,13 +34557,14 @@ paths:
   /v1/ads/insights/reports:
     post:
       operationId: createAdInsightsReport
-      tags: [Ads]
-      summary: Submit an async insights report run (Meta)
+      tags: ["Ad Insights"]
+      x-platforms: ["meta"]
+      summary: Submit an async insights report run
       description: |
         Submits an asynchronous Meta insights report. Same query surface as GET /v1/ads/insights, but
         in the JSON body; Meta processes the report server-side, which is the right choice for long
         ranges or large accounts where the sync query is slow or rate-limited. Returns a `reportRunId`
-        to poll via GET /v1/ads/insights/reports/{reportRunId}. Meta only.
+        to poll via GET /v1/ads/insights/reports/{reportRunId}.
       security:
         - bearerAuth: []
       requestBody:
@@ -34533,8 +34620,9 @@ paths:
   /v1/ads/insights/reports/{reportRunId}:
     get:
       operationId: getAdInsightsReport
-      tags: [Ads]
-      summary: Poll an async insights report run (Meta)
+      tags: ["Ad Insights"]
+      x-platforms: ["meta"]
+      summary: Poll an async insights report run
       description: |
         Status and results for a report run created via POST /v1/ads/insights/reports. While the job
         runs, returns `status` and `percentCompletion`. Once `status` is "Job Completed" the response
@@ -34575,7 +34663,8 @@ paths:
   /v1/ads/{adId}/analytics:
     get:
       operationId: getAdAnalytics
-      tags: [Ads]
+      tags: ["Ad Insights"]
+      x-platforms: ["meta", "google", "tiktok", "linkedin", "pinterest", "x"]
       summary: Get ad analytics
       description: |
         Returns detailed performance analytics for an ad. Includes summary metrics, a daily timeline
@@ -34655,7 +34744,8 @@ paths:
   /v1/ads/{adId}/tracking-tags:
     get:
       operationId: getAdTrackingTags
-      tags: [Ads]
+      tags: ["Tracking Tags"]
+      x-platforms: ["meta"]
       summary: Get ad tracking tags
       description: |
         Unified read of the platform's native click-URL tracking params.
@@ -34689,7 +34779,8 @@ paths:
         '405': { description: "Platform has no click-URL tracking surface" }
     patch:
       operationId: updateAdTrackingTags
-      tags: [Ads]
+      tags: ["Tracking Tags"]
+      x-platforms: ["meta"]
       summary: Set ad tracking tags
       description: |
         Unified update. Send only the fields for the ad's platform:
@@ -34746,7 +34837,8 @@ paths:
   /v1/ads/{adId}/comments:
     get:
       operationId: getAdComments
-      tags: [Ads]
+      tags: ["Ad Accounts"]
+      x-platforms: ["meta"]
       summary: List comments on an ad
       description: |
         Returns comments on an ad's underlying creative post. Useful for moderating or analyzing
@@ -34844,7 +34936,8 @@ paths:
   /v1/ads/business-centers:
     get:
       operationId: listAdsBusinessCenters
-      tags: [Ads]
+      tags: ["Ad Accounts"]
+      x-platforms: ["tiktok"]
       summary: List TikTok Business Centers
       description: |
         Returns the TikTok Business Centers (BCs) the connected `tiktokads` account can read.
@@ -34874,14 +34967,15 @@ paths:
   /v1/ads/activity:
     get:
       operationId: getAdsActivityLog
-      tags: [Ads]
-      summary: Ad account change / audit log (Meta)
+      tags: ["Ad Accounts"]
+      x-platforms: ["meta"]
+      summary: Ad account change / audit log
       description: |-
         Account-level audit log from Meta's `/act_X/activities`: who changed what and when
         (creates, edits, status flips, budget changes...) with Meta's translated event names and
         the structured before/after in `extra_data`. Rows are returned verbatim. Meta has no
         server-side per-object filter on this edge, so `objectId` filters the returned page
-        client-side (combine with paging to walk history for one campaign/ad set/ad). Meta only.
+        client-side (combine with paging to walk history for one campaign/ad set/ad).
       security:
         - bearerAuth: []
       parameters:
@@ -34915,8 +35009,9 @@ paths:
   /v1/ads/rf-predictions:
     post:
       operationId: createRfPrediction
-      tags: [Ads]
-      summary: Create a Reach & Frequency prediction (Meta)
+      tags: ["Reach and Frequency"]
+      x-platforms: ["meta"]
+      summary: Create a Reach & Frequency prediction
       description: |-
         Creates an R&F prediction — a QUOTE, nothing is bought and no ad entities are created.
         Provide a date range plus exactly one of `budgetAmount` (Meta predicts reach) or `reach`
@@ -34927,7 +35022,7 @@ paths:
 
         Reservation campaigns reject automatic placements, so omitted `placements` default to
         Facebook feed (+ Instagram stream when a linked IG professional account resolves);
-        Instagram placements require that IG account. Meta only.
+        Instagram placements require that IG account.
       security:
         - bearerAuth: []
       requestBody:
@@ -34966,8 +35061,9 @@ paths:
   /v1/ads/rf-predictions/{predictionId}:
     get:
       operationId: getRfPrediction
-      tags: [Ads]
-      summary: Read a Reach & Frequency prediction (Meta)
+      tags: ["Reach and Frequency"]
+      x-platforms: ["meta"]
+      summary: Read a Reach & Frequency prediction
       security:
         - bearerAuth: []
       parameters:
@@ -34990,8 +35086,9 @@ paths:
         '501': { description: Only supported on Meta (facebook/instagram) }
     delete:
       operationId: cancelRfReservation
-      tags: [Ads]
-      summary: Cancel a Reach & Frequency reservation (Meta)
+      tags: ["Reach and Frequency"]
+      x-platforms: ["meta"]
+      summary: Cancel a Reach & Frequency reservation
       description: Releases a RESERVATION's locked price and inventory. Unreserved predictions expire on their own.
       security:
         - bearerAuth: []
@@ -35009,12 +35106,13 @@ paths:
   /v1/ads/rf-predictions/{predictionId}/reserve:
     post:
       operationId: reserveRfPrediction
-      tags: [Ads]
-      summary: Reserve a Reach & Frequency prediction (Meta)
+      tags: ["Reach and Frequency"]
+      x-platforms: ["meta"]
+      summary: Reserve a Reach & Frequency prediction
       description: |-
         Locks the quoted price + inventory until the returned `expiresAt` and mints a NEW
         prediction id — pass that RESERVED id (not the original) as `rfPredictionId` on
-        POST /v1/ads/create. Release an unused reservation via DELETE. Meta only.
+        POST /v1/ads/create. Release an unused reservation via DELETE.
       security:
         - bearerAuth: []
       parameters:
@@ -35046,12 +35144,13 @@ paths:
   /v1/ads/studies:
     get:
       operationId: listAdStudies
-      tags: [Ads]
-      summary: A/B tests and lift studies (Meta)
+      tags: ["Ad Accounts"]
+      x-platforms: ["meta"]
+      summary: A/B tests and lift studies
       description: |-
         Lists the ad account's A/B tests and lift studies (Meta's `/act_X/ad_studies`), rows
         returned verbatim. The default projection covers id, name, type, timing and cells with
-        split percentages; `fields` is a raw-passthrough override. Meta only.
+        split percentages; `fields` is a raw-passthrough override.
       security:
         - bearerAuth: []
       parameters:
@@ -35083,12 +35182,13 @@ paths:
   /v1/ads/businesses:
     get:
       operationId: listMetaBusinesses
-      tags: [Ads]
-      summary: Businesses list (Meta)
+      tags: ["Ad Accounts"]
+      x-platforms: ["meta"]
+      summary: Businesses list
       description: |-
         Business Manager portfolios the connected Meta user belongs to (Meta's `/me/businesses`),
         rows returned verbatim (id, name, verification_status, created_time). Token-scoped, so no
-        `adAccountId` is needed. Meta only; for TikTok Business Centers use
+        `adAccountId` is needed. For TikTok Business Centers use
         `GET /v1/ads/business-centers`.
       security:
         - bearerAuth: []
@@ -35118,11 +35218,12 @@ paths:
   /v1/ads/labels:
     get:
       operationId: listAdLabels
-      tags: [Ads]
-      summary: Ad labels (Meta)
+      tags: ["Ad Accounts"]
+      x-platforms: ["meta"]
+      summary: Ad labels
       description: |-
         Lists the ad account's organizational labels (Meta's `/act_X/adlabels`), rows returned
-        verbatim (id, name, created/updated time). Meta only.
+        verbatim (id, name, created/updated time).
       security:
         - bearerAuth: []
       parameters:
@@ -35153,13 +35254,14 @@ paths:
   /v1/ads/high-demand-periods:
     get:
       operationId: listHighDemandPeriods
-      tags: [Ads]
-      summary: High demand periods / budget schedules (Meta)
+      tags: ["Ad Accounts"]
+      x-platforms: ["meta"]
+      summary: High demand periods / budget schedules
       description: |-
         Scheduled budget increases (Meta's budget-scheduling API). The Graph edge lives on the
         campaign and ad-set nodes only, so exactly one of `campaignId` / `adSetId` (platform
         ids) is required. Rows returned verbatim (budget_value, budget_value_type, time window,
-        recurrence). Meta only.
+        recurrence).
       security:
         - bearerAuth: []
       parameters:
@@ -35191,14 +35293,15 @@ paths:
   /v1/ads/creatives:
     get:
       operationId: listAdCreatives
-      tags: [Ads]
-      summary: Creative library (Meta)
+      tags: ["Ad Creatives"]
+      x-platforms: ["meta"]
+      summary: Creative library
       description: |-
         Lists the ad account's creative library (Meta's `/act_X/adcreatives`), rows returned
         verbatim. The default projection covers id, name, status, object type, thumbnail,
         object_story_spec / asset_feed_spec and url_tags; `fields` is a raw-passthrough
         override. Any creative id here is reusable on the create endpoints via
-        `existingCreativeId`. Meta only.
+        `existingCreativeId`.
       security:
         - bearerAuth: []
       parameters:
@@ -35228,14 +35331,15 @@ paths:
         '501': { description: Only supported on Meta (facebook/instagram) }
     post:
       operationId: createAdCreative
-      tags: [Ads]
-      summary: Create a standalone creative (Meta)
+      tags: ["Ad Creatives"]
+      x-platforms: ["meta"]
+      summary: Create a standalone creative
       description: |-
         Creates a creative in the library WITHOUT an ad, reusable on the create endpoints via
         `existingCreativeId`. Provide exactly one of `imageUrl` (uploaded server-side),
         `imageHash` (from POST /v1/ads/images or the library list), or `carouselCards` (2-10
         hand-built cards). The Page (and linked Instagram account, when present) is resolved
-        from `accountId` as the story actor. Meta only.
+        from `accountId` as the story actor.
       security:
         - bearerAuth: []
       requestBody:
@@ -35291,11 +35395,12 @@ paths:
   /v1/ads/creatives/{creativeId}:
     get:
       operationId: getAdCreative
-      tags: [Ads]
-      summary: Creative details (Meta)
+      tags: ["Ad Creatives"]
+      x-platforms: ["meta"]
+      summary: Creative details
       description: |-
         One creative's details, verbatim from Meta. `fields` is a raw-passthrough override of
-        the default projection. Meta only.
+        the default projection.
       security:
         - bearerAuth: []
       parameters:
@@ -35316,12 +35421,13 @@ paths:
         '501': { description: Only supported on Meta (facebook/instagram) }
     put:
       operationId: updateAdCreative
-      tags: [Ads]
-      summary: Rename a creative (Meta)
+      tags: ["Ad Creatives"]
+      x-platforms: ["meta"]
+      summary: Rename a creative
       description: |-
         Renames a creative. Creatives are immutable on Meta beyond `name` — for content changes
         create a new creative (POST /v1/ads/creatives) and swap it onto the ad
-        (PUT /v1/ads/{adId} with `creative`). Meta only.
+        (PUT /v1/ads/{adId} with `creative`).
       security:
         - bearerAuth: []
       parameters:
@@ -35352,8 +35458,9 @@ paths:
         '501': { description: Only supported on Meta (facebook/instagram) }
     delete:
       operationId: deleteAdCreative
-      tags: [Ads]
-      summary: Delete a creative (Meta)
+      tags: ["Ad Creatives"]
+      x-platforms: ["meta"]
+      summary: Delete a creative
       description: |-
         Deletes a creative from the library. Meta only allows deleting creatives not referenced
         by any ad — otherwise its 400 surfaces verbatim.
@@ -35379,12 +35486,13 @@ paths:
   /v1/ads/accounts/finance:
     get:
       operationId: getAdAccountFinance
-      tags: [Ads]
-      summary: Ad account finances (Meta)
+      tags: ["Ad Accounts"]
+      x-platforms: ["meta"]
+      summary: Ad account finances
       description: |-
         Finances of one Meta ad account: prepaid `balance`, lifetime `amountSpent`, account
         `spendCap` (null = no cap) and the `fundingSource`. Money values are converted from
-        Meta's minor units to whole units of `currency`. Meta only.
+        Meta's minor units to whole units of `currency`.
       security:
         - bearerAuth: []
       parameters:
@@ -35415,7 +35523,8 @@ paths:
   /v1/ads/accounts:
     get:
       operationId: listAdAccounts
-      tags: [Ads]
+      tags: ["Ad Accounts"]
+      x-platforms: ["meta", "google", "tiktok", "linkedin", "pinterest", "x"]
       summary: List ad accounts
       description: |
         Returns the platform ad accounts available for the given social account (e.g. Meta ad
@@ -35459,7 +35568,8 @@ paths:
           description: Platform ads connection required (TikTok Ads, X Ads) or Instagram missing linked Facebook account
     patch:
       operationId: updateAdAccount
-      tags: [Ads]
+      tags: ["Ad Accounts"]
+      x-platforms: ["meta"]
       summary: Update ad account settings
       description: |
         Sets the default DSA beneficiary and payor on a Meta ad account (EU DSA, Article 26).
@@ -35515,7 +35625,8 @@ paths:
   /v1/ads/dsa-defaults:
     get:
       operationId: getDsaDefaults
-      tags: [Ads]
+      tags: ["Ad Accounts"]
+      x-platforms: ["meta"]
       summary: Get ad account DSA defaults
       description: |
         Returns the default DSA beneficiary and payor currently set on a Meta ad account,
@@ -35549,7 +35660,8 @@ paths:
   /v1/ads/dsa-recommendations:
     get:
       operationId: getDsaRecommendations
-      tags: [Ads]
+      tags: ["Ad Accounts"]
+      x-platforms: ["meta"]
       summary: List DSA beneficiary/payor suggestions
       description: |
         Returns Meta's suggested beneficiary/payor names for an ad account, derived by Meta
@@ -35586,7 +35698,8 @@ paths:
   /v1/ads/boost:
     post:
       operationId: boostPost
-      tags: [Ads]
+      tags: ["Ad Campaigns"]
+      x-platforms: ["meta"]
       summary: Boost post as ad
       description: Creates a paid ad campaign from an existing published post. Creates the full platform campaign hierarchy (campaign, ad set, ad).
       security:
@@ -35808,7 +35921,8 @@ paths:
   /v1/ads/create:
     post:
       operationId: createStandaloneAd
-      tags: [Ads]
+      tags: ["Ad Campaigns"]
+      x-platforms: ["meta", "google", "tiktok", "linkedin", "pinterest", "x"]
       summary: Create standalone ad
       description: >-
         Creates a paid ad with custom creative across Meta, Google Ads,
@@ -36595,7 +36709,8 @@ paths:
   /v1/ads/leads:
     get:
       operationId: listLeads
-      tags: [Ads]
+      tags: ["Lead Gen"]
+      x-platforms: ["meta"]
       summary: List submitted leads
       description: >
         Returns persisted Meta Lead Gen leads for your team, newest-first, with
@@ -36644,7 +36759,8 @@ paths:
   /v1/ads/lead-forms:
     get:
       operationId: listLeadForms
-      tags: [Ads]
+      tags: ["Lead Gen"]
+      x-platforms: ["meta"]
       summary: List lead forms
       description: Lists the Lead Gen forms owned by the connected Facebook Page. Requires the Ads add-on.
       parameters:
@@ -36666,7 +36782,8 @@ paths:
         '403': { description: Ads add-on required. }
     post:
       operationId: createLeadForm
-      tags: [Ads]
+      tags: ["Lead Gen"]
+      x-platforms: ["meta"]
       summary: Create a lead form
       description: >
         Creates a Lead Gen form on the connected Facebook Page (POST
@@ -36721,7 +36838,8 @@ paths:
   /v1/ads/lead-forms/{formId}:
     get:
       operationId: getLeadForm
-      tags: [Ads]
+      tags: ["Lead Gen"]
+      x-platforms: ["meta"]
       summary: Get a lead form
       parameters:
         - { name: formId, in: path, required: true, schema: { type: string } }
@@ -36735,7 +36853,8 @@ paths:
         '401': { $ref: '#/components/responses/Unauthorized' }
     delete:
       operationId: archiveLeadForm
-      tags: [Ads]
+      tags: ["Lead Gen"]
+      x-platforms: ["meta"]
       summary: Archive a lead form
       description: Meta has no hard delete for forms; this archives the form (status=ARCHIVED).
       parameters:
@@ -36752,7 +36871,8 @@ paths:
   /v1/ads/lead-forms/{formId}/leads:
     get:
       operationId: listFormLeads
-      tags: [Ads]
+      tags: ["Lead Gen"]
+      x-platforms: ["meta"]
       summary: List leads for a single form
       description: >
         Returns leads for one form. Serves persisted leads (ingested via the
@@ -36789,7 +36909,8 @@ paths:
   /v1/ads/lead-forms/{formId}/test-leads:
     post:
       operationId: createTestLead
-      tags: [Ads]
+      tags: ["Lead Gen"]
+      x-platforms: ["meta"]
       summary: Create a test lead
       description: >
         Submits a test lead against the form (POST /{form-id}/test_leads) to
@@ -36826,13 +36947,14 @@ paths:
   /v1/ads/images:
     post:
       operationId: uploadAdImage
-      tags: [Ads]
-      summary: Upload an ad image from base64 (Meta)
+      tags: ["Ad Creatives"]
+      x-platforms: ["meta"]
+      summary: Upload an ad image from base64
       description: |-
         Uploads raw image bytes to the Meta ad account's image library — for callers whose
         creatives aren't hosted at a public URL. Returns the image `hash` (Meta's identifier for
         the asset) and the Meta-hosted `url`, which can be used directly as `imageUrl` on the
-        create endpoints. Max 30 MB decoded. Meta only.
+        create endpoints. Max 30 MB decoded.
       security:
         - bearerAuth: []
       requestBody:
@@ -36867,13 +36989,14 @@ paths:
 
     get:
       operationId: listAdImages
-      tags: [Ads]
-      summary: Ad image library (Meta)
+      tags: ["Ad Creatives"]
+      x-platforms: ["meta"]
+      summary: Ad image library
       description: |-
         Lists the ad account's image library (Meta's `/act_X/adimages`), rows returned verbatim.
         The default projection covers hash, url, name, dimensions and status; `fields` is a
         raw-passthrough override. Any `hash` here is reusable wherever Meta accepts
-        `image_hash` (e.g. `imageHash` on POST /v1/ads/creatives). Meta only.
+        `image_hash` (e.g. `imageHash` on POST /v1/ads/creatives).
       security:
         - bearerAuth: []
       parameters:
@@ -36906,7 +37029,8 @@ paths:
     get:
       operationId: searchAdInterests
       deprecated: true
-      tags: [Ads]
+      tags: ["Ad Targeting"]
+      x-platforms: ["meta"]
       summary: Search targeting interests
       description: |
         Deprecated alias for `GET /v1/ads/targeting/search?dimension=interest`. Kept for
@@ -36941,7 +37065,8 @@ paths:
   /v1/ads/targeting/search:
     get:
       operationId: searchAdTargeting
-      tags: [Ads]
+      tags: ["Ad Targeting"]
+      x-platforms: ["meta", "google", "tiktok", "linkedin", "pinterest"]
       summary: Search targeting options
       description: |
         Resolve a human-readable query into the platform's opaque targeting ids used in
@@ -37002,7 +37127,8 @@ paths:
   /v1/ads/targeting/reach-estimate:
     post:
       operationId: estimateAdReach
-      tags: [Ads]
+      tags: ["Ad Targeting"]
+      x-platforms: ["meta"]
       summary: Estimate audience reach
       description: |
         Returns a normalized pre-flight audience-size estimate for a targeting spec,
@@ -37059,8 +37185,9 @@ paths:
   /v1/ads/targeting/bid-pricing:
     post:
       operationId: getLinkedInBidPricing
-      tags: [Ads]
-      summary: Suggested bid and budget bounds (LinkedIn)
+      tags: ["Ad Targeting"]
+      x-platforms: ["linkedin"]
+      summary: Suggested bid and budget bounds
       description: |
         LinkedIn-only. Returns the suggested bid and bid limits for a targeting
         spec, plus the daily-budget bounds LinkedIn will accept. Use it before
@@ -37129,8 +37256,9 @@ paths:
   /v1/ads/targeting/supply-forecast:
     post:
       operationId: getLinkedInSupplyForecast
-      tags: [Ads]
-      summary: Impressions, clicks and spend forecast (LinkedIn)
+      tags: ["Ad Targeting"]
+      x-platforms: ["linkedin"]
+      summary: Impressions, clicks and spend forecast
       description: |
         LinkedIn-only. Forecasted impressions, clicks, spend and ~20 other
         metrics for a targeting spec over a time range. Wraps LinkedIn's
@@ -37211,7 +37339,8 @@ paths:
   /v1/ads/catalogs:
     get:
       operationId: listAdCatalogs
-      tags: [Ads]
+      tags: ["Ad Creatives"]
+      x-platforms: ["meta"]
       summary: List Meta product catalogs
       description: "Lists the Meta product catalogs reachable from an ad account (owned + agency-shared catalogs of the ad account's business), for Advantage+ catalog ads (`goal: catalog_sales` on POST /v1/ads/create — e.g. vehicle inventory catalogs). Read-only; uses scopes customers already granted (no reconnect needed). Catalog contents (items, feeds) are managed in Meta Commerce Manager, not through this API."
       security:
@@ -37243,7 +37372,8 @@ paths:
   /v1/ads/catalogs/{catalogId}/product-sets:
     get:
       operationId: listAdCatalogProductSets
-      tags: [Ads]
+      tags: ["Ad Creatives"]
+      x-platforms: ["meta"]
       summary: List a catalog's product sets
       description: "Lists a Meta product catalog's product sets — the unit a catalog ad promotes. Pass the chosen set as `promotedObject.productSetId` on POST /v1/ads/create with `goal: catalog_sales`."
       security:
@@ -37274,7 +37404,8 @@ paths:
   /v1/ads/audiences:
     get:
       operationId: listAdAudiences
-      tags: [Ad Audiences]
+      tags: ["Ad Audiences"]
+      x-platforms: ["meta", "google", "tiktok", "linkedin", "pinterest", "x"]
       summary: List custom audiences
       description: Returns custom audiences for the given ad account. Supports Meta, Google, TikTok, Pinterest, LinkedIn, and X (Twitter).
       security:
@@ -37316,7 +37447,8 @@ paths:
           description: Ads access required. Legacy plans need the Ads add-on; included by default on usage-based plans.
     post:
       operationId: createAdAudience
-      tags: [Ad Audiences]
+      tags: ["Ad Audiences"]
+      x-platforms: ["meta", "google", "tiktok", "linkedin", "pinterest", "x"]
       summary: Create custom audience
       description: |
         Create a custom audience. `customer_list` is supported on Meta, Google, X, LinkedIn, TikTok, and Pinterest;
@@ -37466,7 +37598,8 @@ paths:
   /v1/ads/audiences/{audienceId}:
     get:
       operationId: getAdAudience
-      tags: [Ad Audiences]
+      tags: ["Ad Audiences"]
+      x-platforms: ["meta", "google", "tiktok", "linkedin", "pinterest", "x"]
       summary: Get audience details
       description: Returns the local audience record and fresh data from Meta (if available).
       security:
@@ -37489,7 +37622,8 @@ paths:
         '404': { $ref: '#/components/responses/NotFound' }
     put:
       operationId: updateAdAudience
-      tags: [Ad Audiences]
+      tags: ["Ad Audiences"]
+      x-platforms: ["meta", "google", "tiktok", "linkedin", "pinterest", "x"]
       summary: Update an audience
       description: |
         Update an audience. `saved_targeting` audiences accept `name`, `description`, and `spec`
@@ -37538,7 +37672,8 @@ paths:
           description: Platform audience updates are only supported on Meta
     delete:
       operationId: deleteAdAudience
-      tags: [Ad Audiences]
+      tags: ["Ad Audiences"]
+      x-platforms: ["meta", "google", "tiktok", "linkedin", "pinterest", "x"]
       summary: Delete custom audience
       description: Deletes the audience from both the platform and the local database. `saved_targeting` audiences exist only on Zernio, so only the local record is removed.
       security:
@@ -37562,7 +37697,8 @@ paths:
   /v1/ads/audiences/{audienceId}/users:
     post:
       operationId: addUsersToAdAudience
-      tags: [Ad Audiences]
+      tags: ["Ad Audiences"]
+      x-platforms: ["meta", "google", "tiktok", "linkedin", "pinterest", "x"]
       summary: Add users to audience
       description: |
         Upload user data to a customer_list audience. Data is SHA256-hashed server-side before sending to the platform.
@@ -37612,7 +37748,8 @@ paths:
   /v1/ads/conversions/quality:
     get:
       operationId: getConversionsQuality
-      tags: [Ads]
+      tags: [Conversions]
+      x-platforms: ["meta"]
       summary: Get Event Match Quality
       description: |
         Reads Meta Event Match Quality (EMQ) and pixel↔CAPI event coverage for a
@@ -37653,7 +37790,8 @@ paths:
   /v1/ads/conversions:
     post:
       operationId: sendConversions
-      tags: [Ads]
+      tags: [Conversions]
+      x-platforms: ["meta", "google", "tiktok", "linkedin"]
       summary: Send conversion events
       description: |
         Relay one or more conversion events to the target ad platform's native Conversions API.
@@ -37788,7 +37926,8 @@ paths:
   /v1/ads/conversions/adjustments:
     post:
       operationId: adjustConversions
-      tags: [Ads]
+      tags: [Conversions]
+      x-platforms: ["meta"]
       summary: Adjust uploaded conversions
       description: |
         Adjust conversions that were previously uploaded via `POST /v1/ads/conversions` —
@@ -37908,7 +38047,8 @@ paths:
   /v1/accounts/{accountId}/conversion-destinations:
     get:
       operationId: listConversionDestinations
-      tags: [Ads]
+      tags: [Conversions]
+      x-platforms: ["meta", "google", "tiktok", "linkedin"]
       summary: List conversion destinations
       description: |
         Returns the list of pixels (Meta), conversion actions (Google), or
@@ -37981,7 +38121,8 @@ paths:
 
     post:
       operationId: createConversionDestination
-      tags: [Ads]
+      tags: [Conversions]
+      x-platforms: ["meta", "google", "tiktok", "linkedin"]
       summary: Create a conversion destination
       description: |
         Create a new conversion destination on the platform. Supported for
@@ -38148,7 +38289,8 @@ paths:
   /v1/accounts/{accountId}/conversion-destinations/{destinationId}:
     get:
       operationId: getConversionDestination
-      tags: [Ads]
+      tags: [Conversions]
+      x-platforms: ["meta", "google", "tiktok", "linkedin"]
       summary: Get a conversion destination
       description: |
         LinkedIn-only today. Returns the full destination record for one
@@ -38183,7 +38325,8 @@ paths:
 
     patch:
       operationId: updateConversionDestination
-      tags: [Ads]
+      tags: [Conversions]
+      x-platforms: ["meta", "google", "tiktok", "linkedin"]
       summary: Update a conversion destination
       description: |
         Partial-update a conversion rule. LinkedIn-only today. Whitelisted
@@ -38257,7 +38400,8 @@ paths:
 
     delete:
       operationId: deleteConversionDestination
-      tags: [Ads]
+      tags: [Conversions]
+      x-platforms: ["meta", "google", "tiktok", "linkedin"]
       summary: Delete a conversion destination
       description: |
         LinkedIn-only today. LinkedIn does not expose hard-delete on conversion
@@ -38289,7 +38433,8 @@ paths:
   /v1/accounts/{accountId}/conversion-destinations/{destinationId}/associations:
     get:
       operationId: listConversionAssociations
-      tags: [Ads]
+      tags: [Conversions]
+      x-platforms: ["meta", "google", "tiktok", "linkedin"]
       summary: List associated campaigns
       description: |
         LinkedIn-only today. Returns the campaigns currently associated with
@@ -38331,7 +38476,8 @@ paths:
 
     post:
       operationId: addConversionAssociations
-      tags: [Ads]
+      tags: [Conversions]
+      x-platforms: ["meta", "google", "tiktok", "linkedin"]
       summary: Associate campaigns
       description: |
         Associate one or more campaigns with this conversion rule. Returns a
@@ -38391,7 +38537,8 @@ paths:
 
     delete:
       operationId: removeConversionAssociations
-      tags: [Ads]
+      tags: [Conversions]
+      x-platforms: ["meta", "google", "tiktok", "linkedin"]
       summary: Remove associated campaigns
       description: |
         Remove one or more campaign associations from this conversion rule.
@@ -38443,7 +38590,8 @@ paths:
   /v1/accounts/{accountId}/conversion-destinations/{destinationId}/metrics:
     get:
       operationId: getConversionMetrics
-      tags: [Ads]
+      tags: [Conversions]
+      x-platforms: ["meta", "google", "tiktok", "linkedin"]
       summary: Get attribution metrics
       description: |
         LinkedIn-only today. Returns conversion-attribution metrics
@@ -38503,7 +38651,7 @@ paths:
   /v1/whatsapp/conversions:
     get:
       operationId: listWhatsAppConversions
-      tags: [WhatsApp, Ads]
+      tags: [WhatsApp]
       summary: List conversion events
       description: |
         Returns the most recent conversion events sent through
@@ -38567,7 +38715,7 @@ paths:
         '404': { description: WhatsApp account not found }
     post:
       operationId: sendWhatsAppConversion
-      tags: [WhatsApp, Ads]
+      tags: [WhatsApp]
       summary: Send WhatsApp conversion event
       description: |
         Forward a WhatsApp Business Messaging conversion event (`LeadSubmitted`,
@@ -38743,7 +38891,8 @@ paths:
   /v1/ads/messaging:
     post:
       operationId: createMessagingAd
-      tags: [Ads]
+      tags: ["Messaging Ads"]
+      x-platforms: ["meta"]
       summary: Create click-to-message ad (WhatsApp / Messenger / Instagram Direct)
       description: |-
         Creates a click-to-message ad; `destination` selects where the tapped ad opens a
@@ -38779,7 +38928,8 @@ paths:
   /v1/ads/call:
     post:
       operationId: createCallAd
-      tags: [Ads]
+      tags: ["Messaging Ads"]
+      x-platforms: ["meta"]
       summary: Create Click-to-Call ad
       description: |-
         Same shape and flow as POST /v1/ads/ctwa, but the CTA is CALL_NOW dialing `phoneNumber`
@@ -38816,7 +38966,8 @@ paths:
   /v1/ads/ctwa:
     post:
       operationId: createCtwaAd
-      tags: [Ads]
+      tags: ["Messaging Ads"]
+      x-platforms: ["meta"]
       summary: Create Click-to-WhatsApp ad (deprecated)
       deprecated: true
       description: |-
@@ -38879,7 +39030,8 @@ paths:
   /v1/accounts/{accountId}/tracking-tags:
     get:
       operationId: listTrackingTags
-      tags: [Tracking Tags]
+      tags: ["Tracking Tags"]
+      x-platforms: ["meta"]
       summary: List tracking tags
       description: |
         Returns the tracking tags (Meta Pixels) the connected ads account can
@@ -38918,7 +39070,8 @@ paths:
 
     post:
       operationId: createTrackingTag
-      tags: [Tracking Tags]
+      tags: ["Tracking Tags"]
+      x-platforms: ["meta"]
       summary: Create a tracking tag
       description: |
         Creates a Meta Pixel on the given ad account (`POST /act_{id}/adspixels`
@@ -38967,7 +39120,8 @@ paths:
   /v1/accounts/{accountId}/tracking-tags/{tagId}:
     get:
       operationId: getTrackingTag
-      tags: [Tracking Tags]
+      tags: ["Tracking Tags"]
+      x-platforms: ["meta"]
       summary: Get a tracking tag
       description: |
         Returns the full tag record including the base-code `code` snippet,
@@ -38995,7 +39149,8 @@ paths:
 
     patch:
       operationId: updateTrackingTag
-      tags: [Tracking Tags]
+      tags: ["Tracking Tags"]
+      x-platforms: ["meta"]
       summary: Update a tracking tag
       description: |
         Partial-update a pixel. Whitelisted fields: `name` (rename),
@@ -39060,7 +39215,8 @@ paths:
   /v1/accounts/{accountId}/tracking-tags/{tagId}/shared-accounts:
     get:
       operationId: listTrackingTagSharedAccounts
-      tags: [Tracking Tags]
+      tags: ["Tracking Tags"]
+      x-platforms: ["meta"]
       summary: List accounts it is shared with
       description: Meta only (platform `metaads`); other platforms return 405.
       security:
@@ -39087,7 +39243,8 @@ paths:
 
     post:
       operationId: addTrackingTagSharedAccount
-      tags: [Tracking Tags]
+      tags: ["Tracking Tags"]
+      x-platforms: ["meta"]
       summary: Share with an ad account
       description: |
         Shares the pixel with another ad account so campaigns/audiences in that
@@ -39127,7 +39284,8 @@ paths:
 
     delete:
       operationId: removeTrackingTagSharedAccount
-      tags: [Tracking Tags]
+      tags: ["Tracking Tags"]
+      x-platforms: ["meta"]
       summary: Stop sharing with an account
       description: |
         `adAccountId` may be passed as a query parameter (recommended) or as a
@@ -39150,7 +39308,8 @@ paths:
   /v1/accounts/{accountId}/tracking-tags/{tagId}/stats:
     get:
       operationId: getTrackingTagStats
-      tags: [Tracking Tags]
+      tags: ["Tracking Tags"]
+      x-platforms: ["meta"]
       summary: Get aggregated event stats
       description: |
         Returns aggregated event counts for the pixel (`GET /{pixel_id}/stats`).

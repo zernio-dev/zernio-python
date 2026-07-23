@@ -54,6 +54,32 @@ class TrackingTagsResource:
                 result[to_camel(k)] = v
         return result
 
+    def get_ad_tracking_tags(self, ad_id: str) -> dict[str, Any]:
+        """Get ad tracking tags"""
+        return self._client._get(f"/v1/ads/{ad_id}/tracking-tags")
+
+    def update_ad_tracking_tags(
+        self,
+        ad_id: str,
+        *,
+        url_tags: list[dict[str, Any]] | None = None,
+        creative: dict[str, Any] | None = None,
+        tracking_url_template: str | None = None,
+        final_url_suffix: str | None = None,
+        dynamic_value_parameters: dict[str, Any] | None = None,
+        custom_value_parameters: dict[str, Any] | None = None,
+    ) -> dict[str, Any]:
+        """Set ad tracking tags"""
+        payload = self._build_payload(
+            url_tags=url_tags,
+            creative=creative,
+            tracking_url_template=tracking_url_template,
+            final_url_suffix=final_url_suffix,
+            dynamic_value_parameters=dynamic_value_parameters,
+            custom_value_parameters=custom_value_parameters,
+        )
+        return self._client._patch(f"/v1/ads/{ad_id}/tracking-tags", data=payload)
+
     def list_tracking_tags(
         self, account_id: str, *, ad_account_id: str | None = None
     ) -> dict[str, Any]:
@@ -153,6 +179,34 @@ class TrackingTagsResource:
         )
         return self._client._get(
             f"/v1/accounts/{account_id}/tracking-tags/{tag_id}/stats", params=params
+        )
+
+    async def aget_ad_tracking_tags(self, ad_id: str) -> dict[str, Any]:
+        """Get ad tracking tags (async)"""
+        return await self._client._aget(f"/v1/ads/{ad_id}/tracking-tags")
+
+    async def aupdate_ad_tracking_tags(
+        self,
+        ad_id: str,
+        *,
+        url_tags: list[dict[str, Any]] | None = None,
+        creative: dict[str, Any] | None = None,
+        tracking_url_template: str | None = None,
+        final_url_suffix: str | None = None,
+        dynamic_value_parameters: dict[str, Any] | None = None,
+        custom_value_parameters: dict[str, Any] | None = None,
+    ) -> dict[str, Any]:
+        """Set ad tracking tags (async)"""
+        payload = self._build_payload(
+            url_tags=url_tags,
+            creative=creative,
+            tracking_url_template=tracking_url_template,
+            final_url_suffix=final_url_suffix,
+            dynamic_value_parameters=dynamic_value_parameters,
+            custom_value_parameters=custom_value_parameters,
+        )
+        return await self._client._apatch(
+            f"/v1/ads/{ad_id}/tracking-tags", data=payload
         )
 
     async def alist_tracking_tags(
