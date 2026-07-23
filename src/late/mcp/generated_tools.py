@@ -11180,15 +11180,23 @@ def register_generated_tools(mcp, _get_client):
             openWorldHint=False,
         )
     )
-    def profiles_list_profiles(include_over_limit: bool = False) -> str:
+    def profiles_list_profiles(
+        include_over_limit: bool = False,
+        name: str | None = None,
+        limit: int | None = None,
+        skip: int | None = None,
+    ) -> str:
         """List profiles
 
         Args:
-            include_over_limit: When true, includes over-limit profiles (marked with isOverLimit: true)."""
+            include_over_limit: When true, includes over-limit profiles (marked with isOverLimit: true).
+            name: Exact-match filter on the profile name. Useful to recover a profile id after an ambiguous create (timeout followed by a 409 on retry).
+            limit: Page size. When limit or skip is present, the response includes total and skip (and echoes limit).
+            skip: Number of profiles to skip, applied after sorting and filtering."""
         client = _get_client()
         try:
             response = client.profiles.list_profiles(
-                include_over_limit=include_over_limit
+                include_over_limit=include_over_limit, name=name, limit=limit, skip=skip
             )
             return _format_response(response)
         except Exception as e:

@@ -6112,6 +6112,15 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/Profile'
+        total:
+          type: integer
+          description: 'Total matching profiles across all pages. Present only when limit or skip was passed.'
+        skip:
+          type: integer
+          description: 'Offset applied. Present only when limit or skip was passed.'
+        limit:
+          type: integer
+          description: Echo of the limit query param. Present only when it was passed.
     ProfileCreateResponse:
       type: object
       properties:
@@ -13287,7 +13296,11 @@ paths:
       operationId: listProfiles
       tags: [Profiles]
       summary: List profiles
-      description: Returns profiles sorted by creation date. Use includeOverLimit=true to include profiles that exceed the plan limit.
+      description: >-
+        Returns profiles sorted default-first, then by creation date. Filter
+        with name (exact match) and paginate with limit/skip; without those
+        params the full list is returned unchanged. Use includeOverLimit=true
+        to include profiles that exceed the plan limit.
       parameters:
         - name: includeOverLimit
           in: query
@@ -13296,6 +13309,21 @@ paths:
             type: boolean
             default: false
           description: "When true, includes over-limit profiles (marked with isOverLimit: true)."
+        - name: name
+          in: query
+          required: false
+          schema: { type: string }
+          description: 'Exact-match filter on the profile name. Useful to recover a profile id after an ambiguous create (timeout followed by a 409 on retry).'
+        - name: limit
+          in: query
+          required: false
+          schema: { type: integer, minimum: 1, maximum: 1000 }
+          description: 'Page size. When limit or skip is present, the response includes total and skip (and echoes limit).'
+        - name: skip
+          in: query
+          required: false
+          schema: { type: integer, minimum: 0 }
+          description: 'Number of profiles to skip, applied after sorting and filtering.'
       responses:
         '200':
           description: Profiles
@@ -13311,12 +13339,29 @@ paths:
                         name: "Personal Brand"
                         color: "#ffeda0"
                         isDefault: true
+        '400': { $ref: '#/components/responses/BadRequest' }
         '401': { $ref: '#/components/responses/Unauthorized' }
     post:
       operationId: createProfile
       tags: [Profiles]
       summary: Create profile
-      description: Creates a new profile with a name, optional description, and color.
+      description: >-
+        Creates a new profile with a name, optional description, and color.
+        Names are unique per workspace: a duplicate returns a 409 whose
+        details.existingProfileId carries the id of the existing profile.
+        Send an Idempotency-Key header to make retries safe: a retried create
+        with the same key and body replays the original 201 (same _id)
+        instead of conflicting.
+      parameters:
+        - name: Idempotency-Key
+          in: header
+          required: false
+          schema: { type: string, maxLength: 255 }
+          description: >-
+            Optional client-generated unique key (e.g. a UUID) that makes
+            create retries safe. Same key + same body replays the original
+            response; same key + different body → 422; key still processing →
+            409.
       requestBody:
         required: true
         content:
@@ -13353,7 +13398,8 @@ paths:
         '401': { $ref: '#/components/responses/Unauthorized' }
         '402': { $ref: '#/components/responses/PaymentRequired' }
         '403': { description: Profile limit exceeded }
-        '409': { description: "A profile with this name already exists (code: profile_name_conflict)." }
+        '409': { description: 'A profile with this name already exists (code: profile_name_conflict); details.existingProfileId carries the id of the existing profile. Also returned while a request with the same Idempotency-Key is still processing.' }
+        '422': { description: Idempotency-Key reused with a different body }
   /v1/profiles/{profileId}:
     get:
       operationId: getProfile
