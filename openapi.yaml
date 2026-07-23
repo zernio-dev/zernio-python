@@ -27117,8 +27117,9 @@ paths:
                         enum: [APPROVED, PENDING_REVIEW, DECLINED, NONE]
                         description: Meta review status for the display name
                       phoneNumber: { type: string, description: Display phone number }
+        '400': { description: accountId is required }
         '401': { $ref: '#/components/responses/Unauthorized' }
-        '404': { description: WhatsApp account not found }
+        '404': { description: WhatsApp account not found or accountId is not a valid ObjectId }
     post:
       operationId: updateWhatsAppDisplayName
       tags: [WhatsApp]
