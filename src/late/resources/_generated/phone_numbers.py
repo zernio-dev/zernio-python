@@ -326,6 +326,22 @@ class PhoneNumbersResource:
         )
         return self._client._post(f"/v1/phone-numbers/{id}/remediate", data=payload)
 
+    def reply_to_phone_number_reviewer(
+        self,
+        id: str,
+        *,
+        text: str | None = None,
+        attachments: list[dict[str, Any]] | None = None,
+    ) -> dict[str, Any]:
+        """Reply to the regulatory reviewer"""
+        payload = self._build_payload(
+            text=text,
+            attachments=attachments,
+        )
+        return self._client._post(
+            f"/v1/phone-numbers/{id}/remediate/reply", data=payload
+        )
+
     async def alist_phone_numbers(
         self, *, status: str | None = None, profile_id: str | None = None
     ) -> dict[str, Any]:
@@ -604,4 +620,20 @@ class PhoneNumbersResource:
         )
         return await self._client._apost(
             f"/v1/phone-numbers/{id}/remediate", data=payload
+        )
+
+    async def areply_to_phone_number_reviewer(
+        self,
+        id: str,
+        *,
+        text: str | None = None,
+        attachments: list[dict[str, Any]] | None = None,
+    ) -> dict[str, Any]:
+        """Reply to the regulatory reviewer (async)"""
+        payload = self._build_payload(
+            text=text,
+            attachments=attachments,
+        )
+        return await self._client._apost(
+            f"/v1/phone-numbers/{id}/remediate/reply", data=payload
         )

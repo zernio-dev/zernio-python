@@ -698,6 +698,7 @@ Both `from zernio import ...` and `from late import ...` work identically. The `
 | `phone_numbers.purchase_phone_number()` | Purchase phone number |
 | `phone_numbers.release_phone_number()` | Release phone number |
 | `phone_numbers.remediate_phone_number()` | Resubmit a declined number |
+| `phone_numbers.reply_to_phone_number_reviewer()` | Reply to the regulatory reviewer |
 | `phone_numbers.review_phone_number_kyc_packet()` | Pre-review a KYC packet |
 | `phone_numbers.search_available_phone_numbers()` | Search available numbers |
 | `phone_numbers.submit_phone_number_kyc()` | Submit KYC |

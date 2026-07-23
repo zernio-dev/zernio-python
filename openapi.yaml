@@ -29264,6 +29264,58 @@ paths:
         '401': { $ref: '#/components/responses/Unauthorized' }
         '404': { description: Number not found }
 
+  /v1/phone-numbers/{id}/remediate/reply:
+    post:
+      operationId: replyToPhoneNumberReviewer
+      tags: [Phone Numbers]
+      summary: Reply to the regulatory reviewer
+      description: |
+        Post a free-text reply (with optional file attachments) to the reviewer
+        on a number awaiting remediation — for asks the structured form can't
+        express (e.g. "is this personal or business?"). Attachments are stored by
+        us and their links are added to the reviewer's comment thread (the
+        carrier's number order takes no loose files). A reply to a comment-style
+        ask moves the number back to "in review"; a reply on a formal decline is
+        supplementary and you must still resubmit the fix. Requires text or at
+        least one attachment.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                text: { type: string, maxLength: 2000, description: The reply message to the reviewer. }
+                attachments:
+                  type: array
+                  maxItems: 5
+                  description: 'Files (PDF/JPG/PNG/WEBP, max 10 MB each) whose links are added to the reply.'
+                  items:
+                    type: object
+                    required: [filename, base64]
+                    properties:
+                      filename: { type: string }
+                      base64: { type: string, description: Base64-encoded file bytes. }
+      responses:
+        '200':
+          description: Reply posted.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  posted: { type: boolean }
+                  attachments: { type: integer, description: Number of attachments uploaded. }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404': { description: Number not found }
+        '502': { description: Couldn't deliver the reply to the reviewer; retry. }
+
   /v1/whatsapp/phone-numbers/kyc:
     get:
       operationId: getWhatsAppNumberKycForm
