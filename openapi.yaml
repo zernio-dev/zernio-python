@@ -36831,7 +36831,7 @@ paths:
               schema:
                 type: object
                 properties:
-                  validateOnly: { type: boolean, enum: [true] }
+                  validateOnly: { type: boolean, description: 'Always true in a validate-only response.' }
                   results:
                     type: array
                     items:
