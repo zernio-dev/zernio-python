@@ -10388,6 +10388,28 @@ def register_generated_tools(mcp, _get_client):
 
     @mcp.tool(
         annotations=ToolAnnotations(
+            title="View a KYC document on file",
+            readOnlyHint=True,
+            destructiveHint=False,
+            openWorldHint=False,
+        )
+    )
+    def phone_numbers_view_phone_number_kyc_document(document_id: str) -> str:
+        """View a KYC document on file
+
+        Args:
+            document_id: The Telnyx document id (from `reusable.options[].details[].documentId`). (required)"""
+        client = _get_client()
+        try:
+            response = client.phone_numbers.view_phone_number_kyc_document(
+                document_id=document_id
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
             title="Upload a KYC document",
             readOnlyHint=False,
             destructiveHint=True,

@@ -704,6 +704,7 @@ Both `from zernio import ...` and `from late import ...` work identically. The `
 | `phone_numbers.upload_phone_number_kyc_document()` | Upload a KYC document |
 | `phone_numbers.upload_phone_number_port_in_document()` | Upload a porting document |
 | `phone_numbers.validate_phone_number_kyc_address()` | Pre-validate KYC address |
+| `phone_numbers.view_phone_number_kyc_document()` | View a KYC document on file |
 
 ### Reach and Frequency
 | Method | Description |

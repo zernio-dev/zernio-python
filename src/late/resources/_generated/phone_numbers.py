@@ -179,6 +179,10 @@ class PhoneNumbersResource:
         )
         return self._client._post("/v1/phone-numbers/kyc", data=payload)
 
+    def view_phone_number_kyc_document(self, document_id: str) -> dict[str, Any]:
+        """View a KYC document on file"""
+        return self._client._get(f"/v1/phone-numbers/kyc/document/{document_id}")
+
     def upload_phone_number_kyc_document(self, x_filename: str) -> dict[str, Any]:
         """Upload a KYC document"""
         return self._client._post("/v1/phone-numbers/kyc/upload-document")
@@ -444,6 +448,10 @@ class PhoneNumbersResource:
             address=address,
         )
         return await self._client._apost("/v1/phone-numbers/kyc", data=payload)
+
+    async def aview_phone_number_kyc_document(self, document_id: str) -> dict[str, Any]:
+        """View a KYC document on file (async)"""
+        return await self._client._aget(f"/v1/phone-numbers/kyc/document/{document_id}")
 
     async def aupload_phone_number_kyc_document(
         self, x_filename: str
