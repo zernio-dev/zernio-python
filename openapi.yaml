@@ -32552,6 +32552,7 @@ paths:
                     properties:
                       id: { type: string }
                       status: { type: string }
+        '400': { $ref: '#/components/responses/BadRequest' }
         '401': { $ref: '#/components/responses/Unauthorized' }
         '404': { $ref: '#/components/responses/NotFound' }
 
@@ -32682,6 +32683,7 @@ paths:
                     type: array
                     description: Events in chronological order (oldest first).
                     items: { $ref: '#/components/schemas/WorkflowExecutionEvent' }
+        '400': { $ref: '#/components/responses/BadRequest' }
         '401': { $ref: '#/components/responses/Unauthorized' }
         '404': { $ref: '#/components/responses/NotFound' }
 
@@ -32719,6 +32721,7 @@ paths:
                       entryNodeId: { type: [string, "null"] }
                       nodeCount: { type: integer }
                       createdAt: { type: string, format: date-time }
+        '400': { $ref: '#/components/responses/BadRequest' }
         '401': { $ref: '#/components/responses/Unauthorized' }
         '404': { $ref: '#/components/responses/NotFound' }
 
@@ -32755,6 +32758,7 @@ paths:
                         createdByEmail: { type: [string, "null"], description: Denormalized email so the history UI can render without a join }
                         restoredFromVersion: { type: [integer, "null"], description: "When non-null, this snapshot was created by restoring that version" }
                         createdAt: { type: string, format: date-time }
+        '400': { $ref: '#/components/responses/BadRequest' }
         '401': { $ref: '#/components/responses/Unauthorized' }
         '404': { $ref: '#/components/responses/NotFound' }
 
@@ -32792,6 +32796,7 @@ paths:
                       createdByEmail: { type: [string, "null"] }
                       restoredFromVersion: { type: [integer, "null"] }
                       createdAt: { type: string, format: date-time }
+        '400': { $ref: '#/components/responses/BadRequest' }
         '401': { $ref: '#/components/responses/Unauthorized' }
         '404': { $ref: '#/components/responses/NotFound' }
 
