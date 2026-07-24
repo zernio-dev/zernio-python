@@ -10187,6 +10187,7 @@ def register_generated_tools(mcp, _get_client):
         profile_id: str,
         country: str = "US",
         number_type: str | None = None,
+        area_code: str | None = None,
         connect_whatsapp: bool = True,
         wants_sms: bool = False,
         wants_whatsapp: bool = False,
@@ -10199,6 +10200,7 @@ def register_generated_tools(mcp, _get_client):
             profile_id: Profile to associate the number with (required)
             country: ISO 3166-1 alpha-2 country for the number (default US). International numbers require usage-based billing. Tier 3/4 countries return 202 { status: "kyc_required", kycUrl } — the customer must complete KYC at that URL before the number is ordered. See GET /v1/phone-numbers/countries.
             number_type: Which of the country's offered number types to order (see `types[]` on GET /v1/phone-numbers/countries). Omitted = the country's default type, which is always the WhatsApp-safe choice. Capabilities, price, and KYC requirements are per (country, type): toll_free can never connect WhatsApp (400 when combined with connectWhatsapp:true), and wantsSms:true requires an SMS-capable type.
+            area_code: Area code (national destination code, e.g. 11 for Sao Paulo) the number must be in. Hard constraint: when the area has no deliverable inventory the purchase fails with 409 code AREA_CODE_UNAVAILABLE instead of assigning a number from another area, and later replacements stay in this area too. Omit for any area. Get live options from GET /v1/phone-numbers/availability (areaOptions).
             connect_whatsapp: A phone number is the unit; WhatsApp is one optional feature. Pass false to buy a STANDALONE number (Calls/SMS only): provisioning skips the Meta pre-verify/OTP steps and the number activates immediately. Omitted defaults to the WhatsApp provisioning path. WhatsApp can be connected to a standalone number later from the connect flow.
             wants_sms: SMS capability is per-number, not per-country. Pass true to provision from the SMS-capable inventory pool so the number can actually text (see also GET /v1/phone-numbers/available with sms=true, and smsAvailable on GET /v1/phone-numbers/countries).
             wants_whatsapp: Declare WhatsApp intent on a STANDALONE purchase (connectWhatsapp:false). The number still activates and bills immediately, but if WhatsApp's buy-time check rejects the assigned number, it is automatically swapped for a WhatsApp-eligible one during the purchase instead of being delivered with WhatsApp unavailable. Ignored on the WhatsApp provisioning path (connectWhatsapp omitted or true), which always delivers a WhatsApp-verified number.
@@ -10210,6 +10212,7 @@ def register_generated_tools(mcp, _get_client):
                 profile_id=profile_id,
                 country=country,
                 number_type=number_type,
+                area_code=area_code,
                 connect_whatsapp=connect_whatsapp,
                 wants_sms=wants_sms,
                 wants_whatsapp=wants_whatsapp,
@@ -10288,17 +10291,18 @@ def register_generated_tools(mcp, _get_client):
         )
     )
     def phone_numbers_check_phone_number_availability(
-        country: str, number_type: str | None = None
+        country: str, number_type: str | None = None, sms: bool | None = None
     ) -> str:
         """Check country availability
 
         Args:
             country: ISO-2 country code. (required)
-            number_type: Check a specific offered type (stock and address constraints are per type). Omitted = the country's default type."""
+            number_type: Check a specific offered type (stock and address constraints are per type). Omitted = the country's default type.
+            sms: Pass true when the buyer wants SMS: availability, areas, and areaOptions then describe the SMS-capable pool (an SMS purchase orders from it), not the wider voice-only pool."""
         client = _get_client()
         try:
             response = client.phone_numbers.check_phone_number_availability(
-                country=country, number_type=number_type
+                country=country, number_type=number_type, sms=sms
             )
             return _format_response(response)
         except Exception as e:
@@ -10345,6 +10349,7 @@ def register_generated_tools(mcp, _get_client):
         reuse: bool | None = None,
         reuse_option_id: str | None = None,
         reuse_from: str | None = None,
+        area_code: str | None = None,
         end_user_first_name: str | None = None,
         end_user_last_name: str | None = None,
         values: dict[str, Any] | None = None,
@@ -10361,6 +10366,7 @@ def register_generated_tools(mcp, _get_client):
             reuse: Reuse a prior approved verification for this country (skips document/field collection; places the order immediately).
             reuse_option_id: Which reusable verification to use (GET reusable.options[].id). The unambiguous selection key. Omitted = the approved default. No match = 409.
             reuse_from: Legacy fallback for `reuseOptionId`: the source phone number (GET reusable.options[].fromPhoneNumber). Ambiguous when a number labels two verifications — prefer `reuseOptionId`. Omitted = the approved default. No match = 409.
+            area_code: Area code (NDC) the number must be in. Hard constraint: an empty area pool fails with 409 code AREA_CODE_UNAVAILABLE instead of ordering from another area. Omit for any area. Options come from GET /v1/phone-numbers/availability (areaOptions); the purchase 202 kycUrl echoes the areaCode picked at purchase time so it can be passed here.
             end_user_first_name: End user's legal first name. Required when the country has an action/ID-verification (Onfido) requirement.
             end_user_last_name: End user's legal last name. Same condition as endUserFirstName.
             values: requirementId → textual value
@@ -10376,6 +10382,7 @@ def register_generated_tools(mcp, _get_client):
                 reuse=reuse,
                 reuse_option_id=reuse_option_id,
                 reuse_from=reuse_from,
+                area_code=area_code,
                 end_user_first_name=end_user_first_name,
                 end_user_last_name=end_user_last_name,
                 values=values,
@@ -10472,6 +10479,7 @@ def register_generated_tools(mcp, _get_client):
     def phone_numbers_create_phone_number_kyc_link(
         profile_id: str,
         country: str,
+        area_code: str | None = None,
         branding: dict[str, Any] | None = None,
         redirect_url: str | None = None,
     ) -> str:
@@ -10480,6 +10488,7 @@ def register_generated_tools(mcp, _get_client):
             Args:
                 profile_id: (required)
                 country: ISO 3166-1 alpha-2 country code (must be a regulated/KYC country). (required)
+                area_code: Area code (NDC) the eventual number must be in. Hard constraint carried by the link; the end customer filling the form makes no area choice. Options come from GET /v1/phone-numbers/availability (areaOptions).
                 branding: Optional white-label of the hosted page the end customer sees.
                 redirect_url: Where to send the end customer's browser after a successful
         submit. On completion Zernio appends `kyc=submitted` and
@@ -10490,6 +10499,7 @@ def register_generated_tools(mcp, _get_client):
             response = client.phone_numbers.create_phone_number_kyc_link(
                 profile_id=profile_id,
                 country=country,
+                area_code=area_code,
                 branding=branding,
                 redirect_url=redirect_url,
             )
@@ -15819,18 +15829,19 @@ def register_generated_tools(mcp, _get_client):
         )
     )
     def whatsapp_phone_numbers_check_whats_app_number_availability(
-        country: str, number_type: str | None = None
+        country: str, number_type: str | None = None, sms: bool | None = None
     ) -> str:
         """Check country availability
 
         Args:
             country: ISO-2 country code. (required)
-            number_type: Check a specific offered type (stock and address constraints are per type). Omitted = the country's default type."""
+            number_type: Check a specific offered type (stock and address constraints are per type). Omitted = the country's default type.
+            sms: Pass true when the buyer wants SMS: availability, areas, and areaOptions then describe the SMS-capable pool (an SMS purchase orders from it), not the wider voice-only pool."""
         client = _get_client()
         try:
             response = (
                 client.whatsapp_phone_numbers.check_whats_app_number_availability(
-                    country=country, number_type=number_type
+                    country=country, number_type=number_type, sms=sms
                 )
             )
             return _format_response(response)
@@ -15878,6 +15889,7 @@ def register_generated_tools(mcp, _get_client):
         reuse: bool | None = None,
         reuse_option_id: str | None = None,
         reuse_from: str | None = None,
+        area_code: str | None = None,
         end_user_first_name: str | None = None,
         end_user_last_name: str | None = None,
         values: dict[str, Any] | None = None,
@@ -15894,6 +15906,7 @@ def register_generated_tools(mcp, _get_client):
             reuse: Reuse a prior approved verification for this country (skips document/field collection; places the order immediately).
             reuse_option_id: Which reusable verification to use (GET reusable.options[].id). The unambiguous selection key. Omitted = the approved default. No match = 409.
             reuse_from: Legacy fallback for `reuseOptionId`: the source phone number (GET reusable.options[].fromPhoneNumber). Ambiguous when a number labels two verifications — prefer `reuseOptionId`. Omitted = the approved default. No match = 409.
+            area_code: Area code (NDC) the number must be in. Hard constraint: an empty area pool fails with 409 code AREA_CODE_UNAVAILABLE instead of ordering from another area. Omit for any area. Options come from GET /v1/phone-numbers/availability (areaOptions); the purchase 202 kycUrl echoes the areaCode picked at purchase time so it can be passed here.
             end_user_first_name: End user's legal first name. Required when the country has an action/ID-verification (Onfido) requirement.
             end_user_last_name: End user's legal last name. Same condition as endUserFirstName.
             values: requirementId → textual value
@@ -15909,6 +15922,7 @@ def register_generated_tools(mcp, _get_client):
                 reuse=reuse,
                 reuse_option_id=reuse_option_id,
                 reuse_from=reuse_from,
+                area_code=area_code,
                 end_user_first_name=end_user_first_name,
                 end_user_last_name=end_user_last_name,
                 values=values,
@@ -15987,6 +16001,7 @@ def register_generated_tools(mcp, _get_client):
     def whatsapp_phone_numbers_create_whats_app_number_kyc_link(
         profile_id: str,
         country: str,
+        area_code: str | None = None,
         branding: dict[str, Any] | None = None,
         redirect_url: str | None = None,
     ) -> str:
@@ -15995,6 +16010,7 @@ def register_generated_tools(mcp, _get_client):
             Args:
                 profile_id: (required)
                 country: ISO 3166-1 alpha-2 country code (must be a regulated/KYC country). (required)
+                area_code: Area code (NDC) the eventual number must be in. Hard constraint carried by the link; the end customer filling the form makes no area choice. Options come from GET /v1/phone-numbers/availability (areaOptions).
                 branding: Optional white-label of the hosted page the end customer sees.
                 redirect_url: Where to send the end customer's browser after a successful
         submit. On completion Zernio appends `kyc=submitted` and
@@ -16005,6 +16021,7 @@ def register_generated_tools(mcp, _get_client):
             response = client.whatsapp_phone_numbers.create_whats_app_number_kyc_link(
                 profile_id=profile_id,
                 country=country,
+                area_code=area_code,
                 branding=branding,
                 redirect_url=redirect_url,
             )

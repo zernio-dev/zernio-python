@@ -114,12 +114,13 @@ class WhatsappPhoneNumbersResource:
         return self._client._get("/v1/whatsapp/phone-numbers/available", params=params)
 
     def check_whats_app_number_availability(
-        self, country: str, *, number_type: str | None = None
+        self, country: str, *, number_type: str | None = None, sms: bool | None = None
     ) -> dict[str, Any]:
         """Check country availability"""
         params = self._build_params(
             country=country,
             number_type=number_type,
+            sms=sms,
         )
         return self._client._get(
             "/v1/whatsapp/phone-numbers/availability", params=params
@@ -145,6 +146,7 @@ class WhatsappPhoneNumbersResource:
         reuse: bool | None = None,
         reuse_option_id: str | None = None,
         reuse_from: str | None = None,
+        area_code: str | None = None,
         end_user_first_name: str | None = None,
         end_user_last_name: str | None = None,
         values: dict[str, Any] | None = None,
@@ -160,6 +162,7 @@ class WhatsappPhoneNumbersResource:
             reuse=reuse,
             reuse_option_id=reuse_option_id,
             reuse_from=reuse_from,
+            area_code=area_code,
             end_user_first_name=end_user_first_name,
             end_user_last_name=end_user_last_name,
             values=values,
@@ -198,6 +201,7 @@ class WhatsappPhoneNumbersResource:
         profile_id: str,
         country: str,
         *,
+        area_code: str | None = None,
         branding: dict[str, Any] | None = None,
         redirect_url: str | None = None,
     ) -> dict[str, Any]:
@@ -205,6 +209,7 @@ class WhatsappPhoneNumbersResource:
         payload = self._build_payload(
             profile_id=profile_id,
             country=country,
+            area_code=area_code,
             branding=branding,
             redirect_url=redirect_url,
         )
@@ -304,12 +309,13 @@ class WhatsappPhoneNumbersResource:
         )
 
     async def acheck_whats_app_number_availability(
-        self, country: str, *, number_type: str | None = None
+        self, country: str, *, number_type: str | None = None, sms: bool | None = None
     ) -> dict[str, Any]:
         """Check country availability (async)"""
         params = self._build_params(
             country=country,
             number_type=number_type,
+            sms=sms,
         )
         return await self._client._aget(
             "/v1/whatsapp/phone-numbers/availability", params=params
@@ -335,6 +341,7 @@ class WhatsappPhoneNumbersResource:
         reuse: bool | None = None,
         reuse_option_id: str | None = None,
         reuse_from: str | None = None,
+        area_code: str | None = None,
         end_user_first_name: str | None = None,
         end_user_last_name: str | None = None,
         values: dict[str, Any] | None = None,
@@ -350,6 +357,7 @@ class WhatsappPhoneNumbersResource:
             reuse=reuse,
             reuse_option_id=reuse_option_id,
             reuse_from=reuse_from,
+            area_code=area_code,
             end_user_first_name=end_user_first_name,
             end_user_last_name=end_user_last_name,
             values=values,
@@ -392,6 +400,7 @@ class WhatsappPhoneNumbersResource:
         profile_id: str,
         country: str,
         *,
+        area_code: str | None = None,
         branding: dict[str, Any] | None = None,
         redirect_url: str | None = None,
     ) -> dict[str, Any]:
@@ -399,6 +408,7 @@ class WhatsappPhoneNumbersResource:
         payload = self._build_payload(
             profile_id=profile_id,
             country=country,
+            area_code=area_code,
             branding=branding,
             redirect_url=redirect_url,
         )

@@ -80,6 +80,7 @@ class PhoneNumbersResource:
         *,
         country: str | None = "US",
         number_type: str | None = None,
+        area_code: str | None = None,
         connect_whatsapp: bool | None = True,
         wants_sms: bool | None = False,
         wants_whatsapp: bool | None = False,
@@ -91,6 +92,7 @@ class PhoneNumbersResource:
             profile_id=profile_id,
             country=country,
             number_type=number_type,
+            area_code=area_code,
             connect_whatsapp=connect_whatsapp,
             wants_sms=wants_sms,
             wants_whatsapp=wants_whatsapp,
@@ -127,12 +129,13 @@ class PhoneNumbersResource:
         return self._client._get("/v1/phone-numbers/available", params=params)
 
     def check_phone_number_availability(
-        self, country: str, *, number_type: str | None = None
+        self, country: str, *, number_type: str | None = None, sms: bool | None = None
     ) -> dict[str, Any]:
         """Check country availability"""
         params = self._build_params(
             country=country,
             number_type=number_type,
+            sms=sms,
         )
         return self._client._get("/v1/phone-numbers/availability", params=params)
 
@@ -156,6 +159,7 @@ class PhoneNumbersResource:
         reuse: bool | None = None,
         reuse_option_id: str | None = None,
         reuse_from: str | None = None,
+        area_code: str | None = None,
         end_user_first_name: str | None = None,
         end_user_last_name: str | None = None,
         values: dict[str, Any] | None = None,
@@ -171,6 +175,7 @@ class PhoneNumbersResource:
             reuse=reuse,
             reuse_option_id=reuse_option_id,
             reuse_from=reuse_from,
+            area_code=area_code,
             end_user_first_name=end_user_first_name,
             end_user_last_name=end_user_last_name,
             values=values,
@@ -213,6 +218,7 @@ class PhoneNumbersResource:
         profile_id: str,
         country: str,
         *,
+        area_code: str | None = None,
         branding: dict[str, Any] | None = None,
         redirect_url: str | None = None,
     ) -> dict[str, Any]:
@@ -220,6 +226,7 @@ class PhoneNumbersResource:
         payload = self._build_payload(
             profile_id=profile_id,
             country=country,
+            area_code=area_code,
             branding=branding,
             redirect_url=redirect_url,
         )
@@ -388,6 +395,7 @@ class PhoneNumbersResource:
         *,
         country: str | None = "US",
         number_type: str | None = None,
+        area_code: str | None = None,
         connect_whatsapp: bool | None = True,
         wants_sms: bool | None = False,
         wants_whatsapp: bool | None = False,
@@ -399,6 +407,7 @@ class PhoneNumbersResource:
             profile_id=profile_id,
             country=country,
             number_type=number_type,
+            area_code=area_code,
             connect_whatsapp=connect_whatsapp,
             wants_sms=wants_sms,
             wants_whatsapp=wants_whatsapp,
@@ -435,12 +444,13 @@ class PhoneNumbersResource:
         return await self._client._aget("/v1/phone-numbers/available", params=params)
 
     async def acheck_phone_number_availability(
-        self, country: str, *, number_type: str | None = None
+        self, country: str, *, number_type: str | None = None, sms: bool | None = None
     ) -> dict[str, Any]:
         """Check country availability (async)"""
         params = self._build_params(
             country=country,
             number_type=number_type,
+            sms=sms,
         )
         return await self._client._aget("/v1/phone-numbers/availability", params=params)
 
@@ -464,6 +474,7 @@ class PhoneNumbersResource:
         reuse: bool | None = None,
         reuse_option_id: str | None = None,
         reuse_from: str | None = None,
+        area_code: str | None = None,
         end_user_first_name: str | None = None,
         end_user_last_name: str | None = None,
         values: dict[str, Any] | None = None,
@@ -479,6 +490,7 @@ class PhoneNumbersResource:
             reuse=reuse,
             reuse_option_id=reuse_option_id,
             reuse_from=reuse_from,
+            area_code=area_code,
             end_user_first_name=end_user_first_name,
             end_user_last_name=end_user_last_name,
             values=values,
@@ -523,6 +535,7 @@ class PhoneNumbersResource:
         profile_id: str,
         country: str,
         *,
+        area_code: str | None = None,
         branding: dict[str, Any] | None = None,
         redirect_url: str | None = None,
     ) -> dict[str, Any]:
@@ -530,6 +543,7 @@ class PhoneNumbersResource:
         payload = self._build_payload(
             profile_id=profile_id,
             country=country,
+            area_code=area_code,
             branding=branding,
             redirect_url=redirect_url,
         )

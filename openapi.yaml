@@ -27899,6 +27899,17 @@ paths:
                     connect WhatsApp (400 when combined with
                     connectWhatsapp:true), and wantsSms:true requires an
                     SMS-capable type.
+                areaCode:
+                  type: string
+                  pattern: '^\d{1,4}$'
+                  description: >
+                    Area code (national destination code, e.g. 11 for Sao
+                    Paulo) the number must be in. Hard constraint: when the
+                    area has no deliverable inventory the purchase fails with
+                    409 code AREA_CODE_UNAVAILABLE instead of assigning a
+                    number from another area, and later replacements stay in
+                    this area too. Omit for any area. Get live options from
+                    GET /v1/phone-numbers/availability (areaOptions).
                 connectWhatsapp:
                   type: boolean
                   default: true
@@ -27990,16 +28001,18 @@ paths:
         '403': { description: A paid plan is required }
         '409':
           description: >
-            Duplicate-purchase protection: another number was purchased for
-            this user within the last 10 minutes. Retry with allowMultiple:
-            true to confirm the additional purchase is intentional.
+            Either duplicate-purchase protection (code PURCHASE_VELOCITY:
+            another number was purchased within the last 10 minutes; retry
+            with allowMultiple: true to confirm), or the requested areaCode
+            has no deliverable inventory right now (code
+            AREA_CODE_UNAVAILABLE: pick another area or omit areaCode).
           content:
             application/json:
               schema:
                 type: object
                 properties:
                   error: { type: string }
-                  code: { type: string, enum: [PURCHASE_VELOCITY] }
+                  code: { type: string, enum: [PURCHASE_VELOCITY, AREA_CODE_UNAVAILABLE] }
         '202':
           description: Country requires end-user KYC before the number can be ordered.
           content:
@@ -28132,6 +28145,7 @@ paths:
       parameters:
         - { name: country, in: query, required: true, schema: { type: string }, description: ISO-2 country code. }
         - { name: numberType, in: query, required: false, schema: { type: string, enum: [local, mobile, national, toll_free] }, description: "Check a specific offered type (stock and address constraints are per type). Omitted = the country's default type." }
+        - { name: sms, in: query, required: false, schema: { type: boolean }, description: 'Pass true when the buyer wants SMS: availability, areas, and areaOptions then describe the SMS-capable pool (an SMS purchase orders from it), not the wider voice-only pool.' }
       responses:
         '200':
           description: Availability + address constraint.
@@ -28148,6 +28162,20 @@ paths:
                     type: array
                     description: For `geo` only — the area(s) the registered address must be in.
                     items: { type: string }
+                  areaOptions:
+                    type: array
+                    description: >
+                      Live inventory grouped by area code, largest stock
+                      first. Empty when out of stock (or the area lookup
+                      failed). Pass a chosen `ndc` as `areaCode` on POST
+                      /v1/phone-numbers/purchase (or on the KYC submit for
+                      regulated countries) to require that area.
+                    items:
+                      type: object
+                      properties:
+                        ndc: { type: string, description: 'Area code (national destination code), e.g. "11".' }
+                        name: { type: string, description: 'Human-readable area name, e.g. "Sao Paulo".' }
+                        count: { type: integer, description: Deliverable numbers seen in this area on the latest inventory page. }
         '400': { description: Country not offerable }
         '401': { $ref: '#/components/responses/Unauthorized' }
 
@@ -28356,16 +28384,18 @@ paths:
         '403': { description: A paid plan is required }
         '409':
           description: >
-            Duplicate-purchase protection: another number was purchased for
-            this user within the last 10 minutes. Retry with allowMultiple:
-            true to confirm the additional purchase is intentional.
+            Either duplicate-purchase protection (code PURCHASE_VELOCITY:
+            another number was purchased within the last 10 minutes; retry
+            with allowMultiple: true to confirm), or the requested areaCode
+            has no deliverable inventory right now (code
+            AREA_CODE_UNAVAILABLE: pick another area or omit areaCode).
           content:
             application/json:
               schema:
                 type: object
                 properties:
                   error: { type: string }
-                  code: { type: string, enum: [PURCHASE_VELOCITY] }
+                  code: { type: string, enum: [PURCHASE_VELOCITY, AREA_CODE_UNAVAILABLE] }
         '202':
           description: Country requires end-user KYC before the number can be ordered.
           content:
@@ -28481,6 +28511,7 @@ paths:
       parameters:
         - { name: country, in: query, required: true, schema: { type: string }, description: ISO-2 country code. }
         - { name: numberType, in: query, required: false, schema: { type: string, enum: [local, mobile, national, toll_free] }, description: "Check a specific offered type (stock and address constraints are per type). Omitted = the country's default type." }
+        - { name: sms, in: query, required: false, schema: { type: boolean }, description: 'Pass true when the buyer wants SMS: availability, areas, and areaOptions then describe the SMS-capable pool (an SMS purchase orders from it), not the wider voice-only pool.' }
       responses:
         '200':
           description: Availability + address constraint.
@@ -28497,6 +28528,20 @@ paths:
                     type: array
                     description: For `geo` only — the area(s) the registered address must be in.
                     items: { type: string }
+                  areaOptions:
+                    type: array
+                    description: >
+                      Live inventory grouped by area code, largest stock
+                      first. Empty when out of stock (or the area lookup
+                      failed). Pass a chosen `ndc` as `areaCode` on POST
+                      /v1/phone-numbers/purchase (or on the KYC submit for
+                      regulated countries) to require that area.
+                    items:
+                      type: object
+                      properties:
+                        ndc: { type: string, description: 'Area code (national destination code), e.g. "11".' }
+                        name: { type: string, description: 'Human-readable area name, e.g. "Sao Paulo".' }
+                        count: { type: integer, description: Deliverable numbers seen in this area on the latest inventory page. }
         '400': { description: Country not offerable }
         '401': { $ref: '#/components/responses/Unauthorized' }
 
@@ -28607,6 +28652,7 @@ paths:
                 reuse: { type: boolean, description: Reuse a prior approved verification for this country (skips document/field collection; places the order immediately). }
                 reuseOptionId: { type: string, description: 'Which reusable verification to use (GET reusable.options[].id). The unambiguous selection key. Omitted = the approved default. No match = 409.' }
                 reuseFrom: { type: string, description: 'Legacy fallback for `reuseOptionId`: the source phone number (GET reusable.options[].fromPhoneNumber). Ambiguous when a number labels two verifications — prefer `reuseOptionId`. Omitted = the approved default. No match = 409.' }
+                areaCode: { type: string, pattern: '^\d{1,4}$', description: 'Area code (NDC) the number must be in. Hard constraint: an empty area pool fails with 409 code AREA_CODE_UNAVAILABLE instead of ordering from another area. Omit for any area. Options come from GET /v1/phone-numbers/availability (areaOptions); the purchase 202 kycUrl echoes the areaCode picked at purchase time so it can be passed here.' }
                 endUserFirstName: { type: string, description: End user's legal first name. Required when the country has an action/ID-verification (Onfido) requirement. }
                 endUserLastName: { type: string, description: End user's legal last name. Same condition as endUserFirstName. }
                 values:
@@ -28668,7 +28714,7 @@ paths:
                         phoneNumber: { type: string }
                         country: { type: string }
         '400': { description: "Validation error (e.g. address not in-country, file too large)" }
-        '409': { description: reuse requested but no prior approved verification exists for this country }
+        '409': { description: 'Either reuse was requested but no prior approved verification exists for this country, or the requested areaCode has no deliverable inventory right now (code: area_code_unavailable; pick another area and resubmit).' }
         '401': { $ref: '#/components/responses/Unauthorized' }
 
   /v1/phone-numbers/kyc/document/{documentId}:
@@ -28831,6 +28877,7 @@ paths:
               properties:
                 profileId: { type: string }
                 country: { type: string, minLength: 2, maxLength: 2, description: ISO 3166-1 alpha-2 country code (must be a regulated/KYC country). }
+                areaCode: { type: string, pattern: '^\d{1,4}$', description: 'Area code (NDC) the eventual number must be in. Hard constraint carried by the link; the end customer filling the form makes no area choice. Options come from GET /v1/phone-numbers/availability (areaOptions).' }
                 branding:
                   type: object
                   description: Optional white-label of the hosted page the end customer sees.
@@ -29577,6 +29624,7 @@ paths:
                 reuse: { type: boolean, description: Reuse a prior approved verification for this country (skips document/field collection; places the order immediately). }
                 reuseOptionId: { type: string, description: 'Which reusable verification to use (GET reusable.options[].id). The unambiguous selection key. Omitted = the approved default. No match = 409.' }
                 reuseFrom: { type: string, description: 'Legacy fallback for `reuseOptionId`: the source phone number (GET reusable.options[].fromPhoneNumber). Ambiguous when a number labels two verifications — prefer `reuseOptionId`. Omitted = the approved default. No match = 409.' }
+                areaCode: { type: string, pattern: '^\d{1,4}$', description: 'Area code (NDC) the number must be in. Hard constraint: an empty area pool fails with 409 code AREA_CODE_UNAVAILABLE instead of ordering from another area. Omit for any area. Options come from GET /v1/phone-numbers/availability (areaOptions); the purchase 202 kycUrl echoes the areaCode picked at purchase time so it can be passed here.' }
                 endUserFirstName: { type: string, description: End user's legal first name. Required when the country has an action/ID-verification (Onfido) requirement. }
                 endUserLastName: { type: string, description: End user's legal last name. Same condition as endUserFirstName. }
                 values:
@@ -29638,7 +29686,7 @@ paths:
                         phoneNumber: { type: string }
                         country: { type: string }
         '400': { description: "Validation error (e.g. address not in-country, file too large)" }
-        '409': { description: reuse requested but no prior approved verification exists for this country }
+        '409': { description: 'Either reuse was requested but no prior approved verification exists for this country, or the requested areaCode has no deliverable inventory right now (code: area_code_unavailable; pick another area and resubmit).' }
         '401': { $ref: '#/components/responses/Unauthorized' }
 
   /v1/whatsapp/phone-numbers/kyc/upload-document:
@@ -29785,6 +29833,7 @@ paths:
               properties:
                 profileId: { type: string }
                 country: { type: string, minLength: 2, maxLength: 2, description: ISO 3166-1 alpha-2 country code (must be a regulated/KYC country). }
+                areaCode: { type: string, pattern: '^\d{1,4}$', description: 'Area code (NDC) the eventual number must be in. Hard constraint carried by the link; the end customer filling the form makes no area choice. Options come from GET /v1/phone-numbers/availability (areaOptions).' }
                 branding:
                   type: object
                   description: Optional white-label of the hosted page the end customer sees.
