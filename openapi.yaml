@@ -28236,6 +28236,7 @@ paths:
                           name: { type: string, example: "sandbox_start" }
                           language: { type: string, example: "en" }
                       isSandbox: { type: boolean }
+        '400': { $ref: '#/components/responses/BadRequest' }
         '401': { $ref: '#/components/responses/Unauthorized' }
 
   /v1/whatsapp/phone-numbers/purchase:
@@ -34424,6 +34425,7 @@ paths:
                     description: "Present and true only on `202` responses: part of the requested date range is still being backfilled from the platform in the background. Retry the same request shortly; it returns 200 once the range is fully ingested."
         '202':
           description: "Part of the requested date range predates the ingested history; a background backfill job has been queued. The body has the same shape as the 200 response, carries the currently-available data, and includes `backfillPending: true`. A `Retry-After` header carries the recommended poll interval in seconds. Allow the job a short time to run (typically 1-3 minutes) and submit the request again; once ingestion completes the same request returns 200 with the full range."
+        '400': { $ref: '#/components/responses/BadRequest' }
         '401': { $ref: '#/components/responses/Unauthorized' }
         '403':
           description: Ads access required. Legacy plans need the Ads add-on; included by default on usage-based plans.
