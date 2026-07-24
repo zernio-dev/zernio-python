@@ -6368,6 +6368,10 @@ components:
     AdStatus:
       type: string
       enum: [active, paused, pending_review, rejected, completed, cancelled, error]
+    AdReviewStatus:
+      type: string
+      enum: [in_review, approved, rejected, with_issues]
+      description: "Platform-side review state, independent of the delivery `status` and the `configuredStatus` on/off toggle. `in_review` means the platform is still reviewing. Absent when the platform reports no review signal (e.g. a paused ad whose review state is masked behind the pause)."
     BusinessCenter:
       type: object
       description: |
@@ -6581,7 +6585,14 @@ components:
         _id: { type: string }
         name: { type: string }
         platform: { type: string, enum: [facebook, instagram, tiktok, linkedin, pinterest, google, twitter, openai] }
-        status: { $ref: '#/components/schemas/AdStatus' }
+        status: { allOf: [{ $ref: '#/components/schemas/AdStatus' }], description: "Delivery status. Derived from the platform `effective_status`, so it inherits ancestor pauses (an ACTIVE ad under a PAUSED campaign reads `paused`). For the ad's own on/off toggle use `configuredStatus`; for the review state use `reviewStatus`." }
+        configuredStatus:
+          type: [string, "null"]
+          description: "The ad's own on/off toggle as configured on the platform (Meta `configured_status`: ACTIVE / PAUSED), unaffected by ancestor (ad set / campaign) pauses. Distinct from `status`, which is the ancestor-cascaded delivery status. Only present for Meta ads synced after this field was added."
+          example: ACTIVE
+        reviewStatus:
+          allOf: [{ $ref: '#/components/schemas/AdReviewStatus' }]
+          description: "Platform review state of this ad, independent of delivery `status` / `configuredStatus`. Absent when the platform reports no review signal."
         adType: { type: string, enum: [boost, standalone] }
         goal: { type: string, enum: [engagement, traffic, awareness, video_views, lead_generation, lead_conversion, conversions, app_promotion, catalog_sales, job_applicants], description: "Available goals vary by platform. Meta (Facebook/Instagram) supports all 9 (incl. `lead_conversion` = website pixel lead optimization and `catalog_sales` = Advantage+ catalog ads). TikTok supports the 7 non-`lead_conversion` goals. LinkedIn supports all except app_promotion / lead_conversion. Twitter/X supports engagement, traffic, awareness, video_views, app_promotion. Pinterest and Google Ads support only engagement, traffic, awareness, video_views." }
         isExternal: { type: boolean, description: True for ads synced from platform ad managers }
@@ -6765,8 +6776,9 @@ components:
         campaignName: { type: string }
         status: { allOf: [{ $ref: '#/components/schemas/AdStatus' }], description: "Delivery status derived from child ad statuses. Distinct from `reviewStatus`, which reflects the platform-side review state." }
         reviewStatus:
-          type: [string, "null"]
-          enum: [in_review, approved, rejected, with_issues]
+          anyOf:
+            - $ref: '#/components/schemas/AdReviewStatus'
+            - type: "null"
           description: |
             Platform-side review state of the campaign. Independent of the
             children-derived delivery `status`: a campaign can have ads
@@ -6848,8 +6860,9 @@ components:
         campaignName: { type: string }
         status: { allOf: [{ $ref: '#/components/schemas/AdStatus' }], description: "Delivery status derived from child ad statuses. Distinct from `reviewStatus`." }
         reviewStatus:
-          type: [string, "null"]
-          enum: [in_review, approved, rejected, with_issues]
+          anyOf:
+            - $ref: '#/components/schemas/AdReviewStatus'
+            - type: "null"
           description: "Platform-side review state of the campaign. See AdTreeCampaign.reviewStatus for the full description."
         platformCampaignStatus:
           type: [string, "null"]
@@ -25129,6 +25142,7 @@ paths:
         '400': { description: accountId is required }
         '401': { $ref: '#/components/responses/Unauthorized' }
         '404': { $ref: '#/components/responses/NotFound' }
+        '502': { description: Meta rejected the request or was unreachable. Meta 4xx statuses are forwarded as-is. }
     patch:
       operationId: updateWhatsAppTemplate
       tags: [WhatsApp]
@@ -25193,6 +25207,7 @@ paths:
         '400': { description: Validation error (missing fields) }
         '401': { $ref: '#/components/responses/Unauthorized' }
         '404': { $ref: '#/components/responses/NotFound' }
+        '502': { description: Meta rejected the update or was unreachable. Meta 4xx statuses are forwarded as-is. }
     delete:
       operationId: deleteWhatsAppTemplate
       tags: [WhatsApp]
@@ -25230,6 +25245,7 @@ paths:
         '400': { description: accountId or template name is required }
         '401': { $ref: '#/components/responses/Unauthorized' }
         '404': { $ref: '#/components/responses/NotFound' }
+        '502': { description: Meta rejected the delete or was unreachable. Meta 4xx statuses are forwarded as-is. }
 
   # ──────────────────────────────────────────────────────────────────────────
   # WHATSAPP BUSINESS CALLING
