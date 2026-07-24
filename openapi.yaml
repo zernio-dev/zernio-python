@@ -30505,6 +30505,7 @@ paths:
                         properties:
                           after: { type: string }
                           before: { type: string }
+        '400': { $ref: '#/components/responses/BadRequest' }
         '401': { $ref: '#/components/responses/Unauthorized' }
     post:
       operationId: createWhatsAppGroupChat
@@ -30545,6 +30546,7 @@ paths:
                     properties:
                       groupId: { type: string }
                       inviteLink: { type: string }
+        '400': { $ref: '#/components/responses/BadRequest' }
         '401': { $ref: '#/components/responses/Unauthorized' }
 
   /v1/whatsapp/wa-groups/{groupId}:
@@ -30588,6 +30590,7 @@ paths:
                       participantCount: { type: integer }
                       createdAt: { type: integer, description: UNIX timestamp }
                       isSuspended: { type: boolean }
+        '400': { $ref: '#/components/responses/BadRequest' }
         '401': { $ref: '#/components/responses/Unauthorized' }
         '404': { $ref: '#/components/responses/NotFound' }
     post:
@@ -30623,6 +30626,7 @@ paths:
                 properties:
                   success: { type: boolean }
                   message: { type: string }
+        '400': { $ref: '#/components/responses/BadRequest' }
         '401': { $ref: '#/components/responses/Unauthorized' }
         '404': { $ref: '#/components/responses/NotFound' }
     delete:
@@ -30648,6 +30652,7 @@ paths:
                 properties:
                   success: { type: boolean }
                   message: { type: string }
+        '400': { $ref: '#/components/responses/BadRequest' }
         '401': { $ref: '#/components/responses/Unauthorized' }
         '404': { $ref: '#/components/responses/NotFound' }
 
@@ -30688,6 +30693,7 @@ paths:
                 properties:
                   success: { type: boolean }
                   message: { type: string }
+        '400': { $ref: '#/components/responses/BadRequest' }
         '401': { $ref: '#/components/responses/Unauthorized' }
     delete:
       operationId: removeWhatsAppGroupParticipants
@@ -30724,6 +30730,7 @@ paths:
                 properties:
                   success: { type: boolean }
                   message: { type: string }
+        '400': { $ref: '#/components/responses/BadRequest' }
         '401': { $ref: '#/components/responses/Unauthorized' }
 
   /v1/whatsapp/wa-groups/{groupId}/invite-link:
@@ -30750,6 +30757,7 @@ paths:
                 properties:
                   success: { type: boolean }
                   inviteLink: { type: string }
+        '400': { $ref: '#/components/responses/BadRequest' }
         '401': { $ref: '#/components/responses/Unauthorized' }
 
   /v1/whatsapp/wa-groups/{groupId}/join-requests:
@@ -30782,6 +30790,7 @@ paths:
                       properties:
                         user: { type: string, description: Phone number }
                         timestamp: { type: integer, description: UNIX timestamp of request }
+        '400': { $ref: '#/components/responses/BadRequest' }
         '401': { $ref: '#/components/responses/Unauthorized' }
     post:
       operationId: approveWhatsAppGroupJoinRequests
@@ -30818,6 +30827,7 @@ paths:
                 properties:
                   success: { type: boolean }
                   message: { type: string }
+        '400': { $ref: '#/components/responses/BadRequest' }
         '401': { $ref: '#/components/responses/Unauthorized' }
     delete:
       operationId: rejectWhatsAppGroupJoinRequests
@@ -30854,6 +30864,7 @@ paths:
                 properties:
                   success: { type: boolean }
                   message: { type: string }
+        '400': { $ref: '#/components/responses/BadRequest' }
         '401': { $ref: '#/components/responses/Unauthorized' }
 
   # ─── WhatsApp Flows ───────────────────────────────────────────────
