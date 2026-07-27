@@ -93,6 +93,37 @@ class AdCampaignsResource:
         )
         return self._client._get("/v1/ads", params=params)
 
+    def list_ad_keywords(
+        self,
+        *,
+        page: int | None = 1,
+        limit: int | None = 50,
+        account_id: str | None = None,
+        ad_account_id: str | None = None,
+        profile_id: str | None = None,
+        campaign_id: str | None = None,
+        ad_set_id: str | None = None,
+        status: str | None = None,
+        match_type: str | None = None,
+        negative: bool | None = None,
+        search: str | None = None,
+    ) -> dict[str, Any]:
+        """List Search keywords"""
+        params = self._build_params(
+            page=page,
+            limit=limit,
+            account_id=account_id,
+            ad_account_id=ad_account_id,
+            profile_id=profile_id,
+            campaign_id=campaign_id,
+            ad_set_id=ad_set_id,
+            status=status,
+            match_type=match_type,
+            negative=negative,
+            search=search,
+        )
+        return self._client._get("/v1/ads/keywords", params=params)
+
     def list_ad_campaigns(
         self,
         *,
@@ -669,6 +700,37 @@ class AdCampaignsResource:
             to_date=to_date,
         )
         return await self._client._aget("/v1/ads", params=params)
+
+    async def alist_ad_keywords(
+        self,
+        *,
+        page: int | None = 1,
+        limit: int | None = 50,
+        account_id: str | None = None,
+        ad_account_id: str | None = None,
+        profile_id: str | None = None,
+        campaign_id: str | None = None,
+        ad_set_id: str | None = None,
+        status: str | None = None,
+        match_type: str | None = None,
+        negative: bool | None = None,
+        search: str | None = None,
+    ) -> dict[str, Any]:
+        """List Search keywords (async)"""
+        params = self._build_params(
+            page=page,
+            limit=limit,
+            account_id=account_id,
+            ad_account_id=ad_account_id,
+            profile_id=profile_id,
+            campaign_id=campaign_id,
+            ad_set_id=ad_set_id,
+            status=status,
+            match_type=match_type,
+            negative=negative,
+            search=search,
+        )
+        return await self._client._aget("/v1/ads/keywords", params=params)
 
     async def alist_ad_campaigns(
         self,

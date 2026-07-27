@@ -1779,6 +1779,60 @@ def register_generated_tools(mcp, _get_client):
 
     @mcp.tool(
         annotations=ToolAnnotations(
+            title="List Search keywords",
+            readOnlyHint=True,
+            destructiveHint=False,
+            openWorldHint=False,
+        )
+    )
+    def ad_campaigns_list_ad_keywords(
+        page: int = 1,
+        limit: int = 50,
+        account_id: str | None = None,
+        ad_account_id: str | None = None,
+        profile_id: str | None = None,
+        campaign_id: str | None = None,
+        ad_set_id: str | None = None,
+        status: str | None = None,
+        match_type: str | None = None,
+        negative: bool | None = None,
+        search: str | None = None,
+    ) -> str:
+        """List Search keywords
+
+        Args:
+            page: Page number
+            limit
+            account_id: Social account ID
+            ad_account_id: Platform ad account ID (Google customer ID). Mirrors the same filter on /v1/ads.
+            profile_id: Profile ID
+            campaign_id: Platform campaign ID
+            ad_set_id: Platform ad group ID (Google ad group)
+            status: Keyword criterion status
+            match_type
+            negative: true = negative keywords only, false = positive only. Omit for both.
+            search: Case-insensitive substring match on the keyword text"""
+        client = _get_client()
+        try:
+            response = client.ad_campaigns.list_ad_keywords(
+                page=page,
+                limit=limit,
+                account_id=account_id,
+                ad_account_id=ad_account_id,
+                profile_id=profile_id,
+                campaign_id=campaign_id,
+                ad_set_id=ad_set_id,
+                status=status,
+                match_type=match_type,
+                negative=negative,
+                search=search,
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
             title="List campaigns",
             readOnlyHint=True,
             destructiveHint=False,

@@ -33711,6 +33711,67 @@ paths:
         '403':
           description: Ads access required. Legacy plans need the Ads add-on; included by default on usage-based plans.
 
+  /v1/ads/keywords:
+    get:
+      operationId: listAdKeywords
+      tags: ["Ad Campaigns"]
+      x-platforms: ["google"]
+      summary: List Search keywords
+      description: |
+        Returns the Google Search keyword criteria (positive and negative) synced from
+        connected Google Ads accounts, one row per ad-group keyword. Populated by the
+        periodic ads discovery sweep (roughly every 3 hours per account), so keywords
+        added on Google appear with that delay. Campaign-level negative keywords are
+        not included; only ad-group-level criteria are.
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/PageParam'
+        - { name: limit, in: query, schema: { type: integer, minimum: 1, maximum: 500, default: 50 } }
+        - { name: accountId, in: query, schema: { type: string }, description: Social account ID }
+        - { name: adAccountId, in: query, schema: { type: string }, description: 'Platform ad account ID (Google customer ID). Mirrors the same filter on /v1/ads.' }
+        - { name: profileId, in: query, schema: { type: string }, description: Profile ID }
+        - { name: campaignId, in: query, schema: { type: string }, description: Platform campaign ID }
+        - { name: adSetId, in: query, schema: { type: string }, description: 'Platform ad group ID (Google ad group)' }
+        - { name: status, in: query, schema: { type: string, enum: [active, paused] }, description: Keyword criterion status }
+        - { name: matchType, in: query, schema: { type: string, enum: [exact, phrase, broad, unknown] } }
+        - { name: negative, in: query, schema: { type: boolean }, description: 'true = negative keywords only, false = positive only. Omit for both.' }
+        - { name: search, in: query, schema: { type: string, maxLength: 200 }, description: 'Case-insensitive substring match on the keyword text' }
+      responses:
+        '200':
+          description: Paginated keywords
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  keywords:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id: { type: string }
+                        accountId: { type: string, description: Social account ID owning the sync }
+                        profileId: { type: string }
+                        platform: { type: string, enum: [google] }
+                        adAccountId: { type: string, description: Google customer ID }
+                        campaignId: { type: string }
+                        campaignName: { type: [string, "null"] }
+                        campaignStatus: { type: [string, "null"] }
+                        adSetId: { type: string, description: Google ad group ID }
+                        adSetName: { type: [string, "null"] }
+                        adSetStatus: { type: [string, "null"] }
+                        keyword: { type: string }
+                        matchType: { type: string, enum: [exact, phrase, broad, unknown] }
+                        status: { type: string, enum: [active, paused] }
+                        negative: { type: boolean }
+                        syncedAt: { type: [string, "null"], format: date-time }
+                  pagination: { $ref: '#/components/schemas/Pagination' }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403':
+          description: Ads access required. Legacy plans need the Ads add-on; included by default on usage-based plans.
+
   /v1/ads/campaigns:
     get:
       operationId: listAdCampaigns

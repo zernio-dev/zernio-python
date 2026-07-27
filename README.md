@@ -406,6 +406,7 @@ Both `from zernio import ...` and `from late import ...` work identically. The `
 | Method | Description |
 |--------|-------------|
 | `ad_campaigns.list_ad_campaigns()` | List campaigns |
+| `ad_campaigns.list_ad_keywords()` | List Search keywords |
 | `ad_campaigns.list_ads()` | List ads |
 | `ad_campaigns.bulk_update_ad_campaign_status()` | Pause or resume many campaigns |
 | `ad_campaigns.create_ad_campaign()` | Create a standalone campaign |
