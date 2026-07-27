@@ -26557,6 +26557,7 @@ paths:
                   registrationId: { type: string }
                   status: { type: string, enum: [pending] }
                   awaitingOtp: { type: boolean, description: "True for sole-prop 10DLC: an OTP was texted to the brand's mobile; submit it via /verify-otp." }
+        '400': { $ref: '#/components/responses/BadRequest' }
         '401': { $ref: '#/components/responses/Unauthorized' }
         '422': { description: Carrier registry rejected a field; `param` names it when known. }
     get:
@@ -26604,6 +26605,7 @@ paths:
                             label: { type: string }
                             smsPerMinute: { type: number }
                             smsPerDay: { type: number }
+        '400': { $ref: '#/components/responses/BadRequest' }
         '401': { $ref: '#/components/responses/Unauthorized' }
 
   /v1/sms/registrations/{id}:
@@ -26632,6 +26634,7 @@ paths:
                 type: object
                 properties:
                   status: { type: string, enum: [deactivated] }
+        '400': { $ref: '#/components/responses/BadRequest' }
         '401': { $ref: '#/components/responses/Unauthorized' }
         '404': { description: Registration not found }
     get:
@@ -26669,6 +26672,7 @@ paths:
                       messageFlow: { type: string }
                       sample1: { type: string }
                       sample2: { type: string }
+        '400': { $ref: '#/components/responses/BadRequest' }
         '401': { $ref: '#/components/responses/Unauthorized' }
         '404': { description: Registration not found }
 
@@ -26703,6 +26707,7 @@ paths:
                 type: object
                 properties:
                   verified: { type: boolean }
+        '400': { $ref: '#/components/responses/BadRequest' }
         '401': { $ref: '#/components/responses/Unauthorized' }
         '404': { description: Registration not found }
 
@@ -26729,7 +26734,7 @@ paths:
                 type: object
                 properties:
                   sent: { type: boolean }
-        '400': { description: The registration is not awaiting a verification code }
+        '400': { description: 'Malformed `id`, or the registration is not awaiting a verification code.' }
         '401': { $ref: '#/components/responses/Unauthorized' }
         '404': { description: Registration not found }
         '429': { description: A code was just sent — wait a minute before requesting another }
@@ -26776,7 +26781,7 @@ paths:
                 type: object
                 properties:
                   status: { type: string, enum: [pending] }
-        '400': { description: Registration has no campaign to appeal; fix the brand and re-verify instead }
+        '400': { description: 'Malformed `id`, or the registration has no campaign to appeal (fix the brand and re-verify instead).' }
         '401': { $ref: '#/components/responses/Unauthorized' }
         '404': { description: Registration not found }
 
@@ -26884,6 +26889,7 @@ paths:
                 properties:
                   url: { type: string }
                   expiresAt: { type: string, format: date-time }
+        '400': { $ref: '#/components/responses/BadRequest' }
         '401': { $ref: '#/components/responses/Unauthorized' }
         '404': { description: Number not found }
 
