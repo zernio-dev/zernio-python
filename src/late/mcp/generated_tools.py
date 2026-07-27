@@ -10429,7 +10429,7 @@ def register_generated_tools(mcp, _get_client):
             profile_id: (required)
             country: (required)
             submission_id: Idempotency token for this submission attempt. A retry/double-submit with the same token returns the same number; omit and each call creates a new number.
-            quantity: Provision several same-country numbers from one submission (1-5). The single verification covers all of them; each number is billed only when it activates. Numbers that fail to order are skipped (best-effort).
+            quantity: Provision several same-country numbers from one submission (1-5). The single verification covers all of them; each number is billed only when it activates. Numbers that fail to order are skipped (best-effort). With `areaCode`, a quantity above that area's live stock is rejected with a 400.
             reuse: Reuse a prior approved verification for this country (skips document/field collection; places the order immediately).
             reuse_option_id: Which reusable verification to use (GET reusable.options[].id). The unambiguous selection key. Omitted = the approved default. No match = 409.
             reuse_from: Legacy fallback for `reuseOptionId`: the source phone number (GET reusable.options[].fromPhoneNumber). Ambiguous when a number labels two verifications — prefer `reuseOptionId`. Omitted = the approved default. No match = 409.
@@ -15969,7 +15969,7 @@ def register_generated_tools(mcp, _get_client):
             profile_id: (required)
             country: (required)
             submission_id: Idempotency token for this submission attempt. A retry/double-submit with the same token returns the same number; omit and each call creates a new number.
-            quantity: Provision several same-country numbers from one submission (1-5). The single verification covers all of them; each number is billed only when it activates. Numbers that fail to order are skipped (best-effort).
+            quantity: Provision several same-country numbers from one submission (1-5). The single verification covers all of them; each number is billed only when it activates. Numbers that fail to order are skipped (best-effort). With `areaCode`, a quantity above that area's live stock is rejected with a 400.
             reuse: Reuse a prior approved verification for this country (skips document/field collection; places the order immediately).
             reuse_option_id: Which reusable verification to use (GET reusable.options[].id). The unambiguous selection key. Omitted = the approved default. No match = 409.
             reuse_from: Legacy fallback for `reuseOptionId`: the source phone number (GET reusable.options[].fromPhoneNumber). Ambiguous when a number labels two verifications — prefer `reuseOptionId`. Omitted = the approved default. No match = 409.

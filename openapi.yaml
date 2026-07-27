@@ -28671,7 +28671,7 @@ paths:
                 profileId: { type: string }
                 country: { type: string }
                 submissionId: { type: string, description: Idempotency token for this submission attempt. A retry/double-submit with the same token returns the same number; omit and each call creates a new number. }
-                quantity: { type: integer, minimum: 1, maximum: 5, default: 1, description: 'Provision several same-country numbers from one submission (1-5). The single verification covers all of them; each number is billed only when it activates. Numbers that fail to order are skipped (best-effort).' }
+                quantity: { type: integer, minimum: 1, maximum: 5, default: 1, description: 'Provision several same-country numbers from one submission (1-5). The single verification covers all of them; each number is billed only when it activates. Numbers that fail to order are skipped (best-effort). With `areaCode`, a quantity above that area''s live stock is rejected with a 400.' }
                 reuse: { type: boolean, description: Reuse a prior approved verification for this country (skips document/field collection; places the order immediately). }
                 reuseOptionId: { type: string, description: 'Which reusable verification to use (GET reusable.options[].id). The unambiguous selection key. Omitted = the approved default. No match = 409.' }
                 reuseFrom: { type: string, description: 'Legacy fallback for `reuseOptionId`: the source phone number (GET reusable.options[].fromPhoneNumber). Ambiguous when a number labels two verifications — prefer `reuseOptionId`. Omitted = the approved default. No match = 409.' }
@@ -29643,7 +29643,7 @@ paths:
                 profileId: { type: string }
                 country: { type: string }
                 submissionId: { type: string, description: Idempotency token for this submission attempt. A retry/double-submit with the same token returns the same number; omit and each call creates a new number. }
-                quantity: { type: integer, minimum: 1, maximum: 5, default: 1, description: 'Provision several same-country numbers from one submission (1-5). The single verification covers all of them; each number is billed only when it activates. Numbers that fail to order are skipped (best-effort).' }
+                quantity: { type: integer, minimum: 1, maximum: 5, default: 1, description: 'Provision several same-country numbers from one submission (1-5). The single verification covers all of them; each number is billed only when it activates. Numbers that fail to order are skipped (best-effort). With `areaCode`, a quantity above that area''s live stock is rejected with a 400.' }
                 reuse: { type: boolean, description: Reuse a prior approved verification for this country (skips document/field collection; places the order immediately). }
                 reuseOptionId: { type: string, description: 'Which reusable verification to use (GET reusable.options[].id). The unambiguous selection key. Omitted = the approved default. No match = 409.' }
                 reuseFrom: { type: string, description: 'Legacy fallback for `reuseOptionId`: the source phone number (GET reusable.options[].fromPhoneNumber). Ambiguous when a number labels two verifications — prefer `reuseOptionId`. Omitted = the approved default. No match = 409.' }
