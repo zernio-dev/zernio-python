@@ -396,12 +396,12 @@ def register_generated_tools(mcp, _get_client):
         """List accounts
 
         Args:
-            profile_id: Filter accounts by profile ID
+            profile_id: Filter accounts by profile ID. Must be a valid ObjectId.
             platform: Filter accounts by platform (e.g. "instagram", "twitter").
             status: Filter accounts by connection status. `connected` returns healthy accounts; `disconnected` returns accounts that need reconnection (per the same reconnection check surfaced in the dashboard). Omit to return accounts in any status. When combined with page/limit, pagination totals reflect the filtered result set.
             include_over_limit: When true, includes accounts from over-limit profiles.
-            page: Page number (1-based). When provided with limit, enables server-side pagination. Omit for all accounts.
-            limit: Page size. Required alongside page for pagination."""
+            page: Page number (1-based). Must be provided together with limit to enable server-side pagination; sending only one of the two returns 400. Omit both for all accounts.
+            limit: Page size. Must be provided together with page; sending only one of the two returns 400."""
         client = _get_client()
         try:
             response = client.accounts.list_accounts(

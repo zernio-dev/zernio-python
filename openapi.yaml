@@ -13528,11 +13528,12 @@ paths:
       description: |
         Returns connected social accounts. Only includes accounts within the plan limit by default. Follower data requires analytics add-on.
         Supports optional server-side pagination via page/limit params. When omitted, returns all accounts (backward-compatible).
+        page and limit must be supplied together; out-of-range page/limit values are rejected with 400 rather than silently clamped.
       parameters:
         - name: profileId
           in: query
           schema: { type: string }
-          description: Filter accounts by profile ID
+          description: Filter accounts by profile ID. Must be a valid ObjectId.
         - name: platform
           in: query
           schema: { type: string }
@@ -13554,11 +13555,13 @@ paths:
         - name: page
           in: query
           schema: { type: integer, minimum: 1 }
-          description: Page number (1-based). When provided with limit, enables server-side pagination. Omit for all accounts.
+          description: |
+            Page number (1-based). Must be provided together with limit to enable server-side pagination; sending only one of the two returns 400. Omit both for all accounts.
         - name: limit
           in: query
           schema: { type: integer, minimum: 1, maximum: 100 }
-          description: Page size. Required alongside page for pagination.
+          description: |
+            Page size. Must be provided together with page; sending only one of the two returns 400.
       responses:
         '200':
           description: Accounts (with optional pagination)
@@ -13581,6 +13584,7 @@ paths:
                         profileUrl: "https://x.com/acme"
                         isActive: true
                     hasAnalyticsAccess: false
+        '400': { $ref: '#/components/responses/BadRequest' }
         '401': { $ref: '#/components/responses/Unauthorized' }
   /v1/accounts/follower-stats:
     get:
