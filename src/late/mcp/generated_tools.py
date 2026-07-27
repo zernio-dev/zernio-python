@@ -9157,6 +9157,7 @@ def register_generated_tools(mcp, _get_client):
     def lead_gen_list_leads(
         form_id: str | None = None,
         account_id: str | None = None,
+        ad_account_id: str | None = None,
         limit: int = 25,
         since: int | None = None,
         cursor: str | None = None,
@@ -9165,15 +9166,17 @@ def register_generated_tools(mcp, _get_client):
 
         Args:
             form_id: Filter to a single lead form.
-            account_id: Filter to a single connected account.
+            account_id: Filter to a single connected account. LinkedIn ads accounts switch to the live fetch.
+            ad_account_id: LinkedIn only: the LinkedIn ad account id whose responses to read (owner-scoped finder).
             limit
-            since: Unix seconds; only leads created at/after this Meta timestamp.
-            cursor: Keyset cursor from a previous response's pagination.cursor."""
+            since: Unix seconds; only leads created at/after this timestamp.
+            cursor: Keyset cursor from a previous response's pagination.cursor (Meta: AdLead id; LinkedIn: numeric start offset)."""
         client = _get_client()
         try:
             response = client.lead_gen.list_leads(
                 form_id=form_id,
                 account_id=account_id,
+                ad_account_id=ad_account_id,
                 limit=limit,
                 since=since,
                 cursor=cursor,
@@ -9191,18 +9194,25 @@ def register_generated_tools(mcp, _get_client):
         )
     )
     def lead_gen_list_lead_forms(
-        account_id: str, limit: int = 25, cursor: str | None = None
+        account_id: str,
+        ad_account_id: str | None = None,
+        limit: int = 25,
+        cursor: str | None = None,
     ) -> str:
         """List lead forms
 
         Args:
-            account_id: Connected facebook account id. (required)
+            account_id: Connected facebook or linkedin ads account id. (required)
+            ad_account_id: LinkedIn only: the LinkedIn ad account id (used to resolve the owning organization). Required for LinkedIn.
             limit
             cursor"""
         client = _get_client()
         try:
             response = client.lead_gen.list_lead_forms(
-                account_id=account_id, limit=limit, cursor=cursor
+                account_id=account_id,
+                ad_account_id=ad_account_id,
+                limit=limit,
+                cursor=cursor,
             )
             return _format_response(response)
         except Exception as e:
@@ -9219,8 +9229,8 @@ def register_generated_tools(mcp, _get_client):
     def lead_gen_create_lead_form(
         account_id: str,
         name: str,
-        questions: list[dict[str, Any]] | None,
         privacy_policy_url: str,
+        questions: list[dict[str, Any]] | None = None,
         privacy_policy_link_text: str | None = None,
         follow_up_action_url: str | None = None,
         locale: str | None = None,
@@ -9230,23 +9240,25 @@ def register_generated_tools(mcp, _get_client):
         thank_you_button_type: str | None = None,
         thank_you_website_url: str | None = None,
         is_optimized_for_quality: bool | None = None,
+        platform_specific_data: dict[str, Any] | None = None,
     ) -> str:
         """Create a lead form
 
         Args:
             account_id: (required)
             name: (required)
-            questions: (required)
+            questions: Deprecated (Meta legacy shape): use platformSpecificData.questions.
             privacy_policy_url: (required)
-            privacy_policy_link_text
-            follow_up_action_url
-            locale
-            thank_you_title
-            thank_you_body
-            thank_you_button_text
-            thank_you_button_type
-            thank_you_website_url
-            is_optimized_for_quality"""
+            privacy_policy_link_text: Deprecated: use platformSpecificData.privacyPolicyLinkText.
+            follow_up_action_url: Deprecated: use platformSpecificData.followUpActionUrl.
+            locale: Deprecated: use platformSpecificData.locale.
+            thank_you_title: Deprecated: use platformSpecificData.thankYouTitle.
+            thank_you_body: Deprecated: use platformSpecificData.thankYouBody.
+            thank_you_button_text: Deprecated: use platformSpecificData.thankYouButtonText.
+            thank_you_button_type: Deprecated: use platformSpecificData.thankYouButtonType.
+            thank_you_website_url: Deprecated: use platformSpecificData.thankYouWebsiteUrl.
+            is_optimized_for_quality: Deprecated: use platformSpecificData.isOptimizedForQuality.
+            platform_specific_data: Form content; the shape is selected by the accountId's platform. Unknown fields are a 400 (strict-parsed)."""
         client = _get_client()
         try:
             response = client.lead_gen.create_lead_form(
@@ -9263,6 +9275,7 @@ def register_generated_tools(mcp, _get_client):
                 thank_you_button_type=thank_you_button_type,
                 thank_you_website_url=thank_you_website_url,
                 is_optimized_for_quality=is_optimized_for_quality,
+                platform_specific_data=platform_specific_data,
             )
             return _format_response(response)
         except Exception as e:
@@ -9280,8 +9293,8 @@ def register_generated_tools(mcp, _get_client):
         """Get a lead form
 
         Args:
-            form_id: (required)
-            account_id: (required)"""
+            form_id: Numeric form id (Meta leadgen_form id or LinkedIn leadForm id). (required)
+            account_id: Connected facebook or linkedin ads account id (selects the platform). (required)"""
         client = _get_client()
         try:
             response = client.lead_gen.get_lead_form(
@@ -9303,8 +9316,8 @@ def register_generated_tools(mcp, _get_client):
         """Archive a lead form
 
         Args:
-            form_id: (required)
-            account_id: (required)"""
+            form_id: Numeric form id (Meta leadgen_form id or LinkedIn leadForm id). (required)
+            account_id: Connected facebook or linkedin ads account id (selects the platform). (required)"""
         client = _get_client()
         try:
             response = client.lead_gen.archive_lead_form(

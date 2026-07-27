@@ -59,6 +59,7 @@ class LeadGenResource:
         *,
         form_id: str | None = None,
         account_id: str | None = None,
+        ad_account_id: str | None = None,
         limit: int | None = 25,
         since: int | None = None,
         cursor: str | None = None,
@@ -67,6 +68,7 @@ class LeadGenResource:
         params = self._build_params(
             form_id=form_id,
             account_id=account_id,
+            ad_account_id=ad_account_id,
             limit=limit,
             since=since,
             cursor=cursor,
@@ -74,11 +76,17 @@ class LeadGenResource:
         return self._client._get("/v1/ads/leads", params=params)
 
     def list_lead_forms(
-        self, account_id: str, *, limit: int | None = 25, cursor: str | None = None
+        self,
+        account_id: str,
+        *,
+        ad_account_id: str | None = None,
+        limit: int | None = 25,
+        cursor: str | None = None,
     ) -> dict[str, Any]:
         """List lead forms"""
         params = self._build_params(
             account_id=account_id,
+            ad_account_id=ad_account_id,
             limit=limit,
             cursor=cursor,
         )
@@ -88,9 +96,9 @@ class LeadGenResource:
         self,
         account_id: str,
         name: str,
-        questions: list[dict[str, Any]],
         privacy_policy_url: str,
         *,
+        questions: list[dict[str, Any]] | None = None,
         privacy_policy_link_text: str | None = None,
         follow_up_action_url: str | None = None,
         locale: str | None = None,
@@ -100,6 +108,7 @@ class LeadGenResource:
         thank_you_button_type: str | None = None,
         thank_you_website_url: str | None = None,
         is_optimized_for_quality: bool | None = None,
+        platform_specific_data: Any | None = None,
     ) -> dict[str, Any]:
         """Create a lead form"""
         payload = self._build_payload(
@@ -116,6 +125,7 @@ class LeadGenResource:
             thank_you_button_type=thank_you_button_type,
             thank_you_website_url=thank_you_website_url,
             is_optimized_for_quality=is_optimized_for_quality,
+            platform_specific_data=platform_specific_data,
         )
         return self._client._post("/v1/ads/lead-forms", data=payload)
 
@@ -168,6 +178,7 @@ class LeadGenResource:
         *,
         form_id: str | None = None,
         account_id: str | None = None,
+        ad_account_id: str | None = None,
         limit: int | None = 25,
         since: int | None = None,
         cursor: str | None = None,
@@ -176,6 +187,7 @@ class LeadGenResource:
         params = self._build_params(
             form_id=form_id,
             account_id=account_id,
+            ad_account_id=ad_account_id,
             limit=limit,
             since=since,
             cursor=cursor,
@@ -183,11 +195,17 @@ class LeadGenResource:
         return await self._client._aget("/v1/ads/leads", params=params)
 
     async def alist_lead_forms(
-        self, account_id: str, *, limit: int | None = 25, cursor: str | None = None
+        self,
+        account_id: str,
+        *,
+        ad_account_id: str | None = None,
+        limit: int | None = 25,
+        cursor: str | None = None,
     ) -> dict[str, Any]:
         """List lead forms (async)"""
         params = self._build_params(
             account_id=account_id,
+            ad_account_id=ad_account_id,
             limit=limit,
             cursor=cursor,
         )
@@ -197,9 +215,9 @@ class LeadGenResource:
         self,
         account_id: str,
         name: str,
-        questions: list[dict[str, Any]],
         privacy_policy_url: str,
         *,
+        questions: list[dict[str, Any]] | None = None,
         privacy_policy_link_text: str | None = None,
         follow_up_action_url: str | None = None,
         locale: str | None = None,
@@ -209,6 +227,7 @@ class LeadGenResource:
         thank_you_button_type: str | None = None,
         thank_you_website_url: str | None = None,
         is_optimized_for_quality: bool | None = None,
+        platform_specific_data: Any | None = None,
     ) -> dict[str, Any]:
         """Create a lead form (async)"""
         payload = self._build_payload(
@@ -225,6 +244,7 @@ class LeadGenResource:
             thank_you_button_type=thank_you_button_type,
             thank_you_website_url=thank_you_website_url,
             is_optimized_for_quality=is_optimized_for_quality,
+            platform_specific_data=platform_specific_data,
         )
         return await self._client._apost("/v1/ads/lead-forms", data=payload)
 

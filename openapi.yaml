@@ -37154,18 +37154,25 @@ paths:
     get:
       operationId: listLeads
       tags: ["Lead Gen"]
-      x-platforms: ["meta"]
+      x-platforms: ["meta", "linkedin"]
       summary: List submitted leads
       description: >
-        Returns persisted Meta Lead Gen leads for your team, newest-first, with
-        keyset pagination on `cursor`. Leads are ingested in real time from the
-        `leadgen` webhook. Requires the Ads add-on.
+        Returns submitted Lead Gen leads for your team, newest-first, with
+        keyset pagination on `cursor`. For Meta (default) leads are served from
+        the persisted cache, ingested in real time from the `leadgen` webhook.
+        When `accountId` is a LinkedIn ads account, leads are fetched live from
+        LinkedIn's `leadFormResponses` (LinkedIn has no webhook and enforces
+        90-day retention, so nothing is persisted) and `adAccountId` is required.
+        Reading LinkedIn responses needs the `r_marketing_leadgen_automation`
+        permission; accounts connected before it was added must reconnect.
+        Requires the Ads add-on.
       parameters:
         - { name: formId, in: query, schema: { type: string }, description: Filter to a single lead form. }
-        - { name: accountId, in: query, schema: { type: string }, description: Filter to a single connected account. }
+        - { name: accountId, in: query, schema: { type: string }, description: Filter to a single connected account. LinkedIn ads accounts switch to the live fetch. }
+        - { name: adAccountId, in: query, schema: { type: string }, description: "LinkedIn only: the LinkedIn ad account id whose responses to read (owner-scoped finder)." }
         - { name: limit, in: query, schema: { type: integer, minimum: 1, maximum: 100, default: 25 } }
-        - { name: since, in: query, schema: { type: integer }, description: Unix seconds; only leads created at/after this Meta timestamp. }
-        - { name: cursor, in: query, schema: { type: string }, description: Keyset cursor from a previous response's pagination.cursor. }
+        - { name: since, in: query, schema: { type: integer }, description: Unix seconds; only leads created at/after this timestamp. }
+        - { name: cursor, in: query, schema: { type: string }, description: "Keyset cursor from a previous response's pagination.cursor (Meta: AdLead id; LinkedIn: numeric start offset)." }
       responses:
         '200':
           description: Lead list.
@@ -37204,11 +37211,16 @@ paths:
     get:
       operationId: listLeadForms
       tags: ["Lead Gen"]
-      x-platforms: ["meta"]
+      x-platforms: ["meta", "linkedin"]
       summary: List lead forms
-      description: Lists the Lead Gen forms owned by the connected Facebook Page. Requires the Ads add-on.
+      description: >
+        Lists the Lead Gen forms owned by the account. Meta: forms on the
+        connected Facebook Page. LinkedIn: forms owned by the ad account's
+        Company Page — pass `adAccountId` (LinkedIn forms are org-owned).
+        Requires the Ads add-on.
       parameters:
-        - { name: accountId, in: query, required: true, schema: { type: string }, description: Connected facebook account id. }
+        - { name: accountId, in: query, required: true, schema: { type: string }, description: Connected facebook or linkedin ads account id. }
+        - { name: adAccountId, in: query, schema: { type: string }, description: "LinkedIn only: the LinkedIn ad account id (used to resolve the owning organization). Required for LinkedIn." }
         - { name: limit, in: query, schema: { type: integer, minimum: 1, maximum: 100, default: 25 } }
         - { name: cursor, in: query, schema: { type: string } }
       responses:
@@ -37227,26 +37239,36 @@ paths:
     post:
       operationId: createLeadForm
       tags: ["Lead Gen"]
-      x-platforms: ["meta"]
+      x-platforms: ["meta", "linkedin"]
       summary: Create a lead form
       description: >
-        Creates a Lead Gen form on the connected Facebook Page (POST
-        /{page-id}/leadgen_forms). NOT idempotent — a retry creates a second
-        form. Prefilled question types (EMAIL, PHONE, FULL_NAME, …) must omit
-        label/key; CUSTOM questions require both. Requires the Ads add-on.
+        Creates a Lead Gen form. The form content goes inside
+        `platformSpecificData` for both platforms (the shape is selected by the
+        accountId's platform). Meta: created on the connected Facebook Page
+        (POST /{page-id}/leadgen_forms); the old top-level Meta fields
+        (questions, thankYou*, contextCard, …) are DEPRECATED but still
+        accepted while platformSpecificData is absent — mixing both shapes is
+        a 400. LinkedIn: created on the ad account's Company Page. NOT
+        idempotent — a retry creates a second form. Meta prefilled question
+        types (EMAIL, PHONE, FULL_NAME, …) must omit label/key; CUSTOM
+        questions require both. LinkedIn exposes only free-text and
+        multiple-choice questions via API (prefilled-from-profile fields are
+        Campaign Manager UI-only). Requires the Ads add-on.
       requestBody:
         required: true
         content:
           application/json:
             schema:
               type: object
-              required: [accountId, name, questions, privacyPolicyUrl]
+              required: [accountId, name, privacyPolicyUrl]
               properties:
                 accountId: { type: string }
                 name: { type: string, maxLength: 200 }
                 questions:
                   type: array
                   minItems: 1
+                  deprecated: true
+                  description: "Deprecated (Meta legacy shape): use platformSpecificData.questions."
                   items:
                     type: object
                     required: [type]
@@ -37257,15 +37279,103 @@ paths:
                       options: { type: array, items: { type: object, properties: { key: { type: string }, value: { type: string } } } }
                       inline_context: { type: string }
                 privacyPolicyUrl: { type: string, format: uri }
-                privacyPolicyLinkText: { type: string, maxLength: 70 }
-                followUpActionUrl: { type: string, format: uri }
-                locale: { type: string, example: EN_US }
-                thankYouTitle: { type: string }
-                thankYouBody: { type: string }
-                thankYouButtonText: { type: string }
-                thankYouButtonType: { type: string, example: VIEW_WEBSITE }
-                thankYouWebsiteUrl: { type: string, format: uri }
-                isOptimizedForQuality: { type: boolean }
+                privacyPolicyLinkText: { type: string, maxLength: 70, deprecated: true, description: "Deprecated: use platformSpecificData.privacyPolicyLinkText." }
+                followUpActionUrl: { type: string, format: uri, deprecated: true, description: "Deprecated: use platformSpecificData.followUpActionUrl." }
+                locale: { type: string, example: EN_US, deprecated: true, description: "Deprecated: use platformSpecificData.locale." }
+                thankYouTitle: { type: string, deprecated: true, description: "Deprecated: use platformSpecificData.thankYouTitle." }
+                thankYouBody: { type: string, deprecated: true, description: "Deprecated: use platformSpecificData.thankYouBody." }
+                thankYouButtonText: { type: string, deprecated: true, description: "Deprecated: use platformSpecificData.thankYouButtonText." }
+                thankYouButtonType: { type: string, example: VIEW_WEBSITE, deprecated: true, description: "Deprecated: use platformSpecificData.thankYouButtonType." }
+                thankYouWebsiteUrl: { type: string, format: uri, deprecated: true, description: "Deprecated: use platformSpecificData.thankYouWebsiteUrl." }
+                isOptimizedForQuality: { type: boolean, deprecated: true, description: "Deprecated: use platformSpecificData.isOptimizedForQuality." }
+                platformSpecificData:
+                  description: "Form content; the shape is selected by the accountId's platform. Unknown fields are a 400 (strict-parsed)."
+                  oneOf:
+                    - type: object
+                      title: MetaLeadFormPlatformData
+                      required: [questions]
+                      properties:
+                        questions:
+                          type: array
+                          minItems: 1
+                          items:
+                            type: object
+                            required: [type]
+                            properties:
+                              type: { type: string, description: "EMAIL, PHONE, FULL_NAME, FIRST_NAME, LAST_NAME, CUSTOM, …" }
+                              key: { type: string, description: "CUSTOM questions only." }
+                              label: { type: string, description: "CUSTOM questions only." }
+                              options: { type: array, items: { type: object, properties: { key: { type: string }, value: { type: string } } } }
+                              inline_context: { type: string }
+                        privacyPolicyLinkText: { type: string, maxLength: 70 }
+                        followUpActionUrl: { type: string, format: uri }
+                        locale: { type: string, example: EN_US }
+                        thankYouTitle: { type: string }
+                        thankYouBody: { type: string }
+                        thankYouButtonText: { type: string }
+                        thankYouButtonType: { type: string, example: VIEW_WEBSITE }
+                        thankYouWebsiteUrl: { type: string, format: uri }
+                        isOptimizedForQuality: { type: boolean }
+                        formType: { type: string, enum: [MORE_VOLUME, HIGHER_INTENT, RICH_CREATIVE] }
+                        blockDisplayForNonTargetedViewer: { type: boolean }
+                        allowOrganicLeadGen: { type: boolean }
+                        questionPageCustomHeadline: { type: string }
+                        contextCard:
+                          type: object
+                          properties:
+                            title: { type: string }
+                            content: { type: array, items: { type: string } }
+                            style: { type: string, enum: [LIST_STYLE, PARAGRAPH_STYLE] }
+                            buttonText: { type: string }
+                            coverPhoto: { type: string }
+                    - type: object
+                      title: LinkedInLeadFormPlatformData
+                      required: [adAccountId, headline, description, questions]
+                      properties:
+                        adAccountId: { type: string, description: "LinkedIn ad account id (resolves the owning organization)." }
+                        headline: { type: string, maxLength: 255 }
+                        description: { type: string, maxLength: 1500 }
+                        state: { type: string, enum: [DRAFT, PUBLISHED], description: "Defaults to DRAFT." }
+                        locale: { type: object, properties: { country: { type: string }, language: { type: string } } }
+                        consents:
+                          type: array
+                          items:
+                            type: object
+                            required: [description]
+                            properties:
+                              description: { type: string }
+                              required: { type: boolean, description: "Whether the viewer must tick this consent to submit. Defaults to false.", default: false }
+                        questions:
+                          type: array
+                          minItems: 1
+                          items:
+                            oneOf:
+                              - type: object
+                                required: [kind, name, question]
+                                properties:
+                                  kind: { type: string, enum: [text] }
+                                  name: { type: string }
+                                  question: { type: string }
+                                  required: { type: boolean }
+                                  responseEditable: { type: boolean }
+                                  maxResponseLength: { type: integer, description: "Defaults to 300 on LinkedIn's side." }
+                              - type: object
+                                required: [kind, name, question, choices]
+                                properties:
+                                  kind: { type: string, enum: [multipleChoice] }
+                                  name: { type: string }
+                                  question: { type: string }
+                                  required: { type: boolean }
+                                  responseEditable: { type: boolean }
+                                  choices:
+                                    type: array
+                                    minItems: 1
+                                    items:
+                                      type: object
+                                      required: [id, text]
+                                      properties:
+                                        id: { type: integer }
+                                        text: { type: string }
       responses:
         '200':
           description: Created form.
@@ -37283,11 +37393,11 @@ paths:
     get:
       operationId: getLeadForm
       tags: ["Lead Gen"]
-      x-platforms: ["meta"]
+      x-platforms: ["meta", "linkedin"]
       summary: Get a lead form
       parameters:
-        - { name: formId, in: path, required: true, schema: { type: string } }
-        - { name: accountId, in: query, required: true, schema: { type: string } }
+        - { name: formId, in: path, required: true, schema: { type: string }, description: "Numeric form id (Meta leadgen_form id or LinkedIn leadForm id)." }
+        - { name: accountId, in: query, required: true, schema: { type: string }, description: "Connected facebook or linkedin ads account id (selects the platform)." }
       responses:
         '200':
           description: Form metadata.
@@ -37298,12 +37408,12 @@ paths:
     delete:
       operationId: archiveLeadForm
       tags: ["Lead Gen"]
-      x-platforms: ["meta"]
+      x-platforms: ["meta", "linkedin"]
       summary: Archive a lead form
-      description: Meta has no hard delete for forms; this archives the form (status=ARCHIVED).
+      description: "Neither platform hard-deletes a form; this archives it (Meta status=ARCHIVED; LinkedIn state=ARCHIVED via PARTIAL_UPDATE)."
       parameters:
-        - { name: formId, in: path, required: true, schema: { type: string } }
-        - { name: accountId, in: query, required: true, schema: { type: string } }
+        - { name: formId, in: path, required: true, schema: { type: string }, description: "Numeric form id (Meta leadgen_form id or LinkedIn leadForm id)." }
+        - { name: accountId, in: query, required: true, schema: { type: string }, description: "Connected facebook or linkedin ads account id (selects the platform)." }
       responses:
         '200':
           description: Archived.
