@@ -19512,7 +19512,7 @@ paths:
                 total: 28
                 breakdown: { like: 10, love: 5, haha: 4, wow: 3, sad: 2, angry: 1, care: 3 }
                 lastUpdated: "2026-07-09T09:43:50.000Z"
-        '400': { description: Not a Facebook account or missing postId parameter }
+        '400': { description: 'Invalid accountId format, not a Facebook account, or missing postId parameter' }
         '401': { $ref: '#/components/responses/Unauthorized' }
         '404': { description: Account not found }
         '502': { description: Facebook rejected the request }
