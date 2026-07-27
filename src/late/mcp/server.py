@@ -32,13 +32,13 @@ from typing import Any
 import httpx
 from fastmcp import FastMCP
 from fastmcp.server.dependencies import get_access_token
-from fastmcp.server.transforms.search import BM25SearchTransform
 from mcp.types import ToolAnnotations
 
 from late import Late, MediaType, PostStatus
 
 from .auth import build_auth_provider
 from .tool_definitions import TOOL_DEFINITIONS
+from .transforms import LegacyAdsAliasTransform, LenientCallToolSearchTransform
 
 # Context variable to store the Zernio API key for the current connection
 _zernio_api_key: ContextVar[str | None] = ContextVar("zernio_api_key", default=None)
@@ -51,12 +51,12 @@ _CACHE_TTL_HOURS = 24
 # Always-visible core: the 20 hand-written ergonomic tools (guardrails +
 # LLM-shaped args, preferred over their raw generated twins) plus the generated
 # tools central to working on a profile — posting, the scheduling queue,
-# pre-publish validation, account health, cross-platform analytics basics, and
-# engagement on published posts. The remaining ~430 generated tools (messaging
-# suite, ads, connect, platform-specific analytics, ...) sit behind the BM25
-# tool-search transform (search_tools / call_tool), so clients see ~51 tools up
-# front instead of 481 — small enough that clients which cap or truncate large
-# tool lists show them all.
+# pre-publish validation, account health, cross-platform analytics basics,
+# engagement on published posts, and the ads read surface. The remaining ~420
+# generated tools (ads writes, messaging suite, connect, platform-specific
+# analytics, ...) sit behind the BM25 tool-search transform (search_tools /
+# call_tool), so clients see ~55 tools up front instead of 481 — small enough
+# that clients which cap or truncate large tool lists show them all.
 _PINNED_TOOLS = [
     # Hand-written ergonomic tools
     "accounts_list", "accounts_get",
@@ -86,6 +86,12 @@ _PINNED_TOOLS = [
     # Campaign tags & usage
     "tracking_tags_list_tracking_tags", "tracking_tags_get_tracking_tag_stats",
     "usage_get_usage",
+    # Ads read surface. Without these pinned, the whole ads capability is
+    # invisible to clients that never think to call search_tools (observed:
+    # chat concluding "Zernio doesn't support Google Ads"). Writes stay
+    # behind search.
+    "ad_campaigns_get_ad_tree", "ad_campaigns_list_ad_campaigns",
+    "ad_campaigns_list_ads", "ad_insights_get_campaign_analytics",
 ]
 
 # Initialize MCP server
@@ -100,6 +106,18 @@ Available tools are prefixed by resource:
 - posts_*    : Create, list, update, delete posts
 - media_*    : Upload images and videos
 - docs_*     : Search Zernio API documentation
+- ad_campaigns_* / ad_insights_* : Ads — campaign tree, ads, analytics
+
+ONLY A CORE SUBSET OF TOOLS IS LISTED UP FRONT. Hundreds more are
+available on demand — full ads management (all platforms: Meta, Google,
+LinkedIn, TikTok), messaging/inbox, account connect flows,
+platform-specific analytics, and more:
+
+  1. search_tools("<what you need>") returns matching tool definitions.
+  2. call_tool(name, arguments) executes any tool found that way.
+
+If a capability seems missing from the visible tool list, ALWAYS call
+search_tools before concluding it does not exist.
 
 MULTI-ACCOUNT WORKFLOW (agencies, multi-client setups):
 When a user has more than one account on the same platform, you MUST
@@ -118,9 +136,14 @@ of silently picking the first matching account has been removed.
     # Resource-server auth: validates the bearer against the Zernio API and
     # auto-serves RFC 9728 protected-resource discovery (see late.mcp.auth).
     auth=build_auth_provider(),
-    # Collapse the ~383 generated tools behind search_tools/call_tool; the
-    # pinned ergonomic tools remain always-visible.
-    transforms=[BM25SearchTransform(always_visible=_PINNED_TOOLS, max_results=8)],
+    # Collapse the generated long tail behind search_tools/call_tool; the
+    # pinned tools remain always-visible. The lenient variant accepts
+    # JSON-stringified `arguments` (broken-client defense) and the alias
+    # transform keeps pre-re-tag `ads_*` tool names callable.
+    transforms=[
+        LenientCallToolSearchTransform(always_visible=_PINNED_TOOLS, max_results=8),
+        LegacyAdsAliasTransform(),
+    ],
 )
 
 
