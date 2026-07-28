@@ -18494,7 +18494,7 @@ paths:
                       saves: { type: integer, description: Times the post was saved (personal accounts only; 0 for organization accounts) }
                       sends: { type: integer, description: Times the post was sent via LinkedIn messaging (personal accounts only; 0 for organization accounts) }
                       clicks: { type: integer, description: Clicks on the post (organization accounts only) }
-                      views: { type: integer, description: 'Video views (video posts only). Organization accounts require the connected LinkedIn user to be an ADMINISTRATOR of the page; CONTENT_ADMINISTRATOR returns 0.' }
+                      views: { type: integer, description: Video views (video posts only) }
                       engagementRate: { type: number, description: Engagement rate as percentage }
                   lastUpdated: { type: string, format: date-time }
               example:
