@@ -39028,7 +39028,7 @@ paths:
           description: Required as query OR in JSON body.
       responses:
         '204': { description: Soft-deleted. }
-        '400': { description: adAccountId missing. }
+        '400': { description: 'adAccountId missing, or accountId is not a valid id.' }
         '401': { $ref: '#/components/responses/Unauthorized' }
         '403': { description: Ads add-on or LinkedIn reconnect required. }
         '404': { description: Account or destination not found. }
@@ -39184,8 +39184,9 @@ paths:
                         reason: { type: string }
         '400':
           description: |
-            Validation error: missing `adAccountId` or `campaignIds`, or
-            campaignIds exceeds 100 entries per request.
+            Validation error: missing `adAccountId` or `campaignIds`,
+            campaignIds exceeds 100 entries per request, or `accountId` is not
+            a valid id.
         '401': { $ref: '#/components/responses/Unauthorized' }
         '403': { description: Ads add-on or LinkedIn reconnect required. }
         '404': { description: Account or destination not found. }
