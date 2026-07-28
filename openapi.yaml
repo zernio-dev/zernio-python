@@ -28193,8 +28193,9 @@ paths:
                         ndc: { type: string, description: 'Area code (national destination code), e.g. "11".' }
                         name: { type: string, description: 'Area name: "City, ST" for US/CA (e.g. "Miami, FL"), city otherwise (e.g. "Sao Paulo").' }
                         count: { type: integer, description: 'Numbers available in this area: country-wide count for US/CA, numbers seen on the latest inventory page otherwise.' }
-        '400': { description: Country not offerable }
+        '400': { description: 'Country not offerable, or the inventory provider rejected the lookup (its 4xx status is forwarded as-is).' }
         '401': { $ref: '#/components/responses/Unauthorized' }
+        '502': { description: 'The inventory provider was unreachable or returned an unclassified error.' }
 
   /v1/whatsapp/phone-numbers:
     get:
@@ -28565,8 +28566,9 @@ paths:
                         ndc: { type: string, description: 'Area code (national destination code), e.g. "11".' }
                         name: { type: string, description: 'Area name: "City, ST" for US/CA (e.g. "Miami, FL"), city otherwise (e.g. "Sao Paulo").' }
                         count: { type: integer, description: 'Numbers available in this area: country-wide count for US/CA, numbers seen on the latest inventory page otherwise.' }
-        '400': { description: Country not offerable }
+        '400': { description: 'Country not offerable, or the inventory provider rejected the lookup (its 4xx status is forwarded as-is).' }
         '401': { $ref: '#/components/responses/Unauthorized' }
+        '502': { description: 'The inventory provider was unreachable or returned an unclassified error.' }
 
   /v1/phone-numbers/kyc:
     get:
