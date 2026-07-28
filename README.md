@@ -783,6 +783,7 @@ Both `from zernio import ...` and `from late import ...` work identically. The `
 | `twitter_engagement.follow_user()` | Follow a user |
 | `twitter_engagement.remove_bookmark()` | Remove bookmark |
 | `twitter_engagement.retweet_post()` | Retweet a post |
+| `twitter_engagement.search_tweets()` | Search recent tweets |
 | `twitter_engagement.undo_retweet()` | Undo retweet |
 | `twitter_engagement.unfollow_user()` | Unfollow a user |
 

@@ -10,6 +10,8 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Any
 
 if TYPE_CHECKING:
+    from datetime import datetime
+
     from ..client.base import BaseClient
 
 
@@ -102,6 +104,33 @@ class TwitterEngagementResource:
         )
         return self._client._delete("/v1/twitter/follow", params=params)
 
+    def search_tweets(
+        self,
+        account_id: str,
+        query: str,
+        *,
+        limit: int | None = 10,
+        since_id: str | None = None,
+        until_id: str | None = None,
+        start_time: datetime | str | None = None,
+        end_time: datetime | str | None = None,
+        cursor: str | None = None,
+        sort_order: str | None = "recency",
+    ) -> dict[str, Any]:
+        """Search recent tweets"""
+        params = self._build_params(
+            account_id=account_id,
+            query=query,
+            limit=limit,
+            since_id=since_id,
+            until_id=until_id,
+            start_time=start_time,
+            end_time=end_time,
+            cursor=cursor,
+            sort_order=sort_order,
+        )
+        return self._client._get("/v1/twitter/search", params=params)
+
     async def aretweet_post(self, account_id: str, tweet_id: str) -> dict[str, Any]:
         """Retweet a post (async)"""
         payload = self._build_payload(
@@ -153,3 +182,30 @@ class TwitterEngagementResource:
             target_user_id=target_user_id,
         )
         return await self._client._adelete("/v1/twitter/follow", params=params)
+
+    async def asearch_tweets(
+        self,
+        account_id: str,
+        query: str,
+        *,
+        limit: int | None = 10,
+        since_id: str | None = None,
+        until_id: str | None = None,
+        start_time: datetime | str | None = None,
+        end_time: datetime | str | None = None,
+        cursor: str | None = None,
+        sort_order: str | None = "recency",
+    ) -> dict[str, Any]:
+        """Search recent tweets (async)"""
+        params = self._build_params(
+            account_id=account_id,
+            query=query,
+            limit=limit,
+            since_id=since_id,
+            until_id=until_id,
+            start_time=start_time,
+            end_time=end_time,
+            cursor=cursor,
+            sort_order=sort_order,
+        )
+        return await self._client._aget("/v1/twitter/search", params=params)

@@ -13094,6 +13094,54 @@ def register_generated_tools(mcp, _get_client):
         except Exception as e:
             return f"Error: {e}"
 
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Search recent tweets",
+            readOnlyHint=True,
+            destructiveHint=False,
+            openWorldHint=False,
+        )
+    )
+    def twitter_engagement_search_tweets(
+        account_id: str,
+        query: str,
+        limit: int = 10,
+        since_id: str | None = None,
+        until_id: str | None = None,
+        start_time: str | None = None,
+        end_time: str | None = None,
+        cursor: str | None = None,
+        sort_order: str = "recency",
+    ) -> str:
+        """Search recent tweets
+
+        Args:
+            account_id: The social account ID (required)
+            query: X search query, max 512 characters. Operators are passed through unchanged; X rejects malformed queries with a 400. (required)
+            limit: Results per page. X requires a minimum of 10; values below 10 are rejected.
+            since_id: Only return tweets with an ID greater than (more recent than) this numeric tweet ID. Non-numeric values are rejected with 400.
+            until_id: Only return tweets with an ID less than (older than) this numeric tweet ID. Non-numeric values are rejected with 400.
+            start_time: Oldest UTC timestamp (ISO 8601, inclusive), within the last 7 days
+            end_time: Newest UTC timestamp (ISO 8601, exclusive), within the last 7 days
+            cursor: Pagination cursor from a previous response
+            sort_order"""
+        client = _get_client()
+        try:
+            response = client.twitter_engagement.search_tweets(
+                account_id=account_id,
+                query=query,
+                limit=limit,
+                since_id=since_id,
+                until_id=until_id,
+                start_time=start_time,
+                end_time=end_time,
+                cursor=cursor,
+                sort_order=sort_order,
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
     # USAGE
 
     @mcp.tool(
