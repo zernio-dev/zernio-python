@@ -35416,6 +35416,7 @@ paths:
                   businessCenters:
                     type: array
                     items: { $ref: '#/components/schemas/BusinessCenter' }
+        '400': { $ref: '#/components/responses/BadRequest' }
         '401': { $ref: '#/components/responses/Unauthorized' }
         '404': { description: TikTok account not found }
         '422': { description: TikTok Ads not connected }
@@ -37230,6 +37231,7 @@ paths:
                     properties:
                       hasMore: { type: boolean }
                       cursor: { type: [string, "null"] }
+        '400': { $ref: '#/components/responses/BadRequest' }
         '401': { $ref: '#/components/responses/Unauthorized' }
         '403': { description: Ads add-on required. }
 
@@ -37260,6 +37262,7 @@ paths:
                   status: { type: string, example: success }
                   forms: { type: array, items: { type: object } }
                   pagination: { type: object, properties: { hasMore: { type: boolean }, cursor: { type: [string, "null"] } } }
+        '400': { $ref: '#/components/responses/BadRequest' }
         '401': { $ref: '#/components/responses/Unauthorized' }
         '403': { description: Ads add-on required. }
     post:
@@ -37412,6 +37415,7 @@ paths:
                 properties:
                   status: { type: string, example: success }
                   form: { type: object, properties: { id: { type: string }, name: { type: string } } }
+        '400': { $ref: '#/components/responses/BadRequest' }
         '401': { $ref: '#/components/responses/Unauthorized' }
         '403': { description: Ads add-on required. }
 
@@ -37430,6 +37434,7 @@ paths:
           content:
             application/json:
               schema: { type: object, properties: { status: { type: string }, form: { type: object } } }
+        '400': { $ref: '#/components/responses/BadRequest' }
         '401': { $ref: '#/components/responses/Unauthorized' }
     delete:
       operationId: archiveLeadForm
@@ -37446,6 +37451,7 @@ paths:
           content:
             application/json:
               schema: { type: object, properties: { status: { type: string }, formId: { type: string }, archived: { type: boolean } } }
+        '400': { $ref: '#/components/responses/BadRequest' }
         '401': { $ref: '#/components/responses/Unauthorized' }
 
   /v1/ads/lead-forms/{formId}/leads:
@@ -37484,6 +37490,7 @@ paths:
                         fields: { type: object, additionalProperties: { type: string } }
                         fieldData: { type: array, items: { type: object } }
                   pagination: { type: object, properties: { hasMore: { type: boolean }, cursor: { type: [string, "null"] } } }
+        '400': { $ref: '#/components/responses/BadRequest' }
         '401': { $ref: '#/components/responses/Unauthorized' }
 
   /v1/ads/lead-forms/{formId}/test-leads:
@@ -37522,6 +37529,7 @@ paths:
           content:
             application/json:
               schema: { type: object, properties: { status: { type: string }, testLead: { type: object, properties: { id: { type: string } } } } }
+        '400': { $ref: '#/components/responses/BadRequest' }
         '401': { $ref: '#/components/responses/Unauthorized' }
 
   /v1/ads/images:
