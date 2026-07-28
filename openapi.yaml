@@ -26619,6 +26619,11 @@ paths:
                     directLending: { type: boolean }
                     privacyPolicyLink: { type: string, description: "Link to your privacy policy. Recommended: reviewers check that it says mobile information is not sold or shared with third parties for promotional purposes. A bare domain is normalized to https://." }
                     termsAndConditionsLink: { type: string, description: "Link to your terms & conditions. A bare domain is normalized to https://." }
+                messagingBrandName:
+                  type: string
+                  minLength: 2
+                  maxLength: 60
+                  description: 'DBA / trade name used to brand message content (samples and auto-replies) when it differs from the legal name, e.g. a sole proprietor texting under a business name. The legal `brand.displayName` is still what the carrier vets.'
                 wizardValues:
                   type: object
                   additionalProperties: { type: string }
@@ -26717,6 +26722,60 @@ paths:
         '400': { $ref: '#/components/responses/BadRequest' }
         '401': { $ref: '#/components/responses/Unauthorized' }
 
+  /v1/sms/registrations/preflight:
+    post:
+      operationId: preflightSmsRegistration
+      tags: [SMS]
+      summary: Pre-check a carrier registration
+      description: |
+        Dry-run of `POST /v1/sms/registrations` for 10DLC: validates and
+        composes the exact brand/campaign payloads a submission would store
+        (branding, disclosures, auto-replies), runs deterministic compliance
+        lints plus an AI reviewer over them, and returns the findings WITHOUT
+        creating anything. Use it to fix issues before submitting; `block`
+        severity findings indicate a near-certain carrier rejection.
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [registrationType, brand, campaign]
+              properties:
+                registrationType: { type: string, enum: [standard_10dlc, sole_prop_10dlc] }
+                phoneNumbers: { type: array, items: { type: string } }
+                brand: { type: object, description: 'Same shape as the registration `brand`.' }
+                campaign: { type: object, description: 'Same shape as the registration `campaign`.' }
+                messagingBrandName: { type: string, minLength: 2, maxLength: 60 }
+      responses:
+        '200':
+          description: Composed payloads + findings.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  composed:
+                    type: object
+                    description: 'The exact payloads a submission would store (post-branding, disclosures appended, auto-replies generated).'
+                    properties:
+                      brand: { type: object }
+                      campaign: { type: object }
+                  advisories:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        field: { type: [string, "null"], description: 'The payload field the finding is about, when attributable.' }
+                        code: { type: [string, "null"], description: 'Stable rule id for deterministic findings; absent on AI findings.' }
+                        concern: { type: string }
+                        severity: { type: string, enum: [block, warn] }
+                  verdict: { type: string, enum: [pass, warn, fail, unreviewed] }
+                  aiUnavailable: { type: boolean, description: 'True when the AI portion of the check could not run; advisories then contain only deterministic findings.' }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
   /v1/sms/registrations/{id}:
     delete:
       operationId: deactivateSmsRegistration
@@ -26893,6 +26952,50 @@ paths:
         '400': { description: 'Malformed `id`, or the registration has no campaign to appeal (fix the brand and re-verify instead).' }
         '401': { $ref: '#/components/responses/Unauthorized' }
         '404': { description: Registration not found }
+
+  /v1/sms/registrations/{id}/respond:
+    post:
+      operationId: respondToSmsRegistrationReview
+      tags: [SMS]
+      summary: Reply to a change request
+      description: |
+        Replies to a reviewer change request on a registration in
+        `changes_requested` state: a note, hosted document URLs (from
+        `POST /v1/sms/opt-in-proof`), or both, sent together. The registration
+        returns to `requested` (back in review) — no need to resubmit the
+        whole registration. To change the submitted brand/campaign fields
+        themselves, resubmit via `POST /v1/sms/registrations` with
+        `resubmitRequestId` instead.
+      security:
+        - bearerAuth: []
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string } }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                note: { type: string, maxLength: 2000, description: 'Answer for the reviewer. Required when no files are sent.' }
+                files:
+                  type: array
+                  maxItems: 5
+                  items: { type: string }
+                  description: 'Hosted document URLs returned by POST /v1/sms/opt-in-proof.'
+      responses:
+        '200':
+          description: Reply recorded; the registration is back in review.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status: { type: string, enum: [requested] }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404': { description: Registration not found }
+        '409': { description: Registration is not waiting on changes }
 
   /v1/sms/opt-in-proof:
     post:

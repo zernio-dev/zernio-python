@@ -125,6 +125,7 @@ class SmsResource:
         *,
         brand: dict[str, Any] | None = None,
         campaign: dict[str, Any] | None = None,
+        messaging_brand_name: str | None = None,
         wizard_values: dict[str, Any] | None = None,
         resubmit_request_id: str | None = None,
         toll_free: dict[str, Any] | None = None,
@@ -135,6 +136,7 @@ class SmsResource:
             phone_numbers=phone_numbers,
             brand=brand,
             campaign=campaign,
+            messaging_brand_name=messaging_brand_name,
             wizard_values=wizard_values,
             resubmit_request_id=resubmit_request_id,
             toll_free=toll_free,
@@ -149,6 +151,25 @@ class SmsResource:
             include_deactivated=include_deactivated,
         )
         return self._client._get("/v1/sms/registrations", params=params)
+
+    def preflight_sms_registration(
+        self,
+        registration_type: str,
+        brand: dict[str, Any],
+        campaign: dict[str, Any],
+        *,
+        phone_numbers: list[str] | None = None,
+        messaging_brand_name: str | None = None,
+    ) -> dict[str, Any]:
+        """Pre-check a carrier registration"""
+        payload = self._build_payload(
+            registration_type=registration_type,
+            phone_numbers=phone_numbers,
+            brand=brand,
+            campaign=campaign,
+            messaging_brand_name=messaging_brand_name,
+        )
+        return self._client._post("/v1/sms/registrations/preflight", data=payload)
 
     def deactivate_sms_registration(self, id: str) -> dict[str, Any]:
         """Deactivate a brand/campaign registration"""
@@ -188,6 +209,16 @@ class SmsResource:
             sample2=sample2,
         )
         return self._client._post(f"/v1/sms/registrations/{id}/appeal", data=payload)
+
+    def respond_to_sms_registration_review(
+        self, id: str, *, note: str | None = None, files: list[str] | None = None
+    ) -> dict[str, Any]:
+        """Reply to a change request"""
+        payload = self._build_payload(
+            note=note,
+            files=files,
+        )
+        return self._client._post(f"/v1/sms/registrations/{id}/respond", data=payload)
 
     def upload_sms_opt_in_proof_file(self) -> dict[str, Any]:
         """Upload opt-in form proof"""
@@ -287,6 +318,7 @@ class SmsResource:
         *,
         brand: dict[str, Any] | None = None,
         campaign: dict[str, Any] | None = None,
+        messaging_brand_name: str | None = None,
         wizard_values: dict[str, Any] | None = None,
         resubmit_request_id: str | None = None,
         toll_free: dict[str, Any] | None = None,
@@ -297,6 +329,7 @@ class SmsResource:
             phone_numbers=phone_numbers,
             brand=brand,
             campaign=campaign,
+            messaging_brand_name=messaging_brand_name,
             wizard_values=wizard_values,
             resubmit_request_id=resubmit_request_id,
             toll_free=toll_free,
@@ -311,6 +344,27 @@ class SmsResource:
             include_deactivated=include_deactivated,
         )
         return await self._client._aget("/v1/sms/registrations", params=params)
+
+    async def apreflight_sms_registration(
+        self,
+        registration_type: str,
+        brand: dict[str, Any],
+        campaign: dict[str, Any],
+        *,
+        phone_numbers: list[str] | None = None,
+        messaging_brand_name: str | None = None,
+    ) -> dict[str, Any]:
+        """Pre-check a carrier registration (async)"""
+        payload = self._build_payload(
+            registration_type=registration_type,
+            phone_numbers=phone_numbers,
+            brand=brand,
+            campaign=campaign,
+            messaging_brand_name=messaging_brand_name,
+        )
+        return await self._client._apost(
+            "/v1/sms/registrations/preflight", data=payload
+        )
 
     async def adeactivate_sms_registration(self, id: str) -> dict[str, Any]:
         """Deactivate a brand/campaign registration (async)"""
@@ -353,6 +407,18 @@ class SmsResource:
         )
         return await self._client._apost(
             f"/v1/sms/registrations/{id}/appeal", data=payload
+        )
+
+    async def arespond_to_sms_registration_review(
+        self, id: str, *, note: str | None = None, files: list[str] | None = None
+    ) -> dict[str, Any]:
+        """Reply to a change request (async)"""
+        payload = self._build_payload(
+            note=note,
+            files=files,
+        )
+        return await self._client._apost(
+            f"/v1/sms/registrations/{id}/respond", data=payload
         )
 
     async def aupload_sms_opt_in_proof_file(self) -> dict[str, Any]:

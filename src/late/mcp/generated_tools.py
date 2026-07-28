@@ -12366,6 +12366,7 @@ def register_generated_tools(mcp, _get_client):
         phone_numbers: list[str] | None,
         brand: dict[str, Any] | None = None,
         campaign: dict[str, Any] | None = None,
+        messaging_brand_name: str | None = None,
         wizard_values: dict[str, Any] | None = None,
         resubmit_request_id: str | None = None,
         toll_free: dict[str, Any] | None = None,
@@ -12384,6 +12385,7 @@ def register_generated_tools(mcp, _get_client):
         name the registered brand and carry the disclosures — submissions
         that don't are rewritten to the compliant template before the
         campaign is filed.
+                messaging_brand_name: DBA / trade name used to brand message content (samples and auto-replies) when it differs from the legal name, e.g. a sole proprietor texting under a business name. The legal `brand.displayName` is still what the carrier vets.
                 wizard_values: Raw dashboard-wizard answers, stored only to prefill edit-and-resubmit. API integrators can omit.
                 resubmit_request_id: Resubmit a registration that was returned for changes — updates it in place instead of creating a new one.
                 toll_free: Required for toll_free."""
@@ -12394,6 +12396,7 @@ def register_generated_tools(mcp, _get_client):
                 phone_numbers=phone_numbers,
                 brand=brand,
                 campaign=campaign,
+                messaging_brand_name=messaging_brand_name,
                 wizard_values=wizard_values,
                 resubmit_request_id=resubmit_request_id,
                 toll_free=toll_free,
@@ -12419,6 +12422,42 @@ def register_generated_tools(mcp, _get_client):
         try:
             response = client.sms.list_sms_registrations(
                 include_deactivated=include_deactivated
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Pre-check a carrier registration",
+            readOnlyHint=False,
+            destructiveHint=True,
+            openWorldHint=True,
+        )
+    )
+    def sms_preflight_sms_registration(
+        registration_type: str,
+        brand: dict[str, Any] | None,
+        campaign: dict[str, Any] | None,
+        phone_numbers: list[str] | None = None,
+        messaging_brand_name: str | None = None,
+    ) -> str:
+        """Pre-check a carrier registration
+
+        Args:
+            registration_type: (required)
+            phone_numbers
+            brand: Same shape as the registration `brand`. (required)
+            campaign: Same shape as the registration `campaign`. (required)
+            messaging_brand_name"""
+        client = _get_client()
+        try:
+            response = client.sms.preflight_sms_registration(
+                registration_type=registration_type,
+                phone_numbers=phone_numbers,
+                brand=brand,
+                campaign=campaign,
+                messaging_brand_name=messaging_brand_name,
             )
             return _format_response(response)
         except Exception as e:
@@ -12536,6 +12575,32 @@ def register_generated_tools(mcp, _get_client):
                 message_flow=message_flow,
                 sample1=sample1,
                 sample2=sample2,
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Reply to a change request",
+            readOnlyHint=False,
+            destructiveHint=True,
+            openWorldHint=True,
+        )
+    )
+    def sms_respond_to_sms_registration_review(
+        id: str, note: str | None = None, files: list[str] | None = None
+    ) -> str:
+        """Reply to a change request
+
+        Args:
+            id: (required)
+            note: Answer for the reviewer. Required when no files are sent.
+            files: Hosted document URLs returned by POST /v1/sms/opt-in-proof."""
+        client = _get_client()
+        try:
+            response = client.sms.respond_to_sms_registration_review(
+                id=id, note=note, files=files
             )
             return _format_response(response)
         except Exception as e:

@@ -752,8 +752,10 @@ Both `from zernio import ...` and `from late import ...` work identically. The `
 | `sms.disable_sms_on_number()` | Disable SMS on a number |
 | `sms.enable_sms_on_number()` | Enable SMS on a number |
 | `sms.lookup_sms_number()` | Look up carrier + line type |
+| `sms.preflight_sms_registration()` | Pre-check a carrier registration |
 | `sms.request_sms_sender_id_limit_increase()` | Request a higher sender ID daily limit |
 | `sms.resend_sms_registration_otp()` | Re-send the sole-prop OTP |
+| `sms.respond_to_sms_registration_review()` | Reply to a change request |
 | `sms.reuse_sms_registration_for_number()` | Add number to SMS registration |
 | `sms.send_sms()` | Send an SMS/MMS |
 | `sms.share_sms_registration()` | Create a registration share link |
