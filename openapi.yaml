@@ -1378,7 +1378,7 @@ components:
           enum: [quick_reply, url, phone_number, otp, copy_code, flow, mpm, catalog]
         text:
           type: string
-          description: Visible button label. Required for all types except copy_code (whose label is fixed by WhatsApp).
+          description: 'Visible button label. Required for all types except copy_code (whose label is fixed by WhatsApp) and otp (omit it and WhatsApp supplies its own label, localized to the template language; an English label on a non-English template is rejected).'
         url:
           type: string
           format: uri
