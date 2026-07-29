@@ -25938,6 +25938,7 @@ paths:
                       - type: object
                         properties:
                           contactName: { type: string, description: "CRM contact name for the counterparty, when resolved." }
+        '400': { $ref: '#/components/responses/BadRequest' }
         '401': { $ref: '#/components/responses/Unauthorized' }
         '403': { description: Not enrolled in the calling beta }
         '404': { description: Call not found }
@@ -25968,6 +25969,7 @@ paths:
                 type: object
                 properties:
                   url: { type: string }
+        '400': { $ref: '#/components/responses/BadRequest' }
         '401': { $ref: '#/components/responses/Unauthorized' }
         '403': { description: Not enrolled in the calling beta }
         '404': { description: "Call not found, or no recording is available for this call" }
