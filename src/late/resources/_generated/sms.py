@@ -121,8 +121,8 @@ class SmsResource:
     def start_sms_registration(
         self,
         registration_type: str,
-        phone_numbers: list[str],
         *,
+        phone_numbers: list[str] | None = None,
         brand: dict[str, Any] | None = None,
         campaign: dict[str, Any] | None = None,
         messaging_brand_name: str | None = None,
@@ -314,8 +314,8 @@ class SmsResource:
     async def astart_sms_registration(
         self,
         registration_type: str,
-        phone_numbers: list[str],
         *,
+        phone_numbers: list[str] | None = None,
         brand: dict[str, Any] | None = None,
         campaign: dict[str, Any] | None = None,
         messaging_brand_name: str | None = None,

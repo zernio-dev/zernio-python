@@ -26585,14 +26585,13 @@ paths:
           application/json:
             schema:
               type: object
-              required: [registrationType, phoneNumbers]
+              required: [registrationType]
               properties:
                 registrationType: { type: string, enum: [standard_10dlc, sole_prop_10dlc, toll_free] }
                 phoneNumbers:
                   type: array
-                  minItems: 1
                   items: { type: string }
-                  description: Your numbers this registration covers.
+                  description: 'Your numbers this registration covers. When omitted or empty on a 10DLC registration, defaults to your active SMS-enabled US local numbers not already covered by another registration.'
                 brand:
                   type: object
                   description: Required for 10DLC. The legal entity behind the traffic (TCR brand).

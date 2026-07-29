@@ -12363,7 +12363,7 @@ def register_generated_tools(mcp, _get_client):
     )
     def sms_start_sms_registration(
         registration_type: str,
-        phone_numbers: list[str] | None,
+        phone_numbers: list[str] | None = None,
         brand: dict[str, Any] | None = None,
         campaign: dict[str, Any] | None = None,
         messaging_brand_name: str | None = None,
@@ -12375,7 +12375,7 @@ def register_generated_tools(mcp, _get_client):
 
             Args:
                 registration_type: (required)
-                phone_numbers: Your numbers this registration covers. (required)
+                phone_numbers: Your numbers this registration covers. When omitted or empty on a 10DLC registration, defaults to your active SMS-enabled US local numbers not already covered by another registration.
                 brand: Required for 10DLC. The legal entity behind the traffic (TCR brand).
                 campaign: Required for 10DLC. What you'll send and how recipients opt in/out.
         The opt-in/opt-out/help auto-responses (`optinMessage`,
