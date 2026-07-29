@@ -4428,10 +4428,10 @@ components:
               description: "MANUAL (graduate from Instagram app) or SS_PERFORMANCE (auto-graduate if performs well with non-followers)"
         userTags:
           type: array
-          description: Tag Instagram users in photos by username and position. Not supported for stories or videos. For carousels, use mediaIndex to target specific slides (defaults to 0). Tags on video items are silently skipped.
+          description: 'Tag Instagram users by username. The tag shape depends on the media: photos require x/y coordinates, Reels and videos take username only (coordinates are ignored), stories accept optional coordinates. For carousels, use mediaIndex to target specific slides (defaults to 0); video slides take username-only tags. Photo tags without valid coordinates are skipped.'
           items:
             type: object
-            required: [username, x, y]
+            required: [username]
             properties:
               username:
                 type: string
@@ -4441,18 +4441,18 @@ components:
                 type: number
                 minimum: 0
                 maximum: 1
-                description: X coordinate position from left edge (0.0 = left, 0.5 = center, 1.0 = right)
+                description: 'X coordinate position from left edge (0.0 = left, 0.5 = center, 1.0 = right). Required for photos, ignored for Reels/videos, optional for stories.'
                 example: 0.5
               y:
                 type: number
                 minimum: 0
                 maximum: 1
-                description: Y coordinate position from top edge (0.0 = top, 0.5 = center, 1.0 = bottom)
+                description: 'Y coordinate position from top edge (0.0 = top, 0.5 = center, 1.0 = bottom). Required for photos, ignored for Reels/videos, optional for stories.'
                 example: 0.5
               mediaIndex:
                 type: integer
                 minimum: 0
-                description: Zero-based index of the carousel item to tag. Defaults to 0. Tags on video items or out-of-range indices are ignored.
+                description: Zero-based index of the carousel item to tag. Defaults to 0. Tags on out-of-range indices are ignored.
                 example: 0
         audioName:
           type: string
