@@ -15,10 +15,10 @@ info:
     url: https://zernio.com/icon.png?v=3
   x-long-description: |
     Zernio is the social media API that replaces 16 integrations. Schedule posts, retrieve analytics,
-    manage DMs, comments, and reviews across Twitter/X, Instagram, WhatsApp, TikTok, LinkedIn,
-    Facebook, YouTube, Threads, Reddit, Pinterest, Bluesky, Telegram, Google Business, Snapchat,
-    Discord, and Slack, all from a single REST API. Run paid ads on Meta (Facebook + Instagram), Google,
-    TikTok, LinkedIn, Pinterest, X, and OpenAI from the same account.
+    manage DMs, comments, and reviews across Twitter/X, Instagram, TikTok, LinkedIn, Facebook,
+    YouTube, Threads, Reddit, Pinterest, Bluesky, Telegram, Google Business, Snapchat, Discord,
+    and Slack, all from a single REST API. Run paid ads on Meta (Facebook + Instagram), Google, TikTok,
+    LinkedIn, Pinterest, X, and OpenAI from the same account.
 
     Key features: Unified posting to 16 platforms, ads management on 7 ad networks (via /v1/ads), aggregated analytics, unified inbox (DMs, comments, reviews), webhooks, OAuth connect, queue scheduling, and white-label support for agencies managing unlimited accounts.
 
