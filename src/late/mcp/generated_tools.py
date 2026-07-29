@@ -2831,7 +2831,7 @@ def register_generated_tools(mcp, _get_client):
         creates 1 campaign + 1 ad set + N ads (one per entry here).
         Top-level `headline` / `body` / `imageUrl` / `linkUrl` /
         `callToAction` are ignored in this mode. Mutually exclusive with `adSetId`.
-                ad_set_id: Meta-only. When present, switches to the attach shape: adds
+                ad_set_id: When present, switches to the attach shape: adds
         one new ad to this existing ad set without creating a new
         campaign. Budget, targeting, goal, schedule, AND bid strategy
         are inherited from the ad set on Meta — passing `bidStrategy`
