@@ -3522,7 +3522,7 @@ components:
             id: { type: string, description: Internal conversation ID }
             platform:
               type: string
-              enum: [instagram, facebook, telegram, whatsapp, twitter, reddit, bluesky, sms]
+              enum: [instagram, facebook, telegram, whatsapp, twitter, reddit, bluesky, sms, slack]
             platformConversationId: { type: string }
             participantId: { type: string, description: "Contact's platform identifier (IGSID, PSID, wa_id, etc.)" }
             participantName: { type: string }
@@ -22154,7 +22154,7 @@ paths:
           description: Filter by profile ID
         - name: platform
           in: query
-          schema: { type: string, enum: [facebook, instagram, telegram, whatsapp, sms] }
+          schema: { type: string, enum: [facebook, instagram, telegram, whatsapp, sms, slack] }
           description: Filter by platform (searchable platforms only)
         - name: accountId
           in: query
