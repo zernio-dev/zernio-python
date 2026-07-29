@@ -7066,7 +7066,7 @@ components:
         actionSource:
           type: string
           enum: [web, app, offline, crm, phone_call, system_generated]
-          description: Where the conversion happened. Used by Meta; Google ignores.
+          description: 'Where the conversion happened. Used by Meta. Google also requires an event source internally; omitting this field sends OTHER to Google. Send an explicit value for accurate origin reporting.'
         platformData:
           type: object
           additionalProperties: true
