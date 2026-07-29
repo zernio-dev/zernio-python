@@ -28246,7 +28246,12 @@ paths:
               properties:
                 profileId:
                   type: string
-                  description: Profile to associate the number with
+                  description: >
+                    Preferred profile for the number. One number = one
+                    profile, so when the requested profile already holds a
+                    number the API assigns the next free profile instead (or
+                    creates one) and returns the actual assignment in
+                    `profileId` on the response.
                 country:
                   type: string
                   description: >
@@ -28317,7 +28322,8 @@ paths:
                     Optional idempotency key. Send the same value when retrying
                     a purchase: if a number was already bought under this key,
                     the API returns { status: "already_purchased", numberId,
-                    phoneNumber } instead of provisioning a second number.
+                    phoneNumber, profileId } instead of provisioning a second
+                    number.
                     Generate a fresh key for each genuinely new purchase.
                 allowMultiple:
                   type: boolean
@@ -28357,6 +28363,7 @@ paths:
                           provisionedAt: { type: string, format: date-time }
                           metaPreverifiedId: { type: string }
                           metaVerificationStatus: { type: string }
+                          profileId: { type: string, description: 'The profile the number was actually assigned to.' }
                   - type: object
                     description: >
                       A number was already purchased under the supplied
@@ -28365,6 +28372,7 @@ paths:
                       status: { type: string, enum: [already_purchased] }
                       numberId: { type: string }
                       phoneNumber: { type: string }
+                      profileId: { type: string, description: 'The profile the number was actually assigned to.' }
         '400': { description: "Plan limit reached, profileId required, or country not available" }
         '401': { $ref: '#/components/responses/Unauthorized' }
         '403': { description: A paid plan is required }
