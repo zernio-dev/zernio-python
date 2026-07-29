@@ -142,6 +142,7 @@ x-documentation:
     - `post.recycled` - Post recycled (cloned and re-scheduled)
     - `post.platform.published` - A single platform target inside a post finished publishing successfully. Fires once per platform-account as it terminates, without waiting for other platforms on the same post. Use this for incremental UIs; use `post.published` for the post-level rollup.
     - `post.platform.failed` - A single platform target inside a post failed permanently. Temporary/retryable failures do NOT fire this event, only permanent ones, so retry loops stay quiet.
+    - `post.platform.deleted` - A single platform target inside a post was detected as deleted on the platform after publishing (e.g. the user deleted the Instagram post natively). Detection is poll-driven via Zernio background sync (~hourly), not real-time. `platform.deletedAt` carries the detection time. Coverage is bounded to the posts the platform listing returns.
     - `post.tiktok.url_resolved` - A published TikTok post's public URL became available. TikTok exposes the numeric video id asynchronously, so `post.published` / `post.platform.published` can carry an empty `publishedUrl` for TikTok; this event delivers the URL once resolved (at most once per platform target). Never fires for drafts or private posts, which have no public URL.
     - `post.external.created` - A native post authored outside Zernio (e.g. a Google Business Profile localPost created in the Google UI) was detected by our sync for the first time. Poll-driven (~hourly), not real-time. Payload carries `post.source: "external"`.
     - `post.external.updated` - A tracked native post's text or media changed on the platform. Edits are detected by comparing text/media structure and (where the platform exposes it) the platform's own edit timestamp; media-URL-only refreshes do not fire this.
@@ -403,7 +404,7 @@ tags:
   - name: Webhooks
     description: |
       Configure webhooks for real-time notifications. Webhooks can be created from the dashboard (Settings → Webhooks) or via this API.
-      Events: post.scheduled, post.published, post.failed, post.partial, post.cancelled, post.recycled, post.platform.published, post.platform.failed, post.tiktok.url_resolved, post.external.created, post.external.updated, post.external.deleted, account.connected, account.disconnected, account.ads.initial_sync_completed, message.received, conversation.started, call.received, call.ended, call.failed, call.permission_request, message.sent, message.edited, message.deleted, message.delivered, message.read, message.failed, reaction.received, comment.received, review.new, review.updated, lead.received, ad.status_changed, whatsapp.template.status_updated, whatsapp.automatic_event, whatsapp.number.activated, whatsapp.number.declined, whatsapp.number.action_required, whatsapp.number.verification_required, whatsapp.number.suspended, whatsapp.number.reactivated, whatsapp.number.released, whatsapp.number.kyc_submitted, verification.approved, verification.failed, webhook.test.
+      Events: post.scheduled, post.published, post.failed, post.partial, post.cancelled, post.recycled, post.platform.published, post.platform.failed, post.platform.deleted, post.tiktok.url_resolved, post.external.created, post.external.updated, post.external.deleted, account.connected, account.disconnected, account.ads.initial_sync_completed, message.received, conversation.started, call.received, call.ended, call.failed, call.permission_request, message.sent, message.edited, message.deleted, message.delivered, message.read, message.failed, reaction.received, comment.received, review.new, review.updated, lead.received, ad.status_changed, whatsapp.template.status_updated, whatsapp.automatic_event, whatsapp.number.activated, whatsapp.number.declined, whatsapp.number.action_required, whatsapp.number.verification_required, whatsapp.number.suspended, whatsapp.number.reactivated, whatsapp.number.released, whatsapp.number.kyc_submitted, verification.approved, verification.failed, webhook.test.
       Security: optional HMAC-SHA256 signature in X-Zernio-Signature header. Configure a secret key to enable verification. Custom headers supported.
   - name: Webhook Events
     description: |
@@ -2010,7 +2011,7 @@ components:
           type: array
           items:
             type: string
-            enum: [post.scheduled, post.published, post.failed, post.partial, post.cancelled, post.recycled, post.platform.published, post.platform.failed, post.tiktok.url_resolved, post.external.created, post.external.updated, post.external.deleted, account.connected, account.disconnected, account.ads.initial_sync_completed, message.received, conversation.started, call.received, call.ended, call.failed, call.permission_request, message.sent, message.edited, message.deleted, message.delivered, message.read, message.failed, reaction.received, comment.received, review.new, review.updated, lead.received, ad.status_changed, whatsapp.template.status_updated, whatsapp.automatic_event, whatsapp.number.activated, whatsapp.number.declined, whatsapp.number.action_required, whatsapp.number.verification_required, whatsapp.number.suspended, whatsapp.number.reactivated, whatsapp.number.released, whatsapp.number.kyc_submitted, verification.approved, verification.failed]
+            enum: [post.scheduled, post.published, post.failed, post.partial, post.cancelled, post.recycled, post.platform.published, post.platform.failed, post.platform.deleted, post.tiktok.url_resolved, post.external.created, post.external.updated, post.external.deleted, account.connected, account.disconnected, account.ads.initial_sync_completed, message.received, conversation.started, call.received, call.ended, call.failed, call.permission_request, message.sent, message.edited, message.deleted, message.delivered, message.read, message.failed, reaction.received, comment.received, review.new, review.updated, lead.received, ad.status_changed, whatsapp.template.status_updated, whatsapp.automatic_event, whatsapp.number.activated, whatsapp.number.declined, whatsapp.number.action_required, whatsapp.number.verification_required, whatsapp.number.suspended, whatsapp.number.reactivated, whatsapp.number.released, whatsapp.number.kyc_submitted, verification.approved, verification.failed]
           description: Events subscribed to
         isActive:
           type: boolean
@@ -2134,15 +2135,19 @@ components:
       type: object
       description: |
         Webhook payload for the per-platform terminal events
-        `post.platform.published` and `post.platform.failed`, and for
-        `post.tiktok.url_resolved` (same shape, fired when a published
-        TikTok post's public URL is backfilled). Terminal events fire once
-        per platform target inside a post as that platform reaches a
-        terminal state (published or permanent failure). The `post`
-        envelope mirrors the shape of `WebhookPayloadPost` so consumers
-        can reuse rendering logic; the `platform` block identifies which
-        specific platform transitioned; the `account` block identifies
-        the connected social account behind that platform-write.
+        `post.platform.published` and `post.platform.failed`, for
+        `post.platform.deleted` (same shape, fired when Zernio's background
+        sync detects that a platform target published through Zernio was
+        later deleted on the platform; poll-driven ~hourly, not real-time),
+        and for `post.tiktok.url_resolved` (same shape, fired when a
+        published TikTok post's public URL is backfilled). Terminal events
+        fire once per platform target inside a post as that platform
+        reaches a terminal state (published or permanent failure). The
+        `post` envelope mirrors the shape of `WebhookPayloadPost` so
+        consumers can reuse rendering logic; the `platform` block
+        identifies which specific platform transitioned; the `account`
+        block identifies the connected social account behind that
+        platform-write.
       required: [id, event, post, platform, account, timestamp]
       properties:
         id:
@@ -2150,7 +2155,7 @@ components:
           description: Stable webhook event ID.
         event:
           type: string
-          enum: [post.platform.published, post.platform.failed, post.tiktok.url_resolved]
+          enum: [post.platform.published, post.platform.failed, post.platform.deleted, post.tiktok.url_resolved]
         post:
           type: object
           required: [id, content, status, scheduledFor, platforms]
@@ -2191,17 +2196,21 @@ components:
               description: Platform name (e.g. `twitter`, `tiktok`, `instagram`).
             status:
               type: string
-              enum: [published, failed]
+              enum: [published, failed, deleted]
               description: Terminal status this event fires on. Matches the event suffix.
             platformPostId:
               type: string
-              description: Platform-native post id. Present on `published`, absent on `failed`.
+              description: 'Platform-native post id. Present on `published` and `deleted`, absent on `failed`.'
             publishedUrl:
               type: string
-              description: Public URL to the platform-side post. Present on `published` (when the platform exposes one and it is not a draft).
+              description: 'Public URL to the platform-side post. Present on `published` (when the platform exposes one and it is not a draft) and on `deleted` (when one was recorded at publish time).'
             error:
               type: string
-              description: Error message from the platform. Present on `failed`, absent on `published`.
+              description: Error message from the platform. Present on `failed` only.
+            deletedAt:
+              type: string
+              format: date-time
+              description: 'When the platform-side deletion was detected by Zernio sync (ISO 8601). Present only on `post.platform.deleted`.'
         account:
           type: object
           description: The connected social account the platform-write went through.
@@ -7284,6 +7293,29 @@ webhooks:
         only permanent ones, so retry loops stay quiet. The envelope event
         (`post.failed` / `post.partial`) fires separately AFTER all
         platforms have terminated.
+      tags: [Webhook Events]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/WebhookPayloadPostPlatform'
+      responses:
+        '200':
+          description: Webhook received successfully
+  post.platform.deleted:
+    post:
+      operationId: onPostPlatformDeleted
+      summary: Post platform deleted event
+      description: |
+        Fired when Zernio's background sync detects that a platform target
+        published through Zernio was later deleted on the platform (e.g.
+        the user deleted the Instagram post natively). Detection is
+        poll-driven (~hourly), not real-time, and fires once per platform
+        target. `platform.deletedAt` carries the detection time. Detection
+        is listing-based: a false positive self-heals in Zernio's data when
+        the post reappears, but the event is not retracted. Coverage is
+        bounded to the posts the platform listing returns.
       tags: [Webhook Events]
       requestBody:
         required: true
@@ -21257,7 +21289,7 @@ paths:
                   minItems: 1
                   items:
                     type: string
-                    enum: [post.scheduled, post.published, post.failed, post.partial, post.cancelled, post.recycled, post.platform.published, post.platform.failed, post.tiktok.url_resolved, post.external.created, post.external.updated, post.external.deleted, account.connected, account.disconnected, account.ads.initial_sync_completed, message.received, conversation.started, call.received, call.ended, call.failed, call.permission_request, message.sent, message.edited, message.deleted, message.delivered, message.read, message.failed, reaction.received, comment.received, review.new, review.updated, lead.received, ad.status_changed, whatsapp.template.status_updated, whatsapp.automatic_event, whatsapp.number.activated, whatsapp.number.declined, whatsapp.number.action_required, whatsapp.number.verification_required, whatsapp.number.suspended, whatsapp.number.reactivated, whatsapp.number.released, whatsapp.number.kyc_submitted, verification.approved, verification.failed]
+                    enum: [post.scheduled, post.published, post.failed, post.partial, post.cancelled, post.recycled, post.platform.published, post.platform.failed, post.platform.deleted, post.tiktok.url_resolved, post.external.created, post.external.updated, post.external.deleted, account.connected, account.disconnected, account.ads.initial_sync_completed, message.received, conversation.started, call.received, call.ended, call.failed, call.permission_request, message.sent, message.edited, message.deleted, message.delivered, message.read, message.failed, reaction.received, comment.received, review.new, review.updated, lead.received, ad.status_changed, whatsapp.template.status_updated, whatsapp.automatic_event, whatsapp.number.activated, whatsapp.number.declined, whatsapp.number.action_required, whatsapp.number.verification_required, whatsapp.number.suspended, whatsapp.number.reactivated, whatsapp.number.released, whatsapp.number.kyc_submitted, verification.approved, verification.failed]
                   description: Events to subscribe to (at least one required)
                 isActive:
                   type: boolean
@@ -21331,7 +21363,7 @@ paths:
                   minItems: 1
                   items:
                     type: string
-                    enum: [post.scheduled, post.published, post.failed, post.partial, post.cancelled, post.recycled, post.platform.published, post.platform.failed, post.tiktok.url_resolved, post.external.created, post.external.updated, post.external.deleted, account.connected, account.disconnected, account.ads.initial_sync_completed, message.received, conversation.started, call.received, call.ended, call.failed, call.permission_request, message.sent, message.edited, message.deleted, message.delivered, message.read, message.failed, reaction.received, comment.received, review.new, review.updated, lead.received, ad.status_changed, whatsapp.template.status_updated, whatsapp.automatic_event, whatsapp.number.activated, whatsapp.number.declined, whatsapp.number.action_required, whatsapp.number.verification_required, whatsapp.number.suspended, whatsapp.number.reactivated, whatsapp.number.released, whatsapp.number.kyc_submitted, verification.approved, verification.failed]
+                    enum: [post.scheduled, post.published, post.failed, post.partial, post.cancelled, post.recycled, post.platform.published, post.platform.failed, post.platform.deleted, post.tiktok.url_resolved, post.external.created, post.external.updated, post.external.deleted, account.connected, account.disconnected, account.ads.initial_sync_completed, message.received, conversation.started, call.received, call.ended, call.failed, call.permission_request, message.sent, message.edited, message.deleted, message.delivered, message.read, message.failed, reaction.received, comment.received, review.new, review.updated, lead.received, ad.status_changed, whatsapp.template.status_updated, whatsapp.automatic_event, whatsapp.number.activated, whatsapp.number.declined, whatsapp.number.action_required, whatsapp.number.verification_required, whatsapp.number.suspended, whatsapp.number.reactivated, whatsapp.number.released, whatsapp.number.kyc_submitted, verification.approved, verification.failed]
                   description: Events to subscribe to. Must contain at least one event if provided.
                 isActive:
                   type: boolean
