@@ -3478,6 +3478,102 @@ def register_generated_tools(mcp, _get_client):
 
     @mcp.tool(
         annotations=ToolAnnotations(
+            title="Generate keyword ideas (Google Keyword Planner)",
+            readOnlyHint=False,
+            destructiveHint=True,
+            openWorldHint=True,
+        )
+    )
+    def ad_insights_generate_keyword_ideas(
+        account_id: str,
+        customer_id: str | None = None,
+        seed_keywords: list[str] | None = None,
+        seed_url: str | None = None,
+        countries: list[str] | None = None,
+        language_constant_id: str = "1000",
+        network: str = "GOOGLE_SEARCH",
+        include_adult_keywords: bool | None = None,
+        page_size: int | None = None,
+        page_token: str | None = None,
+    ) -> str:
+        """Generate keyword ideas (Google Keyword Planner)
+
+        Args:
+            account_id: Zernio googleads SocialAccount id. (required)
+            customer_id: Numeric Google Ads customer id (no dashes); only needed when the connection has several accounts.
+            seed_keywords: Seed terms. Provide these, seedUrl, or both.
+            seed_url: Landing page to mine for ideas. Provide this, seedKeywords, or both.
+            countries: ISO 3166-1 alpha-2 country codes. Omitted = worldwide.
+            language_constant_id: Google languageConstant id (1000 = English).
+            network
+            include_adult_keywords
+            page_size
+            page_token: Cursor from paging.nextPageToken of the previous page."""
+        client = _get_client()
+        try:
+            response = client.ad_insights.generate_keyword_ideas(
+                account_id=account_id,
+                customer_id=customer_id,
+                seed_keywords=seed_keywords,
+                seed_url=seed_url,
+                countries=countries,
+                language_constant_id=language_constant_id,
+                network=network,
+                include_adult_keywords=include_adult_keywords,
+                page_size=page_size,
+                page_token=page_token,
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Historical keyword metrics (Google Keyword Planner)",
+            readOnlyHint=False,
+            destructiveHint=True,
+            openWorldHint=True,
+        )
+    )
+    def ad_insights_generate_keyword_historical_metrics(
+        account_id: str,
+        keywords: list[str] | None,
+        customer_id: str | None = None,
+        countries: list[str] | None = None,
+        language_constant_id: str = "1000",
+        network: str = "GOOGLE_SEARCH",
+        include_adult_keywords: bool | None = None,
+        include_average_cpc: bool | None = None,
+    ) -> str:
+        """Historical keyword metrics (Google Keyword Planner)
+
+        Args:
+            account_id: Zernio googleads SocialAccount id. (required)
+            customer_id: Numeric Google Ads customer id (no dashes); only needed when the connection has several accounts.
+            keywords: (required)
+            countries: ISO 3166-1 alpha-2 country codes. Omitted = worldwide.
+            language_constant_id: Google languageConstant id (1000 = English).
+            network
+            include_adult_keywords
+            include_average_cpc: Adds averageCpcMicros to each row's keywordMetrics."""
+        client = _get_client()
+        try:
+            response = client.ad_insights.generate_keyword_historical_metrics(
+                account_id=account_id,
+                customer_id=customer_id,
+                keywords=keywords,
+                countries=countries,
+                language_constant_id=language_constant_id,
+                network=network,
+                include_adult_keywords=include_adult_keywords,
+                include_average_cpc=include_average_cpc,
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
             title="Flexible live insights query",
             readOnlyHint=True,
             destructiveHint=False,
@@ -3486,7 +3582,10 @@ def register_generated_tools(mcp, _get_client):
     )
     def ad_insights_query_ad_insights(
         account_id: str,
-        object_id: str,
+        object_id: str | None = None,
+        query: str | None = None,
+        customer_id: str | None = None,
+        page_token: str | None = None,
         level: str | None = None,
         fields: str | None = None,
         breakdowns: str | None = None,
@@ -3505,8 +3604,11 @@ def register_generated_tools(mcp, _get_client):
         """Flexible live insights query
 
         Args:
-            account_id: Zernio SocialAccount id (posting or ads variant) used to resolve the Meta token. (required)
-            object_id: Meta insights node: act_<n>, campaign id, ad set id or ad id. (required)
+            account_id: Zernio SocialAccount id (posting or ads variant); its platform selects the Meta or Google contract. (required)
+            object_id: Meta only (required there): insights node — act_<n>, campaign id, ad set id or ad id.
+            query: Google only (required there): the GAQL SELECT statement to run.
+            customer_id: Google only: numeric customer id (no dashes) when the connection has several Google Ads accounts.
+            page_token: Google only: cursor from paging.nextPageToken of the previous page.
             level: Row granularity
             fields: Comma-separated Graph insights fields (e.g. spend,impressions,frequency,website_purchase_roas). Omitted = Meta's default set.
             breakdowns: Comma-separated Graph breakdowns (e.g. age,gender or publisher_platform).
@@ -3526,6 +3628,9 @@ def register_generated_tools(mcp, _get_client):
             response = client.ad_insights.query_ad_insights(
                 account_id=account_id,
                 object_id=object_id,
+                query=query,
+                customer_id=customer_id,
+                page_token=page_token,
                 level=level,
                 fields=fields,
                 breakdowns=breakdowns,

@@ -74,11 +74,68 @@ class AdInsightsResource:
             f"/v1/ads/campaigns/{campaign_id}/analytics", params=params
         )
 
+    def generate_keyword_ideas(
+        self,
+        account_id: str,
+        *,
+        customer_id: str | None = None,
+        seed_keywords: list[str] | None = None,
+        seed_url: str | None = None,
+        countries: list[str] | None = None,
+        language_constant_id: str | None = "1000",
+        network: str | None = "GOOGLE_SEARCH",
+        include_adult_keywords: bool | None = None,
+        page_size: int | None = None,
+        page_token: str | None = None,
+    ) -> dict[str, Any]:
+        """Generate keyword ideas (Google Keyword Planner)"""
+        payload = self._build_payload(
+            account_id=account_id,
+            customer_id=customer_id,
+            seed_keywords=seed_keywords,
+            seed_url=seed_url,
+            countries=countries,
+            language_constant_id=language_constant_id,
+            network=network,
+            include_adult_keywords=include_adult_keywords,
+            page_size=page_size,
+            page_token=page_token,
+        )
+        return self._client._post("/v1/ads/keywords/ideas", data=payload)
+
+    def generate_keyword_historical_metrics(
+        self,
+        account_id: str,
+        keywords: list[str],
+        *,
+        customer_id: str | None = None,
+        countries: list[str] | None = None,
+        language_constant_id: str | None = "1000",
+        network: str | None = "GOOGLE_SEARCH",
+        include_adult_keywords: bool | None = None,
+        include_average_cpc: bool | None = None,
+    ) -> dict[str, Any]:
+        """Historical keyword metrics (Google Keyword Planner)"""
+        payload = self._build_payload(
+            account_id=account_id,
+            customer_id=customer_id,
+            keywords=keywords,
+            countries=countries,
+            language_constant_id=language_constant_id,
+            network=network,
+            include_adult_keywords=include_adult_keywords,
+            include_average_cpc=include_average_cpc,
+        )
+        return self._client._post("/v1/ads/keywords/historical-metrics", data=payload)
+
     def query_ad_insights(
         self,
         account_id: str,
-        object_id: str,
         *,
+        object_id: str | None = None,
+        query: str | None = None,
+        customer_id: str | None = None,
+        page_token: str | None = None,
         level: str | None = None,
         fields: str | None = None,
         breakdowns: str | None = None,
@@ -98,6 +155,9 @@ class AdInsightsResource:
         params = self._build_params(
             account_id=account_id,
             object_id=object_id,
+            query=query,
+            customer_id=customer_id,
+            page_token=page_token,
             level=level,
             fields=fields,
             breakdowns=breakdowns,
@@ -206,11 +266,70 @@ class AdInsightsResource:
             f"/v1/ads/campaigns/{campaign_id}/analytics", params=params
         )
 
+    async def agenerate_keyword_ideas(
+        self,
+        account_id: str,
+        *,
+        customer_id: str | None = None,
+        seed_keywords: list[str] | None = None,
+        seed_url: str | None = None,
+        countries: list[str] | None = None,
+        language_constant_id: str | None = "1000",
+        network: str | None = "GOOGLE_SEARCH",
+        include_adult_keywords: bool | None = None,
+        page_size: int | None = None,
+        page_token: str | None = None,
+    ) -> dict[str, Any]:
+        """Generate keyword ideas (Google Keyword Planner) (async)"""
+        payload = self._build_payload(
+            account_id=account_id,
+            customer_id=customer_id,
+            seed_keywords=seed_keywords,
+            seed_url=seed_url,
+            countries=countries,
+            language_constant_id=language_constant_id,
+            network=network,
+            include_adult_keywords=include_adult_keywords,
+            page_size=page_size,
+            page_token=page_token,
+        )
+        return await self._client._apost("/v1/ads/keywords/ideas", data=payload)
+
+    async def agenerate_keyword_historical_metrics(
+        self,
+        account_id: str,
+        keywords: list[str],
+        *,
+        customer_id: str | None = None,
+        countries: list[str] | None = None,
+        language_constant_id: str | None = "1000",
+        network: str | None = "GOOGLE_SEARCH",
+        include_adult_keywords: bool | None = None,
+        include_average_cpc: bool | None = None,
+    ) -> dict[str, Any]:
+        """Historical keyword metrics (Google Keyword Planner) (async)"""
+        payload = self._build_payload(
+            account_id=account_id,
+            customer_id=customer_id,
+            keywords=keywords,
+            countries=countries,
+            language_constant_id=language_constant_id,
+            network=network,
+            include_adult_keywords=include_adult_keywords,
+            include_average_cpc=include_average_cpc,
+        )
+        return await self._client._apost(
+            "/v1/ads/keywords/historical-metrics", data=payload
+        )
+
     async def aquery_ad_insights(
         self,
         account_id: str,
-        object_id: str,
         *,
+        object_id: str | None = None,
+        query: str | None = None,
+        customer_id: str | None = None,
+        page_token: str | None = None,
         level: str | None = None,
         fields: str | None = None,
         breakdowns: str | None = None,
@@ -230,6 +349,9 @@ class AdInsightsResource:
         params = self._build_params(
             account_id=account_id,
             object_id=object_id,
+            query=query,
+            customer_id=customer_id,
+            page_token=page_token,
             level=level,
             fields=fields,
             breakdowns=breakdowns,

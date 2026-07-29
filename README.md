@@ -450,6 +450,8 @@ Both `from zernio import ...` and `from late import ...` work identically. The `
 | `ad_insights.get_ad_analytics()` | Get ad analytics |
 | `ad_insights.get_ad_insights_report()` | Poll an async insights report run |
 | `ad_insights.get_campaign_analytics()` | Get campaign analytics |
+| `ad_insights.generate_keyword_historical_metrics()` | Historical keyword metrics (Google Keyword Planner) |
+| `ad_insights.generate_keyword_ideas()` | Generate keyword ideas (Google Keyword Planner) |
 | `ad_insights.query_ad_insights()` | Flexible live insights query |
 
 ### Ad Targeting

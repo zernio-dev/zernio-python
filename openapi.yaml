@@ -35203,28 +35203,136 @@ paths:
         '429': { description: Meta rate limit reached }
         '501': { description: Only supported on Meta (facebook/instagram) }
 
+  /v1/ads/keywords/ideas:
+    post:
+      operationId: generateKeywordIdeas
+      tags: ["Ad Insights"]
+      x-platforms: ["google"]
+      summary: Generate keyword ideas (Google Keyword Planner)
+      description: |
+        Google Ads only. Runs Keyword Planner's generateKeywordIdeas from seed keywords, a seed URL,
+        or both, returning idea rows verbatim (avgMonthlySearches, competition, competitionIndex,
+        top-of-page bid micros, monthlySearchVolumes). Counters are int64s encoded as strings; bid
+        values are micros of the account currency. Omitting `countries` targets worldwide.
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [accountId]
+              properties:
+                accountId: { type: string, description: "Zernio googleads SocialAccount id." }
+                customerId: { type: string, description: "Numeric Google Ads customer id (no dashes); only needed when the connection has several accounts." }
+                seedKeywords: { type: array, items: { type: string, maxLength: 80 }, minItems: 1, maxItems: 20, description: "Seed terms. Provide these, seedUrl, or both." }
+                seedUrl: { type: string, format: uri, description: "Landing page to mine for ideas. Provide this, seedKeywords, or both." }
+                countries: { type: array, items: { type: string, minLength: 2, maxLength: 2 }, minItems: 1, maxItems: 10, description: "ISO 3166-1 alpha-2 country codes. Omitted = worldwide." }
+                languageConstantId: { type: string, default: "1000", description: "Google languageConstant id (1000 = English)." }
+                network: { type: string, enum: [GOOGLE_SEARCH, GOOGLE_SEARCH_AND_PARTNERS], default: GOOGLE_SEARCH }
+                includeAdultKeywords: { type: boolean }
+                pageSize: { type: integer, minimum: 1, maximum: 10000 }
+                pageToken: { type: string, description: "Cursor from paging.nextPageToken of the previous page." }
+      responses:
+        '200':
+          description: Keyword idea rows (raw Keyword Planner shape)
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  customerId: { type: string, description: "The customer the request ran against." }
+                  data:
+                    type: array
+                    items: { type: object, description: "Raw GenerateKeywordIdeaResult: text + keywordIdeaMetrics." }
+                  aggregateMetricResults: { type: [object, "null"] }
+                  paging:
+                    type: object
+                    properties:
+                      nextPageToken: { type: [string, "null"], description: "Cursor for the next page; null when exhausted." }
+        '400': { description: "Invalid input, or Google rejected the request — message carries Google's error" }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '429': { description: "Per-user Google Ads operations budget or the shared Google quota reached; the message says which and when it resets." }
+        '501': { description: Only supported on Google Ads }
+
+  /v1/ads/keywords/historical-metrics:
+    post:
+      operationId: generateKeywordHistoricalMetrics
+      tags: ["Ad Insights"]
+      x-platforms: ["google"]
+      summary: Historical keyword metrics (Google Keyword Planner)
+      description: |
+        Google Ads only. Runs Keyword Planner's generateKeywordHistoricalMetrics for up to 1,000
+        exact keywords: historical search volume, competition and top-of-page bid ranges, plus
+        averageCpcMicros when includeAverageCpc is set. Rows come back verbatim; counters are int64s
+        encoded as strings, bid/CPC values are micros of the account currency.
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [accountId, keywords]
+              properties:
+                accountId: { type: string, description: "Zernio googleads SocialAccount id." }
+                customerId: { type: string, description: "Numeric Google Ads customer id (no dashes); only needed when the connection has several accounts." }
+                keywords: { type: array, items: { type: string, maxLength: 80 }, minItems: 1, maxItems: 1000 }
+                countries: { type: array, items: { type: string, minLength: 2, maxLength: 2 }, minItems: 1, maxItems: 10, description: "ISO 3166-1 alpha-2 country codes. Omitted = worldwide." }
+                languageConstantId: { type: string, default: "1000", description: "Google languageConstant id (1000 = English)." }
+                network: { type: string, enum: [GOOGLE_SEARCH, GOOGLE_SEARCH_AND_PARTNERS], default: GOOGLE_SEARCH }
+                includeAdultKeywords: { type: boolean }
+                includeAverageCpc: { type: boolean, description: "Adds averageCpcMicros to each row's keywordMetrics." }
+      responses:
+        '200':
+          description: Historical metric rows (raw Keyword Planner shape)
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  customerId: { type: string, description: "The customer the request ran against." }
+                  data:
+                    type: array
+                    items: { type: object, description: "Raw KeywordHistoricalMetricsResult: text, closeVariants, keywordMetrics." }
+                  aggregateMetricResults: { type: [object, "null"] }
+        '400': { description: "Invalid input, or Google rejected the request — message carries Google's error" }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '429': { description: "Per-user Google Ads operations budget or the shared Google quota reached; the message says which and when it resets." }
+        '501': { description: Only supported on Google Ads }
+
   /v1/ads/insights:
     get:
       operationId: queryAdInsights
       tags: ["Ad Insights"]
-      x-platforms: ["meta"]
+      x-platforms: ["meta", "google"]
       summary: Flexible live insights query
       description: |
-        Live, flexible insights query against Meta's Graph API. Unlike GET /v1/ads/{adId}/analytics
-        (fixed metric set, cached), this forwards caller-chosen `fields`, `breakdowns` and `filtering`
-        to any Meta insights node and returns Meta's rows verbatim.
+        Live, flexible insights query. The account's platform picks the contract:
 
-        `objectId` selects the node: an ad account, campaign, ad set or ad platform id.
-        `level` sets row granularity independently of the node.
+        **Meta (facebook/instagram)**: forwards caller-chosen `fields`, `breakdowns` and `filtering`
+        to any Meta insights node and returns Meta's rows verbatim. `objectId` (required) selects the
+        node; `level` sets row granularity. Semantic validation is Meta's: an unknown field or invalid
+        breakdown combination returns a 400 carrying Meta's message. For long ranges or agency-scale
+        accounts prefer the async variant (POST /v1/ads/insights/reports).
 
-        Semantic validation is Meta's: an unknown field or invalid breakdown combination returns a 400
-        carrying Meta's message. For long ranges or agency-scale accounts prefer the async variant
-        (POST /v1/ads/insights/reports).
+        **Google Ads (googleads)**: raw GAQL passthrough. Send any read-only GAQL SELECT via `query`
+        (campaign/keyword/search-term/geo/demographic/asset/shopping resources, `change_event`, any
+        `segments.*`) and rows come back verbatim (camelCase, counters as strings). Results are paged
+        at a fixed 10,000 rows; follow `paging.nextPageToken` with `pageToken`. `customerId` is only
+        needed when the connection has several Google Ads accounts. Semantic validation is Google's:
+        an invalid query returns a 400 carrying Google's message (note: selecting `segments.date`
+        requires a finite date filter).
       security:
         - bearerAuth: []
       parameters:
-        - { name: accountId, in: query, required: true, schema: { type: string }, description: "Zernio SocialAccount id (posting or ads variant) used to resolve the Meta token." }
-        - { name: objectId, in: query, required: true, schema: { type: string }, description: "Meta insights node: act_<n>, campaign id, ad set id or ad id." }
+        - { name: accountId, in: query, required: true, schema: { type: string }, description: "Zernio SocialAccount id (posting or ads variant); its platform selects the Meta or Google contract." }
+        - { name: objectId, in: query, schema: { type: string }, description: "Meta only (required there): insights node — act_<n>, campaign id, ad set id or ad id." }
+        - { name: query, in: query, schema: { type: string, maxLength: 10000 }, description: "Google only (required there): the GAQL SELECT statement to run." }
+        - { name: customerId, in: query, schema: { type: string }, description: "Google only: numeric customer id (no dashes) when the connection has several Google Ads accounts." }
+        - { name: pageToken, in: query, schema: { type: string }, description: "Google only: cursor from paging.nextPageToken of the previous page." }
         - { name: level, in: query, schema: { type: string, enum: [ad, adset, campaign, account] }, description: Row granularity }
         - { name: fields, in: query, schema: { type: string }, description: "Comma-separated Graph insights fields (e.g. spend,impressions,frequency,website_purchase_roas). Omitted = Meta's default set." }
         - { name: breakdowns, in: query, schema: { type: string }, description: "Comma-separated Graph breakdowns (e.g. age,gender or publisher_platform)." }
@@ -35241,24 +35349,27 @@ paths:
         - { name: after, in: query, schema: { type: string }, description: "Cursor from paging.after of the previous page." }
       responses:
         '200':
-          description: Insight rows (raw Meta shape)
+          description: Insight rows (raw platform shape)
           content:
             application/json:
               schema:
                 type: object
                 properties:
-                  objectId: { type: string }
+                  objectId: { type: string, description: "Meta responses only." }
+                  customerId: { type: string, description: "Google responses only: the customer the query ran against." }
+                  fieldMask: { type: [string, "null"], description: "Google responses only: the selected fields echoed by Google." }
                   data:
                     type: array
-                    items: { type: object, description: "Raw Meta insights row; keys are the requested Graph fields plus date_start/date_stop." }
+                    items: { type: object, description: "Raw platform row. Meta: keys are the requested Graph fields plus date_start/date_stop. Google: nested GAQL resources in camelCase, int64 counters as strings." }
                   paging:
                     type: object
                     properties:
-                      after: { type: [string, "null"], description: "Cursor for the next page; null when exhausted." }
-        '400': { description: "Invalid input, or Meta rejected the query (unknown field, invalid breakdown combo) — message carries Meta's error" }
+                      after: { type: [string, "null"], description: "Meta cursor for the next page; null when exhausted." }
+                      nextPageToken: { type: [string, "null"], description: "Google cursor for the next page; null when exhausted." }
+        '400': { description: "Invalid input, or the platform rejected the query (unknown field, invalid breakdown combo, malformed GAQL) — message carries the platform's error" }
         '401': { $ref: '#/components/responses/Unauthorized' }
-        '429': { description: Meta rate limit reached }
-        '501': { description: Only supported on Meta (facebook/instagram) }
+        '429': { description: "Platform rate limit reached. For Google this is the per-user operations budget or the shared quota; the message says which and when it resets." }
+        '501': { description: Only supported on Meta (facebook/instagram) and Google Ads }
 
   /v1/ads/insights/reports:
     post:
