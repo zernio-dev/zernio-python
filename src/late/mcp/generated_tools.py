@@ -1213,6 +1213,56 @@ def register_generated_tools(mcp, _get_client):
         except Exception as e:
             return f"Error: {e}"
 
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Get Slack account settings",
+            readOnlyHint=True,
+            destructiveHint=False,
+            openWorldHint=False,
+        )
+    )
+    def accounts_get_slack_settings(account_id: str) -> str:
+        """Get Slack account settings
+
+        Args:
+            account_id: (required)"""
+        client = _get_client()
+        try:
+            response = client.accounts.get_slack_settings(account_id=account_id)
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Update Slack account settings",
+            readOnlyHint=False,
+            destructiveHint=True,
+            openWorldHint=True,
+        )
+    )
+    def accounts_update_slack_settings(
+        account_id: str,
+        default_username: str | None = None,
+        default_icon_url: str | None = None,
+    ) -> str:
+        """Update Slack account settings
+
+        Args:
+            account_id: (required)
+            default_username: Author name shown on posts. Empty string clears it.
+            default_icon_url: Author avatar image URL. Empty string clears it."""
+        client = _get_client()
+        try:
+            response = client.accounts.update_slack_settings(
+                account_id=account_id,
+                default_username=default_username,
+                default_icon_url=default_icon_url,
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
     # AD_ACCOUNTS
 
     @mcp.tool(

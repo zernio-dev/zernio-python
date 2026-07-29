@@ -19874,6 +19874,67 @@ paths:
         '404': { description: Account not found }
         '502': { description: "Reddit was unreachable or returned an unclassified error. Reddit 4xx statuses (e.g. subreddit does not allow user flair selection) are forwarded as-is." }
 
+  /v1/accounts/{accountId}/slack-settings:
+    get:
+      operationId: getSlackSettings
+      tags: [Accounts]
+      summary: Get Slack account settings
+      description: 'Returns the connected Slack channel details and the default message identity (name and avatar shown as the author on every post, with Slack''s APP badge). The identity applies to messages only; the app''s own Slack profile is global and cannot be changed per workspace.'
+      parameters:
+        - name: accountId
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        '200':
+          description: Slack account settings
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  account:
+                    type: object
+                    properties:
+                      _id: { type: string }
+                      platform: { type: string, example: slack }
+                      displayName: { type: [string, "null"] }
+                      channelId: { type: [string, "null"] }
+                      channelName: { type: [string, "null"] }
+                      channelType: { type: [string, "null"], description: 'public or private' }
+                      teamId: { type: [string, "null"] }
+                      teamName: { type: [string, "null"] }
+                      defaultUsername: { type: [string, "null"] }
+                      defaultIconUrl: { type: [string, "null"] }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404': { description: Account not found }
+    patch:
+      operationId: updateSlackSettings
+      tags: [Accounts]
+      summary: Update Slack account settings
+      description: 'Set or clear the default message identity for this channel. Empty string clears a field; per-post platformSpecificData.username/iconUrl still override these defaults.'
+      parameters:
+        - name: accountId
+          in: path
+          required: true
+          schema: { type: string }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                defaultUsername: { type: string, maxLength: 80, description: 'Author name shown on posts. Empty string clears it.' }
+                defaultIconUrl: { type: string, description: 'Author avatar image URL. Empty string clears it.' }
+      responses:
+        '200':
+          description: Updated settings
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404': { description: Account not found }
+
   /v1/accounts/{accountId}/discord-settings:
     get:
       operationId: getDiscordSettings

@@ -482,6 +482,26 @@ class AccountsResource:
             f"/v1/accounts/{account_id}/linkedin-mentions", params=params
         )
 
+    def get_slack_settings(self, account_id: str) -> dict[str, Any]:
+        """Get Slack account settings"""
+        return self._client._get(f"/v1/accounts/{account_id}/slack-settings")
+
+    def update_slack_settings(
+        self,
+        account_id: str,
+        *,
+        default_username: str | None = None,
+        default_icon_url: str | None = None,
+    ) -> dict[str, Any]:
+        """Update Slack account settings"""
+        payload = self._build_payload(
+            default_username=default_username,
+            default_icon_url=default_icon_url,
+        )
+        return self._client._patch(
+            f"/v1/accounts/{account_id}/slack-settings", data=payload
+        )
+
     async def alist_accounts(
         self,
         *,
@@ -910,4 +930,24 @@ class AccountsResource:
         )
         return await self._client._aget(
             f"/v1/accounts/{account_id}/linkedin-mentions", params=params
+        )
+
+    async def aget_slack_settings(self, account_id: str) -> dict[str, Any]:
+        """Get Slack account settings (async)"""
+        return await self._client._aget(f"/v1/accounts/{account_id}/slack-settings")
+
+    async def aupdate_slack_settings(
+        self,
+        account_id: str,
+        *,
+        default_username: str | None = None,
+        default_icon_url: str | None = None,
+    ) -> dict[str, Any]:
+        """Update Slack account settings (async)"""
+        payload = self._build_payload(
+            default_username=default_username,
+            default_icon_url=default_icon_url,
+        )
+        return await self._client._apatch(
+            f"/v1/accounts/{account_id}/slack-settings", data=payload
         )
