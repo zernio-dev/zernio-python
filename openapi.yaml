@@ -11417,6 +11417,13 @@ paths:
                     - video/webm
                     - video/x-m4v
                     - application/pdf
+                    - audio/mpeg
+                    - audio/mp4
+                    - audio/aac
+                    - audio/ogg
+                    - audio/wav
+                    - audio/webm
+                    - audio/x-m4a
                   example: "video/mp4"
                 size:
                   type: integer
