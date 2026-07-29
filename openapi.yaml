@@ -4053,6 +4053,7 @@ components:
             - $ref: '#/components/schemas/RedditPlatformData'
             - $ref: '#/components/schemas/BlueskyPlatformData'
             - $ref: '#/components/schemas/DiscordPlatformData'
+            - $ref: '#/components/schemas/SlackPlatformData'
           additionalProperties: true
         status:
           type: string
@@ -5304,6 +5305,27 @@ components:
       description: |
         Discord message settings. Supports plain text (2,000 chars), rich embeds (up to 10), native polls, forum posts, threads, and announcement crossposts. Media attachments support images (JPEG, PNG, GIF, WebP), videos (MP4), and documents (up to 10 files, 25 MB each). Webhook identity (username + avatar) can be customized per-account via PATCH /v1/connect/discord or per-post via webhookUsername/webhookAvatarUrl.
 
+    SlackPlatformData:
+      type: object
+      properties:
+        threadTs:
+          type: string
+          description: 'Parent message ts to post this message as a thread reply (e.g. "1503435956.000247").'
+        unfurlLinks:
+          type: boolean
+          description: 'Expand links in the message into preview cards. Default true.'
+        unfurlMedia:
+          type: boolean
+          description: 'Expand media links into inline previews. Default true.'
+        username:
+          type: string
+          description: 'Override the bot display name for this message only (requires no setup; shown with an APP badge). Does not change the app identity in the sidebar.'
+        iconUrl:
+          type: string
+          description: 'Override the bot avatar image URL for this message only.'
+      description: |
+        Slack message settings. Posts mrkdwn text (up to 40,000 chars; Slack truncates beyond that) to the channel fixed by the connected account, with up to 10 media files per post uploaded via Slack's file API (the text becomes the caption). The target channel is chosen at connect time — one connected account per channel — so channelId is NOT accepted here (a 400 is returned); connect the desired channel via /v1/connect/slack and target its accountId. Messages over 4,000 characters cannot be edited later (Slack's edit limit is stricter than its post limit).
+
     DiscordScheduledEvent:
       type: object
       description: |
@@ -5406,7 +5428,7 @@ components:
         _id: { type: string }
         platform:
           type: string
-          enum: [tiktok, instagram, facebook, youtube, linkedin, twitter, threads, pinterest, reddit, bluesky, googlebusiness, telegram, snapchat, discord, whatsapp, linkedinads, metaads, pinterestads, tiktokads, xads, googleads, openaiads]
+          enum: [tiktok, instagram, facebook, youtube, linkedin, twitter, threads, pinterest, reddit, bluesky, googlebusiness, telegram, snapchat, discord, slack, whatsapp, linkedinads, metaads, pinterestads, tiktokads, xads, googleads, openaiads]
         profileId:
           oneOf:
             - type: string
@@ -8330,7 +8352,7 @@ paths:
                     properties:
                       platform:
                         type: string
-                        enum: [twitter, instagram, tiktok, youtube, facebook, linkedin, bluesky, threads, reddit, pinterest, telegram, snapchat, googlebusiness, discord]
+                        enum: [twitter, instagram, tiktok, youtube, facebook, linkedin, bluesky, threads, reddit, pinterest, telegram, snapchat, googlebusiness, discord, slack]
                       accountId: { type: string, description: 'Account to validate against. For twitter, resolves X Premium status to apply the 25000 character limit instead of 280.' }
                       customContent: { type: string }
                       platformSpecificData: { type: object }
@@ -12176,6 +12198,7 @@ paths:
                           - $ref: '#/components/schemas/RedditPlatformData'
                           - $ref: '#/components/schemas/BlueskyPlatformData'
                           - $ref: '#/components/schemas/DiscordPlatformData'
+                          - $ref: '#/components/schemas/SlackPlatformData'
                 scheduledFor: { type: string, format: date-time }
                 publishNow: { type: boolean, default: false }
                 isDraft:
@@ -13856,7 +13879,7 @@ paths:
           description: Filter by platform
           schema:
             type: string
-            enum: [facebook, instagram, linkedin, twitter, tiktok, youtube, threads, pinterest, reddit, bluesky, googlebusiness, telegram, snapchat, discord, whatsapp]
+            enum: [facebook, instagram, linkedin, twitter, tiktok, youtube, threads, pinterest, reddit, bluesky, googlebusiness, telegram, snapchat, discord, slack, whatsapp]
         - name: status
           in: query
           description: Filter by health status
@@ -14344,7 +14367,7 @@ paths:
           required: true
           schema:
             type: string
-            enum: [facebook, instagram, linkedin, twitter, tiktok, youtube, threads, reddit, pinterest, bluesky, googlebusiness, telegram, snapchat, discord, whatsapp]
+            enum: [facebook, instagram, linkedin, twitter, tiktok, youtube, threads, reddit, pinterest, bluesky, googlebusiness, telegram, snapchat, discord, slack, whatsapp]
           description: Social media platform to connect
         - name: profileId
           in: query
