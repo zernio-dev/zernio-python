@@ -22993,7 +22993,16 @@ paths:
                   error: { type: string }
                   code:
                     type: string
-                    enum: [PLATFORM_LIMITATION]
+                    description: "Stable machine-readable reason. PLATFORM_LIMITATION covers a capability the platform does not offer (e.g. Bluesky and Reddit DMs reject media); MISSING_PARTICIPANT means the stored conversation has no recipient to send to."
+                    enum: [PLATFORM_LIMITATION, MISSING_PARTICIPANT]
+                  platformError:
+                    type: object
+                    description: "Instagram/Facebook only. Meta's own diagnostic fields for the rejected send, passed through verbatim so you can tell failure classes apart and quote them to Meta. Absent when the failure did not come from Meta."
+                    properties:
+                      code: { type: integer, description: "Meta error code" }
+                      subcode: { type: integer, description: "Meta error_subcode" }
+                      fbtraceId: { type: string, description: "Meta fbtrace_id, quote this in a Meta bug report" }
+                      type: { type: string, description: "Meta error type (e.g. OAuthException)" }
         '401': { $ref: '#/components/responses/Unauthorized' }
         '403':
           description: Inbox addon required
