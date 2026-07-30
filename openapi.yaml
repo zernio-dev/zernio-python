@@ -4546,12 +4546,12 @@ components:
             we do not publish a catalog of presets and Facebook may change the available set.
             Pages only (ignored on personal profiles and groups) and text-only feed posts only:
             the request is rejected with 400 when mediaItems or carouselCards are present, when
-            contentType is story or reel, when content is empty, or when content exceeds 130
-            characters. Those are Facebook limits, and above them Facebook silently drops the
-            background and publishes a plain text post instead of returning an error, so we
-            reject up front rather than let the background disappear. A URL detected in the
-            content is NOT attached as a link preview while a preset is set, because a link
-            attachment also makes Facebook drop the background.
+            contentType is story or reel, or when content is empty. An attachment makes Facebook
+            drop the background silently, so those are rejected up front. Length is NOT rejected:
+            Facebook's composer stops offering a background at around 130 characters, but Meta
+            documents no API limit, so longer content publishes and returns a warning instead.
+            A URL detected in the content is NOT attached as a link preview while a preset is
+            set, because a link attachment also makes Facebook drop the background.
       description: >
         Feed posts support up to 10 images (no mixed video+image). Stories require single media (24h, no captions).
         Reels require single vertical video (9:16, 3-60s). Carousel posts (carouselCards) render a 2-5 card
