@@ -126,7 +126,7 @@ x-documentation:
 
     Legacy AppSumo lifetime tiers get a flat 600 req/min regardless of tier.
 
-    Posts themselves are unlimited on every connected social account; the rate limit applies only to API request throughput. Per-platform safety caps still apply at the social-network side (Instagram 100/day per account, Twitter 20/day per account, Pinterest 25/day per account).
+    Posts themselves are unlimited on every connected social account; the rate limit applies only to API request throughput. Zernio also applies per-account daily publish caps as an anti-abuse safeguard (Instagram 100/day, Facebook 100/day, Threads 250/day, X/Twitter 50/day, Pinterest 25/day, 50/day for every other platform), plus a 25-posts-per-hour per-account velocity cap.
 
     All responses include `X-RateLimit-Limit`, `X-RateLimit-Remaining`, and `X-RateLimit-Reset` headers — read these instead of hard-coding limits, since your tier may be configured higher than the default.
 
@@ -12859,7 +12859,7 @@ paths:
                       platform: { type: string }
                       existingPostId: { type: string }
         '429':
-          description: "Rate limit exceeded. Possible causes: API rate limit, velocity limit (15 posts/hour per account), account cooldown, or daily platform limits."
+          description: "Rate limit exceeded. Possible causes: API rate limit, velocity limit (25 posts/hour per account), account cooldown, or daily platform limits."
           content:
             application/json:
               schema:
@@ -13334,7 +13334,7 @@ paths:
           description: Post is currently publishing
         '429':
           description: |
-            Rate limit exceeded. Possible causes: API rate limit (requests per minute), velocity limit (15 posts/hour per account), or account cooldown (temporarily rate-limited due to repeated errors).
+            Rate limit exceeded. Possible causes: API rate limit (requests per minute), velocity limit (25 posts/hour per account), or account cooldown (temporarily rate-limited due to repeated errors).
           content:
             application/json:
               schema:
