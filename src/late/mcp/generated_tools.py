@@ -15716,6 +15716,54 @@ def register_generated_tools(mcp, _get_client):
         except Exception as e:
             return f"Error: {e}"
 
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Start caller-ID verification for a customer-brought number",
+            readOnlyHint=False,
+            destructiveHint=True,
+            openWorldHint=True,
+        )
+    )
+    def whatsapp_calling_start_whats_app_caller_id_verification(
+        id: str, method: str = "sms"
+    ) -> str:
+        """Start caller-ID verification for a customer-brought number
+
+        Args:
+            id: Phone number record ID (from GET /v1/phone-numbers). (required)
+            method"""
+        client = _get_client()
+        try:
+            response = client.whatsapp_calling.start_whats_app_caller_id_verification(
+                id=id, method=method
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Confirm the caller-ID verification code",
+            readOnlyHint=False,
+            destructiveHint=True,
+            openWorldHint=True,
+        )
+    )
+    def whatsapp_calling_verify_whats_app_caller_id(id: str, code: str) -> str:
+        """Confirm the caller-ID verification code
+
+        Args:
+            id: Phone number record ID (from GET /v1/phone-numbers). (required)
+            code: (required)"""
+        client = _get_client()
+        try:
+            response = client.whatsapp_calling.verify_whats_app_caller_id(
+                id=id, code=code
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
     # WHATSAPP_FLOWS
 
     @mcp.tool(

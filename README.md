@@ -879,6 +879,8 @@ Both `from zernio import ...` and `from late import ...` work identically. The `
 | `whatsapp_calling.enable_whats_app_calling()` | Enable calling on a number |
 | `whatsapp_calling.enable_whats_app_calling_legacy()` | Enable calling on a number |
 | `whatsapp_calling.initiate_whats_app_call()` | Initiate outbound call |
+| `whatsapp_calling.start_whats_app_caller_id_verification()` | Start caller-ID verification for a customer-brought number |
+| `whatsapp_calling.verify_whats_app_caller_id()` | Confirm the caller-ID verification code |
 
 ### WhatsApp Flows
 | Method | Description |

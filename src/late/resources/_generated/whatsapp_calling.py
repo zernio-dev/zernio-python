@@ -274,6 +274,27 @@ class WhatsappCallingResource:
             f"/v1/phone-numbers/{id}/whatsapp/calling", params=params
         )
 
+    def start_whats_app_caller_id_verification(
+        self, id: str, *, method: str | None = "sms"
+    ) -> dict[str, Any]:
+        """Start caller-ID verification for a customer-brought number"""
+        payload = self._build_payload(
+            method=method,
+        )
+        return self._client._post(
+            f"/v1/phone-numbers/{id}/whatsapp/caller-id-verification", data=payload
+        )
+
+    def verify_whats_app_caller_id(self, id: str, code: str) -> dict[str, Any]:
+        """Confirm the caller-ID verification code"""
+        payload = self._build_payload(
+            code=code,
+        )
+        return self._client._post(
+            f"/v1/phone-numbers/{id}/whatsapp/caller-id-verification/verify",
+            data=payload,
+        )
+
     async def aget_whats_app_calling_config(self, account_id: str) -> dict[str, Any]:
         """Get calling config for an account (async)"""
         params = self._build_params(
@@ -494,4 +515,25 @@ class WhatsappCallingResource:
         )
         return await self._client._adelete(
             f"/v1/phone-numbers/{id}/whatsapp/calling", params=params
+        )
+
+    async def astart_whats_app_caller_id_verification(
+        self, id: str, *, method: str | None = "sms"
+    ) -> dict[str, Any]:
+        """Start caller-ID verification for a customer-brought number (async)"""
+        payload = self._build_payload(
+            method=method,
+        )
+        return await self._client._apost(
+            f"/v1/phone-numbers/{id}/whatsapp/caller-id-verification", data=payload
+        )
+
+    async def averify_whats_app_caller_id(self, id: str, code: str) -> dict[str, Any]:
+        """Confirm the caller-ID verification code (async)"""
+        payload = self._build_payload(
+            code=code,
+        )
+        return await self._client._apost(
+            f"/v1/phone-numbers/{id}/whatsapp/caller-id-verification/verify",
+            data=payload,
         )

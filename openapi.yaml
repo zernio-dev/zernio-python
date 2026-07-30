@@ -25954,6 +25954,11 @@ paths:
                   callIconCountries:
                     type: [array, "null"]
                     items: { type: string, minLength: 2, maxLength: 2 }
+                  callerIdMode:
+                    type: string
+                    enum: [business, platform]
+                    description: 'Caller ID the forward-leg callee sees on tel: forwards. business = this WhatsApp number; platform = a Zernio number (customer-brought number without verified caller ID; verify via /v1/phone-numbers/{id}/whatsapp/caller-id-verification).'
+                  callerIdVerified: { type: boolean, description: 'True once the number completed caller-ID verification.' }
         '401': { $ref: '#/components/responses/Unauthorized' }
         '404': { description: WhatsApp phone number not found for this account }
 
@@ -31120,7 +31125,81 @@ paths:
         '401': { $ref: '#/components/responses/Unauthorized' }
         '404': { description: Phone number not found }
 
+  /v1/phone-numbers/{id}/whatsapp/caller-id-verification:
+    post:
+      operationId: startWhatsAppCallerIdVerification
+      tags: [WhatsApp Calling]
+      summary: Start caller-ID verification for a customer-brought number
+      description: |
+        Customer-brought (BYO) WhatsApp numbers cannot present themselves as
+        caller ID on `tel:` call forwards until verified (carrier
+        anti-spoofing); until then forwarded calls show a Zernio number
+        (`callerIdMode: platform` on the calling config). This sends a
+        one-time code to the number by SMS or voice call. Re-POST to resend.
+        Zernio-purchased numbers never need this and get a 400.
+      security:
+        - bearerAuth: []
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string }, description: "Phone number record ID (from GET /v1/phone-numbers)." }
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                method: { type: string, enum: [sms, call], default: sms }
+      responses:
+        '200':
+          description: 'Code sent (or the number was already verified)'
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  verified: { type: boolean }
+                  codeSent: { type: boolean }
+                  method: { type: string, enum: [sms, call] }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404': { description: Number not found }
+        '429': { description: 'Too many verification attempts for this number; wait before retrying' }
 
+  /v1/phone-numbers/{id}/whatsapp/caller-id-verification/verify:
+    post:
+      operationId: verifyWhatsAppCallerId
+      tags: [WhatsApp Calling]
+      summary: Confirm the caller-ID verification code
+      description: |
+        Submits the one-time code the number received. On success, `tel:`
+        call forwards present the business number itself as caller ID
+        (`callerIdMode: business`).
+      security:
+        - bearerAuth: []
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string }, description: "Phone number record ID (from GET /v1/phone-numbers)." }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [code]
+              properties:
+                code: { type: string, minLength: 4, maxLength: 10 }
+      responses:
+        '200':
+          description: Verified
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  verified: { type: boolean }
+        '400': { description: 'Invalid or expired code, or malformed request' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404': { description: Number not found }
+        '429': { description: 'Attempt lockout from the carrier; wait a few minutes, then request a fresh code' }
 
   /v1/whatsapp/phone-numbers/{phoneNumberId}:
     get:
