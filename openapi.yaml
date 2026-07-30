@@ -6881,6 +6881,7 @@ components:
             objectType: { type: string, description: "Meta creative object_type (e.g. SHARE, VIDEO, PRIVACY_CHECK_FAIL, POST_DELETED). Use this to render state-aware previews — when Meta moderation strips image/video fields, only thumbnailUrl at 64x64 is available." }
             objectStoryId: { type: [string, "null"], description: "Meta creative `object_story_id` (the SHARE reference). Frequently absent — Meta omits it for SHARE creatives. Use effectiveObjectStoryId instead." }
             effectiveObjectStoryId: { type: [string, "null"], description: "Meta `effective_object_story_id` — `{pageId}_{postId}` of the Facebook post the ad's engagement (comments) lives on. Pass to GET /v1/ads?effectiveObjectStoryId= to map a Business-Manager-visible post back to this ad; GET /v1/ads/{adId}/comments resolves comments against it." }
+            pageId: { type: [string, "null"], description: "Facebook Page backing the creative (Meta only). What the `pageId` filter on /v1/ads, /v1/ads/campaigns and /v1/ads/tree matches against. Absent for non-Meta ads and rare Meta creatives with no page signal." }
             effectiveInstagramMediaId: { type: [string, "null"], description: "Meta `effective_instagram_media_id` — the Instagram media ID of the boosted post the ad's engagement lives on. Pass to GET /v1/ads?effectiveInstagramMediaId= to map a Business-Manager-visible IG post back to this ad." }
             instagramUserId: { type: [string, "null"], description: "Meta `instagram_user_id` — the Instagram-scoped business ID that owns the boosted media." }
             instagramPermalinkUrl: { type: [string, "null"], description: "Meta `instagram_permalink_url` — public Instagram post URL of the boosted media." }
@@ -34403,6 +34404,7 @@ paths:
         - { name: platform, in: query, schema: { type: string, enum: [facebook, instagram, tiktok, linkedin, pinterest, google, twitter, openai] } }
         - { name: accountId, in: query, schema: { type: string }, description: Social account ID }
         - { name: adAccountId, in: query, schema: { type: string }, description: "Platform ad account ID (e.g. act_123 for Meta). Mirrors the same filter on /v1/ads/campaigns and /v1/ads/tree." }
+        - { name: pageId, in: query, schema: { type: string }, description: "Meta only: Facebook Page ID. Returns only ads whose creative is backed by this Page (a Meta ad account serves ads for every Page in the Business Manager). Matches each ad's `creative.pageId`; ads with no page signal (rare IG-only creatives) never match. Mirrors the same filter on /v1/ads/campaigns and /v1/ads/tree." }
         - { name: profileId, in: query, schema: { type: string }, description: Profile ID }
         - { name: campaignId, in: query, schema: { type: string }, description: Platform campaign ID (filter ads within a campaign) }
         - { name: platformAdId, in: query, schema: { type: string }, description: "Meta ad ID. Returns the ad with this platform-side ad ID." }
@@ -34517,6 +34519,7 @@ paths:
         - { name: platform, in: query, schema: { type: string, enum: [facebook, instagram, tiktok, linkedin, pinterest, google, twitter, openai] } }
         - { name: status, in: query, schema: { $ref: '#/components/schemas/AdStatus' }, description: Filter by derived campaign status (post-aggregation) }
         - { name: adAccountId, in: query, schema: { type: string }, description: Platform ad account ID (e.g. act_123 for Meta) }
+        - { name: pageId, in: query, schema: { type: string }, description: "Meta only: Facebook Page ID. Campaigns have no Page of their own, so this keeps campaigns having at least one ad backed by this Page, with adCount and metrics computed over those ads only. Mirrors the same filter on /v1/ads and /v1/ads/tree." }
         - { name: accountId, in: query, schema: { type: string }, description: Social account ID }
         - { name: profileId, in: query, schema: { type: string }, description: Profile ID }
         - { name: fromDate, in: query, schema: { type: string, format: date }, description: "Start of metrics date range (YYYY-MM-DD, inclusive). Defaults to 90 days ago when both date params are omitted." }
@@ -35186,6 +35189,7 @@ paths:
         - { name: platform, in: query, schema: { type: string, enum: [facebook, instagram, tiktok, linkedin, pinterest, google, twitter, openai] } }
         - { name: status, in: query, schema: { $ref: '#/components/schemas/AdStatus' }, description: Filter by derived campaign status (post-aggregation) }
         - { name: adAccountId, in: query, schema: { type: string }, description: Platform ad account ID }
+        - { name: pageId, in: query, schema: { type: string }, description: "Meta only: Facebook Page ID. Prunes the tree to ads whose creative is backed by this Page — campaigns and ad sets with no ad on the Page drop out, and rolled-up metrics cover only the Page's ads. Mirrors the same filter on /v1/ads and /v1/ads/campaigns." }
         - { name: accountId, in: query, schema: { type: string }, description: Social account ID }
         - { name: profileId, in: query, schema: { type: string }, description: Profile ID }
         - { name: campaignId, in: query, schema: { type: string }, description: "Restrict the tree to a single campaign by its platform campaign id (the id the platform assigns, e.g. Meta's numeric campaign id). Filters the campaign set itself, so it works regardless of account size and pagination — pass this when you already hold a campaign id instead of paging the tree to find it. Mirrors the `campaignId` filter on GET /v1/ads." }

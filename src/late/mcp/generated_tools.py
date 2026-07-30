@@ -1780,6 +1780,7 @@ def register_generated_tools(mcp, _get_client):
         platform: str | None = None,
         account_id: str | None = None,
         ad_account_id: str | None = None,
+        page_id: str | None = None,
         profile_id: str | None = None,
         campaign_id: str | None = None,
         platform_ad_id: str | None = None,
@@ -1798,6 +1799,7 @@ def register_generated_tools(mcp, _get_client):
             platform
             account_id: Social account ID
             ad_account_id: Platform ad account ID (e.g. act_123 for Meta). Mirrors the same filter on /v1/ads/campaigns and /v1/ads/tree.
+            page_id: Meta only: Facebook Page ID. Returns only ads whose creative is backed by this Page (a Meta ad account serves ads for every Page in the Business Manager). Matches each ad's `creative.pageId`; ads with no page signal (rare IG-only creatives) never match. Mirrors the same filter on /v1/ads/campaigns and /v1/ads/tree.
             profile_id: Profile ID
             campaign_id: Platform campaign ID (filter ads within a campaign)
             platform_ad_id: Meta ad ID. Returns the ad with this platform-side ad ID.
@@ -1815,6 +1817,7 @@ def register_generated_tools(mcp, _get_client):
                 platform=platform,
                 account_id=account_id,
                 ad_account_id=ad_account_id,
+                page_id=page_id,
                 profile_id=profile_id,
                 campaign_id=campaign_id,
                 platform_ad_id=platform_ad_id,
@@ -1896,6 +1899,7 @@ def register_generated_tools(mcp, _get_client):
         platform: str | None = None,
         status: str | None = None,
         ad_account_id: str | None = None,
+        page_id: str | None = None,
         account_id: str | None = None,
         profile_id: str | None = None,
         from_date: str | None = None,
@@ -1910,6 +1914,7 @@ def register_generated_tools(mcp, _get_client):
             platform
             status: Filter by derived campaign status (post-aggregation)
             ad_account_id: Platform ad account ID (e.g. act_123 for Meta)
+            page_id: Meta only: Facebook Page ID. Campaigns have no Page of their own, so this keeps campaigns having at least one ad backed by this Page, with adCount and metrics computed over those ads only. Mirrors the same filter on /v1/ads and /v1/ads/tree.
             account_id: Social account ID
             profile_id: Profile ID
             from_date: Start of metrics date range (YYYY-MM-DD, inclusive). Defaults to 90 days ago when both date params are omitted.
@@ -1923,6 +1928,7 @@ def register_generated_tools(mcp, _get_client):
                 platform=platform,
                 status=status,
                 ad_account_id=ad_account_id,
+                page_id=page_id,
                 account_id=account_id,
                 profile_id=profile_id,
                 from_date=from_date,
@@ -2366,6 +2372,7 @@ def register_generated_tools(mcp, _get_client):
         platform: str | None = None,
         status: str | None = None,
         ad_account_id: str | None = None,
+        page_id: str | None = None,
         account_id: str | None = None,
         profile_id: str | None = None,
         campaign_id: str | None = None,
@@ -2384,6 +2391,7 @@ def register_generated_tools(mcp, _get_client):
             platform
             status: Filter by derived campaign status (post-aggregation)
             ad_account_id: Platform ad account ID
+            page_id: Meta only: Facebook Page ID. Prunes the tree to ads whose creative is backed by this Page — campaigns and ad sets with no ad on the Page drop out, and rolled-up metrics cover only the Page's ads. Mirrors the same filter on /v1/ads and /v1/ads/campaigns.
             account_id: Social account ID
             profile_id: Profile ID
             campaign_id: Restrict the tree to a single campaign by its platform campaign id (the id the platform assigns, e.g. Meta's numeric campaign id). Filters the campaign set itself, so it works regardless of account size and pagination — pass this when you already hold a campaign id instead of paging the tree to find it. Mirrors the `campaignId` filter on GET /v1/ads.
@@ -2401,6 +2409,7 @@ def register_generated_tools(mcp, _get_client):
                 platform=platform,
                 status=status,
                 ad_account_id=ad_account_id,
+                page_id=page_id,
                 account_id=account_id,
                 profile_id=profile_id,
                 campaign_id=campaign_id,
