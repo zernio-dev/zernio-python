@@ -36073,7 +36073,7 @@ paths:
               properties:
                 urlTags:
                   type: array
-                  description: "Meta only. Click-URL params appended to a freshly-rebuilt creative."
+                  description: "Meta only. Click-URL params appended to a freshly-rebuilt creative. Meta dynamic macros ({{ad.id}}, {{campaign.id}}, {{placement}}, ...) are sent through unescaped so Meta expands them; every other character is percent-encoded."
                   items:
                     type: object
                     required: [key, value]
@@ -37119,7 +37119,7 @@ paths:
                     pixelId: { type: string }
                     urlTags:
                       type: array
-                      description: 'URL parameters appended to the ad link, rendered as `key=value` pairs joined with `&`.'
+                      description: 'URL parameters appended to the ad link, rendered as `key=value` pairs joined with `&`. Meta dynamic macros ({{ad.id}}, {{campaign.id}}, {{placement}}, ...) are sent through unescaped so Meta expands them; every other character is percent-encoded.'
                       items:
                         type: object
                         properties:
@@ -37264,7 +37264,7 @@ paths:
                     pixelId: { type: string, description: "Meta Pixel ID to attach for offsite-conversion measurement." }
                     urlTags:
                       type: array
-                      description: "Click-URL params appended to the ad's destination as `url_tags` (e.g. utm_source)."
+                      description: "Click-URL params appended to the ad's destination as `url_tags` (e.g. utm_source). Meta dynamic macros ({{ad.id}}, {{campaign.id}}, {{placement}}, ...) are sent through unescaped so Meta expands them; every other character is percent-encoded."
                       items:
                         type: object
                         required: [key, value]
