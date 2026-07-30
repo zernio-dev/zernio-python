@@ -32668,7 +32668,7 @@ paths:
     post:
       operationId: bulkCreateContacts
       summary: Bulk create contacts
-      description: Import up to 1000 contacts at a time. Skips duplicates.
+      description: 'Import up to 1000 contacts at a time. Skips duplicates. On phone platforms (whatsapp, sms) the platformIdentifier is normalized to digits and a value that is not phone-shaped is rejected per contact and reported in errors[], not imported.'
       tags: [Contacts]
       requestBody:
         required: true
@@ -32705,7 +32705,7 @@ paths:
                   success: { type: boolean }
                   created: { type: integer }
                   skipped: { type: integer }
-                  errors: { type: array, items: { type: object } }
+                  errors: { type: array, items: { type: string }, description: 'Per-contact failures, e.g. an identifier that is not a valid phone number' }
                   total: { type: integer }
         '400': { description: Invalid request }
         '401': { $ref: '#/components/responses/Unauthorized' }
