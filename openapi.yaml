@@ -500,11 +500,6 @@ components:
       in: query
       description: Page number (1-based)
       schema: { type: integer, minimum: 1, default: 1 }
-    LimitParam:
-      name: limit
-      in: query
-      description: Page size
-      schema: { type: integer, minimum: 1, maximum: 100, default: 10 }
   responses:
     BadRequest:
       description: Invalid request
@@ -12347,7 +12342,10 @@ paths:
       description: Returns a paginated list of posts. Published posts include platformPostUrl with the public URL on each platform.
       parameters:
         - $ref: '#/components/parameters/PageParam'
-        - $ref: '#/components/parameters/LimitParam'
+        - name: limit
+          in: query
+          schema: { type: integer, minimum: 1, maximum: 500, default: 10 }
+          description: 'Page size. Values above the maximum return 400 rather than being clamped.'
         - name: source
           in: query
           schema: { type: string, enum: [zernio, external], default: zernio }
@@ -12369,6 +12367,7 @@ paths:
         - name: createdBy
           in: query
           schema: { type: string }
+          description: 'Filter posts to those created by a specific team user (24-char hex ObjectId).'
         - name: dateFrom
           in: query
           schema: { type: string, format: date }
@@ -12471,6 +12470,7 @@ paths:
                       limit: 10
                       total: 1
                       pages: 1
+        '400': { $ref: '#/components/responses/BadRequest' }
         '401': { $ref: '#/components/responses/Unauthorized' }
     post:
       operationId: createPost
@@ -13092,9 +13092,13 @@ paths:
                           errorMessage: "Post text exceeds the 500 character limit for Threads."
                           errorCategory: "user_content"
                           errorSource: "user"
+        '400': { $ref: '#/components/responses/BadRequest' }
         '401': { $ref: '#/components/responses/Unauthorized' }
         '403':
           description: Forbidden
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ErrorResponse' }
         '404': { $ref: '#/components/responses/NotFound' }
     put:
       operationId: updatePost
@@ -13200,9 +13204,15 @@ paths:
           description: Partial publish success
         '400':
           description: Invalid request
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ErrorResponse' }
         '401': { $ref: '#/components/responses/Unauthorized' }
         '403':
           description: Forbidden
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ErrorResponse' }
         '404': { $ref: '#/components/responses/NotFound' }
     delete:
       operationId: deletePost
@@ -13225,9 +13235,15 @@ paths:
                 message: "Post deleted successfully"
         '400':
           description: Cannot delete published posts
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ErrorResponse' }
         '401': { $ref: '#/components/responses/Unauthorized' }
         '403':
           description: Forbidden
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ErrorResponse' }
         '404': { $ref: '#/components/responses/NotFound' }
   /v1/posts/bulk-upload:
     post:
@@ -13289,7 +13305,23 @@ paths:
                 warnings: []
         '400':
           description: Invalid CSV or validation errors
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ErrorResponse' }
         '401': { $ref: '#/components/responses/Unauthorized' }
+        '402':
+          description: 'Payment required: the account owner has a failed payment. Not returned on dry-run.'
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error: { type: string }
+        '404':
+          description: Authenticated user not found
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ErrorResponse' }
         '429':
           description: |
             Rate limit exceeded. Possible causes: API rate limit (requests per minute) or account cooldown (one or more accounts for platforms specified in the CSV are temporarily rate-limited).
@@ -13341,12 +13373,29 @@ paths:
           description: Partial success
         '400':
           description: Invalid state
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ErrorResponse' }
         '401': { $ref: '#/components/responses/Unauthorized' }
+        '402':
+          description: 'Payment required: the account owner has a failed payment.'
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error: { type: string }
         '403':
           description: Forbidden
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ErrorResponse' }
         '404': { $ref: '#/components/responses/NotFound' }
         '409':
           description: Post is currently publishing
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ErrorResponse' }
         '429':
           description: |
             Rate limit exceeded. Possible causes: API rate limit (requests per minute), velocity limit (25 posts/hour per account), or account cooldown (temporarily rate-limited due to repeated errors).
@@ -13410,9 +13459,15 @@ paths:
                 message: "Post deleted from threads successfully"
         '400':
           description: "Invalid request: platform not supported for deletion, post not on that platform, not published, no platform post ID, or no access token."
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ErrorResponse' }
         '401': { $ref: '#/components/responses/Unauthorized' }
         '403':
           description: Forbidden
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ErrorResponse' }
         '404': { $ref: '#/components/responses/NotFound' }
         '500':
           description: Platform API deletion failed
@@ -13622,9 +13677,15 @@ paths:
                 updatedFields: ["title", "description", "tags"]
         '400':
           description: "Invalid request: unsupported platform, post not published, missing fields, or validation error."
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ErrorResponse' }
         '401': { $ref: '#/components/responses/Unauthorized' }
         '403':
           description: Forbidden
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ErrorResponse' }
         '404': { $ref: '#/components/responses/NotFound' }
         '500':
           description: Platform API update failed

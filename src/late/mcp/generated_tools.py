@@ -11155,12 +11155,12 @@ def register_generated_tools(mcp, _get_client):
 
         Args:
             page: Page number
-            limit: Results per page
+            limit: Page size. Values above the maximum return 400 rather than being clamped.
             source: Which collection to read. `zernio` (default) returns posts authored through Zernio. `external` returns posts synced from the platform (existing/historical posts that were published outside Zernio). Combine with `accountId` and paginate via `page`/`limit` to walk the full synced history (we keep up to the last ~12 months per account).
             status
             platform
             profile_id
-            created_by
+            created_by: Filter posts to those created by a specific team user (24-char hex ObjectId).
             date_from
             date_to
             include_hidden
