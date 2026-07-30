@@ -54,6 +54,17 @@ class WhatsappResource:
                 result[to_camel(k)] = v
         return result
 
+    def register_whats_app_number(
+        self, account_id: str, *, pin: str | None = None
+    ) -> dict[str, Any]:
+        """Register a connected WhatsApp number on the Cloud API"""
+        payload = self._build_payload(
+            pin=pin,
+        )
+        return self._client._post(
+            f"/v1/accounts/{account_id}/whatsapp/register", data=payload
+        )
+
     def get_whats_app_media(self, media_id: str, account_id: str) -> dict[str, Any]:
         """Download WhatsApp media"""
         params = self._build_params(
@@ -462,6 +473,17 @@ class WhatsappResource:
             test_code=test_code,
         )
         return self._client._post("/v1/whatsapp/conversions", data=payload)
+
+    async def aregister_whats_app_number(
+        self, account_id: str, *, pin: str | None = None
+    ) -> dict[str, Any]:
+        """Register a connected WhatsApp number on the Cloud API (async)"""
+        payload = self._build_payload(
+            pin=pin,
+        )
+        return await self._client._apost(
+            f"/v1/accounts/{account_id}/whatsapp/register", data=payload
+        )
 
     async def aget_whats_app_media(
         self, media_id: str, account_id: str

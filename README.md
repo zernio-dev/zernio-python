@@ -855,6 +855,7 @@ Both `from zernio import ...` and `from late import ...` work identically. The `
 | `whatsapp.add_whats_app_group_participants()` | Add participants |
 | `whatsapp.approve_whats_app_group_join_requests()` | Approve join requests |
 | `whatsapp.block_whats_app_users()` | Block users |
+| `whatsapp.register_whats_app_number()` | Register a connected WhatsApp number on the Cloud API |
 | `whatsapp.reject_whats_app_group_join_requests()` | Reject join requests |
 | `whatsapp.remove_whats_app_group_participants()` | Remove participants |
 | `whatsapp.send_whats_app_conversion()` | Send WhatsApp conversion event |

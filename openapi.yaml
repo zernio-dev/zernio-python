@@ -14364,6 +14364,55 @@ paths:
                     issues: ["Token expired"]
         '400': { $ref: '#/components/responses/BadRequest' }
         '401': { $ref: '#/components/responses/Unauthorized' }
+  /v1/accounts/{accountId}/whatsapp/register:
+    post:
+      operationId: registerWhatsAppNumber
+      tags: [WhatsApp]
+      summary: Register a connected WhatsApp number on the Cloud API
+      description: |
+        Re-runs Meta's Cloud API registration for a WhatsApp account that is already connected.
+        Use it when the number has its own two-step verification PIN: the connect flows register
+        with a default PIN, Meta rejects that with error 133005, and the number then fails every
+        send with the misleading '(#200) You do not have the necessary permission to send messages'
+        while the account still shows as connected. The PIN is used for this call only and is not stored.
+      parameters:
+        - name: accountId
+          in: path
+          required: true
+          schema: { type: string }
+          description: The WhatsApp account ID
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                pin:
+                  type: string
+                  pattern: '^\d{6}$'
+                  description: 'The 6-digit two-step verification PIN set on the number. Omit it only if the number has no PIN of its own.'
+            example:
+              pin: "481902"
+      responses:
+        '200':
+          description: Number registered on the WhatsApp Cloud API
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  registered: { type: boolean }
+                  accountId: { type: string }
+                  phoneNumberId: { type: string }
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          description: Invalid or expired credentials
+        '404':
+          description: WhatsApp account not found
+        '422':
+          description: 'Meta rejected the registration (e.g. PIN mismatch), or the number cannot be registered through the API.'
   /v1/accounts/{accountId}/health:
     get:
       operationId: getAccountHealth
@@ -18189,11 +18238,16 @@ paths:
                 phoneNumberId:
                   type: string
                   description: Phone Number ID from Meta WhatsApp Manager
+                pin:
+                  type: string
+                  pattern: '^\d{6}$'
+                  description: 'The 6-digit two-step verification PIN set on the number. Required if you enabled two-step verification for it, otherwise Meta rejects the Cloud API registration with error 133005 and the number cannot send messages.'
             example:
               profileId: "6507a1b2c3d4e5f6a7b8c9d0"
               accessToken: "EAABsbCS...your-system-user-token"
               wabaId: "123456789012345"
               phoneNumberId: "987654321098765"
+              pin: "481902"
       responses:
         '200':
           description: WhatsApp connected successfully
@@ -18203,6 +18257,9 @@ paths:
                 type: object
                 properties:
                   message: { type: string }
+                  registrationWarning:
+                    type: string
+                    description: 'Present when the account was created but Meta rejected the Cloud API registration. The number cannot send messages until this is resolved.'
                   account:
                     type: object
                     properties:
@@ -18223,9 +18280,10 @@ paths:
                   selectedPhoneNumber: "+1 555-123-4567"
         '400':
           description: |
-            Invalid request. Either missing fields or the phoneNumberId was not found
-            in the specified WABA. If the phone was not found, the response includes
-            availablePhoneNumbers to help identify the correct ID.
+            Invalid request. Missing fields, a `pin` that is not 6 digits, or the
+            phoneNumberId was not found in the specified WABA. If the phone was not
+            found, the response includes availablePhoneNumbers to help identify the
+            correct ID.
         '401':
           description: Invalid or expired access token
         '403':

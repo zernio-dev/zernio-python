@@ -6617,7 +6617,11 @@ def register_generated_tools(mcp, _get_client):
         )
     )
     def connect_whats_app_credentials(
-        profile_id: str, access_token: str, waba_id: str, phone_number_id: str
+        profile_id: str,
+        access_token: str,
+        waba_id: str,
+        phone_number_id: str,
+        pin: str | None = None,
     ) -> str:
         """Connect WhatsApp via credentials
 
@@ -6625,7 +6629,8 @@ def register_generated_tools(mcp, _get_client):
             profile_id: Your Zernio profile ID (required)
             access_token: Permanent System User access token from Meta Business Suite (required)
             waba_id: WhatsApp Business Account ID from Meta (required)
-            phone_number_id: Phone Number ID from Meta WhatsApp Manager (required)"""
+            phone_number_id: Phone Number ID from Meta WhatsApp Manager (required)
+            pin: The 6-digit two-step verification PIN set on the number. Required if you enabled two-step verification for it, otherwise Meta rejects the Cloud API registration with error 133005 and the number cannot send messages."""
         client = _get_client()
         try:
             response = client.connect.connect_whats_app_credentials(
@@ -6633,6 +6638,7 @@ def register_generated_tools(mcp, _get_client):
                 access_token=access_token,
                 waba_id=waba_id,
                 phone_number_id=phone_number_id,
+                pin=pin,
             )
             return _format_response(response)
         except Exception as e:
@@ -14331,6 +14337,31 @@ def register_generated_tools(mcp, _get_client):
             return f"Error: {e}"
 
     # WHATSAPP
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Register a connected WhatsApp number on the Cloud API",
+            readOnlyHint=False,
+            destructiveHint=True,
+            openWorldHint=True,
+        )
+    )
+    def whatsapp_register_whats_app_number(
+        account_id: str, pin: str | None = None
+    ) -> str:
+        """Register a connected WhatsApp number on the Cloud API
+
+        Args:
+            account_id: The WhatsApp account ID (required)
+            pin: The 6-digit two-step verification PIN set on the number. Omit it only if the number has no PIN of its own."""
+        client = _get_client()
+        try:
+            response = client.whatsapp.register_whats_app_number(
+                account_id=account_id, pin=pin
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
 
     @mcp.tool(
         annotations=ToolAnnotations(
