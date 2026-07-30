@@ -1871,6 +1871,14 @@ components:
           description: |
             Object keyed by metric name. For time_series: each metric has "total" (number) and "values" (array of {date, value}).
             For total_value: each metric has "total" (number) and optionally "breakdowns" (array of {dimension, value}).
+
+            Monetary metrics additionally carry "unit" and "currency". Zernio never rescales money:
+            "total" and every "values[].value" are the platform's raw numbers in the stated unit.
+            Monetary metrics also keep "values" on metricType=total_value, because their "total" is the
+            sum of the daily buckets the platform returned over the range: keep the series so you can
+            reconcile that sum against the platform's own reporting before invoicing on it.
+            A metric that could not be served is absent from this object and listed in
+            "unavailableMetrics" instead, so an unavailable metric is never reported as a zero.
           additionalProperties:
             type: object
             properties:
@@ -1879,7 +1887,7 @@ components:
                 description: Sum or aggregate value for the metric
               values:
                 type: array
-                description: Daily values (only for time_series)
+                description: Daily values (for time_series, and always on monetary metrics)
                 items:
                   type: object
                   properties:
@@ -1898,9 +1906,149 @@ components:
                       type: string
                     value:
                       type: number
+              unit:
+                type: string
+                enum: [micro_amount, unspecified]
+                description: |
+                  Present on monetary metrics only. The scale of "total" and of every "values[].value",
+                  exactly as the platform returned them.
+
+                  "micro_amount": the platform returned an object shape carrying a micro amount, and the
+                  values are that integer, summed, unconverted. Zernio does not publish a divisor because
+                  Meta does not document one; divide by the scale you have verified against the Page's own
+                  Meta Business Suite export. On Facebook Page insights this is always
+                  content_monetization_earnings.
+
+                  "unspecified": the platform returned a bare number with no unit metadata. It is passed
+                  through as-is; the platform does not state whether it is major or minor currency units.
+                  On Facebook Page insights this is always monetization_approximate_earnings.
+              currency:
+                type: [string, "null"]
+                description: |
+                  ISO 4217 currency of a monetary metric, or null when the platform omitted it.
+                  Always null on monetization_approximate_earnings, which Meta returns as a bare number
+                  with no currency; always present on content_monetization_earnings.
+                example: "USD"
+        unavailableMetrics:
+          type: array
+          description: |
+            Requested metrics that could not be served. Present only when at least one metric is
+            unavailable, and absent otherwise. Each listed metric is OMITTED from "metrics" rather than
+            reported as 0, which is how an unavailable metric is distinguished from a genuine zero.
+            The request itself still succeeds with HTTP 200.
+          items:
+            type: object
+            properties:
+              metric:
+                type: string
+                description: The requested metric name.
+              reason:
+                type: string
+                enum: [not_enrolled, permission_missing, unsupported_metric, no_data, unreadable_value, mixed_currency, upstream_error]
+                description: |
+                  "not_enrolled": the account is not enrolled in the program behind this metric.
+                  "permission_missing": the connected user lacks access to this metric.
+                  "unsupported_metric": the platform does not accept this metric name on the API version Zernio uses.
+                  "no_data": the platform returned no bucket for this metric over the requested range.
+                  "unreadable_value": the platform returned a value shape Zernio cannot read, so no total is reported.
+                  "mixed_currency": readable values disagree on currency or unit within the range.
+                  "upstream_error": any other platform failure.
+
+                  "no_data" is the common case in practice. The others are defensive: "not_enrolled" and
+                  "unsupported_metric" in particular have not been observed on live Facebook traffic, since
+                  a non-enrolled Page returns zeros rather than an error and metric names are validated
+                  before any platform call.
+              message:
+                type: string
+                description: 'Platform-provided explanation when available (access tokens redacted), otherwise Zernio copy.'
         dataDelay:
           type: string
           example: "Data may be delayed up to 48 hours"
+    FacebookPostEarningsResponse:
+      type: object
+      description: |
+        Lifetime monetization earnings for one Facebook post. Same "unit" / "currency" contract and
+        same unavailable-vs-zero contract as the Page-level response; there is no date range, no
+        metricType, and no daily "values", because the single lifetime bucket IS the total.
+      properties:
+        success:
+          type: boolean
+          example: true
+        accountId:
+          type: string
+          example: "64e1a2b3c4d5e6f7a8b9c0d1"
+        postId:
+          type: string
+          description: 'The platform post ID that was queried, echoed back.'
+          example: "123456789_987654321"
+        platform:
+          type: string
+          example: "facebook"
+        period:
+          type: string
+          enum: [lifetime]
+          description: |
+            Always "lifetime": the total is cumulative since publication and must not be summed
+            across dates or across posts.
+        metrics:
+          type: object
+          description: |
+            One entry per served metric. A metric reported here with "total": 0 genuinely earned
+            nothing (or its Page is not enrolled, which Meta reports identically).
+          additionalProperties:
+            type: object
+            properties:
+              total:
+                type: number
+                description: 'Lifetime earnings in "unit", exactly as Meta returned them. Never rescaled.'
+              unit:
+                type: string
+                enum: [micro_amount, unspecified]
+                description: |
+                  "micro_amount": Meta returned an object shape carrying a micro amount, and "total" is
+                  that integer, unconverted. Zernio does not publish a divisor because Meta does not
+                  document one; divide by the scale you have verified against the Page's own Meta
+                  Business Suite export. This is always content_monetization_earnings.
+
+                  "unspecified": Meta returned a bare number with no unit metadata, passed through as-is;
+                  Meta does not state whether it is major or minor currency units. This is always
+                  monetization_approximate_earnings.
+              currency:
+                type: [string, "null"]
+                description: |
+                  ISO 4217 currency, or null when Meta omitted it. Always null on
+                  monetization_approximate_earnings; always present on content_monetization_earnings.
+                example: "USD"
+        unavailableMetrics:
+          type: array
+          description: |
+            Requested metrics Meta could not serve. Present only when at least one metric is
+            unavailable, and absent otherwise. Each listed metric is OMITTED from "metrics" rather than
+            reported as 0. The request itself still succeeds with HTTP 200.
+          items:
+            type: object
+            properties:
+              metric:
+                type: string
+                description: The requested metric name.
+              reason:
+                type: string
+                enum: [not_enrolled, permission_missing, unsupported_metric, no_data, unreadable_value, mixed_currency, upstream_error]
+                description: |
+                  "not_enrolled": the account is not enrolled in the program behind this metric.
+                  "permission_missing": the connected user lacks access to this metric.
+                  "unsupported_metric": Meta does not accept this metric name on the API version Zernio uses.
+                  "no_data": Meta returned no bucket for this metric.
+                  "unreadable_value": Meta returned a value shape Zernio cannot read, so no total is reported.
+                  "mixed_currency": readable values disagree on currency or unit.
+                  "upstream_error": any other platform failure.
+
+                  "no_data" is the common case in practice; the others are defensive.
+              message:
+                type: string
+                description: 'Platform-provided explanation when available (access tokens redacted), otherwise Zernio copy.'
+        dataDelay:
+          type: string
     InstagramDemographicsResponse:
       type: object
       properties:
@@ -9349,6 +9497,31 @@ paths:
             left by the page_fan_adds / page_fan_removes deprecation):
               - followers_gained
               - followers_lost
+
+            Monetization (opt-in, not in the defaults):
+              - content_monetization_earnings
+              - monetization_approximate_earnings
+
+            Each monetization metric is fetched with its own separate Graph call, so requesting both
+            adds two calls. Values are approximate and Meta restates them after the fact.
+
+            content_monetization_earnings returns an object per day and always carries unit
+            "micro_amount" plus an ISO 4217 "currency". monetization_approximate_earnings returns a bare
+            number per day, so its unit is always "unspecified" and its "currency" is always null. The two
+            are on different scales and are not comparable to each other. Both keep their daily "values"
+            on every metricType and are never rescaled by Zernio.
+
+            Earnings here are Page-level daily buckets and "total" is their sum. Meta does not
+            document whether a bucket carries that day's earnings or a running total, and every
+            Page measured so far earned exactly 0, so reconcile "total" against the Page's own Meta
+            export before relying on it; the daily "values" are always returned for that purpose.
+            Per-post lifetime earnings are served by GET /v1/analytics/facebook/post-earnings.
+
+            A Page that is not enrolled in monetization, or that earned nothing, returns normal daily
+            buckets of 0 in "metrics": Meta does not distinguish the two, so a 0 total here does NOT mean
+            the Page is enrolled. "unavailableMetrics" covers the narrower case where Meta returned no
+            bucket for the metric at all ("no_data") or rejected the request outright, and the metric is
+            then omitted from "metrics" rather than reported as 0.
         - name: since
           in: query
           schema: { type: string, format: date }
@@ -9398,13 +9571,160 @@ paths:
                         values:
                           - { date: "2026-03-01", value: 1 }
                           - { date: "2026-03-02", value: 0 }
-                    dataDelay: "Meta page insights may be delayed up to 24 hours. Metrics reflect the current (post-November 2025) Graph API names."
+                    dataDelay: "Meta page insights may be delayed up to 24 hours. Metrics reflect the current (post-November 2025) Graph API names. Monetization earnings are approximate and Meta restates them after the fact."
+                monetization:
+                  summary: 'Both monetization metrics, each at its own scale'
+                  value:
+                    success: true
+                    accountId: "64e1a2b3c4d5e6f7a8b9c0d1"
+                    platform: "facebook"
+                    dateRange: { since: "2026-06-01", until: "2026-06-30" }
+                    metricType: "total_value"
+                    metrics:
+                      page_media_view:
+                        total: 125000
+                      content_monetization_earnings:
+                        total: 1234000000
+                        unit: "micro_amount"
+                        currency: "USD"
+                        values:
+                          - { date: "2026-06-01", value: 634000000 }
+                          - { date: "2026-06-02", value: 600000000 }
+                      monetization_approximate_earnings:
+                        total: 1234
+                        unit: "unspecified"
+                        currency: null
+                        values:
+                          - { date: "2026-06-01", value: 700 }
+                          - { date: "2026-06-02", value: 534 }
+                    dataDelay: "Meta page insights may be delayed up to 24 hours. Metrics reflect the current (post-November 2025) Graph API names. Monetization earnings are approximate and Meta restates them after the fact."
+                monetizationUnavailable:
+                  summary: 'A monetization metric Meta returned no bucket for'
+                  value:
+                    success: true
+                    accountId: "64e1a2b3c4d5e6f7a8b9c0d1"
+                    platform: "facebook"
+                    dateRange: { since: "2026-06-01", until: "2026-06-30" }
+                    metricType: "total_value"
+                    metrics:
+                      page_media_view:
+                        total: 125000
+                    unavailableMetrics:
+                      - metric: "content_monetization_earnings"
+                        reason: "no_data"
+                        message: "Meta returned no data for this monetization metric."
+                    dataDelay: "Meta page insights may be delayed up to 24 hours. Metrics reflect the current (post-November 2025) Graph API names. Monetization earnings are approximate and Meta restates them after the fact."
         '400':
           description: |
             Bad request. Common cases:
               - Requested a deprecated metric (page_impressions, page_fans, page_fan_adds, page_fan_removes) - use current names instead
               - Account has no Page selected (metadata.pageAccessToken missing)
               - Invalid accountId / metrics / metricType / date range
+              - Account is not a Facebook account
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '402':
+          description: Analytics access required. Legacy plans need the Analytics add-on; included by default on usage-based plans.
+        '404':
+          description: Account not found
+
+  /v1/analytics/facebook/post-earnings:
+    get:
+      operationId: getFacebookPostEarnings
+      tags: [Analytics]
+      summary: Get Facebook post monetization earnings
+      description: |
+        Returns lifetime monetization earnings for ONE Facebook post, read live from Meta on every
+        request. Requires the Analytics add-on.
+
+        Earnings are CUMULATIVE since the post was published, not earnings within a date range, so
+        this endpoint takes no since/until and the totals must not be summed across dates or across
+        posts. Page-level daily earnings live on /v1/analytics/facebook/page-insights.
+
+        A post on a Page that is not enrolled in monetization, or that earned nothing, returns
+        "total": 0 rather than an error: Meta does not distinguish the two. A metric Meta returned no
+        bucket for at all is reported in "unavailableMetrics" and omitted from "metrics", never as a 0.
+
+        Amounts are the platform's raw numbers in the stated "unit" and are never rescaled by Zernio.
+        Breakdown dimensions are not exposed and a "breakdown" param is rejected with 400. So are
+        "since", "until", "period", and "metricType": scoping this endpoint to a window is not
+        possible, and silently returning the lifetime total for one would let a caller sum a year of
+        weekly requests into a figure ~52x the post's real earnings.
+      parameters:
+        - name: accountId
+          in: query
+          required: true
+          schema: { type: string }
+          description: The Zernio SocialAccount ID for the connected Facebook Page.
+        - name: postId
+          in: query
+          required: true
+          schema: { type: string }
+          description: |
+            The platform post ID, exactly as returned in platformAnalytics[].platformPostId by
+            /v1/analytics: "{pageId}_{postId}", or the bare video ID for Reels.
+        - name: metrics
+          in: query
+          schema: { type: string }
+          description: |
+            Comma-separated list of monetization metrics. Defaults to both:
+              - content_monetization_earnings
+              - monetization_approximate_earnings
+
+            content_monetization_earnings always carries unit "micro_amount" plus an ISO 4217
+            "currency". monetization_approximate_earnings is always a bare number, so its unit is
+            "unspecified" and its "currency" is null. The two are on different scales and are not
+            comparable to each other. Any other metric name is rejected with 400.
+      responses:
+        '200':
+          description: Lifetime per-post monetization earnings
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FacebookPostEarningsResponse'
+              examples:
+                served:
+                  summary: 'Both metrics served, each at its own scale'
+                  value:
+                    success: true
+                    accountId: "64e1a2b3c4d5e6f7a8b9c0d1"
+                    postId: "123456789_987654321"
+                    platform: "facebook"
+                    period: "lifetime"
+                    metrics:
+                      content_monetization_earnings:
+                        total: 1234000000
+                        unit: "micro_amount"
+                        currency: "USD"
+                      monetization_approximate_earnings:
+                        total: 1234
+                        unit: "unspecified"
+                        currency: null
+                    dataDelay: "Meta restates monetization earnings after the fact. Per-post earnings are lifetime cumulative: they are the total since publication, not earnings within a date range, and must not be summed across dates."
+                partiallyUnavailable:
+                  summary: 'One metric served, one with no bucket returned by Meta'
+                  value:
+                    success: true
+                    accountId: "64e1a2b3c4d5e6f7a8b9c0d1"
+                    postId: "123456789_987654321"
+                    platform: "facebook"
+                    period: "lifetime"
+                    metrics:
+                      monetization_approximate_earnings:
+                        total: 0
+                        unit: "unspecified"
+                        currency: null
+                    unavailableMetrics:
+                      - metric: "content_monetization_earnings"
+                        reason: "no_data"
+                        message: "Meta returned no data for this monetization metric."
+                    dataDelay: "Meta restates monetization earnings after the fact. Per-post earnings are lifetime cumulative: they are the total since publication, not earnings within a date range, and must not be summed across dates."
+        '400':
+          description: |
+            Bad request. Common cases:
+              - Invalid accountId format, or a metric name that is not a monetization metric
+              - A "breakdown" param was supplied (breakdown dimensions are not exposed)
+              - A "since", "until", "period", or "metricType" param was supplied (this endpoint returns a lifetime total and takes no date range)
+              - Account has no Page access token (metadata.pageAccessToken missing)
               - Account is not a Facebook account
         '401': { $ref: '#/components/responses/Unauthorized' }
         '402':

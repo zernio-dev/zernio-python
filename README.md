@@ -229,6 +229,7 @@ Both `from zernio import ...` and `from late import ...` work identically. The `
 | `analytics.get_content_decay()` | Get content performance decay |
 | `analytics.get_daily_metrics()` | Get daily aggregated metrics |
 | `analytics.get_facebook_page_insights()` | Get Facebook Page insights |
+| `analytics.get_facebook_post_earnings()` | Get Facebook post monetization earnings |
 | `analytics.get_facebook_post_reactions()` | Get Facebook post reactions |
 | `analytics.get_google_business_performance()` | Get GBP performance metrics |
 | `analytics.get_google_business_search_keywords()` | Get GBP search keywords |

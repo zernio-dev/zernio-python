@@ -201,6 +201,17 @@ class AnalyticsResource:
         )
         return self._client._get("/v1/analytics/facebook/page-insights", params=params)
 
+    def get_facebook_post_earnings(
+        self, account_id: str, post_id: str, *, metrics: str | None = None
+    ) -> dict[str, Any]:
+        """Get Facebook post monetization earnings"""
+        params = self._build_params(
+            account_id=account_id,
+            post_id=post_id,
+            metrics=metrics,
+        )
+        return self._client._get("/v1/analytics/facebook/post-earnings", params=params)
+
     def get_instagram_account_insights(
         self,
         account_id: str,
@@ -626,6 +637,19 @@ class AnalyticsResource:
         )
         return await self._client._aget(
             "/v1/analytics/facebook/page-insights", params=params
+        )
+
+    async def aget_facebook_post_earnings(
+        self, account_id: str, post_id: str, *, metrics: str | None = None
+    ) -> dict[str, Any]:
+        """Get Facebook post monetization earnings (async)"""
+        params = self._build_params(
+            account_id=account_id,
+            post_id=post_id,
+            metrics=metrics,
+        )
+        return await self._client._aget(
+            "/v1/analytics/facebook/post-earnings", params=params
         )
 
     async def aget_instagram_account_insights(

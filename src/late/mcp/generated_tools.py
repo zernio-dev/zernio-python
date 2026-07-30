@@ -4371,6 +4371,31 @@ def register_generated_tools(mcp, _get_client):
         left by the page_fan_adds / page_fan_removes deprecation):
           - followers_gained
           - followers_lost
+
+        Monetization (opt-in, not in the defaults):
+          - content_monetization_earnings
+          - monetization_approximate_earnings
+
+        Each monetization metric is fetched with its own separate Graph call, so requesting both
+        adds two calls. Values are approximate and Meta restates them after the fact.
+
+        content_monetization_earnings returns an object per day and always carries unit
+        "micro_amount" plus an ISO 4217 "currency". monetization_approximate_earnings returns a bare
+        number per day, so its unit is always "unspecified" and its "currency" is always null. The two
+        are on different scales and are not comparable to each other. Both keep their daily "values"
+        on every metricType and are never rescaled by Zernio.
+
+        Earnings here are Page-level daily buckets and "total" is their sum. Meta does not
+        document whether a bucket carries that day's earnings or a running total, and every
+        Page measured so far earned exactly 0, so reconcile "total" against the Page's own Meta
+        export before relying on it; the daily "values" are always returned for that purpose.
+        Per-post lifetime earnings are served by GET /v1/analytics/facebook/post-earnings.
+
+        A Page that is not enrolled in monetization, or that earned nothing, returns normal daily
+        buckets of 0 in "metrics": Meta does not distinguish the two, so a 0 total here does NOT mean
+        the Page is enrolled. "unavailableMetrics" covers the narrower case where Meta returned no
+        bucket for the metric at all ("no_data") or rejected the request outright, and the metric is
+        then omitted from "metrics" rather than reported as 0.
                 since: Start date (YYYY-MM-DD). Defaults to 30 days ago.
                 until: End date (YYYY-MM-DD). Defaults to today.
                 metric_type: "total_value" (default) returns aggregated totals only.
@@ -4383,6 +4408,41 @@ def register_generated_tools(mcp, _get_client):
                 since=since,
                 until=until,
                 metric_type=metric_type,
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Get Facebook post monetization earnings",
+            readOnlyHint=True,
+            destructiveHint=False,
+            openWorldHint=False,
+        )
+    )
+    def analytics_get_facebook_post_earnings(
+        account_id: str, post_id: str, metrics: str | None = None
+    ) -> str:
+        """Get Facebook post monetization earnings
+
+            Args:
+                account_id: The Zernio SocialAccount ID for the connected Facebook Page. (required)
+                post_id: The platform post ID, exactly as returned in platformAnalytics[].platformPostId by
+        /v1/analytics: "{pageId}_{postId}", or the bare video ID for Reels.
+         (required)
+                metrics: Comma-separated list of monetization metrics. Defaults to both:
+          - content_monetization_earnings
+          - monetization_approximate_earnings
+
+        content_monetization_earnings always carries unit "micro_amount" plus an ISO 4217
+        "currency". monetization_approximate_earnings is always a bare number, so its unit is
+        "unspecified" and its "currency" is null. The two are on different scales and are not
+        comparable to each other. Any other metric name is rejected with 400."""
+        client = _get_client()
+        try:
+            response = client.analytics.get_facebook_post_earnings(
+                account_id=account_id, post_id=post_id, metrics=metrics
             )
             return _format_response(response)
         except Exception as e:
