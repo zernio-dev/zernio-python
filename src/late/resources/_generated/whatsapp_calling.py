@@ -73,6 +73,8 @@ class WhatsappCallingResource:
         sip_auth_password: str | None = None,
         recording_enabled: bool | None = False,
         call_icon_countries: list[str] | None = None,
+        max_call_duration_seconds: int | None = None,
+        forward_caller_id: str | None = "business",
     ) -> dict[str, Any]:
         """Enable calling on a number"""
         payload = self._build_payload(
@@ -82,6 +84,8 @@ class WhatsappCallingResource:
             sip_auth_password=sip_auth_password,
             recording_enabled=recording_enabled,
             call_icon_countries=call_icon_countries,
+            max_call_duration_seconds=max_call_duration_seconds,
+            forward_caller_id=forward_caller_id,
         )
         return self._client._post(
             f"/v1/whatsapp/phone-numbers/{id}/calling", data=payload
@@ -97,6 +101,8 @@ class WhatsappCallingResource:
         sip_auth_password: Any | None = None,
         recording_enabled: bool | None = None,
         call_icon_countries: Any | None = None,
+        max_call_duration_seconds: Any | None = None,
+        forward_caller_id: str | None = None,
     ) -> dict[str, Any]:
         """Update calling config"""
         payload = self._build_payload(
@@ -106,6 +112,8 @@ class WhatsappCallingResource:
             sip_auth_password=sip_auth_password,
             recording_enabled=recording_enabled,
             call_icon_countries=call_icon_countries,
+            max_call_duration_seconds=max_call_duration_seconds,
+            forward_caller_id=forward_caller_id,
         )
         return self._client._patch(
             f"/v1/whatsapp/phone-numbers/{id}/calling", data=payload
@@ -227,6 +235,8 @@ class WhatsappCallingResource:
         sip_auth_password: str | None = None,
         recording_enabled: bool | None = False,
         call_icon_countries: list[str] | None = None,
+        max_call_duration_seconds: int | None = None,
+        forward_caller_id: str | None = "business",
     ) -> dict[str, Any]:
         """Enable calling on a number"""
         payload = self._build_payload(
@@ -236,6 +246,8 @@ class WhatsappCallingResource:
             sip_auth_password=sip_auth_password,
             recording_enabled=recording_enabled,
             call_icon_countries=call_icon_countries,
+            max_call_duration_seconds=max_call_duration_seconds,
+            forward_caller_id=forward_caller_id,
         )
         return self._client._post(
             f"/v1/phone-numbers/{id}/whatsapp/calling", data=payload
@@ -251,6 +263,8 @@ class WhatsappCallingResource:
         sip_auth_password: Any | None = None,
         recording_enabled: bool | None = None,
         call_icon_countries: Any | None = None,
+        max_call_duration_seconds: Any | None = None,
+        forward_caller_id: str | None = None,
     ) -> dict[str, Any]:
         """Update calling config"""
         payload = self._build_payload(
@@ -260,6 +274,8 @@ class WhatsappCallingResource:
             sip_auth_password=sip_auth_password,
             recording_enabled=recording_enabled,
             call_icon_countries=call_icon_countries,
+            max_call_duration_seconds=max_call_duration_seconds,
+            forward_caller_id=forward_caller_id,
         )
         return self._client._patch(
             f"/v1/phone-numbers/{id}/whatsapp/calling", data=payload
@@ -312,6 +328,8 @@ class WhatsappCallingResource:
         sip_auth_password: str | None = None,
         recording_enabled: bool | None = False,
         call_icon_countries: list[str] | None = None,
+        max_call_duration_seconds: int | None = None,
+        forward_caller_id: str | None = "business",
     ) -> dict[str, Any]:
         """Enable calling on a number (async)"""
         payload = self._build_payload(
@@ -321,6 +339,8 @@ class WhatsappCallingResource:
             sip_auth_password=sip_auth_password,
             recording_enabled=recording_enabled,
             call_icon_countries=call_icon_countries,
+            max_call_duration_seconds=max_call_duration_seconds,
+            forward_caller_id=forward_caller_id,
         )
         return await self._client._apost(
             f"/v1/whatsapp/phone-numbers/{id}/calling", data=payload
@@ -336,6 +356,8 @@ class WhatsappCallingResource:
         sip_auth_password: Any | None = None,
         recording_enabled: bool | None = None,
         call_icon_countries: Any | None = None,
+        max_call_duration_seconds: Any | None = None,
+        forward_caller_id: str | None = None,
     ) -> dict[str, Any]:
         """Update calling config (async)"""
         payload = self._build_payload(
@@ -345,6 +367,8 @@ class WhatsappCallingResource:
             sip_auth_password=sip_auth_password,
             recording_enabled=recording_enabled,
             call_icon_countries=call_icon_countries,
+            max_call_duration_seconds=max_call_duration_seconds,
+            forward_caller_id=forward_caller_id,
         )
         return await self._client._apatch(
             f"/v1/whatsapp/phone-numbers/{id}/calling", data=payload
@@ -468,6 +492,8 @@ class WhatsappCallingResource:
         sip_auth_password: str | None = None,
         recording_enabled: bool | None = False,
         call_icon_countries: list[str] | None = None,
+        max_call_duration_seconds: int | None = None,
+        forward_caller_id: str | None = "business",
     ) -> dict[str, Any]:
         """Enable calling on a number (async)"""
         payload = self._build_payload(
@@ -477,6 +503,8 @@ class WhatsappCallingResource:
             sip_auth_password=sip_auth_password,
             recording_enabled=recording_enabled,
             call_icon_countries=call_icon_countries,
+            max_call_duration_seconds=max_call_duration_seconds,
+            forward_caller_id=forward_caller_id,
         )
         return await self._client._apost(
             f"/v1/phone-numbers/{id}/whatsapp/calling", data=payload
@@ -492,6 +520,8 @@ class WhatsappCallingResource:
         sip_auth_password: Any | None = None,
         recording_enabled: bool | None = None,
         call_icon_countries: Any | None = None,
+        max_call_duration_seconds: Any | None = None,
+        forward_caller_id: str | None = None,
     ) -> dict[str, Any]:
         """Update calling config (async)"""
         payload = self._build_payload(
@@ -501,6 +531,8 @@ class WhatsappCallingResource:
             sip_auth_password=sip_auth_password,
             recording_enabled=recording_enabled,
             call_icon_countries=call_icon_countries,
+            max_call_duration_seconds=max_call_duration_seconds,
+            forward_caller_id=forward_caller_id,
         )
         return await self._client._apatch(
             f"/v1/phone-numbers/{id}/whatsapp/calling", data=payload

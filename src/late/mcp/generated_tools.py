@@ -15305,6 +15305,8 @@ def register_generated_tools(mcp, _get_client):
         sip_auth_password: str | None = None,
         recording_enabled: bool = False,
         call_icon_countries: list[str] | None = None,
+        max_call_duration_seconds: int | None = None,
+        forward_caller_id: str = "business",
     ) -> str:
         """Enable calling on a number
 
@@ -15315,7 +15317,9 @@ def register_generated_tools(mcp, _get_client):
             sip_auth_username
             sip_auth_password: Stored encrypted, never returned by any endpoint.
             recording_enabled
-            call_icon_countries"""
+            call_icon_countries
+            max_call_duration_seconds: Hard cap (seconds) on a forwarded call; the carrier hangs up both legs when it fires. Safety valve against dead-air billing when a destination hangs up but the signal is lost.
+            forward_caller_id: Caller ID presented to the forward destination. caller = the WhatsApp user's number (sip: destinations only; ignored on tel: forwards). Fixes AI-agent trunks that reject seeing the business number call itself."""
         client = _get_client()
         try:
             response = client.whatsapp_calling.enable_whats_app_calling_legacy(
@@ -15326,6 +15330,8 @@ def register_generated_tools(mcp, _get_client):
                 sip_auth_password=sip_auth_password,
                 recording_enabled=recording_enabled,
                 call_icon_countries=call_icon_countries,
+                max_call_duration_seconds=max_call_duration_seconds,
+                forward_caller_id=forward_caller_id,
             )
             return _format_response(response)
         except Exception as e:
@@ -15347,6 +15353,8 @@ def register_generated_tools(mcp, _get_client):
         sip_auth_password: str | None = None,
         recording_enabled: bool | None = None,
         call_icon_countries: str | None = None,
+        max_call_duration_seconds: str | None = None,
+        forward_caller_id: str | None = None,
     ) -> str:
         """Update calling config
 
@@ -15357,7 +15365,9 @@ def register_generated_tools(mcp, _get_client):
             sip_auth_username
             sip_auth_password
             recording_enabled
-            call_icon_countries"""
+            call_icon_countries
+            max_call_duration_seconds: Hard cap (seconds) on forwarded calls; null clears the cap.
+            forward_caller_id: caller = present the WhatsApp user's number to the forward destination (sip: only)."""
         client = _get_client()
         try:
             response = client.whatsapp_calling.update_whats_app_calling_legacy(
@@ -15368,6 +15378,8 @@ def register_generated_tools(mcp, _get_client):
                 sip_auth_password=sip_auth_password,
                 recording_enabled=recording_enabled,
                 call_icon_countries=call_icon_countries,
+                max_call_duration_seconds=max_call_duration_seconds,
+                forward_caller_id=forward_caller_id,
             )
             return _format_response(response)
         except Exception as e:
@@ -15625,6 +15637,8 @@ def register_generated_tools(mcp, _get_client):
         sip_auth_password: str | None = None,
         recording_enabled: bool = False,
         call_icon_countries: list[str] | None = None,
+        max_call_duration_seconds: int | None = None,
+        forward_caller_id: str = "business",
     ) -> str:
         """Enable calling on a number
 
@@ -15635,7 +15649,9 @@ def register_generated_tools(mcp, _get_client):
             sip_auth_username
             sip_auth_password: Stored encrypted, never returned by any endpoint.
             recording_enabled
-            call_icon_countries"""
+            call_icon_countries
+            max_call_duration_seconds: Hard cap (seconds) on a forwarded call; the carrier hangs up both legs when it fires. Safety valve against dead-air billing when a destination hangs up but the signal is lost.
+            forward_caller_id: Caller ID presented to the forward destination. caller = the WhatsApp user's number (sip: destinations only; ignored on tel: forwards). Fixes AI-agent trunks that reject seeing the business number call itself."""
         client = _get_client()
         try:
             response = client.whatsapp_calling.enable_whats_app_calling(
@@ -15646,6 +15662,8 @@ def register_generated_tools(mcp, _get_client):
                 sip_auth_password=sip_auth_password,
                 recording_enabled=recording_enabled,
                 call_icon_countries=call_icon_countries,
+                max_call_duration_seconds=max_call_duration_seconds,
+                forward_caller_id=forward_caller_id,
             )
             return _format_response(response)
         except Exception as e:
@@ -15667,6 +15685,8 @@ def register_generated_tools(mcp, _get_client):
         sip_auth_password: str | None = None,
         recording_enabled: bool | None = None,
         call_icon_countries: str | None = None,
+        max_call_duration_seconds: str | None = None,
+        forward_caller_id: str | None = None,
     ) -> str:
         """Update calling config
 
@@ -15677,7 +15697,9 @@ def register_generated_tools(mcp, _get_client):
             sip_auth_username
             sip_auth_password
             recording_enabled
-            call_icon_countries"""
+            call_icon_countries
+            max_call_duration_seconds: Hard cap (seconds) on forwarded calls; null clears the cap.
+            forward_caller_id: caller = present the WhatsApp user's number to the forward destination (sip: only)."""
         client = _get_client()
         try:
             response = client.whatsapp_calling.update_whats_app_calling(
@@ -15688,6 +15710,8 @@ def register_generated_tools(mcp, _get_client):
                 sip_auth_password=sip_auth_password,
                 recording_enabled=recording_enabled,
                 call_icon_countries=call_icon_countries,
+                max_call_duration_seconds=max_call_duration_seconds,
+                forward_caller_id=forward_caller_id,
             )
             return _format_response(response)
         except Exception as e:

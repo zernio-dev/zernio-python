@@ -25959,6 +25959,8 @@ paths:
                     enum: [business, platform]
                     description: 'Caller ID the forward-leg callee sees on tel: forwards. business = this WhatsApp number; platform = a Zernio number (customer-brought number without verified caller ID; verify via /v1/phone-numbers/{id}/whatsapp/caller-id-verification).'
                   callerIdVerified: { type: boolean, description: 'True once the number completed caller-ID verification.' }
+                  maxCallDurationSeconds: { type: [integer, "null"], description: 'Hard cap (seconds) on forwarded calls; null = no cap.' }
+                  forwardCallerId: { type: string, enum: [business, caller] }
         '401': { $ref: '#/components/responses/Unauthorized' }
         '404': { description: WhatsApp phone number not found for this account }
 
@@ -25996,6 +25998,8 @@ paths:
                 callIconCountries:
                   type: array
                   items: { type: string, minLength: 2, maxLength: 2 }
+                maxCallDurationSeconds: { type: integer, minimum: 30, maximum: 14400, description: 'Hard cap (seconds) on a forwarded call; the carrier hangs up both legs when it fires. Safety valve against dead-air billing when a destination hangs up but the signal is lost.' }
+                forwardCallerId: { type: string, enum: [business, caller], default: business, description: 'Caller ID presented to the forward destination. caller = the WhatsApp user''s number (sip: destinations only; ignored on tel: forwards). Fixes AI-agent trunks that reject seeing the business number call itself.' }
       responses:
         '200':
           description: Calling enabled
@@ -26050,6 +26054,8 @@ paths:
                 callIconCountries:
                   type: [array, "null"]
                   items: { type: string, minLength: 2, maxLength: 2 }
+                maxCallDurationSeconds: { type: [integer, "null"], minimum: 30, maximum: 14400, description: 'Hard cap (seconds) on forwarded calls; null clears the cap.' }
+                forwardCallerId: { type: string, enum: [business, caller], description: 'caller = present the WhatsApp user''s number to the forward destination (sip: only).' }
       responses:
         '200': { description: Updated }
         '400': { description: Invalid request }
@@ -31018,6 +31024,8 @@ paths:
                     enum: [business, platform]
                     description: 'Caller ID the forward-leg callee sees on tel: forwards. business = this WhatsApp number; platform = a Zernio number (used when the number was brought by the customer and its caller ID is not verified for PSTN origination).'
                   callerIdVerified: { type: boolean, description: 'True once the number completed caller-ID verification, making tel: forwards display the business number itself.' }
+                  maxCallDurationSeconds: { type: [integer, "null"], description: 'Hard cap (seconds) on forwarded calls; null = no cap.' }
+                  forwardCallerId: { type: string, enum: [business, caller] }
         '400': { description: Invalid request }
         '401': { $ref: '#/components/responses/Unauthorized' }
         '404': { description: Number not found }
@@ -31050,6 +31058,8 @@ paths:
                 callIconCountries:
                   type: array
                   items: { type: string, minLength: 2, maxLength: 2 }
+                maxCallDurationSeconds: { type: integer, minimum: 30, maximum: 14400, description: 'Hard cap (seconds) on a forwarded call; the carrier hangs up both legs when it fires. Safety valve against dead-air billing when a destination hangs up but the signal is lost.' }
+                forwardCallerId: { type: string, enum: [business, caller], default: business, description: 'Caller ID presented to the forward destination. caller = the WhatsApp user''s number (sip: destinations only; ignored on tel: forwards). Fixes AI-agent trunks that reject seeing the business number call itself.' }
       responses:
         '200':
           description: Calling enabled
@@ -31100,6 +31110,8 @@ paths:
                 callIconCountries:
                   type: [array, "null"]
                   items: { type: string, minLength: 2, maxLength: 2 }
+                maxCallDurationSeconds: { type: [integer, "null"], minimum: 30, maximum: 14400, description: 'Hard cap (seconds) on forwarded calls; null clears the cap.' }
+                forwardCallerId: { type: string, enum: [business, caller], description: 'caller = present the WhatsApp user''s number to the forward destination (sip: only).' }
       responses:
         '200': { description: Updated }
         '400': { description: Invalid request }
