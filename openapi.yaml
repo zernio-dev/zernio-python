@@ -26003,7 +26003,11 @@ paths:
                   callingEnabled: { type: boolean }
                   sipHostname: { type: string }
                   forwardTo: { type: string }
-        '400': { description: Invalid request }
+                  callerIdMode:
+                    type: string
+                    enum: [business, platform]
+                    description: 'Caller ID the forward-leg callee sees on tel: forwards. business = this WhatsApp number; platform = a Zernio number (customer-brought number without verified caller ID).'
+        '400': { description: 'Invalid request (including forwardTo set to the number itself)' }
         '401': { $ref: '#/components/responses/Unauthorized' }
         '404': { description: WhatsApp phone number not found }
         '422': { description: "Not eligible to enable calling: not on usage-based billing, or the number's messaging limit is below Meta's ~2,000-daily-recipient threshold (TIER_250). Warm the number up to raise the limit." }
@@ -31004,6 +31008,11 @@ paths:
                     type: [array, "null"]
                     items: { type: string, minLength: 2, maxLength: 2 }
                   outboundDisabled: { type: boolean, description: "True when the number's country blocks business-initiated (outbound) WhatsApp calling; inbound still works." }
+                  callerIdMode:
+                    type: string
+                    enum: [business, platform]
+                    description: 'Caller ID the forward-leg callee sees on tel: forwards. business = this WhatsApp number; platform = a Zernio number (used when the number was brought by the customer and its caller ID is not verified for PSTN origination).'
+                  callerIdVerified: { type: boolean, description: 'True once the number completed caller-ID verification, making tel: forwards display the business number itself.' }
         '400': { description: Invalid request }
         '401': { $ref: '#/components/responses/Unauthorized' }
         '404': { description: Number not found }
@@ -31048,7 +31057,11 @@ paths:
                   callingEnabled: { type: boolean }
                   sipHostname: { type: string }
                   forwardTo: { type: string }
-        '400': { description: Invalid request }
+                  callerIdMode:
+                    type: string
+                    enum: [business, platform]
+                    description: 'Caller ID the forward-leg callee sees on tel: forwards. business = this WhatsApp number; platform = a Zernio number (customer-brought number without verified caller ID).'
+        '400': { description: 'Invalid request (including forwardTo set to the number itself)' }
         '401': { $ref: '#/components/responses/Unauthorized' }
         '404': { description: Phone number not found }
         '422': { description: "Not eligible to enable calling: not on usage-based billing, or the number's messaging limit is below Meta's ~2,000-daily-recipient threshold (TIER_250). Warm the number up to raise the limit." }
