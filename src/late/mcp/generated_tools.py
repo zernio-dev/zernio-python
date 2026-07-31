@@ -7241,6 +7241,45 @@ def register_generated_tools(mcp, _get_client):
         except Exception as e:
             return f"Error: {e}"
 
+    # CONNECTED_APPS
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="List connected apps",
+            readOnlyHint=True,
+            destructiveHint=False,
+            openWorldHint=False,
+        )
+    )
+    def connected_apps_list_connected_apps() -> str:
+        """List connected apps"""
+        client = _get_client()
+        try:
+            response = client.connected_apps.list_connected_apps()
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Revoke connected app",
+            readOnlyHint=False,
+            destructiveHint=True,
+            openWorldHint=True,
+        )
+    )
+    def connected_apps_revoke_connected_app(client_id: str) -> str:
+        """Revoke connected app
+
+        Args:
+            client_id: OAuth client id, as returned by GET /v1/me/connected-apps. (required)"""
+        client = _get_client()
+        try:
+            response = client.connected_apps.revoke_connected_app(client_id=client_id)
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
     # CONTACTS
 
     @mcp.tool(

@@ -512,6 +512,12 @@ Both `from zernio import ...` and `from late import ...` work identically. The `
 | `comments.unhide_inbox_comment()` | Unhide comment |
 | `comments.unlike_inbox_comment()` | Unlike comment |
 
+### Connected Apps
+| Method | Description |
+|--------|-------------|
+| `connected_apps.list_connected_apps()` | List connected apps |
+| `connected_apps.revoke_connected_app()` | Revoke connected app |
+
 ### Contacts
 | Method | Description |
 |--------|-------------|

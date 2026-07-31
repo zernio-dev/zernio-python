@@ -26,6 +26,7 @@ from ..resources import (
     CommentAutomationsResource,
     CommentsResource,
     ConnectResource,
+    ConnectedAppsResource,
     ContactsResource,
     ConversionsResource,
     CustomFieldsResource,
@@ -155,6 +156,7 @@ class Zernio(BaseClient):
         self.comment_automations = CommentAutomationsResource(self)
         self.comments = CommentsResource(self)
         self.connect = ConnectResource(self)
+        self.connected_apps = ConnectedAppsResource(self)
         self.contacts = ContactsResource(self)
         self.conversions = ConversionsResource(self)
         self.custom_fields = CustomFieldsResource(self)

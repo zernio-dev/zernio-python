@@ -20,6 +20,7 @@ from ._generated.calls import CallsResource
 from ._generated.comment_automations import CommentAutomationsResource
 from ._generated.comments import CommentsResource
 from ._generated.connect import ConnectResource
+from ._generated.connected_apps import ConnectedAppsResource
 from ._generated.contacts import ContactsResource
 from ._generated.conversions import ConversionsResource
 from ._generated.custom_fields import CustomFieldsResource
@@ -82,6 +83,7 @@ __all__ = [
     "CommentAutomationsResource",
     "CommentsResource",
     "ConnectResource",
+    "ConnectedAppsResource",
     "ContactsResource",
     "ConversionsResource",
     "CustomFieldsResource",

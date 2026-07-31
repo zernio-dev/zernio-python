@@ -226,6 +226,10 @@ tags:
   - name: API Keys
     description: |
       Create, list, and revoke API keys used to authenticate requests.
+  - name: Connected Apps
+    description: |
+      List and revoke the OAuth clients (AI assistants and MCP connectors) authorized
+      on the account.
   - name: Invites
     description: |
       Generate invite tokens for adding members to a team.
@@ -5705,6 +5709,31 @@ components:
           enum: [read-write, read]
           description: "'read-write' allows all operations, 'read' restricts to GET requests only"
           default: read-write
+    ConnectedApp:
+      type: object
+      description: |
+        An OAuth client (AI assistant / MCP connector) authorized by the user and still
+        holding at least one live token.
+      properties:
+        clientId: { type: string }
+        clientName:
+          type: string
+          description: 'Name the client declared at registration. Registration is open, so this is self-declared and not verified.'
+        redirectHost:
+          type: [string, "null"]
+          description: 'Host of the client''s registered redirect URI (non-http schemes are shown as scheme//host). The destination an impostor cannot fake.'
+        scopes:
+          type: array
+          items: { type: string }
+          description: Scopes granted on the most recent token.
+        authorizedAt: { type: [string, "null"], format: date-time }
+        lastUsedAt:
+          type: [string, "null"]
+          format: date-time
+          description: Last time any of the client's live tokens authenticated a request.
+        tokenCount:
+          type: integer
+          description: 'Live tokens held by the client (an active session is typically one access plus one refresh token).'
     BillingSnapshot:
       type: object
       description: |
@@ -14751,6 +14780,92 @@ paths:
                 message: "API key deleted successfully"
         '401': { $ref: '#/components/responses/Unauthorized' }
         '404': { $ref: '#/components/responses/NotFound' }
+
+  /v1/me/connected-apps:
+    get:
+      operationId: listConnectedApps
+      tags: [Connected Apps]
+      summary: List connected apps
+      description: |
+        Returns the OAuth clients (AI assistants and MCP connectors) the authenticated
+        user has authorized and that still hold a live token.
+
+        Requires a session or a full-scope API key. A profile-scoped API key or an
+        OAuth access token is rejected with 403: an app must not be able to enumerate
+        its sibling authorizations.
+      responses:
+        '200':
+          description: Connected apps
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  connectedApps:
+                    type: array
+                    items: { $ref: '#/components/schemas/ConnectedApp' }
+              example:
+                connectedApps:
+                  - clientId: "late_cid_3f9c1a7b2d4e6f80a1b2c3d4e5f60718293a4b5c6d7e8f90a1b2c3d4e5f60718"
+                    clientName: "Claude"
+                    redirectHost: "claude.ai"
+                    scopes: ["posts:read", "posts:write", "accounts:read"]
+                    authorizedAt: "2026-07-02T09:14:00Z"
+                    lastUsedAt: "2026-07-30T18:02:11Z"
+                    tokenCount: 2
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403':
+          description: 'The calling credential may not manage OAuth authorizations (profile-scoped API key or OAuth access token). Error code: insufficient_permissions.'
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ErrorResponse' }
+  /v1/me/connected-apps/{clientId}:
+    delete:
+      operationId: revokeConnectedApp
+      tags: [Connected Apps]
+      summary: Revoke connected app
+      description: |
+        Ends an app's access: invalidates the client's pending authorization codes and
+        revokes every live token it holds for the authenticated user. Takes effect on
+        the app's next request.
+
+        Idempotent while the authorization is still on record: revoking an app that
+        was already revoked returns 200 with `revokedTokens: 0`.
+      parameters:
+        - name: clientId
+          in: path
+          required: true
+          description: 'OAuth client id, as returned by GET /v1/me/connected-apps.'
+          schema: { type: string, minLength: 1, maxLength: 200 }
+      responses:
+        '200':
+          description: Revoked
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  revoked: { type: boolean }
+                  clientId: { type: string }
+                  revokedTokens: { type: integer, description: 'Access and refresh tokens revoked by this call.' }
+                  invalidatedCodes: { type: integer, description: 'Pending authorization codes invalidated by this call.' }
+              example:
+                revoked: true
+                clientId: "late_cid_3f9c1a7b2d4e6f80a1b2c3d4e5f60718293a4b5c6d7e8f90a1b2c3d4e5f60718"
+                revokedTokens: 2
+                invalidatedCodes: 0
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403':
+          description: 'The calling credential may not manage OAuth authorizations (profile-scoped API key or OAuth access token). Error code: insufficient_permissions.'
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ErrorResponse' }
+        '404':
+          description: 'The authenticated user has never authorized this client. Error code: oauth_client_not_found.'
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ErrorResponse' }
 
   /v1/invite/tokens:
     post:

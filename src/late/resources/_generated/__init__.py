@@ -18,6 +18,7 @@ from .calls import CallsResource
 from .comment_automations import CommentAutomationsResource
 from .comments import CommentsResource
 from .connect import ConnectResource
+from .connected_apps import ConnectedAppsResource
 from .contacts import ContactsResource
 from .conversions import ConversionsResource
 from .custom_fields import CustomFieldsResource
@@ -75,6 +76,7 @@ __all__ = [
     "CommentAutomationsResource",
     "CommentsResource",
     "ConnectResource",
+    "ConnectedAppsResource",
     "ContactsResource",
     "ConversionsResource",
     "CustomFieldsResource",
