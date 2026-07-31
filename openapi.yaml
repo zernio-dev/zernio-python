@@ -34910,6 +34910,18 @@ paths:
       security:
         - bearerAuth: []
       parameters:
+        - name: includeEmpty
+          in: query
+          required: false
+          schema: { type: boolean }
+          description: >-
+            Meta only. Campaign reads aggregate over ad documents, so a campaign
+            with ZERO ads is normally invisible here — the state the two-step
+            create (campaign, then ads via `existingCampaignId`) leaves behind
+            whenever Meta rejects the ad step. Set true to list those too, with
+            `adCount: 0` and zeroed metrics. Requires `accountId` and
+            `adAccountId`, since an empty campaign has no ad row to resolve a
+            token or ad account from.
         - $ref: '#/components/parameters/PageParam'
         - { name: limit, in: query, schema: { type: integer, minimum: 1, maximum: 100, default: 20 } }
         - { name: source, in: query, schema: { type: string, enum: [zernio, all], default: all }, description: "`all` (default) returns both Zernio-created ads and those discovered from the platform's ad manager — matches the web UI's default view. Pass `zernio` to restrict to isExternal=false only. Status is NOT filtered by default — use the `status` param for that." }
@@ -35057,6 +35069,12 @@ paths:
       description: |
         Campaign-level edits. At least one of `budget`, `bidStrategy`, `name` or `platformSpecificData` is required.
 
+        **Empty campaigns.** A campaign with zero ads has no local Ad documents to
+        resolve, so this would 404 even though it exists on Meta. Send `accountId`
+        in the body to skip the local lookup and forward the update to Meta. The
+        response then carries `updated: 0`, since there are no local rows to mirror
+        onto. `accountId` is ignored when the campaign does have ads.
+
         - `budget` updates the CBO (Campaign Budget Optimization) budget. For ABO campaigns
           (where the budget lives on the ad set), use PUT /v1/ads/ad-sets/{adSetId} instead — this endpoint
           will return 409 with code BUDGET_LEVEL_MISMATCH.
@@ -35078,6 +35096,7 @@ paths:
               type: object
               required: [platform]
               properties:
+                accountId: { type: string, description: "Zernio SocialAccount id owning the ad account. Required only to update an EMPTY campaign (zero ads), which has no local Ad documents to resolve a token from." }
                 platform: { type: string, enum: [facebook, instagram] }
                 budget:
                   type: object

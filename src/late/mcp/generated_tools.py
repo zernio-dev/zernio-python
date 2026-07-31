@@ -1893,6 +1893,7 @@ def register_generated_tools(mcp, _get_client):
         )
     )
     def ad_campaigns_list_ad_campaigns(
+        include_empty: bool | None = None,
         page: int = 1,
         limit: int = 20,
         source: str = "all",
@@ -1908,6 +1909,7 @@ def register_generated_tools(mcp, _get_client):
         """List campaigns
 
         Args:
+            include_empty: Meta only. Campaign reads aggregate over ad documents, so a campaign with ZERO ads is normally invisible here — the state the two-step create (campaign, then ads via `existingCampaignId`) leaves behind whenever Meta rejects the ad step. Set true to list those too, with `adCount: 0` and zeroed metrics. Requires `accountId` and `adAccountId`, since an empty campaign has no ad row to resolve a token or ad account from.
             page: Page number
             limit
             source: `all` (default) returns both Zernio-created ads and those discovered from the platform's ad manager — matches the web UI's default view. Pass `zernio` to restrict to isExternal=false only. Status is NOT filtered by default — use the `status` param for that.
@@ -1922,6 +1924,7 @@ def register_generated_tools(mcp, _get_client):
         client = _get_client()
         try:
             response = client.ad_campaigns.list_ad_campaigns(
+                include_empty=include_empty,
                 page=page,
                 limit=limit,
                 source=source,
@@ -2029,6 +2032,7 @@ def register_generated_tools(mcp, _get_client):
     def ad_campaigns_update_ad_campaign(
         campaign_id: str,
         platform: str,
+        account_id: str | None = None,
         budget: dict[str, Any] | None = None,
         bid_strategy: str | None = None,
         name: str | None = None,
@@ -2038,6 +2042,7 @@ def register_generated_tools(mcp, _get_client):
 
             Args:
                 campaign_id: Platform campaign ID (required)
+                account_id: Zernio SocialAccount id owning the ad account. Required only to update an EMPTY campaign (zero ads), which has no local Ad documents to resolve a token from.
                 platform: (required)
                 budget
                 bid_strategy: Campaign-level default. Ad sets inherit this unless they override.
@@ -2049,6 +2054,7 @@ def register_generated_tools(mcp, _get_client):
         try:
             response = client.ad_campaigns.update_ad_campaign(
                 campaign_id=campaign_id,
+                account_id=account_id,
                 platform=platform,
                 budget=budget,
                 bid_strategy=bid_strategy,

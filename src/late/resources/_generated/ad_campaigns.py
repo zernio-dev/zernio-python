@@ -148,6 +148,7 @@ class AdCampaignsResource:
     def list_ad_campaigns(
         self,
         *,
+        include_empty: bool | None = None,
         page: int | None = 1,
         limit: int | None = 20,
         source: str | None = "all",
@@ -162,6 +163,7 @@ class AdCampaignsResource:
     ) -> dict[str, Any]:
         """List campaigns"""
         params = self._build_params(
+            include_empty=include_empty,
             page=page,
             limit=limit,
             source=source,
@@ -225,6 +227,7 @@ class AdCampaignsResource:
         campaign_id: str,
         platform: str,
         *,
+        account_id: str | None = None,
         budget: dict[str, Any] | None = None,
         bid_strategy: Any | None = None,
         name: str | None = None,
@@ -232,6 +235,7 @@ class AdCampaignsResource:
     ) -> dict[str, Any]:
         """Update a campaign"""
         payload = self._build_payload(
+            account_id=account_id,
             platform=platform,
             budget=budget,
             bid_strategy=bid_strategy,
@@ -778,6 +782,7 @@ class AdCampaignsResource:
     async def alist_ad_campaigns(
         self,
         *,
+        include_empty: bool | None = None,
         page: int | None = 1,
         limit: int | None = 20,
         source: str | None = "all",
@@ -792,6 +797,7 @@ class AdCampaignsResource:
     ) -> dict[str, Any]:
         """List campaigns (async)"""
         params = self._build_params(
+            include_empty=include_empty,
             page=page,
             limit=limit,
             source=source,
@@ -855,6 +861,7 @@ class AdCampaignsResource:
         campaign_id: str,
         platform: str,
         *,
+        account_id: str | None = None,
         budget: dict[str, Any] | None = None,
         bid_strategy: Any | None = None,
         name: str | None = None,
@@ -862,6 +869,7 @@ class AdCampaignsResource:
     ) -> dict[str, Any]:
         """Update a campaign (async)"""
         payload = self._build_payload(
+            account_id=account_id,
             platform=platform,
             budget=budget,
             bid_strategy=bid_strategy,
