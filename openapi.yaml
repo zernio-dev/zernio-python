@@ -6772,7 +6772,7 @@ components:
                   address: { type: string, description: "Optional label, sent to Meta as `address_string`. latitude/longitude take precedence for the pin location." }
         ageMin: { type: integer, minimum: 13, maximum: 100 }
         ageMax: { type: integer, minimum: 13, maximum: 100 }
-        gender: { type: string, enum: [all, male, female], description: "Restrict by gender. 'all' (default) targets everyone." }
+        gender: { type: string, enum: [all, male, female], description: "Restrict by gender. 'all' (default) targets everyone. Applied on Meta, TikTok and Pinterest. Ignored on Google, LinkedIn and X." }
         incomeTier:
           type: string
           enum: [top_5, top_10, top_10_25, top_25_50]
@@ -37376,7 +37376,7 @@ paths:
                   properties:
                     ageMin: { type: integer, minimum: 13, maximum: 65 }
                     ageMax: { type: integer, minimum: 13, maximum: 65 }
-                    gender: { type: string, enum: [all, male, female], description: "Meta only." }
+                    gender: { type: string, enum: [all, male, female], description: "Applied on Meta, TikTok and Pinterest. Ignored on Google, LinkedIn and X." }
                     languages: { type: array, items: { type: string }, description: "Meta locale ids (numeric), passed through as given." }
                     countries: { type: array, items: { type: string }, description: "ISO country codes. Required for TikTok boosts (TikTok's ad group requires location_ids); optional on other platforms." }
                     regions:
@@ -38151,7 +38151,7 @@ paths:
                     `VIEW_THROUGH: 1`; `CLICK_THROUGH: 28` only on certain objectives. Invalid combos
                     surface as a Meta 400.
                     Example: `[{ "eventType": "CLICK_THROUGH", "windowDays": 7 }, { "eventType": "VIEW_THROUGH", "windowDays": 1 }]`
-                gender: { type: string, enum: [all, male, female], default: all, description: "Meta only. Restrict the audience by gender. 'male' targets men only, 'female' targets women only, 'all' (default) targets everyone. Ignored by non-Meta platforms." }
+                gender: { type: string, enum: [all, male, female], default: all, description: "Restrict the audience by gender. 'male' targets men only, 'female' targets women only, 'all' (default) targets everyone. Applied on Meta, TikTok and Pinterest. Ignored on Google, LinkedIn and X." }
                 bidStrategy:
                   allOf: [{ $ref: '#/components/schemas/BidStrategy' }]
                   description: "Meta bid strategy applied to the ad set."
