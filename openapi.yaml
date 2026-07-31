@@ -4489,10 +4489,6 @@ components:
     FacebookPlatformData:
       type: object
       properties:
-        draft:
-          type: boolean
-          description: When true, creates the post as a draft in Facebook Publishing Tools instead of publishing immediately. Supported for feed posts (text, link, image, video) and reels. Not supported for stories. Drafts expire after ~30 days.
-          default: false
         contentType:
           type: string
           enum: [story, reel]
@@ -4502,12 +4498,31 @@ components:
           description: Reel title (only for contentType=reel). Separate from the caption/content field.
         firstComment:
           type: string
-          description: Optional first comment to post immediately after publishing (feed posts and reels, not stories). Skipped when draft is true.
+          description: Optional first comment to post immediately after publishing (feed posts and reels, not stories). Skipped when facebookSettings.draft is true.
         pageId:
           type: string
           description: Target Facebook Page ID for multi-page posting. If omitted, uses the default page. Use GET /v1/accounts/{id}/facebook-page to list pages.
         geoRestriction:
           $ref: '#/components/schemas/GeoRestriction'
+        facebookSettings:
+          $ref: '#/components/schemas/FacebookSettings'
+      description: >
+        Feed posts support up to 10 images (no mixed video+image). Stories require single media (24h, no captions).
+        Reels require single vertical video (9:16, 3-60s). Geo-restriction is a hard visibility
+        restriction: users outside the specified countries cannot see the post. Not supported for stories.
+        Draft, carousel, and colored-background text options live under facebookSettings, see FacebookSettings.
+
+    FacebookSettings:
+      type: object
+      description: >
+        Facebook options that must be nested under platformSpecificData.facebookSettings, or sent
+        at the request root as facebookSettings. The remaining Facebook options sit directly on
+        platformSpecificData, see FacebookPlatformData.
+      properties:
+        draft:
+          type: boolean
+          description: When true, creates the post as a draft in Facebook Publishing Tools instead of publishing immediately. Supported for feed posts (text, link, image, video) and reels. Not supported for stories. Drafts expire after ~30 days.
+          default: false
         carouselCards:
           type: array
           minItems: 2
@@ -4556,11 +4571,6 @@ components:
             documents no API limit, so longer content publishes and returns a warning instead.
             A URL detected in the content is NOT attached as a link preview while a preset is
             set, because a link attachment also makes Facebook drop the background.
-      description: >
-        Feed posts support up to 10 images (no mixed video+image). Stories require single media (24h, no captions).
-        Reels require single vertical video (9:16, 3-60s). Carousel posts (carouselCards) render a 2-5 card
-        multi-link post, images only, mutually exclusive with story/reel. Geo-restriction is a hard visibility
-        restriction: users outside the specified countries cannot see the post. Not supported for stories.
 
     InstagramPlatformData:
       type: object
@@ -12605,8 +12615,8 @@ paths:
                   $ref: '#/components/schemas/TikTokPlatformData'
                   description: Root-level TikTok settings applied to all TikTok platforms. Merged into each platform's platformSpecificData, with platform-specific settings taking precedence.
                 facebookSettings:
-                  $ref: '#/components/schemas/FacebookPlatformData'
-                  description: Root-level Facebook settings applied to all Facebook platforms. Merged into each platform's platformSpecificData, with platform-specific settings taking precedence.
+                  $ref: '#/components/schemas/FacebookSettings'
+                  description: Root-level Facebook settings applied to all Facebook platforms. Merged into each platform's platformSpecificData.facebookSettings, with platform-specific settings taking precedence.
                 recycling:
                   $ref: '#/components/schemas/RecyclingConfig'
                 queuedFromProfile:
@@ -12660,6 +12670,20 @@ paths:
                       - link: "https://example.com/inventory/car-3"
                         name: "2024 Truck"
                         description: "Loaded"
+              facebookTextBackground:
+                summary: Facebook colored-background text post
+                description: |
+                  Renders the post as large text on a Facebook-defined colored background.
+                  Text-only: mediaItems and carouselCards are rejected, and contentType
+                  must not be story or reel.
+                value:
+                  content: "We just shipped something big."
+                  platforms:
+                    - platform: facebook
+                      accountId: "64e1f0a9e2b5af0012ab34cd"
+                  publishNow: true
+                  facebookSettings:
+                    textFormatPresetId: "1881421442117417"
               recyclingPost:
                 summary: Post with weekly recycling and content variations
                 value:
@@ -13207,8 +13231,8 @@ paths:
                   $ref: '#/components/schemas/TikTokPlatformData'
                   description: Root-level TikTok settings applied to all TikTok platforms. Merged into each platform's platformSpecificData, with platform-specific settings taking precedence.
                 facebookSettings:
-                  $ref: '#/components/schemas/FacebookPlatformData'
-                  description: Root-level Facebook settings applied to all Facebook platforms. Merged into each platform's platformSpecificData, with platform-specific settings taking precedence.
+                  $ref: '#/components/schemas/FacebookSettings'
+                  description: Root-level Facebook settings applied to all Facebook platforms. Merged into each platform's platformSpecificData.facebookSettings, with platform-specific settings taking precedence.
                 recycling:
                   $ref: '#/components/schemas/RecyclingConfig'
               additionalProperties: true
