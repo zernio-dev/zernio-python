@@ -32897,7 +32897,7 @@ paths:
     post:
       operationId: bulkCreateContacts
       summary: Bulk create contacts
-      description: 'Import up to 1000 contacts at a time. Skips duplicates. On phone platforms (whatsapp, sms) the platformIdentifier is normalized to digits and a value that is not phone-shaped is rejected per contact and reported in errors[], not imported.'
+      description: 'Import up to 1000 contacts at a time. Skips duplicates, merging any new tags onto the existing contact. accountId is required whenever contacts carry a platformIdentifier (or a row-level accountId); platform is always derived from the resolved account, never used to decide whether channels are created, and a mismatched platform 404s as account not found. On phone platforms (whatsapp, sms) the platformIdentifier is normalized to digits and a value that is not phone-shaped is rejected per contact and reported in errors[], not imported.'
       tags: [Contacts]
       requestBody:
         required: true
@@ -32905,11 +32905,11 @@ paths:
           application/json:
             schema:
               type: object
-              required: [profileId, accountId, platform, contacts]
+              required: [profileId, contacts]
               properties:
                 profileId: { type: string }
-                accountId: { type: string }
-                platform: { type: string }
+                accountId: { type: string, description: 'Required when contacts carry channel data (platformIdentifier or a row-level accountId). Omit for a plain CRM import with no channels.' }
+                platform: { type: string, description: 'Ignored when accountId is set: the platform is derived from the resolved account. Only relevant to disambiguate accountId lookup; a mismatch 404s.' }
                 contacts:
                   type: array
                   maxItems: 1000
@@ -32936,7 +32936,7 @@ paths:
                   skipped: { type: integer }
                   errors: { type: array, items: { type: string }, description: 'Per-contact failures, e.g. an identifier that is not a valid phone number' }
                   total: { type: integer }
-        '400': { description: Invalid request }
+        '400': { description: 'Missing required field, or a row carries platformIdentifier/accountId with no top-level accountId to attach it to' }
         '401': { $ref: '#/components/responses/Unauthorized' }
 
   /v1/contacts/{contactId}/fields/{slug}:

@@ -168,9 +168,10 @@ class ContactsResource:
     def bulk_create_contacts(
         self,
         profile_id: str,
-        account_id: str,
-        platform: str,
         contacts: list[dict[str, Any]],
+        *,
+        account_id: str | None = None,
+        platform: str | None = None,
     ) -> dict[str, Any]:
         """Bulk create contacts"""
         payload = self._build_payload(
@@ -276,9 +277,10 @@ class ContactsResource:
     async def abulk_create_contacts(
         self,
         profile_id: str,
-        account_id: str,
-        platform: str,
         contacts: list[dict[str, Any]],
+        *,
+        account_id: str | None = None,
+        platform: str | None = None,
     ) -> dict[str, Any]:
         """Bulk create contacts (async)"""
         payload = self._build_payload(

@@ -7521,16 +7521,16 @@ def register_generated_tools(mcp, _get_client):
     )
     def contacts_bulk_create_contacts(
         profile_id: str,
-        account_id: str,
-        platform: str,
         contacts: list[dict[str, Any]] | None,
+        account_id: str | None = None,
+        platform: str | None = None,
     ) -> str:
         """Bulk create contacts
 
         Args:
             profile_id: (required)
-            account_id: (required)
-            platform: (required)
+            account_id: Required when contacts carry channel data (platformIdentifier or a row-level accountId). Omit for a plain CRM import with no channels.
+            platform: Ignored when accountId is set: the platform is derived from the resolved account. Only relevant to disambiguate accountId lookup; a mismatch 404s.
             contacts: (required)"""
         client = _get_client()
         try:
