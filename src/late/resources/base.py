@@ -5,6 +5,7 @@ Base resource class for API endpoints.
 from __future__ import annotations
 
 from datetime import datetime
+from enum import Enum
 from typing import TYPE_CHECKING, Any, Generic, TypeVar
 
 from pydantic import BaseModel
@@ -19,6 +20,20 @@ def _to_camel_case(snake_str: str) -> str:
     """Convert snake_case to camelCase."""
     components = snake_str.split("_")
     return components[0] + "".join(x.title() for x in components[1:])
+
+
+def _normalize_value(value: Any) -> Any:
+    """
+    Normalize a value for the wire.
+
+    Enum members are unwrapped to their value: httpx serializes params via
+    str(), and str() of an Enum member yields "ClassName.MEMBER" rather than
+    the member's value — so `status=PostStatus.FAILED` would otherwise reach
+    the API as `status=PostStatus.FAILED` instead of `status=failed`.
+    """
+    if isinstance(value, Enum):
+        return value.value
+    return value
 
 
 class BaseResource(Generic[T]):
@@ -51,7 +66,11 @@ class BaseResource(Generic[T]):
         Returns:
             Dictionary with non-None values and camelCase keys
         """
-        return {_to_camel_case(k): v for k, v in kwargs.items() if v is not None}
+        return {
+            _to_camel_case(k): _normalize_value(v)
+            for k, v in kwargs.items()
+            if v is not None
+        }
 
     def _build_payload(self, **kwargs: Any) -> dict[str, Any]:
         """
@@ -72,7 +91,7 @@ class BaseResource(Generic[T]):
             if isinstance(value, datetime):
                 payload[camel_key] = value.isoformat()
             else:
-                payload[camel_key] = value
+                payload[camel_key] = _normalize_value(value)
         return payload
 
     def _path(self, *parts: str) -> str:

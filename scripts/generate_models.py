@@ -56,6 +56,7 @@ def main() -> int:
         "--field-constraints",
         "--use-field-description",
         "--capitalise-enum-members",
+        "--use-subclass-enum",
         "--use-default-kwarg",
         "--collapse-root-models",
         "--use-union-operator",

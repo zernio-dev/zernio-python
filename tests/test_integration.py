@@ -1056,6 +1056,56 @@ class TestBaseResourceHelpers:
         assert "includeHidden" in params
         assert "profile_id" not in params
 
+    def test_build_params_unwraps_enums(self, client: Late) -> None:
+        """Enum params must serialize as their value, not "ClassName.MEMBER".
+
+        Regression test for zernio-claude-plugin#1: httpx serializes params
+        via str(), so passing PostStatus.FAILED through unchanged produced
+        `status=PostStatus.FAILED` on the wire and the API matched nothing.
+        """
+        import httpx
+
+        from late import Platform, PostStatus
+
+        params = client.posts._build_params(
+            status=PostStatus.FAILED,
+            platform=Platform.TWITTER,
+            limit=50,
+        )
+
+        assert params["status"] == "failed"
+        assert params["platform"] == "twitter"
+        assert str(httpx.QueryParams(params)) == "status=failed&platform=twitter&limit=50"
+
+    def test_build_payload_unwraps_enums(self, client: Late) -> None:
+        """Enum payload values must serialize as their value."""
+        from late import PostStatus
+
+        payload = client.posts._build_payload(
+            content="Test",
+            status=PostStatus.DRAFT,
+        )
+
+        assert payload["status"] == "draft"
+
+    def test_generated_status_enum_matches_public_post_status(self) -> None:
+        """Generated post-status enum must stay value-compatible with PostStatus.
+
+        The generated enum is renamed on regeneration (Status7, Status10, ...);
+        what matters is that its members are str-mixins equal to the public
+        PostStatus values, so status comparisons in the MCP tools keep working.
+        """
+        from late import PostStatus
+        from late.models._generated.models import PostGetResponse
+
+        post = PostGetResponse.model_validate(
+            {"post": {"_id": "abc", "status": "failed"}}
+        ).post
+        assert post is not None
+        assert post.status == "failed"
+        assert post.status == PostStatus.FAILED
+        assert post.status.value == PostStatus.FAILED.value
+
     def test_build_payload_handles_datetime(self, client: Late) -> None:
         """Test that _build_payload serializes datetime objects."""
         dt = datetime(2024, 12, 25, 10, 0, 0)
