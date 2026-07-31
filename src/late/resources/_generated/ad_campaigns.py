@@ -164,10 +164,14 @@ class AdCampaignsResource:
         name: str,
         goal: str,
         *,
+        idempotency_key: str | None = None,
         special_ad_categories: list[str] | None = None,
         budget_amount: float | None = None,
         budget_type: str | None = None,
         status: str | None = "PAUSED",
+        bid_strategy: str | None = None,
+        bid_amount: float | None = None,
+        roas_average_floor: float | None = None,
     ) -> dict[str, Any]:
         """Create a standalone campaign"""
         payload = self._build_payload(
@@ -179,6 +183,9 @@ class AdCampaignsResource:
             budget_amount=budget_amount,
             budget_type=budget_type,
             status=status,
+            bid_strategy=bid_strategy,
+            bid_amount=bid_amount,
+            roas_average_floor=roas_average_floor,
         )
         return self._client._post("/v1/ads/campaigns", data=payload)
 
@@ -233,6 +240,7 @@ class AdCampaignsResource:
         campaign_id: str,
         platform: str,
         *,
+        idempotency_key: str | None = None,
         deep_copy: bool | None = True,
         status_option: str | None = "PAUSED",
         start_time: datetime | str | None = None,
@@ -263,6 +271,7 @@ class AdCampaignsResource:
         ad_set_id: str,
         platform: str,
         *,
+        idempotency_key: str | None = None,
         campaign_id: str | None = None,
         deep_copy: bool | None = True,
         status_option: str | None = "PAUSED",
@@ -294,6 +303,7 @@ class AdCampaignsResource:
         self,
         ad_id: str,
         *,
+        idempotency_key: str | None = None,
         ad_set_id: str | None = None,
         status_option: str | None = "PAUSED",
         rename_strategy: str | None = None,
@@ -569,6 +579,8 @@ class AdCampaignsResource:
         instagram_account_id: str | None = None,
         dynamic_creative: dict[str, Any] | None = None,
         carousel_cards: list[dict[str, Any]] | None = None,
+        default_locale: str | None = None,
+        translations: list[dict[str, Any]] | None = None,
         placement_assets: dict[str, Any] | None = None,
         audience_id: str | None = None,
         campaign_type: str | None = "display",
@@ -649,6 +661,8 @@ class AdCampaignsResource:
             instagram_account_id=instagram_account_id,
             dynamic_creative=dynamic_creative,
             carousel_cards=carousel_cards,
+            default_locale=default_locale,
+            translations=translations,
             placement_assets=placement_assets,
             audience_id=audience_id,
             campaign_type=campaign_type,
@@ -778,10 +792,14 @@ class AdCampaignsResource:
         name: str,
         goal: str,
         *,
+        idempotency_key: str | None = None,
         special_ad_categories: list[str] | None = None,
         budget_amount: float | None = None,
         budget_type: str | None = None,
         status: str | None = "PAUSED",
+        bid_strategy: str | None = None,
+        bid_amount: float | None = None,
+        roas_average_floor: float | None = None,
     ) -> dict[str, Any]:
         """Create a standalone campaign (async)"""
         payload = self._build_payload(
@@ -793,6 +811,9 @@ class AdCampaignsResource:
             budget_amount=budget_amount,
             budget_type=budget_type,
             status=status,
+            bid_strategy=bid_strategy,
+            bid_amount=bid_amount,
+            roas_average_floor=roas_average_floor,
         )
         return await self._client._apost("/v1/ads/campaigns", data=payload)
 
@@ -851,6 +872,7 @@ class AdCampaignsResource:
         campaign_id: str,
         platform: str,
         *,
+        idempotency_key: str | None = None,
         deep_copy: bool | None = True,
         status_option: str | None = "PAUSED",
         start_time: datetime | str | None = None,
@@ -881,6 +903,7 @@ class AdCampaignsResource:
         ad_set_id: str,
         platform: str,
         *,
+        idempotency_key: str | None = None,
         campaign_id: str | None = None,
         deep_copy: bool | None = True,
         status_option: str | None = "PAUSED",
@@ -912,6 +935,7 @@ class AdCampaignsResource:
         self,
         ad_id: str,
         *,
+        idempotency_key: str | None = None,
         ad_set_id: str | None = None,
         status_option: str | None = "PAUSED",
         rename_strategy: str | None = None,
@@ -1189,6 +1213,8 @@ class AdCampaignsResource:
         instagram_account_id: str | None = None,
         dynamic_creative: dict[str, Any] | None = None,
         carousel_cards: list[dict[str, Any]] | None = None,
+        default_locale: str | None = None,
+        translations: list[dict[str, Any]] | None = None,
         placement_assets: dict[str, Any] | None = None,
         audience_id: str | None = None,
         campaign_type: str | None = "display",
@@ -1269,6 +1295,8 @@ class AdCampaignsResource:
             instagram_account_id=instagram_account_id,
             dynamic_creative=dynamic_creative,
             carousel_cards=carousel_cards,
+            default_locale=default_locale,
+            translations=translations,
             placement_assets=placement_assets,
             audience_id=audience_id,
             campaign_type=campaign_type,

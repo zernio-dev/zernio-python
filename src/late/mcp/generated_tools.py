@@ -1955,6 +1955,9 @@ def register_generated_tools(mcp, _get_client):
         budget_amount: float | None = None,
         budget_type: str | None = None,
         status: str = "PAUSED",
+        bid_strategy: str | None = None,
+        bid_amount: float | None = None,
+        roas_average_floor: float | None = None,
     ) -> str:
         """Create a standalone campaign
 
@@ -1966,7 +1969,10 @@ def register_generated_tools(mcp, _get_client):
             special_ad_categories
             budget_amount: Campaign-level (CBO) budget in whole currency units. Requires budgetType.
             budget_type
-            status"""
+            status
+            bid_strategy: Campaign bid strategy. Meta puts `bid_strategy` where the budget lives, so this applies only alongside a campaign budget (CBO). Previously settable only via `PUT /v1/ads/campaigns/{campaignId}`.
+            bid_amount: Whole currency units (USD: 5 = $5.00). Required for LOWEST_COST_WITH_BID_CAP and COST_CAP; ignored otherwise.
+            roas_average_floor: Decimal ROAS multiplier (2.0 = 2.0x). Required for LOWEST_COST_WITH_MIN_ROAS."""
         client = _get_client()
         try:
             response = client.ad_campaigns.create_ad_campaign(
@@ -1978,6 +1984,9 @@ def register_generated_tools(mcp, _get_client):
                 budget_amount=budget_amount,
                 budget_type=budget_type,
                 status=status,
+                bid_strategy=bid_strategy,
+                bid_amount=bid_amount,
+                roas_average_floor=roas_average_floor,
             )
             return _format_response(response)
         except Exception as e:
@@ -2760,6 +2769,8 @@ def register_generated_tools(mcp, _get_client):
         instagram_account_id: str | None = None,
         dynamic_creative: dict[str, Any] | None = None,
         carousel_cards: list[dict[str, Any]] | None = None,
+        default_locale: str | None = None,
+        translations: list[dict[str, Any]] | None = None,
         placement_assets: dict[str, Any] | None = None,
         audience_id: str | None = None,
         campaign_type: str = "display",
@@ -2958,6 +2969,18 @@ def register_generated_tools(mcp, _get_client):
         Mutually exclusive with `imageUrl`/`video`, `creatives[]`, `dynamicCreative`,
         `placementAssets`, `existingCreativeId`, `adSetId`, `leadGenFormId` and goal
         `catalog_sales`.
+                default_locale: Meta only. Language the top-level copy is written in (e.g. `en`, `pt_BR`), used by the `translations` default rule. Defaults to `en`. Meta rejects a language asset feed whose default rule carries no locales of its own.
+                translations: Meta only. Multi-language ads (Dynamic Language Optimization): ONE ad carrying
+        per-locale copy and, optionally, per-locale media — the "Languages" toggle in Ads
+        Manager. Keeps social proof (likes/comments/shares) on a SINGLE post instead of
+        splitting it across one ad per language.
+
+        The ad's top-level copy and media are the DEFAULT every unlisted locale falls back
+        to, and a variant inherits any field it omits, so send only what differs per
+        language. Media shared across languages is uploaded once.
+
+        Mutually exclusive with `dynamicCreative`, `placementAssets`, `carouselCards` and
+        `existingCreativeId` — Meta allows one `asset_feed_spec` shape per creative.
                 placement_assets: Meta only. Placement asset customization: pin a SPECIFIC asset (image OR video) to
         each placement group on a SINGLE ad (e.g. a 9:16 on Stories/Reels and a 4:5 on Feed).
         The same thing Meta Ads Manager produces with "different creative per placement",
@@ -3122,6 +3145,8 @@ def register_generated_tools(mcp, _get_client):
                 instagram_account_id=instagram_account_id,
                 dynamic_creative=dynamic_creative,
                 carousel_cards=carousel_cards,
+                default_locale=default_locale,
+                translations=translations,
                 placement_assets=placement_assets,
                 audience_id=audience_id,
                 campaign_type=campaign_type,
