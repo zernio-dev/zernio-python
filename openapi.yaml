@@ -24394,7 +24394,10 @@ paths:
             (code USE_AD_COMMENTS_ENDPOINT — response includes `adId` and `adCommentsUrl`).
         '401': { $ref: '#/components/responses/Unauthorized' }
         '403':
-          description: Inbox addon required
+          description: 'Inbox addon required, or the connected account is not permitted to read this post on the platform (code platform_api_error, type platform_error)'
+        '429': { $ref: '#/components/responses/RateLimited' }
+        '502':
+          description: 'Upstream platform error (code platform_api_error, type platform_error)'
     post:
       operationId: replyToInboxPost
       summary: Reply to comment
@@ -24444,7 +24447,10 @@ paths:
           description: 'Invalid request (e.g. attachmentUrl on a platform other than Facebook, code PLATFORM_NOT_SUPPORTED)'
         '401': { $ref: '#/components/responses/Unauthorized' }
         '403':
-          description: Inbox addon required
+          description: 'Inbox addon required, or the connected account is not permitted to comment on this post on the platform (code platform_api_error, type platform_error)'
+        '429': { $ref: '#/components/responses/RateLimited' }
+        '502':
+          description: 'Upstream platform error (code platform_api_error, type platform_error)'
     delete:
       operationId: deleteInboxComment
       summary: Delete comment
@@ -24481,7 +24487,7 @@ paths:
                     properties:
                       message: { type: string }
         '400':
-          description: Platform rejected the operation (e.g., comment already deleted, insufficient permissions on the video)
+          description: 'Platform rejected the operation (e.g., comment already deleted)'
           content:
             application/json:
               schema:
@@ -24490,7 +24496,10 @@ paths:
                   error: { type: string }
         '401': { $ref: '#/components/responses/Unauthorized' }
         '403':
-          description: Inbox addon required
+          description: 'Inbox addon required, or the connected account is not permitted to delete this comment on the platform (code platform_api_error, type platform_error)'
+        '429': { $ref: '#/components/responses/RateLimited' }
+        '502':
+          description: 'Upstream platform error (code platform_api_error, type platform_error)'
 
   /v1/inbox/comments/{postId}/{commentId}:
     patch:
