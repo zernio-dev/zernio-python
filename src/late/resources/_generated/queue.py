@@ -28,17 +28,13 @@ class QueueResource:
         default for optional string args, and the API rejects empty query
         values (e.g. ``platform=``) with a 400. Filtering here keeps both direct
         SDK callers and MCP tool callers safe.
+
+        Enum members are unwrapped to their value: httpx serializes params
+        via str(), which yields "ClassName.MEMBER" for Enum members, so
+        e.g. ``status=PostStatus.FAILED`` would otherwise reach the API as
+        ``status=PostStatus.FAILED`` instead of ``status=failed``.
         """
-
-        def to_camel(s: str) -> str:
-            parts = s.split("_")
-            return parts[0] + "".join(p.title() for p in parts[1:])
-
-        return {to_camel(k): v for k, v in kwargs.items() if v is not None and v != ""}
-
-    def _build_payload(self, **kwargs: Any) -> dict[str, Any]:
-        """Build request payload, filtering None values."""
-        from datetime import datetime
+        from enum import Enum
 
         def to_camel(s: str) -> str:
             parts = s.split("_")
@@ -46,6 +42,29 @@ class QueueResource:
 
         result: dict[str, Any] = {}
         for k, v in kwargs.items():
+            if isinstance(v, Enum):
+                v = v.value
+            if v is None or v == "":
+                continue
+            result[to_camel(k)] = v
+        return result
+
+    def _build_payload(self, **kwargs: Any) -> dict[str, Any]:
+        """Build request payload, filtering None values. Enum members are
+        unwrapped to their value so JSON bodies carry e.g. "failed" rather
+        than a raw Enum member (plain Enum members are not JSON-serializable).
+        """
+        from datetime import datetime
+        from enum import Enum
+
+        def to_camel(s: str) -> str:
+            parts = s.split("_")
+            return parts[0] + "".join(p.title() for p in parts[1:])
+
+        result: dict[str, Any] = {}
+        for k, v in kwargs.items():
+            if isinstance(v, Enum):
+                v = v.value
             if v is None:
                 continue
             if isinstance(v, datetime):

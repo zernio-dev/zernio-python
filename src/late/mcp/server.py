@@ -756,8 +756,9 @@ def posts_retry(post_id: str) -> str:
         post = post_response.post
         if not post:
             return f"\u274c Post {post_id} not found"
-        if post.status != PostStatus.FAILED:
-            return f"\u26a0\ufe0f Post {post_id} is not in failed status (current: {post.status})"
+        status_value = post.status.value if post.status else "unknown"
+        if status_value != PostStatus.FAILED.value:
+            return f"\u26a0\ufe0f Post {post_id} is not in failed status (current: {status_value})"
     except Exception as e:
         return f"\u274c Could not find post {post_id}: {e}"
 
