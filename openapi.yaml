@@ -34982,13 +34982,13 @@ paths:
                 specialAdCategories:
                   type: array
                   items: { type: string, enum: [HOUSING, EMPLOYMENT, CREDIT, ISSUES_ELECTIONS_POLITICS, FINANCIAL_PRODUCTS_SERVICES, ONLINE_GAMBLING_AND_GAMING] }
-                budgetAmount: { type: number, description: "Campaign-level (CBO) budget in whole currency units. Requires budgetType." }
+                budgetAmount: { type: number, description: "Campaign-level (CBO) budget in WHOLE currency units (USD: 50 = $50.00), NOT cents — Meta's own Marketing API takes this same number in minor units, so it is an easy and expensive mix-up. Requires budgetType." }
                 budgetType: { type: string, enum: [daily, lifetime] }
                 status: { type: string, enum: [ACTIVE, PAUSED], default: PAUSED }
                 bidStrategy:
                   type: string
                   enum: [LOWEST_COST_WITHOUT_CAP, LOWEST_COST_WITH_BID_CAP, COST_CAP, LOWEST_COST_WITH_MIN_ROAS]
-                  description: "Campaign bid strategy. Meta puts `bid_strategy` where the budget lives, so this applies only alongside a campaign budget (CBO). Previously settable only via `PUT /v1/ads/campaigns/{campaignId}`."
+                  description: "Campaign bid strategy. Meta stores `bid_strategy` alongside the budget, so this REQUIRES `budgetAmount` + `budgetType` on the same request; sending it without a campaign budget is a 400. A campaign carrying a strategy without its `bid_amount` makes every ad set created under it fail with an error that names the ad set (code 100, subcode 1815857), so the bad state is rejected up front rather than accepted. To bid at ad-set level, set the strategy there instead."
                 bidAmount: { type: number, description: "Whole currency units (USD: 5 = $5.00). Required for LOWEST_COST_WITH_BID_CAP and COST_CAP; ignored otherwise." }
                 roasAverageFloor: { type: number, description: "Decimal ROAS multiplier (2.0 = 2.0x). Required for LOWEST_COST_WITH_MIN_ROAS." }
       responses:
@@ -35128,6 +35128,14 @@ paths:
 
         Meta-only for now. Other platforms return 501 Not Implemented — fall
         back to DELETE /v1/ads/{adId} per ad in the meantime.
+
+        **Empty campaigns.** A campaign with zero ads has no local Ad documents
+        to resolve, so it is invisible to `/v1/ads/tree` and this endpoint would
+        404. That state is produced by the two-step create flow (campaign, then
+        ads via `existingCampaignId`) whenever Meta rejects the ad step. To
+        delete such a shell, send `accountId` in the body: we skip the local
+        lookup entirely and forward the delete to Meta. `accountId` is ignored
+        when the campaign does have ads.
       security:
         - bearerAuth: []
       parameters:
@@ -35141,6 +35149,7 @@ paths:
               required: [platform]
               properties:
                 platform: { type: string, enum: [facebook, instagram] }
+                accountId: { type: string, description: "Zernio SocialAccount id owning the ad account. Required only to delete an EMPTY campaign (zero ads), which has no local Ad documents to resolve a token from." }
       responses:
         '200':
           description: Campaign deleted
@@ -37751,7 +37760,7 @@ paths:
                 validateOnly:
                   type: boolean
                   description: 'Meta only, single standalone shape only (no creatives[], adSetId, or RESERVED). Dry-run: each node runs Meta''s execution_options validate_only and NOTHING is created or persisted. Children need real parents, so a fresh tree validates the campaign + creative (the ad set needs its campaign to exist — pass existingCampaignId to validate it too; the ad itself is never validatable pre-create). A Meta validation failure returns the 400 verbatim; success returns 200 with per-node results instead of an ad.'
-                budgetAmount: { type: number, description: "Required on legacy + multi-creative shapes. Inherited on attach. OpenAI Ads requires a $1 minimum (its budget is lifetime-only, see budgetType)." }
+                budgetAmount: { type: number, description: "Budget in WHOLE currency units (USD: 50 = $50.00), NOT cents — Meta's own Marketing API takes this same number in minor units, so it is an easy and expensive mix-up. Required on legacy + multi-creative shapes. Inherited on attach. OpenAI Ads requires a $1 minimum (its budget is lifetime-only, see budgetType)." }
                 budgetType: { type: string, enum: [daily, lifetime], description: "Required on legacy + multi-creative shapes. Inherited on attach. OpenAI Ads accepts lifetime only (no daily-budget concept on the platform); sending daily returns 422. OpenAI Ads lifetime budgets require `endDate` to give the lifetime cap a spend window." }
                 status:
                   type: string
@@ -38123,7 +38132,7 @@ paths:
                       callToAction: { type: string, description: "Card CTA override. Defaults to the top-level callToAction; same enum." }
                 defaultLocale:
                   type: string
-                  description: "Meta only. Language the top-level copy is written in (e.g. `en`, `pt_BR`), used by the `translations` default rule. Defaults to `en`. Meta rejects a language asset feed whose default rule carries no locales of its own."
+                  description: "Meta only. Language the top-level copy is written in (e.g. `en`, `pt_BR`), used by the `translations` default rule. Defaults to `en`. Meta rejects a language asset feed whose default rule carries no locales of its own. Must NOT also appear as an entry in `translations`."
                 translations:
                   type: array
                   minItems: 1
@@ -38134,20 +38143,39 @@ paths:
                     Manager. Keeps social proof (likes/comments/shares) on a SINGLE post instead of
                     splitting it across one ad per language.
 
-                    The ad's top-level copy and media are the DEFAULT every unlisted locale falls back
-                    to, and a variant inherits any field it omits, so send only what differs per
-                    language. Media shared across languages is uploaded once.
+                    The ad's top-level copy is the DEFAULT shown to every locale you do NOT list,
+                    and it counts as one of the language variants.
+
+                    IMPORTANT, and the opposite of what you might expect: text does NOT inherit.
+                    Every entry must carry its own `headline`, `body` AND `description`, and all of
+                    them must be DISTINCT from each other and from the ad's top-level copy. Meta
+                    deduplicates identical strings inside the asset feed, so two locales sharing a
+                    string collapse into one asset and the create fails with a misleading "Too few
+                    ... texts provided in asset creation" (subcode 1885817) that names a field which
+                    is actually present. We validate this before calling Meta and return a 400
+                    naming the offending locale and field. `description` is therefore effectively
+                    required on the ad whenever `translations` is present, even though it is
+                    optional otherwise.
+
+                    Do NOT list `defaultLocale` inside `translations`: Meta rejects the duplicate
+                    with "The language asset feed includes an unsupported targeting field"
+                    (subcode 1885985).
+
+                    Media DOES inherit and is uploaded once when shared. Note that Meta enforces
+                    Dynamic Creative image dimensions on language feeds, so an `imageUrl` that
+                    works on a normal ad may be rejected with "The following images have invalid
+                    dimensions for Dynamic Creative" (subcode 1885558). Video is not affected.
 
                     Mutually exclusive with `dynamicCreative`, `placementAssets`, `carouselCards` and
                     `existingCreativeId` — Meta allows one `asset_feed_spec` shape per creative.
                   items:
                     type: object
-                    required: [locale]
+                    required: [locale, headline, body, description]
                     properties:
                       locale: { type: string, description: "Language code, resolved to Meta's numeric locale id. Bare codes target the '(All)' umbrella (`es` = every Spanish variant); region-qualified codes target the variant (`pt_BR`, `en_GB`)." }
-                      headline: { type: string, maxLength: 255, description: "Headline for this language. Inherits the top-level `headline` when omitted." }
-                      body: { type: string, description: "Primary text for this language. Inherits the top-level `body` when omitted." }
-                      description: { type: string, maxLength: 255, description: "Link description for this language. Inherits the top-level `description` when omitted." }
+                      headline: { type: string, maxLength: 255, description: "Headline for this language. REQUIRED, and must differ from every other locale and from the ad's top-level headline." }
+                      body: { type: string, description: "Primary text for this language. REQUIRED, and must differ from every other locale and from the ad's top-level body." }
+                      description: { type: string, maxLength: 255, description: "Link description for this language. REQUIRED, and must differ from every other locale and from the ad's top-level description." }
                       imageUrl: { type: string, format: uri, description: "Image for this language. Inherits the ad's `imageUrl` when omitted. The feed is all-image OR all-video." }
                       videoUrl: { type: string, format: uri, description: "Video for this language. Inherits the ad's `video.url` when omitted. The feed is all-image OR all-video." }
                       thumbnailUrl: { type: string, format: uri, description: "Poster frame for this language's video." }

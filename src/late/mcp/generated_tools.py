@@ -1967,10 +1967,10 @@ def register_generated_tools(mcp, _get_client):
             name: (required)
             goal: Mapped to the ODAX objective (same mapping as POST /v1/ads/create). (required)
             special_ad_categories
-            budget_amount: Campaign-level (CBO) budget in whole currency units. Requires budgetType.
+            budget_amount: Campaign-level (CBO) budget in WHOLE currency units (USD: 50 = $50.00), NOT cents — Meta's own Marketing API takes this same number in minor units, so it is an easy and expensive mix-up. Requires budgetType.
             budget_type
             status
-            bid_strategy: Campaign bid strategy. Meta puts `bid_strategy` where the budget lives, so this applies only alongside a campaign budget (CBO). Previously settable only via `PUT /v1/ads/campaigns/{campaignId}`.
+            bid_strategy: Campaign bid strategy. Meta stores `bid_strategy` alongside the budget, so this REQUIRES `budgetAmount` + `budgetType` on the same request; sending it without a campaign budget is a 400. A campaign carrying a strategy without its `bid_amount` makes every ad set created under it fail with an error that names the ad set (code 100, subcode 1815857), so the bad state is rejected up front rather than accepted. To bid at ad-set level, set the strategy there instead.
             bid_amount: Whole currency units (USD: 5 = $5.00). Required for LOWEST_COST_WITH_BID_CAP and COST_CAP; ignored otherwise.
             roas_average_floor: Decimal ROAS multiplier (2.0 = 2.0x). Required for LOWEST_COST_WITH_MIN_ROAS."""
         client = _get_client()
@@ -2067,16 +2067,19 @@ def register_generated_tools(mcp, _get_client):
             openWorldHint=True,
         )
     )
-    def ad_campaigns_delete_ad_campaign(campaign_id: str, platform: str) -> str:
+    def ad_campaigns_delete_ad_campaign(
+        campaign_id: str, platform: str, account_id: str | None = None
+    ) -> str:
         """Delete a campaign
 
         Args:
             campaign_id: Platform campaign ID (required)
-            platform: (required)"""
+            platform: (required)
+            account_id: Zernio SocialAccount id owning the ad account. Required only to delete an EMPTY campaign (zero ads), which has no local Ad documents to resolve a token from."""
         client = _get_client()
         try:
             response = client.ad_campaigns.delete_ad_campaign(
-                campaign_id=campaign_id, platform=platform
+                campaign_id=campaign_id, platform=platform, account_id=account_id
             )
             return _format_response(response)
         except Exception as e:
@@ -2825,7 +2828,7 @@ def register_generated_tools(mcp, _get_client):
                 rf_prediction_id: Meta only. The RESERVED prediction id the R&F ad set runs on (reserving mints a new id — pass that one). Requires buyingType RESERVED.
                 creative_features: Meta only. Advantage+ creative enhancements: a partial map of Meta creative feature keys (snake_case, e.g. enhance_cta, image_brightness_and_contrast, text_optimizations) to enroll status, forwarded as degrees_of_freedom_spec.creative_features_spec. Meta validates the keys; unspecified features default to OPT_OUT. The legacy standard_enhancements bundle is deprecated by Meta and rejected.
                 validate_only: Meta only, single standalone shape only (no creatives[], adSetId, or RESERVED). Dry-run: each node runs Meta's execution_options validate_only and NOTHING is created or persisted. Children need real parents, so a fresh tree validates the campaign + creative (the ad set needs its campaign to exist — pass existingCampaignId to validate it too; the ad itself is never validatable pre-create). A Meta validation failure returns the 400 verbatim; success returns 200 with per-node results instead of an ad.
-                budget_amount: Required on legacy + multi-creative shapes. Inherited on attach. OpenAI Ads requires a $1 minimum (its budget is lifetime-only, see budgetType).
+                budget_amount: Budget in WHOLE currency units (USD: 50 = $50.00), NOT cents — Meta's own Marketing API takes this same number in minor units, so it is an easy and expensive mix-up. Required on legacy + multi-creative shapes. Inherited on attach. OpenAI Ads requires a $1 minimum (its budget is lifetime-only, see budgetType).
                 budget_type: Required on legacy + multi-creative shapes. Inherited on attach. OpenAI Ads accepts lifetime only (no daily-budget concept on the platform); sending daily returns 422. OpenAI Ads lifetime budgets require `endDate` to give the lifetime cap a spend window.
                 status: Meta and TikTok. Publish state of the created entities. Omitted or ACTIVE publishes live (default, back-compat); PAUSED creates them paused and skips activation, so you can review before they spend. On TikTok the whole campaign > ad group > ad hierarchy stays paused.
                 budget_level: Meta only. Where the budget lives, which selects the Meta budget model:
@@ -2969,15 +2972,34 @@ def register_generated_tools(mcp, _get_client):
         Mutually exclusive with `imageUrl`/`video`, `creatives[]`, `dynamicCreative`,
         `placementAssets`, `existingCreativeId`, `adSetId`, `leadGenFormId` and goal
         `catalog_sales`.
-                default_locale: Meta only. Language the top-level copy is written in (e.g. `en`, `pt_BR`), used by the `translations` default rule. Defaults to `en`. Meta rejects a language asset feed whose default rule carries no locales of its own.
+                default_locale: Meta only. Language the top-level copy is written in (e.g. `en`, `pt_BR`), used by the `translations` default rule. Defaults to `en`. Meta rejects a language asset feed whose default rule carries no locales of its own. Must NOT also appear as an entry in `translations`.
                 translations: Meta only. Multi-language ads (Dynamic Language Optimization): ONE ad carrying
         per-locale copy and, optionally, per-locale media — the "Languages" toggle in Ads
         Manager. Keeps social proof (likes/comments/shares) on a SINGLE post instead of
         splitting it across one ad per language.
 
-        The ad's top-level copy and media are the DEFAULT every unlisted locale falls back
-        to, and a variant inherits any field it omits, so send only what differs per
-        language. Media shared across languages is uploaded once.
+        The ad's top-level copy is the DEFAULT shown to every locale you do NOT list,
+        and it counts as one of the language variants.
+
+        IMPORTANT, and the opposite of what you might expect: text does NOT inherit.
+        Every entry must carry its own `headline`, `body` AND `description`, and all of
+        them must be DISTINCT from each other and from the ad's top-level copy. Meta
+        deduplicates identical strings inside the asset feed, so two locales sharing a
+        string collapse into one asset and the create fails with a misleading "Too few
+        ... texts provided in asset creation" (subcode 1885817) that names a field which
+        is actually present. We validate this before calling Meta and return a 400
+        naming the offending locale and field. `description` is therefore effectively
+        required on the ad whenever `translations` is present, even though it is
+        optional otherwise.
+
+        Do NOT list `defaultLocale` inside `translations`: Meta rejects the duplicate
+        with "The language asset feed includes an unsupported targeting field"
+        (subcode 1885985).
+
+        Media DOES inherit and is uploaded once when shared. Note that Meta enforces
+        Dynamic Creative image dimensions on language feeds, so an `imageUrl` that
+        works on a normal ad may be rejected with "The following images have invalid
+        dimensions for Dynamic Creative" (subcode 1885558). Video is not affected.
 
         Mutually exclusive with `dynamicCreative`, `placementAssets`, `carouselCards` and
         `existingCreativeId` — Meta allows one `asset_feed_spec` shape per creative.

@@ -240,7 +240,9 @@ class AdCampaignsResource:
         )
         return self._client._put(f"/v1/ads/campaigns/{campaign_id}", data=payload)
 
-    def delete_ad_campaign(self, campaign_id: str, platform: str) -> dict[str, Any]:
+    def delete_ad_campaign(
+        self, campaign_id: str, platform: str, *, account_id: str | None = None
+    ) -> dict[str, Any]:
         """Delete a campaign"""
         return self._client._delete(f"/v1/ads/campaigns/{campaign_id}")
 
@@ -871,7 +873,7 @@ class AdCampaignsResource:
         )
 
     async def adelete_ad_campaign(
-        self, campaign_id: str, platform: str
+        self, campaign_id: str, platform: str, *, account_id: str | None = None
     ) -> dict[str, Any]:
         """Delete a campaign (async)"""
         return await self._client._adelete(f"/v1/ads/campaigns/{campaign_id}")
