@@ -19493,6 +19493,17 @@ paths:
                 noOrgForPersonMention:
                   value: { error: "No organization found. You need to be an admin of a LinkedIn organization to use person mentions. Organization mentions work without this requirement." }
         '401': { $ref: '#/components/responses/Unauthorized' }
+        '403':
+          description: The account holds no organization role that can resolve person mentions
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error: { type: string }
+              examples:
+                noPostingRole:
+                  value: { error: "LinkedIn blocked this lookup. Your account has no company page where it can create posts, which LinkedIn requires to resolve a person's profile URL. Ask for an Admin or Content Admin role on one of your pages, or mention a company instead." }
         '404':
           description: Person or organization not found
           content:
