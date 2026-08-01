@@ -7347,6 +7347,7 @@ def register_generated_tools(mcp, _get_client):
         profile_id: str | None = None,
         search: str | None = None,
         tag: str | None = None,
+        tags: str | None = None,
         platform: str | None = None,
         is_subscribed: str | None = None,
         limit: int = 50,
@@ -7358,6 +7359,7 @@ def register_generated_tools(mcp, _get_client):
             profile_id: Filter by profile. Omit to list across all profiles
             search
             tag
+            tags: Comma-separated tags, matches contacts carrying any of them
             platform
             is_subscribed
             limit
@@ -7368,6 +7370,7 @@ def register_generated_tools(mcp, _get_client):
                 profile_id=profile_id,
                 search=search,
                 tag=tag,
+                tags=tags,
                 platform=platform,
                 is_subscribed=is_subscribed,
                 limit=limit,

@@ -32637,6 +32637,7 @@ paths:
         - { name: profileId, in: query, schema: { type: string }, description: Filter by profile. Omit to list across all profiles }
         - { name: search, in: query, schema: { type: string } }
         - { name: tag, in: query, schema: { type: string } }
+        - { name: tags, in: query, schema: { type: string }, description: 'Comma-separated tags, matches contacts carrying any of them' }
         - { name: platform, in: query, schema: { type: string, enum: [instagram, facebook, telegram, twitter, bluesky, reddit, whatsapp] } }
         - { name: isSubscribed, in: query, schema: { type: string, enum: ['true', 'false'] } }
         - { name: limit, in: query, schema: { type: integer, default: 50, maximum: 200 } }
