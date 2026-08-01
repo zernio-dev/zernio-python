@@ -32897,7 +32897,7 @@ paths:
     post:
       operationId: bulkCreateContacts
       summary: Bulk create contacts
-      description: 'Import up to 1000 contacts at a time. Skips duplicates, merging any new tags onto the existing contact. accountId is required whenever contacts carry a platformIdentifier (or a row-level accountId); platform is always derived from the resolved account, never used to decide whether channels are created, and a mismatched platform 404s as account not found. On phone platforms (whatsapp, sms) the platformIdentifier is normalized to digits and a value that is not phone-shaped is rejected per contact and reported in errors[], not imported.'
+      description: 'Import up to 1000 contacts at a time. Skips duplicates, merging any new tags onto the existing contact. accountId is required whenever contacts carry a platformIdentifier (or a row-level accountId); platform is always derived from the resolved account, never used to decide whether channels are created, and a mismatched platform 404s as account not found. When accountId is set, each contact must carry a platformIdentifier; a row missing it is rejected individually (reported in errors[], HTTP 200), not a 400 for the whole import. On phone platforms (whatsapp, sms) the platformIdentifier is normalized to digits and a value that is not phone-shaped is rejected per contact and reported in errors[], not imported.'
       tags: [Contacts]
       requestBody:
         required: true
@@ -32915,10 +32915,10 @@ paths:
                   maxItems: 1000
                   items:
                     type: object
-                    required: [name, platformIdentifier]
+                    required: [name]
                     properties:
                       name: { type: string }
-                      platformIdentifier: { type: string }
+                      platformIdentifier: { type: string, description: 'Required when the top-level accountId is set (channel mode). A row missing it in that mode is rejected individually and reported in errors[], not a 400 for the whole import.' }
                       displayIdentifier: { type: string }
                       email: { type: string }
                       company: { type: string }
@@ -32936,7 +32936,7 @@ paths:
                   skipped: { type: integer }
                   errors: { type: array, items: { type: string }, description: 'Per-contact failures, e.g. an identifier that is not a valid phone number' }
                   total: { type: integer }
-        '400': { description: 'Missing required field, or a row carries platformIdentifier/accountId with no top-level accountId to attach it to' }
+        '400': { description: 'Contact missing required field name, or a row carries platformIdentifier/accountId with no top-level accountId to attach it to. A row missing platformIdentifier while accountId IS set is not a 400: it is reported in errors[] under a 200.' }
         '401': { $ref: '#/components/responses/Unauthorized' }
 
   /v1/contacts/{contactId}/fields/{slug}:
