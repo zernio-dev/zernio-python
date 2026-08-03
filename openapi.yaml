@@ -13294,6 +13294,7 @@ paths:
                       platformSpecificData:
                         type: object
                         additionalProperties: true
+                        description: 'A <platform>Settings namespace (e.g. facebookSettings, tiktokSettings) omitted from the request is preserved from the stored post. Sending the key replaces the whole namespace; it is not deep-merged.'
                 scheduledFor: { type: string, format: date-time }
                 publishNow: { type: boolean, default: false }
                 isDraft:
