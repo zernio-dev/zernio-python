@@ -12704,10 +12704,10 @@ paths:
                 metadata: { type: object, additionalProperties: true }
                 tiktokSettings:
                   $ref: '#/components/schemas/TikTokPlatformData'
-                  description: Root-level TikTok settings applied to all TikTok platforms. Merged into each platform's platformSpecificData, with platform-specific settings taking precedence.
+                  description: 'Root-level TikTok settings applied to the TikTok platforms sent in the same request. Merged into each platform''s platformSpecificData, with platform-specific settings taking precedence.'
                 facebookSettings:
                   $ref: '#/components/schemas/FacebookSettings'
-                  description: Root-level Facebook settings applied to all Facebook platforms. Merged into each platform's platformSpecificData.facebookSettings, with platform-specific settings taking precedence.
+                  description: 'Root-level Facebook settings applied to the Facebook platforms sent in the same request. Merged into each platform''s platformSpecificData.facebookSettings, with platform-specific settings taking precedence.'
                 recycling:
                   $ref: '#/components/schemas/RecyclingConfig'
                 queuedFromProfile:
@@ -13321,10 +13321,10 @@ paths:
                   description: Specific queue ID to use when scheduling via queue.
                 tiktokSettings:
                   $ref: '#/components/schemas/TikTokPlatformData'
-                  description: Root-level TikTok settings applied to all TikTok platforms. Merged into each platform's platformSpecificData, with platform-specific settings taking precedence.
+                  description: 'Root-level TikTok settings applied to the TikTok platforms sent in the same request. Merged into each platform''s platformSpecificData, with platform-specific settings taking precedence. Returns 400 if sent without a platforms array.'
                 facebookSettings:
                   $ref: '#/components/schemas/FacebookSettings'
-                  description: Root-level Facebook settings applied to all Facebook platforms. Merged into each platform's platformSpecificData.facebookSettings, with platform-specific settings taking precedence.
+                  description: 'Root-level Facebook settings applied to the Facebook platforms sent in the same request. Merged into each platform''s platformSpecificData.facebookSettings, with platform-specific settings taking precedence. Returns 400 if sent without a platforms array.'
                 recycling:
                   $ref: '#/components/schemas/RecyclingConfig'
               additionalProperties: true
