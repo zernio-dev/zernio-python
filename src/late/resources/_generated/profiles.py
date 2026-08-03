@@ -91,12 +91,7 @@ class ProfilesResource:
         return self._client._get("/v1/profiles", params=params)
 
     def create_profile(
-        self,
-        name: str,
-        *,
-        idempotency_key: str | None = None,
-        description: str | None = None,
-        color: str | None = None,
+        self, name: str, *, description: str | None = None, color: str | None = None
     ) -> dict[str, Any]:
         """Create profile"""
         payload = self._build_payload(
@@ -150,12 +145,7 @@ class ProfilesResource:
         return await self._client._aget("/v1/profiles", params=params)
 
     async def acreate_profile(
-        self,
-        name: str,
-        *,
-        idempotency_key: str | None = None,
-        description: str | None = None,
-        color: str | None = None,
+        self, name: str, *, description: str | None = None, color: str | None = None
     ) -> dict[str, Any]:
         """Create profile (async)"""
         payload = self._build_payload(

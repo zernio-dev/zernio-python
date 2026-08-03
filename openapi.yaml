@@ -504,7 +504,20 @@ components:
       in: query
       description: Page number (1-based)
       schema: { type: integer, minimum: 1, default: 1 }
+    IdempotencyKeyHeader:
+      name: Idempotency-Key
+      in: header
+      required: false
+      schema: { type: string, maxLength: 255 }
+      description: >-
+        Optional client-generated unique key (e.g. a UUID) that makes retries
+        safe. Same key + same body replays the original response; same key +
+        different body → 422; key still processing → 409.
   responses:
+    IdempotencyKeyInFlight:
+      description: Same Idempotency-Key still processing; retry after a short backoff
+    IdempotencyKeyReused:
+      description: Idempotency-Key reused with a different body
     BadRequest:
       description: Invalid request
       content:
@@ -13960,15 +13973,7 @@ paths:
         with the same key and body replays the original 201 (same _id)
         instead of conflicting.
       parameters:
-        - name: Idempotency-Key
-          in: header
-          required: false
-          schema: { type: string, maxLength: 255 }
-          description: >-
-            Optional client-generated unique key (e.g. a UUID) that makes
-            create retries safe. Same key + same body replays the original
-            response; same key + different body → 422; key still processing →
-            409.
+        - $ref: '#/components/parameters/IdempotencyKeyHeader'
       requestBody:
         required: true
         content:
@@ -14006,7 +14011,7 @@ paths:
         '402': { $ref: '#/components/responses/PaymentRequired' }
         '403': { description: Profile limit exceeded }
         '409': { description: 'A profile with this name already exists (code: profile_name_conflict); details.existingProfileId carries the id of the existing profile. Also returned while a request with the same Idempotency-Key is still processing.' }
-        '422': { description: Idempotency-Key reused with a different body }
+        '422': { $ref: '#/components/responses/IdempotencyKeyReused' }
   /v1/profiles/{profileId}:
     get:
       operationId: getProfile
@@ -23263,6 +23268,13 @@ paths:
         are available via the `interactive` field. Tap events are delivered through
         the `message.received` webhook with WhatsApp-specific `metadata` fields
         (`interactiveType`, `interactiveId`, `flowResponseJson`, `flowResponseData`).
+
+        **Idempotency:** send an `Idempotency-Key` header to make retries safe
+        (e.g. after a client-side timeout where delivery is unknown): same key +
+        same body replays the original response (with `Idempotent-Replayed: true`)
+        instead of sending the message a second time; same key + different body
+        returns 422; a key still in flight returns 409. Works for JSON and
+        multipart (file upload) requests alike. Keys are retained for 24 hours.
       tags: [Messages]
       security: [{ bearerAuth: [] }]
       parameters:
@@ -23271,6 +23283,7 @@ paths:
           required: true
           schema: { type: string }
           description: The conversation ID (id field from list conversations endpoint). This is the platform-specific conversation identifier, not an internal database ID.
+        - $ref: '#/components/parameters/IdempotencyKeyHeader'
       requestBody:
         required: true
         content:
@@ -23756,6 +23769,8 @@ paths:
         '401': { $ref: '#/components/responses/Unauthorized' }
         '403':
           description: Inbox addon required
+        '409': { $ref: '#/components/responses/IdempotencyKeyInFlight' }
+        '422': { $ref: '#/components/responses/IdempotencyKeyReused' }
 
   /v1/whatsapp/media/{mediaId}:
     get:
@@ -26429,15 +26444,7 @@ paths:
       security:
         - bearerAuth: []
       parameters:
-        - name: Idempotency-Key
-          in: header
-          required: false
-          schema: { type: string, maxLength: 255 }
-          description: >-
-            Optional client-generated unique key (e.g. a UUID) that makes
-            dial retries safe. Same key + same body replays the original
-            response; same key + different body → 422; key still processing →
-            409.
+        - $ref: '#/components/parameters/IdempotencyKeyHeader'
       requestBody:
         required: true
         content:
@@ -26775,15 +26782,7 @@ paths:
       security:
         - bearerAuth: []
       parameters:
-        - name: Idempotency-Key
-          in: header
-          required: false
-          schema: { type: string, maxLength: 255 }
-          description: >-
-            Optional client-generated unique key (e.g. a UUID) that makes
-            dial retries safe. Same key + same body replays the original
-            response; same key + different body → 422; key still processing →
-            409.
+        - $ref: '#/components/parameters/IdempotencyKeyHeader'
       requestBody:
         required: true
         content:
@@ -27117,14 +27116,7 @@ paths:
       security:
         - bearerAuth: []
       parameters:
-        - name: Idempotency-Key
-          in: header
-          required: false
-          schema: { type: string, maxLength: 255 }
-          description: >-
-            Optional client-generated unique key (e.g. a UUID) that makes send
-            retries safe. Same key + same body replays the original response;
-            same key + different body → 422; key still processing → 409.
+        - $ref: '#/components/parameters/IdempotencyKeyHeader'
       requestBody:
         required: true
         content:
@@ -27158,8 +27150,8 @@ paths:
                   status: { type: string, enum: [sent] }
         '401': { $ref: '#/components/responses/Unauthorized' }
         '404': { description: "No SMS-enabled number matches `from`" }
-        '409': { description: Same Idempotency-Key still processing; retry after a short backoff }
-        '422': { description: Idempotency-Key reused with a different body }
+        '409': { $ref: '#/components/responses/IdempotencyKeyInFlight' }
+        '422': { $ref: '#/components/responses/IdempotencyKeyReused' }
         '502': { description: Carrier-side send failed }
 
   /v1/sms/lookup:
@@ -37800,14 +37792,7 @@ paths:
       security:
         - bearerAuth: []
       parameters:
-        - name: Idempotency-Key
-          in: header
-          required: false
-          schema: { type: string, maxLength: 255 }
-          description: >-
-            Optional client-generated unique key (e.g. a UUID) that makes create
-            retries safe. Same key + same body replays the original response;
-            same key + different body → 422; key still processing → 409.
+        - $ref: '#/components/parameters/IdempotencyKeyHeader'
       requestBody:
         required: true
         content:
