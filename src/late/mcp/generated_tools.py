@@ -2635,11 +2635,18 @@ def register_generated_tools(mcp, _get_client):
         GET /v1/ads/targeting/search?dimension=geo. City radius and lat/lng
         `customLocations` are Meta-only and preserve the boosted post's
         social proof (the ad references the existing post).
-                raw_targeting: Meta only. A verbatim Meta-native targeting spec (e.g.
-        `{ "geo_locations": { "cities": [{ "key": "...", "radius": 15, "distance_unit": "kilometer" }] } }`),
-        forwarded unchanged. Mutually exclusive with `targeting` (sending both is a 400).
-        Use for advanced fields the structured object does not expose (flexible_spec,
-        excluded audiences, business places).
+                raw_targeting: Meta only. A Meta-native targeting spec (e.g.
+        `{ "geo_locations": { "cities": [{ "key": "...", "radius": 15, "distance_unit": "kilometer" }] } }`).
+        Sent alone it is forwarded unchanged. Use for advanced fields the structured
+        object does not expose (flexible_spec, excluded audiences, business places,
+        user_os, wireless_carrier).
+
+        Can be combined with `targeting`: rawTargeting is the BASE layer and the
+        built camelCase spec is merged on top, key by key (camelCase wins on
+        collision). The merge goes one level deep inside `geo_locations` and
+        `excluded_geo_locations` (built sub-keys win; raw-only sub-keys such as
+        `location_types` survive). Array values (`flexible_spec`, ...) are replaced
+        as a whole key, never element-merged.
                 bid_strategy: Meta bid strategy applied to the ad set. On TikTok, mapped to
         `bid_type` / `bid_price` / `deep_bid_type` automatically.
                 bid_amount: Bid cap in WHOLE currency units (USD: 5 = $5.00; JPY: 100 = ¥100). Required when
@@ -2852,7 +2859,7 @@ def register_generated_tools(mcp, _get_client):
                 description: Meta only (facebook/instagram). Link description — the secondary text shown below the headline (Meta's link_data.description; on video creatives mapped to video_data.link_description). When omitted, Meta auto-pulls the destination URL's OpenGraph description. Applies on legacy, attach, and placementAssets shapes; for multi-creative use creatives[].description (this field is the shared fallback). For multi-text variations use dynamicCreative.descriptions instead.
                 call_to_action: Required on legacy + attach shapes for Meta. Honoured on TikTok (passes through to the Spark Ad creative's `call_to_action`) and on LinkedIn (the CTA button on the ad; defaults to LEARN_MORE when `linkUrl` is set). LinkedIn accepts: LEARN_MORE, SIGN_UP, DOWNLOAD, SUBSCRIBE, REGISTER, JOIN, ATTEND, REQUEST_DEMO, VIEW_QUOTE, APPLY, SEE_MORE, SHOP_NOW, BUY_NOW. Ignored by Google, Pinterest, and X/Twitter.
                 link_url: Required on legacy + attach shapes (skip for multi-creative). On LinkedIn it's the ad's destination URL; required for `traffic` ads, optional for `engagement` / `awareness`. NOT required when `goal` is `lead_generation` (the ad opens a Lead Gen form instead of a destination). On LinkedIn, `imageUrl` + `linkUrl` publishes an ARTICLE-content creative; this is LinkedIn's article ad format, with the image as thumbnail and `longHeadline` as description. Required for OpenAI Ads (the chat card's target_url).
-                lead_gen_form_id: Meta Lead Gen forms only (facebook/instagram). The leadgen_forms ID to attach to the ad's creative — create one via POST /v1/ads/lead-forms. REQUIRED when `goal` is `lead_generation`, and on every ATTACH (`adSetId`) call that targets a lead ad set (the form attaches per-ad; Meta rejects a formless ad in a lead ad set). Ignored otherwise. The ad set's promoted_object.page_id + LEAD_GENERATION optimization + destination_type ON_AD are derived automatically from the goal. Both `placementAssets` (per-placement creative) and `dynamicCreative` (multi-text / multi-asset pool, e.g. multiple headlines and primary texts) ARE supported on instant-form lead ads — the form is attached for you, and for `dynamicCreative` the ad set is created as a Dynamic Creative ad set automatically (Meta requires that for any multi-text feed; there is no non-DCO multi-text path). Send a single `imageUrls` entry plus your text variations to get Meta's "Multiple Text Options" behavior on a lead ad.
+                lead_gen_form_id: Meta Lead Gen forms only (facebook/instagram). The leadgen_forms ID to attach to the ad's creative — create one via POST /v1/ads/lead-forms. REQUIRED when `goal` is `lead_generation`, and on every ATTACH (`adSetId`) call that targets a lead ad set (the form attaches per-ad; Meta rejects a formless ad in a lead ad set). Ignored otherwise. The ad set's promoted_object.page_id + LEAD_GENERATION optimization + destination_type ON_AD are derived automatically from the goal. Both `placementAssets` (per-placement creative) and `dynamicCreative` (multi-text / multi-asset pool, e.g. multiple headlines and primary texts) ARE supported on instant-form lead ads — the form is attached for you, and for `dynamicCreative` the ad set is created as a Dynamic Creative ad set automatically (Meta requires that for any multi-text feed; there is no non-DCO multi-text path). Send a single `imageUrls` (or `videoUrls`) entry plus your text variations to get Meta's "Multiple Text Options" behavior on a lead ad.
                 image_url: Image creative for Meta/Google/Pinterest/LinkedIn on legacy + attach shapes (mutually exclusive with `video`). Required for LinkedIn ads unless `video` is set. Not required for Google Search campaigns. For TikTok, this field carries the VIDEO URL (the TikTok ads endpoint is video-only; the field retains the `imageUrl` name for cross-platform consistency). Ignored for X/Twitter. For Google Display, treated as the landscape image (alias of `images.landscape`); supply `images.square` alongside or the request is rejected. For LinkedIn the image is uploaded to LinkedIn under the authoring Company Page (see `organizationId`); recommended ratio 1.91:1 (e.g. 1200×627). Required for OpenAI Ads (uploaded as the chat card's image; OpenAI has no video ad format).
                 images: Google Display (Responsive Display Ads) only. Google RDA requires both a landscape (1.91:1) and a square (1:1) marketing image; sending only one is rejected upstream as 'Too few.' (NOT_ENOUGH_*_MARKETING_IMAGE_ASSET). Supply both URLs here. Either this field or the legacy `imageUrl` can provide the landscape, but `square` has no legacy counterpart so it must be set here for Display.
                 video: Meta (facebook, instagram) and LinkedIn. When set, creates a VIDEO ad on the legacy (or, for Meta, attach) shape. Mutually exclusive with `imageUrl`. For Meta multi-creative, set `video` per entry inside `creatives[]` instead. For LinkedIn the video is uploaded to LinkedIn under the authoring Company Page (see `organizationId`) and the campaign format is set to SINGLE_VIDEO; LinkedIn ignores `thumbnailUrl` (it auto-generates the poster frame) — supply MP4 H.264/AAC, 3s-30min, 75KB-500MB.
@@ -2942,14 +2949,24 @@ def register_generated_tools(mcp, _get_client):
                 saved_targeting_id: ID of a `saved_targeting` audience (created via POST /v1/ads/audiences). When set, its stored
         TargetingSpec is expanded as the base targeting; inline fields on this body merge on top. Lets you
         reuse a named targeting preset without re-sending every field.
-                raw_targeting: Meta only. A raw Meta-native targeting spec passed to the ad set VERBATIM (snake_case:
-        `geo_locations`, `age_min`, `excluded_custom_audiences`, `flexible_spec`, `targeting_automation`,
-        business places, etc.) — exactly the shape `GET /v1/ads/{adId}` returns for external ads. Use it to
-        clone a campaign's targeting EXACTLY, preserving advanced fields the camelCase targeting fields can't
-        model. Mutually exclusive with the camelCase targeting fields (countries/regions/cities/interests/
-        ageMin/...), `audienceId`, and `savedTargetingId` (sending both → 422). Sent as-is; Meta validates and
-        surfaces any errors. If cloning an EU campaign, also pass `dsaBeneficiary` / `dsaPayor` (those are
-        separate fields, not part of targeting).
+                raw_targeting: Meta only. A raw Meta-native targeting spec (snake_case: `geo_locations`, `age_min`,
+        `excluded_custom_audiences`, `flexible_spec`, `targeting_automation`, `user_os`,
+        `wireless_carrier`, business places, etc.) — exactly the shape `GET /v1/ads/{adId}` returns for
+        external ads. Sent alone it reaches the ad set VERBATIM (the clone-a-campaign's-targeting-exactly
+        path). Meta validates and surfaces any errors.
+
+        Can be combined with the camelCase targeting fields (countries/regions/cities/interests/ageMin/...,
+        `targeting`, `savedTargetingId`, `audienceId`): rawTargeting is the BASE layer and the built
+        camelCase spec is merged on top, key by key, with the camelCase side winning on collision (the
+        camelCase precedence chain stays `savedTargetingId` < `targeting` < flat fields). The merge goes
+        one level deep inside `geo_locations` and `excluded_geo_locations`: built sub-keys win, raw-only
+        sub-keys such as `location_types` survive alongside built `countries`. Array values
+        (`flexible_spec`, ...) are replaced as a WHOLE key when the camelCase spec builds them, never
+        element-merged. When rawTargeting is present the defaults the camelCase builder normally injects
+        (US geo, `targeting_automation.advantage_audience: 0`) are suppressed, so raw's values are not
+        clobbered — include `targeting_automation` in the raw spec (or send `advantageAudience`) as Meta
+        requires it on create. If cloning an EU campaign, also pass `dsaBeneficiary` / `dsaPayor` (those
+        are separate fields, not part of targeting).
                 special_ad_categories: Meta only. Declares the ad's special category, required for housing, employment, credit, or
         political/social-issue ads (Meta enforces restricted targeting for these). Note: setting a special
         category disables income/zip targeting on Meta.
@@ -2969,8 +2986,9 @@ def register_generated_tools(mcp, _get_client):
         optimises them into the best-performing variations within a single ad (mapped to the
         creative's `asset_feed_spec`). When set, the top-level single-creative fields
         (`imageUrl`, `headline`, `body`, `linkUrl`, `callToAction`) are ignored. Mutually
-        exclusive with the `creatives[]` multi-creative shape. Meta limits: ≤10 images,
-        ≤5 bodies / titles / descriptions.
+        exclusive with the `creatives[]` multi-creative shape. Exactly ONE of `imageUrls` /
+        `videoUrls` is required (Meta allows one ad format per asset feed; sending both →
+        400). Meta limits: ≤10 images or ≤10 videos, ≤5 bodies / titles / descriptions.
                 carousel_cards: Meta only. Hand-built carousel: 2-10 authored cards in DETERMINISTIC order, mapped to
         the creative's `link_data.child_attachments`. Unlike `dynamicCreative`,
         you control the card order and per-card copy/link. Requires top-level `body`,
