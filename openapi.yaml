@@ -27275,10 +27275,10 @@ paths:
         Constraints: 3-11 characters (letters, digits, spaces; at least one
         letter). Sends cannot reach the US, Canada, or Puerto Rico, are
         text-only, and recipients cannot reply. Sender IDs that impersonate
-        well-known brands or institutions are rejected, and an ID already
-        registered by another workspace returns 409 (active sender IDs are
-        globally unique, first-come-first-served). Creating the same sender ID
-        again is a no-op (re-activates it after a delete).
+        well-known brands or institutions are rejected. Names are not
+        exclusive: the same sender ID can be registered by any number of
+        workspaces. Creating the same sender ID again is a no-op
+        (re-activates it after a delete).
       security:
         - bearerAuth: []
       requestBody:
@@ -27307,8 +27307,7 @@ paths:
                   isActive: { type: boolean }
         '400': { $ref: '#/components/responses/BadRequest' }
         '401': { $ref: '#/components/responses/Unauthorized' }
-        '403': { description: 'Workspace is not on usage-based billing, or already holds the maximum of 5 active sender IDs (code `sender_id_limit_reached`; raisable via support).' }
-        '409': { description: 'Sender ID already registered by another workspace (code `sender_id_taken`).' }
+        '403': { description: 'Workspace is not on usage-based billing, or already holds the maximum of 1,000 active sender IDs (code `sender_id_limit_reached`; raisable via support).' }
         '422': { description: 'Sender ID rejected: it appears to impersonate a protected brand or institution.' }
     get:
       operationId: listSmsSenderIds
