@@ -1457,6 +1457,11 @@ components:
               type: array
               items: { type: string }
               description: Sample values for header text variables
+            header_text_named_params:
+              type: array
+              items:
+                $ref: '#/components/schemas/WhatsAppNamedParamExample'
+              description: 'Sample values for NAMED header variables (templates using {{customer_name}}-style tokens with parameter_format: NAMED).'
             header_handle:
               type: array
               minItems: 1
@@ -1487,6 +1492,22 @@ components:
                 type: array
                 items: { type: string }
               description: Sample values for body variables (array of arrays)
+            body_text_named_params:
+              type: array
+              items:
+                $ref: '#/components/schemas/WhatsAppNamedParamExample'
+              description: 'Sample values for NAMED body variables (templates using {{customer_name}}-style tokens with parameter_format: NAMED).'
+    WhatsAppNamedParamExample:
+      type: object
+      required: [param_name, example]
+      properties:
+        param_name:
+          type: string
+          pattern: '^[a-z0-9_]+$'
+          description: 'Variable name as it appears in the text, without braces (e.g. customer_name for {{customer_name}}).'
+        example:
+          type: string
+          description: Sample value for this variable.
     WhatsAppFooterComponent:
       type: object
       required: [type]
@@ -26161,6 +26182,10 @@ paths:
                 language:
                   type: string
                   description: Template language code (e.g., en_US)
+                parameter_format:
+                  type: string
+                  enum: [POSITIONAL, NAMED, positional, named]
+                  description: 'Variable style: POSITIONAL ({{1}}, the default) or NAMED ({{customer_name}}). Named templates provide examples via body_text_named_params / header_text_named_params. Inferred as NAMED when omitted but a named-params example is present.'
                 components:
                   type: array
                   description: "Template components (header, body, footer, buttons, carousel, limited_time_offer). Required for custom templates, omit when using library_template_name."

@@ -14545,6 +14545,7 @@ def register_generated_tools(mcp, _get_client):
         name: str,
         category: str,
         language: str,
+        parameter_format: str | None = None,
         components: list[dict[str, Any]] | None = None,
         library_template_name: str | None = None,
         library_template_body_inputs: dict[str, Any] | None = None,
@@ -14557,6 +14558,7 @@ def register_generated_tools(mcp, _get_client):
                 name: Template name (lowercase, letters/numbers/underscores, must start with a letter) (required)
                 category: Template category (required)
                 language: Template language code (e.g., en_US) (required)
+                parameter_format: Variable style: POSITIONAL ({{1}}, the default) or NAMED ({{customer_name}}). Named templates provide examples via body_text_named_params / header_text_named_params. Inferred as NAMED when omitted but a named-params example is present.
                 components: Template components (header, body, footer, buttons, carousel, limited_time_offer). Required for custom templates, omit when using library_template_name.
                 library_template_name: Name of a pre-built template from Meta's template library (e.g., "appointment_reminder",
         "auto_pay_reminder_1", "address_update"). When provided, the template is pre-approved
@@ -14573,6 +14575,7 @@ def register_generated_tools(mcp, _get_client):
                 name=name,
                 category=category,
                 language=language,
+                parameter_format=parameter_format,
                 components=components,
                 library_template_name=library_template_name,
                 library_template_body_inputs=library_template_body_inputs,
