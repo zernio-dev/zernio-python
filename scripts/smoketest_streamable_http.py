@@ -99,6 +99,20 @@ async def run_streamable_http_checks() -> None:
             assert any(n.startswith("posts_") for n in names), names
             print(f"[ok]    list_tools -> {len(names)} tools (sample: {names[:5]})")
 
+            # fastmcp builds the synthetic search/call tools without
+            # annotations; clients that gate approval on hints then auto-deny
+            # them (codex-cli in non-interactive runs). Assert over the wire,
+            # not just in-process, so a serialization regression is caught too.
+            by_name = {t.name: t for t in tools.tools}
+            for synthetic in ("search_tools", "call_tool"):
+                assert synthetic in by_name, f"{synthetic} missing from tools/list"
+                assert by_name[synthetic].annotations is not None, (
+                    f"{synthetic} has no annotations - approval-gating clients will deny it"
+                )
+            assert by_name["search_tools"].annotations.readOnlyHint is True
+            assert by_name["call_tool"].annotations.destructiveHint is True
+            print("[ok]    synthetic search/call tools carry annotations")
+
             # The real ContextVar test: invoke a tool and observe the error.
             # - If plumbing is BROKEN: tool errors with "API key is required"
             #   (the ValueError raised by _get_client when ContextVar is unset).
