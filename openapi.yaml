@@ -21111,12 +21111,6 @@ paths:
         objects so callers can build community-ops automation (e.g. "add role
         to all members joined in the last 7 days") on the actual platform shape.
 
-        **Important:** this endpoint requires the privileged "Server Members
-        Intent" on the Discord application. If the intent is not enabled,
-        Discord rejects the call and this endpoint returns **403**. Single
-        member lookup and prefix search (see the sibling endpoints) do not
-        need the intent.
-
         Pagination: pass `after` = the last `user.id` from the previous page.
         Omit on the first call. Response includes a `nextCursor` and `hasMore`
         flag so callers don't need to know Discord's pagination shape.
@@ -21143,7 +21137,7 @@ paths:
                       hasMore: { type: boolean }
         '400': { description: Invalid query params. }
         '401': { $ref: '#/components/responses/Unauthorized' }
-        '403': { description: The Server Members Intent is not enabled on the Discord application. }
+        '403': { description: 'Discord denied access to the guild members (the bot is no longer in the guild).' }
         '404': { description: Discord account not found or not in this guild. }
 
   /v1/discord/guilds/{guildId}/members/search:
@@ -21155,8 +21149,8 @@ paths:
         Search guild members whose username or nickname **starts with** the
         query (Discord matches prefixes only, not substrings).
 
-        Does not require the privileged Server Members Intent, so this works
-        even where the full member listing returns 403.
+        Cheaper than paginating the full member listing when you already know
+        who you are looking for.
       parameters:
         - { name: guildId, in: path, required: true, schema: { type: string } }
         - { name: accountId, in: query, required: true, schema: { type: string } }
@@ -21185,8 +21179,8 @@ paths:
       description: |
         Fetch a single guild member by Discord user id.
 
-        Does not require the privileged Server Members Intent, so this works
-        even where the full member listing returns 403.
+        Cheaper than paginating the full member listing when you already know
+        who you are looking for.
       parameters:
         - { name: guildId, in: path, required: true, schema: { type: string } }
         - { name: userId, in: path, required: true, schema: { type: string }, description: Discord user snowflake. }
@@ -25727,6 +25721,70 @@ paths:
         '403': { description: 'X analytics capability not enabled for this account (code X_ANALYTICS_NOT_ENABLED)' }
         '404': { description: Account not found }
         '429': { description: 'X search rate limit exceeded (300 requests per 15 minutes)' }
+
+  /v1/twitter/tweet:
+    get:
+      operationId: getTweet
+      summary: Look up a tweet
+      description: |
+        Resolve a single tweet by ID or URL into its text, author and public metrics.
+
+        Use this to render a post you are referencing, e.g. the tweet quoted by a quote-style post.
+        Unlike `/v1/twitter/search` this is not limited to the last 7 days and works for any tweet
+        visible to the connected account.
+
+        Billed as an X posts read ($0.005). Repeat lookups of the same tweet within the same UTC day
+        are charged once.
+      tags: [Twitter Engagement]
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - name: accountId
+          in: query
+          required: true
+          schema: { type: string }
+          description: The social account ID whose X token is used for the lookup
+        - name: id
+          in: query
+          required: true
+          schema: { type: string }
+          description: 'Numeric tweet ID or a tweet URL (e.g. https://x.com/user/status/123...)'
+      responses:
+        '200':
+          description: The resolved tweet
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status: { type: string, example: success }
+                  tweet:
+                    type: object
+                    properties:
+                      id: { type: string }
+                      text: { type: string }
+                      created: { type: string, format: date-time }
+                      conversationId: { type: string }
+                      inReplyToTweetId: { type: [string, "null"], description: 'Parent tweet ID when the tweet is itself a reply' }
+                      lang: { type: string }
+                      author:
+                        type: object
+                        properties:
+                          id: { type: string }
+                          username: { type: string }
+                          displayName: { type: string }
+                          avatar: { type: string }
+                          verifiedType: { type: string }
+                      likeCount: { type: integer }
+                      replyCount: { type: integer }
+                      retweetCount: { type: integer }
+                      quoteCount: { type: integer }
+                      platform: { type: string, example: twitter }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '402': { description: 'X API spend cap reached for this billing period' }
+        '403': { description: 'X analytics capability not enabled for this account (code X_ANALYTICS_NOT_ENABLED), or the tweet author is protected or suspended' }
+        '404': { description: 'Account not found, or the tweet was deleted or never existed' }
+        '429': { description: 'X rate limit exceeded' }
 
   /v1/inbox/mentions:
     get:

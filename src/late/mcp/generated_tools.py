@@ -13564,6 +13564,27 @@ def register_generated_tools(mcp, _get_client):
         except Exception as e:
             return f"Error: {e}"
 
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Look up a tweet",
+            readOnlyHint=True,
+            destructiveHint=False,
+            openWorldHint=False,
+        )
+    )
+    def twitter_engagement_get_tweet(account_id: str, id: str) -> str:
+        """Look up a tweet
+
+        Args:
+            account_id: The social account ID whose X token is used for the lookup (required)
+            id: Numeric tweet ID or a tweet URL (e.g. https://x.com/user/status/123...) (required)"""
+        client = _get_client()
+        try:
+            response = client.twitter_engagement.get_tweet(account_id=account_id, id=id)
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
     # USAGE
 
     @mcp.tool(

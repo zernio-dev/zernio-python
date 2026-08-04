@@ -150,6 +150,14 @@ class TwitterEngagementResource:
         )
         return self._client._get("/v1/twitter/search", params=params)
 
+    def get_tweet(self, account_id: str, id: str) -> dict[str, Any]:
+        """Look up a tweet"""
+        params = self._build_params(
+            account_id=account_id,
+            id=id,
+        )
+        return self._client._get("/v1/twitter/tweet", params=params)
+
     async def aretweet_post(self, account_id: str, tweet_id: str) -> dict[str, Any]:
         """Retweet a post (async)"""
         payload = self._build_payload(
@@ -228,3 +236,11 @@ class TwitterEngagementResource:
             sort_order=sort_order,
         )
         return await self._client._aget("/v1/twitter/search", params=params)
+
+    async def aget_tweet(self, account_id: str, id: str) -> dict[str, Any]:
+        """Look up a tweet (async)"""
+        params = self._build_params(
+            account_id=account_id,
+            id=id,
+        )
+        return await self._client._aget("/v1/twitter/tweet", params=params)

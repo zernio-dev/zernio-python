@@ -792,6 +792,7 @@ Both `from zernio import ...` and `from late import ...` work identically. The `
 ### Twitter Engagement
 | Method | Description |
 |--------|-------------|
+| `twitter_engagement.get_tweet()` | Look up a tweet |
 | `twitter_engagement.bookmark_post()` | Bookmark a tweet |
 | `twitter_engagement.follow_user()` | Follow a user |
 | `twitter_engagement.remove_bookmark()` | Remove bookmark |
