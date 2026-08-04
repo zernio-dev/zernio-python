@@ -27,7 +27,7 @@ import os
 import re
 from contextvars import ContextVar
 from datetime import datetime, timedelta
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 import httpx
 from fastmcp import FastMCP
@@ -39,6 +39,9 @@ from late import Late, MediaType, PostStatus
 
 from .auth import build_auth_provider
 from .tool_definitions import TOOL_DEFINITIONS
+
+if TYPE_CHECKING:
+    from fastmcp.tools import Tool
 
 # Context variable to store the Zernio API key for the current connection
 _zernio_api_key: ContextVar[str | None] = ContextVar("zernio_api_key", default=None)
@@ -88,6 +91,49 @@ _PINNED_TOOLS = [
     "usage_get_usage",
 ]
 
+
+class _AnnotatedBM25SearchTransform(BM25SearchTransform):
+    """BM25SearchTransform whose synthetic tools carry ToolAnnotations.
+
+    fastmcp builds search_tools/call_tool without annotations (still true in
+    4.0.0b1). Clients that gate approval on hints treat an unannotated tool as
+    needing confirmation, so codex-cli auto-denies both in non-interactive
+    `codex exec` runs and reports "user cancelled MCP tool call".
+
+    Wrapping the parent's Tool via model_copy instead of rebuilding it keeps
+    the upstream closure by reference, so future upstream fixes to it (4.0
+    adds a catalog-membership check inside call_tool) are inherited.
+    """
+
+    def _make_search_tool(self) -> Tool:
+        # Pure in-memory catalog search: no external calls, no state change.
+        return super()._make_search_tool().model_copy(
+            update={
+                "annotations": ToolAnnotations(
+                    title="Search available tools",
+                    readOnlyHint=True,
+                    destructiveHint=False,
+                    openWorldHint=False,
+                )
+            }
+        )
+
+    def _make_call_tool(self) -> Tool:
+        # Dispatches to any hidden tool, including writes to external
+        # platforms, so it must not claim to be read-only: that would bypass
+        # client approval for every write reachable through the proxy.
+        return super()._make_call_tool().model_copy(
+            update={
+                "annotations": ToolAnnotations(
+                    title="Call a tool discovered via search",
+                    readOnlyHint=False,
+                    destructiveHint=True,
+                    openWorldHint=True,
+                )
+            }
+        )
+
+
 # Initialize MCP server
 mcp = FastMCP(
     "Zernio",
@@ -120,7 +166,7 @@ of silently picking the first matching account has been removed.
     auth=build_auth_provider(),
     # Collapse the ~383 generated tools behind search_tools/call_tool; the
     # pinned ergonomic tools remain always-visible.
-    transforms=[BM25SearchTransform(always_visible=_PINNED_TOOLS, max_results=8)],
+    transforms=[_AnnotatedBM25SearchTransform(always_visible=_PINNED_TOOLS, max_results=8)],
 )
 
 
