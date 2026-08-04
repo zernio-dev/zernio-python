@@ -502,10 +502,16 @@ def update_client_file(client_path: Path, all_resources: list[str]) -> None:
     """
     content = client_path.read_text()
 
-    # Build new import block, sorted by class name to match ruff isort
+    # Build new import block, sorted by class name to match ruff isort. Ruff
+    # sorts case-insensitively (isort case-sensitive defaults to false), so a
+    # plain sorted() drifts as soon as two names differ only by case position,
+    # e.g. AdsResource vs AdTargetingResource.
     class_names = sorted(
-        "".join(word.title() for word in r.split("_")) + "Resource"
-        for r in all_resources
+        (
+            "".join(word.title() for word in r.split("_")) + "Resource"
+            for r in all_resources
+        ),
+        key=str.lower,
     )
 
     import_block = "from ..resources import (\n"
