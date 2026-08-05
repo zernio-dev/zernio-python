@@ -20948,6 +20948,53 @@ paths:
         '401': { $ref: '#/components/responses/Unauthorized' }
         '404': { description: Account not found }
 
+  /v1/accounts/{accountId}/slack-members:
+    get:
+      operationId: listSlackMembers
+      tags: [Slack]
+      summary: List Slack workspace members
+      description: 'Members of the connected Slack workspace that can receive a direct message, for populating a recipient picker. Bots, deactivated members and Slackbot are excluded. Start a DM by passing a member id as `participantId` to POST /v1/inbox/conversations.'
+      parameters:
+        - name: accountId
+          in: path
+          required: true
+          schema: { type: string }
+        - name: query
+          in: query
+          required: false
+          description: 'Case-insensitive filter over display name and handle.'
+          schema: { type: string, maxLength: 100 }
+        - name: limit
+          in: query
+          required: false
+          schema: { type: integer, minimum: 1, maximum: 2000, default: 50 }
+      responses:
+        '200':
+          description: Workspace members
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  members:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id: { type: string, description: 'Slack member id (pass as participantId to start a DM).' }
+                        name: { type: string, description: Display name }
+                        username: { type: [string, "null"], description: Slack handle }
+                        picture: { type: [string, "null"], description: Avatar URL }
+              example:
+                members:
+                  - id: "U01ABCDEF"
+                    name: "Maria García"
+                    username: "maria"
+                    picture: "https://avatars.slack-edge.com/maria.png"
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404': { description: Slack account not found }
+
   /v1/discord/dms:
     post:
       operationId: sendDiscordDirectMessage
@@ -22900,7 +22947,9 @@ paths:
       description: |
         Initiate a new direct message conversation with a specified user. If a conversation already exists with the recipient, the message is added to the existing thread.
 
-        Supported platforms: X/Twitter, Bluesky, Reddit, and WhatsApp. Other platforms return PLATFORM_NOT_SUPPORTED.
+        Supported platforms: X/Twitter, Bluesky, Reddit, WhatsApp, SMS, and Slack. Other platforms return PLATFORM_NOT_SUPPORTED.
+
+        Slack: pass a workspace member id as participantId (list them with GET /v1/accounts/{accountId}/slack-members). Zernio opens the DM channel with that member and sends the message; the thread then behaves like any other Slack conversation in the inbox. The member must belong to the connected workspace.
 
         WhatsApp: this is the endpoint for sending an approved template message to a phone number. Provide templateName, templateLanguage, and templateParams (variable values for the text header, body and dynamic URL buttons, in that order), with the recipient phone in participantId. A template is required because WhatsApp does not permit freeform messages to open a conversation; a missing template returns TEMPLATE_REQUIRED. Templates with media headers (image, video, document) are handled automatically: Zernio reads the approved template definition and fills the header at send time with the template's approved sample asset. To send a DIFFERENT asset per message (e.g. a distinct invoice PDF for each recipient), pass the headerMedia field with a public link (or a Meta media id); it overrides the sample for that send. Calling this for a number you already have a thread with simply sends the template into that thread, which also makes it the way to re-engage a contact after the 24-hour customer-service window has closed. Once the recipient replies (opening the 24h window), send freeform messages with the send-message endpoint (POST /v1/inbox/conversations/{conversationId}/messages). Template fields are accepted on the JSON body only, not on multipart requests. Alternatively, WhatsApp Business Accounts eligible for Meta Direct Send can open a conversation with a business-initiated utility text message and no template: pass category: 'utility' together with message (and no templateName). See the category field below.
 
@@ -22924,7 +22973,7 @@ paths:
                   description: The social account ID to send from
                 participantId:
                   type: string
-                  description: Recipient identifier. For X this is the numeric user ID; for WhatsApp, the recipient phone number in international format (digits, country code included). Provide either this or participantUsername.
+                  description: 'Recipient identifier. For X this is the numeric user ID; for WhatsApp and SMS, the recipient phone number in international format (digits, country code included); for Slack, the workspace member id (e.g. U01ABCDEF). Provide either this or participantUsername.'
                 participantUsername:
                   type: string
                   description: Recipient handle/username — an X or Bluesky handle (with or without @) or a Reddit username (with or without u/). Resolved via lookup. Provide either this or participantId.
@@ -39588,6 +39637,7 @@ paths:
         '400': { $ref: '#/components/responses/BadRequest' }
         '401': { $ref: '#/components/responses/Unauthorized' }
         '403': { description: Ads add-on required. }
+        '422': { description: "Meta rejected the lead form with error code 3. The Facebook Page normally needs a Page admin to accept the Lead Ads Terms of Service." }
 
   /v1/ads/lead-forms/{formId}:
     get:

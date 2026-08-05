@@ -10183,7 +10183,7 @@ def register_generated_tools(mcp, _get_client):
 
         Args:
             account_id: The social account ID to send from (required)
-            participant_id: Recipient identifier. For X this is the numeric user ID; for WhatsApp, the recipient phone number in international format (digits, country code included). Provide either this or participantUsername.
+            participant_id: Recipient identifier. For X this is the numeric user ID; for WhatsApp and SMS, the recipient phone number in international format (digits, country code included); for Slack, the workspace member id (e.g. U01ABCDEF). Provide either this or participantUsername.
             participant_username: Recipient handle/username — an X or Bluesky handle (with or without @) or a Reddit username (with or without u/). Resolved via lookup. Provide either this or participantId.
             message: Text content of the message. At least one of message, attachment, or (for WhatsApp) templateName is required. Required when category is set (a Direct Send utility message is a text message).
             skip_dm_check: X/Twitter only. Skip the receives_your_dm eligibility check before sending. Use if you have already verified the recipient accepts DMs.
@@ -12756,6 +12756,34 @@ def register_generated_tools(mcp, _get_client):
         try:
             response = client.sequences.list_sequence_enrollments(
                 sequence_id=sequence_id, status=status, limit=limit, skip=skip
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    # SLACK
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="List Slack workspace members",
+            readOnlyHint=True,
+            destructiveHint=False,
+            openWorldHint=False,
+        )
+    )
+    def slack_list_slack_members(
+        account_id: str, query: str | None = None, limit: int = 50
+    ) -> str:
+        """List Slack workspace members
+
+        Args:
+            account_id: (required)
+            query: Case-insensitive filter over display name and handle.
+            limit"""
+        client = _get_client()
+        try:
+            response = client.slack.list_slack_members(
+                account_id=account_id, query=query, limit=limit
             )
             return _format_response(response)
         except Exception as e:

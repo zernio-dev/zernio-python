@@ -755,6 +755,11 @@ Both `from zernio import ...` and `from late import ...` work identically. The `
 | `sequences.pause_sequence()` | Pause sequence |
 | `sequences.unenroll_contact()` | Unenroll contact |
 
+### Slack
+| Method | Description |
+|--------|-------------|
+| `slack.list_slack_members()` | List Slack workspace members |
+
 ### SMS
 | Method | Description |
 |--------|-------------|

@@ -40,6 +40,7 @@ from ._generated.reach_and_frequency import ReachAndFrequencyResource
 from ._generated.reddit import RedditResource
 from ._generated.reviews import ReviewsResource
 from ._generated.sequences import SequencesResource
+from ._generated.slack import SlackResource
 from ._generated.sms import SmsResource
 from ._generated.tracking_tags import TrackingTagsResource
 from ._generated.twitter_engagement import TwitterEngagementResource
@@ -107,6 +108,7 @@ __all__ = [
     "RedditResource",
     "ReviewsResource",
     "SequencesResource",
+    "SlackResource",
     "SmsResource",
     "ToolsResource",
     "TrackingTagsResource",
