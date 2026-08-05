@@ -66,8 +66,16 @@ def is_allowed_origin(request: Request) -> bool:
 
 logger = logging.getLogger(__name__)
 
-_VERIFY_URL = "https://zernio.com/api/v1/accounts"
-_VERIFY_TIMEOUT = 5.0
+# /v1/auth/verify authenticates and returns, nothing else. The old target,
+# /v1/accounts, answered the same question by running a full account listing
+# (team resolution, ads status, counts): during the 2026-08-03 API degradation
+# 29% of those calls crossed the timeout below, and every one of them reached a
+# user as "your token is invalid, clear it and re-register". Overridable so a
+# bad endpoint is an env-var flip on Railway, not a redeploy.
+_VERIFY_URL = os.getenv("MCP_VERIFY_URL", "https://zernio.com/api/v1/auth/verify")
+# Generous because a slow answer is still an answer: only an exception here
+# costs the caller its verdict.
+_VERIFY_TIMEOUT = 10.0
 
 # Positive-only verification cache: sha256(token) -> monotonic timestamp of the
 # last upstream confirmation. Positives only, so an attacker cannot grow it by

@@ -166,3 +166,22 @@ def test_verification_cache_is_bounded():
     # Eviction is LRU, so the oldest inserts are the ones that went.
     assert "token-0" not in auth._VERIFIED_AT
     assert f"token-{auth._VERIFIED_CACHE_MAX + 49}" in auth._VERIFIED_AT
+
+
+async def test_verification_targets_the_auth_only_endpoint():
+    """A data endpoint would make every MCP request pay for a listing it
+    discards, which is what pushed verification past the client timeout during
+    the 2026-08-03 API degradation."""
+    seen: list[str] = []
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        seen.append(str(request.url))
+        return httpx.Response(200)
+
+    client = httpx.AsyncClient(transport=httpx.MockTransport(handler))
+    verifier = ZernioTokenVerifier(client=client)
+
+    await verifier.verify_token("some-api-key")
+
+    assert seen == ["https://zernio.com/api/v1/auth/verify"]
+    await client.aclose()
