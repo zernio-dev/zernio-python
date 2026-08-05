@@ -2773,6 +2773,7 @@ def register_generated_tools(mcp, _get_client):
         spark_auth_code: str | None = None,
         dsa_beneficiary: str | None = None,
         dsa_payor: str | None = None,
+        optimization_goal: str | None = None,
     ) -> str:
         """Boost post as ad
 
@@ -2848,7 +2849,15 @@ def register_generated_tools(mcp, _get_client):
                 dsa_payor: Legal entity that pays for the ad. Can differ from `dsaBeneficiary`
         (for example, an agency paying for a client's ads). Same rules as
         `dsaBeneficiary`: required for EU targeting unless the ad account has
-        a default payor."""
+        a default payor.
+                optimization_goal: Meta only. Explicit ad-set `optimization_goal` override. When omitted,
+        defaults to the value derived from `goal`. The value must be compatible
+        with the objective Meta derives from `goal`, not with the objective used
+        by `POST /v1/ads/create` for the same `goal` name: boost maps `goal:
+        "engagement"` to objective `OUTCOME_AWARENESS`, which accepts
+        `REACH`, `IMPRESSIONS`, `AD_RECALL_LIFT`, or THRUPLAY-class values, and
+        rejects `POST_ENGAGEMENT` (that value is only valid under
+        `OUTCOME_ENGAGEMENT`, which create uses for the same goal name)."""
         client = _get_client()
         try:
             response = client.ad_campaigns.boost_post(
@@ -2875,6 +2884,7 @@ def register_generated_tools(mcp, _get_client):
                 spark_auth_code=spark_auth_code,
                 dsa_beneficiary=dsa_beneficiary,
                 dsa_payor=dsa_payor,
+                optimization_goal=optimization_goal,
             )
             return _format_response(response)
         except Exception as e:

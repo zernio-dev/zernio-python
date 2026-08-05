@@ -516,6 +516,7 @@ class AdCampaignsResource:
         spark_auth_code: str | None = None,
         dsa_beneficiary: str | None = None,
         dsa_payor: str | None = None,
+        optimization_goal: str | None = None,
     ) -> dict[str, Any]:
         """Boost post as ad"""
         payload = self._build_payload(
@@ -542,6 +543,7 @@ class AdCampaignsResource:
             spark_auth_code=spark_auth_code,
             dsa_beneficiary=dsa_beneficiary,
             dsa_payor=dsa_payor,
+            optimization_goal=optimization_goal,
         )
         return self._client._post("/v1/ads/boost", data=payload)
 
@@ -1161,6 +1163,7 @@ class AdCampaignsResource:
         spark_auth_code: str | None = None,
         dsa_beneficiary: str | None = None,
         dsa_payor: str | None = None,
+        optimization_goal: str | None = None,
     ) -> dict[str, Any]:
         """Boost post as ad (async)"""
         payload = self._build_payload(
@@ -1187,6 +1190,7 @@ class AdCampaignsResource:
             spark_auth_code=spark_auth_code,
             dsa_beneficiary=dsa_beneficiary,
             dsa_payor=dsa_payor,
+            optimization_goal=optimization_goal,
         )
         return await self._client._apost("/v1/ads/boost", data=payload)
 
