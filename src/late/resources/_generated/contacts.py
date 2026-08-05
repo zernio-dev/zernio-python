@@ -77,6 +77,7 @@ class ContactsResource:
         self,
         *,
         profile_id: str | None = None,
+        account_id: str | None = None,
         search: str | None = None,
         tag: str | None = None,
         tags: str | None = None,
@@ -88,6 +89,7 @@ class ContactsResource:
         """List contacts"""
         params = self._build_params(
             profile_id=profile_id,
+            account_id=account_id,
             search=search,
             tag=tag,
             tags=tags,
@@ -188,6 +190,7 @@ class ContactsResource:
         self,
         *,
         profile_id: str | None = None,
+        account_id: str | None = None,
         search: str | None = None,
         tag: str | None = None,
         tags: str | None = None,
@@ -199,6 +202,7 @@ class ContactsResource:
         """List contacts (async)"""
         params = self._build_params(
             profile_id=profile_id,
+            account_id=account_id,
             search=search,
             tag=tag,
             tags=tags,

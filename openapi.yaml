@@ -33089,7 +33089,8 @@ paths:
       description: List and search contacts for a profile. Supports filtering by tags, platform, subscription status, and full-text search.
       tags: [Contacts]
       parameters:
-        - { name: profileId, in: query, schema: { type: string }, description: Filter by profile. Omit to list across all profiles }
+        - { name: profileId, in: query, schema: { type: string }, description: 'Filter by profile. Omit to list across all profiles. Matches the profile recorded on the contact itself, which is set when the contact is created and is independent of the profile its account currently belongs to. Filter by accountId to list a contact through its channel instead.' }
+        - { name: accountId, in: query, schema: { type: string }, description: 'Filter by the SocialAccount that owns the contact channel. Contacts are resolved through their channels, so the profileId contact filter is not applied while accountId is set. A profileId sent alongside is still access-checked and still scopes the returned filters.tags list.' }
         - { name: search, in: query, schema: { type: string } }
         - { name: tag, in: query, schema: { type: string } }
         - { name: tags, in: query, schema: { type: string }, description: 'Comma-separated tags, matches contacts carrying any of them' }
@@ -33199,7 +33200,7 @@ paths:
                   warning: { type: string }
         '400': { description: Invalid request }
         '401': { $ref: '#/components/responses/Unauthorized' }
-        '409': { description: Duplicate contact }
+        '409': { description: 'Duplicate channel. The platformIdentifier is already bound to a channel on this accountId.' }
 
   /v1/contacts/{contactId}:
     get:

@@ -7575,6 +7575,7 @@ def register_generated_tools(mcp, _get_client):
     )
     def contacts_list_contacts(
         profile_id: str | None = None,
+        account_id: str | None = None,
         search: str | None = None,
         tag: str | None = None,
         tags: str | None = None,
@@ -7586,7 +7587,8 @@ def register_generated_tools(mcp, _get_client):
         """List contacts
 
         Args:
-            profile_id: Filter by profile. Omit to list across all profiles
+            profile_id: Filter by profile. Omit to list across all profiles. Matches the profile recorded on the contact itself, which is set when the contact is created and is independent of the profile its account currently belongs to. Filter by accountId to list a contact through its channel instead.
+            account_id: Filter by the SocialAccount that owns the contact channel. Contacts are resolved through their channels, so the profileId contact filter is not applied while accountId is set. A profileId sent alongside is still access-checked and still scopes the returned filters.tags list.
             search
             tag
             tags: Comma-separated tags, matches contacts carrying any of them
@@ -7598,6 +7600,7 @@ def register_generated_tools(mcp, _get_client):
         try:
             response = client.contacts.list_contacts(
                 profile_id=profile_id,
+                account_id=account_id,
                 search=search,
                 tag=tag,
                 tags=tags,
