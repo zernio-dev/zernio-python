@@ -22481,6 +22481,7 @@ paths:
                 message: "Test webhook sent successfully"
         '400': { description: Webhook ID required }
         '401': { $ref: '#/components/responses/Unauthorized' }
+        '404': { description: Webhook not found }
         '500':
           description: Test webhook failed to deliver
           content:
