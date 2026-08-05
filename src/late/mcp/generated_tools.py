@@ -5258,6 +5258,23 @@ def register_generated_tools(mcp, _get_client):
 
     @mcp.tool(
         annotations=ToolAnnotations(
+            title="Verify credential",
+            readOnlyHint=True,
+            destructiveHint=False,
+            openWorldHint=False,
+        )
+    )
+    def api_keys_verify_credential() -> str:
+        """Verify credential"""
+        client = _get_client()
+        try:
+            response = client.api_keys.verify_credential()
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
             title="List keys",
             readOnlyHint=True,
             destructiveHint=False,

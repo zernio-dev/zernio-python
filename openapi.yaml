@@ -14878,6 +14878,34 @@ paths:
                   error: { type: string }
               example:
                 error: "TikTok creator has reached the daily posting limit. Please try again later."
+  /v1/auth/verify:
+    get:
+      operationId: verifyCredential
+      tags: [API Keys]
+      summary: Verify credential
+      description: 'Checks whether the bearer credential on this request is valid, without reading any data. Accepts an API key or an OAuth access token. Intended for clients that must validate a credential before use (for example an MCP server verifying an incoming token) so they do not have to call a data endpoint to do it.'
+      responses:
+        '200':
+          description: Credential is valid
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  valid: { type: boolean }
+                  userId: { type: string }
+                  authType:
+                    type: string
+                    enum: [api_key, oauth, session]
+                  scope:
+                    type: [string, 'null']
+                    description: 'Granted OAuth scopes, space-separated. Null for API keys.'
+              example:
+                valid: true
+                userId: "6507a1b2c3d4e5f6a7b8c9d0"
+                authType: "oauth"
+                scope: "posts:read posts:write accounts:read"
+        '401': { $ref: '#/components/responses/Unauthorized' }
   /v1/api-keys:
     get:
       operationId: listApiKeys

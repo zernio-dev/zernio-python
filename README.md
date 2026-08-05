@@ -283,6 +283,7 @@ Both `from zernio import ...` and `from late import ...` work identically. The `
 | `api_keys.list_api_keys()` | List keys |
 | `api_keys.create_api_key()` | Create key |
 | `api_keys.delete_api_key()` | Delete key |
+| `api_keys.verify_credential()` | Verify credential |
 
 ### Media
 | Method | Description |

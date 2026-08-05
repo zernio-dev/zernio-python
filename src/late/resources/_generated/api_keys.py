@@ -73,6 +73,10 @@ class ApiKeysResource:
                 result[to_camel(k)] = v
         return result
 
+    def verify_credential(self) -> dict[str, Any]:
+        """Verify credential"""
+        return self._client._get("/v1/auth/verify")
+
     def list_api_keys(self) -> dict[str, Any]:
         """List keys"""
         return self._client._get("/v1/api-keys")
@@ -99,6 +103,10 @@ class ApiKeysResource:
     def delete_api_key(self, key_id: str) -> dict[str, Any]:
         """Delete key"""
         return self._client._delete(f"/v1/api-keys/{key_id}")
+
+    async def averify_credential(self) -> dict[str, Any]:
+        """Verify credential (async)"""
+        return await self._client._aget("/v1/auth/verify")
 
     async def alist_api_keys(self) -> dict[str, Any]:
         """List keys (async)"""
