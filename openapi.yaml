@@ -6585,7 +6585,7 @@ components:
         impressions: { type: integer }
         reach:
           type: integer
-          description: "Unique people reached in the requested date range. Meta (facebook/instagram): Meta's own de-duplicated reach for the exact range, fetched live and cached up to ~1 hour (may lag recent delivery; on a transient Meta error the value temporarily falls back to a sum of per-day reach, which overcounts people reached on multiple days or by multiple child ads). Because it is de-duplicated, Meta reach is NOT additive: neither daily values nor child nodes sum to the range total. TikTok: sum of per-day reach, so multi-day ranges overcount vs TikTok Ads Manager. Google, LinkedIn, X, Pinterest and OpenAI report 0 (reach not synced). Only derive frequency (impressions / reach) for Meta."
+          description: "Unique people reached in the requested date range. Meta (facebook/instagram) and TikTok: the platform's own de-duplicated reach for the exact range, fetched live and cached up to ~1 hour (may lag recent delivery; on a transient platform error the value temporarily falls back to a sum of per-day reach, which overcounts people reached on multiple days or by multiple child ads). Because it is de-duplicated, reach is NOT additive on these platforms: neither daily values nor child nodes sum to the range total. Google, LinkedIn, X, Pinterest and OpenAI report 0 (reach not synced). Frequency (impressions / reach) is only meaningful for Meta and TikTok."
         clicks: { type: integer }
         ctr: { type: number, description: Click-through rate (%) }
         cpc: { type: number, description: Cost per click }
@@ -6641,9 +6641,9 @@ components:
         called with `timeIncrement=1`. Rate metrics (ctr/cpc/cpm/costPerConversion/
         roas/videoAvgTimeWatchedActions) are recomputed per day from that day's
         sums, so summing the additive fields across a node's `daily[]` reproduces
-        its aggregated `metrics` total. `reach` is the exception: on Meta the
-        aggregated total is de-duplicated across the range, so daily reach does
-        not sum to it. Do NOT sum or plain-average
+        its aggregated `metrics` total. `reach` is the exception: on Meta and
+        TikTok the aggregated total is de-duplicated across the range, so daily
+        reach does not sum to it. Do NOT sum or plain-average
         `videoAvgTimeWatchedActions` across days: the range value is the
         play-weighted average of the daily values.
       allOf:
@@ -36009,7 +36009,7 @@ paths:
         - { name: fromDate, in: query, schema: { type: string, format: date }, description: "Start of the METRICS date range (YYYY-MM-DD). Affects only the spend/impression numbers overlaid on each node, NOT which campaigns are returned. Defaults to 90 days ago." }
         - { name: toDate, in: query, schema: { type: string, format: date }, description: "End of metrics date range (YYYY-MM-DD). Defaults to today. Max 730-day range." }
         - { name: sort, in: query, schema: { type: string, enum: [newest, oldest, spend_desc, spend_asc], default: newest }, description: "Campaign-level sort order. `newest` (default) / `oldest` order by the campaign's newest-ad createdAt. `spend_desc` / `spend_asc` order by aggregated spend in the requested date range; campaigns with no spend land at the end." }
-        - { name: timeIncrement, in: query, schema: { type: integer, enum: [1] }, description: "Set to `1` to also return a daily breakdown. Mirrors Meta Insights' `time_increment=1`: each node gains a `daily[]` array of per-day metrics (same fields as the aggregated `metrics`) alongside the range total, so you get per-entity daily trends in ONE call instead of calling the tree once per day. Only `1` (daily) is supported. The daily series covers the same date range and uses the same source data as `metrics`, except Meta `reach`: the range total is Meta's de-duplicated value, so daily reach does not sum to it. See `dailyLevel` to control which levels carry it." }
+        - { name: timeIncrement, in: query, schema: { type: integer, enum: [1] }, description: "Set to `1` to also return a daily breakdown. Mirrors Meta Insights' `time_increment=1`: each node gains a `daily[]` array of per-day metrics (same fields as the aggregated `metrics`) alongside the range total, so you get per-entity daily trends in ONE call instead of calling the tree once per day. Only `1` (daily) is supported. The daily series covers the same date range and uses the same source data as `metrics`, except `reach` on Meta and TikTok: the range total is the platform's de-duplicated value, so daily reach does not sum to it. See `dailyLevel` to control which levels carry it." }
         - { name: dailyLevel, in: query, schema: { type: string, enum: [campaign, adset, ad], default: campaign }, description: "Which tree levels get the `daily[]` series when `timeIncrement=1`. `campaign` (default) attaches it on campaign nodes only — the common per-campaign-trend case, and the smallest payload. `adset` adds it on ad sets too; `ad` adds it on every ad in `ads[]` as well (heaviest — a long range × up to 100 ads per ad set). Scope with `campaignId` to keep `ad`-level responses small. Ignored when `timeIncrement` is unset." }
       responses:
         '200':
