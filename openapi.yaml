@@ -6681,6 +6681,101 @@ components:
             agency apps without full BC asset read scope) — distinct from `0`,
             which would imply the BC genuinely has no advertisers.
           example: 23
+    ValueRuleCriterion:
+      type: object
+      additionalProperties: false
+      required: [criteriaType, operator, criteriaValues, criteriaValueTypes]
+      description: |
+        One matching condition inside a value rule. `criteriaValues` and `criteriaValueTypes`
+        are POSITIONALLY paired: same length, same order.
+      properties:
+        id:
+          type: string
+          description: |
+            Platform criterion id. Echo it on `PUT` to KEEP this criterion, omit it to CREATE a
+            new one. A criterion left out of the array entirely is DELETED.
+        criteriaType:
+          type: string
+          enum: [AGE, GENDER, OS_TYPE, DEVICE_PLATFORM, LOCATION, PLACEMENT, OMNI_CHANNEL, AUDIENCE_LABEL]
+          description: |
+            The dimension being matched. `OMNI_CHANNEL` (conversion location: APP, INSTANT_FORM,
+            PHONE_CALL, WEBSITE) is accepted even though Meta's own enum table omits it.
+        operator:
+          type: string
+          enum: [CONTAINS]
+          description: "Required on every criterion. `CONTAINS` is currently the only value Meta supports."
+        criteriaValues:
+          type: array
+          minItems: 1
+          items: { type: string }
+          description: |
+            The values to match. `AGE` takes ranges such as `18-24`, `18+` or a custom `18-26`;
+            a range whose upper bound is 65 is NOT allowed (use `18+` instead of `18-65`).
+            `LOCATION` takes Targeting-Search keys: a two-letter country code for
+            `LOCATION_COUNTRY`, a numeric key for region / city / comScore market.
+            `AUDIENCE_LABEL` takes labels such as `HIGH_VALUE`, which are applied to a Custom
+            Audience in Ads Manager: there is no API to provision them, so they are passed
+            through unvalidated.
+        criteriaValueTypes:
+          type: array
+          minItems: 1
+          items: { type: string }
+          description: |
+            One entry per `criteriaValues` entry, in the same order. The literal `"NONE"` for
+            every criteriaType except `LOCATION`, which uses `LOCATION_COUNTRY`,
+            `LOCATION_REGION`, `LOCATION_CITY` or `LOCATION_COMSCORE_MARKET` and MAY mix them
+            within one criterion. `LOCATION_DMA` was replaced by `LOCATION_COMSCORE_MARKET` on
+            2026-06-22 and is rejected by this API.
+    ValueRule:
+      type: object
+      additionalProperties: false
+      required: [name, adjustSign, adjustValue, criteria]
+      description: |
+        One bid-adjustment rule. Rules are evaluated in ARRAY ORDER and only the first matching
+        rule adjusts the bid for an overlapping audience, so the order is semantic.
+      properties:
+        id:
+          type: string
+          description: |
+            Platform rule id. Echo it on `PUT` to KEEP this rule, omit it to CREATE a new one.
+            A rule left out of the array entirely is DELETED.
+        name: { type: string, minLength: 1, maxLength: 255 }
+        adjustSign:
+          type: string
+          enum: [INCREASE, DECREASE]
+          description: "Direction of the adjustment. There is no signed value field."
+        adjustValue:
+          type: integer
+          minimum: 1
+          maximum: 1000
+          description: |
+            Unsigned percentage magnitude. `INCREASE` accepts 1-1000, `DECREASE` accepts 1-90.
+            0 is out of range on both.
+        status:
+          type: string
+          description: |
+            Meta returns `ACTIVE` here but documents no enum for the field. Treat it as a
+            passthrough: echo whatever the `GET` returned, and do not synthesize values.
+        criteria:
+          type: array
+          minItems: 1
+          maxItems: 4
+          items: { $ref: '#/components/schemas/ValueRuleCriterion' }
+          description: "All criteria on a rule must match for the rule to fire."
+    ValueRuleSet:
+      type: object
+      additionalProperties: false
+      required: [id, name, rules]
+      description: |
+        A named set of bid-adjustment rules on an ad account. Attach it to an ad set with
+        `valueRuleSetId`. Limits: 6 sets per ad account, 10 rules per set, 4 criteria per rule.
+      properties:
+        id: { type: string, description: "Platform value rule set id." }
+        name: { type: string }
+        rules:
+          type: array
+          items: { $ref: '#/components/schemas/ValueRule' }
+          description: "Evaluated in order; the first matching rule wins."
     BidStrategy:
       type: string
       enum: [LOWEST_COST_WITHOUT_CAP, LOWEST_COST_WITH_BID_CAP, COST_CAP, LOWEST_COST_WITH_MIN_ROAS]
@@ -35821,9 +35916,25 @@ paths:
       summary: Update an ad set
       description: |
         Ad-set-level writes. Use this for ABO budget updates, ad-set-scoped
-        pause/resume, bid-strategy edits, and Meta-only post-launch delivery
-        settings via `platformSpecificData`. At least one updatable field
-        is required.
+        pause/resume, bid-strategy edits, Meta value-rule-set attach/detach, and
+        Meta-only post-launch delivery settings via `platformSpecificData`. At
+        least one updatable field is required.
+
+        Value rule sets (Meta only, see `/v1/ads/value-rule-sets`):
+        - ATTACH or REPLACE: send `valueRuleSetId`. Attachment is driven by the id's
+          presence, so `valueRulesApplied: true` is optional. Sending a different id
+          replaces the previous association; there is no separate replace call.
+        - DETACH: send `valueRulesApplied: false` and OMIT `valueRuleSetId`.
+        - Sending `valueRulesApplied: false` TOGETHER with `valueRuleSetId` returns 400
+          `mutually_exclusive_fields`. This is deliberate: Meta attaches the rule set
+          whenever `value_rule_set_id` is present, even with `value_rules_applied` false,
+          so echoing stored state while asking to detach would silently keep the bid
+          adjustments live.
+        - Eligibility: only ad sets on `LOWEST_COST_WITHOUT_CAP` or `COST_CAP`. Meta
+          rejects the rest server-side.
+        - Read back with `GET /v1/ads/ad-sets/{adSetId}?fields=value_rule_set_id`. Meta
+          does not document `value_rules_applied` as a readable ad-set field, so the
+          boolean cannot be read back.
 
         Bid strategy compatibility (per Meta's spec):
         - `LOWEST_COST_WITHOUT_CAP`: no `bidAmount`, no `roasAverageFloor`.
@@ -35881,6 +35992,21 @@ paths:
                     Minimum ROAS as a decimal multiplier (2.0 = 2.0x). Required when bidStrategy is
                     LOWEST_COST_WITH_MIN_ROAS. Sent to Meta as `bid_constraints.roas_average_floor` × 10000.
                     Not supported on OpenAI (422).
+                valueRuleSetId:
+                  type: string
+                  pattern: '^\d+$'
+                  description: |
+                    Meta only (other platforms return 501). Value rule set to attach to this ad
+                    set, from `/v1/ads/value-rule-sets`. Sending a different id replaces the
+                    current association. To DETACH, send `valueRulesApplied: false` and omit
+                    this field.
+                valueRulesApplied:
+                  type: boolean
+                  description: |
+                    Meta only (other platforms return 501). `false` DETACHES the ad set's value
+                    rule set and must be sent WITHOUT `valueRuleSetId`; the combination returns
+                    400. `true` is optional when attaching, since attachment is driven by
+                    `valueRuleSetId`, and requires it to be present.
                 platformSpecificData:
                   type: object
                   description: |
@@ -37570,6 +37696,247 @@ paths:
         '401': { $ref: '#/components/responses/Unauthorized' }
         '501': { description: Only supported on Meta (facebook/instagram) }
 
+  /v1/ads/value-rule-sets:
+    get:
+      operationId: listValueRuleSets
+      tags: ["Ad Accounts"]
+      x-platforms: ["meta"]
+      summary: List value rule sets
+      description: |-
+        Lists the ad account's value rule sets (Meta's `/act_X/value_rule_set`). A value rule
+        set adjusts the auction bid up or down for audience segments you value differently;
+        attach one to an ad set with `valueRuleSetId` on `POST /v1/ads/create` or
+        `PUT /v1/ads/ad-sets/{adSetId}`.
+
+        Rows are returned in the same camelCase shape the `PUT` body takes, ids included, so a
+        set round-trips 1:1: **the update is a full replace, not a patch**, so you GET, mutate
+        and send the whole thing back.
+
+        Limits: 6 rule sets per ad account, 10 rules per set, 4 criteria per rule.
+
+        **Rule order is semantic.** Rules are evaluated in array order and only the FIRST
+        matching rule adjusts the bid for an overlapping audience. The order you send is the
+        order that is stored and returned.
+
+        Eligibility: value rule sets apply only to ad sets on the `LOWEST_COST_WITHOUT_CAP`
+        (auto-bid) or `COST_CAP` bid strategies. Meta rejects the rest server-side.
+      security:
+        - bearerAuth: []
+      parameters:
+        - { name: accountId, in: query, required: true, schema: { type: string }, description: "Zernio SocialAccount id (posting or ads variant) used to resolve the Meta token." }
+        - { name: adAccountId, in: query, required: true, schema: { type: string }, description: "Meta ad account id (act_<n>)." }
+        - { name: limit, in: query, schema: { type: integer, minimum: 1, maximum: 100, default: 25 }, description: Rows per page }
+        - { name: after, in: query, schema: { type: string }, description: "Cursor from paging.after of the previous page. Meta does not document paging on this edge; `after` comes back null when it omits cursors." }
+      responses:
+        '200':
+          description: Value rule sets
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  adAccountId: { type: string }
+                  data:
+                    type: array
+                    items: { $ref: '#/components/schemas/ValueRuleSet' }
+                  paging:
+                    type: object
+                    properties:
+                      after: { type: [string, "null"], description: "Cursor for the next page; null when exhausted or when Meta omits paging." }
+        '400': { description: "Invalid input, or Meta rejected the query. Meta answers a bad rule-set id with GraphMethodException code 100 / subcode 33, which is indistinguishable between not-found, no-permission, and account-not-enabled." }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '501': { description: Only supported on Meta (facebook/instagram) }
+
+    post:
+      operationId: createValueRuleSet
+      tags: ["Ad Accounts"]
+      x-platforms: ["meta"]
+      summary: Create a value rule set
+      description: |-
+        Creates a value rule set on the ad account (Meta's `POST /act_X/value_rule_set`).
+        Attach the returned id to an ad set with `valueRuleSetId` on `POST /v1/ads/create` or
+        `PUT /v1/ads/ad-sets/{adSetId}`.
+
+        **Rule order is semantic**: rules are evaluated in array order and only the first
+        matching rule adjusts the bid for an overlapping audience.
+
+        `adjustValue` is an unsigned magnitude in percent; the direction lives in `adjustSign`.
+        `INCREASE` accepts 1-1000, `DECREASE` accepts 1-90. There is no signed field and 0 is
+        out of range.
+
+        `criteriaValueTypes` is positionally paired with `criteriaValues` (same length, same
+        order). Every type is the literal `"NONE"` except on `LOCATION`, which uses
+        `LOCATION_COUNTRY` / `LOCATION_REGION` / `LOCATION_CITY` / `LOCATION_COMSCORE_MARKET`
+        and may mix them within one criterion. Location values are Targeting-Search keys: a
+        two-letter country code for `LOCATION_COUNTRY`, a numeric key for the rest.
+
+        `LOCATION_DMA` was replaced by `LOCATION_COMSCORE_MARKET` on 2026-06-22 and rules using
+        DMAs are no longer active, so this API rejects it.
+
+        `AUDIENCE_LABEL` values (e.g. `HIGH_VALUE`) are applied to a Custom Audience in Ads
+        Manager. There is no API to provision them, so label strings are passed through
+        unvalidated and a typo produces a rule that never fires.
+
+        Ads Manager turns a rule set read-only (this API stays editable) when a rule uses more
+        than 2 criteria, a custom age range, or the placements `FB_MARKETPLACE`, `FB_SEARCH`,
+        `FB_VIDEO` or `IG_EXPLORE`.
+
+        Limits: 6 rule sets per ad account, 10 rules per set, 4 criteria per rule. The
+        per-account cap is enforced by Meta, not here.
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [accountId, adAccountId, name, rules]
+              properties:
+                accountId: { type: string, description: "Zernio SocialAccount id (posting or ads variant) used to resolve the Meta token." }
+                adAccountId: { type: string, description: "Meta ad account id (act_<n>)." }
+                name: { type: string, minLength: 1, maxLength: 255 }
+                rules:
+                  type: array
+                  minItems: 1
+                  maxItems: 10
+                  description: "Evaluated in order; the first matching rule wins."
+                  items: { $ref: '#/components/schemas/ValueRule' }
+      responses:
+        '201':
+          description: Value rule set created
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  adAccountId: { type: string }
+                  valueRuleSetId: { type: [string, "null"], description: "The new rule set id. Meta does not document the create response body, so this is null on the (unobserved) case where it omits the id." }
+        '400': { description: "Invalid input, or Meta rejected the create (per-account rule-set cap, ineligible criteria, or an account that is not enabled for value rules)" }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '501': { description: Only supported on Meta (facebook/instagram) }
+
+  /v1/ads/value-rule-sets/{valueRuleSetId}:
+    get:
+      operationId: getValueRuleSet
+      tags: ["Ad Accounts"]
+      x-platforms: ["meta"]
+      summary: Read a value rule set
+      description: |-
+        Reads one value rule set including every nested rule id and criterion id. This is step
+        one of any edit: `PUT` is a full replace, so you need the ids before you can keep the
+        objects you are not changing.
+
+        Meta's own read returns `GENDER` values lowercase (`"male"`) while writes require
+        `"MALE"`. Values are passed through untouched, so never case-compare a stored rule
+        against a fetched one.
+      security:
+        - bearerAuth: []
+      parameters:
+        - { name: valueRuleSetId, in: path, required: true, schema: { type: string }, description: "Platform value rule set id." }
+        - { name: accountId, in: query, required: true, schema: { type: string }, description: "Zernio SocialAccount id (posting or ads variant) used to resolve the Meta token." }
+      responses:
+        '200':
+          description: Value rule set
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  valueRuleSet: { $ref: '#/components/schemas/ValueRuleSet' }
+        '400': { description: "Invalid input, or Meta rejected the read. A bad id comes back as GraphMethodException code 100 / subcode 33, which cannot be told apart from a permission problem." }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '501': { description: Only supported on Meta (facebook/instagram) }
+
+    put:
+      operationId: updateValueRuleSet
+      tags: ["Ad Accounts"]
+      x-platforms: ["meta"]
+      summary: Replace a value rule set
+      description: |-
+        **THIS IS A FULL REPLACE, NOT A PATCH.** Meta's update is declarative: the body you
+        send becomes the rule set.
+
+        - `GET /v1/ads/value-rule-sets/{valueRuleSetId}` FIRST.
+        - Keep a rule or criterion by echoing its `id`.
+        - Create one by including the object WITHOUT an `id`.
+        - Delete one by OMITTING it from the array. There is no warning and no undo.
+
+        `name` and `rules` are both required for exactly this reason: a partial body would
+        silently destroy every rule left out.
+
+        **Rule order is semantic**: the array order you send is the evaluation order, and only
+        the first matching rule adjusts the bid for an overlapping audience.
+
+        Existing rule sets created elsewhere may contain `LOCATION_DMA` criteria. Those went
+        inert on 2026-06-22 and are rejected here; migrate them to `LOCATION_COMSCORE_MARKET`.
+      security:
+        - bearerAuth: []
+      parameters:
+        - { name: valueRuleSetId, in: path, required: true, schema: { type: string }, description: "Platform value rule set id." }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [accountId, name, rules]
+              properties:
+                accountId: { type: string, description: "Zernio SocialAccount id (posting or ads variant) used to resolve the Meta token." }
+                name: { type: string, minLength: 1, maxLength: 255, description: "Required: the update replaces the whole set." }
+                rules:
+                  type: array
+                  minItems: 1
+                  maxItems: 10
+                  description: "The COMPLETE rule list. Omitting a rule deletes it on Meta."
+                  items: { $ref: '#/components/schemas/ValueRule' }
+      responses:
+        '200':
+          description: Value rule set replaced
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  valueRuleSetId: { type: string }
+                  name: { type: string }
+                  rules:
+                    type: array
+                    items: { $ref: '#/components/schemas/ValueRule' }
+                  message: { type: string }
+        '400': { description: "Invalid input, or Meta rejected the update" }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '501': { description: Only supported on Meta (facebook/instagram) }
+
+    delete:
+      operationId: deleteValueRuleSet
+      tags: ["Ad Accounts"]
+      x-platforms: ["meta"]
+      summary: Delete a value rule set
+      description: |-
+        Deletes the rule set (Meta's `POST /{value-rule-set-id}/delete_rule_set`, a custom
+        action edge rather than an HTTP DELETE on its side). Ad sets pointing at it are not
+        modified here; detach them first with `valueRulesApplied: false` on
+        `PUT /v1/ads/ad-sets/{adSetId}`.
+      security:
+        - bearerAuth: []
+      parameters:
+        - { name: valueRuleSetId, in: path, required: true, schema: { type: string }, description: "Platform value rule set id." }
+        - { name: accountId, in: query, required: true, schema: { type: string }, description: "Zernio SocialAccount id (posting or ads variant) used to resolve the Meta token." }
+      responses:
+        '200':
+          description: Value rule set deleted
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  valueRuleSetId: { type: string }
+                  message: { type: string }
+        '400': { description: "Invalid input, or Meta rejected the delete. A bad id comes back as GraphMethodException code 100 / subcode 33, which reads like a permission error rather than a 404." }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '501': { description: Only supported on Meta (facebook/instagram) }
+
   /v1/ads/accounts/finance:
     get:
       operationId: getAdAccountFinance
@@ -38718,6 +39085,31 @@ paths:
                     Minimum ROAS as a decimal multiplier (e.g. 2.0 = 2.0x ROAS). Required when
                     `bidStrategy` is `LOWEST_COST_WITH_MIN_ROAS`. Sent to Meta as
                     `bid_constraints.roas_average_floor` × 10000.
+                valueRuleSetId:
+                  type: string
+                  pattern: '^\d+$'
+                  description: |
+                    Meta only (facebook, instagram; other platforms return 400). Value rule set
+                    to attach to the new ad set, from `/v1/ads/value-rule-sets`. Attachment is
+                    driven by this id, so `valueRulesApplied` is optional alongside it.
+
+                    Rejected with 400 in `adSetId` attach mode: that shape inherits the existing
+                    ad set's attachment, so the field would be silently ignored. Use
+                    `PUT /v1/ads/ad-sets/{adSetId}` there instead.
+
+                    Ignored (stripped before the ad-set create) when `buyingType` is `RESERVED`:
+                    value rules only apply to auction ad sets on `LOWEST_COST_WITHOUT_CAP` or
+                    `COST_CAP`, and a Reach & Frequency reservation has no auction bid strategy.
+
+                    Read back with `GET /v1/ads/ad-sets/{adSetId}?fields=value_rule_set_id`; the
+                    attachment is not mirrored onto Zernio's ad documents.
+                valueRulesApplied:
+                  type: boolean
+                  description: |
+                    Meta only (facebook, instagram; other platforms return 400). Optional when
+                    attaching, and requires `valueRuleSetId`. `false` is REJECTED here with 400:
+                    a newly created ad set has nothing to detach, so detaching lives on
+                    `PUT /v1/ads/ad-sets/{adSetId}`.
                 platformSpecificData:
                   description: |
                     Platform-specific options. The platform is derived from `accountId`;

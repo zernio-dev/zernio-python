@@ -388,12 +388,17 @@ Both `from zernio import ...` and `from late import ...` work identically. The `
 | `ad_accounts.list_ads_business_centers()` | List TikTok Business Centers |
 | `ad_accounts.list_high_demand_periods()` | High demand periods / budget schedules |
 | `ad_accounts.list_meta_businesses()` | Businesses list |
+| `ad_accounts.list_value_rule_sets()` | List value rule sets |
+| `ad_accounts.create_value_rule_set()` | Create a value rule set |
 | `ad_accounts.get_ad_account_finance()` | Ad account finances |
 | `ad_accounts.get_ad_comments()` | List comments on an ad |
 | `ad_accounts.get_ads_activity_log()` | Ad account change / audit log |
 | `ad_accounts.get_dsa_defaults()` | Get ad account DSA defaults |
 | `ad_accounts.get_dsa_recommendations()` | List DSA beneficiary/payor suggestions |
+| `ad_accounts.get_value_rule_set()` | Read a value rule set |
 | `ad_accounts.update_ad_account()` | Update ad account settings |
+| `ad_accounts.update_value_rule_set()` | Replace a value rule set |
+| `ad_accounts.delete_value_rule_set()` | Delete a value rule set |
 
 ### Ad Audiences
 | Method | Description |

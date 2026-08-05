@@ -1489,6 +1489,150 @@ def register_generated_tools(mcp, _get_client):
 
     @mcp.tool(
         annotations=ToolAnnotations(
+            title="List value rule sets",
+            readOnlyHint=True,
+            destructiveHint=False,
+            openWorldHint=False,
+        )
+    )
+    def ad_accounts_list_value_rule_sets(
+        account_id: str, ad_account_id: str, limit: int = 25, after: str | None = None
+    ) -> str:
+        """List value rule sets
+
+        Args:
+            account_id: Zernio SocialAccount id (posting or ads variant) used to resolve the Meta token. (required)
+            ad_account_id: Meta ad account id (act_<n>). (required)
+            limit: Rows per page
+            after: Cursor from paging.after of the previous page. Meta does not document paging on this edge; `after` comes back null when it omits cursors."""
+        client = _get_client()
+        try:
+            response = client.ad_accounts.list_value_rule_sets(
+                account_id=account_id,
+                ad_account_id=ad_account_id,
+                limit=limit,
+                after=after,
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Create a value rule set",
+            readOnlyHint=False,
+            destructiveHint=True,
+            openWorldHint=True,
+        )
+    )
+    def ad_accounts_create_value_rule_set(
+        account_id: str,
+        ad_account_id: str,
+        name: str,
+        rules: list[dict[str, Any]] | None,
+    ) -> str:
+        """Create a value rule set
+
+        Args:
+            account_id: Zernio SocialAccount id (posting or ads variant) used to resolve the Meta token. (required)
+            ad_account_id: Meta ad account id (act_<n>). (required)
+            name: (required)
+            rules: Evaluated in order; the first matching rule wins. (required)"""
+        client = _get_client()
+        try:
+            response = client.ad_accounts.create_value_rule_set(
+                account_id=account_id,
+                ad_account_id=ad_account_id,
+                name=name,
+                rules=rules,
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Read a value rule set",
+            readOnlyHint=True,
+            destructiveHint=False,
+            openWorldHint=False,
+        )
+    )
+    def ad_accounts_get_value_rule_set(value_rule_set_id: str, account_id: str) -> str:
+        """Read a value rule set
+
+        Args:
+            value_rule_set_id: Platform value rule set id. (required)
+            account_id: Zernio SocialAccount id (posting or ads variant) used to resolve the Meta token. (required)"""
+        client = _get_client()
+        try:
+            response = client.ad_accounts.get_value_rule_set(
+                value_rule_set_id=value_rule_set_id, account_id=account_id
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Replace a value rule set",
+            readOnlyHint=False,
+            destructiveHint=True,
+            openWorldHint=True,
+        )
+    )
+    def ad_accounts_update_value_rule_set(
+        value_rule_set_id: str,
+        account_id: str,
+        name: str,
+        rules: list[dict[str, Any]] | None,
+    ) -> str:
+        """Replace a value rule set
+
+        Args:
+            value_rule_set_id: Platform value rule set id. (required)
+            account_id: Zernio SocialAccount id (posting or ads variant) used to resolve the Meta token. (required)
+            name: Required: the update replaces the whole set. (required)
+            rules: The COMPLETE rule list. Omitting a rule deletes it on Meta. (required)"""
+        client = _get_client()
+        try:
+            response = client.ad_accounts.update_value_rule_set(
+                value_rule_set_id=value_rule_set_id,
+                account_id=account_id,
+                name=name,
+                rules=rules,
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Delete a value rule set",
+            readOnlyHint=False,
+            destructiveHint=True,
+            openWorldHint=True,
+        )
+    )
+    def ad_accounts_delete_value_rule_set(
+        value_rule_set_id: str, account_id: str
+    ) -> str:
+        """Delete a value rule set
+
+        Args:
+            value_rule_set_id: Platform value rule set id. (required)
+            account_id: Zernio SocialAccount id (posting or ads variant) used to resolve the Meta token. (required)"""
+        client = _get_client()
+        try:
+            response = client.ad_accounts.delete_value_rule_set(
+                value_rule_set_id=value_rule_set_id, account_id=account_id
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
             title="Ad account finances",
             readOnlyHint=True,
             destructiveHint=False,
@@ -2306,6 +2450,8 @@ def register_generated_tools(mcp, _get_client):
         bid_strategy: str | None = None,
         bid_amount: float | None = None,
         roas_average_floor: float | None = None,
+        value_rule_set_id: str | None = None,
+        value_rules_applied: bool | None = None,
         platform_specific_data: dict[str, Any] | None = None,
     ) -> str:
         """Update an ad set
@@ -2330,6 +2476,14 @@ def register_generated_tools(mcp, _get_client):
                 roas_average_floor: Minimum ROAS as a decimal multiplier (2.0 = 2.0x). Required when bidStrategy is
         LOWEST_COST_WITH_MIN_ROAS. Sent to Meta as `bid_constraints.roas_average_floor` × 10000.
         Not supported on OpenAI (422).
+                value_rule_set_id: Meta only (other platforms return 501). Value rule set to attach to this ad
+        set, from `/v1/ads/value-rule-sets`. Sending a different id replaces the
+        current association. To DETACH, send `valueRulesApplied: false` and omit
+        this field.
+                value_rules_applied: Meta only (other platforms return 501). `false` DETACHES the ad set's value
+        rule set and must be sent WITHOUT `valueRuleSetId`; the combination returns
+        400. `true` is optional when attaching, since attachment is driven by
+        `valueRuleSetId`, and requires it to be present.
                 platform_specific_data: Platform-specific post-launch delivery settings. The platform is implied by the
         `platform` body param. Meta only; other platforms return 400. Unknown keys are rejected."""
         client = _get_client()
@@ -2343,6 +2497,8 @@ def register_generated_tools(mcp, _get_client):
                 bid_strategy=bid_strategy,
                 bid_amount=bid_amount,
                 roas_average_floor=roas_average_floor,
+                value_rule_set_id=value_rule_set_id,
+                value_rules_applied=value_rules_applied,
                 platform_specific_data=platform_specific_data,
             )
             return _format_response(response)
@@ -2806,6 +2962,8 @@ def register_generated_tools(mcp, _get_client):
         bid_strategy: str | None = None,
         bid_amount: float | None = None,
         roas_average_floor: float | None = None,
+        value_rule_set_id: str | None = None,
+        value_rules_applied: bool | None = None,
         platform_specific_data: dict[str, Any] | None = None,
         dsa_beneficiary: str | None = None,
         dsa_payor: str | None = None,
@@ -3078,6 +3236,24 @@ def register_generated_tools(mcp, _get_client):
                 roas_average_floor: Minimum ROAS as a decimal multiplier (e.g. 2.0 = 2.0x ROAS). Required when
         `bidStrategy` is `LOWEST_COST_WITH_MIN_ROAS`. Sent to Meta as
         `bid_constraints.roas_average_floor` × 10000.
+                value_rule_set_id: Meta only (facebook, instagram; other platforms return 400). Value rule set
+        to attach to the new ad set, from `/v1/ads/value-rule-sets`. Attachment is
+        driven by this id, so `valueRulesApplied` is optional alongside it.
+
+        Rejected with 400 in `adSetId` attach mode: that shape inherits the existing
+        ad set's attachment, so the field would be silently ignored. Use
+        `PUT /v1/ads/ad-sets/{adSetId}` there instead.
+
+        Ignored (stripped before the ad-set create) when `buyingType` is `RESERVED`:
+        value rules only apply to auction ad sets on `LOWEST_COST_WITHOUT_CAP` or
+        `COST_CAP`, and a Reach & Frequency reservation has no auction bid strategy.
+
+        Read back with `GET /v1/ads/ad-sets/{adSetId}?fields=value_rule_set_id`; the
+        attachment is not mirrored onto Zernio's ad documents.
+                value_rules_applied: Meta only (facebook, instagram; other platforms return 400). Optional when
+        attaching, and requires `valueRuleSetId`. `false` is REJECTED here with 400:
+        a newly created ad set has nothing to detach, so detaching lives on
+        `PUT /v1/ads/ad-sets/{adSetId}`.
                 platform_specific_data: Platform-specific options. The platform is derived from `accountId`;
         sending options for a different platform returns a 400. LinkedIn
         (campaign bidding and delivery controls) is the only platform with
@@ -3212,6 +3388,8 @@ def register_generated_tools(mcp, _get_client):
                 bid_strategy=bid_strategy,
                 bid_amount=bid_amount,
                 roas_average_floor=roas_average_floor,
+                value_rule_set_id=value_rule_set_id,
+                value_rules_applied=value_rules_applied,
                 platform_specific_data=platform_specific_data,
                 dsa_beneficiary=dsa_beneficiary,
                 dsa_payor=dsa_payor,

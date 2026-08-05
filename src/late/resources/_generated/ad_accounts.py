@@ -185,6 +185,70 @@ class AdAccountsResource:
         )
         return self._client._get("/v1/ads/high-demand-periods", params=params)
 
+    def list_value_rule_sets(
+        self,
+        account_id: str,
+        ad_account_id: str,
+        *,
+        limit: int | None = 25,
+        after: str | None = None,
+    ) -> dict[str, Any]:
+        """List value rule sets"""
+        params = self._build_params(
+            account_id=account_id,
+            ad_account_id=ad_account_id,
+            limit=limit,
+            after=after,
+        )
+        return self._client._get("/v1/ads/value-rule-sets", params=params)
+
+    def create_value_rule_set(
+        self, account_id: str, ad_account_id: str, name: str, rules: list[Any]
+    ) -> dict[str, Any]:
+        """Create a value rule set"""
+        payload = self._build_payload(
+            account_id=account_id,
+            ad_account_id=ad_account_id,
+            name=name,
+            rules=rules,
+        )
+        return self._client._post("/v1/ads/value-rule-sets", data=payload)
+
+    def get_value_rule_set(
+        self, value_rule_set_id: str, account_id: str
+    ) -> dict[str, Any]:
+        """Read a value rule set"""
+        params = self._build_params(
+            account_id=account_id,
+        )
+        return self._client._get(
+            f"/v1/ads/value-rule-sets/{value_rule_set_id}", params=params
+        )
+
+    def update_value_rule_set(
+        self, value_rule_set_id: str, account_id: str, name: str, rules: list[Any]
+    ) -> dict[str, Any]:
+        """Replace a value rule set"""
+        payload = self._build_payload(
+            account_id=account_id,
+            name=name,
+            rules=rules,
+        )
+        return self._client._put(
+            f"/v1/ads/value-rule-sets/{value_rule_set_id}", data=payload
+        )
+
+    def delete_value_rule_set(
+        self, value_rule_set_id: str, account_id: str
+    ) -> dict[str, Any]:
+        """Delete a value rule set"""
+        params = self._build_params(
+            account_id=account_id,
+        )
+        return self._client._delete(
+            f"/v1/ads/value-rule-sets/{value_rule_set_id}", params=params
+        )
+
     def get_ad_account_finance(
         self, account_id: str, ad_account_id: str
     ) -> dict[str, Any]:
@@ -356,6 +420,70 @@ class AdAccountsResource:
             after=after,
         )
         return await self._client._aget("/v1/ads/high-demand-periods", params=params)
+
+    async def alist_value_rule_sets(
+        self,
+        account_id: str,
+        ad_account_id: str,
+        *,
+        limit: int | None = 25,
+        after: str | None = None,
+    ) -> dict[str, Any]:
+        """List value rule sets (async)"""
+        params = self._build_params(
+            account_id=account_id,
+            ad_account_id=ad_account_id,
+            limit=limit,
+            after=after,
+        )
+        return await self._client._aget("/v1/ads/value-rule-sets", params=params)
+
+    async def acreate_value_rule_set(
+        self, account_id: str, ad_account_id: str, name: str, rules: list[Any]
+    ) -> dict[str, Any]:
+        """Create a value rule set (async)"""
+        payload = self._build_payload(
+            account_id=account_id,
+            ad_account_id=ad_account_id,
+            name=name,
+            rules=rules,
+        )
+        return await self._client._apost("/v1/ads/value-rule-sets", data=payload)
+
+    async def aget_value_rule_set(
+        self, value_rule_set_id: str, account_id: str
+    ) -> dict[str, Any]:
+        """Read a value rule set (async)"""
+        params = self._build_params(
+            account_id=account_id,
+        )
+        return await self._client._aget(
+            f"/v1/ads/value-rule-sets/{value_rule_set_id}", params=params
+        )
+
+    async def aupdate_value_rule_set(
+        self, value_rule_set_id: str, account_id: str, name: str, rules: list[Any]
+    ) -> dict[str, Any]:
+        """Replace a value rule set (async)"""
+        payload = self._build_payload(
+            account_id=account_id,
+            name=name,
+            rules=rules,
+        )
+        return await self._client._aput(
+            f"/v1/ads/value-rule-sets/{value_rule_set_id}", data=payload
+        )
+
+    async def adelete_value_rule_set(
+        self, value_rule_set_id: str, account_id: str
+    ) -> dict[str, Any]:
+        """Delete a value rule set (async)"""
+        params = self._build_params(
+            account_id=account_id,
+        )
+        return await self._client._adelete(
+            f"/v1/ads/value-rule-sets/{value_rule_set_id}", params=params
+        )
 
     async def aget_ad_account_finance(
         self, account_id: str, ad_account_id: str
