@@ -12629,6 +12629,7 @@ paths:
         - name: profileId
           in: query
           schema: { type: string }
+          description: 'Filter posts to a specific profile (24-char hex ObjectId). Omit it, or send `all` or an empty value, to list posts across every profile.'
         - name: createdBy
           in: query
           schema: { type: string }

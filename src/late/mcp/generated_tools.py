@@ -11509,7 +11509,7 @@ def register_generated_tools(mcp, _get_client):
             source: Which collection to read. `zernio` (default) returns posts authored through Zernio. `external` returns posts synced from the platform (existing/historical posts that were published outside Zernio). Combine with `accountId` and paginate via `page`/`limit` to walk the full synced history (we keep up to the last ~12 months per account).
             status
             platform
-            profile_id
+            profile_id: Filter posts to a specific profile (24-char hex ObjectId). Omit it, or send `all` or an empty value, to list posts across every profile.
             created_by: Filter posts to those created by a specific team user (24-char hex ObjectId).
             date_from
             date_to
