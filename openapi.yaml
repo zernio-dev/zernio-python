@@ -15491,12 +15491,14 @@ paths:
                   identityId: { type: string, description: "The TikTok-assigned identity_id, cached on the account." }
                   displayName: { type: string }
         '400':
-          description: "Missing fields, invalid lengths, account is in linked mode, or no advertiser found on the account"
+          description: "Missing fields, invalid JSON body, invalid accountId format, invalid lengths, or no advertiser found on the account"
         '401': { $ref: '#/components/responses/Unauthorized' }
         '404':
           description: TikTok Ads account not found
         '500':
-          description: Failed to create the TikTok identity (TikTok API error)
+          description: Unexpected server error while caching the identity
+        '502':
+          description: 'TikTok rejected the image upload or the identity creation (type: platform_error; an upstream 4xx status is forwarded instead of 502)'
 
   /v1/connect/facebook/select-page:
     get:
