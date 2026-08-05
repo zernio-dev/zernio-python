@@ -10454,6 +10454,16 @@ def register_generated_tools(mcp, _get_client):
         "Send location" button; the user's reply arrives as a regular
         location message in the conversation.
 
+        For `request_contact_info`, `action` may be omitted (we default it
+        to `{ "name": "request_contact_info" }`). WhatsApp renders a
+        localized share button that cannot be relabelled, so put the reason
+        for asking in `body.text`: this is a consent prompt, and a bare
+        request converts badly. The reply arrives as an inbound `contacts`
+        message with `metadata.contactsOrigin` set to `contact_request`,
+        and we fold the shared number back into the contact automatically.
+        A `contacts` message with origin `other` is a card the user picked
+        from their address book and is NOT proof of their own number.
+
         For `catalog_message`, `action` may also be omitted (we default it
         to `{ "name": "catalog_message" }`).
 

@@ -3376,6 +3376,25 @@ components:
                 product_retailer_id:
                   type: string
                   description: Retailer ID (SKU) of the product being asked about.
+            contacts:
+              type: array
+              description: |
+                WhatsApp only. Contact cards the user shared, forwarded verbatim
+                from Meta. Read `contactsOrigin` before treating any number here
+                as the sender's own.
+              items:
+                type: object
+                additionalProperties: true
+            contactsOrigin:
+              type: string
+              enum: [contact_request, other]
+              description: |
+                WhatsApp only. How the contact card was shared.
+                `contact_request` means the user tapped a `request_contact_info`
+                button, so the number is their own and consented. `other` means
+                they picked a card from their address book: it may be anyone's,
+                and must NOT be stored as the sender's identity. Omitted when
+                Meta sends no origin.
             storyReply:
               type: object
               description: |
@@ -23821,6 +23840,16 @@ paths:
                     "Send location" button; the user's reply arrives as a regular
                     location message in the conversation.
 
+                    For `request_contact_info`, `action` may be omitted (we default it
+                    to `{ "name": "request_contact_info" }`). WhatsApp renders a
+                    localized share button that cannot be relabelled, so put the reason
+                    for asking in `body.text`: this is a consent prompt, and a bare
+                    request converts badly. The reply arrives as an inbound `contacts`
+                    message with `metadata.contactsOrigin` set to `contact_request`,
+                    and we fold the shared number back into the contact automatically.
+                    A `contacts` message with origin `other` is a card the user picked
+                    from their address book and is NOT proof of their own number.
+
                     For `catalog_message`, `action` may also be omitted (we default it
                     to `{ "name": "catalog_message" }`).
 
@@ -23832,7 +23861,7 @@ paths:
                   properties:
                     type:
                       type: string
-                      enum: [list, cta_url, flow, location_request_message, voice_call, product, product_list, catalog_message, carousel]
+                      enum: [list, cta_url, flow, location_request_message, request_contact_info, voice_call, product, product_list, catalog_message, carousel]
                       description: Which interactive layout to render.
                     header:
                       type: object
@@ -23936,6 +23965,11 @@ paths:
                           required: [name]
                           properties:
                             name: { type: string, enum: [send_location] }
+                        - type: object
+                          description: 'Contact-info request action. `type` on the parent must be `request_contact_info`. May be omitted entirely; it is defaulted.'
+                          required: [name]
+                          properties:
+                            name: { type: string, enum: [request_contact_info] }
                         - type: object
                           description: |
                             Single-product action. `type` on the parent must be
