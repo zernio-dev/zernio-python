@@ -11511,8 +11511,8 @@ def register_generated_tools(mcp, _get_client):
             platform
             profile_id: Filter posts to a specific profile (24-char hex ObjectId). Omit it, or send `all` or an empty value, to list posts across every profile.
             created_by: Filter posts to those created by a specific team user (24-char hex ObjectId).
-            date_from
-            date_to
+            date_from: Zero-padded YYYY-MM-DD, or a full ISO 8601 datetime. An empty value means no date filter; any other malformed value returns 400.
+            date_to: Zero-padded YYYY-MM-DD, or a full ISO 8601 datetime. An empty value means no date filter; any other malformed value returns 400.
             include_hidden
             search: Search posts by text content.
             sort_by: Sort order for results.

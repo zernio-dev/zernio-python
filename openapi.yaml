@@ -12637,9 +12637,11 @@ paths:
         - name: dateFrom
           in: query
           schema: { type: string, format: date }
+          description: 'Zero-padded YYYY-MM-DD, or a full ISO 8601 datetime. An empty value means no date filter; any other malformed value returns 400.'
         - name: dateTo
           in: query
           schema: { type: string, format: date }
+          description: 'Zero-padded YYYY-MM-DD, or a full ISO 8601 datetime. An empty value means no date filter; any other malformed value returns 400.'
         - name: includeHidden
           in: query
           schema: { type: boolean, default: false }
