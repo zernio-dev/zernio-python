@@ -89,6 +89,7 @@ class ApiKeysResource:
         scope: str | None = "full",
         profile_ids: list[str] | None = None,
         permission: str | None = "read-write",
+        disabled_resource_groups: list[str] | None = None,
     ) -> dict[str, Any]:
         """Create key"""
         payload = self._build_payload(
@@ -97,6 +98,7 @@ class ApiKeysResource:
             scope=scope,
             profile_ids=profile_ids,
             permission=permission,
+            disabled_resource_groups=disabled_resource_groups,
         )
         return self._client._post("/v1/api-keys", data=payload)
 
@@ -120,6 +122,7 @@ class ApiKeysResource:
         scope: str | None = "full",
         profile_ids: list[str] | None = None,
         permission: str | None = "read-write",
+        disabled_resource_groups: list[str] | None = None,
     ) -> dict[str, Any]:
         """Create key (async)"""
         payload = self._build_payload(
@@ -128,6 +131,7 @@ class ApiKeysResource:
             scope=scope,
             profile_ids=profile_ids,
             permission=permission,
+            disabled_resource_groups=disabled_resource_groups,
         )
         return await self._client._apost("/v1/api-keys", data=payload)
 

@@ -5304,6 +5304,7 @@ def register_generated_tools(mcp, _get_client):
         scope: str = "full",
         profile_ids: list[str] | None = None,
         permission: str = "read-write",
+        disabled_resource_groups: list[str] | None = None,
     ) -> str:
         """Create key
 
@@ -5312,7 +5313,8 @@ def register_generated_tools(mcp, _get_client):
             expires_in: Days until expiry
             scope: 'full' grants access to all profiles (default), 'profiles' restricts to specific profiles
             profile_ids: Profile IDs this key can access. Required when scope is 'profiles'.
-            permission: 'read-write' allows all operations (default), 'read' restricts to GET requests only"""
+            permission: 'read-write' allows all operations (default), 'read' restricts to GET requests only
+            disabled_resource_groups: Resource groups to DISABLE on this key (opt-out denylist). Omit for a legacy full-access key. A key with any group disabled mints with the zrk_ prefix, gets 403 with code=insufficient_permissions and required_group on operations in disabled groups (each operation's group is published as x-resource-group), and can never manage API keys, invites, or member identity. With 'messages' disabled, the KEY cannot access private messages; the ACCOUNT's pre-existing webhook subscriptions are a separate grant surface."""
         client = _get_client()
         try:
             response = client.api_keys.create_api_key(
@@ -5321,6 +5323,7 @@ def register_generated_tools(mcp, _get_client):
                 scope=scope,
                 profile_ids=profile_ids,
                 permission=permission,
+                disabled_resource_groups=disabled_resource_groups,
             )
             return _format_response(response)
         except Exception as e:
