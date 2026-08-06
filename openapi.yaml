@@ -4302,6 +4302,17 @@ components:
           type: string
           format: date-time
           description: Timestamp when the post was published to this platform
+        removedFromPlatformAt:
+          type: [string, "null"]
+          format: date-time
+          description: >-
+            Set when a post that was successfully published later disappears
+            from the platform (deleted on-platform or taken down by the
+            platform). status stays "published" (it reflects the publish
+            outcome); poll this field to detect post-publish removals. Absent
+            while the post is live, and cleared if the post reappears.
+            Detection runs with the analytics sync, so expect up to a few
+            hours of lag.
         isTrialReel:
           type: boolean
           description: >-
