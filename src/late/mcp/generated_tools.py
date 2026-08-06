@@ -5314,7 +5314,7 @@ def register_generated_tools(mcp, _get_client):
             scope: 'full' grants access to all profiles (default), 'profiles' restricts to specific profiles
             profile_ids: Profile IDs this key can access. Required when scope is 'profiles'.
             permission: 'read-write' allows all operations (default), 'read' restricts to GET requests only
-            disabled_resource_groups: Resource groups to DISABLE on this key (opt-out denylist). Omit for a legacy full-access key. A key with any group disabled mints with the zrk_ prefix, gets 403 with code=insufficient_permissions and required_group on operations in disabled groups (each operation's group is published as x-resource-group), and can never manage API keys, invites, or member identity. With 'messages' disabled, the KEY cannot access private messages; the ACCOUNT's pre-existing webhook subscriptions are a separate grant surface."""
+            disabled_resource_groups: Resource groups to DISABLE on this key (opt-out denylist). Omit for a legacy full-access key. A key with any group disabled mints with the zrk_ prefix, gets 403 with code=insufficient_permissions and required_group on operations in disabled groups (each operation's group is published as x-resource-group), and can never manage API keys, invites, or member identity. With 'messages' disabled, the key cannot read or send private messages through any API surface and cannot create or edit a webhook subscription broader than itself. Subscriptions that already exist are governed by their own `disabledResourceGroups`, not by this key's. OAuth connector tokens resolve against the same registry, but their groups are not settable yet."""
         client = _get_client()
         try:
             response = client.api_keys.create_api_key(
@@ -14587,6 +14587,7 @@ def register_generated_tools(mcp, _get_client):
         secret: str | None = None,
         is_active: bool = True,
         custom_headers: dict[str, Any] | None = None,
+        disabled_resource_groups: list[str] | None = None,
     ) -> str:
         """Create webhook
 
@@ -14596,7 +14597,8 @@ def register_generated_tools(mcp, _get_client):
             secret: Secret key for HMAC-SHA256 signature verification
             events: Events to subscribe to (at least one required) (required)
             is_active: Enable or disable webhook delivery. Defaults to `true` when omitted.
-            custom_headers: Custom headers to include in webhook requests"""
+            custom_headers: Custom headers to include in webhook requests
+            disabled_resource_groups: Resource groups this subscription does not receive (opt-out denylist). Omit or send an empty array to receive every event in `events`. Listing a group here drops its events before delivery and on every replay path. Set at creation it applies to everything this subscription ever receives; changed later via PUT it applies to events emitted after the change, with a five-minute tail for events already queued (see that operation). When the caller is a restricted (zrk_) key, that key's own disabled groups are unioned into whatever you send here, so a restricted key can never create a subscription wider than itself."""
         client = _get_client()
         try:
             response = client.webhooks.create_webhook_settings(
@@ -14606,6 +14608,7 @@ def register_generated_tools(mcp, _get_client):
                 events=events,
                 is_active=is_active,
                 custom_headers=custom_headers,
+                disabled_resource_groups=disabled_resource_groups,
             )
             return _format_response(response)
         except Exception as e:
@@ -14627,6 +14630,7 @@ def register_generated_tools(mcp, _get_client):
         events: list[str] | None = None,
         is_active: bool | None = None,
         custom_headers: dict[str, Any] | None = None,
+        disabled_resource_groups: list[str] | None = None,
     ) -> str:
         """Update webhook
 
@@ -14637,7 +14641,8 @@ def register_generated_tools(mcp, _get_client):
             secret: Secret key for HMAC-SHA256 signature verification
             events: Events to subscribe to. Must contain at least one event if provided.
             is_active: Enable or disable webhook delivery
-            custom_headers: Custom headers to include in webhook requests"""
+            custom_headers: Custom headers to include in webhook requests
+            disabled_resource_groups: Replaces the subscription's denylist. Send an empty array to clear it and receive every event in `events` again. Omitting the field leaves the current denylist untouched. Applies to events emitted after the update; already-queued events can still deliver for up to five minutes after they were enqueued. When the caller is a restricted (zrk_) key, that key's own disabled groups are unioned back in either way, so a restricted key can neither clear nor widen a subscription past its own groups."""
         client = _get_client()
         try:
             response = client.webhooks.update_webhook_settings(
@@ -14648,6 +14653,7 @@ def register_generated_tools(mcp, _get_client):
                 events=events,
                 is_active=is_active,
                 custom_headers=custom_headers,
+                disabled_resource_groups=disabled_resource_groups,
             )
             return _format_response(response)
         except Exception as e:
