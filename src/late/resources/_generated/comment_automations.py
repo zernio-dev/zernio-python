@@ -103,6 +103,8 @@ class CommentAutomationsResource:
         comment_reply_variations: list[str] | None = None,
         link_tracking: bool | None = True,
         click_tag: str | None = None,
+        audience: Any | None = None,
+        follow_gate: Any | None = None,
     ) -> dict[str, Any]:
         """Create comment-to-DM automation"""
         payload = self._build_payload(
@@ -124,6 +126,8 @@ class CommentAutomationsResource:
             comment_reply_variations=comment_reply_variations,
             link_tracking=link_tracking,
             click_tag=click_tag,
+            audience=audience,
+            follow_gate=follow_gate,
         )
         return self._client._post("/v1/comment-automations", data=payload)
 
@@ -148,6 +152,8 @@ class CommentAutomationsResource:
         comment_reply_variations: list[str] | None = None,
         link_tracking: bool | None = None,
         click_tag: str | None = None,
+        audience: Any | None = None,
+        follow_gate: Any | None = None,
         is_active: bool | None = None,
     ) -> dict[str, Any]:
         """Update automation settings"""
@@ -165,6 +171,8 @@ class CommentAutomationsResource:
             comment_reply_variations=comment_reply_variations,
             link_tracking=link_tracking,
             click_tag=click_tag,
+            audience=audience,
+            follow_gate=follow_gate,
             is_active=is_active,
         )
         return self._client._patch(
@@ -223,6 +231,8 @@ class CommentAutomationsResource:
         comment_reply_variations: list[str] | None = None,
         link_tracking: bool | None = True,
         click_tag: str | None = None,
+        audience: Any | None = None,
+        follow_gate: Any | None = None,
     ) -> dict[str, Any]:
         """Create comment-to-DM automation (async)"""
         payload = self._build_payload(
@@ -244,6 +254,8 @@ class CommentAutomationsResource:
             comment_reply_variations=comment_reply_variations,
             link_tracking=link_tracking,
             click_tag=click_tag,
+            audience=audience,
+            follow_gate=follow_gate,
         )
         return await self._client._apost("/v1/comment-automations", data=payload)
 
@@ -268,6 +280,8 @@ class CommentAutomationsResource:
         comment_reply_variations: list[str] | None = None,
         link_tracking: bool | None = None,
         click_tag: str | None = None,
+        audience: Any | None = None,
+        follow_gate: Any | None = None,
         is_active: bool | None = None,
     ) -> dict[str, Any]:
         """Update automation settings (async)"""
@@ -285,6 +299,8 @@ class CommentAutomationsResource:
             comment_reply_variations=comment_reply_variations,
             link_tracking=link_tracking,
             click_tag=click_tag,
+            audience=audience,
+            follow_gate=follow_gate,
             is_active=is_active,
         )
         return await self._client._apatch(

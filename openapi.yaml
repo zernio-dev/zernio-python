@@ -1404,6 +1404,49 @@ components:
           type: object
           additionalProperties: true
           description: Additional structured context (e.g. field-level validation errors).
+    CommentAutomationAudience:
+      type: object
+      description: |
+        Who a comment automation answers. Instagram only - Meta exposes the follow
+        relationship on no other platform, and only for people who have MESSAGED the
+        account (a comment grants no consent). `whenUnknown` is therefore the important
+        setting: it decides what happens for a first-time commenter.
+      properties:
+        followerStatus:
+          type: string
+          enum: [any, follower, non_follower]
+          default: any
+        minFollowerCount:
+          type: integer
+          minimum: 0
+          description: 'Skip commenters with fewer followers than this. Omit for no size rule.'
+        whenUnknown:
+          type: string
+          enum: [send, skip, verify]
+          default: send
+          description: |
+            What to do when Instagram will not reveal the follow relationship.
+              * `send` (default) - deliver the DM anyway (fails open).
+              * `skip` - stay silent.
+              * `verify` - send `followGate.message` with a confirm button. Tapping it is a
+                message, which grants consent, so the re-check on the tap resolves and the
+                real DM (or `followGate.notFollowingMessage`) follows automatically.
+    CommentAutomationFollowGate:
+      type: object
+      description: 'Copy for the follow gate. Sensible defaults are used for any field left empty.'
+      properties:
+        message:
+          type: string
+          maxLength: 640
+          description: 'Confirmation DM sent when whenUnknown=verify.'
+        buttonLabel:
+          type: string
+          maxLength: 20
+          description: 'Confirm button label. Defaults to "I''m following".'
+        notFollowingMessage:
+          type: string
+          maxLength: 1000
+          description: 'Sent to a commenter we know does not follow (followerStatus=follower). Omit to stay silent on a keyword comment; a confirm tap always gets an answer.'
     DmButton:
       type: object
       description: |
@@ -2670,6 +2713,25 @@ components:
                   type: string
                 picture:
                   type: [string, "null"]
+                instagramProfile:
+                  type: object
+                  description: |
+                    Instagram only, best-effort. Present ONLY for commenters who have
+                    messaged the account before: Meta gates the follow relationship behind
+                    messaging consent, and commenting does not grant it. Absent otherwise -
+                    treat a missing object as "unknown", never as "not a follower". To check
+                    on demand, call GET /v1/accounts/{accountId}/follow-status/{userId}.
+                  properties:
+                    isFollower:
+                      type: [boolean, "null"]
+                      description: The commenter follows this account.
+                    isFollowing:
+                      type: [boolean, "null"]
+                      description: This account follows the commenter.
+                    followerCount:
+                      type: [integer, "null"]
+                    isVerified:
+                      type: [boolean, "null"]
             createdAt:
               type: string
               format: date-time
@@ -15029,6 +15091,80 @@ paths:
                   missingRequired: []
                 issues: []
                 recommendations: []
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404': { $ref: '#/components/responses/NotFound' }
+  /v1/accounts/{accountId}/follow-status/{userId}:
+    get:
+      operationId: getInstagramFollowStatus
+      tags: [Accounts]
+      x-platforms: ["instagram"]
+      summary: Check whether an Instagram user follows the account
+      description: |
+        Resolves the follow relationship between an Instagram user and the connected
+        account, plus their public profile counters.
+
+        `userId` is the Instagram-scoped id (IGSID) Meta gives you on a webhook:
+        `sender.id` on `message.received`, `comment.author.id` on `comment.received`.
+
+        **Meta only answers for people who have MESSAGED the account.** Commenting grants
+        no consent, so a commenter who has never DMed you is unresolvable - that is a
+        platform rule, not a limitation of this endpoint. When it cannot be resolved the
+        response is still `200` with `isFollower: null` and an `unavailableReason`, because
+        "unknown" is a normal state to branch on:
+
+          * `consent_required` - the user has never messaged this account.
+          * `dm_access_disabled` - the account owner turned off Instagram Direct API access.
+          * `not_messageable` - the id is not a messaging-scoped id.
+          * `error` - a transient Graph API failure.
+
+        To gate a comment automation on this, use the automation's `audience` rules instead
+        of calling this per comment - they run the same lookup only on comments that
+        actually match a keyword, and can ask the commenter to confirm with one tap.
+
+        Answers are cached briefly per (account, user). Pass `refresh=true` right after
+        asking someone to follow, so a follow from a moment ago is visible.
+      security:
+        - bearerAuth: []
+      parameters:
+        - { name: accountId, in: path, required: true, schema: { type: string }, description: Instagram account ID }
+        - { name: userId, in: path, required: true, schema: { type: string }, description: 'Instagram-scoped user id (IGSID) from a webhook payload' }
+        - { name: refresh, in: query, required: false, schema: { type: boolean }, description: Bypass the cache and re-query Meta }
+      responses:
+        '200':
+          description: Follow status (fields are null when Meta would not resolve it)
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [userId, accountId, isFollower]
+                properties:
+                  userId: { type: string }
+                  accountId: { type: string }
+                  isFollower:
+                    type: [boolean, "null"]
+                    description: 'The user follows this account. Null = unknown, never "no".'
+                  isFollowedByAccount:
+                    type: [boolean, "null"]
+                    description: This account follows the user.
+                  followerCount: { type: [integer, "null"] }
+                  isVerified: { type: [boolean, "null"] }
+                  username: { type: [string, "null"] }
+                  name: { type: [string, "null"] }
+                  unavailableReason:
+                    type: [string, "null"]
+                    enum: [consent_required, dm_access_disabled, not_messageable, error, null]
+                    description: 'Why the follow relationship could not be resolved. Null when it was.'
+              example:
+                userId: "1312733120229708"
+                accountId: "6977a34e77637c5c857c816c"
+                isFollower: true
+                isFollowedByAccount: false
+                followerCount: 25
+                isVerified: false
+                username: "to.bias8262"
+                name: "Tobi Ma"
+                unavailableReason: null
+        '400': { $ref: '#/components/responses/BadRequest' }
         '401': { $ref: '#/components/responses/Unauthorized' }
         '404': { $ref: '#/components/responses/NotFound' }
   /v1/accounts/{accountId}/tiktok/creator-info:
@@ -35760,6 +35896,13 @@ paths:
             account-wide automations, each with its own keyword set, and they all run
             independently. Per-post automations take priority on their post.
 
+        Audience (`audience`, Instagram only): restrict the automation to followers or
+        non-followers, and/or to accounts above a follower count. Instagram only reveals the
+        follow relationship for people who have messaged the account, so `audience.whenUnknown`
+        decides what happens for everyone else - including `verify`, which sends a one-tap
+        confirmation DM (`followGate`) and then delivers the real DM automatically. People we
+        already know follow you skip the tap entirely.
+
         Links in the DM's buttons can be click-tracked (`linkTracking`, on by default) and
         clickers optionally tagged (`clickTag`) for segmentation. Stats returned include
         delivered, read, and link clicks.
@@ -35806,6 +35949,8 @@ paths:
                   description: "Optional alternate public replies, rotated at random alongside commentReply (picked independently of the DM). Up to 5."
                 linkTracking: { type: boolean, default: true, description: "Wrap link buttons in the DM in a tracked redirect so clicks are counted (Link Clicks / CTR). Pass false to send links exactly as written. Defaults to on." }
                 clickTag: { type: string, description: "Optional tag applied to a contact when they click a tracked link (requires linkTracking). Lets you segment clickers for broadcasts/sequences." }
+                audience: { $ref: '#/components/schemas/CommentAutomationAudience' }
+                followGate: { $ref: '#/components/schemas/CommentAutomationFollowGate' }
       responses:
         '200':
           description: Automation created
@@ -35837,6 +35982,8 @@ paths:
                       commentReplyVariations: { type: array, items: { type: string }, description: "Alternate public replies rotated at random with commentReply. Omitted when none." }
                       linkTracking: { type: boolean }
                       clickTag: { type: string }
+                      audience: { $ref: '#/components/schemas/CommentAutomationAudience' }
+                      followGate: { $ref: '#/components/schemas/CommentAutomationFollowGate' }
                       isActive: { type: boolean }
                       stats: { type: object, properties: { totalTriggered: { type: integer }, totalSent: { type: integer }, totalFailed: { type: integer } } }
                       createdAt: { type: string, format: date-time }
@@ -35889,6 +36036,8 @@ paths:
                       commentReplyVariations: { type: array, items: { type: string }, description: "Alternate public replies rotated at random with commentReply. Omitted when none." }
                       linkTracking: { type: boolean }
                       clickTag: { type: string }
+                      audience: { $ref: '#/components/schemas/CommentAutomationAudience' }
+                      followGate: { $ref: '#/components/schemas/CommentAutomationFollowGate' }
                       isActive: { type: boolean }
                       stats: { type: object, properties: { totalTriggered: { type: integer }, totalSent: { type: integer }, totalFailed: { type: integer } } }
                       createdAt: { type: string, format: date-time }
@@ -35903,7 +36052,10 @@ paths:
                         commenterId: { type: string }
                         commenterName: { type: string }
                         commentText: { type: string }
-                        status: { type: string, enum: [sent, failed, skipped], description: DM outcome }
+                        status: { type: string, enum: [sent, failed, skipped, gated], description: "DM outcome. 'gated' = the follow-gate confirmation DM went out and we are waiting for the tap; it flips to 'sent' or 'skipped' when they tap." }
+                        audienceOutcome: { type: string, enum: [passed, blocked, gate_sent, gate_passed, gate_failed], description: "How the audience rule resolved. Absent on automations without one." }
+                        commenterIsFollower: { type: boolean, description: "Follow relationship at decision time. Absent when Instagram would not tell us (the commenter never messaged the account)." }
+                        commenterFollowerCount: { type: integer }
                         error: { type: string, description: DM error message if status is failed }
                         commentReplyStatus: { type: string, enum: [sent, failed, skipped], description: "Outcome of the optional public reply on the triggering comment. 'skipped' if no commentReply was configured or if the DM failed (the public reply is not attempted in that case)." }
                         commentReplyError: { type: string, description: Public-reply error message if commentReplyStatus is failed }
@@ -35954,6 +36106,8 @@ paths:
                   description: "Alternate public replies for random rotation. Pass [] to clear."
                 linkTracking: { type: boolean, description: "Wrap link buttons in a tracked redirect to count clicks. Pass false to send links untouched." }
                 clickTag: { type: string, description: "Tag applied to a contact when they click a tracked link (requires linkTracking). Empty string clears it." }
+                audience: { $ref: '#/components/schemas/CommentAutomationAudience' }
+                followGate: { $ref: '#/components/schemas/CommentAutomationFollowGate' }
                 isActive: { type: boolean }
       responses:
         '200':
@@ -35981,6 +36135,8 @@ paths:
                       commentReply: { type: string }
                       dmMessageVariations: { type: array, items: { type: string }, description: "Alternate DM texts rotated at random with dmMessage. Omitted when none." }
                       commentReplyVariations: { type: array, items: { type: string }, description: "Alternate public replies rotated at random with commentReply. Omitted when none." }
+                      audience: { $ref: '#/components/schemas/CommentAutomationAudience' }
+                      followGate: { $ref: '#/components/schemas/CommentAutomationFollowGate' }
                       isActive: { type: boolean }
                       updatedAt: { type: string, format: date-time }
         '401': { $ref: '#/components/responses/Unauthorized' }
@@ -36011,7 +36167,7 @@ paths:
         - bearerAuth: []
       parameters:
         - { name: automationId, in: path, required: true, schema: { type: string } }
-        - { name: status, in: query, schema: { type: string, enum: [sent, failed, skipped] }, description: Filter by result status }
+        - { name: status, in: query, schema: { type: string, enum: [sent, failed, skipped, gated] }, description: Filter by result status }
         - { name: limit, in: query, schema: { type: integer, default: 50, minimum: 1, maximum: 200 } }
         - { name: skip, in: query, schema: { type: integer, default: 0, minimum: 0 } }
       responses:
@@ -36033,7 +36189,10 @@ paths:
                         commenterId: { type: string }
                         commenterName: { type: string }
                         commentText: { type: string }
-                        status: { type: string, enum: [sent, failed, skipped], description: DM outcome }
+                        status: { type: string, enum: [sent, failed, skipped, gated], description: "DM outcome. 'gated' = the follow-gate confirmation DM went out and we are waiting for the tap; it flips to 'sent' or 'skipped' when they tap." }
+                        audienceOutcome: { type: string, enum: [passed, blocked, gate_sent, gate_passed, gate_failed], description: "How the audience rule resolved. Absent on automations without one." }
+                        commenterIsFollower: { type: boolean, description: "Follow relationship at decision time. Absent when Instagram would not tell us (the commenter never messaged the account)." }
+                        commenterFollowerCount: { type: integer }
                         error: { type: string, description: DM error message if status is failed }
                         commentReplyStatus: { type: string, enum: [sent, failed, skipped], description: "Outcome of the optional public reply on the triggering comment. 'skipped' if no commentReply was configured or if the DM failed (the public reply is not attempted in that case)." }
                         commentReplyError: { type: string, description: Public-reply error message if commentReplyStatus is failed }

@@ -161,6 +161,17 @@ class AccountsResource:
         """Check account health"""
         return self._client._get(f"/v1/accounts/{account_id}/health")
 
+    def get_instagram_follow_status(
+        self, account_id: str, user_id: str, *, refresh: bool | None = None
+    ) -> dict[str, Any]:
+        """Check whether an Instagram user follows the account"""
+        params = self._build_params(
+            refresh=refresh,
+        )
+        return self._client._get(
+            f"/v1/accounts/{account_id}/follow-status/{user_id}", params=params
+        )
+
     def get_tik_tok_creator_info(
         self, account_id: str, *, media_type: str | None = "video"
     ) -> dict[str, Any]:
@@ -608,6 +619,17 @@ class AccountsResource:
     async def aget_account_health(self, account_id: str) -> dict[str, Any]:
         """Check account health (async)"""
         return await self._client._aget(f"/v1/accounts/{account_id}/health")
+
+    async def aget_instagram_follow_status(
+        self, account_id: str, user_id: str, *, refresh: bool | None = None
+    ) -> dict[str, Any]:
+        """Check whether an Instagram user follows the account (async)"""
+        params = self._build_params(
+            refresh=refresh,
+        )
+        return await self._client._aget(
+            f"/v1/accounts/{account_id}/follow-status/{user_id}", params=params
+        )
 
     async def aget_tik_tok_creator_info(
         self, account_id: str, *, media_type: str | None = "video"

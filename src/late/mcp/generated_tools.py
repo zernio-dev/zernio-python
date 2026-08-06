@@ -581,6 +581,32 @@ def register_generated_tools(mcp, _get_client):
 
     @mcp.tool(
         annotations=ToolAnnotations(
+            title="Check whether an Instagram user follows the account",
+            readOnlyHint=True,
+            destructiveHint=False,
+            openWorldHint=False,
+        )
+    )
+    def accounts_get_instagram_follow_status(
+        account_id: str, user_id: str, refresh: bool | None = None
+    ) -> str:
+        """Check whether an Instagram user follows the account
+
+        Args:
+            account_id: Instagram account ID (required)
+            user_id: Instagram-scoped user id (IGSID) from a webhook payload (required)
+            refresh: Bypass the cache and re-query Meta"""
+        client = _get_client()
+        try:
+            response = client.accounts.get_instagram_follow_status(
+                account_id=account_id, user_id=user_id, refresh=refresh
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
             title="Get TikTok creator info",
             readOnlyHint=True,
             destructiveHint=False,
@@ -5774,6 +5800,8 @@ def register_generated_tools(mcp, _get_client):
         comment_reply_variations: list[str] | None = None,
         link_tracking: bool = True,
         click_tag: str | None = None,
+        audience: dict[str, Any] | None = None,
+        follow_gate: dict[str, Any] | None = None,
     ) -> str:
         """Create comment-to-DM automation
 
@@ -5795,7 +5823,9 @@ def register_generated_tools(mcp, _get_client):
             dm_message_variations: Optional alternate DM texts for random rotation. When set, each triggered comment sends one picked at random from [dmMessage, ...dmMessageVariations], so repeat commenters get slightly different DMs (helps avoid identical-message patterns). Up to 5. Buttons are attached to whichever text is picked, not varied.
             comment_reply_variations: Optional alternate public replies, rotated at random alongside commentReply (picked independently of the DM). Up to 5.
             link_tracking: Wrap link buttons in the DM in a tracked redirect so clicks are counted (Link Clicks / CTR). Pass false to send links exactly as written. Defaults to on.
-            click_tag: Optional tag applied to a contact when they click a tracked link (requires linkTracking). Lets you segment clickers for broadcasts/sequences."""
+            click_tag: Optional tag applied to a contact when they click a tracked link (requires linkTracking). Lets you segment clickers for broadcasts/sequences.
+            audience
+            follow_gate"""
         client = _get_client()
         try:
             response = client.comment_automations.create_comment_automation(
@@ -5817,6 +5847,8 @@ def register_generated_tools(mcp, _get_client):
                 comment_reply_variations=comment_reply_variations,
                 link_tracking=link_tracking,
                 click_tag=click_tag,
+                audience=audience,
+                follow_gate=follow_gate,
             )
             return _format_response(response)
         except Exception as e:
@@ -5867,6 +5899,8 @@ def register_generated_tools(mcp, _get_client):
         comment_reply_variations: list[str] | None = None,
         link_tracking: bool | None = None,
         click_tag: str | None = None,
+        audience: dict[str, Any] | None = None,
+        follow_gate: dict[str, Any] | None = None,
         is_active: bool | None = None,
     ) -> str:
         """Update automation settings
@@ -5886,6 +5920,8 @@ def register_generated_tools(mcp, _get_client):
             comment_reply_variations: Alternate public replies for random rotation. Pass [] to clear.
             link_tracking: Wrap link buttons in a tracked redirect to count clicks. Pass false to send links untouched.
             click_tag: Tag applied to a contact when they click a tracked link (requires linkTracking). Empty string clears it.
+            audience
+            follow_gate
             is_active"""
         client = _get_client()
         try:
@@ -5904,6 +5940,8 @@ def register_generated_tools(mcp, _get_client):
                 comment_reply_variations=comment_reply_variations,
                 link_tracking=link_tracking,
                 click_tag=click_tag,
+                audience=audience,
+                follow_gate=follow_gate,
                 is_active=is_active,
             )
             return _format_response(response)
