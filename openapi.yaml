@@ -36012,8 +36012,8 @@ paths:
       parameters:
         - { name: automationId, in: path, required: true, schema: { type: string } }
         - { name: status, in: query, schema: { type: string, enum: [sent, failed, skipped] }, description: Filter by result status }
-        - { name: limit, in: query, schema: { type: integer, default: 50 } }
-        - { name: skip, in: query, schema: { type: integer, default: 0 } }
+        - { name: limit, in: query, schema: { type: integer, default: 50, minimum: 1, maximum: 200 } }
+        - { name: skip, in: query, schema: { type: integer, default: 0, minimum: 0 } }
       responses:
         '200':
           description: Trigger logs with pagination
@@ -36045,6 +36045,23 @@ paths:
                       limit: { type: integer }
                       skip: { type: integer }
                       hasMore: { type: boolean }
+                  misses:
+                    type: object
+                    description: "Comments that reached this automation but matched none of its keywords. These produce no log entry, so this is the only signal that a keyword is catching nothing. Retained for a short window, then dropped."
+                    properties:
+                      total: { type: integer, description: Number of non-matching comments in the retention window }
+                      retentionDays: { type: integer, description: How many days of non-matching comments the total covers }
+                      samples:
+                        type: array
+                        description: A few of the most recent non-matching comments, for diagnosing a keyword setup.
+                        items:
+                          type: object
+                          properties:
+                            commentText: { type: string }
+                            commenterName: { type: string }
+                            excludedBy: { type: string, description: Set when an exclusion keyword vetoed an otherwise matching comment }
+                            at: { type: string, format: date-time }
+        '400': { $ref: '#/components/responses/BadRequest' }
         '401': { $ref: '#/components/responses/Unauthorized' }
         '404': { $ref: '#/components/responses/NotFound' }
 
