@@ -25666,6 +25666,7 @@ paths:
                   platform: { type: string, example: twitter }
         '400': { description: Bad request or platform limitation }
         '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { description: 'X rejected the request (e.g. suspended account, missing OAuth scope)' }
         '404': { description: Account not found }
     delete:
       operationId: undoRetweet
@@ -25698,6 +25699,7 @@ paths:
                   platform: { type: string, example: twitter }
         '400': { description: Bad request }
         '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { description: 'X rejected the request (e.g. suspended account, missing OAuth scope)' }
         '404': { description: Account not found }
 
   /v1/twitter/bookmark:
@@ -25734,6 +25736,7 @@ paths:
                   platform: { type: string, example: twitter }
         '400': { description: Bad request or platform limitation }
         '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { description: 'X rejected the request (e.g. suspended account, missing OAuth scope)' }
         '404': { description: Account not found }
     delete:
       operationId: removeBookmark
@@ -25766,6 +25769,7 @@ paths:
                   platform: { type: string, example: twitter }
         '400': { description: Bad request }
         '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { description: 'X rejected the request (e.g. suspended account, missing OAuth scope)' }
         '404': { description: Account not found }
 
   /v1/twitter/follow:
@@ -25803,6 +25807,7 @@ paths:
                   platform: { type: string, example: twitter }
         '400': { description: Bad request or platform limitation }
         '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { description: 'X rejected the request (e.g. suspended account, missing OAuth scope)' }
         '404': { description: Account not found }
     delete:
       operationId: unfollowUser
@@ -25835,6 +25840,7 @@ paths:
                   platform: { type: string, example: twitter }
         '400': { description: Bad request }
         '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { description: 'X rejected the request (e.g. suspended account, missing OAuth scope)' }
         '404': { description: Account not found }
 
   /v1/twitter/search:
