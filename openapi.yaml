@@ -134,7 +134,7 @@ x-documentation:
 
     Receive real-time notifications for post status changes, account events, and incoming messages:
 
-    - `post.scheduled` - Post created and scheduled for publishing
+    - `post.scheduled` - Post entered the scheduled state: created with a schedule, added to a queue, a draft promoted to scheduled or queued, a failed post retried, or a recycled clone created
     - `post.published` - Post successfully published
     - `post.failed` - Post failed on all platforms
     - `post.partial` - Post published to some platforms, failed on others
@@ -6753,7 +6753,68 @@ components:
         videoAvgTimeWatchedActions:
           type: number
           description: "Average seconds watched per play (Meta `video_avg_time_watched_actions`). Aggregated over date ranges and across children as a play-weighted average (total watch time / total plays), never a plain average of averages."
+        costPerThruplay:
+          type: number
+          description: "Derived `spend / videoThruplayWatchedActions`, in ad-account native currency. Rounded to 4 decimals rather than the usual 2 because a ThruPlay routinely costs well under a cent. 0 when the ad has no ThruPlays."
+        funnel:
+          $ref: '#/components/schemas/AdFunnelCounts'
+        engagementBreakdown:
+          $ref: '#/components/schemas/AdEngagementCounts'
         lastSyncedAt: { type: string, format: date-time, description: "Present on individual ads only, not on campaign aggregations" }
+    AdFunnelCounts:
+      type: object
+      description: |
+        Named conversion-funnel steps, resolved from the same data as `actions`
+        so you never have to parse action-type strings yourself.
+
+        Meta reports one event under several action types at once
+        (`offsite_conversion.fb_pixel_purchase`, `omni_purchase`, `purchase`, …).
+        Each field below takes the FIRST family member present rather than
+        summing them, which is what makes these counts safe to add up — summing
+        the raw `actions` keys yourself double or triple counts. The same
+        priority order backs `conversions`, so a purchase-optimised campaign
+        reports the identical number in `conversions` and `funnel.purchases`.
+
+        Every field is 0 when that step never fired. Populated for Meta ads;
+        other platforms report a different action taxonomy and generally leave
+        these at 0 (read `actions` for those). At ad-set and campaign level each
+        step is summed from its per-ad values.
+      properties:
+        landingPageViews: { type: integer, description: "Landing page views — the visitor actually loaded the destination, unlike a link click. Meta `landing_page_view`." }
+        contentViews: { type: integer, description: "Content views (Meta `ViewContent` pixel event)." }
+        searches: { type: integer, description: "On-site searches (Meta `Search` pixel event)." }
+        wishlistAdds: { type: integer, description: "Adds to wishlist (Meta `AddToWishlist` pixel event)." }
+        cartAdds: { type: integer, description: "Adds to cart (Meta `AddToCart` pixel event)." }
+        checkoutsInitiated: { type: integer, description: "Checkouts started (Meta `InitiateCheckout` pixel event)." }
+        paymentInfoAdds: { type: integer, description: "Payment details added at checkout (Meta `AddPaymentInfo` pixel event)." }
+        purchases: { type: integer, description: "Purchases (Meta `Purchase` pixel event). Pair with `purchaseValue` for revenue." }
+        leads: { type: integer, description: "Leads, from either the website pixel or an instant form — whichever the ad uses." }
+        registrationsCompleted: { type: integer, description: "Completed registrations (Meta `CompleteRegistration` pixel event)." }
+        appInstalls: { type: integer, description: "Mobile app installs attributed to the ad." }
+        messagingConversationsStarted: { type: integer, description: "Messaging conversations started within 7 days — the headline metric for click-to-WhatsApp and click-to-Messenger ads." }
+        messagingFirstReplies: { type: integer, description: "Messaging threads where the person sent a first reply." }
+    AdEngagementCounts:
+      type: object
+      description: |
+        The single `engagement` total split into the interactions behind it.
+
+        Note that `engagement` is not the sum of these: Meta's own
+        `post_engagement` and `page_engagement` totals already contain the
+        individual interactions, and all of them are counted into `engagement`.
+        Use these fields when you need a specific interaction, and `engagement`
+        only as the coarse total it has always been.
+
+        Meta-only; other platforms leave these at 0.
+      properties:
+        postEngagement: { type: integer, description: "Meta's own post-engagement total (`post_engagement`)." }
+        pageEngagement: { type: integer, description: "Meta's own page-engagement total (`page_engagement`)." }
+        reactions: { type: integer, description: "Reactions on the ad's post (`post_reaction`)." }
+        comments: { type: integer, description: "Comments on the ad's post." }
+        shares: { type: integer, description: "Shares of the ad's post. Meta reports these under the action type literally named `post`." }
+        saves: { type: integer, description: "Saves of the ad's post (`onsite_conversion.post_save`)." }
+        pageLikes: { type: integer, description: "New Page likes attributed to the ad (`like`)." }
+        videoViews: { type: integer, description: "3-second video views (`video_view`). For completion-based counts use `videoThruplayWatchedActions`." }
+        linkClicks: { type: integer, description: "Attributed link clicks (`link_click`). This is the attribution-window count, which differs from the in-session `inline_link_clicks` reported by `GET /v1/ads/{adId}/analytics`." }
     AdDailyMetrics:
       description: |
         One day of metrics. Same fields as `AdMetrics` plus the `date` they
@@ -7095,6 +7156,11 @@ components:
           allOf: [{ $ref: '#/components/schemas/AdReviewStatus' }]
           description: "Platform review state of this ad, independent of delivery `status` / `configuredStatus`. Absent when the platform reports no review signal."
         adType: { type: string, enum: [boost, standalone] }
+        creativeType:
+          type: [string, "null"]
+          enum: [carousel, video, document, image, null]
+          description: "Creative format, classified from the media the creative carries. `null` when the creative carries no media to classify — an unsynced creative and a genuine text-only ad are indistinguishable, so neither is guessed at. Returned by `GET /v1/ads`, `GET /v1/ads/{adId}` and the ad nodes of `GET /v1/ads/tree`."
+          example: video
         goal: { type: string, enum: [engagement, traffic, awareness, video_views, lead_generation, lead_conversion, conversions, app_promotion, catalog_sales, job_applicants], description: "Available goals vary by platform. Meta (Facebook/Instagram) supports all 9 (incl. `lead_conversion` = website pixel lead optimization and `catalog_sales` = Advantage+ catalog ads). TikTok supports the 7 non-`lead_conversion` goals. LinkedIn supports all except app_promotion / lead_conversion. Twitter/X supports engagement, traffic, awareness, video_views, app_promotion. Pinterest and Google Ads support only engagement, traffic, awareness, video_views." }
         isExternal: { type: boolean, description: True for ads synced from platform ad managers }
         budget:
@@ -7733,7 +7799,7 @@ webhooks:
     post:
       operationId: onPostScheduled
       summary: Post scheduled event
-      description: Fired when a post is created and scheduled for publishing.
+      description: 'Fired whenever a post enters the scheduled state: created with a schedule, added to a queue, a draft promoted to scheduled or queued, a failed or partial post retried, or a recycled clone created. Not fired when an already-scheduled post is edited or rescheduled.'
       tags: [Webhook Events]
       requestBody:
         required: true
@@ -7808,7 +7874,7 @@ webhooks:
     post:
       operationId: onPostRecycled
       summary: Post recycled event
-      description: Fired when a post is recycled (cloned and re-scheduled for publishing).
+      description: 'Fired when a post is recycled (cloned and re-scheduled for publishing). The new clone also fires a post.scheduled event.'
       tags: [Webhook Events]
       requestBody:
         required: true
