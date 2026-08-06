@@ -3195,7 +3195,9 @@ def register_generated_tools(mcp, _get_client):
         with "The language asset feed includes an unsupported targeting field"
         (subcode 1885985).
 
-        Media DOES inherit and is uploaded once when shared. Note that Meta enforces
+        Media DOES inherit and is uploaded once when shared, and `linkUrl` inherits
+        too: each locale may name its own landing page and unlisted locales fall back
+        to the ad's top-level `linkUrl`. Note that Meta enforces
         Dynamic Creative image dimensions on language feeds, so an `imageUrl` that
         works on a normal ad may be rejected with "The following images have invalid
         dimensions for Dynamic Creative" (subcode 1885558). Video is not affected.

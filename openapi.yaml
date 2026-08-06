@@ -39765,7 +39765,9 @@ paths:
                     with "The language asset feed includes an unsupported targeting field"
                     (subcode 1885985).
 
-                    Media DOES inherit and is uploaded once when shared. Note that Meta enforces
+                    Media DOES inherit and is uploaded once when shared, and `linkUrl` inherits
+                    too: each locale may name its own landing page and unlisted locales fall back
+                    to the ad's top-level `linkUrl`. Note that Meta enforces
                     Dynamic Creative image dimensions on language feeds, so an `imageUrl` that
                     works on a normal ad may be rejected with "The following images have invalid
                     dimensions for Dynamic Creative" (subcode 1885558). Video is not affected.
@@ -39780,6 +39782,7 @@ paths:
                       headline: { type: string, maxLength: 255, description: "Headline for this language. REQUIRED, and must differ from every other locale and from the ad's top-level headline." }
                       body: { type: string, description: "Primary text for this language. REQUIRED, and must differ from every other locale and from the ad's top-level body." }
                       description: { type: string, maxLength: 255, description: "Link description for this language. REQUIRED, and must differ from every other locale and from the ad's top-level description." }
+                      linkUrl: { type: string, format: uri, description: "Destination URL for this language. Inherits the ad's top-level `linkUrl` when omitted, and requires it to be present (400 otherwise): the top-level URL is the destination for every locale you did not override. Unlike text, identical URLs across locales are fine (they share one asset)." }
                       imageUrl: { type: string, format: uri, description: "Image for this language. Inherits the ad's `imageUrl` when omitted. The feed is all-image OR all-video." }
                       videoUrl: { type: string, format: uri, description: "Video for this language. Inherits the ad's `video.url` when omitted. The feed is all-image OR all-video." }
                       thumbnailUrl: { type: string, format: uri, description: "Poster frame for this language's video." }
