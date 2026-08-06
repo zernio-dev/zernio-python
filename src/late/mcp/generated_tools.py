@@ -10479,7 +10479,7 @@ def register_generated_tools(mcp, _get_client):
                 reply_markup: Telegram-native keyboard markup. Ignored on other platforms.
                 messaging_type: Facebook messaging type. Required when using messageTag.
                 message_tag: Facebook message tag for messaging outside 24h window. Requires messagingType MESSAGE_TAG. Instagram only supports HUMAN_AGENT.
-                reply_to: Platform message ID to quote-reply to. For WhatsApp, pass the wamid (available in message.platformMessageId from webhooks). For Telegram, pass the Telegram message ID.
+                reply_to: Platform message ID to quote-reply to. For WhatsApp, pass the wamid; for Telegram, the Telegram message ID; for Instagram, the Meta mid (all available in message.platformMessageId from webhooks or the list-messages endpoint). On Slack it threads the reply (thread_ts) instead of quoting. Silently ignored on platforms without reply support, including Facebook Messenger (Meta's Messenger Send API has no reply_to).
                 location: WhatsApp-only. Send a location pin.
                 contacts: WhatsApp-only. Send one or more contact cards."""
         client = _get_client()
