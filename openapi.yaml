@@ -35641,7 +35641,9 @@ paths:
                         platformPostId: { type: string }
                         postTitle: { type: string }
                         keywords: { type: array, items: { type: string } }
-                        matchMode: { type: string, enum: [exact, contains] }
+                        matchMode: { type: string, enum: [exact, contains, word], description: "How a keyword is compared with the comment. 'contains' (default) matches anywhere, even inside another word (keyword 'app' fires on 'happy'). 'word' matches the keyword only as a standalone word. 'exact' requires the whole comment to be exactly the keyword." }
+                        excludeKeywords: { type: array, items: { type: string }, description: "Comments containing one of these never trigger the automation, even when a trigger keyword also matches. Compared using the same matchMode." }
+                        typoTolerance: { type: boolean, description: "Only with matchMode=word: also fire on close misspellings of a keyword (one edit for 4-7 character keywords, two from 8 up). Keywords shorter than 4 characters are never fuzzy-matched." }
                         dmMessage: { type: string }
                         buttons:
                           type: array
@@ -35716,7 +35718,9 @@ paths:
                   type: array
                   items: { type: string }
                   description: Trigger keywords (empty = any comment triggers)
-                matchMode: { type: string, enum: [exact, contains], default: contains }
+                matchMode: { type: string, enum: [exact, contains, word], default: contains, description: "How a keyword is compared with the comment. 'contains' (default) matches anywhere, even inside another word (keyword 'app' fires on 'happy'). 'word' matches the keyword only as a standalone word. 'exact' requires the whole comment to be exactly the keyword." }
+                excludeKeywords: { type: array, items: { type: string }, description: "Comments containing one of these never trigger the automation, even when a trigger keyword also matches. Compared using the same matchMode." }
+                typoTolerance: { type: boolean, description: "Only with matchMode=word: also fire on close misspellings of a keyword (one edit for 4-7 character keywords, two from 8 up). Keywords shorter than 4 characters are never fuzzy-matched." }
                 dmMessage: { type: string, description: "DM text to send to commenter. Max 640 chars when buttons are set, otherwise ~1000." }
                 buttons:
                   type: array
@@ -35754,7 +35758,9 @@ paths:
                       trigger: { type: string, enum: [comment, story_reply] }
                       platformPostId: { type: string }
                       keywords: { type: array, items: { type: string } }
-                      matchMode: { type: string, enum: [exact, contains] }
+                      matchMode: { type: string, enum: [exact, contains, word], description: "How a keyword is compared with the comment. 'contains' (default) matches anywhere, even inside another word (keyword 'app' fires on 'happy'). 'word' matches the keyword only as a standalone word. 'exact' requires the whole comment to be exactly the keyword." }
+                      excludeKeywords: { type: array, items: { type: string }, description: "Comments containing one of these never trigger the automation, even when a trigger keyword also matches. Compared using the same matchMode." }
+                      typoTolerance: { type: boolean, description: "Only with matchMode=word: also fire on close misspellings of a keyword (one edit for 4-7 character keywords, two from 8 up). Keywords shorter than 4 characters are never fuzzy-matched." }
                       dmMessage: { type: string }
                       buttons:
                         type: array
@@ -35804,7 +35810,9 @@ paths:
                       postId: { type: string }
                       postTitle: { type: string }
                       keywords: { type: array, items: { type: string } }
-                      matchMode: { type: string, enum: [exact, contains] }
+                      matchMode: { type: string, enum: [exact, contains, word], description: "How a keyword is compared with the comment. 'contains' (default) matches anywhere, even inside another word (keyword 'app' fires on 'happy'). 'word' matches the keyword only as a standalone word. 'exact' requires the whole comment to be exactly the keyword." }
+                      excludeKeywords: { type: array, items: { type: string }, description: "Comments containing one of these never trigger the automation, even when a trigger keyword also matches. Compared using the same matchMode." }
+                      typoTolerance: { type: boolean, description: "Only with matchMode=word: also fire on close misspellings of a keyword (one edit for 4-7 character keywords, two from 8 up). Keywords shorter than 4 characters are never fuzzy-matched." }
                       dmMessage: { type: string }
                       buttons:
                         type: array
@@ -35857,7 +35865,9 @@ paths:
               properties:
                 name: { type: string }
                 keywords: { type: array, items: { type: string } }
-                matchMode: { type: string, enum: [exact, contains] }
+                matchMode: { type: string, enum: [exact, contains, word], description: "How a keyword is compared with the comment. 'contains' (default) matches anywhere, even inside another word (keyword 'app' fires on 'happy'). 'word' matches the keyword only as a standalone word. 'exact' requires the whole comment to be exactly the keyword." }
+                excludeKeywords: { type: array, items: { type: string }, description: "Comments containing one of these never trigger the automation, even when a trigger keyword also matches. Compared using the same matchMode." }
+                typoTolerance: { type: boolean, description: "Only with matchMode=word: also fire on close misspellings of a keyword (one edit for 4-7 character keywords, two from 8 up). Keywords shorter than 4 characters are never fuzzy-matched." }
                 dmMessage: { type: string }
                 buttons:
                   type: array
@@ -35893,7 +35903,9 @@ paths:
                       id: { type: string }
                       name: { type: string }
                       keywords: { type: array, items: { type: string } }
-                      matchMode: { type: string, enum: [exact, contains] }
+                      matchMode: { type: string, enum: [exact, contains, word], description: "How a keyword is compared with the comment. 'contains' (default) matches anywhere, even inside another word (keyword 'app' fires on 'happy'). 'word' matches the keyword only as a standalone word. 'exact' requires the whole comment to be exactly the keyword." }
+                      excludeKeywords: { type: array, items: { type: string }, description: "Comments containing one of these never trigger the automation, even when a trigger keyword also matches. Compared using the same matchMode." }
+                      typoTolerance: { type: boolean, description: "Only with matchMode=word: also fire on close misspellings of a keyword (one edit for 4-7 character keywords, two from 8 up). Keywords shorter than 4 characters are never fuzzy-matched." }
                       dmMessage: { type: string }
                       buttons:
                         type: array

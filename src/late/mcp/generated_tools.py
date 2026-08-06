@@ -5766,6 +5766,8 @@ def register_generated_tools(mcp, _get_client):
         post_title: str | None = None,
         keywords: list[str] | None = None,
         match_mode: str = "contains",
+        exclude_keywords: list[str] | None = None,
+        typo_tolerance: bool | None = None,
         buttons: list[dict[str, Any]] | None = None,
         comment_reply: str | None = None,
         dm_message_variations: list[str] | None = None,
@@ -5784,7 +5786,9 @@ def register_generated_tools(mcp, _get_client):
             post_title: Post content snippet for display
             name: Automation label (required)
             keywords: Trigger keywords (empty = any comment triggers)
-            match_mode
+            match_mode: How a keyword is compared with the comment. 'contains' (default) matches anywhere, even inside another word (keyword 'app' fires on 'happy'). 'word' matches the keyword only as a standalone word. 'exact' requires the whole comment to be exactly the keyword.
+            exclude_keywords: Comments containing one of these never trigger the automation, even when a trigger keyword also matches. Compared using the same matchMode.
+            typo_tolerance: Only with matchMode=word: also fire on close misspellings of a keyword (one edit for 4-7 character keywords, two from 8 up). Keywords shorter than 4 characters are never fuzzy-matched.
             dm_message: DM text to send to commenter. Max 640 chars when buttons are set, otherwise ~1000. (required)
             buttons: Optional inline DM buttons (1-3). Phone buttons are Facebook-only. Omit or pass [] for a plain-text DM.
             comment_reply: Optional public reply to the comment
@@ -5804,6 +5808,8 @@ def register_generated_tools(mcp, _get_client):
                 name=name,
                 keywords=keywords,
                 match_mode=match_mode,
+                exclude_keywords=exclude_keywords,
+                typo_tolerance=typo_tolerance,
                 dm_message=dm_message,
                 buttons=buttons,
                 comment_reply=comment_reply,
@@ -5851,6 +5857,8 @@ def register_generated_tools(mcp, _get_client):
         name: str | None = None,
         keywords: list[str] | None = None,
         match_mode: str | None = None,
+        exclude_keywords: list[str] | None = None,
+        typo_tolerance: bool | None = None,
         dm_message: str | None = None,
         buttons: list[dict[str, Any]] | None = None,
         comment_reply: str | None = None,
@@ -5866,7 +5874,9 @@ def register_generated_tools(mcp, _get_client):
             automation_id: (required)
             name
             keywords
-            match_mode
+            match_mode: How a keyword is compared with the comment. 'contains' (default) matches anywhere, even inside another word (keyword 'app' fires on 'happy'). 'word' matches the keyword only as a standalone word. 'exact' requires the whole comment to be exactly the keyword.
+            exclude_keywords: Comments containing one of these never trigger the automation, even when a trigger keyword also matches. Compared using the same matchMode.
+            typo_tolerance: Only with matchMode=word: also fire on close misspellings of a keyword (one edit for 4-7 character keywords, two from 8 up). Keywords shorter than 4 characters are never fuzzy-matched.
             dm_message
             buttons: Inline DM buttons (1-3). Pass [] to clear all buttons.
             comment_reply
@@ -5882,6 +5892,8 @@ def register_generated_tools(mcp, _get_client):
                 name=name,
                 keywords=keywords,
                 match_mode=match_mode,
+                exclude_keywords=exclude_keywords,
+                typo_tolerance=typo_tolerance,
                 dm_message=dm_message,
                 buttons=buttons,
                 comment_reply=comment_reply,
