@@ -5855,6 +5855,7 @@ def register_generated_tools(mcp, _get_client):
     def comment_automations_update_comment_automation(
         automation_id: str,
         name: str | None = None,
+        trigger: str | None = None,
         keywords: list[str] | None = None,
         match_mode: str | None = None,
         exclude_keywords: list[str] | None = None,
@@ -5873,6 +5874,7 @@ def register_generated_tools(mcp, _get_client):
         Args:
             automation_id: (required)
             name
+            trigger: What fires the automation. Changing it detaches the automation from its bound post or story (a post id and a story id are different objects), unless this same request sets a new binding. 'story_reply' is Instagram only.
             keywords
             match_mode: How a keyword is compared with the comment. 'contains' (default) matches anywhere, even inside another word (keyword 'app' fires on 'happy'). 'word' matches the keyword only as a standalone word. 'exact' requires the whole comment to be exactly the keyword.
             exclude_keywords: Comments containing one of these never trigger the automation, even when a trigger keyword also matches. Compared using the same matchMode.
@@ -5890,6 +5892,7 @@ def register_generated_tools(mcp, _get_client):
             response = client.comment_automations.update_comment_automation(
                 automation_id=automation_id,
                 name=name,
+                trigger=trigger,
                 keywords=keywords,
                 match_mode=match_mode,
                 exclude_keywords=exclude_keywords,

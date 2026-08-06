@@ -136,6 +136,7 @@ class CommentAutomationsResource:
         automation_id: str,
         *,
         name: str | None = None,
+        trigger: str | None = None,
         keywords: list[str] | None = None,
         match_mode: str | None = None,
         exclude_keywords: list[str] | None = None,
@@ -152,6 +153,7 @@ class CommentAutomationsResource:
         """Update automation settings"""
         payload = self._build_payload(
             name=name,
+            trigger=trigger,
             keywords=keywords,
             match_mode=match_mode,
             exclude_keywords=exclude_keywords,
@@ -254,6 +256,7 @@ class CommentAutomationsResource:
         automation_id: str,
         *,
         name: str | None = None,
+        trigger: str | None = None,
         keywords: list[str] | None = None,
         match_mode: str | None = None,
         exclude_keywords: list[str] | None = None,
@@ -270,6 +273,7 @@ class CommentAutomationsResource:
         """Update automation settings (async)"""
         payload = self._build_payload(
             name=name,
+            trigger=trigger,
             keywords=keywords,
             match_mode=match_mode,
             exclude_keywords=exclude_keywords,
