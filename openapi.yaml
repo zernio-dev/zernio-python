@@ -7686,6 +7686,14 @@ components:
             zip: { type: string, description: "Meta advanced matching (zp). US uses first 5 digits; hashed server-side. Meta only." }
             dob: { type: string, description: "Meta advanced matching (db). YYYYMMDD; hashed server-side. Meta only." }
             gender: { type: string, description: "Meta advanced matching (ge). 'f' or 'm'; hashed server-side. Meta only." }
+            leadId:
+              type: string
+              description: |
+                Meta lead ID from a Lead Ad submission, as a string. Required
+                for Conversion Leads CRM events: send it with
+                `actionSource: 'crm'` and
+                `platformData: { event_source: 'crm', lead_event_source: '<CRM name>' }`.
+                Forwarded unhashed to Meta's `user_data.lead_id`. Meta only.
             clickIds:
               type: object
               description: Platform click identifiers captured from the originating ad click.
@@ -7726,7 +7734,13 @@ components:
         platformData:
           type: object
           additionalProperties: true
-          description: Escape hatch for platform-specific fields we haven't normalized. Forwarded as-is.
+          description: |
+            Escape hatch for platform-specific fields we haven't normalized.
+            On Meta, keys are shallow-merged into `custom_data` only: fields
+            Zernio already builds (`value`, `currency`, `contents`,
+            `num_items`) always win on collision, and `user_data` (hashed
+            match keys) is never touched. Use first-class fields (e.g.
+            `user.leadId`) for anything that must reach `user_data`.
 
     ConversionDestination:
       type: object
@@ -35856,6 +35870,8 @@ paths:
                         commentReplyVariations: { type: array, items: { type: string }, description: "Alternate public replies rotated at random with commentReply. Omitted when none." }
                         linkTracking: { type: boolean, description: "Whether link buttons in the DM are wrapped in a tracked redirect to count clicks." }
                         clickTag: { type: string, description: "Tag applied to a contact when they click a tracked link." }
+                        dmDelaySeconds: { type: integer, description: "Seconds waited after the trigger before the DM is sent. Absent when the DM goes out immediately." }
+                        commentReplyDelaySeconds: { type: integer, description: "Seconds waited before the public reply is posted. Absent when it follows the DM immediately." }
                         isActive: { type: boolean }
                         stats:
                           type: object
@@ -35949,6 +35965,8 @@ paths:
                   description: "Optional alternate public replies, rotated at random alongside commentReply (picked independently of the DM). Up to 5."
                 linkTracking: { type: boolean, default: true, description: "Wrap link buttons in the DM in a tracked redirect so clicks are counted (Link Clicks / CTR). Pass false to send links exactly as written. Defaults to on." }
                 clickTag: { type: string, description: "Optional tag applied to a contact when they click a tracked link (requires linkTracking). Lets you segment clickers for broadcasts/sequences." }
+                dmDelaySeconds: { type: integer, minimum: 0, maximum: 86400, description: "Seconds to wait after the trigger before sending the DM. Omit or send 0 to reply immediately (the default). Max 86400 (24h). The trigger is still matched and deduplicated the moment the comment arrives, so a delay only moves when the response is sent." }
+                commentReplyDelaySeconds: { type: integer, minimum: 0, maximum: 86400, description: "Seconds to wait before posting the public comment reply. Omit or send 0 to post it right after the DM (the default). The reply never goes out before the DM, so a value below dmDelaySeconds is raised to it. Ignored when trigger=story_reply, which has no public reply." }
                 audience: { $ref: '#/components/schemas/CommentAutomationAudience' }
                 followGate: { $ref: '#/components/schemas/CommentAutomationFollowGate' }
       responses:
@@ -35982,6 +36000,8 @@ paths:
                       commentReplyVariations: { type: array, items: { type: string }, description: "Alternate public replies rotated at random with commentReply. Omitted when none." }
                       linkTracking: { type: boolean }
                       clickTag: { type: string }
+                      dmDelaySeconds: { type: integer, description: "Seconds waited after the trigger before the DM is sent. Absent when the DM goes out immediately." }
+                      commentReplyDelaySeconds: { type: integer, description: "Seconds waited before the public reply is posted. Absent when it follows the DM immediately." }
                       audience: { $ref: '#/components/schemas/CommentAutomationAudience' }
                       followGate: { $ref: '#/components/schemas/CommentAutomationFollowGate' }
                       isActive: { type: boolean }
@@ -36036,6 +36056,8 @@ paths:
                       commentReplyVariations: { type: array, items: { type: string }, description: "Alternate public replies rotated at random with commentReply. Omitted when none." }
                       linkTracking: { type: boolean }
                       clickTag: { type: string }
+                      dmDelaySeconds: { type: integer, description: "Seconds waited after the trigger before the DM is sent. Absent when the DM goes out immediately." }
+                      commentReplyDelaySeconds: { type: integer, description: "Seconds waited before the public reply is posted. Absent when it follows the DM immediately." }
                       audience: { $ref: '#/components/schemas/CommentAutomationAudience' }
                       followGate: { $ref: '#/components/schemas/CommentAutomationFollowGate' }
                       isActive: { type: boolean }
@@ -36052,13 +36074,14 @@ paths:
                         commenterId: { type: string }
                         commenterName: { type: string }
                         commentText: { type: string }
-                        status: { type: string, enum: [sent, failed, skipped, gated], description: "DM outcome. 'gated' = the follow-gate confirmation DM went out and we are waiting for the tap; it flips to 'sent' or 'skipped' when they tap." }
+                        status: { type: string, enum: [pending, sent, failed, skipped, gated], description: "DM outcome. 'pending' = the automation has a dmDelaySeconds and the response is queued but not sent yet. 'gated' = the follow-gate confirmation DM went out and we are waiting for the tap; it flips to 'sent' or 'skipped' when they tap." }
                         audienceOutcome: { type: string, enum: [passed, blocked, gate_sent, gate_passed, gate_failed], description: "How the audience rule resolved. Absent on automations without one." }
                         commenterIsFollower: { type: boolean, description: "Follow relationship at decision time. Absent when Instagram would not tell us (the commenter never messaged the account)." }
                         commenterFollowerCount: { type: integer }
                         error: { type: string, description: DM error message if status is failed }
                         commentReplyStatus: { type: string, enum: [sent, failed, skipped], description: "Outcome of the optional public reply on the triggering comment. 'skipped' if no commentReply was configured or if the DM failed (the public reply is not attempted in that case)." }
                         commentReplyError: { type: string, description: Public-reply error message if commentReplyStatus is failed }
+                        nextDueAt: { type: string, format: date-time, description: "When the next queued send fires. Present only while something is still pending." }
                         createdAt: { type: string, format: date-time }
         '401': { $ref: '#/components/responses/Unauthorized' }
         '404': { $ref: '#/components/responses/NotFound' }
@@ -36106,6 +36129,8 @@ paths:
                   description: "Alternate public replies for random rotation. Pass [] to clear."
                 linkTracking: { type: boolean, description: "Wrap link buttons in a tracked redirect to count clicks. Pass false to send links untouched." }
                 clickTag: { type: string, description: "Tag applied to a contact when they click a tracked link (requires linkTracking). Empty string clears it." }
+                dmDelaySeconds: { type: integer, minimum: 0, maximum: 86400, description: "Seconds to wait after the trigger before sending the DM. Send 0 to clear the delay and reply immediately." }
+                commentReplyDelaySeconds: { type: integer, minimum: 0, maximum: 86400, description: "Seconds to wait before posting the public comment reply. Send 0 to clear it. The reply never goes out before the DM." }
                 audience: { $ref: '#/components/schemas/CommentAutomationAudience' }
                 followGate: { $ref: '#/components/schemas/CommentAutomationFollowGate' }
                 isActive: { type: boolean }
@@ -36167,7 +36192,7 @@ paths:
         - bearerAuth: []
       parameters:
         - { name: automationId, in: path, required: true, schema: { type: string } }
-        - { name: status, in: query, schema: { type: string, enum: [sent, failed, skipped, gated] }, description: Filter by result status }
+        - { name: status, in: query, schema: { type: string, enum: [pending, sent, failed, skipped, gated] }, description: Filter by result status }
         - { name: limit, in: query, schema: { type: integer, default: 50, minimum: 1, maximum: 200 } }
         - { name: skip, in: query, schema: { type: integer, default: 0, minimum: 0 } }
       responses:
@@ -36189,13 +36214,14 @@ paths:
                         commenterId: { type: string }
                         commenterName: { type: string }
                         commentText: { type: string }
-                        status: { type: string, enum: [sent, failed, skipped, gated], description: "DM outcome. 'gated' = the follow-gate confirmation DM went out and we are waiting for the tap; it flips to 'sent' or 'skipped' when they tap." }
+                        status: { type: string, enum: [pending, sent, failed, skipped, gated], description: "DM outcome. 'pending' = the automation has a dmDelaySeconds and the response is queued but not sent yet. 'gated' = the follow-gate confirmation DM went out and we are waiting for the tap; it flips to 'sent' or 'skipped' when they tap." }
                         audienceOutcome: { type: string, enum: [passed, blocked, gate_sent, gate_passed, gate_failed], description: "How the audience rule resolved. Absent on automations without one." }
                         commenterIsFollower: { type: boolean, description: "Follow relationship at decision time. Absent when Instagram would not tell us (the commenter never messaged the account)." }
                         commenterFollowerCount: { type: integer }
                         error: { type: string, description: DM error message if status is failed }
                         commentReplyStatus: { type: string, enum: [sent, failed, skipped], description: "Outcome of the optional public reply on the triggering comment. 'skipped' if no commentReply was configured or if the DM failed (the public reply is not attempted in that case)." }
                         commentReplyError: { type: string, description: Public-reply error message if commentReplyStatus is failed }
+                        nextDueAt: { type: string, format: date-time, description: "When the next queued send fires. Present only while something is still pending." }
                         createdAt: { type: string, format: date-time }
                   pagination:
                     type: object
