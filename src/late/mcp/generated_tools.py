@@ -17027,6 +17027,31 @@ def register_generated_tools(mcp, _get_client):
 
     @mcp.tool(
         annotations=ToolAnnotations(
+            title="Move a number to another profile",
+            readOnlyHint=False,
+            destructiveHint=True,
+            openWorldHint=True,
+        )
+    )
+    def whatsapp_phone_numbers_move_whats_app_number_to_profile(
+        id: str, profile_id: str
+    ) -> str:
+        """Move a number to another profile
+
+        Args:
+            id: WhatsAppPhoneNumber id. (required)
+            profile_id: Destination profile id. Must belong to the same team. (required)"""
+        client = _get_client()
+        try:
+            response = client.whatsapp_phone_numbers.move_whats_app_number_to_profile(
+                id=id, profile_id=profile_id
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
             title="Get declined requirements",
             readOnlyHint=True,
             destructiveHint=False,

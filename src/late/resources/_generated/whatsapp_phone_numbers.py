@@ -234,6 +234,17 @@ class WhatsappPhoneNumbersResource:
         )
         return self._client._post("/v1/whatsapp/phone-numbers/kyc/share", data=payload)
 
+    def move_whats_app_number_to_profile(
+        self, id: str, profile_id: str
+    ) -> dict[str, Any]:
+        """Move a number to another profile"""
+        payload = self._build_payload(
+            profile_id=profile_id,
+        )
+        return self._client._patch(
+            f"/v1/whatsapp/phone-numbers/{id}/profile", data=payload
+        )
+
     def get_whats_app_number_remediation(self, id: str) -> dict[str, Any]:
         """Get declined requirements"""
         return self._client._get(f"/v1/whatsapp/phone-numbers/{id}/remediate")
@@ -433,6 +444,17 @@ class WhatsappPhoneNumbersResource:
         )
         return await self._client._apost(
             "/v1/whatsapp/phone-numbers/kyc/share", data=payload
+        )
+
+    async def amove_whats_app_number_to_profile(
+        self, id: str, profile_id: str
+    ) -> dict[str, Any]:
+        """Move a number to another profile (async)"""
+        payload = self._build_payload(
+            profile_id=profile_id,
+        )
+        return await self._client._apatch(
+            f"/v1/whatsapp/phone-numbers/{id}/profile", data=payload
         )
 
     async def aget_whats_app_number_remediation(self, id: str) -> dict[str, Any]:

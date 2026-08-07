@@ -930,6 +930,7 @@ Both `from zernio import ...` and `from late import ...` work identically. The `
 | `whatsapp_phone_numbers.get_whats_app_phone_number()` | Get phone number |
 | `whatsapp_phone_numbers.get_whats_app_phone_numbers()` | List phone numbers |
 | `whatsapp_phone_numbers.check_whats_app_number_availability()` | Check country availability |
+| `whatsapp_phone_numbers.move_whats_app_number_to_profile()` | Move a number to another profile |
 | `whatsapp_phone_numbers.purchase_whats_app_phone_number()` | Purchase phone number |
 | `whatsapp_phone_numbers.release_whats_app_phone_number()` | Release phone number |
 | `whatsapp_phone_numbers.remediate_whats_app_number()` | Resubmit a declined number |
