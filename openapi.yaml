@@ -158,7 +158,7 @@ x-documentation:
     - `message.delivered` - An outgoing message was delivered (WhatsApp, Messenger)
     - `message.read` - An outgoing message was read by the recipient (WhatsApp, Messenger, Instagram)
     - `message.failed` - An outgoing message failed delivery (WhatsApp)
-    - `reaction.received` - A participant added or removed an emoji reaction on a message (WhatsApp, Telegram)
+    - `reaction.received` - A participant added or removed an emoji reaction on a message (WhatsApp, Telegram, Slack, Instagram, Facebook Messenger)
     - `comment.received` - New comment received on a post
     - `review.new` - New review posted on a connected account (Google Business Profile)
     - `review.updated` - Review updated or reply added (Google Business Profile, or via reply API)
@@ -3211,7 +3211,7 @@ components:
     # ────────────────────────────────────────────────────────────────────────
     WebhookPayloadReaction:
       type: object
-      description: Webhook payload for reaction received events (WhatsApp, Telegram)
+      description: 'Webhook payload for reaction received events (WhatsApp, Telegram, Slack, Instagram, Facebook Messenger)'
       required: [id, event, reaction, conversation, account, timestamp]
       properties:
         id:
@@ -3241,7 +3241,7 @@ components:
             sender:
               type: object
               required: [id]
-              description: The participant who added or removed the reaction.
+              description: 'Whoever added or removed the reaction. Usually the participant, but on Slack, Instagram and Facebook Messenger it is the business own platform id when the reaction was made from the native app: compare it with conversation.participantId.'
               properties:
                 id:
                   type: string
@@ -8317,11 +8317,15 @@ webhooks:
       summary: Reaction received event
       description: |
         Fired when a participant adds or removes an emoji reaction on a message.
-        Supported on WhatsApp and Telegram. Distinct from message.received so a
-        reaction (e.g. a thumbs-up) is not mistaken for an inbound message.
-        The `reaction.action` field is `added` or `removed`. On WhatsApp removals
-        the platform does not report which emoji was removed, so `reaction.emoji`
-        may be an empty string. Requires the Inbox add-on.
+        Supported on WhatsApp, Telegram, Slack, Instagram and Facebook Messenger.
+        Distinct from message.received so a reaction (e.g. a thumbs-up) is not
+        mistaken for an inbound message.
+        The `reaction.action` field is `added` or `removed`. On WhatsApp and Meta
+        removals the platform does not report which emoji was removed, so
+        `reaction.emoji` may be an empty string.
+        Instagram and Facebook accounts connected before reactions shipped only
+        emit this event after their webhook subscription is refreshed; reconnect
+        the account if reactions never arrive. Requires the Inbox add-on.
       tags: [Webhook Events]
       requestBody:
         required: true
@@ -25078,6 +25082,8 @@ paths:
         Add an emoji reaction to a message. Platform support:
         - Telegram: Supports a subset of Unicode emoji reactions
         - WhatsApp: Supports any standard emoji (one reaction per message per sender)
+        - Instagram and Facebook Messenger: Any standard emoji, subject to Meta's 24h messaging window
+        - Slack: The emoji must have a Slack name (e.g. `:thumbsup:`); unnamed characters return 400
         - All others: Returns 400 (not supported)
       tags: [Messages]
       security: [{ bearerAuth: [] }]
@@ -25126,6 +25132,8 @@ paths:
         Remove a reaction from a message. Platform support:
         - Telegram: Send empty reaction array to clear
         - WhatsApp: Send empty emoji to remove
+        - Instagram and Facebook Messenger: Sends Meta's `unreact` action; the emoji does not need to be repeated
+        - Slack: Removes the reaction we previously sent on that message
         - All others: Returns 400 (not supported)
       tags: [Messages]
       security: [{ bearerAuth: [] }]
