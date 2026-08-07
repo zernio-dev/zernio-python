@@ -228,17 +228,21 @@ class AdCampaignsResource:
         platform: str,
         *,
         account_id: str | None = None,
-        budget: dict[str, Any] | None = None,
         bid_strategy: Any | None = None,
+        bid_amount: float | None = None,
+        roas_average_floor: float | None = None,
+        budget: dict[str, Any] | None = None,
         name: str | None = None,
         platform_specific_data: dict[str, Any] | None = None,
     ) -> dict[str, Any]:
         """Update a campaign"""
         payload = self._build_payload(
-            account_id=account_id,
             platform=platform,
-            budget=budget,
+            account_id=account_id,
             bid_strategy=bid_strategy,
+            bid_amount=bid_amount,
+            roas_average_floor=roas_average_floor,
+            budget=budget,
             name=name,
             platform_specific_data=platform_specific_data,
         )
@@ -871,17 +875,21 @@ class AdCampaignsResource:
         platform: str,
         *,
         account_id: str | None = None,
-        budget: dict[str, Any] | None = None,
         bid_strategy: Any | None = None,
+        bid_amount: float | None = None,
+        roas_average_floor: float | None = None,
+        budget: dict[str, Any] | None = None,
         name: str | None = None,
         platform_specific_data: dict[str, Any] | None = None,
     ) -> dict[str, Any]:
         """Update a campaign (async)"""
         payload = self._build_payload(
-            account_id=account_id,
             platform=platform,
-            budget=budget,
+            account_id=account_id,
             bid_strategy=bid_strategy,
+            bid_amount=bid_amount,
+            roas_average_floor=roas_average_floor,
+            budget=budget,
             name=name,
             platform_specific_data=platform_specific_data,
         )

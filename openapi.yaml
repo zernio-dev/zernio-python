@@ -36573,7 +36573,7 @@ paths:
       x-resource-group: "ads"
       operationId: updateAdCampaignStatus
       tags: ["Ad Campaigns"]
-      x-platforms: ["meta", "google", "tiktok", "linkedin", "pinterest", "x"]
+      x-platforms: ["meta", "google", "tiktok", "linkedin", "pinterest", "x", "openai"]
       summary: Pause or resume a campaign
       description: |
         Updates the status of all ads in a campaign. Makes one platform API call (not per-ad) since status cascades through the campaign hierarchy.
@@ -36615,26 +36615,31 @@ paths:
       x-resource-group: "ads"
       operationId: updateAdCampaign
       tags: ["Ad Campaigns"]
-      x-platforms: ["meta", "google", "tiktok", "linkedin", "pinterest", "x"]
+      x-platforms: ["meta", "google"]
       summary: Update a campaign
       description: |
-        Campaign-level edits. At least one of `budget`, `bidStrategy`, `name` or `platformSpecificData` is required.
+        Campaign-level edits. Send at least one of `budget`, `bidStrategy`, `name`
+        or `platformSpecificData`. An unsupported field is always an error, never a
+        silent drop.
 
-        **Empty campaigns.** A campaign with zero ads has no local Ad documents to
-        resolve, so this would 404 even though it exists on Meta. Send `accountId`
-        in the body to skip the local lookup and forward the update to Meta. The
-        response then carries `updated: 0`, since there are no local rows to mirror
-        onto. `accountId` is ignored when the campaign does have ads.
+        | Body field | Meta | Google | Others |
+        |---|---|---|---|
+        | `bidStrategy` | Yes | Yes | 501 |
+        | `bidAmount`, `roasAverageFloor` | 400 — ad-set level | Yes | 400 |
+        | `budget` (CBO; ABO returns 409) | Yes | 501 | 501 |
+        | `name` | Yes | 501 | 501 |
+        | `platformSpecificData.spendCap` | Yes | 400 | 400 |
+        | `accountId` (empty campaigns) | Yes | - | - |
 
-        - `budget` updates the CBO (Campaign Budget Optimization) budget. For ABO campaigns
-          (where the budget lives on the ad set), use PUT /v1/ads/ad-sets/{adSetId} instead — this endpoint
-          will return 409 with code BUDGET_LEVEL_MISMATCH.
-        - `bidStrategy` sets the campaign-level default bid strategy. Per Meta's spec, `bid_amount` and
-          `bid_constraints` do NOT exist at the campaign level — pass them via PUT /v1/ads/ad-sets/{adSetId}.
-        - `platformSpecificData.spendCap` (Meta only) sets the campaign's lifetime spend cap, in the ad
-          account's currency.
+        Google maps the shared enum onto its own strategies: `LOWEST_COST_WITHOUT_CAP`
+        to Maximize Clicks, `LOWEST_COST_WITH_BID_CAP` to Maximize Clicks with a max
+        CPC (`bidAmount`), `COST_CAP` to Target CPA (`bidAmount`),
+        `LOWEST_COST_WITH_MIN_ROAS` to Target ROAS (`roasAverageFloor`). A campaign on
+        a PORTFOLIO bidding strategy is rejected: detach it in Google Ads first, since
+        it is shared across campaigns.
 
-        Meta-only for now. Other platforms return 501 Not Implemented.
+        `accountId` forwards the update straight to Meta for a campaign with zero ads,
+        which would otherwise 404; the response then carries `updated: 0`.
       security:
         - bearerAuth: []
       parameters:
@@ -36647,26 +36652,26 @@ paths:
               type: object
               required: [platform]
               properties:
-                accountId: { type: string, description: "Zernio SocialAccount id owning the ad account. Required only to update an EMPTY campaign (zero ads), which has no local Ad documents to resolve a token from." }
-                platform: { type: string, enum: [facebook, instagram] }
+                platform: { type: string, enum: [facebook, instagram, google], description: "Required: platform campaign IDs are not globally unique." }
+                accountId: { type: string, description: "**Meta only.** Zernio SocialAccount id owning the ad account. Needed only for an EMPTY campaign (zero ads); ignored otherwise." }
+                bidStrategy:
+                  allOf: [{ $ref: '#/components/schemas/BidStrategy' }]
+                  description: "**Meta + Google.** On Meta, the campaign default that ad sets inherit unless they override it. On Google, the campaign's own bidding strategy."
+                bidAmount: { type: number, description: "**Google only.** Whole currency units (USD: 12 = $12.00). Max CPC for LOWEST_COST_WITH_BID_CAP, CPA target for COST_CAP; required for both." }
+                roasAverageFloor: { type: number, description: "**Google only.** Decimal ROAS multiplier (2.0 = 2.0x), required for LOWEST_COST_WITH_MIN_ROAS." }
                 budget:
                   type: object
+                  description: "**Meta only.** The CBO budget."
                   required: [amount, type]
                   properties:
                     amount: { type: number, description: Budget amount in the ad account's currency }
                     type: { type: string, enum: [daily, lifetime] }
-                bidStrategy:
-                  allOf: [{ $ref: '#/components/schemas/BidStrategy' }]
-                  description: "Campaign-level default. Ad sets inherit this unless they override."
-                name: { type: string, maxLength: 255, description: "Rename the campaign (Meta only; other platforms return 501). At least one of budget/bidStrategy/name/platformSpecificData is required." }
+                name: { type: string, maxLength: 255, description: "**Meta only.** Rename the campaign." }
                 platformSpecificData:
                   type: object
-                  description: |
-                    Platform-specific campaign settings. The platform is implied by the `platform`
-                    body param (same convention as platformSpecificData on POST /v1/ads/create).
-                    Meta (facebook/instagram) only; other platforms return 400.
+                  description: "**Meta only.** Platform implied by the `platform` body param, same convention as POST /v1/ads/create."
                   properties:
-                    spendCap: { type: [number, "null"], description: "Campaign lifetime spend cap, in the ad account's currency (Meta `spend_cap`). Pass null to remove the cap (0 is rejected by Meta)." }
+                    spendCap: { type: [number, "null"], description: "Campaign lifetime spend cap, in the ad account's currency (Meta `spend_cap`). Pass null to remove the cap; 0 is rejected by Meta." }
       responses:
         '200':
           description: Campaign updated
@@ -36674,13 +36679,16 @@ paths:
             application/json:
               schema:
                 type: object
+                description: Echoes back only the fields you sent, plus `updated`.
                 properties:
-                  updated: { type: integer }
+                  updated: { type: integer, description: "Local Ad documents mirrored. 0 on the empty-campaign path." }
                   budget: { $ref: '#/components/schemas/AdBudget' }
                   budgetLevel: { type: string, enum: [campaign] }
                   bidStrategy: { $ref: '#/components/schemas/BidStrategy' }
+                  bidAmount: { type: number }
+                  roasAverageFloor: { type: number }
                   platformSpecificData: { type: object }
-        '400': { description: Invalid input }
+        '400': { description: "Invalid input, or a field the resolved platform does not support at the campaign level (see the support table)" }
         '401': { $ref: '#/components/responses/Unauthorized' }
         '404': { description: Campaign not found }
         '409': { description: "Campaign is ABO — route to /v1/ads/ad-sets/{adSetId} instead" }
@@ -36690,15 +36698,12 @@ paths:
       x-resource-group: "ads"
       operationId: deleteAdCampaign
       tags: ["Ad Campaigns"]
-      x-platforms: ["meta", "google", "tiktok", "linkedin", "pinterest", "x"]
+      x-platforms: ["meta", "tiktok"]
       summary: Delete a campaign
       description: |
         Deletes the whole campaign on the platform, cascading to its ad sets
         and ads. Locally, all Ad documents for this campaign are marked
         `status: cancelled`.
-
-        Meta-only for now. Other platforms return 501 Not Implemented — fall
-        back to DELETE /v1/ads/{adId} per ad in the meantime.
 
         **Empty campaigns.** A campaign with zero ads has no local Ad documents
         to resolve, so it is invisible to `/v1/ads/tree` and this endpoint would

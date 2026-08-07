@@ -2203,31 +2203,35 @@ def register_generated_tools(mcp, _get_client):
         campaign_id: str,
         platform: str,
         account_id: str | None = None,
-        budget: dict[str, Any] | None = None,
         bid_strategy: str | None = None,
+        bid_amount: float | None = None,
+        roas_average_floor: float | None = None,
+        budget: dict[str, Any] | None = None,
         name: str | None = None,
         platform_specific_data: dict[str, Any] | None = None,
     ) -> str:
         """Update a campaign
 
-            Args:
-                campaign_id: Platform campaign ID (required)
-                account_id: Zernio SocialAccount id owning the ad account. Required only to update an EMPTY campaign (zero ads), which has no local Ad documents to resolve a token from.
-                platform: (required)
-                budget
-                bid_strategy: Campaign-level default. Ad sets inherit this unless they override.
-                name: Rename the campaign (Meta only; other platforms return 501). At least one of budget/bidStrategy/name/platformSpecificData is required.
-                platform_specific_data: Platform-specific campaign settings. The platform is implied by the `platform`
-        body param (same convention as platformSpecificData on POST /v1/ads/create).
-        Meta (facebook/instagram) only; other platforms return 400."""
+        Args:
+            campaign_id: Platform campaign ID (required)
+            platform: Required: platform campaign IDs are not globally unique. (required)
+            account_id: **Meta only.** Zernio SocialAccount id owning the ad account. Needed only for an EMPTY campaign (zero ads); ignored otherwise.
+            bid_strategy: **Meta + Google.** On Meta, the campaign default that ad sets inherit unless they override it. On Google, the campaign's own bidding strategy.
+            bid_amount: **Google only.** Whole currency units (USD: 12 = $12.00). Max CPC for LOWEST_COST_WITH_BID_CAP, CPA target for COST_CAP; required for both.
+            roas_average_floor: **Google only.** Decimal ROAS multiplier (2.0 = 2.0x), required for LOWEST_COST_WITH_MIN_ROAS.
+            budget: **Meta only.** The CBO budget.
+            name: **Meta only.** Rename the campaign.
+            platform_specific_data: **Meta only.** Platform implied by the `platform` body param, same convention as POST /v1/ads/create."""
         client = _get_client()
         try:
             response = client.ad_campaigns.update_ad_campaign(
                 campaign_id=campaign_id,
-                account_id=account_id,
                 platform=platform,
-                budget=budget,
+                account_id=account_id,
                 bid_strategy=bid_strategy,
+                bid_amount=bid_amount,
+                roas_average_floor=roas_average_floor,
+                budget=budget,
                 name=name,
                 platform_specific_data=platform_specific_data,
             )
