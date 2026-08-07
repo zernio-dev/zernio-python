@@ -40676,10 +40676,8 @@ paths:
                         thankYouButtonText: { type: string }
                         thankYouButtonType: { type: string, example: VIEW_WEBSITE }
                         thankYouWebsiteUrl: { type: string, format: uri }
-                        isOptimizedForQuality: { type: boolean }
-                        formType: { type: string, enum: [MORE_VOLUME, HIGHER_INTENT, RICH_CREATIVE] }
+                        isOptimizedForQuality: { type: boolean, description: 'Set true for a higher-intent form (adds a review step before submit).' }
                         blockDisplayForNonTargetedViewer: { type: boolean }
-                        allowOrganicLeadGen: { type: boolean }
                         questionPageCustomHeadline: { type: string }
                         contextCard:
                           type: object
