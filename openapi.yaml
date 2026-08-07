@@ -752,7 +752,7 @@ components:
         expiresAt: { type: [string, "null"], description: "When the reservation's locked price expires (set after reserving)." }
     CtwaAdRequestBody:
       type: object
-      required: [accountId, adAccountId, name, budgetAmount, budgetType]
+      required: [accountId, adAccountId, name]
       description: |
         In addition to the `required` list, the request must use
         EXACTLY ONE of the two shapes:
@@ -862,15 +862,26 @@ components:
                 description: |
                   Video creative. Mutually exclusive with this entry's
                   `imageUrl`. Required if `imageUrl` is not supplied.
+        adSetId:
+          type: string
+          description: |
+            Attach the creatives to this EXISTING messaging ad set instead of
+            building a campaign, so the ad set keeps its learning phase. It then
+            owns budget, targeting and schedule, so `budgetAmount`, `budgetType`,
+            `endDate`, `objective`, `countries`, `interests` and `audienceId` are
+            rejected with a 400 alongside it. Its `destination_type` must match
+            the ad's destination.
         budgetAmount:
           type: number
           exclusiveMinimum: 0
           description: |
             Budget amount in the ad account's currency major units
             (e.g. dollars for USD, not cents). Must be > 0.
+            Required unless `adSetId` is set, where the ad set owns it.
         budgetType:
           type: string
           enum: [daily, lifetime]
+          description: Required unless `adSetId` is set.
         currency:
           type: string
           minLength: 3
@@ -39424,7 +39435,19 @@ paths:
       tags: ["Ad Campaigns"]
       x-platforms: ["meta"]
       summary: Boost post as ad
-      description: Creates a paid ad campaign from an existing published post. Creates the full platform campaign hierarchy (campaign, ad set, ad).
+      description: |
+        Creates a paid ad from an existing published post, keeping the post's
+        engagement. By default it provisions the whole hierarchy (campaign, ad
+        set, ad).
+
+        **Attach shape (Meta).** Send `adSetId` to put the ad under an EXISTING
+        ad set instead, so that ad set keeps its learning phase. It then owns
+        `budget`, `schedule` and `targeting`, and sending any of those alongside
+        `adSetId` is a 400 rather than a silent drop. `budget` is required only
+        without `adSetId`.
+
+        `instagramAccountId`, `destinationType` and `adSetId` are Meta-only and
+        return 400 on other platforms.
       security:
         - bearerAuth: []
       requestBody:
@@ -39433,7 +39456,7 @@ paths:
           application/json:
             schema:
               type: object
-              required: [accountId, adAccountId, name, goal, budget]
+              required: [accountId, adAccountId, name, goal]
               properties:
                 postId: { type: string, description: Zernio post ID (provide this or platformPostId) }
                 platformPostId: { type: string, description: Platform post ID (alternative to postId) }
@@ -39441,12 +39464,16 @@ paths:
                 adAccountId: { type: string, description: Platform ad account ID }
                 name: { type: string, maxLength: 255 }
                 goal: { type: string, enum: [engagement, traffic, awareness, video_views, lead_generation, conversions, app_promotion], description: "Available goals vary by platform. Meta (Facebook/Instagram) and TikTok support all 7. LinkedIn supports all except app_promotion. Twitter/X supports engagement, traffic, awareness, video_views, app_promotion. Pinterest and Google Ads support only engagement, traffic, awareness, video_views." }
+                adSetId: { type: string, description: "Meta only. Attach the boosted post to this existing ad set instead of creating a campaign. The ad set then owns budget, schedule and targeting; sending those too is a 400." }
                 budget:
                   type: object
+                  description: "Required unless adSetId is set."
                   required: [amount, type]
                   properties:
                     amount: { type: number, description: "Minimum varies: TikTok=$20, Pinterest=$5, others=$1" }
                     type: { type: string, enum: [daily, lifetime] }
+                instagramAccountId: { type: string, description: "Meta only. Instagram identity the ad runs AS (creative.instagram_user_id), overriding the account linked to the Page. Live-verified against a Page-post creative." }
+                destinationType: { type: string, enum: [INSTAGRAM_PROFILE, WEBSITE, ON_AD, MESSENGER, WHATSAPP], description: "Meta only. Ad-set destination_type — where the click LANDS, as opposed to instagramAccountId which is who the ad runs as. Lead ads force ON_AD and ignore this." }
                 currency: { type: string, example: USD }
                 schedule:
                   type: object
@@ -39601,19 +39628,31 @@ paths:
                   type: string
                   format: uri
                   description: |
-                    TikTok-only. Custom destination URL for the Spark Ad. Without this, TikTok
-                    Spark Ads have no clickable destination — required for traffic / conversion
-                    objectives. Maps to `landing_page_url` on the creative entry of /v2/ad/create/
-                    (TikTok SDK `AdcreateCreatives.landing_page_url`). Ignored on Meta / LinkedIn /
-                    Pinterest / X / Google (those infer the destination from the boosted post).
+                    Destination URL for the CTA button. Send it together with `callToAction`.
+
+                    **Meta**: adds a top-level `call_to_action` to the post-reference creative.
+                    This is what gives a `traffic` boost a clickable destination without
+                    replacing the creative and losing the post's social proof. Ignored when
+                    `leadGenFormId` is set, which supplies its own destination. Live-verified
+                    against a Page-post creative.
+
+                    **TikTok**: maps to `landing_page_url` on the Spark Ad creative
+                    (`AdcreateCreatives.landing_page_url`); Spark Ads have no clickable
+                    destination without it.
+
+                    Ignored on LinkedIn / Pinterest / X / Google, which infer the destination
+                    from the boosted post.
                 callToAction:
                   type: string
                   description: |
-                    TikTok-only. Call-to-action button label on the Spark Ad creative (e.g.
-                    `LEARN_MORE`, `SHOP_NOW`, `DOWNLOAD_NOW`, `SIGN_UP`, `WATCH_NOW`). Maps to
-                    `call_to_action` on the creative entry of /v2/ad/create/. Pass-through —
-                    the platform validates the value. See TikTok's "Enumeration - Call-to-Action"
-                    reference for the full list.
+                    CTA button label. Send it together with `linkUrl` — a CTA without a
+                    destination produces a button that goes nowhere, so sending one alone is a 400.
+
+                    **Meta**: validated against the Meta CTA enum (same values as
+                    POST /v1/ads/create), e.g. `LEARN_MORE`, `SHOP_NOW`, `SIGN_UP`.
+
+                    **TikTok**: pass-through to `call_to_action` on the Spark Ad creative; the
+                    platform validates the value. See TikTok's "Enumeration - Call-to-Action".
                 sparkAuthCode:
                   type: string
                   description: |
@@ -43017,6 +43056,8 @@ paths:
         - **Single-creative**: supply top-level `headline`, `body`, and one of `imageUrl` / `video`. Creates 1 campaign + 1 ad set + 1 ad.
 
         - **Multi-creative**: supply a `creatives[]` array with N entries (each carrying its own headline, body, and image/video). Creates 1 campaign + 1 ad set + N ads sharing budget and targeting so Meta A/Bs the creatives inside a single auction instead of fragmenting budget across N parallel campaigns. Recommended when launching multiple creative variants for the same campaign.
+
+        **Attach shape.** Send `adSetId` (with either creative shape) to add the ads to an EXISTING messaging ad set instead of building a campaign, so the ad set keeps its learning phase — the way to refresh a CTWA creative without resetting delivery. The ad set then owns budget, targeting and schedule, so `budgetAmount`, `budgetType`, `endDate`, `objective`, `countries`, `interests` and `audienceId` are rejected with a 400 alongside it rather than silently dropped. The target ad set's `destination_type` must match the ad's destination (a WhatsApp ad needs a `WHATSAPP` ad set), otherwise Meta would accept an ad that never delivers.
 
         Prerequisites enforced by Meta (surfaced as platform_error on failure): the Facebook Page must be paired with a verified WhatsApp Business number, the WhatsApp Business Account must be business-verified, and the Meta access token must carry ads_management.
       security:
