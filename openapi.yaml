@@ -19523,6 +19523,7 @@ paths:
                   value:
                     status: "expired"
                     message: "Access code has expired. Please generate a new one."
+        '400': { $ref: '#/components/responses/BadRequest' }
         '401': { $ref: '#/components/responses/Unauthorized' }
         '404': { description: Code not found }
         '500': { description: Internal error }
