@@ -24339,7 +24339,7 @@ paths:
           in: path
           required: true
           schema: { type: string }
-          description: The conversation ID (id field from list conversations endpoint). This is the platform-specific conversation identifier, not an internal database ID.
+          description: 'Opaque conversation identifier, accepted verbatim from the list endpoint or from the conversationId on inbox webhooks. Format not to be assumed.'
         - $ref: '#/components/parameters/IdempotencyKeyHeader'
       requestBody:
         required: true
