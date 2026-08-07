@@ -5795,6 +5795,7 @@ def register_generated_tools(mcp, _get_client):
         exclude_keywords: list[str] | None = None,
         typo_tolerance: bool | None = None,
         buttons: list[dict[str, Any]] | None = None,
+        template: dict[str, Any] | None = None,
         comment_reply: str | None = None,
         dm_message_variations: list[str] | None = None,
         comment_reply_variations: list[str] | None = None,
@@ -5821,6 +5822,7 @@ def register_generated_tools(mcp, _get_client):
             typo_tolerance: Only with matchMode=word: also fire on close misspellings of a keyword (one edit for 4-7 character keywords, two from 8 up). Keywords shorter than 4 characters are never fuzzy-matched.
             dm_message: DM text to send to commenter. Max 640 chars when buttons are set, otherwise ~1000. (required)
             buttons: Optional inline DM buttons (1-3). Phone buttons are Facebook-only. Omit or pass [] for a plain-text DM.
+            template: Optional product card sent INSTEAD of the plain dmMessage bubble. Mutually exclusive with buttons. dmMessage stays required: it is what gets sent the moment the card is cleared.
             comment_reply: Optional public reply to the comment
             dm_message_variations: Optional alternate DM texts for random rotation. When set, each triggered comment sends one picked at random from [dmMessage, ...dmMessageVariations], so repeat commenters get slightly different DMs (helps avoid identical-message patterns). Up to 5. Buttons are attached to whichever text is picked, not varied.
             comment_reply_variations: Optional alternate public replies, rotated at random alongside commentReply (picked independently of the DM). Up to 5.
@@ -5846,6 +5848,7 @@ def register_generated_tools(mcp, _get_client):
                 typo_tolerance=typo_tolerance,
                 dm_message=dm_message,
                 buttons=buttons,
+                template=template,
                 comment_reply=comment_reply,
                 dm_message_variations=dm_message_variations,
                 comment_reply_variations=comment_reply_variations,
@@ -5900,6 +5903,7 @@ def register_generated_tools(mcp, _get_client):
         typo_tolerance: bool | None = None,
         dm_message: str | None = None,
         buttons: list[dict[str, Any]] | None = None,
+        template: str | None = None,
         comment_reply: str | None = None,
         dm_message_variations: list[str] | None = None,
         comment_reply_variations: list[str] | None = None,
@@ -5923,6 +5927,7 @@ def register_generated_tools(mcp, _get_client):
             typo_tolerance: Only with matchMode=word: also fire on close misspellings of a keyword (one edit for 4-7 character keywords, two from 8 up). Keywords shorter than 4 characters are never fuzzy-matched.
             dm_message
             buttons: Inline DM buttons (1-3). Pass [] to clear all buttons.
+            template: Product card sent instead of the plain dmMessage bubble. Pass null to clear it and fall back to dmMessage. Mutually exclusive with buttons, including with the buttons already stored on the automation.
             comment_reply
             dm_message_variations: Alternate DM texts for random rotation (see create). Pass [] to clear.
             comment_reply_variations: Alternate public replies for random rotation. Pass [] to clear.
@@ -5945,6 +5950,7 @@ def register_generated_tools(mcp, _get_client):
                 typo_tolerance=typo_tolerance,
                 dm_message=dm_message,
                 buttons=buttons,
+                template=template,
                 comment_reply=comment_reply,
                 dm_message_variations=dm_message_variations,
                 comment_reply_variations=comment_reply_variations,
@@ -10457,6 +10463,10 @@ def register_generated_tools(mcp, _get_client):
                 quick_replies: Quick reply buttons. Mutually exclusive with buttons. Max 13 items.
                 buttons: Action buttons. Mutually exclusive with quickReplies. Max 3 items.
 
+        Instagram / Facebook: also mutually exclusive with `template`.
+        A Meta message carries one body shape, so sending both is a 400
+        rather than a silent drop of the buttons.
+
         WhatsApp: buttons always render as interactive reply buttons.
         Only `title` and `payload` are used — `type`, `url`, and `phone`
         are ignored (WhatsApp has no URL/phone button in this field; use
@@ -10470,7 +10480,9 @@ def register_generated_tools(mcp, _get_client):
 
         Instagram / Facebook: a generic template (carousel). Set `type: generic`
         and provide up to 10 `elements`, each with a `title` (required) and
-        optional `subtitle`, `imageUrl`, and `buttons`.
+        optional `subtitle`, `imageUrl`, and `buttons`. Mutually exclusive with
+        the top-level `buttons` field (sending both is a 400); put the card's
+        buttons on its `elements` instead.
 
         WhatsApp: sends an approved WhatsApp template message, the only message
         type WhatsApp accepts when the 24-hour customer-service window is closed.
