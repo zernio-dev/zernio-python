@@ -16315,7 +16315,7 @@ paths:
                   selectedLocationName: "My Coffee Shop"
                   selectedLocationId: "9281089117903930794"
         '400':
-          description: "Missing required fields (profileId, locationId, or tempToken)"
+          description: 'Missing required fields (profileId, locationId, or tempToken), or the provided accountId is not one of the accounts this connection manages'
         '401': { $ref: '#/components/responses/Unauthorized' }
         '403':
           description: User does not have access to the specified profile
@@ -20840,7 +20840,7 @@ paths:
                 selectedLocation:
                   id: "12345678901234567890"
                   name: "My Business Location"
-        '400': { description: Location not in available locations }
+        '400': { description: 'Location not in available locations, or the provided googleAccountId is not one of the accounts this connection manages' }
         '401': { $ref: '#/components/responses/Unauthorized' }
         '404': { description: Account not found }
 
@@ -20920,7 +20920,7 @@ paths:
                   isActive: true
                   selectedLocationName: "Snap Fitness Dianella"
                   selectedLocationId: "12345678901234567890"
-        '400': { description: 'Invalid body, or selected location not found under the Google account' }
+        '400': { description: 'Invalid body, selected location not found under the Google account, or the provided googleAccountId is not one of the accounts this connection manages' }
         '401': { $ref: '#/components/responses/Unauthorized' }
         '403': { description: 'Payment required, or target profile exceeds plan limit' }
         '404': { description: Source Google Business account not found }
