@@ -10863,6 +10863,42 @@ def register_generated_tools(mcp, _get_client):
         except Exception as e:
             return f"Error: {e}"
 
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Resolve message attachment",
+            readOnlyHint=True,
+            destructiveHint=False,
+            openWorldHint=False,
+        )
+    )
+    def messages_get_message_attachment(
+        conversation_id: str,
+        message_id: str,
+        index: int,
+        account_id: str,
+        format: str = "redirect",
+    ) -> str:
+        """Resolve message attachment
+
+        Args:
+            conversation_id: The conversation ID (Zernio id or platform conversation id) (required)
+            message_id: The message id as returned by the list-messages endpoint (the platform message id) (required)
+            index: Zero-based position of the attachment in the message's attachments array (required)
+            account_id: Social account ID (required)
+            format: `redirect` (default) answers 302 to the media; `json` returns the url in the body"""
+        client = _get_client()
+        try:
+            response = client.messages.get_message_attachment(
+                conversation_id=conversation_id,
+                message_id=message_id,
+                index=index,
+                account_id=account_id,
+                format=format,
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
     # MESSAGING_ADS
 
     @mcp.tool(

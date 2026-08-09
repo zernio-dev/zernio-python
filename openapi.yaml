@@ -24390,7 +24390,12 @@ paths:
                             properties:
                               id: { type: string }
                               type: { type: string, enum: [image, video, audio, file, sticker, share] }
-                              url: { type: string }
+                              url:
+                                type: string
+                                description: 'Direct media link. On Instagram and Facebook this is a signed Meta CDN url that EXPIRES: use it now, do not store it. Persist `refreshUrl` instead.'
+                              refreshUrl:
+                                type: [string, "null"]
+                                description: 'Instagram and Facebook only. Endpoint that resolves this attachment to a working url every time, re-minting it from Meta when the stored one has expired. Safe to store and render indefinitely.'
                               filename: { type: [string, "null"] }
                               previewUrl: { type: [string, "null"] }
                         subject: { type: [string, "null"], description: Reddit message subject }
@@ -25659,6 +25664,77 @@ paths:
           description: Commands deleted
         '400': { $ref: '#/components/responses/BadRequest' }
         '401': { $ref: '#/components/responses/Unauthorized' }
+
+  /v1/inbox/conversations/{conversationId}/messages/{messageId}/attachments/{index}:
+    get:
+      x-resource-group: "messages"
+      operationId: getMessageAttachment
+      summary: Resolve message attachment
+      description: |
+        Resolve one attachment on a message to a media url that works right now.
+
+        Instagram and Facebook sign DM media urls per request and expire them, so
+        the `url` on a message is a snapshot: it works when you read the message
+        and stops working later. This endpoint checks the stored url and, when it
+        has gone stale, re-mints the message's media from Meta and persists it
+        before answering. The message id never expires, so this URL is the one to
+        store — it is returned on each attachment as `refreshUrl`.
+
+        By default it responds `302` to the live media url, so it can be used
+        directly as an `<img src>` on a browser session. API-key integrators
+        should pass `?format=json` and read `url` off the body, since a browser
+        cannot attach an Authorization header to an image request.
+
+        Only Instagram and Facebook media can be re-minted. On other platforms
+        the stored url is returned as-is when it still resolves, and `404`
+        otherwise.
+      tags: [Messages]
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - name: conversationId
+          in: path
+          required: true
+          schema: { type: string }
+          description: 'The conversation ID (Zernio id or platform conversation id)'
+        - name: messageId
+          in: path
+          required: true
+          schema: { type: string }
+          description: 'The message id as returned by the list-messages endpoint (the platform message id)'
+        - name: index
+          in: path
+          required: true
+          schema: { type: integer, minimum: 0 }
+          description: 'Zero-based position of the attachment in the message''s attachments array'
+        - name: accountId
+          in: query
+          required: true
+          schema: { type: string }
+          description: Social account ID
+        - name: format
+          in: query
+          required: false
+          schema: { type: string, enum: [redirect, json], default: redirect }
+          description: '`redirect` (default) answers 302 to the media; `json` returns the url in the body'
+      responses:
+        '200':
+          description: 'Resolved url (only when format=json)'
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status: { type: string, example: success }
+                  url: { type: string, description: 'Live media url. Short-lived; re-request this endpoint rather than storing it.' }
+                  refreshed: { type: boolean, description: True when the stored url had expired and was re-minted from the platform. }
+        '302':
+          description: Redirect to the live media url
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403':
+          description: Inbox addon required
+        '404':
+          description: 'Account, conversation, message or attachment not found, or the platform no longer serves the media'
 
   /v1/inbox/comments:
     get:

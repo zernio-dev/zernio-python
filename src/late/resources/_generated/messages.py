@@ -320,6 +320,25 @@ class MessagesResource:
         """Upload media file"""
         return self._client._post("/v1/media/upload-direct")
 
+    def get_message_attachment(
+        self,
+        conversation_id: str,
+        message_id: str,
+        index: int,
+        account_id: str,
+        *,
+        format: str | None = "redirect",
+    ) -> dict[str, Any]:
+        """Resolve message attachment"""
+        params = self._build_params(
+            account_id=account_id,
+            format=format,
+        )
+        return self._client._get(
+            f"/v1/inbox/conversations/{conversation_id}/messages/{message_id}/attachments/{index}",
+            params=params,
+        )
+
     async def alist_inbox_conversations(
         self,
         *,
@@ -566,3 +585,22 @@ class MessagesResource:
     async def aupload_media_direct(self) -> dict[str, Any]:
         """Upload media file (async)"""
         return await self._client._apost("/v1/media/upload-direct")
+
+    async def aget_message_attachment(
+        self,
+        conversation_id: str,
+        message_id: str,
+        index: int,
+        account_id: str,
+        *,
+        format: str | None = "redirect",
+    ) -> dict[str, Any]:
+        """Resolve message attachment (async)"""
+        params = self._build_params(
+            account_id=account_id,
+            format=format,
+        )
+        return await self._client._aget(
+            f"/v1/inbox/conversations/{conversation_id}/messages/{message_id}/attachments/{index}",
+            params=params,
+        )
