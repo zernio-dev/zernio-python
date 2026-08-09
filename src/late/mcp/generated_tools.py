@@ -6440,14 +6440,22 @@ def register_generated_tools(mcp, _get_client):
         profile_id: str,
         redirect_url: str | None = None,
         headless: bool = False,
+        login_method: str = "instagram_login",
     ) -> str:
         """Get OAuth connect URL
 
-        Args:
-            platform: Social media platform to connect (required)
-            profile_id: Your Zernio profile ID (get from /v1/profiles). For WhatsApp, a Zernio-provisioned number can only be connected on the profile it was provisioned to; connecting from any other profile is rejected with a 409. (required)
-            redirect_url: Your custom redirect URL after connection completes. Accepts an http(s) URL, a custom app scheme for mobile deeplinks (e.g. myapp://callback), or a relative path. Result params are appended with the URL API, so an existing query string is preserved. Standard mode appends connected={platform}&profileId=X&accountId=Y&username=Z. Headless mode appends OAuth data params for platforms requiring selection (e.g. LinkedIn orgs, Facebook pages). If no selection is needed, the account is created directly and the redirect includes accountId.
-            headless: When true, the user is redirected to your redirect_url with raw OAuth data (code, state) instead of Zernio's default account selection UI. Use this to build a custom connect experience."""
+            Args:
+                platform: Social media platform to connect (required)
+                profile_id: Your Zernio profile ID (get from /v1/profiles). For WhatsApp, a Zernio-provisioned number can only be connected on the profile it was provisioned to; connecting from any other profile is rejected with a 409. (required)
+                redirect_url: Your custom redirect URL after connection completes. Accepts an http(s) URL, a custom app scheme for mobile deeplinks (e.g. myapp://callback), or a relative path. Result params are appended with the URL API, so an existing query string is preserved. Standard mode appends connected={platform}&profileId=X&accountId=Y&username=Z. Headless mode appends OAuth data params for platforms requiring selection (e.g. LinkedIn orgs, Facebook pages). If no selection is needed, the account is created directly and the redirect includes accountId.
+                headless: When true, the user is redirected to your redirect_url with raw OAuth data (code, state) instead of Zernio's default account selection UI. Use this to build a custom connect experience.
+                login_method: Instagram only. Which of the two Instagram connection methods to use. Ignored for every other platform.
+
+        `instagram_login` (the default, and what you get if you omit this): the Instagram Login dialog. The user authorizes their Instagram professional account directly, no Facebook Page required.
+
+        `facebook_login`: the Facebook Login dialog, i.e. "Instagram API with Facebook Login". The user authorizes a Facebook Page that has a linked Instagram professional account, and every API call for that account then runs through the Page. Use this when the customer manages Instagram through a Page and expects the Facebook consent screen. Because the user has to pick which Page to connect, the callback continues at the account-selection step, `/v1/connect/instagram/select-account`.
+
+        `facebook_login` does not support `headless=true`: its callback always redirects to Zernio's hosted account-selection page. Pass a `redirect_url` and let the standard flow return the user to you."""
         client = _get_client()
         try:
             response = client.connect.get_connect_url(
@@ -6455,6 +6463,7 @@ def register_generated_tools(mcp, _get_client):
                 profile_id=profile_id,
                 redirect_url=redirect_url,
                 headless=headless,
+                login_method=login_method,
             )
             return _format_response(response)
         except Exception as e:
@@ -6634,6 +6643,59 @@ def register_generated_tools(mcp, _get_client):
                 page_id=page_id,
                 temp_token=temp_token,
                 user_profile=user_profile,
+                redirect_url=redirect_url,
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="List Pages with a linked Instagram account",
+            readOnlyHint=True,
+            destructiveHint=False,
+            openWorldHint=False,
+        )
+    )
+    def connect_list_instagram_pages(profile_id: str, temp_token: str) -> str:
+        """List Pages with a linked Instagram account
+
+        Args:
+            profile_id: Profile ID from your connection flow (required)
+            temp_token: Long-lived Facebook user access token from the OAuth callback redirect (required)"""
+        client = _get_client()
+        try:
+            response = client.connect.list_instagram_pages(
+                profile_id=profile_id, temp_token=temp_token
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Select the Page whose Instagram account to connect",
+            readOnlyHint=False,
+            destructiveHint=True,
+            openWorldHint=True,
+        )
+    )
+    def connect_select_instagram_account(
+        profile_id: str, page_id: str, temp_token: str, redirect_url: str | None = None
+    ) -> str:
+        """Select the Page whose Instagram account to connect
+
+        Args:
+            profile_id: Profile ID from your connection flow (required)
+            page_id: The Facebook Page ID selected by the user, from GET /v1/connect/instagram/select-account (required)
+            temp_token: Long-lived Facebook user access token from the OAuth callback redirect (required)
+            redirect_url: Optional custom redirect URL to return to after selection"""
+        client = _get_client()
+        try:
+            response = client.connect.select_instagram_account(
+                profile_id=profile_id,
+                page_id=page_id,
+                temp_token=temp_token,
                 redirect_url=redirect_url,
             )
             return _format_response(response)

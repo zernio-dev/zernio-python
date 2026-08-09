@@ -322,6 +322,7 @@ Both `from zernio import ...` and `from late import ...` work identically. The `
 |--------|-------------|
 | `connect.list_facebook_pages()` | List Facebook pages |
 | `connect.list_google_business_locations()` | List GBP locations |
+| `connect.list_instagram_pages()` | List Pages with a linked Instagram account |
 | `connect.list_linked_in_organizations()` | List LinkedIn orgs |
 | `connect.list_pinterest_boards_for_selection()` | List Pinterest boards |
 | `connect.list_snapchat_profiles()` | List Snapchat profiles |
@@ -356,6 +357,7 @@ Both `from zernio import ...` and `from late import ...` work identically. The `
 | `connect.initiate_telegram_connect()` | Connect Telegram directly |
 | `connect.select_facebook_page()` | Select Facebook page |
 | `connect.select_google_business_location()` | Select GBP location |
+| `connect.select_instagram_account()` | Select the Page whose Instagram account to connect |
 | `connect.select_linked_in_organization()` | Select LinkedIn org |
 | `connect.select_pinterest_board()` | Select Pinterest board |
 | `connect.select_snapchat_profile()` | Select Snapchat profile |

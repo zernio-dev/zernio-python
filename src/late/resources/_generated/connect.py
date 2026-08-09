@@ -80,12 +80,14 @@ class ConnectResource:
         *,
         redirect_url: str | None = None,
         headless: bool | None = False,
+        login_method: str | None = "instagram_login",
     ) -> dict[str, Any]:
         """Get OAuth connect URL"""
         params = self._build_params(
             profile_id=profile_id,
             redirect_url=redirect_url,
             headless=headless,
+            login_method=login_method,
         )
         return self._client._get(f"/v1/connect/{platform}", params=params)
 
@@ -161,6 +163,31 @@ class ConnectResource:
             redirect_url=redirect_url,
         )
         return self._client._post("/v1/connect/facebook/select-page", data=payload)
+
+    def list_instagram_pages(self, profile_id: str, temp_token: str) -> dict[str, Any]:
+        """List Pages with a linked Instagram account"""
+        params = self._build_params(
+            profile_id=profile_id,
+            temp_token=temp_token,
+        )
+        return self._client._get("/v1/connect/instagram/select-account", params=params)
+
+    def select_instagram_account(
+        self,
+        profile_id: str,
+        page_id: str,
+        temp_token: str,
+        *,
+        redirect_url: str | None = None,
+    ) -> dict[str, Any]:
+        """Select the Page whose Instagram account to connect"""
+        payload = self._build_payload(
+            profile_id=profile_id,
+            page_id=page_id,
+            temp_token=temp_token,
+            redirect_url=redirect_url,
+        )
+        return self._client._post("/v1/connect/instagram/select-account", data=payload)
 
     def list_google_business_locations(
         self,
@@ -645,12 +672,14 @@ class ConnectResource:
         *,
         redirect_url: str | None = None,
         headless: bool | None = False,
+        login_method: str | None = "instagram_login",
     ) -> dict[str, Any]:
         """Get OAuth connect URL (async)"""
         params = self._build_params(
             profile_id=profile_id,
             redirect_url=redirect_url,
             headless=headless,
+            login_method=login_method,
         )
         return await self._client._aget(f"/v1/connect/{platform}", params=params)
 
@@ -731,6 +760,37 @@ class ConnectResource:
         )
         return await self._client._apost(
             "/v1/connect/facebook/select-page", data=payload
+        )
+
+    async def alist_instagram_pages(
+        self, profile_id: str, temp_token: str
+    ) -> dict[str, Any]:
+        """List Pages with a linked Instagram account (async)"""
+        params = self._build_params(
+            profile_id=profile_id,
+            temp_token=temp_token,
+        )
+        return await self._client._aget(
+            "/v1/connect/instagram/select-account", params=params
+        )
+
+    async def aselect_instagram_account(
+        self,
+        profile_id: str,
+        page_id: str,
+        temp_token: str,
+        *,
+        redirect_url: str | None = None,
+    ) -> dict[str, Any]:
+        """Select the Page whose Instagram account to connect (async)"""
+        payload = self._build_payload(
+            profile_id=profile_id,
+            page_id=page_id,
+            temp_token=temp_token,
+            redirect_url=redirect_url,
+        )
+        return await self._client._apost(
+            "/v1/connect/instagram/select-account", data=payload
         )
 
     async def alist_google_business_locations(

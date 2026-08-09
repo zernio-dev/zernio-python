@@ -15705,6 +15705,17 @@ paths:
           in: query
           schema: { type: boolean, default: false }
           description: When true, the user is redirected to your redirect_url with raw OAuth data (code, state) instead of Zernio's default account selection UI. Use this to build a custom connect experience.
+        - name: loginMethod
+          in: query
+          schema: { type: string, enum: [instagram_login, facebook_login], default: instagram_login }
+          description: |
+            Instagram only. Which of the two Instagram connection methods to use. Ignored for every other platform.
+
+            `instagram_login` (the default, and what you get if you omit this): the Instagram Login dialog. The user authorizes their Instagram professional account directly, no Facebook Page required.
+
+            `facebook_login`: the Facebook Login dialog, i.e. "Instagram API with Facebook Login". The user authorizes a Facebook Page that has a linked Instagram professional account, and every API call for that account then runs through the Page. Use this when the customer manages Instagram through a Page and expects the Facebook consent screen. Because the user has to pick which Page to connect, the callback continues at the account-selection step, `/v1/connect/instagram/select-account`.
+
+            `facebook_login` does not support `headless=true`: its callback always redirects to Zernio's hosted account-selection page. Pass a `redirect_url` and let the standard flow return the user to you.
       security:
         - bearerAuth: []
       responses:
@@ -16134,6 +16145,142 @@ paths:
                   code: { type: string, enum: [RECONNECT_ACCOUNT_MISMATCH] }
         '500':
           description: Failed to save Facebook connection
+
+  /v1/connect/instagram/select-account:
+    get:
+      operationId: listInstagramPages
+      tags: [Connect]
+      summary: List Pages with a linked Instagram account
+      description: |
+        Completes the `loginMethod=facebook_login` Instagram flow, i.e. "Instagram API with Facebook Login".
+
+        After the user authorizes on Facebook, extract `tempToken` from the redirect params and pass it here to list the Facebook Pages they manage. Only Pages that have a linked Instagram professional account are returned, so an empty array means the user has no eligible Page. Use the X-Connect-Token header if connecting via API key.
+
+        Not used by the default `instagram_login` flow, which creates the account without a selection step.
+      parameters:
+        - name: profileId
+          in: query
+          required: true
+          schema: { type: string }
+          description: Profile ID from your connection flow
+        - name: tempToken
+          in: query
+          required: true
+          schema: { type: string }
+          description: Long-lived Facebook user access token from the OAuth callback redirect
+      security:
+        - bearerAuth: []
+        - connectToken: []
+      responses:
+        '200':
+          description: Facebook Pages that have a linked Instagram professional account
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  pages:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id: { type: string, description: Facebook Page ID }
+                        name: { type: string, description: Page name }
+                        access_token: { type: string, description: Page-specific access token }
+                        instagram_business_account:
+                          type: object
+                          description: The Instagram professional account linked to this Page
+                          properties:
+                            id: { type: string, description: Instagram Business Account ID }
+                            username: { type: string }
+                            profile_picture_url: { type: string }
+              example:
+                pages:
+                  - id: "811889972008357"
+                    name: "My Brand Page"
+                    access_token: "EAAxxxxx..."
+                    instagram_business_account:
+                      id: "17841400649984407"
+                      username: "mybrand"
+                      profile_picture_url: "https://..."
+        '400': { description: 'Missing required parameters (profileId or tempToken)' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { description: User does not have access to the specified profile }
+    post:
+      operationId: selectInstagramAccount
+      tags: [Connect]
+      summary: Select the Page whose Instagram account to connect
+      description: |
+        Saves the selected Page as an Instagram account connected via Facebook Login. The Page access token becomes the account's access token, so every Instagram call for it runs against the Facebook Graph host.
+
+        One Instagram account per profile: if the profile already has an Instagram account, this replaces it, and picking a different Instagram identity purges the previous account's conversations, external posts and stats.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [profileId, pageId, tempToken]
+              properties:
+                profileId:
+                  type: string
+                  description: Profile ID from your connection flow
+                pageId:
+                  type: string
+                  description: 'The Facebook Page ID selected by the user, from GET /v1/connect/instagram/select-account'
+                tempToken:
+                  type: string
+                  description: Long-lived Facebook user access token from the OAuth callback redirect
+                redirect_url:
+                  type: string
+                  format: uri
+                  description: Optional custom redirect URL to return to after selection
+            example:
+              profileId: "507f1f77bcf86cd799439011"
+              pageId: "811889972008357"
+              tempToken: "EAAxxxxx..."
+              redirect_url: "https://yourdomain.com/integrations/callback"
+      security:
+        - bearerAuth: []
+        - connectToken: []
+      responses:
+        '200':
+          description: Instagram account connected
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message: { type: string }
+                  redirect_url:
+                    type: string
+                    description: Redirect URL if a custom redirect_url was provided
+                  account:
+                    type: object
+                    properties:
+                      accountId: { type: string, description: ID of the created SocialAccount }
+                      platform: { type: string, enum: [instagram] }
+                      username: { type: string }
+                      displayName: { type: string, description: Name of the Facebook Page backing this account }
+                      profilePicture: { type: string }
+                      isActive: { type: boolean }
+                      loginMethod: { type: string, enum: [facebook_login] }
+              example:
+                message: "Instagram (via Facebook) connected"
+                account:
+                  accountId: "64e1f0a9e2b5af0012ab34cd"
+                  platform: "instagram"
+                  username: "mybrand"
+                  displayName: "My Brand Page"
+                  profilePicture: "https://..."
+                  isActive: true
+                  loginMethod: "facebook_login"
+        '400':
+          description: 'Missing required fields, or the selected Page has no linked Instagram professional account'
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '402': { $ref: '#/components/responses/PaymentRequired' }
+        '403': { description: User does not have access to the specified profile }
+        '404': { description: Selected page not found among the pages this token can manage }
 
   /v1/connect/googlebusiness/locations:
     get:
