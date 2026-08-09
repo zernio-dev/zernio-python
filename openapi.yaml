@@ -1153,7 +1153,7 @@ components:
             `{ status, ok, body }` to `vars[saveAs]`. Edge: `'success'` on 2xx, `'error'` otherwise.
 
 
-            **ai**: `{ provider: anthropic|openai|google|mistral|groq, model, preset:
+            **ai**: `{ provider: anthropic|openai|google|mistral|groq|openrouter, model, preset:
             smart|tools|cheap, systemPrompt, userPromptTemplate, saveAs, temperature, maxTokens,
             outputType: text|json, tools:[{ name, description, parameters }] }`. Set `provider` +
             `model` for BYOK (uses your stored API key); omit `provider` for the legacy Telnyx
