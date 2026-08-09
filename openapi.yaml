@@ -26309,8 +26309,12 @@ paths:
       operationId: likeInboxComment
       summary: Like comment
       description: |
-        Like or upvote a comment on a post. Supported platforms: Facebook, Twitter/X, Bluesky, Reddit.
-        For Bluesky, the cid (content identifier) is required in the request body.
+        Like or upvote a comment on a post. Supported platforms: Facebook, Twitter/X,
+        Bluesky, Reddit, LinkedIn. For Bluesky, the cid (content identifier) is required
+        in the request body. For LinkedIn, pass the composite comment URN returned by the
+        comments endpoints as commentId; an optional reactionType picks the reaction
+        (defaults to LIKE), and accounts connected before the social-feed scopes were
+        requested get a 403 with code `linkedin_reconnect_required`.
       tags: [Comments]
       security: [{ bearerAuth: [] }]
       parameters:
@@ -26331,6 +26335,10 @@ paths:
               required: [accountId]
               properties:
                 accountId: { type: string, description: The social account ID }
+                reactionType:
+                  type: string
+                  enum: [LIKE, PRAISE, EMPATHY, INTEREST, APPRECIATION, ENTERTAINMENT]
+                  description: '(LinkedIn only) Reaction to create. Defaults to LIKE; ignored on other platforms.'
                 cid: { type: string, description: (Bluesky only) Content identifier for the comment }
       responses:
         '200':
@@ -26355,8 +26363,8 @@ paths:
       operationId: unlikeInboxComment
       summary: Unlike comment
       description: |
-        Remove a like from a comment. Supported platforms: Facebook, Twitter/X, Bluesky, Reddit.
-        For Bluesky, the likeUri query parameter is required.
+        Remove a like from a comment. Supported platforms: Facebook, Twitter/X, Bluesky,
+        Reddit, LinkedIn. For Bluesky, the likeUri query parameter is required.
       tags: [Comments]
       security: [{ bearerAuth: [] }]
       parameters:
@@ -26393,6 +26401,112 @@ paths:
         '401': { $ref: '#/components/responses/Unauthorized' }
         '403':
           description: Inbox addon required
+
+  /v1/inbox/posts/{postId}/like:
+    post:
+      operationId: likePost
+      summary: Like post
+      description: |
+        Like (or react to) a post as a connected account. Supported platforms: LinkedIn,
+        Twitter/X, Facebook, YouTube, Bluesky. Instagram, Threads, TikTok and Pinterest
+        expose no like endpoint in their APIs and return 400. Reddit returns 400 too,
+        pointing at `POST /v1/accounts/{accountId}/reddit-vote`, which covers upvote,
+        downvote and clear on both posts and comments.
+
+        The account does not have to be the one that published the post, which is what
+        makes executive engagement possible: pass an exec's `accountId` and the brand
+        post's ID. `postId` accepts either a Zernio post ID or the platform's native post
+        ID. A Zernio post ID resolves to the entry for `accountId`, falling back to the
+        post's single entry on the same platform (two entries on that platform is a 400,
+        so pass the native ID).
+
+        LinkedIn requires the `w_member_social_feed` / `w_organization_social_feed`
+        scopes, which are not retroactive: accounts connected before those were requested
+        get a 403 with code `linkedin_reconnect_required` until the user reconnects the
+        account. YouTube spends 50 quota units per call.
+      tags: [Comments]
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - name: postId
+          in: path
+          required: true
+          schema: { type: string }
+          description: Zernio post ID or the platform's native post ID
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [accountId]
+              properties:
+                accountId: { type: string, description: The social account acting as the liker }
+                reactionType:
+                  type: string
+                  enum: [LIKE, PRAISE, EMPATHY, INTEREST, APPRECIATION, ENTERTAINMENT]
+                  description: '(LinkedIn only) Reaction to create. Defaults to LIKE; ignored on other platforms.'
+                cid: { type: string, description: (Bluesky only) Content identifier of the post }
+      responses:
+        '200':
+          description: Post liked
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status: { type: string }
+                  postId: { type: string, description: The resolved native post ID }
+                  platform: { type: string }
+                  liked: { type: boolean }
+                  likeUri: { type: string, description: (Bluesky only) URI to use for unliking }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403':
+          description: Inbox addon required, or the account is missing the platform scope
+        '404':
+          description: Account or post not found
+    delete:
+      operationId: unlikePost
+      summary: Unlike post
+      description: |
+        Remove this account's like from a post. Supported platforms: LinkedIn, Twitter/X,
+        Facebook, YouTube, Bluesky. On YouTube this clears the rating. For Bluesky,
+        `likeUri` (returned when the post was liked) is required. Reddit uses
+        `POST /v1/accounts/{accountId}/reddit-vote` with `direction: 0`.
+      tags: [Comments]
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - name: postId
+          in: path
+          required: true
+          schema: { type: string }
+          description: Zernio post ID or the platform's native post ID
+        - name: accountId
+          in: query
+          required: true
+          schema: { type: string }
+        - name: likeUri
+          in: query
+          schema: { type: string }
+          description: (Bluesky only) The like URI returned when liking
+      responses:
+        '200':
+          description: Post unliked
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status: { type: string }
+                  postId: { type: string, description: The resolved native post ID }
+                  platform: { type: string }
+                  liked: { type: boolean }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403':
+          description: Inbox addon required, or the account is missing the platform scope
+        '404':
+          description: Account or post not found
 
   /v1/inbox/comments/{postId}/{commentId}/private-reply:
     post:

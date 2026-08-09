@@ -515,11 +515,13 @@ Both `from zernio import ...` and `from late import ...` work identically. The `
 | `comments.edit_inbox_comment()` | Edit comment |
 | `comments.hide_inbox_comment()` | Hide comment |
 | `comments.like_inbox_comment()` | Like comment |
+| `comments.like_post()` | Like post |
 | `comments.reply_to_inbox_post()` | Reply to comment |
 | `comments.send_private_reply_to_comment()` | Send private reply |
 | `comments.set_comment_moderation()` | Set comment moderation status |
 | `comments.unhide_inbox_comment()` | Unhide comment |
 | `comments.unlike_inbox_comment()` | Unlike comment |
+| `comments.unlike_post()` | Unlike post |
 
 ### Connected Apps
 | Method | Description |

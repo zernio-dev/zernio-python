@@ -6338,7 +6338,11 @@ def register_generated_tools(mcp, _get_client):
         )
     )
     def comments_like_inbox_comment(
-        post_id: str, comment_id: str, account_id: str, cid: str | None = None
+        post_id: str,
+        comment_id: str,
+        account_id: str,
+        reaction_type: str | None = None,
+        cid: str | None = None,
     ) -> str:
         """Like comment
 
@@ -6346,11 +6350,16 @@ def register_generated_tools(mcp, _get_client):
             post_id: (required)
             comment_id: (required)
             account_id: The social account ID (required)
+            reaction_type: (LinkedIn only) Reaction to create. Defaults to LIKE; ignored on other platforms.
             cid: (Bluesky only) Content identifier for the comment"""
         client = _get_client()
         try:
             response = client.comments.like_inbox_comment(
-                post_id=post_id, comment_id=comment_id, account_id=account_id, cid=cid
+                post_id=post_id,
+                comment_id=comment_id,
+                account_id=account_id,
+                reaction_type=reaction_type,
+                cid=cid,
             )
             return _format_response(response)
         except Exception as e:
@@ -6381,6 +6390,65 @@ def register_generated_tools(mcp, _get_client):
                 comment_id=comment_id,
                 account_id=account_id,
                 like_uri=like_uri,
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Like post",
+            readOnlyHint=False,
+            destructiveHint=True,
+            openWorldHint=True,
+        )
+    )
+    def comments_like_post(
+        post_id: str,
+        account_id: str,
+        reaction_type: str | None = None,
+        cid: str | None = None,
+    ) -> str:
+        """Like post
+
+        Args:
+            post_id: Zernio post ID or the platform's native post ID (required)
+            account_id: The social account acting as the liker (required)
+            reaction_type: (LinkedIn only) Reaction to create. Defaults to LIKE; ignored on other platforms.
+            cid: (Bluesky only) Content identifier of the post"""
+        client = _get_client()
+        try:
+            response = client.comments.like_post(
+                post_id=post_id,
+                account_id=account_id,
+                reaction_type=reaction_type,
+                cid=cid,
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Unlike post",
+            readOnlyHint=False,
+            destructiveHint=True,
+            openWorldHint=True,
+        )
+    )
+    def comments_unlike_post(
+        post_id: str, account_id: str, like_uri: str | None = None
+    ) -> str:
+        """Unlike post
+
+        Args:
+            post_id: Zernio post ID or the platform's native post ID (required)
+            account_id: (required)
+            like_uri: (Bluesky only) The like URI returned when liking"""
+        client = _get_client()
+        try:
+            response = client.comments.unlike_post(
+                post_id=post_id, account_id=account_id, like_uri=like_uri
             )
             return _format_response(response)
         except Exception as e:

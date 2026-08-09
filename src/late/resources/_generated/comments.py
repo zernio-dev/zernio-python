@@ -218,11 +218,18 @@ class CommentsResource:
         )
 
     def like_inbox_comment(
-        self, post_id: str, comment_id: str, account_id: str, *, cid: str | None = None
+        self,
+        post_id: str,
+        comment_id: str,
+        account_id: str,
+        *,
+        reaction_type: str | None = None,
+        cid: str | None = None,
     ) -> dict[str, Any]:
         """Like comment"""
         payload = self._build_payload(
             account_id=account_id,
+            reaction_type=reaction_type,
             cid=cid,
         )
         return self._client._post(
@@ -245,6 +252,32 @@ class CommentsResource:
         return self._client._delete(
             f"/v1/inbox/comments/{post_id}/{comment_id}/like", params=params
         )
+
+    def like_post(
+        self,
+        post_id: str,
+        account_id: str,
+        *,
+        reaction_type: str | None = None,
+        cid: str | None = None,
+    ) -> dict[str, Any]:
+        """Like post"""
+        payload = self._build_payload(
+            account_id=account_id,
+            reaction_type=reaction_type,
+            cid=cid,
+        )
+        return self._client._post(f"/v1/inbox/posts/{post_id}/like", data=payload)
+
+    def unlike_post(
+        self, post_id: str, account_id: str, *, like_uri: str | None = None
+    ) -> dict[str, Any]:
+        """Unlike post"""
+        params = self._build_params(
+            account_id=account_id,
+            like_uri=like_uri,
+        )
+        return self._client._delete(f"/v1/inbox/posts/{post_id}/like", params=params)
 
     def send_private_reply_to_comment(
         self,
@@ -412,11 +445,18 @@ class CommentsResource:
         )
 
     async def alike_inbox_comment(
-        self, post_id: str, comment_id: str, account_id: str, *, cid: str | None = None
+        self,
+        post_id: str,
+        comment_id: str,
+        account_id: str,
+        *,
+        reaction_type: str | None = None,
+        cid: str | None = None,
     ) -> dict[str, Any]:
         """Like comment (async)"""
         payload = self._build_payload(
             account_id=account_id,
+            reaction_type=reaction_type,
             cid=cid,
         )
         return await self._client._apost(
@@ -438,6 +478,36 @@ class CommentsResource:
         )
         return await self._client._adelete(
             f"/v1/inbox/comments/{post_id}/{comment_id}/like", params=params
+        )
+
+    async def alike_post(
+        self,
+        post_id: str,
+        account_id: str,
+        *,
+        reaction_type: str | None = None,
+        cid: str | None = None,
+    ) -> dict[str, Any]:
+        """Like post (async)"""
+        payload = self._build_payload(
+            account_id=account_id,
+            reaction_type=reaction_type,
+            cid=cid,
+        )
+        return await self._client._apost(
+            f"/v1/inbox/posts/{post_id}/like", data=payload
+        )
+
+    async def aunlike_post(
+        self, post_id: str, account_id: str, *, like_uri: str | None = None
+    ) -> dict[str, Any]:
+        """Unlike post (async)"""
+        params = self._build_params(
+            account_id=account_id,
+            like_uri=like_uri,
+        )
+        return await self._client._adelete(
+            f"/v1/inbox/posts/{post_id}/like", params=params
         )
 
     async def asend_private_reply_to_comment(
