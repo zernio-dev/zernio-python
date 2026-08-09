@@ -5828,6 +5828,7 @@ def register_generated_tools(mcp, _get_client):
         click_tag: str | None = None,
         dm_delay_seconds: int | None = None,
         comment_reply_delay_seconds: int | None = None,
+        also_match_in_dms: bool = False,
         audience: dict[str, Any] | None = None,
         follow_gate: dict[str, Any] | None = None,
     ) -> str:
@@ -5855,6 +5856,7 @@ def register_generated_tools(mcp, _get_client):
             click_tag: Optional tag applied to a contact when they click a tracked link (requires linkTracking). Lets you segment clickers for broadcasts/sequences.
             dm_delay_seconds: Seconds to wait after the trigger before sending the DM. Omit or send 0 to reply immediately (the default). Max 86400 (24h). The trigger is still matched and deduplicated the moment the comment arrives, so a delay only moves when the response is sent.
             comment_reply_delay_seconds: Seconds to wait before posting the public comment reply. Omit or send 0 to post it right after the DM (the default). The reply never goes out before the DM, so a value below dmDelaySeconds is raised to it. Ignored when trigger=story_reply, which has no public reply.
+            also_match_in_dms: Also fire these keywords on a plain inbound DM, so the automation answers people who message the keyword instead of commenting it. Requires at least one keyword (an empty keyword list means 'match anything', which would answer every inbound message) and is rejected on story_reply automations, which already trigger on DMs. Dedup is per door: a contact who already received the DM from their comment can still receive it from a DM.
             audience
             follow_gate"""
         client = _get_client()
@@ -5881,6 +5883,7 @@ def register_generated_tools(mcp, _get_client):
                 click_tag=click_tag,
                 dm_delay_seconds=dm_delay_seconds,
                 comment_reply_delay_seconds=comment_reply_delay_seconds,
+                also_match_in_dms=also_match_in_dms,
                 audience=audience,
                 follow_gate=follow_gate,
             )
@@ -5934,6 +5937,7 @@ def register_generated_tools(mcp, _get_client):
         comment_reply_variations: list[str] | None = None,
         link_tracking: bool | None = None,
         click_tag: str | None = None,
+        also_match_in_dms: bool | None = None,
         dm_delay_seconds: int | None = None,
         comment_reply_delay_seconds: int | None = None,
         audience: dict[str, Any] | None = None,
@@ -5958,6 +5962,7 @@ def register_generated_tools(mcp, _get_client):
             comment_reply_variations: Alternate public replies for random rotation. Pass [] to clear.
             link_tracking: Wrap link buttons in a tracked redirect to count clicks. Pass false to send links untouched.
             click_tag: Tag applied to a contact when they click a tracked link (requires linkTracking). Empty string clears it.
+            also_match_in_dms: Also fire these keywords on a plain inbound DM. Enabling it requires the automation to end up with at least one keyword (this request's keywords if you send them, otherwise the stored ones) and is rejected on story_reply automations.
             dm_delay_seconds: Seconds to wait after the trigger before sending the DM. Send 0 to clear the delay and reply immediately.
             comment_reply_delay_seconds: Seconds to wait before posting the public comment reply. Send 0 to clear it. The reply never goes out before the DM.
             audience
@@ -5981,6 +5986,7 @@ def register_generated_tools(mcp, _get_client):
                 comment_reply_variations=comment_reply_variations,
                 link_tracking=link_tracking,
                 click_tag=click_tag,
+                also_match_in_dms=also_match_in_dms,
                 dm_delay_seconds=dm_delay_seconds,
                 comment_reply_delay_seconds=comment_reply_delay_seconds,
                 audience=audience,

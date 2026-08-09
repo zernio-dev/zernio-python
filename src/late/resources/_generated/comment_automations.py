@@ -106,6 +106,7 @@ class CommentAutomationsResource:
         click_tag: str | None = None,
         dm_delay_seconds: int | None = None,
         comment_reply_delay_seconds: int | None = None,
+        also_match_in_dms: bool | None = False,
         audience: Any | None = None,
         follow_gate: Any | None = None,
     ) -> dict[str, Any]:
@@ -132,6 +133,7 @@ class CommentAutomationsResource:
             click_tag=click_tag,
             dm_delay_seconds=dm_delay_seconds,
             comment_reply_delay_seconds=comment_reply_delay_seconds,
+            also_match_in_dms=also_match_in_dms,
             audience=audience,
             follow_gate=follow_gate,
         )
@@ -159,6 +161,7 @@ class CommentAutomationsResource:
         comment_reply_variations: list[str] | None = None,
         link_tracking: bool | None = None,
         click_tag: str | None = None,
+        also_match_in_dms: bool | None = None,
         dm_delay_seconds: int | None = None,
         comment_reply_delay_seconds: int | None = None,
         audience: Any | None = None,
@@ -181,6 +184,7 @@ class CommentAutomationsResource:
             comment_reply_variations=comment_reply_variations,
             link_tracking=link_tracking,
             click_tag=click_tag,
+            also_match_in_dms=also_match_in_dms,
             dm_delay_seconds=dm_delay_seconds,
             comment_reply_delay_seconds=comment_reply_delay_seconds,
             audience=audience,
@@ -246,6 +250,7 @@ class CommentAutomationsResource:
         click_tag: str | None = None,
         dm_delay_seconds: int | None = None,
         comment_reply_delay_seconds: int | None = None,
+        also_match_in_dms: bool | None = False,
         audience: Any | None = None,
         follow_gate: Any | None = None,
     ) -> dict[str, Any]:
@@ -272,6 +277,7 @@ class CommentAutomationsResource:
             click_tag=click_tag,
             dm_delay_seconds=dm_delay_seconds,
             comment_reply_delay_seconds=comment_reply_delay_seconds,
+            also_match_in_dms=also_match_in_dms,
             audience=audience,
             follow_gate=follow_gate,
         )
@@ -299,6 +305,7 @@ class CommentAutomationsResource:
         comment_reply_variations: list[str] | None = None,
         link_tracking: bool | None = None,
         click_tag: str | None = None,
+        also_match_in_dms: bool | None = None,
         dm_delay_seconds: int | None = None,
         comment_reply_delay_seconds: int | None = None,
         audience: Any | None = None,
@@ -321,6 +328,7 @@ class CommentAutomationsResource:
             comment_reply_variations=comment_reply_variations,
             link_tracking=link_tracking,
             click_tag=click_tag,
+            also_match_in_dms=also_match_in_dms,
             dm_delay_seconds=dm_delay_seconds,
             comment_reply_delay_seconds=comment_reply_delay_seconds,
             audience=audience,
