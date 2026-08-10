@@ -35328,6 +35328,7 @@ paths:
                         error: { type: string }
                         errorCode: { type: [integer, "null"], description: 'Meta WhatsApp error code (e.g. 131049 for antispam, 131021 for invalid phone, 131026 for re-engagement required). Only populated for status=failed.' }
                         errorExplanation: { type: [string, "null"], description: 'Plain-language translation of errorCode (e.g. for 131026, that the recipient has likely opted out of marketing messages). Null for unmapped codes; fall back to error.' }
+                        errorTraceId: { type: [string, "null"], description: 'Meta trace id (fbtrace_id) for the failed send. Quote this when escalating to Meta Direct Support. Only populated for status=failed on Meta platforms.' }
                         sentAt: { type: string, format: date-time }
                         deliveredAt: { type: string, format: date-time }
                         readAt: { type: string, format: date-time }
