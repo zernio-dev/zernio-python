@@ -135,6 +135,7 @@ class AdCreativesResource:
         carousel_cards: list[dict[str, Any]] | None = None,
         url_tags: str | None = None,
         creative_features: dict[str, Any] | None = None,
+        multi_advertiser: str | None = None,
     ) -> dict[str, Any]:
         """Create a standalone creative"""
         payload = self._build_payload(
@@ -150,6 +151,7 @@ class AdCreativesResource:
             carousel_cards=carousel_cards,
             url_tags=url_tags,
             creative_features=creative_features,
+            multi_advertiser=multi_advertiser,
         )
         return self._client._post("/v1/ads/creatives", data=payload)
 
@@ -297,6 +299,7 @@ class AdCreativesResource:
         carousel_cards: list[dict[str, Any]] | None = None,
         url_tags: str | None = None,
         creative_features: dict[str, Any] | None = None,
+        multi_advertiser: str | None = None,
     ) -> dict[str, Any]:
         """Create a standalone creative (async)"""
         payload = self._build_payload(
@@ -312,6 +315,7 @@ class AdCreativesResource:
             carousel_cards=carousel_cards,
             url_tags=url_tags,
             creative_features=creative_features,
+            multi_advertiser=multi_advertiser,
         )
         return await self._client._apost("/v1/ads/creatives", data=payload)
 

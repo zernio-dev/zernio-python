@@ -390,9 +390,12 @@ Both `from zernio import ...` and `from late import ...` work identically. The `
 | `ad_accounts.list_ad_labels()` | Ad labels |
 | `ad_accounts.list_ad_studies()` | A/B tests and lift studies |
 | `ad_accounts.list_ads_business_centers()` | List TikTok Business Centers |
+| `ad_accounts.list_custom_conversions()` | List custom conversions |
 | `ad_accounts.list_high_demand_periods()` | High demand periods / budget schedules |
 | `ad_accounts.list_meta_businesses()` | Businesses list |
 | `ad_accounts.list_value_rule_sets()` | List value rule sets |
+| `ad_accounts.create_custom_conversion()` | Create or reuse a custom conversion |
+| `ad_accounts.create_high_demand_period()` | Schedule a budget increase |
 | `ad_accounts.create_value_rule_set()` | Create a value rule set |
 | `ad_accounts.get_ad_account_finance()` | Ad account finances |
 | `ad_accounts.get_ad_comments()` | List comments on an ad |

@@ -1515,6 +1515,54 @@ def register_generated_tools(mcp, _get_client):
 
     @mcp.tool(
         annotations=ToolAnnotations(
+            title="Schedule a budget increase",
+            readOnlyHint=False,
+            destructiveHint=True,
+            openWorldHint=True,
+        )
+    )
+    def ad_accounts_create_high_demand_period(
+        account_id: str,
+        budget_value: float,
+        budget_value_type: str,
+        time_start: int,
+        time_end: int,
+        campaign_id: str | None = None,
+        ad_set_id: str | None = None,
+        recurrence_type: str | None = None,
+        currency: str | None = None,
+    ) -> str:
+        """Schedule a budget increase
+
+        Args:
+            account_id: Zernio SocialAccount id used to resolve the Meta token. (required)
+            campaign_id: Platform campaign id. Exactly one of campaignId / adSetId.
+            ad_set_id: Platform ad set id. Exactly one of campaignId / adSetId.
+            budget_value: With ABSOLUTE, a budget in the ad account's currency in WHOLE units (50 = $50.00). With MULTIPLIER, a factor of the existing budget (2 = double it) and NOT a currency amount. (required)
+            budget_value_type: (required)
+            time_start: Unix seconds, on a 15-minute boundary (:00, :15, :30, :45). (required)
+            time_end: Unix seconds, on a 15-minute boundary and after timeStart. (required)
+            recurrence_type
+            currency: Ad account currency, for the ABSOLUTE minor-unit conversion. Ignored for MULTIPLIER."""
+        client = _get_client()
+        try:
+            response = client.ad_accounts.create_high_demand_period(
+                account_id=account_id,
+                campaign_id=campaign_id,
+                ad_set_id=ad_set_id,
+                budget_value=budget_value,
+                budget_value_type=budget_value_type,
+                time_start=time_start,
+                time_end=time_end,
+                recurrence_type=recurrence_type,
+                currency=currency,
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
             title="List value rule sets",
             readOnlyHint=True,
             destructiveHint=False,
@@ -1780,6 +1828,68 @@ def register_generated_tools(mcp, _get_client):
         try:
             response = client.ad_accounts.get_dsa_recommendations(
                 account_id=account_id, ad_account_id=ad_account_id
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="List custom conversions",
+            readOnlyHint=True,
+            destructiveHint=False,
+            openWorldHint=False,
+        )
+    )
+    def ad_accounts_list_custom_conversions(account_id: str, ad_account_id: str) -> str:
+        """List custom conversions
+
+        Args:
+            account_id: Meta ads SocialAccount id. (required)
+            ad_account_id: Meta ad account id (act_<n>). (required)"""
+        client = _get_client()
+        try:
+            response = client.ad_accounts.list_custom_conversions(
+                account_id=account_id, ad_account_id=ad_account_id
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Create or reuse a custom conversion",
+            readOnlyHint=False,
+            destructiveHint=True,
+            openWorldHint=True,
+        )
+    )
+    def ad_accounts_create_custom_conversion(
+        account_id: str,
+        ad_account_id: str,
+        name: str,
+        pixel_id: str,
+        custom_event_type: str,
+        rule: dict[str, Any] | None,
+    ) -> str:
+        """Create or reuse a custom conversion
+
+        Args:
+            account_id: Meta ads SocialAccount id. (required)
+            ad_account_id: Meta ad account id (act_<n>). (required)
+            name: Also the reuse key, together with pixelId. (required)
+            pixel_id: Meta pixel id (event_source_id). From GET /v1/accounts/{accountId}/tracking-tags. (required)
+            custom_event_type: Meta custom_event_type, e.g. LEAD, PURCHASE, OTHER. (required)
+            rule: Meta conversion rule, forwarded verbatim. (required)"""
+        client = _get_client()
+        try:
+            response = client.ad_accounts.create_custom_conversion(
+                account_id=account_id,
+                ad_account_id=ad_account_id,
+                name=name,
+                pixel_id=pixel_id,
+                custom_event_type=custom_event_type,
+                rule=rule,
             )
             return _format_response(response)
         except Exception as e:
@@ -2963,6 +3073,7 @@ def register_generated_tools(mcp, _get_client):
         buying_type: str | None = None,
         rf_prediction_id: str | None = None,
         creative_features: dict[str, Any] | None = None,
+        multi_advertiser: str | None = None,
         validate_only: bool | None = None,
         budget_amount: float | None = None,
         budget_type: str | None = None,
@@ -3066,6 +3177,7 @@ def register_generated_tools(mcp, _get_client):
                 buying_type: Meta only. RESERVED = Reach & Frequency: requires `rfPredictionId` (a RESERVED prediction from /v1/ads/rf-predictions + /reserve). Budget, schedule and pricing come from the reservation, so budgetAmount/budgetType are not required and bid fields are ignored. Only the plain single-ad shape (no creatives[], adSetId, existingCampaignId or dynamicCreative).
                 rf_prediction_id: Meta only. The RESERVED prediction id the R&F ad set runs on (reserving mints a new id — pass that one). Requires buyingType RESERVED.
                 creative_features: Meta only. Advantage+ creative enhancements: a partial map of Meta creative feature keys (snake_case, e.g. enhance_cta, image_brightness_and_contrast, text_optimizations) to enroll status, forwarded as degrees_of_freedom_spec.creative_features_spec. Meta validates the keys; unspecified features default to OPT_OUT. The legacy standard_enhancements bundle is deprecated by Meta and rejected.
+                multi_advertiser: Meta only. Multi-advertiser ads: whether Meta may show this ad alongside other advertisers' in one unit. Meta auto-enrols since Aug 2024, so send OPT_OUT to leave. It is a top-level creative field, NOT a `creativeFeatures` key — Meta rejects it there.
                 validate_only: Meta only, single standalone shape only (no creatives[], adSetId, or RESERVED). Dry-run: each node runs Meta's execution_options validate_only and NOTHING is created or persisted. Children need real parents, so a fresh tree validates the campaign + creative (the ad set needs its campaign to exist — pass existingCampaignId to validate it too; the ad itself is never validatable pre-create). A Meta validation failure returns the 400 verbatim; success returns 200 with per-node results instead of an ad.
                 budget_amount: Budget in WHOLE currency units (USD: 50 = $50.00), NOT cents — Meta's own Marketing API takes this same number in minor units, so it is an easy and expensive mix-up. Required on legacy + multi-creative shapes. Inherited on attach. OpenAI Ads requires a $1 minimum (its budget is lifetime-only, see budgetType).
                 budget_type: Required on legacy + multi-creative shapes. Inherited on attach. OpenAI Ads accepts lifetime only (no daily-budget concept on the platform); sending daily returns 422. OpenAI Ads lifetime budgets require `endDate` to give the lifetime cap a spend window.
@@ -3391,6 +3503,7 @@ def register_generated_tools(mcp, _get_client):
                 buying_type=buying_type,
                 rf_prediction_id=rf_prediction_id,
                 creative_features=creative_features,
+                multi_advertiser=multi_advertiser,
                 validate_only=validate_only,
                 budget_amount=budget_amount,
                 budget_type=budget_type,
@@ -3580,6 +3693,7 @@ def register_generated_tools(mcp, _get_client):
         carousel_cards: list[dict[str, Any]] | None = None,
         url_tags: str | None = None,
         creative_features: dict[str, Any] | None = None,
+        multi_advertiser: str | None = None,
     ) -> str:
         """Create a standalone creative
 
@@ -3595,7 +3709,8 @@ def register_generated_tools(mcp, _get_client):
             image_hash: Existing library image hash (POST /v1/ads/images or GET /v1/ads/images).
             carousel_cards
             url_tags: Appended to every outbound URL (e.g. utm_source=fb).
-            creative_features: Advantage+ creative enhancements: partial map of Meta creative feature keys (snake_case) to enroll status, forwarded as degrees_of_freedom_spec.creative_features_spec. Unspecified features default to OPT_OUT."""
+            creative_features: Advantage+ creative enhancements: partial map of Meta creative feature keys (snake_case) to enroll status, forwarded as degrees_of_freedom_spec.creative_features_spec. Unspecified features default to OPT_OUT.
+            multi_advertiser: Meta only. Multi-advertiser ads: whether Meta may show this ad alongside other advertisers' in one unit. Meta auto-enrols since Aug 2024, so send OPT_OUT to leave. It is a top-level creative field, NOT a `creativeFeatures` key — Meta rejects it there."""
         client = _get_client()
         try:
             response = client.ad_creatives.create_ad_creative(
@@ -3611,6 +3726,7 @@ def register_generated_tools(mcp, _get_client):
                 carousel_cards=carousel_cards,
                 url_tags=url_tags,
                 creative_features=creative_features,
+                multi_advertiser=multi_advertiser,
             )
             return _format_response(response)
         except Exception as e:

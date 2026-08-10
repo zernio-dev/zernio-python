@@ -185,6 +185,33 @@ class AdAccountsResource:
         )
         return self._client._get("/v1/ads/high-demand-periods", params=params)
 
+    def create_high_demand_period(
+        self,
+        account_id: str,
+        budget_value: float,
+        budget_value_type: str,
+        time_start: int,
+        time_end: int,
+        *,
+        campaign_id: str | None = None,
+        ad_set_id: str | None = None,
+        recurrence_type: str | None = None,
+        currency: str | None = None,
+    ) -> dict[str, Any]:
+        """Schedule a budget increase"""
+        payload = self._build_payload(
+            account_id=account_id,
+            campaign_id=campaign_id,
+            ad_set_id=ad_set_id,
+            budget_value=budget_value,
+            budget_value_type=budget_value_type,
+            time_start=time_start,
+            time_end=time_end,
+            recurrence_type=recurrence_type,
+            currency=currency,
+        )
+        return self._client._post("/v1/ads/high-demand-periods", data=payload)
+
     def list_value_rule_sets(
         self,
         account_id: str,
@@ -309,6 +336,38 @@ class AdAccountsResource:
         )
         return self._client._get("/v1/ads/dsa-recommendations", params=params)
 
+    def list_custom_conversions(
+        self, account_id: str, ad_account_id: str
+    ) -> dict[str, Any]:
+        """List custom conversions"""
+        params = self._build_params(
+            ad_account_id=ad_account_id,
+        )
+        return self._client._get(
+            f"/v1/accounts/{account_id}/custom-conversions", params=params
+        )
+
+    def create_custom_conversion(
+        self,
+        account_id: str,
+        ad_account_id: str,
+        name: str,
+        pixel_id: str,
+        custom_event_type: str,
+        rule: dict[str, Any],
+    ) -> dict[str, Any]:
+        """Create or reuse a custom conversion"""
+        payload = self._build_payload(
+            ad_account_id=ad_account_id,
+            name=name,
+            pixel_id=pixel_id,
+            custom_event_type=custom_event_type,
+            rule=rule,
+        )
+        return self._client._post(
+            f"/v1/accounts/{account_id}/custom-conversions", data=payload
+        )
+
     async def aget_ad_comments(
         self,
         ad_id: str,
@@ -420,6 +479,33 @@ class AdAccountsResource:
             after=after,
         )
         return await self._client._aget("/v1/ads/high-demand-periods", params=params)
+
+    async def acreate_high_demand_period(
+        self,
+        account_id: str,
+        budget_value: float,
+        budget_value_type: str,
+        time_start: int,
+        time_end: int,
+        *,
+        campaign_id: str | None = None,
+        ad_set_id: str | None = None,
+        recurrence_type: str | None = None,
+        currency: str | None = None,
+    ) -> dict[str, Any]:
+        """Schedule a budget increase (async)"""
+        payload = self._build_payload(
+            account_id=account_id,
+            campaign_id=campaign_id,
+            ad_set_id=ad_set_id,
+            budget_value=budget_value,
+            budget_value_type=budget_value_type,
+            time_start=time_start,
+            time_end=time_end,
+            recurrence_type=recurrence_type,
+            currency=currency,
+        )
+        return await self._client._apost("/v1/ads/high-demand-periods", data=payload)
 
     async def alist_value_rule_sets(
         self,
@@ -546,3 +632,35 @@ class AdAccountsResource:
             ad_account_id=ad_account_id,
         )
         return await self._client._aget("/v1/ads/dsa-recommendations", params=params)
+
+    async def alist_custom_conversions(
+        self, account_id: str, ad_account_id: str
+    ) -> dict[str, Any]:
+        """List custom conversions (async)"""
+        params = self._build_params(
+            ad_account_id=ad_account_id,
+        )
+        return await self._client._aget(
+            f"/v1/accounts/{account_id}/custom-conversions", params=params
+        )
+
+    async def acreate_custom_conversion(
+        self,
+        account_id: str,
+        ad_account_id: str,
+        name: str,
+        pixel_id: str,
+        custom_event_type: str,
+        rule: dict[str, Any],
+    ) -> dict[str, Any]:
+        """Create or reuse a custom conversion (async)"""
+        payload = self._build_payload(
+            ad_account_id=ad_account_id,
+            name=name,
+            pixel_id=pixel_id,
+            custom_event_type=custom_event_type,
+            rule=rule,
+        )
+        return await self._client._apost(
+            f"/v1/accounts/{account_id}/custom-conversions", data=payload
+        )
