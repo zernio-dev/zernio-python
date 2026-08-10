@@ -74,35 +74,23 @@ class MediaResource:
         return result
 
     def get_media_presigned_url(
-        self,
-        filename: str,
-        content_type: str,
-        *,
-        size: int | None = None,
-        permanent: bool | None = False,
+        self, filename: str, content_type: str, *, size: int | None = None
     ) -> dict[str, Any]:
         """Get upload URL"""
         payload = self._build_payload(
             filename=filename,
             content_type=content_type,
             size=size,
-            permanent=permanent,
         )
         return self._client._post("/v1/media/presign", data=payload)
 
     async def aget_media_presigned_url(
-        self,
-        filename: str,
-        content_type: str,
-        *,
-        size: int | None = None,
-        permanent: bool | None = False,
+        self, filename: str, content_type: str, *, size: int | None = None
     ) -> dict[str, Any]:
         """Get upload URL (async)"""
         payload = self._build_payload(
             filename=filename,
             content_type=content_type,
             size=size,
-            permanent=permanent,
         )
         return await self._client._apost("/v1/media/presign", data=payload)
