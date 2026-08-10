@@ -2957,18 +2957,29 @@ def register_generated_tools(mcp, _get_client):
         `targeting_automation` on ad set creation, so include it in the raw spec,
         or send `targeting.advantage_audience` (0 or 1), which is merged over raw
         as `targeting_automation`.
-                bid_strategy: Meta bid strategy applied to the ad set. On TikTok, mapped to
+                bid_strategy: Deprecated: send it inside `platformSpecificData` instead (Meta today; TikTok's nested shape is planned). The flat field keeps working during the deprecation window; sending both shapes returns a 400.
+
+        Meta bid strategy applied to the ad set. On TikTok, mapped to
         `bid_type` / `bid_price` / `deep_bid_type` automatically.
-                bid_amount: Bid cap in WHOLE currency units (USD: 5 = $5.00; JPY: 100 = ¥100). Required when
+                bid_amount: Deprecated: send it inside `platformSpecificData` instead (Meta today; TikTok's nested shape is planned). The flat field keeps working during the deprecation window; sending both shapes returns a 400.
+
+        Bid cap in WHOLE currency units (USD: 5 = $5.00; JPY: 100 = ¥100). Required when
         `bidStrategy` is `LOWEST_COST_WITH_BID_CAP` or `COST_CAP`. Backward-compat: providing
         `bidAmount` without `bidStrategy` is treated as `LOWEST_COST_WITH_BID_CAP`.
-                roas_average_floor: Minimum ROAS as a decimal multiplier (e.g. 2.0 = 2.0x ROAS). Required when
+                roas_average_floor: Deprecated: send it inside `platformSpecificData` instead (Meta today; TikTok's nested shape is planned). The flat field keeps working during the deprecation window; sending both shapes returns a 400.
+
+        Minimum ROAS as a decimal multiplier (e.g. 2.0 = 2.0x ROAS). Required when
         `bidStrategy` is `LOWEST_COST_WITH_MIN_ROAS`. Sent to Meta as
         `bid_constraints.roas_average_floor` × 10000 (Meta uses fixed-point integers).
                 platform_specific_data: Platform-specific options. The platform is derived from `accountId`;
         sending options for a different platform returns a 400. LinkedIn
-        (campaign bidding and delivery controls) is the only platform with
-        options today.
+        (campaign bidding and delivery controls) and Meta (the bid trio)
+        have options today.
+
+        **Meta**: `bidStrategy`, `bidAmount` and `roasAverageFloor` may be
+        sent here instead of at the root — the preferred home going forward.
+        Sending the bid fields in BOTH places returns a 400
+        (`mutually_exclusive_fields`).
                 tracking: Meta only. Tracking specs (pixel, URL tags).
                 special_ad_categories: Meta only. Required for housing, employment, credit, or political ads.
                 special_ad_category_country: Meta (metaads) only. 2-letter ISO country codes the special ad category applies to. Requires specialAdCategories to be set (400 otherwise).
@@ -3405,10 +3416,16 @@ def register_generated_tools(mcp, _get_client):
         surface as a Meta 400.
         Example: `[{ "eventType": "CLICK_THROUGH", "windowDays": 7 }, { "eventType": "VIEW_THROUGH", "windowDays": 1 }]`
                 gender: Restrict the audience by gender. 'male' targets men only, 'female' targets women only, 'all' (default) targets everyone. Applied on Meta, TikTok and Pinterest. Ignored on Google, LinkedIn and X.
-                bid_strategy: Meta bid strategy applied to the ad set.
-                bid_amount: Bid cap in WHOLE currency units (USD: 5 = $5.00; JPY: 100 = ¥100). Required when
+                bid_strategy: Deprecated: send it inside `platformSpecificData` instead (Meta today; TikTok's nested shape is planned). The flat field keeps working during the deprecation window; sending both shapes returns a 400.
+
+        Meta bid strategy applied to the ad set.
+                bid_amount: Deprecated: send it inside `platformSpecificData` instead (Meta today; TikTok's nested shape is planned). The flat field keeps working during the deprecation window; sending both shapes returns a 400.
+
+        Bid cap in WHOLE currency units (USD: 5 = $5.00; JPY: 100 = ¥100). Required when
         `bidStrategy` is `LOWEST_COST_WITH_BID_CAP` or `COST_CAP`.
-                roas_average_floor: Minimum ROAS as a decimal multiplier (e.g. 2.0 = 2.0x ROAS). Required when
+                roas_average_floor: Deprecated: send it inside `platformSpecificData` instead (Meta today; TikTok's nested shape is planned). The flat field keeps working during the deprecation window; sending both shapes returns a 400.
+
+        Minimum ROAS as a decimal multiplier (e.g. 2.0 = 2.0x ROAS). Required when
         `bidStrategy` is `LOWEST_COST_WITH_MIN_ROAS`. Sent to Meta as
         `bid_constraints.roas_average_floor` × 10000.
                 value_rule_set_id: Meta only (facebook, instagram; other platforms return 400). Value rule set
@@ -3431,8 +3448,13 @@ def register_generated_tools(mcp, _get_client):
         `PUT /v1/ads/ad-sets/{adSetId}`.
                 platform_specific_data: Platform-specific options. The platform is derived from `accountId`;
         sending options for a different platform returns a 400. LinkedIn
-        (campaign bidding and delivery controls) is the only platform with
-        options today.
+        (campaign bidding and delivery controls) and Meta (the bid trio)
+        have options today.
+
+        **Meta**: `bidStrategy`, `bidAmount` and `roasAverageFloor` may be
+        sent here instead of at the root — the preferred home going forward.
+        Sending the bid fields in BOTH places returns a 400
+        (`mutually_exclusive_fields`).
                 dsa_beneficiary: Legal entity that benefits from the ad. Required when targeting EU users
         (EU DSA, Article 26). Optional if the ad account has a default beneficiary:
         set it once via `PATCH /v1/ads/accounts` or in Meta Ads Manager, and Meta
@@ -3925,6 +3947,48 @@ def register_generated_tools(mcp, _get_client):
             return f"Error: {e}"
 
     # AD_INSIGHTS
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Google Ads search terms report",
+            readOnlyHint=True,
+            destructiveHint=False,
+            openWorldHint=False,
+        )
+    )
+    def ad_insights_get_ads_search_terms(
+        account_id: str,
+        customer_id: str | None = None,
+        from_date: str | None = None,
+        to_date: str | None = None,
+        campaign_id: str | None = None,
+        ad_group_id: str | None = None,
+        page_token: str | None = None,
+    ) -> str:
+        """Google Ads search terms report
+
+        Args:
+            account_id: Google ads SocialAccount id. (required)
+            customer_id: Numeric Google Ads customer id (no dashes). Defaults to the account's connected customer.
+            from_date: Defaults to 30 days ago.
+            to_date: Defaults to today.
+            campaign_id: Numeric Google campaign id filter.
+            ad_group_id: Numeric Google ad group id filter.
+            page_token: Cursor from paging.nextPageToken of the previous page."""
+        client = _get_client()
+        try:
+            response = client.ad_insights.get_ads_search_terms(
+                account_id=account_id,
+                customer_id=customer_id,
+                from_date=from_date,
+                to_date=to_date,
+                campaign_id=campaign_id,
+                ad_group_id=ad_group_id,
+                page_token=page_token,
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
 
     @mcp.tool(
         annotations=ToolAnnotations(

@@ -73,6 +73,29 @@ class AdInsightsResource:
                 result[to_camel(k)] = v
         return result
 
+    def get_ads_search_terms(
+        self,
+        account_id: str,
+        *,
+        customer_id: str | None = None,
+        from_date: str | None = None,
+        to_date: str | None = None,
+        campaign_id: str | None = None,
+        ad_group_id: str | None = None,
+        page_token: str | None = None,
+    ) -> dict[str, Any]:
+        """Google Ads search terms report"""
+        params = self._build_params(
+            account_id=account_id,
+            customer_id=customer_id,
+            from_date=from_date,
+            to_date=to_date,
+            campaign_id=campaign_id,
+            ad_group_id=ad_group_id,
+            page_token=page_token,
+        )
+        return self._client._get("/v1/ads/search-terms", params=params)
+
     def get_campaign_analytics(
         self,
         campaign_id: str,
@@ -264,6 +287,29 @@ class AdInsightsResource:
             breakdowns=breakdowns,
         )
         return self._client._get(f"/v1/ads/{ad_id}/analytics", params=params)
+
+    async def aget_ads_search_terms(
+        self,
+        account_id: str,
+        *,
+        customer_id: str | None = None,
+        from_date: str | None = None,
+        to_date: str | None = None,
+        campaign_id: str | None = None,
+        ad_group_id: str | None = None,
+        page_token: str | None = None,
+    ) -> dict[str, Any]:
+        """Google Ads search terms report (async)"""
+        params = self._build_params(
+            account_id=account_id,
+            customer_id=customer_id,
+            from_date=from_date,
+            to_date=to_date,
+            campaign_id=campaign_id,
+            ad_group_id=ad_group_id,
+            page_token=page_token,
+        )
+        return await self._client._aget("/v1/ads/search-terms", params=params)
 
     async def aget_campaign_analytics(
         self,
