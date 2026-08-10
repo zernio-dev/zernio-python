@@ -2254,7 +2254,7 @@ def register_generated_tools(mcp, _get_client):
             budget_type
             status
             bid_strategy: Campaign bid strategy. Meta stores `bid_strategy` alongside the budget, so this REQUIRES `budgetAmount` + `budgetType` on the same request; sending it without a campaign budget is a 400. A campaign carrying a strategy without its `bid_amount` makes every ad set created under it fail with an error that names the ad set (code 100, subcode 1815857), so the bad state is rejected up front rather than accepted. To bid at ad-set level, set the strategy there instead.
-            bid_amount: Whole currency units (USD: 5 = $5.00). Required for LOWEST_COST_WITH_BID_CAP and COST_CAP; ignored otherwise.
+            bid_amount: Whole currency units (USD: 5 = $5.00). Required for LOWEST_COST_WITH_BID_CAP and COST_CAP; ignored otherwise. Validated here but NOT stored by Meta: the campaign object has no bid_amount field, only bid_strategy lives on it. The amount takes effect once an ad set joins this campaign (existingCampaignId on POST /v1/ads/create) and supplies its own bidAmount there.
             roas_average_floor: Decimal ROAS multiplier (2.0 = 2.0x). Required for LOWEST_COST_WITH_MIN_ROAS."""
         client = _get_client()
         try:
@@ -2612,7 +2612,10 @@ def register_generated_tools(mcp, _get_client):
         Not Implemented when bidStrategy is set.
                 bid_amount: Bid cap in WHOLE currency units (USD: 5 = $5.00; JPY: 100 = ¥100). Required when
         bidStrategy is LOWEST_COST_WITH_BID_CAP or COST_CAP. Internally converted to Meta's
-        smallest-denomination integer, or (on OpenAI) to micros (× 1,000,000).
+        smallest-denomination integer, or (on OpenAI) to micros (× 1,000,000). Meta only:
+        may be sent alone, WITHOUT bidStrategy, to update the cap amount on an ad set whose
+        parent campaign is COST_CAP or LOWEST_COST_WITH_BID_CAP (the strategy is inherited
+        from the campaign and is left untouched).
                 roas_average_floor: Minimum ROAS as a decimal multiplier (2.0 = 2.0x). Required when bidStrategy is
         LOWEST_COST_WITH_MIN_ROAS. Sent to Meta as `bid_constraints.roas_average_floor` × 10000.
         Not supported on OpenAI (422).
@@ -3422,12 +3425,22 @@ def register_generated_tools(mcp, _get_client):
                 bid_amount: Deprecated: send it inside `platformSpecificData` instead (Meta today; TikTok's nested shape is planned). The flat field keeps working during the deprecation window; sending both shapes returns a 400.
 
         Bid cap in WHOLE currency units (USD: 5 = $5.00; JPY: 100 = ¥100). Required when
-        `bidStrategy` is `LOWEST_COST_WITH_BID_CAP` or `COST_CAP`.
+        `bidStrategy` is `LOWEST_COST_WITH_BID_CAP` or `COST_CAP`. Meta only: sending
+        `bidAmount` WITHOUT `bidStrategy` requires `existingCampaignId` (400 otherwise),
+        and sets the new ad set's cap under the joined campaign's COST_CAP /
+        LOWEST_COST_WITH_BID_CAP parent. The strategy itself is inherited from the
+        campaign. Restating bidStrategy here is accepted but has no effect on the ad set.
+
+        Rejected with 400 in `adSetId` attach mode: that shape inherits its cap from
+        the platform. Use `PUT /v1/ads/ad-sets/{adSetId}` there instead.
                 roas_average_floor: Deprecated: send it inside `platformSpecificData` instead (Meta today; TikTok's nested shape is planned). The flat field keeps working during the deprecation window; sending both shapes returns a 400.
 
         Minimum ROAS as a decimal multiplier (e.g. 2.0 = 2.0x ROAS). Required when
-        `bidStrategy` is `LOWEST_COST_WITH_MIN_ROAS`. Sent to Meta as
-        `bid_constraints.roas_average_floor` × 10000.
+        `bidStrategy` is `LOWEST_COST_WITH_MIN_ROAS`. Sending it without `bidStrategy`
+        is a 400. Sent to Meta as
+        `bid_constraints.roas_average_floor` × 10000. Known gap: a CBO campaign's
+        ROAS floor lives on the campaign only (set via `POST /v1/ads/campaigns`);
+        there is no supported way to set it while joining a CBO campaign here.
                 value_rule_set_id: Meta only (facebook, instagram; other platforms return 400). Value rule set
         to attach to the new ad set, from `/v1/ads/value-rule-sets`. Attachment is
         driven by this id, so `valueRulesApplied` is optional alongside it.
@@ -3454,7 +3467,8 @@ def register_generated_tools(mcp, _get_client):
         **Meta**: `bidStrategy`, `bidAmount` and `roasAverageFloor` may be
         sent here instead of at the root — the preferred home going forward.
         Sending the bid fields in BOTH places returns a 400
-        (`mutually_exclusive_fields`).
+        (`mutually_exclusive_fields`), and sending any of them in
+        `adSetId` attach mode is a 400 too (the ad set already has its bid).
                 dsa_beneficiary: Legal entity that benefits from the ad. Required when targeting EU users
         (EU DSA, Article 26). Optional if the ad account has a default beneficiary:
         set it once via `PATCH /v1/ads/accounts` or in Meta Ads Manager, and Meta
