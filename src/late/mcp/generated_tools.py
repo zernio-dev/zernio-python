@@ -10267,18 +10267,25 @@ def register_generated_tools(mcp, _get_client):
         )
     )
     def media_get_media_presigned_url(
-        filename: str, content_type: str, size: int | None = None
+        filename: str,
+        content_type: str,
+        size: int | None = None,
+        permanent: bool = False,
     ) -> str:
         """Get upload URL
 
         Args:
             filename: Name of the file to upload (required)
             content_type: MIME type of the file (required)
-            size: Optional file size in bytes for pre-validation (max 5GB)"""
+            size: Optional file size in bytes for pre-validation (max 5GB)
+            permanent: Write the file to permanent storage instead of temporary storage. Temporary files auto-delete 7 days after upload; permanent files never expire."""
         client = _get_client()
         try:
             response = client.media.get_media_presigned_url(
-                filename=filename, content_type=content_type, size=size
+                filename=filename,
+                content_type=content_type,
+                size=size,
+                permanent=permanent,
             )
             return _format_response(response)
         except Exception as e:
