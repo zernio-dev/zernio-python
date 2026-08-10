@@ -83,6 +83,24 @@ class InstagramResource:
             f"/v1/accounts/{account_id}/instagram/publishing-limit"
         )
 
+    def search_instagram_audio(
+        self, account_id: str, audio_type: str, *, q: str | None = None
+    ) -> dict[str, Any]:
+        """Search Instagram audio"""
+        params = self._build_params(
+            audio_type=audio_type,
+            q=q,
+        )
+        return self._client._get(
+            f"/v1/accounts/{account_id}/instagram/audio", params=params
+        )
+
+    def get_instagram_audio(self, account_id: str, audio_id: str) -> dict[str, Any]:
+        """Get Instagram audio metadata"""
+        return self._client._get(
+            f"/v1/accounts/{account_id}/instagram/audio/{audio_id}"
+        )
+
     def get_instagram_story_insights(
         self, account_id: str, story_id: str
     ) -> dict[str, Any]:
@@ -99,6 +117,26 @@ class InstagramResource:
         """Get Instagram publishing limit (async)"""
         return await self._client._aget(
             f"/v1/accounts/{account_id}/instagram/publishing-limit"
+        )
+
+    async def asearch_instagram_audio(
+        self, account_id: str, audio_type: str, *, q: str | None = None
+    ) -> dict[str, Any]:
+        """Search Instagram audio (async)"""
+        params = self._build_params(
+            audio_type=audio_type,
+            q=q,
+        )
+        return await self._client._aget(
+            f"/v1/accounts/{account_id}/instagram/audio", params=params
+        )
+
+    async def aget_instagram_audio(
+        self, account_id: str, audio_id: str
+    ) -> dict[str, Any]:
+        """Get Instagram audio metadata (async)"""
+        return await self._client._aget(
+            f"/v1/accounts/{account_id}/instagram/audio/{audio_id}"
         )
 
     async def aget_instagram_story_insights(

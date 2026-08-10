@@ -4873,8 +4873,29 @@ components:
                 example: 0
         audioName:
           type: string
-          description: Custom name for original audio in Reels. Replaces the default "Original Audio" label. Can only be set once.
+          description: 'Custom name for original audio in Reels. Replaces the default "Original Audio" label. Can only be set once. Unrelated to audioConfiguration, which attaches a catalog track.'
           example: "My Podcast Intro"
+        audioConfiguration:
+          type: object
+          description: 'Attach a licensed music track or original sound from the Instagram audio catalog to a Reel. Reels only (single video post, not a story or image). Requires an Instagram account connected via Facebook Login; classic Instagram Login accounts get a 400 (instagram_audio_requires_facebook_login). Get audio IDs from GET /v1/accounts/{accountId}/instagram/audio. If the track becomes unavailable by publish time (removed, region-blocked, licensing change), the post fails with a user-error; it is not published without the audio.'
+          required: [audioId]
+          properties:
+            audioId:
+              type: string
+              description: 'Audio asset ID from the audio search endpoint.'
+              example: "482851939985510"
+            audioVolume:
+              type: integer
+              minimum: 0
+              maximum: 100
+              description: 'Volume of the attached audio track, 0-100. Defaults to 100.'
+              example: 80
+            videoVolume:
+              type: integer
+              minimum: 0
+              maximum: 100
+              description: 'Volume of the video''s own sound, 0-100. Defaults to 100. Set 0 to mute the original video audio.'
+              example: 100
         thumbOffset:
           type: integer
           minimum: 0
@@ -4893,6 +4914,25 @@ components:
           default: false
           description: When true, the post is labeled by Instagram as containing AI-generated media. Per Meta, this self-disclosure label is for AI-generated media, not AI-written captions. Applies to feed posts, Reels, Stories, and carousels.
       description: Feed aspect ratio 0.8-1.91, carousels up to 10 items, stories require media (no captions). User tag coordinates 0.0-1.0 from top-left. Images over 8 MB and videos over platform limits are auto-compressed.
+
+    InstagramAudioAsset:
+      type: object
+      description: 'One asset from the Instagram audio catalog. Licensed music carries artist/artwork fields; original sounds carry creator fields instead, so most fields are nullable.'
+      properties:
+        audioId:
+          type: string
+          description: 'Audio asset ID. Pass it as platformSpecificData.audioConfiguration.audioId when creating a Reel.'
+          example: "482851939985510"
+        title: { type: [string, "null"], description: 'Track or sound title.' }
+        audioType: { type: [string, "null"], enum: [music, original_sound, null], description: 'Catalog type of the asset.' }
+        durationInMs: { type: [integer, "null"], description: 'Asset duration in milliseconds.' }
+        displayArtist: { type: [string, "null"], description: 'Artist name (licensed music only).' }
+        coverArtworkThumbnailUrl: { type: [string, "null"], description: 'Cover artwork thumbnail (licensed music only).' }
+        downloadUrl: { type: [string, "null"], description: 'Temporary preview URL. Meta expires it after roughly 1.5 days; re-fetch the asset to refresh it.' }
+        igUsername: { type: [string, "null"], description: 'Creator username (original sounds only).' }
+        profilePictureUrl: { type: [string, "null"], description: 'Creator profile picture (original sounds only).' }
+        isAdsEligible: { type: [boolean, "null"], description: 'Whether the asset is eligible for ads use.' }
+        onPlatformAudioPreviewLink: { type: [string, "null"], description: 'Instagram web link to preview the audio.' }
 
     LinkedInPlatformData:
       type: object
@@ -20587,6 +20627,96 @@ paths:
                 quotaTotal: 50
                 quotaDurationSeconds: 86400
         '400': { description: Not an Instagram account }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404': { description: Account not found }
+        '502': { description: Instagram rejected the request }
+
+  /v1/accounts/{accountId}/instagram/audio:
+    get:
+      x-resource-group: "accounts"
+      operationId: searchInstagramAudio
+      tags: [Instagram]
+      summary: Search Instagram audio
+      description: |
+        Search Instagram's audio catalog (licensed music or original sounds),
+        or list what is currently trending by omitting `q`. Returns up to ~30
+        assets; Meta exposes no pagination on this edge.
+
+        Pass the returned `audioId` as
+        `platformSpecificData.audioConfiguration.audioId` when creating a Reel
+        to publish it with that track.
+
+        Requires an Instagram account connected via **Facebook Login**. Meta
+        hosts this catalog on graph.facebook.com only, so accounts connected
+        with classic Instagram Login receive a 400
+        (`instagram_audio_requires_facebook_login`) and must be reconnected
+        choosing the Facebook option.
+      parameters:
+        - name: accountId
+          in: path
+          required: true
+          description: The ID of the Instagram account
+          schema: { type: string }
+        - name: audioType
+          in: query
+          required: true
+          description: 'Catalog to search: licensed music or original sounds from Reels.'
+          schema: { type: string, enum: [music, original_sound] }
+        - name: q
+          in: query
+          required: false
+          description: 'Search keywords. Omit to get the current trending list.'
+          schema: { type: string, minLength: 1, maxLength: 200 }
+      responses:
+        '200':
+          description: Matching audio assets (may be empty)
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  audio:
+                    type: array
+                    items: { $ref: '#/components/schemas/InstagramAudioAsset' }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404': { description: Account not found }
+        '502': { description: Instagram rejected the request }
+
+  /v1/accounts/{accountId}/instagram/audio/{audioId}:
+    get:
+      x-resource-group: "accounts"
+      operationId: getInstagramAudio
+      tags: [Instagram]
+      summary: Get Instagram audio metadata
+      description: |
+        Fetch one audio asset's metadata by ID. Use it to re-validate a stored
+        `audioId` before a scheduled Reel publishes, or to refresh the preview
+        `downloadUrl` (Meta expires preview URLs after roughly 1.5 days).
+
+        Same connection requirement as the search endpoint: Facebook-Login
+        Instagram accounts only.
+      parameters:
+        - name: accountId
+          in: path
+          required: true
+          description: The ID of the Instagram account
+          schema: { type: string }
+        - name: audioId
+          in: path
+          required: true
+          description: Instagram audio asset ID
+          schema: { type: string, pattern: '^\d{1,30}$' }
+      responses:
+        '200':
+          description: The audio asset
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  audio: { $ref: '#/components/schemas/InstagramAudioAsset' }
+        '400': { $ref: '#/components/responses/BadRequest' }
         '401': { $ref: '#/components/responses/Unauthorized' }
         '404': { description: Account not found }
         '502': { description: Instagram rejected the request }

@@ -10080,6 +10080,55 @@ def register_generated_tools(mcp, _get_client):
 
     @mcp.tool(
         annotations=ToolAnnotations(
+            title="Search Instagram audio",
+            readOnlyHint=True,
+            destructiveHint=False,
+            openWorldHint=False,
+        )
+    )
+    def instagram_search_instagram_audio(
+        account_id: str, audio_type: str, q: str | None = None
+    ) -> str:
+        """Search Instagram audio
+
+        Args:
+            account_id: The ID of the Instagram account (required)
+            audio_type: Catalog to search: licensed music or original sounds from Reels. (required)
+            q: Search keywords. Omit to get the current trending list."""
+        client = _get_client()
+        try:
+            response = client.instagram.search_instagram_audio(
+                account_id=account_id, audio_type=audio_type, q=q
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Get Instagram audio metadata",
+            readOnlyHint=True,
+            destructiveHint=False,
+            openWorldHint=False,
+        )
+    )
+    def instagram_get_instagram_audio(account_id: str, audio_id: str) -> str:
+        """Get Instagram audio metadata
+
+        Args:
+            account_id: The ID of the Instagram account (required)
+            audio_id: Instagram audio asset ID (required)"""
+        client = _get_client()
+        try:
+            response = client.instagram.get_instagram_audio(
+                account_id=account_id, audio_id=audio_id
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
             title="Get Instagram story insights",
             readOnlyHint=True,
             destructiveHint=False,
