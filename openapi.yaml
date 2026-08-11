@@ -38079,7 +38079,12 @@ paths:
         - **Meta** (Facebook + Instagram): all fields supported.
         - **TikTok**: status, budget, targeting (via `/v2/adgroup/update/`), and creative
           (via `/v2/ad/update/` patch-style — `headline` is ignored, `body` becomes `ad_text`).
-        - **Pinterest / X / LinkedIn / Google / OpenAI Ads**: status + budget only. Sending
+        - **Google**: status, budget, and KEYWORD edits via `targeting.keywords` /
+          `targeting.negativeKeywords` — each list you send becomes the FULL new set of its
+          kind on the ad group (criteria not in the list are removed); a kind left out is
+          untouched. Any other `targeting` field returns 400: Google cannot mutate broad
+          targeting post-create without recreating the campaign. `creative` returns 501.
+        - **Pinterest / X / LinkedIn / OpenAI Ads**: status + budget only. Sending
           `targeting` or `creative` returns 501 with code `unsupported_platform_operation`.
           OpenAI Ads budget is lifetime-only (see `budget.type` below).
       security:
@@ -38102,8 +38107,23 @@ paths:
                 targeting:
                   type: object
                   description: |
-                    Meta + TikTok only. Pinterest / X / LinkedIn / Google return 501.
+                    Meta + TikTok (demographics/interests) and Google (keyword edits only).
+                    Pinterest / X / LinkedIn return 501.
                   properties:
+                    keywords:
+                      type: array
+                      description: "Google only. The FULL new set of positive keywords for the ad group; live keywords not listed are removed. Entries are strings (BROAD) or { text, matchType } with matchType exact | phrase | broad. Mirrored to GET /v1/ads/keywords immediately."
+                      items:
+                        oneOf:
+                          - { type: string }
+                          - { type: object, required: [text], properties: { text: { type: string, maxLength: 80 }, matchType: { type: string, enum: [exact, phrase, broad] } } }
+                    negativeKeywords:
+                      type: array
+                      description: "Google only. Same declarative contract as keywords, for the ad group's negative keywords."
+                      items:
+                        oneOf:
+                          - { type: string }
+                          - { type: object, required: [text], properties: { text: { type: string, maxLength: 80 }, matchType: { type: string, enum: [exact, phrase, broad] } } }
                     ageMin: { type: integer, minimum: 13, maximum: 65 }
                     ageMax: { type: integer, minimum: 13, maximum: 65 }
                     countries: { type: array, items: { type: string } }
@@ -41000,7 +41020,8 @@ paths:
                                 items: { type: string, enum: [mobile, desktop] }
                 audienceId: { type: string, description: Custom audience ID for targeting }
                 campaignType: { type: string, enum: [display, search], default: display, description: Google only }
-                keywords: { type: array, items: { type: string }, description: Google Search only }
+                keywords: { type: array, items: { type: string }, description: "Google Search only. BROAD-match keywords on the new ad group (first 20)." }
+                negativeKeywords: { type: array, items: { type: string, maxLength: 80 }, description: "Google Search only; other platforms return 400. BROAD-match negative keywords on the new ad group. Editable later via PUT /v1/ads/{adId} targeting.negativeKeywords." }
                 additionalHeadlines: { type: array, items: { type: string }, description: "Google Search RSA only. Extra headlines." }
                 additionalDescriptions: { type: array, items: { type: string }, description: "Google Search RSA only. Extra descriptions." }
                 advantageAudience: { type: integer, enum: [0, 1], description: "Meta only. Controls the Advantage audience feature (targeting_automation). 0 = disabled (default), 1 = enabled. Meta Marketing API requires this field on all ad set creation requests." }

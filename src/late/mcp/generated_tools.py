@@ -2819,7 +2819,8 @@ def register_generated_tools(mcp, _get_client):
                 ad_id: (required)
                 status
                 budget
-                targeting: Meta + TikTok only. Pinterest / X / LinkedIn / Google return 501.
+                targeting: Meta + TikTok (demographics/interests) and Google (keyword edits only).
+        Pinterest / X / LinkedIn return 501.
                 creative: Replace the ad's creative. Meta + TikTok only.
 
         - **Meta**: requires `headline`, `body`, `callToAction`, `linkUrl`, `imageUrl`. The
@@ -3140,6 +3141,7 @@ def register_generated_tools(mcp, _get_client):
         audience_id: str | None = None,
         campaign_type: str = "display",
         keywords: list[str] | None = None,
+        negative_keywords: list[str] | None = None,
         additional_headlines: list[str] | None = None,
         additional_descriptions: list[str] | None = None,
         advantage_audience: int | None = None,
@@ -3405,7 +3407,8 @@ def register_generated_tools(mcp, _get_client):
         posters; Meta auto-generates when omitted). Exactly one catch-all default is required.
                 audience_id: Custom audience ID for targeting
                 campaign_type: Google only
-                keywords: Google Search only
+                keywords: Google Search only. BROAD-match keywords on the new ad group (first 20).
+                negative_keywords: Google Search only; other platforms return 400. BROAD-match negative keywords on the new ad group. Editable later via PUT /v1/ads/{adId} targeting.negativeKeywords.
                 additional_headlines: Google Search RSA only. Extra headlines.
                 additional_descriptions: Google Search RSA only. Extra descriptions.
                 advantage_audience: Meta only. Controls the Advantage audience feature (targeting_automation). 0 = disabled (default), 1 = enabled. Meta Marketing API requires this field on all ad set creation requests.
@@ -3592,6 +3595,7 @@ def register_generated_tools(mcp, _get_client):
                 audience_id=audience_id,
                 campaign_type=campaign_type,
                 keywords=keywords,
+                negative_keywords=negative_keywords,
                 additional_headlines=additional_headlines,
                 additional_descriptions=additional_descriptions,
                 advantage_audience=advantage_audience,
