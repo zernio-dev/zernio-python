@@ -1352,9 +1352,6 @@ components:
         mediaType:
           type: string
           description: Media type (e.g. image, video, carousel)
-        mediaUrl:
-          type: string
-          description: Primary media URL
         thumbnailUrl:
           type: string
           description: Thumbnail URL
