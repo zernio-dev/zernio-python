@@ -6908,6 +6908,20 @@ components:
         roas:
           type: number
           description: "Return on ad spend — derived as `purchaseValue / spend`. 0 when `spend` is 0. Equivalent to Meta's `purchase_roas` under default attribution. At ad-set and campaign levels this is recomputed from summed purchaseValue + spend (NOT averaged across children) so it's mathematically correct at every rollup level."
+        costPerAction:
+          type: object
+          additionalProperties:
+            type: number
+          description: "Derived `spend / actions[type]` for every action type with a non-zero count, in ad-account native currency. Same keys as `actions`. Rounded to 4 decimals because cheap actions cost well under a cent. Recomputed from summed spend + counts at every rollup level. Empty object when spend is 0 or no actions are reported."
+          example:
+            link_click: 0.1052
+            offsite_conversion.fb_pixel_purchase: 4.0114
+        outboundClicks: { type: integer, description: "Clicks leading off Meta's surfaces to the advertiser's destination. Meta-only; other platforms report 0." }
+        outboundClicksCtr: { type: number, description: "Derived `outboundClicks / impressions * 100`, recomputed from sums at every rollup level." }
+        inlineLinkClicks: { type: integer, description: "In-session link clicks. Differs from the attributed `link_click` count in `actions`/`engagementBreakdown.linkClicks`, which uses the attribution window. Meta-only." }
+        inlineLinkClickCtr: { type: number, description: "Derived `inlineLinkClicks / impressions * 100`, recomputed from sums at every rollup level." }
+        uniqueClicks: { type: integer, description: "People who clicked at least once. NOT additive: summed across days/children it overcounts people who clicked on multiple days or ads, so treat rollups as an upper bound (same caveat as `reach`). Meta-only." }
+        uniqueCtr: { type: number, description: "Derived `uniqueClicks / impressions * 100` (NOT Meta's reach-based unique_ctr). Inherits the non-additivity caveat of `uniqueClicks`." }
         videoPlayActions:
           type: integer
           description: "Number of times the video started playing, summed over the date range and across children at ad-set/campaign level. 0 for non-video ads. Sources: Meta `video_play_actions`, TikTok `video_play_actions`."
@@ -6982,7 +6996,7 @@ components:
         saves: { type: integer, description: "Saves of the ad's post (`onsite_conversion.post_save`)." }
         pageLikes: { type: integer, description: "New Page likes attributed to the ad (`like`)." }
         videoViews: { type: integer, description: "3-second video views (`video_view`). For completion-based counts use `videoThruplayWatchedActions`." }
-        linkClicks: { type: integer, description: "Attributed link clicks (`link_click`). This is the attribution-window count, which differs from the in-session `inline_link_clicks` reported by `GET /v1/ads/{adId}/analytics`." }
+        linkClicks: { type: integer, description: "Attributed link clicks (`link_click`). This is the attribution-window count, which differs from the in-session count in the sibling `inlineLinkClicks` field." }
     AdDailyMetrics:
       description: |
         One day of metrics. Same fields as `AdMetrics` plus the `date` they
