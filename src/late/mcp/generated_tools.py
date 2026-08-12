@@ -4027,6 +4027,84 @@ def register_generated_tools(mcp, _get_client):
 
     @mcp.tool(
         annotations=ToolAnnotations(
+            title="Google Local Services Ads leads",
+            readOnlyHint=True,
+            destructiveHint=False,
+            openWorldHint=False,
+        )
+    )
+    def ad_insights_list_local_services_leads(
+        account_id: str,
+        customer_id: str | None = None,
+        from_date: str | None = None,
+        to_date: str | None = None,
+        lead_type: str | None = None,
+        lead_status: str | None = None,
+        charged_only: bool | None = None,
+        page_token: str | None = None,
+    ) -> str:
+        """Google Local Services Ads leads
+
+        Args:
+            account_id: Google ads SocialAccount id. (required)
+            customer_id: Numeric Google Ads customer id (no dashes). Defaults to the account's connected customer.
+            from_date: Leads created at/after this day.
+            to_date: Leads created at/before this day.
+            lead_type
+            lead_status: Google LocalServicesLeadStatus enum value (e.g. NEW, BOOKED, WIPED_OUT).
+            charged_only: true = only leads Google charged for.
+            page_token: Cursor from paging.nextPageToken of the previous page."""
+        client = _get_client()
+        try:
+            response = client.ad_insights.list_local_services_leads(
+                account_id=account_id,
+                customer_id=customer_id,
+                from_date=from_date,
+                to_date=to_date,
+                lead_type=lead_type,
+                lead_status=lead_status,
+                charged_only=charged_only,
+                page_token=page_token,
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Conversations of a Local Services lead",
+            readOnlyHint=True,
+            destructiveHint=False,
+            openWorldHint=False,
+        )
+    )
+    def ad_insights_list_local_services_lead_conversations(
+        lead_id: str,
+        account_id: str,
+        customer_id: str | None = None,
+        page_token: str | None = None,
+    ) -> str:
+        """Conversations of a Local Services lead
+
+        Args:
+            lead_id: Numeric lead id from /v1/ads/local-services/leads. (required)
+            account_id: Google ads SocialAccount id. (required)
+            customer_id: Numeric Google Ads customer id (no dashes). Defaults to the account's connected customer.
+            page_token: Cursor from paging.nextPageToken of the previous page."""
+        client = _get_client()
+        try:
+            response = client.ad_insights.list_local_services_lead_conversations(
+                lead_id=lead_id,
+                account_id=account_id,
+                customer_id=customer_id,
+                page_token=page_token,
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
             title="Get campaign analytics",
             readOnlyHint=True,
             destructiveHint=False,

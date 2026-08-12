@@ -96,6 +96,49 @@ class AdInsightsResource:
         )
         return self._client._get("/v1/ads/search-terms", params=params)
 
+    def list_local_services_leads(
+        self,
+        account_id: str,
+        *,
+        customer_id: str | None = None,
+        from_date: str | None = None,
+        to_date: str | None = None,
+        lead_type: str | None = None,
+        lead_status: str | None = None,
+        charged_only: bool | None = None,
+        page_token: str | None = None,
+    ) -> dict[str, Any]:
+        """Google Local Services Ads leads"""
+        params = self._build_params(
+            account_id=account_id,
+            customer_id=customer_id,
+            from_date=from_date,
+            to_date=to_date,
+            lead_type=lead_type,
+            lead_status=lead_status,
+            charged_only=charged_only,
+            page_token=page_token,
+        )
+        return self._client._get("/v1/ads/local-services/leads", params=params)
+
+    def list_local_services_lead_conversations(
+        self,
+        lead_id: str,
+        account_id: str,
+        *,
+        customer_id: str | None = None,
+        page_token: str | None = None,
+    ) -> dict[str, Any]:
+        """Conversations of a Local Services lead"""
+        params = self._build_params(
+            account_id=account_id,
+            customer_id=customer_id,
+            page_token=page_token,
+        )
+        return self._client._get(
+            f"/v1/ads/local-services/leads/{lead_id}/conversations", params=params
+        )
+
     def get_campaign_analytics(
         self,
         campaign_id: str,
@@ -310,6 +353,49 @@ class AdInsightsResource:
             page_token=page_token,
         )
         return await self._client._aget("/v1/ads/search-terms", params=params)
+
+    async def alist_local_services_leads(
+        self,
+        account_id: str,
+        *,
+        customer_id: str | None = None,
+        from_date: str | None = None,
+        to_date: str | None = None,
+        lead_type: str | None = None,
+        lead_status: str | None = None,
+        charged_only: bool | None = None,
+        page_token: str | None = None,
+    ) -> dict[str, Any]:
+        """Google Local Services Ads leads (async)"""
+        params = self._build_params(
+            account_id=account_id,
+            customer_id=customer_id,
+            from_date=from_date,
+            to_date=to_date,
+            lead_type=lead_type,
+            lead_status=lead_status,
+            charged_only=charged_only,
+            page_token=page_token,
+        )
+        return await self._client._aget("/v1/ads/local-services/leads", params=params)
+
+    async def alist_local_services_lead_conversations(
+        self,
+        lead_id: str,
+        account_id: str,
+        *,
+        customer_id: str | None = None,
+        page_token: str | None = None,
+    ) -> dict[str, Any]:
+        """Conversations of a Local Services lead (async)"""
+        params = self._build_params(
+            account_id=account_id,
+            customer_id=customer_id,
+            page_token=page_token,
+        )
+        return await self._client._aget(
+            f"/v1/ads/local-services/leads/{lead_id}/conversations", params=params
+        )
 
     async def aget_campaign_analytics(
         self,

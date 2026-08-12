@@ -461,6 +461,8 @@ Both `from zernio import ...` and `from late import ...` work identically. The `
 ### Ad Insights
 | Method | Description |
 |--------|-------------|
+| `ad_insights.list_local_services_lead_conversations()` | Conversations of a Local Services lead |
+| `ad_insights.list_local_services_leads()` | Google Local Services Ads leads |
 | `ad_insights.create_ad_insights_report()` | Submit an async insights report run |
 | `ad_insights.get_ad_analytics()` | Get ad analytics |
 | `ad_insights.get_ad_insights_report()` | Poll an async insights report run |
