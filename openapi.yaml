@@ -24847,7 +24847,7 @@ paths:
               properties:
                 accountId: { type: string, description: Social account ID }
                 message: { type: string, description: Message text }
-                attachmentUrl: { type: string, description: "URL of the attachment to send (image, video, audio, or file). The URL must be publicly accessible. For binary file uploads, use multipart/form-data instead." }
+                attachmentUrl: { type: string, description: "URL of the attachment to send (image, video, audio, or file). The URL must be publicly accessible. For binary file uploads, use multipart/form-data instead. On WhatsApp, combining an image, video, or file with `buttons` renders the media as the header of one interactive reply-button message; audio cannot be combined with buttons." }
                 category:
                   type: string
                   enum: [utility]
@@ -24910,6 +24910,12 @@ paths:
                     reply-button message, provide `title` + `payload` and set
                     `type: postback`, e.g.
                     `{ "type": "postback", "title": "Yes", "payload": "yes" }`.
+
+                    Combine `buttons` with `attachmentUrl` and `attachmentType`
+                    `image`, `video`, or `file` to render one WhatsApp message with
+                    a media header, body text, and reply buttons. Audio is not a
+                    supported interactive header and returns 400 when combined
+                    with buttons.
                   items:
                     type: object
                     required: [type, title]
@@ -25285,6 +25291,27 @@ paths:
                           properties:
                             email: { type: string }
                             type: { type: string }
+            examples:
+              whatsappImageWithReplyButtons:
+                summary: WhatsApp image, body text, and reply buttons
+                description: |
+                  The recipient sees one WhatsApp message containing the property
+                  image as its header, "Reply yes to continue." as the body, and
+                  two tappable reply buttons labelled Yes and No. A tap arrives on
+                  the `message.received` webhook as `metadata.interactiveType:
+                  button_reply`; `metadata.interactiveId` is `btn_0` or `btn_1`.
+                value:
+                  accountId: 6a7adc04d0fe733d1a1bed76
+                  message: Reply yes to continue.
+                  attachmentUrl: https://cdn.example.com/property.jpg
+                  attachmentType: image
+                  buttons:
+                    - type: postback
+                      title: Yes
+                      payload: btn_0
+                    - type: postback
+                      title: No
+                      payload: btn_1
           multipart/form-data:
             schema:
               type: object
@@ -25295,13 +25322,13 @@ paths:
                 attachment:
                   type: string
                   format: binary
-                  description: "File attachment (images, videos, documents). Supported formats: JPEG, PNG, GIF, MP4, AAC, WAV. Max 25MB."
+                  description: "File attachment (images, videos, documents). Supported formats: JPEG, PNG, GIF, MP4, AAC, WAV. Max 25MB. On WhatsApp, combining an image, video, or document upload with buttons renders the upload as the interactive message header; audio plus buttons is rejected."
                 quickReplies:
                   type: string
                   description: JSON string of quick replies array (same schema as application/json body)
                 buttons:
                   type: string
-                  description: JSON string of buttons array (same schema as application/json body)
+                  description: JSON string of buttons array (same schema as application/json body). On WhatsApp, an accompanying image, video, or document attachment becomes the interactive message header.
                 template:
                   type: string
                   description: JSON string of template object (same schema as application/json body)

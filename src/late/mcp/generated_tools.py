@@ -10859,7 +10859,7 @@ def register_generated_tools(mcp, _get_client):
                 conversation_id: Opaque conversation identifier, accepted verbatim from the list endpoint or from the conversationId on inbox webhooks. Format not to be assumed. (required)
                 account_id: Social account ID (required)
                 message: Message text
-                attachment_url: URL of the attachment to send (image, video, audio, or file). The URL must be publicly accessible. For binary file uploads, use multipart/form-data instead.
+                attachment_url: URL of the attachment to send (image, video, audio, or file). The URL must be publicly accessible. For binary file uploads, use multipart/form-data instead. On WhatsApp, combining an image, video, or file with `buttons` renders the media as the header of one interactive reply-button message; audio cannot be combined with buttons.
                 category: WhatsApp only (Meta Direct Send). Sends this message as a business-initiated UTILITY message without an approved template, for example outside the 24-hour customer service window; Meta matches or auto-creates a template asynchronously. The WhatsApp Business Account must be eligible for Direct Send, otherwise the send fails with an error telling you to use an approved message template instead. Supported only for text messages (link preview ok) and interactive messages (reply buttons, CTA URL buttons, voice-call button, header of text/image/video/document). Cannot be combined with template, attachments, location, or contacts. Utility messages only; marketing content is not allowed under this category. Accepted on the JSON body only, not on multipart requests.
                 attachment_type: Type of attachment. Defaults to file if not specified.
                 attachment_name: WhatsApp only. Display name for a document sent via attachmentUrl with attachmentType: file (e.g. "Report.pdf"). Maps to the recipient's file name; without it WhatsApp derives the name from the URL and shows "Untitled". Ignored for image/video/audio and for binary uploads (which use the uploaded file's name).
@@ -10884,6 +10884,12 @@ def register_generated_tools(mcp, _get_client):
         reply-button message, provide `title` + `payload` and set
         `type: postback`, e.g.
         `{ "type": "postback", "title": "Yes", "payload": "yes" }`.
+
+        Combine `buttons` with `attachmentUrl` and `attachmentType`
+        `image`, `video`, or `file` to render one WhatsApp message with
+        a media header, body text, and reply buttons. Audio is not a
+        supported interactive header and returns 400 when combined
+        with buttons.
                 template: Platform-dependent template payload. Ignored on Telegram.
 
         Instagram / Facebook: a generic template (carousel). Set `type: generic`
