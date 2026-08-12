@@ -2185,6 +2185,8 @@ def register_generated_tools(mcp, _get_client):
         profile_id: str | None = None,
         from_date: str | None = None,
         to_date: str | None = None,
+        has_delivery: bool | None = None,
+        min_spend: float | None = None,
     ) -> str:
         """List campaigns
 
@@ -2200,7 +2202,9 @@ def register_generated_tools(mcp, _get_client):
             account_id: Social account ID
             profile_id: Profile ID
             from_date: Start of metrics date range (YYYY-MM-DD, inclusive). Defaults to 90 days ago when both date params are omitted.
-            to_date: End of metrics date range (YYYY-MM-DD, inclusive). Defaults to today. Max 730-day range."""
+            to_date: End of metrics date range (YYYY-MM-DD, inclusive). Defaults to today. Max 730-day range.
+            has_delivery: Return only campaigns that delivered between `fromDate` and `toDate` — spend above zero, or impressions served at zero spend. Unlike `status`, which reads a campaign's CURRENT state, this filters on what happened inside the window. Filters the campaign set itself, so `pagination.total` counts only matching campaigns. Mirrors the same filter on /v1/ads/tree.
+            min_spend: Return only campaigns whose spend between `fromDate` and `toDate` reaches this amount, in each campaign's OWN currency (the `currency` field on the campaign). Implies `hasDelivery`; `minSpend=0` applies no filter. Mirrors the same filter on /v1/ads/tree."""
         client = _get_client()
         try:
             response = client.ad_campaigns.list_ad_campaigns(
@@ -2216,6 +2220,8 @@ def register_generated_tools(mcp, _get_client):
                 profile_id=profile_id,
                 from_date=from_date,
                 to_date=to_date,
+                has_delivery=has_delivery,
+                min_spend=min_spend,
             )
             return _format_response(response)
         except Exception as e:
@@ -2695,6 +2701,8 @@ def register_generated_tools(mcp, _get_client):
         campaign_id: str | None = None,
         from_date: str | None = None,
         to_date: str | None = None,
+        has_delivery: bool | None = None,
+        min_spend: float | None = None,
         sort: str = "newest",
         time_increment: int | None = None,
         daily_level: str = "campaign",
@@ -2712,8 +2720,10 @@ def register_generated_tools(mcp, _get_client):
             account_id: Social account ID
             profile_id: Profile ID
             campaign_id: Restrict the tree to a single campaign by its platform campaign id (the id the platform assigns, e.g. Meta's numeric campaign id). Filters the campaign set itself, so it works regardless of account size and pagination — pass this when you already hold a campaign id instead of paging the tree to find it. Mirrors the `campaignId` filter on GET /v1/ads.
-            from_date: Start of the METRICS date range (YYYY-MM-DD). Affects only the spend/impression numbers overlaid on each node, NOT which campaigns are returned. Defaults to 90 days ago.
+            from_date: Start of the METRICS date range (YYYY-MM-DD). On its own it affects only the spend/impression numbers overlaid on each node, not which campaigns are returned — pass `hasDelivery` or `minSpend` to also filter the campaign set to this window. Defaults to 90 days ago.
             to_date: End of metrics date range (YYYY-MM-DD). Defaults to today. Max 730-day range.
+            has_delivery: Return only campaigns that delivered between `fromDate` and `toDate` — spend above zero, or impressions served at zero spend. Unlike `status`, which reads a campaign's CURRENT state, this filters on what happened inside the window, so a campaign that spent then and is paused today is still returned. Filters the campaign set itself, so `pagination.total` counts only matching campaigns.
+            min_spend: Return only campaigns whose spend between `fromDate` and `toDate` reaches this amount. Expressed in each campaign's OWN currency (the `currency` field on the campaign node): spend is stored per ad account in its native currency and one response can span several. Implies `hasDelivery`; `minSpend=0` applies no filter.
             sort: Campaign-level sort order. `newest` (default) / `oldest` order by the campaign's newest-ad createdAt. `spend_desc` / `spend_asc` order by aggregated spend in the requested date range; campaigns with no spend land at the end.
             time_increment: Set to `1` to also return a daily breakdown. Mirrors Meta Insights' `time_increment=1`: each node gains a `daily[]` array of per-day metrics (same fields as the aggregated `metrics`) alongside the range total, so you get per-entity daily trends in ONE call instead of calling the tree once per day. Only `1` (daily) is supported. The daily series covers the same date range and uses the same source data as `metrics`, except `reach` on Meta and TikTok: the range total is the platform's de-duplicated value, so daily reach does not sum to it. See `dailyLevel` to control which levels carry it.
             daily_level: Which tree levels get the `daily[]` series when `timeIncrement=1`. `campaign` (default) attaches it on campaign nodes only — the common per-campaign-trend case, and the smallest payload. `adset` adds it on ad sets too; `ad` adds it on every ad in `ads[]` as well (heaviest — a long range × up to 100 ads per ad set). Scope with `campaignId` to keep `ad`-level responses small. Ignored when `timeIncrement` is unset."""
@@ -2732,6 +2742,8 @@ def register_generated_tools(mcp, _get_client):
                 campaign_id=campaign_id,
                 from_date=from_date,
                 to_date=to_date,
+                has_delivery=has_delivery,
+                min_spend=min_spend,
                 sort=sort,
                 time_increment=time_increment,
                 daily_level=daily_level,

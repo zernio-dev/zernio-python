@@ -160,6 +160,8 @@ class AdCampaignsResource:
         profile_id: str | None = None,
         from_date: str | None = None,
         to_date: str | None = None,
+        has_delivery: bool | None = None,
+        min_spend: float | None = None,
     ) -> dict[str, Any]:
         """List campaigns"""
         params = self._build_params(
@@ -175,6 +177,8 @@ class AdCampaignsResource:
             profile_id=profile_id,
             from_date=from_date,
             to_date=to_date,
+            has_delivery=has_delivery,
+            min_spend=min_spend,
         )
         return self._client._get("/v1/ads/campaigns", params=params)
 
@@ -416,6 +420,8 @@ class AdCampaignsResource:
         campaign_id: str | None = None,
         from_date: str | None = None,
         to_date: str | None = None,
+        has_delivery: bool | None = None,
+        min_spend: float | None = None,
         sort: str | None = "newest",
         time_increment: int | None = None,
         daily_level: str | None = "campaign",
@@ -434,6 +440,8 @@ class AdCampaignsResource:
             campaign_id=campaign_id,
             from_date=from_date,
             to_date=to_date,
+            has_delivery=has_delivery,
+            min_spend=min_spend,
             sort=sort,
             time_increment=time_increment,
             daily_level=daily_level,
@@ -819,6 +827,8 @@ class AdCampaignsResource:
         profile_id: str | None = None,
         from_date: str | None = None,
         to_date: str | None = None,
+        has_delivery: bool | None = None,
+        min_spend: float | None = None,
     ) -> dict[str, Any]:
         """List campaigns (async)"""
         params = self._build_params(
@@ -834,6 +844,8 @@ class AdCampaignsResource:
             profile_id=profile_id,
             from_date=from_date,
             to_date=to_date,
+            has_delivery=has_delivery,
+            min_spend=min_spend,
         )
         return await self._client._aget("/v1/ads/campaigns", params=params)
 
@@ -1079,6 +1091,8 @@ class AdCampaignsResource:
         campaign_id: str | None = None,
         from_date: str | None = None,
         to_date: str | None = None,
+        has_delivery: bool | None = None,
+        min_spend: float | None = None,
         sort: str | None = "newest",
         time_increment: int | None = None,
         daily_level: str | None = "campaign",
@@ -1097,6 +1111,8 @@ class AdCampaignsResource:
             campaign_id=campaign_id,
             from_date=from_date,
             to_date=to_date,
+            has_delivery=has_delivery,
+            min_spend=min_spend,
             sort=sort,
             time_increment=time_increment,
             daily_level=daily_level,
