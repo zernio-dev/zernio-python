@@ -4958,10 +4958,38 @@ components:
           description: "LinkedIn post link to repost (use the post's \"Copy link to post\" action), or a urn:li:share / urn:li:ugcPost / urn:li:groupPost URN. The published post becomes a quote-reshare: your content is shown as the commentary and the original post is embedded underneath (LinkedIn's \"repost with your thoughts\"). Mutually exclusive with media. Works on personal profiles and organization pages."
         geoRestriction:
           $ref: '#/components/schemas/GeoRestriction'
+        poll:
+          type: object
+          description: 'Create a LinkedIn poll with this post. Cannot be combined with media or reshareUrl. Polls cannot be edited after publishing on LinkedIn, and API-created polls are non-sponsored only (they cannot be promoted as ads).'
+          properties:
+            question:
+              type: string
+              minLength: 1
+              maxLength: 140
+              description: 'Poll question (max 140 characters)'
+            options:
+              type: array
+              minItems: 2
+              maxItems: 4
+              items:
+                type: string
+                minLength: 1
+                maxLength: 30
+              description: 'Poll options (2-4 choices, max 30 characters each)'
+            duration:
+              type: string
+              enum: [ONE_DAY, THREE_DAYS, SEVEN_DAYS, FOURTEEN_DAYS]
+              default: SEVEN_DAYS
+              description: How long the poll accepts votes. Defaults to SEVEN_DAYS.
+          required:
+            - question
+            - options
       description: >
         Up to 20 images, no multi-video. Single PDF supported (max 100MB). Link previews auto-generated
         when no media attached. Use organizationUrn for multi-org posting. Geo-restriction only works for
         organization pages (not personal profiles) and requires the targeted audience to exceed 300 followers.
+        Polls are supported via the poll object: 2-4 options, cannot be combined with media or reshareUrl,
+        cannot be edited after publishing, and API-created polls are non-sponsored only.
 
     MoneyAmount:
       type: object
