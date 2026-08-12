@@ -642,6 +642,7 @@ class AdCampaignsResource:
         dsa_payor: str | None = None,
         brand_identity: dict[str, Any] | None = None,
         identity_type: str | None = None,
+        smart_plus: bool | None = None,
         promoted_object: dict[str, Any] | None = None,
     ) -> dict[str, Any]:
         """Create standalone ad"""
@@ -728,6 +729,7 @@ class AdCampaignsResource:
             dsa_payor=dsa_payor,
             brand_identity=brand_identity,
             identity_type=identity_type,
+            smart_plus=smart_plus,
             promoted_object=promoted_object,
         )
         return self._client._post("/v1/ads/create", data=payload)
@@ -1303,6 +1305,7 @@ class AdCampaignsResource:
         dsa_payor: str | None = None,
         brand_identity: dict[str, Any] | None = None,
         identity_type: str | None = None,
+        smart_plus: bool | None = None,
         promoted_object: dict[str, Any] | None = None,
     ) -> dict[str, Any]:
         """Create standalone ad (async)"""
@@ -1389,6 +1392,7 @@ class AdCampaignsResource:
             dsa_payor=dsa_payor,
             brand_identity=brand_identity,
             identity_type=identity_type,
+            smart_plus=smart_plus,
             promoted_object=promoted_object,
         )
         return await self._client._apost("/v1/ads/create", data=payload)
