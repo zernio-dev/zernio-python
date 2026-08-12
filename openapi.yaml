@@ -40371,8 +40371,20 @@ paths:
 
         `instagramAccountId`, `destinationType` and `adSetId` are Meta-only and
         return 400 on other platforms.
+
+        **Retries.** Boosts are NOT idempotent and can take minutes when Meta requires re-hosting an
+        Instagram video, so do not retry on client timeout. Send an
+        Idempotency-Key header to make retries safe: same key and body replays
+        the original 201, and distinct keys always create distinct ads.
+        Without the header, an identical request is treated as a retry: while
+        one is in flight it returns 409, and within 10 minutes of a completed
+        boost it returns the already-created ad instead of creating another.
+        To intentionally duplicate an ad, send distinct Idempotency-Keys (or
+        vary the body, e.g. the name).
       security:
         - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/IdempotencyKeyHeader'
       requestBody:
         required: true
         content:
@@ -40642,6 +40654,10 @@ paths:
         '401': { $ref: '#/components/responses/Unauthorized' }
         '403':
           description: Ads access required. Legacy plans need the Ads add-on; included by default on usage-based plans.
+        '409':
+          description: |
+            An identical boost request is already in progress (with or without
+            an Idempotency-Key). Wait for it to finish instead of retrying.
         '422':
           description: |
             Platform ads connection required (TikTok Ads, X Ads), missing linked
@@ -40649,6 +40665,8 @@ paths:
             as an Identity on the target advertiser. Returned with code
             `ads_connection_required`; the message includes the actionable
             "TikTok Ads Manager → Assets → Identity" remediation step.
+            Also returned as `idempotency_key_reused` when an Idempotency-Key
+            is reused with a different request body.
 
   /v1/ads/create:
     post:
