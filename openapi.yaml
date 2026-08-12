@@ -519,6 +519,10 @@ components:
         Optional client-generated unique key (e.g. a UUID) that makes retries
         safe. Same key + same body replays the original response; same key +
         different body → 422; key still processing → 409.
+  headers:
+    BackfillRetryAfter:
+      description: Recommended delay before retrying, in seconds.
+      schema: { type: integer, example: 60 }
   responses:
     IdempotencyKeyInFlight:
       description: Same Idempotency-Key still processing; retry after a short backoff
@@ -6866,6 +6870,124 @@ components:
       properties:
         user:
           $ref: '#/components/schemas/User'
+    AdsListResponse:
+      type: object
+      properties:
+        ads:
+          type: array
+          items: { $ref: '#/components/schemas/Ad' }
+        pagination: { $ref: '#/components/schemas/Pagination' }
+        backfillPending:
+          type: boolean
+          description: Present and true while historical data is being backfilled.
+    AdTreeResponse:
+      type: object
+      properties:
+        campaigns:
+          type: array
+          items: { $ref: '#/components/schemas/AdTreeCampaign' }
+        pagination: { $ref: '#/components/schemas/Pagination' }
+        backfillPending:
+          type: boolean
+          description: Present and true while historical data is being backfilled.
+    AdsTimelineResponse:
+      type: object
+      properties:
+        backfillPending:
+          type: boolean
+          description: Present and true while historical data is being backfilled.
+        rows:
+          type: array
+          items:
+            type: object
+            properties:
+              date: { type: string, format: date }
+              spend: { type: number, description: "Native currency units (matches /ads/tree convention)." }
+              impressions: { type: integer }
+              reach: { type: integer, description: "Reach summed across the account's ads for this single day. A person seen by two ads the same day counts twice, and reach is de-duplicated per day only: do NOT sum it across days (people reached on multiple days would be double-counted)." }
+              clicks: { type: integer }
+              engagement: { type: integer }
+              ctr: { type: number, description: "Click-through rate as a percentage (0–100)." }
+              cpc: { type: number, description: "Cost per click in native currency." }
+              cpm: { type: number, description: "Cost per 1000 impressions in native currency." }
+              conversions: { type: number, description: "Sum of conversion events over the range. Fractional values are normal (attribution splitting + Google modeled conversions). Meta: events matching the campaign optimization goal. Google: tracked conversions. X / LinkedIn: reported website/lead conversions (added 2026-07)." }
+              costPerConversion: { type: number }
+              actions:
+                type: object
+                additionalProperties: { type: number }
+                description: "Per-action-type counts merged across all ads on this day. Keys are platform-native action types."
+              actionValues:
+                type: object
+                additionalProperties: { type: number }
+                description: "Monetary mirror of `actions` in native currency."
+              purchaseValue: { type: number, description: "Sum of purchase-type action values on this day, native currency." }
+              roas: { type: number, description: "Derived purchaseValue / spend." }
+    CampaignAnalyticsResponse:
+      type: object
+      properties:
+        backfillPending:
+          type: boolean
+          description: Present and true while historical data is being backfilled.
+        campaign:
+          type: object
+          properties:
+            id: { type: string }
+            name: { type: [string, "null"] }
+            platform: { type: string }
+            status: { type: [string, "null"], description: "Effective campaign status (ACTIVE when any child ad is active)." }
+            currency:
+              type: [string, "null"]
+              description: "ISO 4217 code of the ad account (e.g. USD, THB). All money values in `summary` and `daily` are in this currency."
+        analytics:
+          type: object
+          properties:
+            summary: { $ref: '#/components/schemas/AdMetrics' }
+            daily:
+              type: array
+              items:
+                allOf:
+                  - { $ref: '#/components/schemas/AdMetrics' }
+                  - type: object
+                    properties:
+                      date: { type: string, format: date }
+            breakdowns:
+              type: object
+              additionalProperties:
+                type: array
+                items: { type: object }
+    AdAnalyticsResponse:
+      type: object
+      properties:
+        backfillPending:
+          type: boolean
+          description: Present and true while historical data is being backfilled.
+        ad:
+          type: object
+          properties:
+            id: { type: string }
+            name: { type: string }
+            platform: { type: string }
+            status: { type: string }
+            currency:
+              type: [string, "null"]
+              description: "ISO 4217 code of the ad account that owns this ad (e.g. USD, THB, INR). All money values in `summary` and `daily` are in this currency. Null only on legacy ads synced before currency was persisted."
+        analytics:
+          type: object
+          properties:
+            summary: { $ref: '#/components/schemas/AdMetrics' }
+            daily:
+              type: array
+              items:
+                allOf:
+                  - { $ref: '#/components/schemas/AdMetrics' }
+                  - type: object
+                    properties:
+                      date: { type: string, format: date }
+            breakdowns:
+              type: object
+              additionalProperties:
+                type: array
+                items: { type: object }
     AdMetrics:
       type: object
       properties:
@@ -36968,18 +37090,21 @@ paths:
           description: Paginated ads
           content:
             application/json:
-              schema:
-                type: object
-                properties:
-                  ads:
-                    type: array
-                    items: { $ref: '#/components/schemas/Ad' }
-                  backfillPending:
-                    type: boolean
-                    description: "Present and true only on `202` responses: part of the requested date range is still being backfilled from the platform in the background. Retry the same request shortly; it returns 200 once the range is fully ingested."
-                  pagination: { $ref: '#/components/schemas/Pagination' }
+              schema: { $ref: '#/components/schemas/AdsListResponse' }
         '202':
-          description: "Part of the requested date range predates the ingested history; a background backfill job has been queued. The body has the same shape as the 200 response, carries the currently-available data, and includes `backfillPending: true`. A `Retry-After` header carries the recommended poll interval in seconds. Allow the job a short time to run (typically 1-3 minutes) and submit the request again; once ingestion completes the same request returns 200 with the full range."
+          description: Historical data is incomplete and backfill remains pending.
+          headers:
+            Retry-After:
+              $ref: '#/components/headers/BackfillRetryAfter'
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - { $ref: '#/components/schemas/AdsListResponse' }
+                  - type: object
+                    required: [backfillPending]
+                    properties:
+                      backfillPending: { type: boolean, const: true }
         '400': { $ref: '#/components/responses/BadRequest' }
         '401': { $ref: '#/components/responses/Unauthorized' }
         '403':
@@ -37953,18 +38078,21 @@ paths:
           description: Nested campaign tree with pagination
           content:
             application/json:
-              schema:
-                type: object
-                properties:
-                  campaigns:
-                    type: array
-                    items: { $ref: '#/components/schemas/AdTreeCampaign' }
-                  backfillPending:
-                    type: boolean
-                    description: "Present and true only on `202` responses: part of the requested date range is still being backfilled from the platform in the background. Retry the same request shortly; it returns 200 once the range is fully ingested."
-                  pagination: { $ref: '#/components/schemas/Pagination' }
+              schema: { $ref: '#/components/schemas/AdTreeResponse' }
         '202':
-          description: "Part of the requested date range predates the ingested history; a background backfill job has been queued. The body has the same shape as the 200 response, carries the currently-available data, and includes `backfillPending: true`. A `Retry-After` header carries the recommended poll interval in seconds. Allow the job a short time to run (typically 1-3 minutes) and submit the request again; once ingestion completes the same request returns 200 with the full range."
+          description: Historical data is incomplete and backfill remains pending.
+          headers:
+            Retry-After:
+              $ref: '#/components/headers/BackfillRetryAfter'
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - { $ref: '#/components/schemas/AdTreeResponse' }
+                  - type: object
+                    required: [backfillPending]
+                    properties:
+                      backfillPending: { type: boolean, const: true }
         '401': { $ref: '#/components/responses/Unauthorized' }
         '403':
           description: Ads access required. Legacy plans need the Ads add-on; included by default on usage-based plans.
@@ -38003,40 +38131,21 @@ paths:
           description: Daily time series of aggregate metrics. Empty `rows` means the account has no ad activity in the range.
           content:
             application/json:
-              schema:
-                type: object
-                properties:
-                  rows:
-                    type: array
-                    items:
-                      type: object
-                      properties:
-                        date: { type: string, format: date }
-                        spend: { type: number, description: "Native currency units (matches /ads/tree convention)." }
-                        impressions: { type: integer }
-                        reach: { type: integer, description: "Reach summed across the account's ads for this single day. A person seen by two ads the same day counts twice, and reach is de-duplicated per day only: do NOT sum it across days (people reached on multiple days would be double-counted)." }
-                        clicks: { type: integer }
-                        engagement: { type: integer }
-                        ctr: { type: number, description: "Click-through rate as a percentage (0–100)." }
-                        cpc: { type: number, description: "Cost per click in native currency." }
-                        cpm: { type: number, description: "Cost per 1000 impressions in native currency." }
-                        conversions: { type: number, description: "Sum of conversion events over the range. Fractional values are normal (attribution splitting + Google modeled conversions). Meta: events matching the campaign optimization goal. Google: tracked conversions. X / LinkedIn: reported website/lead conversions (added 2026-07)." }
-                        costPerConversion: { type: number }
-                        actions:
-                          type: object
-                          additionalProperties: { type: number }
-                          description: "Per-action-type counts merged across all ads on this day. Keys are platform-native action types."
-                        actionValues:
-                          type: object
-                          additionalProperties: { type: number }
-                          description: "Monetary mirror of `actions` in native currency."
-                        purchaseValue: { type: number, description: "Sum of purchase-type action values on this day, native currency." }
-                        roas: { type: number, description: "Derived purchaseValue / spend." }
-                  backfillPending:
-                    type: boolean
-                    description: "Present and true only on `202` responses: part of the requested date range is still being backfilled from the platform in the background. Retry the same request shortly; it returns 200 once the range is fully ingested."
+              schema: { $ref: '#/components/schemas/AdsTimelineResponse' }
         '202':
-          description: "Part of the requested date range predates the ingested history; a background backfill job has been queued. The body has the same shape as the 200 response, carries the currently-available data, and includes `backfillPending: true`. A `Retry-After` header carries the recommended poll interval in seconds. Allow the job a short time to run (typically 1-3 minutes) and submit the request again; once ingestion completes the same request returns 200 with the full range."
+          description: Historical data is incomplete and backfill remains pending.
+          headers:
+            Retry-After:
+              $ref: '#/components/headers/BackfillRetryAfter'
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - { $ref: '#/components/schemas/AdsTimelineResponse' }
+                  - type: object
+                    required: [backfillPending]
+                    properties:
+                      backfillPending: { type: boolean, const: true }
         '400': { $ref: '#/components/responses/BadRequest' }
         '401': { $ref: '#/components/responses/Unauthorized' }
         '403':
@@ -38294,41 +38403,21 @@ paths:
           description: Campaign analytics
           content:
             application/json:
-              schema:
-                type: object
-                properties:
-                  campaign:
-                    type: object
-                    properties:
-                      id: { type: string }
-                      name: { type: [string, "null"] }
-                      platform: { type: string }
-                      status: { type: [string, "null"], description: "Effective campaign status (ACTIVE when any child ad is active)." }
-                      currency:
-                        type: [string, "null"]
-                        description: "ISO 4217 code of the ad account (e.g. USD, THB). All money values in `summary` and `daily` are in this currency."
-                  backfillPending:
-                    type: boolean
-                    description: "Present and true only on `202` responses: part of the requested date range is still being backfilled from the platform in the background. Retry the same request shortly; it returns 200 once the range is fully ingested."
-                  analytics:
-                    type: object
-                    properties:
-                      summary: { $ref: '#/components/schemas/AdMetrics' }
-                      daily:
-                        type: array
-                        items:
-                          allOf:
-                            - { $ref: '#/components/schemas/AdMetrics' }
-                            - type: object
-                              properties:
-                                date: { type: string, format: date }
-                      breakdowns:
-                        type: object
-                        additionalProperties:
-                          type: array
-                          items: { type: object }
+              schema: { $ref: '#/components/schemas/CampaignAnalyticsResponse' }
         '202':
-          description: "Part of the requested date range predates the ingested history; a background backfill job has been queued. The body has the same shape as the 200 response, carries the currently-available data, and includes `backfillPending: true`. A `Retry-After` header carries the recommended poll interval in seconds. Allow the job a short time to run (typically 1-3 minutes) and submit the request again; once ingestion completes the same request returns 200 with the full range."
+          description: Historical data is incomplete and backfill remains pending.
+          headers:
+            Retry-After:
+              $ref: '#/components/headers/BackfillRetryAfter'
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - { $ref: '#/components/schemas/CampaignAnalyticsResponse' }
+                  - type: object
+                    required: [backfillPending]
+                    properties:
+                      backfillPending: { type: boolean, const: true }
         '400':
           description: "Invalid parameter (e.g. an unknown `breakdowns` dimension). The message lists the offending value(s) and the supported set."
           content:
@@ -38746,42 +38835,21 @@ paths:
           description: Ad analytics
           content:
             application/json:
-              schema:
-                type: object
-                properties:
-                  ad:
-                    type: object
-                    properties:
-                      id: { type: string }
-                      name: { type: string }
-                      platform: { type: string }
-                      trigger: { type: string, enum: [comment, story_reply] }
-                      status: { type: string }
-                      currency:
-                        type: [string, "null"]
-                        description: "ISO 4217 code of the ad account that owns this ad (e.g. USD, THB, INR). All money values in `summary` and `daily` are in this currency. Null only on legacy ads synced before currency was persisted."
-                  backfillPending:
-                    type: boolean
-                    description: "Present and true only on `202` responses: part of the requested date range is still being backfilled from the platform in the background. Retry the same request shortly; it returns 200 once the range is fully ingested."
-                  analytics:
-                    type: object
-                    properties:
-                      summary: { $ref: '#/components/schemas/AdMetrics' }
-                      daily:
-                        type: array
-                        items:
-                          allOf:
-                            - { $ref: '#/components/schemas/AdMetrics' }
-                            - type: object
-                              properties:
-                                date: { type: string, format: date }
-                      breakdowns:
-                        type: object
-                        additionalProperties:
-                          type: array
-                          items: { type: object }
+              schema: { $ref: '#/components/schemas/AdAnalyticsResponse' }
         '202':
-          description: "Part of the requested date range predates the ingested history; a background backfill job has been queued. The body has the same shape as the 200 response, carries the currently-available data, and includes `backfillPending: true`. A `Retry-After` header carries the recommended poll interval in seconds. Allow the job a short time to run (typically 1-3 minutes) and submit the request again; once ingestion completes the same request returns 200 with the full range."
+          description: Historical data is incomplete and backfill remains pending.
+          headers:
+            Retry-After:
+              $ref: '#/components/headers/BackfillRetryAfter'
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - { $ref: '#/components/schemas/AdAnalyticsResponse' }
+                  - type: object
+                    required: [backfillPending]
+                    properties:
+                      backfillPending: { type: boolean, const: true }
         '400':
           description: "Invalid parameter (e.g. an unknown `breakdowns` dimension). The message lists the offending value(s) and the supported set."
           content:
