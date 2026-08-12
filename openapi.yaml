@@ -2459,6 +2459,7 @@ components:
         timestamp:
           type: string
           format: date-time
+          description: 'UTC time at which Zernio generated this event (set once when the event payload is built, before delivery is queued). Retries and redeliveries keep the original value, so it reflects the event, not the delivery attempt.'
     WebhookPayloadPostPlatform:
       type: object
       description: |
@@ -2551,6 +2552,7 @@ components:
         timestamp:
           type: string
           format: date-time
+          description: 'UTC time at which Zernio generated this event (set once when the event payload is built, before delivery is queued). Retries and redeliveries keep the original value, so it reflects the event, not the delivery attempt.'
     WebhookPayloadAccountConnected:
       type: object
       description: Webhook payload for account connected events
@@ -2581,6 +2583,7 @@ components:
         timestamp:
           type: string
           format: date-time
+          description: 'UTC time at which Zernio generated this event (set once when the event payload is built, before delivery is queued). Retries and redeliveries keep the original value, so it reflects the event, not the delivery attempt.'
     WebhookPayloadAccountDisconnected:
       type: object
       description: Webhook payload for account disconnected events
@@ -2618,6 +2621,7 @@ components:
         timestamp:
           type: string
           format: date-time
+          description: 'UTC time at which Zernio generated this event (set once when the event payload is built, before delivery is queued). Retries and redeliveries keep the original value, so it reflects the event, not the delivery attempt.'
     WebhookPayloadAccountAdsInitialSyncCompleted:
       type: object
       description: |
@@ -2720,6 +2724,7 @@ components:
         timestamp:
           type: string
           format: date-time
+          description: 'UTC time at which Zernio generated this event (set once when the event payload is built, before delivery is queued). Retries and redeliveries keep the original value, so it reflects the event, not the delivery attempt.'
     WebhookPayloadComment:
       type: object
       description: Webhook payload for comment received events (Instagram, Facebook, Twitter/X, YouTube, LinkedIn, Bluesky, Reddit)
@@ -2864,6 +2869,7 @@ components:
         timestamp:
           type: string
           format: date-time
+          description: 'UTC time at which Zernio generated this event (set once when the event payload is built, before delivery is queued). Retries and redeliveries keep the original value, so it reflects the event, not the delivery attempt.'
     WebhookPayloadLead:
       type: object
       description: Webhook payload for lead.received events (Meta Lead Gen / Instant Forms).
@@ -2928,6 +2934,7 @@ components:
         timestamp:
           type: string
           format: date-time
+          description: 'UTC time at which Zernio generated this event (set once when the event payload is built, before delivery is queued). Retries and redeliveries keep the original value, so it reflects the event, not the delivery attempt.'
     ReviewWebhookReview:
       type: object
       description: Review data shared by review.new and review.updated payloads.
@@ -3004,6 +3011,7 @@ components:
         timestamp:
           type: string
           format: date-time
+          description: 'UTC time at which Zernio generated this event (set once when the event payload is built, before delivery is queued). Retries and redeliveries keep the original value, so it reflects the event, not the delivery attempt.'
     WebhookPayloadReviewUpdated:
       type: object
       description: |
@@ -3037,6 +3045,7 @@ components:
         timestamp:
           type: string
           format: date-time
+          description: 'UTC time at which Zernio generated this event (set once when the event payload is built, before delivery is queued). Retries and redeliveries keep the original value, so it reflects the event, not the delivery attempt.'
     ExternalPostWebhookPost:
       type: object
       description: Native (external) post data shared by all post.external.* payloads.
@@ -3111,6 +3120,7 @@ components:
         timestamp:
           type: string
           format: date-time
+          description: 'UTC time at which Zernio generated this event (set once when the event payload is built, before delivery is queued). Retries and redeliveries keep the original value, so it reflects the event, not the delivery attempt.'
     # ─── Shared sub-schemas for inbox lifecycle webhook payloads ────────────
     # WebhookPayloadMessageEdited / Deleted / DeliveryStatus reference these
     # as $refs. They were added as top-level named schemas (rather than nested
@@ -3326,6 +3336,7 @@ components:
         timestamp:
           type: string
           format: date-time
+          description: 'UTC time at which Zernio generated this event (set once when the event payload is built, before delivery is queued). Retries and redeliveries keep the original value, so it reflects the event, not the delivery attempt.'
     # ────────────────────────────────────────────────────────────────────────
     WebhookPayloadMessage:
       type: object
@@ -3677,6 +3688,7 @@ components:
         timestamp:
           type: string
           format: date-time
+          description: 'UTC time at which Zernio generated this event (set once when the event payload is built, before delivery is queued). Retries and redeliveries keep the original value, so it reflects the event, not the delivery attempt.'
     WebhookPayloadMessageSent:
       type: object
       description: Webhook payload for message sent events (fired when a message is sent via the API, or from the WhatsApp Business app on Coexistence numbers)
@@ -3762,6 +3774,7 @@ components:
         timestamp:
           type: string
           format: date-time
+          description: 'UTC time at which Zernio generated this event (set once when the event payload is built, before delivery is queued). Retries and redeliveries keep the original value, so it reflects the event, not the delivery attempt.'
     InboxMessageEditAttachment:
       type: object
       description: Attachment snapshot inside an edit-history entry.
@@ -3814,7 +3827,10 @@ components:
           $ref: '#/components/schemas/InboxWebhookConversation'
         account:
           $ref: '#/components/schemas/InboxWebhookAccount'
-        timestamp: { type: string, format: date-time }
+        timestamp:
+          type: string
+          format: date-time
+          description: 'UTC time at which Zernio generated this event (set once when the event payload is built, before delivery is queued). Retries and redeliveries keep the original value, so it reflects the event, not the delivery attempt.'
     WebhookPayloadMessageDeleted:
       type: object
       description: |
@@ -3840,7 +3856,10 @@ components:
           $ref: '#/components/schemas/InboxWebhookConversation'
         account:
           $ref: '#/components/schemas/InboxWebhookAccount'
-        timestamp: { type: string, format: date-time }
+        timestamp:
+          type: string
+          format: date-time
+          description: 'UTC time at which Zernio generated this event (set once when the event payload is built, before delivery is queued). Retries and redeliveries keep the original value, so it reflects the event, not the delivery attempt.'
     WebhookPayloadMessageDeliveryStatus:
       type: object
       description: |
@@ -3883,7 +3902,10 @@ components:
           $ref: '#/components/schemas/InboxWebhookConversation'
         account:
           $ref: '#/components/schemas/InboxWebhookAccount'
-        timestamp: { type: string, format: date-time }
+        timestamp:
+          type: string
+          format: date-time
+          description: 'UTC time at which Zernio generated this event (set once when the event payload is built, before delivery is queued). Retries and redeliveries keep the original value, so it reflects the event, not the delivery attempt.'
     WebhookPayloadConversationStarted:
       type: object
       description: |
@@ -3928,7 +3950,10 @@ components:
           type: string
           format: date-time
           description: When the conversation document was created.
-        timestamp: { type: string, format: date-time }
+        timestamp:
+          type: string
+          format: date-time
+          description: 'UTC time at which Zernio generated this event (set once when the event payload is built, before delivery is queued). Retries and redeliveries keep the original value, so it reflects the event, not the delivery attempt.'
     CallRecord:
       type: object
       description: |
@@ -4024,7 +4049,10 @@ components:
             conversationId: { type: string }
             startedAt: { type: string, format: date-time }
         account: { $ref: '#/components/schemas/InboxWebhookAccount' }
-        timestamp: { type: string, format: date-time }
+        timestamp:
+          type: string
+          format: date-time
+          description: 'UTC time at which Zernio generated this event (set once when the event payload is built, before delivery is queued). Retries and redeliveries keep the original value, so it reflects the event, not the delivery attempt.'
     WebhookPayloadCallEnded:
       type: object
       description: |
@@ -4061,7 +4089,10 @@ components:
                 billableCostUSD: { type: number, description: 'The amount Zernio bills you = Telnyx leg + recording. Excludes Meta (billed by Meta directly).' }
                 totalCostUSD: { type: number, description: 'Full economic cost incl. the Meta portion you pay directly (Meta + Telnyx + recording). Display only, not the Zernio-billed amount.' }
         account: { $ref: '#/components/schemas/InboxWebhookAccount' }
-        timestamp: { type: string, format: date-time }
+        timestamp:
+          type: string
+          format: date-time
+          description: 'UTC time at which Zernio generated this event (set once when the event payload is built, before delivery is queued). Retries and redeliveries keep the original value, so it reflects the event, not the delivery attempt.'
     WebhookPayloadCallFailed:
       type: object
       description: |
@@ -4090,7 +4121,10 @@ components:
                 code: { type: integer }
                 message: { type: string }
         account: { $ref: '#/components/schemas/InboxWebhookAccount' }
-        timestamp: { type: string, format: date-time }
+        timestamp:
+          type: string
+          format: date-time
+          description: 'UTC time at which Zernio generated this event (set once when the event payload is built, before delivery is queued). Retries and redeliveries keep the original value, so it reflects the event, not the delivery attempt.'
     WebhookPayloadCallPermissionRequest:
       type: object
       description: |
@@ -4112,7 +4146,10 @@ components:
             expirationTimestamp: { type: string, format: date-time, description: "Present only when temporary" }
             responseSource: { type: string, description: "Meta's response source, typically `user_action`" }
         account: { $ref: '#/components/schemas/InboxWebhookAccount' }
-        timestamp: { type: string, format: date-time }
+        timestamp:
+          type: string
+          format: date-time
+          description: 'UTC time at which Zernio generated this event (set once when the event payload is built, before delivery is queued). Retries and redeliveries keep the original value, so it reflects the event, not the delivery attempt.'
     WebhookPayloadAdStatusChanged:
       type: object
       description: |
@@ -4221,7 +4258,7 @@ components:
         timestamp:
           type: string
           format: date-time
-          description: ISO-8601 timestamp the webhook was produced.
+          description: 'UTC time at which Zernio generated this event (set once when the event payload is built, before delivery is queued). Retries and redeliveries keep the original value, so it reflects the event, not the delivery attempt.'
     WebhookPayloadWhatsAppTemplateStatusUpdated:
       type: object
       description: |
@@ -4274,7 +4311,7 @@ components:
         timestamp:
           type: string
           format: date-time
-          description: ISO-8601 timestamp the webhook was produced.
+          description: 'UTC time at which Zernio generated this event (set once when the event payload is built, before delivery is queued). Retries and redeliveries keep the original value, so it reflects the event, not the delivery attempt.'
     WebhookPayloadTest:
       type: object
       description: Webhook payload for test deliveries
@@ -4292,6 +4329,7 @@ components:
         timestamp:
           type: string
           format: date-time
+          description: 'UTC time at which Zernio generated this test event (set once when the payload is built). Test fires are sent synchronously as a single attempt; a later redelivery of this event keeps the original value.'
     DiscordGuildMember:
       type: object
       description: A Discord guild member, returned verbatim from Discord's API.
@@ -8891,7 +8929,10 @@ webhooks:
               properties:
                 id: { type: string }
                 event: { type: string, enum: [whatsapp.automatic_event] }
-                timestamp: { type: string, format: date-time }
+                timestamp:
+                  type: string
+                  format: date-time
+                  description: 'UTC time at which Zernio generated this event (set once when the event payload is built, before delivery is queued). Retries and redeliveries keep the original value, so it reflects the event, not the delivery attempt.'
                 accountId:
                   type: string
                   description: SocialAccount id of the WhatsApp number whose conversation was flagged.
@@ -8936,7 +8977,10 @@ webhooks:
               properties:
                 id: { type: string }
                 event: { type: string, enum: [whatsapp.number.activated] }
-                timestamp: { type: string, format: date-time }
+                timestamp:
+                  type: string
+                  format: date-time
+                  description: 'UTC time at which Zernio generated this event (set once when the event payload is built, before delivery is queued). Retries and redeliveries keep the original value, so it reflects the event, not the delivery attempt.'
                 number:
                   type: object
                   properties:
@@ -8965,7 +9009,10 @@ webhooks:
               properties:
                 id: { type: string }
                 event: { type: string, enum: [whatsapp.number.declined] }
-                timestamp: { type: string, format: date-time }
+                timestamp:
+                  type: string
+                  format: date-time
+                  description: 'UTC time at which Zernio generated this event (set once when the event payload is built, before delivery is queued). Retries and redeliveries keep the original value, so it reflects the event, not the delivery attempt.'
                 number:
                   type: object
                   properties:
@@ -8997,7 +9044,10 @@ webhooks:
               properties:
                 id: { type: string }
                 event: { type: string, enum: [whatsapp.number.action_required] }
-                timestamp: { type: string, format: date-time }
+                timestamp:
+                  type: string
+                  format: date-time
+                  description: 'UTC time at which Zernio generated this event (set once when the event payload is built, before delivery is queued). Retries and redeliveries keep the original value, so it reflects the event, not the delivery attempt.'
                 reason: { type: string }
                 number:
                   type: object
@@ -9027,7 +9077,10 @@ webhooks:
               properties:
                 id: { type: string }
                 event: { type: string, enum: [whatsapp.number.verification_required] }
-                timestamp: { type: string, format: date-time }
+                timestamp:
+                  type: string
+                  format: date-time
+                  description: 'UTC time at which Zernio generated this event (set once when the event payload is built, before delivery is queued). Retries and redeliveries keep the original value, so it reflects the event, not the delivery attempt.'
                 number:
                   type: object
                   properties:
@@ -9058,7 +9111,10 @@ webhooks:
               properties:
                 id: { type: string }
                 event: { type: string, enum: [whatsapp.number.suspended] }
-                timestamp: { type: string, format: date-time }
+                timestamp:
+                  type: string
+                  format: date-time
+                  description: 'UTC time at which Zernio generated this event (set once when the event payload is built, before delivery is queued). Retries and redeliveries keep the original value, so it reflects the event, not the delivery attempt.'
                 number:
                   type: object
                   properties:
@@ -9087,7 +9143,10 @@ webhooks:
               properties:
                 id: { type: string }
                 event: { type: string, enum: [whatsapp.number.reactivated] }
-                timestamp: { type: string, format: date-time }
+                timestamp:
+                  type: string
+                  format: date-time
+                  description: 'UTC time at which Zernio generated this event (set once when the event payload is built, before delivery is queued). Retries and redeliveries keep the original value, so it reflects the event, not the delivery attempt.'
                 number:
                   type: object
                   properties:
@@ -9116,7 +9175,10 @@ webhooks:
               properties:
                 id: { type: string }
                 event: { type: string, enum: [whatsapp.number.released] }
-                timestamp: { type: string, format: date-time }
+                timestamp:
+                  type: string
+                  format: date-time
+                  description: 'UTC time at which Zernio generated this event (set once when the event payload is built, before delivery is queued). Retries and redeliveries keep the original value, so it reflects the event, not the delivery attempt.'
                 number:
                   type: object
                   properties:
@@ -9147,7 +9209,10 @@ webhooks:
               properties:
                 id: { type: string }
                 event: { type: string, enum: [whatsapp.number.kyc_submitted, verification.approved, verification.failed] }
-                timestamp: { type: string, format: date-time }
+                timestamp:
+                  type: string
+                  format: date-time
+                  description: 'UTC time at which Zernio generated this event (set once when the event payload is built, before delivery is queued). Retries and redeliveries keep the original value, so it reflects the event, not the delivery attempt.'
                 number:
                   type: object
                   properties:
@@ -9175,7 +9240,10 @@ webhooks:
               properties:
                 id: { type: string }
                 event: { type: string, enum: [verification.approved] }
-                timestamp: { type: string, format: date-time }
+                timestamp:
+                  type: string
+                  format: date-time
+                  description: 'UTC time at which Zernio generated this event (set once when the event payload is built, before delivery is queued). Retries and redeliveries keep the original value, so it reflects the event, not the delivery attempt.'
                 verification:
                   type: object
                   properties:
@@ -9202,7 +9270,10 @@ webhooks:
               properties:
                 id: { type: string }
                 event: { type: string, enum: [verification.failed] }
-                timestamp: { type: string, format: date-time }
+                timestamp:
+                  type: string
+                  format: date-time
+                  description: 'UTC time at which Zernio generated this event (set once when the event payload is built, before delivery is queued). Retries and redeliveries keep the original value, so it reflects the event, not the delivery attempt.'
                 verification:
                   type: object
                   properties:
@@ -26289,7 +26360,7 @@ paths:
                         isLiked: { type: boolean, description: Whether the current user has liked this comment }
                         likeUri: { type: [string, "null"], description: Bluesky like URI for unliking }
                         cid: { type: [string, "null"], description: Bluesky content identifier }
-                        parentId: { type: [string, "null"], description: Parent comment ID for nested replies }
+                        parentId: { type: [string, "null"], description: 'ID of the parent comment. Present on entries inside replies[] for Facebook, Instagram and X/Twitter. On X/Twitter it is also present on top-level entries, where it holds the ID of the post replied to. Omitted entirely (key absent, not null) on top-level Facebook and Instagram entries and on every other platform, which express the parent relationship only through replies[] nesting.' }
                         rootUri: { type: [string, "null"], description: Bluesky root post URI }
                         rootCid: { type: [string, "null"], description: Bluesky root post CID }
                   post:
