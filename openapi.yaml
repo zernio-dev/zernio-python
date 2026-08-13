@@ -26314,8 +26314,18 @@ paths:
         (Instagram side); a row whose count can't be read is omitted.
 
         Pagination walks each account's platform listing. Following `nextCursor` reaches past
-        the first page on Facebook and Instagram only, since they are the platforms that
-        support a server-side date window; on the others the listing stops at its first page.
+        the first page on Facebook, Instagram, Threads, LinkedIn and YouTube, since they are
+        the platforms that support a server-side date window; on the others the listing stops
+        at its first page. Cursor pagination is only coherent for the default sort
+        (`sortBy=date`, `sortOrder=desc`): with `sortOrder=asc`, or with `sortBy=comments`,
+        the cursor filter does not match the sort order and the second page is unreliable.
+
+        `nextCursor` is opaque: pass it back verbatim, never construct or parse it, its
+        composition may change without notice. Because each page re-queries a live window,
+        results can still shift between requests, so dedupe by `id` on the client.
+
+        `commentCount` semantics differ by platform: YouTube's includes replies, Facebook's counts
+        top-level comments only.
       tags: [Comments]
       security: [{ bearerAuth: [] }]
       parameters:
@@ -26412,14 +26422,19 @@ paths:
       x-resource-group: "engagement"
       operationId: getInboxPostComments
       summary: Get post comments
-      description: Fetch comments for a specific post. Requires accountId query parameter.
+      description: |
+        Fetch comments for a specific post. Requires accountId query parameter.
+
+        On Facebook and Instagram, passing a COMMENT id as `postId` is also supported and
+        returns that comment's replies instead of the post's top-level comments. This is not
+        available on YouTube, where `postId` must be a video id.
       tags: [Comments]
       security: [{ bearerAuth: [] }]
       parameters:
         - name: postId
           in: path
           required: true
-          description: Zernio post ID or platform-specific post ID. Zernio IDs are auto-resolved. LinkedIn third-party posts accept full activity URN or numeric ID.
+          description: Zernio post ID or platform-specific post ID. Zernio IDs are auto-resolved. LinkedIn third-party posts accept full activity URN or numeric ID. On Facebook and Instagram, a comment ID is also accepted here and returns that comment's replies.
           schema: { type: string }
         - name: accountId
           in: query
@@ -26436,7 +26451,7 @@ paths:
         - name: cursor
           in: query
           schema: { type: string }
-          description: Pagination cursor
+          description: 'Pagination cursor, returned by a previous call as `pagination.cursor`. This is the platform''s own opaque paging value passed through verbatim: never construct, decode or validate it client-side.'
         - name: commentId
           in: query
           schema: { type: string }
@@ -26471,7 +26486,7 @@ paths:
                               enum: [blue, government, business, none]
                               description: X/Twitter verified badge type. Only present for Twitter/X comments.
                         likeCount: { type: integer }
-                        replyCount: { type: integer }
+                        replyCount: { type: integer, description: "The platform's own reply count, which includes hidden and deleted replies. Can exceed replies[].length even when repliesHasMore is false or absent." }
                         platform: { type: string, description: The platform this comment is from }
                         url:
                           type: [string, "null"]
@@ -26479,6 +26494,9 @@ paths:
                         replies:
                           type: array
                           items: { type: object }
+                        repliesHasMore:
+                          type: boolean
+                          description: "Facebook only. True when replies[] (capped at 10) does not hold the comment's full reply thread; fetch the rest by passing the comment id as postId to GET /v1/inbox/comments/{postId}. Absent (not false) on every other platform, including Instagram, which has no equivalent signal."
                         canReply: { type: boolean }
                         canDelete: { type: boolean }
                         canHide: { type: boolean, description: "Whether this comment can be hidden (Facebook, Instagram, Threads)" }

@@ -6740,11 +6740,11 @@ def register_generated_tools(mcp, _get_client):
         """Get post comments
 
         Args:
-            post_id: Zernio post ID or platform-specific post ID. Zernio IDs are auto-resolved. LinkedIn third-party posts accept full activity URN or numeric ID. (required)
+            post_id: Zernio post ID or platform-specific post ID. Zernio IDs are auto-resolved. LinkedIn third-party posts accept full activity URN or numeric ID. On Facebook and Instagram, a comment ID is also accepted here and returns that comment's replies. (required)
             account_id: (required)
             subreddit: (Reddit only) Subreddit name
             limit: Maximum number of comments to return
-            cursor: Pagination cursor
+            cursor: Pagination cursor, returned by a previous call as `pagination.cursor`. This is the platform's own opaque paging value passed through verbatim: never construct, decode or validate it client-side.
             comment_id: (Reddit only) Get replies to a specific comment"""
         client = _get_client()
         try:
