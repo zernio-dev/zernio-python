@@ -6821,7 +6821,7 @@ def register_generated_tools(mcp, _get_client):
         Args:
             post_id: Zernio post ID or platform-specific post ID. LinkedIn third-party posts accept full activity URN or numeric ID. (required)
             account_id: (required)
-            comment_id: (required)"""
+            comment_id: For LinkedIn, accepts either the numeric comment ID or the composite comment URN returned by the comments listing (e.g. urn:li:comment:(threadUrn,id)) (required)"""
         client = _get_client()
         try:
             response = client.comments.delete_inbox_comment(

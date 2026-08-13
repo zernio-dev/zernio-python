@@ -26618,6 +26618,7 @@ paths:
         - name: commentId
           in: query
           required: true
+          description: 'For LinkedIn, accepts either the numeric comment ID or the composite comment URN returned by the comments listing (e.g. urn:li:comment:(threadUrn,id))'
           schema: { type: string }
       responses:
         '200':
