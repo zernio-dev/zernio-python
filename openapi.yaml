@@ -1203,6 +1203,11 @@ components:
           properties:
             x: { type: number }
             y: { type: number }
+        label:
+          type: string
+          minLength: 1
+          maxLength: 80
+          description: 'Optional display name shown on the builder canvas and inspector, falling back to the node type when absent. The nodes array is replaced wholesale on update, so it must be resent to be kept.'
     WorkflowEdge:
       type: object
       required: [id, source, target]
