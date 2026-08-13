@@ -21,6 +21,7 @@ from ..resources import (
     AdTargetingResource,
     AnalyticsResource,
     ApiKeysResource,
+    BlogsResource,
     BroadcastsResource,
     CallsResource,
     CommentAutomationsResource,
@@ -152,6 +153,7 @@ class Zernio(BaseClient):
         self.ads = AdsResource(self)
         self.analytics = AnalyticsResource(self)
         self.api_keys = ApiKeysResource(self)
+        self.blogs = BlogsResource(self)
         self.broadcasts = BroadcastsResource(self)
         self.calls = CallsResource(self)
         self.comment_automations = CommentAutomationsResource(self)

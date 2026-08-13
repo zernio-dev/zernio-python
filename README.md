@@ -336,6 +336,7 @@ Both `from zernio import ...` and `from late import ...` work identically. The `
 | `connect.get_pinterest_boards()` | List Pinterest boards |
 | `connect.get_reddit_flairs()` | List subreddit flairs |
 | `connect.get_reddit_subreddits()` | List Reddit subreddits |
+| `connect.get_shopify_connect_url()` | Get Shopify OAuth connect URL |
 | `connect.get_subreddit_rules()` | Get subreddit rules |
 | `connect.get_telegram_connect_status()` | Generate Telegram code |
 | `connect.get_youtube_playlists()` | List YouTube playlists |
@@ -480,6 +481,20 @@ Both `from zernio import ...` and `from late import ...` work identically. The `
 | `ad_targeting.estimate_ad_reach()` | Estimate audience reach |
 | `ad_targeting.search_ad_interests()` | Search targeting interests |
 | `ad_targeting.search_ad_targeting()` | Search targeting options |
+
+### Blogs
+| Method | Description |
+|--------|-------------|
+| `blogs.list_blog_articles()` | List blog articles |
+| `blogs.list_blogs()` | List blogs |
+| `blogs.create_blog()` | Create a blog |
+| `blogs.create_blog_article()` | Create a blog article |
+| `blogs.get_blog()` | Get a blog |
+| `blogs.get_blog_article()` | Get a blog article |
+| `blogs.update_blog()` | Update a blog |
+| `blogs.update_blog_article()` | Update a blog article |
+| `blogs.delete_blog()` | Delete a blog |
+| `blogs.delete_blog_article()` | Delete a blog article |
 
 ### Broadcasts
 | Method | Description |

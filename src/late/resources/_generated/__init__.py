@@ -13,6 +13,7 @@ from .ad_insights import AdInsightsResource
 from .ad_targeting import AdTargetingResource
 from .analytics import AnalyticsResource
 from .api_keys import ApiKeysResource
+from .blogs import BlogsResource
 from .broadcasts import BroadcastsResource
 from .calls import CallsResource
 from .comment_automations import CommentAutomationsResource
@@ -72,6 +73,7 @@ __all__ = [
     "AdTargetingResource",
     "AnalyticsResource",
     "ApiKeysResource",
+    "BlogsResource",
     "BroadcastsResource",
     "CallsResource",
     "CommentAutomationsResource",

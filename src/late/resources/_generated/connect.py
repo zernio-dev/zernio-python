@@ -81,6 +81,7 @@ class ConnectResource:
         redirect_url: str | None = None,
         headless: bool | None = False,
         login_method: str | None = "instagram_login",
+        onboarding: str | None = None,
     ) -> dict[str, Any]:
         """Get OAuth connect URL"""
         params = self._build_params(
@@ -88,6 +89,7 @@ class ConnectResource:
             redirect_url=redirect_url,
             headless=headless,
             login_method=login_method,
+            onboarding=onboarding,
         )
         return self._client._get(f"/v1/connect/{platform}", params=params)
 
@@ -125,6 +127,17 @@ class ConnectResource:
             ad_account_ids=ad_account_ids,
         )
         return self._client._get(f"/v1/connect/{platform}/ads", params=params)
+
+    def get_shopify_connect_url(
+        self, profile_id: str, shop: str, *, redirect_url: str | None = None
+    ) -> dict[str, Any]:
+        """Get Shopify OAuth connect URL"""
+        params = self._build_params(
+            profile_id=profile_id,
+            shop=shop,
+            redirect_url=redirect_url,
+        )
+        return self._client._get("/v1/connect/shopify", params=params)
 
     def configure_tik_tok_ads_brand_identity(
         self, account_id: str, display_name: str, image_url: str
@@ -673,6 +686,7 @@ class ConnectResource:
         redirect_url: str | None = None,
         headless: bool | None = False,
         login_method: str | None = "instagram_login",
+        onboarding: str | None = None,
     ) -> dict[str, Any]:
         """Get OAuth connect URL (async)"""
         params = self._build_params(
@@ -680,6 +694,7 @@ class ConnectResource:
             redirect_url=redirect_url,
             headless=headless,
             login_method=login_method,
+            onboarding=onboarding,
         )
         return await self._client._aget(f"/v1/connect/{platform}", params=params)
 
@@ -717,6 +732,17 @@ class ConnectResource:
             ad_account_ids=ad_account_ids,
         )
         return await self._client._aget(f"/v1/connect/{platform}/ads", params=params)
+
+    async def aget_shopify_connect_url(
+        self, profile_id: str, shop: str, *, redirect_url: str | None = None
+    ) -> dict[str, Any]:
+        """Get Shopify OAuth connect URL (async)"""
+        params = self._build_params(
+            profile_id=profile_id,
+            shop=shop,
+            redirect_url=redirect_url,
+        )
+        return await self._client._aget("/v1/connect/shopify", params=params)
 
     async def aconfigure_tik_tok_ads_brand_identity(
         self, account_id: str, display_name: str, image_url: str
