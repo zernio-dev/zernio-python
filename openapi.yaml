@@ -42350,6 +42350,21 @@ paths:
         `urn:li:geo:*` URN usable as a `regions[].key` on `POST /v1/ads/create`,
         `POST /v1/ads/boost` and `POST /v1/ads/targeting/reach-estimate`.
 
+        Pinterest resolves against three whole-catalog endpoints (interests, locations,
+        regions) with no server-side query or pagination, so matching, ranking and the
+        `limit` cutoff all happen in Zernio; the catalog is independent of any ad account
+        and results never carry `audienceSize`. Names come back localized to the connected
+        Pinterest account's language (there is no way to force a locale), so match against
+        whatever language that account returns. `geoType` routes to a different catalog:
+        `country` and `metro_area` read the locations catalog (`type` is `country` or
+        `metro`); `region` reads the regions catalog (`type` is `region`, its id a
+        `regions[].key` on `POST /v1/ads/create`); `all` and the default `city` merge both
+        catalogs with honest per-entry `type`s, since Pinterest has no city-level catalog
+        and `city` is an alias for `all`, not a literal city search. `zip`, `subcity`,
+        `neighborhood`, `place` and `geo_market` return a 400: Pinterest exposes no
+        postal-code catalog, pass postal codes directly as `targeting.zips: [{ key }]` on
+        `POST /v1/ads/create`.
+
         For geo queries, `q` should contain only the locality name (e.g. `"Amsterdam"`,
         not `"Amsterdam, NL"`). Use `countryCode` to disambiguate.
       security:
@@ -42358,7 +42373,7 @@ paths:
         - { name: accountId, in: query, required: true, schema: { type: string }, description: "Social account ID (a connected account on the target ad platform)." }
         - { name: q, in: query, required: true, schema: { type: string }, description: "Search query. For geo, the locality name only (no region/country suffix)." }
         - { name: dimension, in: query, required: false, schema: { type: string, enum: [geo, interest, behavior, income], default: interest }, description: "What to search. `geo` resolves locations (scope further with `geoType`), `interest`/`behavior` resolve audience entities, `income` resolves income-tier options. Defaults to `interest` for backward compatibility with the deprecated /v1/ads/interests alias." }
-        - { name: geoType, in: query, required: false, schema: { type: string, enum: [country, region, city, zip, metro], default: city }, description: "Only used when `dimension=geo`. The kind of location to resolve. Defaults to `city`." }
+        - { name: geoType, in: query, required: false, schema: { type: string, enum: [all, country, region, city, subcity, neighborhood, place, zip, metro_area, geo_market], default: city }, description: "Only used when `dimension=geo`. The kind of location to resolve. `all` searches every type in one relevance-ranked call. Defaults to `city`." }
         - { name: countryCode, in: query, required: false, schema: { type: string, minLength: 2, maxLength: 2 }, description: "ISO 3166-1 alpha-2 country code (e.g. NL) to scope a geo search." }
         - { name: limit, in: query, required: false, schema: { type: integer, minimum: 1, maximum: 100, default: 25 }, description: "Maximum results to return." }
       responses:
