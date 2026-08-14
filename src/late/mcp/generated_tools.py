@@ -3348,8 +3348,9 @@ def register_generated_tools(mcp, _get_client):
         available on `POST /v1/ads/boost`.)
                 instagram_account_id: Meta only. Override the Instagram account the ad is delivered as — pass an Instagram
         Business Account ID (e.g. 17841...), mapped to the creative's `instagram_user_id`.
-        When omitted we auto-resolve the IG account linked to the connected Facebook Page
-        (the existing default). Useful when a Page has more than one eligible IG account.
+        When omitted we use the Instagram actor Meta already runs the Page's other ads as,
+        falling back to the Page's page-backed Instagram account. Useful when a Page has more
+        than one eligible IG account.
                 dynamic_creative: Meta only. Dynamic Creative: supply a POOL of assets and Meta auto-combines and
         optimises them into the best-performing variations within a single ad (mapped to the
         creative's `asset_feed_spec`). When set, the top-level single-creative fields
