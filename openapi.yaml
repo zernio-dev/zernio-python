@@ -32141,6 +32141,7 @@ paths:
                     first_name: { type: string }
                     last_name: { type: string }
                     street_address: { type: string }
+                    extended_address: { type: string, description: 'Address complement: apartment, suite, unit, or the quadra/lote used in some countries. Optional. Does not substitute for a building number on street_address.' }
                     locality: { type: string }
                     administrative_area: { type: string }
                     postal_code: { type: string }
@@ -32265,6 +32266,7 @@ paths:
               properties:
                 country: { type: string, minLength: 2, maxLength: 2, description: ISO 3166-1 alpha-2 country code. }
                 street_address: { type: string }
+                extended_address: { type: string, description: 'Address complement: apartment, suite, unit, or the quadra/lote used in some countries. Optional. Does not substitute for a building number on street_address.' }
                 locality: { type: string, description: City / town. }
                 administrative_area: { type: string, description: "State / province / region. When omitted, the pre-check is skipped (the final submit still validates)." }
                 postal_code: { type: string }
@@ -33131,6 +33133,7 @@ paths:
                     first_name: { type: string }
                     last_name: { type: string }
                     street_address: { type: string }
+                    extended_address: { type: string, description: 'Address complement: apartment, suite, unit, or the quadra/lote used in some countries. Optional. Does not substitute for a building number on street_address.' }
                     locality: { type: string }
                     administrative_area: { type: string }
                     postal_code: { type: string }
@@ -33234,6 +33237,7 @@ paths:
               properties:
                 country: { type: string, minLength: 2, maxLength: 2, description: ISO 3166-1 alpha-2 country code. }
                 street_address: { type: string }
+                extended_address: { type: string, description: 'Address complement: apartment, suite, unit, or the quadra/lote used in some countries. Optional. Does not substitute for a building number on street_address.' }
                 locality: { type: string, description: City / town. }
                 administrative_area: { type: string, description: "State / province / region. When omitted, the pre-check is skipped (the final submit still validates)." }
                 postal_code: { type: string }

@@ -12082,6 +12082,7 @@ def register_generated_tools(mcp, _get_client):
         street_address: str,
         locality: str,
         postal_code: str,
+        extended_address: str | None = None,
         administrative_area: str | None = None,
     ) -> str:
         """Pre-validate KYC address
@@ -12089,6 +12090,7 @@ def register_generated_tools(mcp, _get_client):
         Args:
             country: ISO 3166-1 alpha-2 country code. (required)
             street_address: (required)
+            extended_address: Address complement: apartment, suite, unit, or the quadra/lote used in some countries. Optional. Does not substitute for a building number on street_address.
             locality: City / town. (required)
             administrative_area: State / province / region. When omitted, the pre-check is skipped (the final submit still validates).
             postal_code: (required)"""
@@ -12097,6 +12099,7 @@ def register_generated_tools(mcp, _get_client):
             response = client.phone_numbers.validate_phone_number_kyc_address(
                 country=country,
                 street_address=street_address,
+                extended_address=extended_address,
                 locality=locality,
                 administrative_area=administrative_area,
                 postal_code=postal_code,
@@ -17870,6 +17873,7 @@ def register_generated_tools(mcp, _get_client):
         street_address: str,
         locality: str,
         postal_code: str,
+        extended_address: str | None = None,
         administrative_area: str | None = None,
     ) -> str:
         """Pre-validate KYC address
@@ -17877,6 +17881,7 @@ def register_generated_tools(mcp, _get_client):
         Args:
             country: ISO 3166-1 alpha-2 country code. (required)
             street_address: (required)
+            extended_address: Address complement: apartment, suite, unit, or the quadra/lote used in some countries. Optional. Does not substitute for a building number on street_address.
             locality: City / town. (required)
             administrative_area: State / province / region. When omitted, the pre-check is skipped (the final submit still validates).
             postal_code: (required)"""
@@ -17886,6 +17891,7 @@ def register_generated_tools(mcp, _get_client):
                 client.whatsapp_phone_numbers.validate_whats_app_number_kyc_address(
                     country=country,
                     street_address=street_address,
+                    extended_address=extended_address,
                     locality=locality,
                     administrative_area=administrative_area,
                     postal_code=postal_code,

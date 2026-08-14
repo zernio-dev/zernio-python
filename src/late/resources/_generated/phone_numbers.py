@@ -218,12 +218,14 @@ class PhoneNumbersResource:
         locality: str,
         postal_code: str,
         *,
+        extended_address: str | None = None,
         administrative_area: str | None = None,
     ) -> dict[str, Any]:
         """Pre-validate KYC address"""
         payload = self._build_payload(
             country=country,
             street_address=street_address,
+            extended_address=extended_address,
             locality=locality,
             administrative_area=administrative_area,
             postal_code=postal_code,
@@ -535,12 +537,14 @@ class PhoneNumbersResource:
         locality: str,
         postal_code: str,
         *,
+        extended_address: str | None = None,
         administrative_area: str | None = None,
     ) -> dict[str, Any]:
         """Pre-validate KYC address (async)"""
         payload = self._build_payload(
             country=country,
             street_address=street_address,
+            extended_address=extended_address,
             locality=locality,
             administrative_area=administrative_area,
             postal_code=postal_code,
