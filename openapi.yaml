@@ -150,14 +150,14 @@ x-documentation:
     - `account.connected` - Social account connected
     - `account.disconnected` - Social account disconnected (token expired)
     - `account.ads.initial_sync_completed` - Initial ads sync (discovery + 90-day backfill) completed for an ads-enabled account
-    - `message.received` - New DM received
-    - `conversation.started` - A new conversation opened between one of your accounts and a contact, in either direction (any DM platform); fires only the first time the thread appears
+    - `message.received` - New inbound DM or SMS received (SMS arrives with `platform: "sms"`)
+    - `conversation.started` - A new conversation opened between one of your accounts and a contact, in either direction (any DM platform, and SMS); fires only the first time the thread appears
     - `message.sent` - DM sent via the API
     - `message.edited` - A sender edited a message (Instagram, Messenger, Telegram)
     - `message.deleted` - A sender deleted ("unsent") a message (Instagram; WhatsApp when the business deletes a sent message)
-    - `message.delivered` - An outgoing message was delivered (WhatsApp, Messenger)
+    - `message.delivered` - An outgoing message was delivered (WhatsApp, Messenger, SMS)
     - `message.read` - An outgoing message was read by the recipient (WhatsApp, Messenger, Instagram)
-    - `message.failed` - An outgoing message failed delivery (WhatsApp)
+    - `message.failed` - An outgoing message failed delivery (WhatsApp, SMS; on SMS the carrier's error code rides in `error`)
     - `reaction.received` - A participant added or removed an emoji reaction on a message (WhatsApp, Telegram, Slack, Instagram, Facebook Messenger)
     - `referral.received` - Someone opened an existing Instagram/Messenger thread through an ig.me/m.me `ref` link or a returning Messenger ad click; carries Meta's referral object (a referral that rides an inbound message arrives on `message.received` under `metadata.referral` instead)
     - `comment.received` - New comment received on a post
@@ -3152,7 +3152,7 @@ components:
           description: Internal conversation ID
         platform:
           type: string
-          enum: [instagram, facebook, telegram, whatsapp]
+          enum: [instagram, facebook, telegram, whatsapp, sms]
         platformMessageId:
           type: string
           description: Platform's message ID
@@ -3443,7 +3443,7 @@ components:
               description: Internal conversation ID
             platform:
               type: string
-              enum: [instagram, facebook, telegram, whatsapp]
+              enum: [instagram, facebook, telegram, whatsapp, sms]
             platformMessageId:
               type: string
               description: Platform's message ID
@@ -3986,10 +3986,12 @@ components:
         delivery state for an outgoing message.
 
         Platform support:
-          * message.delivered — WhatsApp, Facebook Messenger.
-          * message.read      — WhatsApp, Facebook Messenger, Instagram.
-          * message.failed    — WhatsApp only (other platforms don't expose
-            per-message failure via webhook).
+          * message.delivered: WhatsApp, Facebook Messenger, SMS.
+          * message.read: WhatsApp, Facebook Messenger, Instagram. Not SMS
+            (carriers report delivery, never read).
+          * message.failed: WhatsApp and SMS (other platforms don't expose
+            per-message failure via webhook). On SMS, `error.code` is the
+            carrier's numeric code and `error.message` its reason.
       required: [id, event, message, statusAt, conversation, account, timestamp]
       properties:
         id: { type: string }
@@ -29431,6 +29433,15 @@ paths:
         US numbers must have an approved carrier registration
         (`/v1/sms/registrations`) before messages deliver.
 
+        **Replies and delivery status arrive as webhooks**, not by polling:
+        an inbound reply fires `message.received` with `platform: "sms"`, the
+        first message of a new thread also fires `conversation.started`, and
+        this message's own outcome fires `message.delivered` or
+        `message.failed` (the latter carrying the carrier's error code).
+
+        **Opted-out recipients:** a send to a number that replied STOP is
+        refused with `409`, never silently dropped.
+
         **Idempotency:** send an `Idempotency-Key` header to make retries safe:
         same key + same body replays the original response instead of sending a
         second message; same key + different body returns 422; a key still in
@@ -29472,7 +29483,7 @@ paths:
                   status: { type: string, enum: [sent] }
         '401': { $ref: '#/components/responses/Unauthorized' }
         '404': { description: "No SMS-enabled number matches `from`" }
-        '409': { $ref: '#/components/responses/IdempotencyKeyInFlight' }
+        '409': { description: "Recipient has opted out (replied STOP), or the same Idempotency-Key is still in flight" }
         '422': { $ref: '#/components/responses/IdempotencyKeyReused' }
         '502': { description: Carrier-side send failed }
 
