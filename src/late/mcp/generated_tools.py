@@ -3245,8 +3245,9 @@ def register_generated_tools(mcp, _get_client):
         The attached ad takes the full single-creative surface:
         `headline`/`body`/`description`/`callToAction` plus either
         `imageUrl`/`video` OR `placementAssets` (its own per-placement
-        Feed/Story assets), and `leadGenFormId` when the target is a
-        lead ad set (the parent must be ON_AD — true for ad sets
+        Feed/Story assets) OR `translations`/`defaultLocale` (its own
+        per-locale asset feed, Meta only), and `leadGenFormId` when
+        the target is a lead ad set (the parent must be ON_AD, true for ad sets
         created via goal `lead_generation`; Meta rejects a formless ad
         there, so pass the form on EVERY attached ad). This is the way
         to build N full ads sharing one ad set: create the first ad
@@ -3394,8 +3395,8 @@ def register_generated_tools(mcp, _get_client):
         works on a normal ad may be rejected with "The following images have invalid
         dimensions for Dynamic Creative" (subcode 1885558). Video is not affected.
 
-        Mutually exclusive with `dynamicCreative`, `placementAssets`, `carouselCards` and
-        `existingCreativeId` — Meta allows one `asset_feed_spec` shape per creative.
+        Mutually exclusive with `dynamicCreative`, `placementAssets`, `carouselCards`,
+        `existingCreativeId` and `creatives[]`. Meta allows one `asset_feed_spec` shape per creative.
                 placement_assets: Meta only. Placement asset customization: pin a SPECIFIC asset (image OR video) to
         each placement group on a SINGLE ad (e.g. a 9:16 on Stories/Reels and a 4:5 on Feed).
         The same thing Meta Ads Manager produces with "different creative per placement",
