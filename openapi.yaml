@@ -899,8 +899,11 @@ components:
           maxLength: 3
           description: |
             ISO 4217 currency code matching the ad account's currency
-            (e.g. `USD`). Optional; Meta infers from the ad account
-            when omitted.
+            (e.g. `USD`). Optional: Zernio resolves it from the ad account
+            when omitted. The value selects the minor-unit exponent Zernio
+            converts budget/bid amounts by before calling Meta (most
+            currencies are cents; zero-decimal currencies like JPY/KRW are
+            sent as-is).
         endDate:
           type: string
           format: date-time
@@ -40796,7 +40799,7 @@ paths:
                     type: { type: string, enum: [daily, lifetime] }
                 instagramAccountId: { type: string, description: "Meta only. Instagram identity the ad runs AS (creative.instagram_user_id), overriding the account linked to the Page. Live-verified against a Page-post creative." }
                 destinationType: { type: string, enum: [INSTAGRAM_PROFILE, WEBSITE, ON_AD, MESSENGER, WHATSAPP], description: "Meta only. Ad-set destination_type — where the click LANDS, as opposed to instagramAccountId which is who the ad runs as. Lead ads force ON_AD and ignore this." }
-                currency: { type: string, example: USD }
+                currency: { type: string, minLength: 3, maxLength: 3, example: USD, description: "ISO 4217 currency code matching the ad account's currency. Meta only. Optional: Zernio resolves it from the ad account when omitted. The value selects the minor-unit exponent Zernio converts budget/bid amounts by before calling Meta (most currencies are cents; zero-decimal currencies like JPY/KRW are sent as-is)." }
                 schedule:
                   type: object
                   properties:
@@ -41179,7 +41182,7 @@ paths:
                         across ad sets automatically.
                     Meta requires the budget at exactly one level, never both. Non-Meta platforms ignore
                     this field. Ignored on the attach shape (`adSetId`), which inherits the existing budget.
-                currency: { type: string }
+                currency: { type: string, minLength: 3, maxLength: 3, description: "ISO 4217 currency code matching the ad account's currency (e.g. `USD`). Meta only. Optional: Zernio resolves it from the ad account when omitted. The value selects the minor-unit exponent Zernio converts budget/bid amounts by before calling Meta (most currencies are cents; zero-decimal currencies like JPY/KRW are sent as-is)." }
                 headline: { type: string, description: "Required for Meta, Google, Pinterest, LinkedIn, and OpenAI Ads on legacy + attach shapes (skip for multi-creative — use `creatives[].headline`). Ignored for TikTok and X/Twitter. Max: Meta=255, Google=30, Pinterest=100, LinkedIn=400, OpenAI=50 (min 3). On LinkedIn this is the ad's headline (the bold text on the creative); for traffic ads it's the link card title. On OpenAI Ads this is the chat card's title." }
                 longHeadline: { type: string, maxLength: 90, description: "Google Display only — defaults to `headline` if omitted. On LinkedIn, reused as the optional secondary description text on traffic (link) ads; omitted if not provided." }
                 body: { type: string, description: "Required on legacy + attach shapes. For X/Twitter this is the tweet text (max 280 chars including a ~24-char URL when `linkUrl` is set). On LinkedIn this is the post commentary (the intro text shown above the ad). On OpenAI Ads this is the chat card's body text. Max: Google=90, Pinterest=500, OpenAI=100." }
