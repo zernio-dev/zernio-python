@@ -15664,7 +15664,15 @@ paths:
       operationId: getAccountHealth
       tags: [Accounts]
       summary: Check account health
-      description: Returns detailed health info for a specific account including token status, permissions, and recommendations.
+      description: |
+        Returns detailed health info for a specific account including token status, permissions, and recommendations.
+
+        For WhatsApp accounts the response also includes `platformConnection`, a live probe of the
+        Meta link behind the channel (the same read as `GET /v1/whatsapp/number-info`). The OAuth
+        token can be perfectly valid while Meta refuses to serve the phone-number object (for
+        example after a phone-side coexistence disconnect), so `tokenStatus` alone is not a
+        liveness signal for WhatsApp. When the Meta link is dead, `platformConnection.status` is
+        `disconnected` and the overall `status` is `error`.
       parameters:
         - name: accountId
           in: path
@@ -15732,6 +15740,28 @@ paths:
                     type: array
                     items: { type: string }
                     description: Actionable recommendations to fix issues
+                  platformConnection:
+                    type: object
+                    description: 'WhatsApp accounts only. Live probe of the Meta link behind the channel, performed at request time (the same read as GET /v1/whatsapp/number-info).'
+                    properties:
+                      status:
+                        type: string
+                        enum: [connected, disconnected, unknown]
+                        description: '`connected` = Meta served the channel object. `disconnected` = Meta refused to serve it (Graph error 100, subcode 33), which is how a phone-side coexistence disconnect surfaces. `unknown` = the live read failed for another reason (timeout, transient Meta error), not evidence either way.'
+                      checkedAt:
+                        type: string
+                        format: date-time
+                        description: When this live probe ran (always the current request; never cached)
+                      phoneStatus:
+                        type: [string, "null"]
+                        description: 'Meta''s own `status` field from the phone-number node (for example CONNECTED), when the object was readable'
+                      metaError:
+                        type: [object, "null"]
+                        description: Set only when status is `disconnected`
+                        properties:
+                          code: { type: integer, description: 'Meta Graph error code (100)' }
+                          subcode: { type: integer, description: 'Meta Graph error subcode (33)' }
+                          message: { type: string }
               example:
                 accountId: "abc123"
                 platform: "instagram"
@@ -15761,6 +15791,7 @@ paths:
                   missingRequired: []
                 issues: []
                 recommendations: []
+        '400': { $ref: '#/components/responses/BadRequest' }
         '401': { $ref: '#/components/responses/Unauthorized' }
         '404': { $ref: '#/components/responses/NotFound' }
   /v1/accounts/{accountId}/follow-status/{userId}:
