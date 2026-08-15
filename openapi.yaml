@@ -24816,7 +24816,7 @@ paths:
         - name: cursor
           in: query
           schema: { type: string }
-          description: Pagination cursor for next page
+          description: "Opaque pagination cursor. Pass back pagination.nextCursor verbatim; do not construct one."
       responses:
         '200':
           description: Conversations containing the query, most recent match first
@@ -24884,7 +24884,7 @@ paths:
                             accountId: { type: string }
                             platform: { type: string }
         '400':
-          description: Invalid query or unsupported platform
+          description: 'Invalid query, unsupported platform, or malformed cursor'
         '401': { $ref: '#/components/responses/Unauthorized' }
         '403':
           description: Inbox addon required

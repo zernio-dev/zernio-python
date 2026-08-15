@@ -11184,7 +11184,7 @@ def register_generated_tools(mcp, _get_client):
             platform: Filter by platform (searchable platforms only)
             account_id: Filter by specific social account ID
             limit: Maximum number of conversations to return
-            cursor: Pagination cursor for next page"""
+            cursor: Opaque pagination cursor. Pass back pagination.nextCursor verbatim; do not construct one."""
         client = _get_client()
         try:
             response = client.messages.search_inbox_conversations(
