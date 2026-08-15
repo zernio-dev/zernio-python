@@ -6682,7 +6682,7 @@ components:
         likes: { type: integer, example: 0 }
         comments: { type: integer, example: 0 }
         shares: { type: integer, example: 0 }
-        saves: { type: integer, example: 0, description: 'Number of saves/bookmarks (Instagram, Pinterest)' }
+        saves: { type: integer, example: 0, description: 'Number of saves/bookmarks (Instagram, Pinterest, X/Twitter)' }
         clicks: { type: integer, example: 0 }
         views: { type: integer, example: 0 }
         follows: { type: integer, example: 0, description: 'Instagram feed posts and stories only: organic accounts that started following from this post. 0 for reels and other platforms.' }
