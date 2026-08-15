@@ -4,7 +4,7 @@ import os
 
 # Server information
 SERVICE_NAME = "Zernio MCP Server"
-SERVICE_VERSION = "1.2.0"
+SERVICE_VERSION = "1.2.1"
 # Streamable HTTP is the primary transport (single endpoint, request/response
 # with optional chunked streaming — no long-idle connection for proxies or
 # bridges like mcp-remote to kill). Legacy SSE is still served for backwards
