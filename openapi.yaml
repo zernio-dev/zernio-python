@@ -36147,7 +36147,7 @@ paths:
                         contactId: { type: string }
                         channelId: { type: string }
                         platformIdentifier: { type: string }
-                        contactName: { type: string }
+                        contactName: { type: [string, "null"] }
                         status: { type: string, enum: [pending, sent, delivered, read, failed] }
                         messageId: { type: string }
                         error: { type: string }
@@ -37131,10 +37131,10 @@ paths:
                         contactName: { type: string }
                         currentStepIndex: { type: integer }
                         status: { type: string, enum: [active, completed, exited, paused] }
-                        exitReason: { type: string }
-                        nextStepAt: { type: string, format: date-time }
+                        exitReason: { type: [string, "null"] }
+                        nextStepAt: { type: [string, "null"], format: date-time }
                         stepsSent: { type: integer }
-                        lastStepSentAt: { type: string, format: date-time }
+                        lastStepSentAt: { type: [string, "null"], format: date-time }
                         createdAt: { type: string, format: date-time }
                   pagination:
                     type: object
