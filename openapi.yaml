@@ -36183,7 +36183,7 @@ paths:
             schema:
               type: object
               properties:
-                contactIds: { type: array, items: { type: string }, description: Specific contact IDs to add }
+                contactIds: { type: array, items: { type: string }, description: 'Specific contact IDs to add. Zernio contact ids (24-character hex), as returned by the list-contacts endpoint. A platform identifier such as a WhatsApp wa_id is rejected with 400; use phones for raw numbers.' }
                 phones: { type: array, items: { type: string }, maxItems: 20000, description: Raw phone numbers (auto-creates contacts). Useful for WhatsApp/Telegram manual entry }
                 useSegment: { type: boolean, description: Auto-populate from broadcast segment filters }
       responses:

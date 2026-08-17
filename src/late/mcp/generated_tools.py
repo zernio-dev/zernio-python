@@ -6299,7 +6299,7 @@ def register_generated_tools(mcp, _get_client):
 
         Args:
             broadcast_id: (required)
-            contact_ids: Specific contact IDs to add
+            contact_ids: Specific contact IDs to add. Zernio contact ids (24-character hex), as returned by the list-contacts endpoint. A platform identifier such as a WhatsApp wa_id is rejected with 400; use phones for raw numbers.
             phones: Raw phone numbers (auto-creates contacts). Useful for WhatsApp/Telegram manual entry
             use_segment: Auto-populate from broadcast segment filters"""
         client = _get_client()
