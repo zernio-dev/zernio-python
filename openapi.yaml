@@ -38052,8 +38052,20 @@ paths:
       x-platforms: ["meta", "google", "tiktok", "linkedin", "pinterest", "x", "openai"]
       summary: Pause or resume a campaign
       description: |
-        Updates the status of all ads in a campaign. Makes one platform API call (not per-ad) since status cascades through the campaign hierarchy.
-        Ads in terminal statuses (rejected, completed, cancelled) are automatically skipped.
+        Writes the campaign's own on/off switch, then lets the platform cascade delivery to its ad sets and ads.
+        Makes one platform API call, not one per ad.
+
+        The switch is always written, whatever delivery status the ads underneath report: an ad still in review
+        does not block resuming its campaign. The echoed `status` is the confirmation that it landed.
+
+        `updated` / `skipped` describe only the ads whose own stored status CHANGED alongside it, so
+        `updated: 0` is a normal successful response, not a no-op. Ads are skipped when they are in a terminal
+        status (rejected, completed, cancelled), already in the target state, or switched on but not yet
+        delivering — the last group keeps its `pending_review` / `error` status until the platform reports what
+        it became. `skippedReasons` names which case applies.
+
+        On Meta this flips the campaign only. An ad set paused in its own right stays paused, so pair this with
+        PUT /v1/ads/ad-sets/{adSetId}/status when you also need the ad set switched back on.
       security:
         - bearerAuth: []
       parameters:
@@ -38076,10 +38088,10 @@ paths:
               schema:
                 type: object
                 properties:
-                  updated: { type: integer, description: Number of ads updated }
-                  skipped: { type: integer, description: Number of ads skipped }
-                  skippedReasons: { type: array, items: { type: string } }
-                  message: { type: string, description: Human-readable summary (present when no ads were actionable) }
+                  status: { type: string, enum: [active, paused], description: The status written to the campaign }
+                  updated: { type: integer, description: 'Number of ads whose own stored status changed too. 0 is normal on a resume whose ads are all awaiting the platform.' }
+                  skipped: { type: integer, description: 'Number of ads whose own status was left as it was' }
+                  skippedReasons: { type: array, items: { type: string }, description: 'Why each group of ads was skipped' }
         '400':
           description: Invalid input or campaign spans multiple social accounts
         '401': { $ref: '#/components/responses/Unauthorized' }
@@ -38582,7 +38594,7 @@ paths:
                   properties:
                     amount: { type: number }
                     type: { type: string, enum: [daily, lifetime] }
-                status: { type: string, enum: [active, paused], description: Omit if not toggling delivery state }
+                status: { type: string, enum: [active, paused], description: "Writes the ad set's own on/off switch (Meta: `configured_status`) on Meta and LinkedIn, whatever delivery status its ads report. Omit if not toggling delivery state." }
                 name: { type: string, maxLength: 255, description: "Rename the ad set (Meta only; other platforms return 501). At least one of budget/status/bidStrategy/name is required." }
                 bidStrategy:
                   allOf: [{ $ref: '#/components/schemas/BidStrategy' }]
@@ -38661,9 +38673,11 @@ paths:
                 properties:
                   budget: { $ref: '#/components/schemas/AdBudget' }
                   budgetLevel: { type: string, enum: [adset] }
-                  status: { type: string, enum: [active, paused] }
-                  statusUpdated: { type: integer }
-                  statusSkipped: { type: integer }
+                  status: { type: string, enum: [active, paused], description: 'The status written to the ad set. Absent when nothing was written (see statusMessage).' }
+                  statusUpdated: { type: integer, description: 'Number of ads whose own stored status changed alongside the ad set switch' }
+                  statusSkipped: { type: integer, description: 'Number of ads whose own status was left as it was' }
+                  statusSkippedReasons: { type: array, items: { type: string }, description: 'Why each group of ads was skipped' }
+                  statusMessage: { type: string, description: 'Present only where the platform has no ad-set switch and no child ad was actionable; `status` is then absent because nothing was written' }
                   bidStrategy: { $ref: '#/components/schemas/BidStrategy' }
                   bidAmount: { type: [number, "null"] }
                   roasAverageFloor: { type: [number, "null"] }
@@ -38687,6 +38701,23 @@ paths:
         over PUT /v1/ads/ad-sets/{adSetId} for callers that only want the
         status toggle and prefer a symmetric URL to
         /v1/ads/campaigns/{campaignId}/status.
+
+        On Meta and LinkedIn this writes the ad set's own on/off switch
+        (Meta: `configured_status`), whatever delivery status its ads report —
+        an ad still in review does not block resuming its ad set. The echoed
+        `status` is the confirmation that it landed. Where the platform has no
+        ad-set switch (TikTok and others) the toggle is emulated by flipping the
+        child ads; a call with no actionable ad then writes nothing and returns a
+        `message` with no `status`.
+
+        `updated` / `skipped` describe only the ads whose own stored status
+        CHANGED alongside the switch, so `updated: 0` is a normal successful
+        response. See `skippedReasons` for which of the three cases applies
+        (terminal, already in the target state, or switched on but not yet
+        delivering).
+
+        A campaign created paused needs its campaign resumed as well: pair this
+        with PUT /v1/ads/campaigns/{campaignId}/status.
       security:
         - bearerAuth: []
       parameters:
@@ -38709,8 +38740,11 @@ paths:
               schema:
                 type: object
                 properties:
-                  updated: { type: integer }
-                  skipped: { type: integer }
+                  status: { type: string, enum: [active, paused], description: 'The status written to the ad set. Absent when nothing was written (see message).' }
+                  updated: { type: integer, description: 'Number of ads whose own stored status changed too. 0 is normal on a resume whose ads are all awaiting the platform.' }
+                  skipped: { type: integer, description: 'Number of ads whose own status was left as it was' }
+                  skippedReasons: { type: array, items: { type: string }, description: 'Why each group of ads was skipped' }
+                  message: { type: string, description: 'Present only where the platform has no ad-set switch and no child ad was actionable' }
         '400': { description: Invalid input }
         '401': { $ref: '#/components/responses/Unauthorized' }
         '404': { description: Ad set not found }
@@ -41285,7 +41319,7 @@ paths:
                 status:
                   type: string
                   enum: [ACTIVE, PAUSED]
-                  description: "Meta and TikTok. Publish state of the created entities. Omitted or ACTIVE publishes live (default, back-compat); PAUSED creates them paused and skips activation, so you can review before they spend. On TikTok the whole campaign > ad group > ad hierarchy stays paused."
+                  description: "Meta and TikTok. Publish state of the created entities. Omitted or ACTIVE publishes live (default, back-compat); PAUSED creates them paused so you can review before they spend. On Meta the pause is held on the campaign this call creates, leaving the ad set and ad switched on, so a single PUT /v1/ads/campaigns/{campaignId}/status with `active` brings the whole thing live. It is held at every level instead when the pause cannot rely on the campaign: `existingCampaignId` (that campaign may be running and is never touched) or `campaignStatus: ACTIVE`. On TikTok the whole campaign > ad group > ad hierarchy stays paused."
                 budgetLevel:
                   type: string
                   enum: [adset, campaign]
