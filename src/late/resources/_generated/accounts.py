@@ -532,6 +532,21 @@ class AccountsResource:
             f"/v1/accounts/{account_id}/slack-settings", data=payload
         )
 
+    def get_bluesky_settings(self, account_id: str) -> dict[str, Any]:
+        """Get Bluesky account settings"""
+        return self._client._get(f"/v1/accounts/{account_id}/bluesky-settings")
+
+    def update_bluesky_settings(
+        self, account_id: str, default_langs: Any
+    ) -> dict[str, Any]:
+        """Update Bluesky account settings"""
+        payload = self._build_payload(
+            default_langs=default_langs,
+        )
+        return self._client._patch(
+            f"/v1/accounts/{account_id}/bluesky-settings", data=payload
+        )
+
     async def alist_accounts(
         self,
         *,
@@ -991,4 +1006,19 @@ class AccountsResource:
         )
         return await self._client._apatch(
             f"/v1/accounts/{account_id}/slack-settings", data=payload
+        )
+
+    async def aget_bluesky_settings(self, account_id: str) -> dict[str, Any]:
+        """Get Bluesky account settings (async)"""
+        return await self._client._aget(f"/v1/accounts/{account_id}/bluesky-settings")
+
+    async def aupdate_bluesky_settings(
+        self, account_id: str, default_langs: Any
+    ) -> dict[str, Any]:
+        """Update Bluesky account settings (async)"""
+        payload = self._build_payload(
+            default_langs=default_langs,
+        )
+        return await self._client._apatch(
+            f"/v1/accounts/{account_id}/bluesky-settings", data=payload
         )

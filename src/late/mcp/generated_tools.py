@@ -1289,6 +1289,49 @@ def register_generated_tools(mcp, _get_client):
         except Exception as e:
             return f"Error: {e}"
 
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Get Bluesky account settings",
+            readOnlyHint=True,
+            destructiveHint=False,
+            openWorldHint=False,
+        )
+    )
+    def accounts_get_bluesky_settings(account_id: str) -> str:
+        """Get Bluesky account settings
+
+        Args:
+            account_id: (required)"""
+        client = _get_client()
+        try:
+            response = client.accounts.get_bluesky_settings(account_id=account_id)
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Update Bluesky account settings",
+            readOnlyHint=False,
+            destructiveHint=True,
+            openWorldHint=True,
+        )
+    )
+    def accounts_update_bluesky_settings(account_id: str, default_langs: str) -> str:
+        """Update Bluesky account settings
+
+        Args:
+            account_id: (required)
+            default_langs: (required)"""
+        client = _get_client()
+        try:
+            response = client.accounts.update_bluesky_settings(
+                account_id=account_id, default_langs=default_langs
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
     # AD_ACCOUNTS
 
     @mcp.tool(

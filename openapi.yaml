@@ -4202,6 +4202,8 @@ components:
             endedAt: { type: string, format: date-time }
             durationSeconds: { type: integer }
             endReason: { type: string, enum: [hangup, no_answer, rejected, error] }
+            hangupCause: { type: [string, "null"], description: "Raw carrier hangup cause behind endReason (e.g. normal_clearing, call_rejected, not_found). Null when the carrier reported none." }
+            sipHangupCause: { type: [string, "null"], description: "SIP response code that ended the call when SIP-signalled (e.g. '403', '486', '603'). endReason collapses all three to 'rejected', so this is what separates a refused destination from a busy line. Null on non-SIP legs." }
             recordingUrl: { type: string }
             recordingExpiresAt: { type: string, format: date-time }
             billing:
@@ -5011,7 +5013,7 @@ components:
         carouselCards:
           type: array
           minItems: 2
-          maxItems: 5
+          maxItems: 10
           description: >
             Renders the post as a multi-link carousel (organic Page post). When set, mediaItems
             must be provided with the same length and all items must be images (no videos).
@@ -5913,6 +5915,21 @@ components:
     BlueskyPlatformData:
       type: object
       properties:
+        langs:
+          type: array
+          minItems: 1
+          maxItems: 3
+          items:
+            type: string
+          example: ["pt", "en"]
+          description: >
+            Language(s) of the post text as 1-3 BCP-47 codes (e.g. "pt", "en-US"), written to the
+            post record's langs field. Bluesky feed generators filter on this field, so posts
+            without it never appear in language-scoped feeds. Can only be set at creation
+            (Bluesky has no post editing). When threadItems is used, every item in the thread
+            carries the same langs. When omitted, the account's default (set via
+            PATCH /v1/accounts/{accountId}/bluesky-settings) applies; with no default either,
+            the field is absent from the record.
         threadItems:
           type: array
           description: >
@@ -5930,7 +5947,7 @@ components:
                 items:
                   $ref: '#/components/schemas/MediaItem'
       description: |
-        Bluesky post settings. Supports text posts with up to 4 images or a single video. threadItems creates a reply chain (Bluesky thread). Images exceeding 1MB are automatically compressed. Alt text supported via mediaItem properties.
+        Bluesky post settings. Supports text posts with up to 4 images or a single video. threadItems creates a reply chain (Bluesky thread). Images exceeding 1MB are automatically compressed. Alt text supported via mediaItem properties. Use langs to tag post language for feed-generator filtering.
 
     DiscordPlatformData:
       type: object
@@ -13816,7 +13833,7 @@ paths:
               facebookCarousel:
                 summary: Facebook multi-link carousel post
                 description: |
-                  Posts a 2-5 card carousel where each image has its own click-through link
+                  Posts a 2-10 card carousel where each image has its own click-through link
                   and optional headline. mediaItems and carouselCards must have the same
                   length, in the same order. Images only (no video cards).
                 value:
@@ -22301,6 +22318,65 @@ paths:
               properties:
                 defaultUsername: { type: string, maxLength: 80, description: 'Author name shown on posts. Empty string clears it.' }
                 defaultIconUrl: { type: string, description: 'Author avatar image URL. Empty string clears it.' }
+      responses:
+        '200':
+          description: Updated settings
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404': { description: Account not found }
+
+  /v1/accounts/{accountId}/bluesky-settings:
+    get:
+      x-resource-group: "accounts"
+      operationId: getBlueskySettings
+      tags: [Accounts]
+      summary: Get Bluesky account settings
+      description: 'Returns the account''s default post languages (defaultLangs), applied at publish time whenever a post''s platformSpecificData.langs is absent. Null when no default is set.'
+      parameters:
+        - name: accountId
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        '200':
+          description: Bluesky account settings
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  defaultLangs:
+                    type: [array, "null"]
+                    items: { type: string }
+                    example: ["pt"]
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404': { description: Account not found }
+    patch:
+      x-resource-group: "accounts"
+      operationId: updateBlueskySettings
+      tags: [Accounts]
+      summary: Update Bluesky account settings
+      description: 'Set or clear the account''s default post languages. 1-3 BCP-47 codes (e.g. "pt", "en-US"), the same validation as per-post langs; explicit null clears the default. Per-post platformSpecificData.langs always overrides this default. Applies to posts published after the change; already-published posts cannot be retagged (Bluesky has no post edit).'
+      parameters:
+        - name: accountId
+          in: path
+          required: true
+          schema: { type: string }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [defaultLangs]
+              properties:
+                defaultLangs:
+                  type: [array, "null"]
+                  minItems: 1
+                  maxItems: 3
+                  items: { type: string }
+                  example: ["pt"]
       responses:
         '200':
           description: Updated settings
@@ -32200,6 +32276,7 @@ paths:
                                   label: { type: string }
                                   value: { type: string }
                                   documentId: { type: string, description: 'Present on document rows — the Telnyx document id. GET /v1/whatsapp/phone-numbers/kyc/document/{documentId} streams it (auth-scoped, inline PDF).' }
+                  pendingReview: { type: boolean, description: 'true when this account already has a number for this country in regulatory review (status pending_regulatory). Scope is the whole account across all profiles, and the country only (any number type), so it is not a per-end-client signal on a multi-tenant setup. Informational only: it never blocks a submission, and several same-country numbers may sit in review at once. For a per-end-client view, call GET /v1/phone-numbers with `profileId` and `status=pending_regulatory`; that view also lists numbers declined in the last 30 days.' }
         '400': { description: Country not available }
         '401': { $ref: '#/components/responses/Unauthorized' }
     post:
@@ -33188,6 +33265,7 @@ paths:
                                   label: { type: string }
                                   value: { type: string }
                                   documentId: { type: string, description: 'Present on document rows — the Telnyx document id. GET /v1/whatsapp/phone-numbers/kyc/document/{documentId} streams it (auth-scoped, inline PDF).' }
+                  pendingReview: { type: boolean, description: 'true when this account already has a number for this country in regulatory review (status pending_regulatory). Scope is the whole account across all profiles, and the country only (any number type), so it is not a per-end-client signal on a multi-tenant setup. Informational only: it never blocks a submission, and several same-country numbers may sit in review at once. For a per-end-client view, call GET /v1/phone-numbers with `profileId` and `status=pending_regulatory`; that view also lists numbers declined in the last 30 days.' }
         '400': { description: Country not available }
         '401': { $ref: '#/components/responses/Unauthorized' }
     post:

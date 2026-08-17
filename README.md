@@ -199,6 +199,7 @@ Both `from zernio import ...` and `from late import ...` work identically. The `
 | `accounts.get_all_accounts_health()` | Check accounts health |
 | `accounts.list_accounts()` | List accounts |
 | `accounts.get_account_health()` | Check account health |
+| `accounts.get_bluesky_settings()` | Get Bluesky account settings |
 | `accounts.get_follower_stats()` | Get follower stats |
 | `accounts.get_google_business_reviews()` | Get reviews |
 | `accounts.get_instagram_follow_status()` | Check whether an Instagram user follows the account |
@@ -206,6 +207,7 @@ Both `from zernio import ...` and `from late import ...` work identically. The `
 | `accounts.get_slack_settings()` | Get Slack account settings |
 | `accounts.get_tik_tok_creator_info()` | Get TikTok creator info |
 | `accounts.update_account()` | Update account |
+| `accounts.update_bluesky_settings()` | Update Bluesky account settings |
 | `accounts.update_slack_settings()` | Update Slack account settings |
 | `accounts.delete_account()` | Disconnect account |
 | `accounts.delete_google_business_review_reply()` | Delete a review reply |
