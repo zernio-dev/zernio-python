@@ -1394,7 +1394,7 @@ components:
             views: { type: integer }
             reach: { type: integer }
             impressions: { type: integer }
-            engagementRate: { type: number }
+            engagementRate: { type: number, description: 'Percentage, rounded to 2 decimals. Same definition as PostAnalytics.engagementRate: (likes + comments + shares + saves) / (impressions or reach or views) * 100, where the denominator is the first of the three that is non-zero. Clicks and follows are never counted.' }
             lastUpdated: { type: string, format: date-time, description: When these metrics were last refreshed }
     ErrorResponse:
       type: object
@@ -6689,7 +6689,7 @@ components:
         igReelsAvgWatchTime: { type: integer, example: 0, description: 'Instagram Reels only: average watch time per play, in milliseconds. 0 for non-Reels media and other platforms.' }
         igReelsVideoViewTotalTime: { type: integer, example: 0, description: 'Instagram Reels only: total watch time including replays, in milliseconds. 0 for non-Reels media and other platforms.' }
         videoDurationSeconds: { type: [integer, "null"], example: 30, description: 'Video length in seconds. Currently Instagram Reels only; combine with igReelsAvgWatchTime (ms) to estimate retention. Null when unknown (other platforms, non-video media, or when Instagram does not expose the media URL, e.g. reels with copyrighted audio).' }
-        engagementRate: { type: number, example: 0 }
+        engagementRate: { type: number, example: 6.59, description: 'Percentage, rounded to 2 decimals: (likes + comments + shares + saves) / (impressions or reach or views) * 100. Clicks and follows are never counted. The denominator is the FIRST of impressions, reach, views that is non-zero, so it is not the same basis on every post: a post with impressions divides by impressions, one without falls back to reach, then to views. If you need a single consistent basis (e.g. interactions / reach), compute it from the raw fields above. The engagementRate on the LinkedIn account endpoints is a different formula.' }
         lastUpdated: { type: string, format: date-time }
     PlatformAnalytics:
       type: object
@@ -6842,7 +6842,7 @@ components:
             shares: { type: integer, description: Total reshares across all posts }
             saves: { type: integer, description: Total times posts were saved (personal accounts only) }
             sends: { type: integer, description: Total times posts were sent via LinkedIn messaging (personal accounts only) }
-            engagementRate: { type: number, description: Overall engagement rate as percentage }
+            engagementRate: { type: number, description: 'Overall engagement rate, as a percentage rounded to 2 decimals: (reactions + comments + shares + saves + sends) / impressions * 100. Clicks are not counted, and there is no fallback denominator, so this is 0 whenever impressions is 0. This is NOT the same formula as PostAnalytics.engagementRate on GET /v1/analytics.' }
         note: { type: string }
         lastUpdated: { type: string, format: date-time }
     LinkedInAggregateAnalyticsDailyResponse:
@@ -20793,7 +20793,7 @@ paths:
                       sends: { type: integer, description: Times the post was sent via LinkedIn messaging (personal accounts only; 0 for organization accounts) }
                       clicks: { type: integer, description: Clicks on the post (organization accounts only) }
                       views: { type: integer, description: Video views (video posts only) }
-                      engagementRate: { type: number, description: Engagement rate as percentage }
+                      engagementRate: { type: number, description: 'Engagement rate, as a percentage rounded to 2 decimals: (likes + comments + shares + clicks + saves + sends) / impressions * 100. Unlike PostAnalytics.engagementRate on GET /v1/analytics, this one DOES count clicks and has no fallback denominator, so it is 0 whenever impressions is 0. For organization accounts the value is the rate LinkedIn returns, not one computed here.' }
                   lastUpdated: { type: string, format: date-time }
               example:
                 accountId: "64abc123def456"
