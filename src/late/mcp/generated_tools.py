@@ -11270,7 +11270,7 @@ def register_generated_tools(mcp, _get_client):
                 conversation_id: The conversation ID (id field from list conversations endpoint). This is the platform-specific conversation identifier, not an internal database ID. (required)
                 account_id: Social account ID (required)
                 limit: Number of messages to return per page. Default 100, max 100.
-                cursor: Opaque pagination cursor. Pass `pagination.nextCursor` from a prior response.
+                cursor: Opaque pagination cursor. Pass `pagination.nextCursor` from a prior response verbatim: a cursor we cannot parse returns 400 rather than silently restarting from the first page.
                 sort_order: Order of returned messages. Default `asc` (oldest first, chat style).
         Twitter, Instagram, Telegram, WhatsApp and Reddit honor this order
         across cursor pages. For Facebook and Bluesky, only intra-page

@@ -25133,7 +25133,7 @@ paths:
           in: query
           required: false
           schema: { type: string }
-          description: Opaque pagination cursor. Pass `pagination.nextCursor` from a prior response.
+          description: 'Opaque pagination cursor. Pass `pagination.nextCursor` from a prior response verbatim: a cursor we cannot parse returns 400 rather than silently restarting from the first page.'
         - name: sortOrder
           in: query
           required: false
@@ -25272,6 +25272,7 @@ paths:
                             and for inbound interactive taps `interactiveType` / `interactiveId`.
                           additionalProperties: true
                   lastUpdated: { type: string, format: date-time }
+        '400': { $ref: '#/components/responses/BadRequest' }
         '401': { $ref: '#/components/responses/Unauthorized' }
         '403':
           description: Inbox addon required
