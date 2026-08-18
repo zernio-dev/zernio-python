@@ -2784,6 +2784,9 @@ components:
                   type: string
                 picture:
                   type: [string, "null"]
+                isOwnAccount:
+                  type: boolean
+                  description: 'True when this comment was authored by the connected account itself (Meta re-delivers the account''s own replies as comments events). Populated on the Instagram and Facebook realtime webhooks only; absent means not evaluated, never "not the account".'
                 instagramProfile:
                   type: object
                   description: |
