@@ -11169,6 +11169,7 @@ def register_generated_tools(mcp, _get_client):
         skip_dm_check: bool = False,
         template_name: str | None = None,
         category: str | None = None,
+        link_preview: bool = True,
         template_language: str | None = None,
         template_params: list[str] | None = None,
         header_media: dict[str, Any] | None = None,
@@ -11183,6 +11184,7 @@ def register_generated_tools(mcp, _get_client):
             skip_dm_check: X/Twitter only. Skip the receives_your_dm eligibility check before sending. Use if you have already verified the recipient accepts DMs.
             template_name: WhatsApp only. Name of the approved template to start the conversation with. Required for WhatsApp unless category is used instead (Direct Send). Cannot be combined with category.
             category: WhatsApp only (Meta Direct Send). Combined with message and without templateName, starts the conversation with a business-initiated UTILITY message and no pre-approved template; Meta matches or auto-creates a template asynchronously. The WhatsApp Business Account must be eligible for Direct Send, otherwise the send fails with an error telling you to use an approved message template instead. Cannot be combined with templateName (templates are already categorized at creation). Utility messages only; marketing content is not allowed under this category. Accepted on the JSON body only, not on multipart requests.
+            link_preview: WhatsApp only. Set false to send the Direct Send (category: 'utility') text message without a link-preview thumbnail for the first URL in the text. Defaults to true, which is how every WhatsApp text has been sent to date. Does not apply to template sends. Accepted on the JSON body only, not on multipart requests.
             template_language: WhatsApp only. Template language code (e.g. en_US).
             template_params: WhatsApp only. Template variable values as one flat array, in the order the variables appear across the whole template: text-header variables first, then body variables, then one value per dynamic URL button (in button order). Works with positional placeholders ({{1}}, {{2}}, ...) and with named placeholders ({{name}}, {{company}} - how Meta Business Manager creates templates), where values fill the named slots in order of appearance. Example - a body with {{1}}, {{2}} plus a URL button https://example.com/{{1}} takes three values: [body1, body2, buttonSuffix]. Media headers (image, video, document) are filled automatically from the approved template and take no value here (use headerMedia to override the header asset per send).
             header_media: WhatsApp only. Overrides a media-header template's header asset for THIS send, so a template with an image/video/document header can carry a different asset per message (e.g. each recipient their own invoice PDF). Without it, the template's approved sample asset is sent. Provide exactly one of link or id."""
@@ -11196,6 +11198,7 @@ def register_generated_tools(mcp, _get_client):
                 skip_dm_check=skip_dm_check,
                 template_name=template_name,
                 category=category,
+                link_preview=link_preview,
                 template_language=template_language,
                 template_params=template_params,
                 header_media=header_media,
@@ -11349,6 +11352,7 @@ def register_generated_tools(mcp, _get_client):
         message: str | None = None,
         attachment_url: str | None = None,
         category: str | None = None,
+        link_preview: bool = True,
         attachment_type: str | None = None,
         attachment_name: str | None = None,
         voice_note: bool | None = None,
@@ -11371,6 +11375,7 @@ def register_generated_tools(mcp, _get_client):
                 message: Message text
                 attachment_url: URL of the attachment to send (image, video, audio, or file). The URL must be publicly accessible. For binary file uploads, use multipart/form-data instead. On WhatsApp, combining an image, video, or file with `buttons` renders the media as the header of one interactive reply-button message; audio cannot be combined with buttons.
                 category: WhatsApp only (Meta Direct Send). Sends this message as a business-initiated UTILITY message without an approved template, for example outside the 24-hour customer service window; Meta matches or auto-creates a template asynchronously. The WhatsApp Business Account must be eligible for Direct Send, otherwise the send fails with an error telling you to use an approved message template instead. Supported only for text messages (link preview ok) and interactive messages (reply buttons, CTA URL buttons, voice-call button, header of text/image/video/document). Cannot be combined with template, attachments, location, or contacts. Utility messages only; marketing content is not allowed under this category. Accepted on the JSON body only, not on multipart requests.
+                link_preview: WhatsApp only. Set false to send the message without a link-preview thumbnail for the first URL in the text. Defaults to true, which is how every WhatsApp text has been sent to date. Ignored on other platforms. Accepted on the JSON body only, not on multipart requests.
                 attachment_type: Type of attachment. Defaults to file if not specified.
                 attachment_name: WhatsApp only. Display name for a document sent via attachmentUrl with attachmentType: file (e.g. "Report.pdf"). Maps to the recipient's file name; without it WhatsApp derives the name from the URL and shows "Untitled". Ignored for image/video/audio and for binary uploads (which use the uploaded file's name).
                 voice_note: WhatsApp only. When `true` on an audio attachment, the message is sent
@@ -11491,6 +11496,7 @@ def register_generated_tools(mcp, _get_client):
                 message=message,
                 attachment_url=attachment_url,
                 category=category,
+                link_preview=link_preview,
                 attachment_type=attachment_type,
                 attachment_name=attachment_name,
                 voice_note=voice_note,
