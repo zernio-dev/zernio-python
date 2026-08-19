@@ -1956,7 +1956,7 @@ components:
           description: 'Present only when the range reaches into YouTube''s ~3-day processing window: the first date whose numbers are provisional and may still be revised by YouTube.'
         retentionCurve:
           type: array
-          description: Up to 100 points covering the video timeline, aggregated over the date range. Empty for videos with very few views.
+          description: 'Up to 100 points covering the video timeline, aggregated over the date range. Can be empty when YouTube has no retention data for the video in the given range.'
           items:
             type: object
             properties:
@@ -1971,10 +1971,10 @@ components:
                 description: Retention vs videos of similar length (0 = worst, 0.5 = median, 1 = best)
               startedWatching:
                 type: integer
-                description: Viewers who started watching in this segment
+                description: 'Viewers who started watching in this segment. 0 when YouTube has no segment-level data for the video.'
               stoppedWatching:
                 type: integer
-                description: Viewers who stopped watching in this segment
+                description: 'Viewers who stopped watching in this segment. 0 when YouTube has no segment-level data for the video.'
               totalSegmentImpressions:
                 type: integer
                 description: Total views of this segment, including rewatches
