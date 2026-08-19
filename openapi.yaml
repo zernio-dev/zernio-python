@@ -44923,6 +44923,7 @@ paths:
         '403': { description: 'Ads access required (Ads add-on on legacy plans, included on usage-based plans), or the Meta token lacks ads permissions (reconnect required).' }
         '404': { description: Account not found or not accessible. }
         '405': { description: Platform does not support listing tracking tags. }
+        '502': { description: 'Meta was unreachable or returned an unclassified error (type: platform_error; the raw Meta payload is in platformError). Retryable.' }
 
     post:
       x-resource-group: "ads"
@@ -44988,6 +44989,7 @@ paths:
         '404': { description: Account not found or not accessible. }
         '405': { description: Platform does not support creating tracking tags. }
         '422': { description: 'OpenAI Ads only: the ad account is not enabled for pixel management. Contact your OpenAI partner representative.' }
+        '502': { description: 'Meta was unreachable or returned an unclassified error (type: platform_error; the raw Meta payload is in platformError). Creating a pixel is NOT idempotent, so before retrying confirm with GET /v1/accounts/{accountId}/tracking-tags that no pixel was created.' }
 
   /v1/accounts/{accountId}/tracking-tags/{tagId}:
     get:
@@ -45021,6 +45023,7 @@ paths:
         '403': { description: 'Ads access required (Ads add-on on legacy plans, included on usage-based plans), or the Meta token lacks ads permissions (reconnect required).' }
         '404': { description: Account or tracking tag not found. }
         '405': { description: Platform does not support fetching a tracking tag. }
+        '502': { description: 'Meta was unreachable or returned an unclassified error (type: platform_error; the raw Meta payload is in platformError). Retryable.' }
 
     patch:
       x-resource-group: "ads"
@@ -45087,6 +45090,7 @@ paths:
         '403': { description: 'Ads access required (Ads add-on on legacy plans, included on usage-based plans), or the Meta token lacks ads permissions (reconnect required).' }
         '404': { description: Account or tracking tag not found. }
         '405': { description: Platform does not support updating tracking tags. }
+        '502': { description: 'Meta was unreachable or returned an unclassified error (type: platform_error; the raw Meta payload is in platformError). Retryable.' }
 
   /v1/accounts/{accountId}/tracking-tags/{tagId}/shared-accounts:
     get:
@@ -45117,6 +45121,7 @@ paths:
         '403': { description: 'Ads access required (Ads add-on on legacy plans, included on usage-based plans), or the Meta token lacks ads permissions (reconnect required).' }
         '404': { description: Account or tracking tag not found. }
         '405': { description: Platform does not support shared accounts. }
+        '502': { description: 'Meta was unreachable or returned an unclassified error (type: platform_error; the raw Meta payload is in platformError). Retryable.' }
 
     post:
       x-resource-group: "ads"
@@ -45159,6 +45164,7 @@ paths:
         '403': { description: 'Ads access required (Ads add-on on legacy plans, included on usage-based plans), or the Meta token lacks ads permissions (reconnect required).' }
         '404': { description: Account or tracking tag not found. }
         '405': { description: Platform does not support shared accounts. }
+        '502': { description: 'Meta was unreachable or returned an unclassified error (type: platform_error; the raw Meta payload is in platformError). Retryable.' }
 
     delete:
       x-resource-group: "ads"
@@ -45183,6 +45189,7 @@ paths:
         '403': { description: 'Ads access required (Ads add-on on legacy plans, included on usage-based plans), or the Meta token lacks ads permissions (reconnect required).' }
         '404': { description: Account or tracking tag not found. }
         '405': { description: Platform does not support shared accounts. }
+        '502': { description: 'Meta was unreachable or returned an unclassified error (type: platform_error; the raw Meta payload is in platformError). Retryable.' }
 
   /v1/accounts/{accountId}/tracking-tags/{tagId}/stats:
     get:
@@ -45250,6 +45257,7 @@ paths:
         '403': { description: 'Ads access required (Ads add-on on legacy plans, included on usage-based plans), or the Meta token lacks ads permissions (reconnect required).' }
         '404': { description: Account or tracking tag not found. }
         '405': { description: Platform does not support tracking-tag stats. }
+        '502': { description: 'Meta was unreachable or returned an unclassified error (type: platform_error; the raw Meta payload is in platformError). Retryable.' }
 
   /v1/accounts/{accountId}/blogs:
     get:
