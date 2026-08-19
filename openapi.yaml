@@ -4700,9 +4700,8 @@ components:
           description: The native post ID on the platform (populated after successful publish)
           example: "1234567890123456789"
         platformPostUrl:
-          type: string
-          format: uri
-          description: Public URL of the published post. Included in the response for immediate posts; for scheduled posts, fetch via GET /v1/posts/{postId} after publish time.
+          type: [string, "null"]
+          description: Public URL of the published post. Included in the response for immediate posts; for scheduled posts, fetch via GET /v1/posts/{postId} after publish time. Empty when the platform confirmed the publish without returning an id a permalink can be built from (TikTok returns a publish id for some uploads); the TikTok reconcile cron backfills it later.
           example: "https://twitter.com/acmecorp/status/1234567890123456789"
         publishedAt:
           type: string
