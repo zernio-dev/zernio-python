@@ -42321,16 +42321,16 @@ paths:
                       type: object
                       properties:
                         id: { type: string, description: Zernio lead id. }
-                        leadgenId: { type: string, description: Meta lead id. }
+                        leadgenId: { type: string, description: 'Meta lead id. On LinkedIn, the leadFormResponse id.' }
                         formId: { type: string }
                         formName: { type: [string, "null"] }
                         accountId: { type: string }
                         adId: { type: [string, "null"] }
                         adsetId: { type: [string, "null"] }
-                        campaignId: { type: [string, "null"] }
+                        campaignId: { type: [string, "null"], description: 'On LinkedIn, this is the LinkedIn Campaign id, which corresponds to platformAdSetId on GET /v1/ads (LinkedIn''s Campaign Group is Zernio''s campaign).' }
                         isOrganic: { type: boolean }
                         createdTime: { type: [string, "null"], description: ISO 8601. }
-                        fields: { type: object, additionalProperties: { type: string }, description: "Question key → answer." }
+                        fields: { type: object, additionalProperties: { type: string }, description: 'Question key → answer. On LinkedIn, the key is the lowercased predefinedField, else the question name, else the numeric questionId; multiple-choice values are option labels (unlike Meta, which returns the option key).' }
                         fieldData: { type: array, items: { type: object }, description: "Raw Meta field_data." }
                   pagination:
                     type: object
