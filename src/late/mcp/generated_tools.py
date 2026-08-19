@@ -3059,8 +3059,9 @@ def register_generated_tools(mcp, _get_client):
                 call_to_action: CTA button label. Send it together with `linkUrl` — a CTA without a
         destination produces a button that goes nowhere, so sending one alone is a 400.
 
-        **Meta**: validated against the Meta CTA enum (same values as
-        POST /v1/ads/create), e.g. `LEARN_MORE`, `SHOP_NOW`, `SIGN_UP`.
+        **Meta**: the CTA enum of POST /v1/ads/create plus
+        `VIEW_INSTAGRAM_PROFILE`, which is accepted on boost only. For that
+        value `linkUrl` is typically the Instagram profile URL.
 
         **TikTok**: pass-through to `call_to_action` on the Spark Ad creative; the
         platform validates the value. See TikTok's "Enumeration - Call-to-Action".
