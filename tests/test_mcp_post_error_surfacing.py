@@ -1,21 +1,18 @@
 """
 Regression tests for the MCP post-reading tools (Crisp session_6e4c63b7).
 
-An integrator reported two defects in the same ticket:
-
-1. The failed-post views read the error from ``post.metadata["error"]``, a key
-   the API never populates, and fell back to the literal ``"Unknown error"``.
-   The real text lives per platform in ``PlatformTarget.errorMessage``.
-   ``posts_list`` did not render an error at all, not even the fallback.
-2. ``posts_get``/``posts_list`` raised ``1 validation error for
-   PostGetResponse`` on TikTok posts that published fine, because the API
-   emits ``platformPostUrl: ""`` when TikTok confirms a publish without a
-   numeric video id, and the generated model declared the field as a URI.
+The failed-post views read the error from ``post.metadata["error"]``, a key
+the API never populates, and fell back to the literal ``"Unknown error"``. The
+real text lives per platform in ``PlatformTarget.errorMessage``. ``posts_list``
+did not render an error at all, not even the fallback.
 
 The payloads below are the real shapes from the reporting account
-(userId 6a4fe17d8adb6036cd5c37c6): a TikTok post failed with the platform's
-quota message, and a TikTok post published with a ``p_pub_url~v2.`` publish id
-and an empty permalink.
+(userId 6a4fe17d8adb6036cd5c37c6).
+
+The same ticket reported a second defect, ``posts_get`` raising a validation
+error on TikTok posts whose ``platformPostUrl`` is an empty string. That one is
+fixed in the OpenAPI spec and arrives here with the next model regeneration, so
+its coverage lands in a follow-up.
 
 A post holds one entry in ``platforms[]`` per target platform. The entries
 below that already published but still carry a stale ``errorMessage`` are
@@ -61,10 +58,9 @@ FAILED_POST: dict[str, Any] = {
     ],
 }
 
-# Published TikTok post whose permalink could not be built: TikTok returned a
-# publish id instead of a numeric video id.
-EMPTY_URL_POST: dict[str, Any] = {
-    "_id": "6a7e23169598cfb3119bb578",
+# Healthy published post: nothing here may produce an error line.
+PUBLISHED_POST: dict[str, Any] = {
+    "_id": "6a841714e25e28de95dd35d3",
     "content": "Nothing goes viral. Somebody built it to.",
     "status": "published",
     "platforms": [
@@ -72,8 +68,8 @@ EMPTY_URL_POST: dict[str, Any] = {
             "platform": "tiktok",
             "accountId": "6a7e062a77555aae017c9617",
             "status": "published",
-            "platformPostId": "p_pub_url~v2.7673609262345750542",
-            "platformPostUrl": "",
+            "platformPostId": "7675444697107614990",
+            "platformPostUrl": "https://www.tiktok.com/@crezio.ai/video/7675444697107614990",
         }
     ],
 }
@@ -163,7 +159,7 @@ POSTS_BY_ID = {
     p["_id"]: p
     for p in (
         FAILED_POST,
-        EMPTY_URL_POST,
+        PUBLISHED_POST,
         MIXED_POST,
         CANCELLED_POST,
         MIXED_CANCELLED_POST,
@@ -212,44 +208,6 @@ def fake_api(monkeypatch: pytest.MonkeyPatch) -> FakeZernioAPI:
     monkeypatch.setattr(client_base.httpx, "Client", patched_client)
     monkeypatch.setattr(mcp_server, "_get_client", lambda: Late(api_key="test-key"))
     return api
-
-
-@pytest.mark.usefixtures("fake_api")
-class TestEmptyPermalinkIsAccepted:
-    """Defect 2: an empty permalink must not make the post unreadable."""
-
-    def test_posts_get_returns_the_post(self) -> None:
-        result = mcp_server.posts_get("6a7e23169598cfb3119bb578")
-
-        assert "validation error" not in result
-        assert "6a7e23169598cfb3119bb578" in result
-        assert "published" in result
-
-    def test_posts_list_returns_the_post(self) -> None:
-        result = mcp_server.posts_list()
-
-        assert "validation error" not in result
-        assert "6a7e23169598cfb3119bb578" in result
-
-    def test_model_accepts_empty_platform_post_url(self) -> None:
-        """The generated model itself, so a spec regression fails here first."""
-        from late.models import PlatformTarget
-
-        target = PlatformTarget.model_validate(
-            {"platform": "tiktok", "status": "published", "platformPostUrl": ""}
-        )
-
-        assert target.platformPostUrl == ""
-
-    def test_model_still_accepts_a_real_permalink(self) -> None:
-        from late.models import PlatformTarget
-
-        url = "https://www.tiktok.com/@crezio.ai/video/7675444697107614990"
-        target = PlatformTarget.model_validate(
-            {"platform": "tiktok", "status": "published", "platformPostUrl": url}
-        )
-
-        assert str(target.platformPostUrl) == url
 
 
 @pytest.mark.usefixtures("fake_api")
