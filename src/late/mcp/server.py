@@ -509,6 +509,36 @@ def profiles_delete(profile_id: str) -> str:
 # ============================================================================
 
 
+def _platform_errors(post: Any) -> list[str]:
+    """One "Error (platform): message" line per platform that did not publish.
+
+    A post holds one entry in post.platforms[] per target platform, and each
+    entry tracks its own status and errorMessage. The API never populates
+    post.metadata["error"], so that is where the real text lives.
+
+    An entry that published can still carry an errorMessage left over from an
+    earlier attempt, so the entry's own status decides whether it counts, not
+    whether it has a message.
+
+    Two statuses count, the two that mean "this platform is done and did not
+    publish": failed and cancelled. Cancelled matters because
+    account-disconnect cleanup writes the only actionable reason onto that
+    entry ('Account "X" was disconnected'), so a failed post targeting one
+    platform that got cancelled would otherwise read "Unknown error".
+
+    The in-progress statuses (pending, processing, uploading) are excluded:
+    every reset path clears errorMessage, so anything still on one is stale.
+    """
+    errors = []
+    for target in post.platforms or []:
+        if target.status not in ("failed", "cancelled"):
+            continue
+        message = (target.errorMessage or "").strip()
+        if message:
+            errors.append(f"Error ({target.platform or '?'}): {message}")
+    return errors
+
+
 @tool_def("posts_list")
 def posts_list(status: str = "", limit: int = 10) -> str:
     client = _get_client()
@@ -532,6 +562,7 @@ def posts_list(status: str = "", limit: int = 10) -> str:
         status = post.status.value if post.status else "unknown"
         lines.append(f"- [{status}] {content_preview}")
         lines.append(f"  Platforms: {platforms} | ID: {post.field_id}")
+        lines.extend(f"  {error}" for error in _platform_errors(post))
 
     return "\n".join(lines)
 
@@ -562,8 +593,7 @@ def posts_get(post_id: str) -> str:
     if hasattr(post, "publishedAt") and post.publishedAt:
         lines.append(f"Published at: {post.publishedAt}")
 
-    if post.metadata and post.metadata.get("error"):
-        lines.append(f"Error: {post.metadata['error']}")
+    lines.extend(_platform_errors(post))
 
     return "\n".join(lines)
 
@@ -829,10 +859,12 @@ def posts_list_failed(limit: int = 10) -> str:
         content = post.content or ""
         content_preview = content[:50] + "..." if len(content) > 50 else content
         platforms = ", ".join(t.platform or "?" for t in (post.platforms or []))
-        error = post.metadata.get("error", "Unknown error") if post.metadata else "Unknown error"
         lines.append(f"- {content_preview}")
         lines.append(f"  Platforms: {platforms} | ID: {post.field_id}")
-        lines.append(f"  Error: {error}")
+        # This view exists to show why posts failed, so it always carries an
+        # error line even when no platform recorded a message.
+        errors = _platform_errors(post) or ["Error: Unknown error"]
+        lines.extend(f"  {error}" for error in errors)
         lines.append("")
 
     return "\n".join(lines)
