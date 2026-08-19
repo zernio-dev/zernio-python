@@ -4881,9 +4881,239 @@ components:
           format: date-time
           description: When the last recycled copy was created (read-only)
 
+    XArticleTextRange:
+      type: object
+      additionalProperties: false
+      required: [from_index, to_index, text]
+      properties:
+        from_index:
+          type: integer
+          minimum: 0
+          description: Inclusive start index in the block text.
+        to_index:
+          type: integer
+          minimum: 0
+          description: Exclusive end index in the block text. Must be greater than or equal to from_index and no greater than the block text length.
+        text: { type: string, description: Text represented by this metadata range. }
+
+    XArticleInlineStyleRange:
+      type: object
+      additionalProperties: false
+      required: [offset, length, style]
+      properties:
+        offset: { type: integer, minimum: 0 }
+        length: { type: integer, minimum: 0 }
+        style: { type: string, enum: [bold, italic, strikethrough] }
+      description: The offset plus length must not exceed the containing block's text length.
+
+    XArticleEntityRange:
+      type: object
+      additionalProperties: false
+      required: [key, offset, length]
+      properties:
+        key:
+          type: integer
+          minimum: 0
+          description: Zero-based index into content_state.entities.
+        offset: { type: integer, minimum: 0 }
+        length: { type: integer, minimum: 0 }
+      description: The referenced entity must exist, and offset plus length must not exceed the containing block's text length.
+
+    XArticleBlock:
+      type: object
+      additionalProperties: false
+      required: [type, text]
+      properties:
+        type:
+          type: string
+          enum: [unstyled, header-one, header-two, header-three, unordered-list-item, ordered-list-item, blockquote, atomic]
+        text: { type: string }
+        key: { type: string, minLength: 1 }
+        data:
+          type: object
+          additionalProperties: false
+          properties:
+            cashtags: { type: array, items: { $ref: '#/components/schemas/XArticleTextRange' } }
+            hashtags: { type: array, items: { $ref: '#/components/schemas/XArticleTextRange' } }
+            mentions: { type: array, items: { $ref: '#/components/schemas/XArticleTextRange' } }
+            urls: { type: array, items: { $ref: '#/components/schemas/XArticleTextRange' } }
+        inline_style_ranges:
+          type: array
+          items: { $ref: '#/components/schemas/XArticleInlineStyleRange' }
+        entity_ranges:
+          type: array
+          items: { $ref: '#/components/schemas/XArticleEntityRange' }
+
+    XArticleEntity:
+      oneOf:
+        - type: object
+          additionalProperties: false
+          required: [key, value]
+          properties:
+            key: { type: string, minLength: 1 }
+            value:
+              type: object
+              additionalProperties: false
+              required: [type, mutability, data]
+              properties:
+                type: { type: string, const: post }
+                mutability: { type: string, enum: [immutable, mutable, segmented] }
+                data:
+                  type: object
+                  additionalProperties: false
+                  required: [post_id]
+                  properties:
+                    post_id: { type: string, minLength: 1 }
+        - type: object
+          additionalProperties: false
+          required: [key, value]
+          properties:
+            key: { type: string, minLength: 1 }
+            value:
+              type: object
+              additionalProperties: false
+              required: [type, mutability, data]
+              properties:
+                type: { type: string, const: link }
+                mutability: { type: string, enum: [immutable, mutable, segmented] }
+                data:
+                  type: object
+                  additionalProperties: false
+                  required: [url]
+                  properties:
+                    url: { type: string, format: uri }
+        - type: object
+          additionalProperties: false
+          required: [key, value]
+          properties:
+            key: { type: string, minLength: 1 }
+            value:
+              type: object
+              additionalProperties: false
+              required: [type, mutability, data]
+              properties:
+                type: { type: string, const: image }
+                mutability: { type: string, enum: [immutable, mutable, segmented] }
+                data:
+                  type: object
+                  additionalProperties: false
+                  required: [url]
+                  properties:
+                    url:
+                      type: string
+                      format: uri
+                      pattern: '^https?://.+\.(?:[jJ][pP][eE]?[gG]|[pP][nN][gG]|[wW][eE][bB][pP]|[gG][iI][fF]|[mM][pP]4)(?:[?#].*)?$'
+                      description: Public image, GIF, or MP4 URL. Zernio uploads it to X and replaces it with native media metadata. Caller-supplied media IDs are rejected.
+                    caption: { type: string }
+                    altText:
+                      type: string
+                      maxLength: 1000
+                      description: Supported for image and GIF URLs; rejected for MP4 media.
+        - type: object
+          additionalProperties: false
+          required: [key, value]
+          properties:
+            key: { type: string, minLength: 1 }
+            value:
+              type: object
+              additionalProperties: false
+              required: [type, mutability, data]
+              properties:
+                type: { type: string, const: emoji }
+                mutability: { type: string, enum: [immutable, mutable, segmented] }
+                data:
+                  type: object
+                  additionalProperties: false
+                  required: [entity_key]
+                  properties:
+                    entity_key: { type: string, minLength: 1 }
+        - type: object
+          additionalProperties: false
+          required: [key, value]
+          properties:
+            key: { type: string, minLength: 1 }
+            value:
+              type: object
+              additionalProperties: false
+              required: [type, mutability, data]
+              properties:
+                type: { type: string, const: markdown }
+                mutability: { type: string, enum: [immutable, mutable, segmented] }
+                data:
+                  type: object
+                  additionalProperties: false
+                  required: [markdown]
+                  properties:
+                    markdown: { type: string }
+        - type: object
+          additionalProperties: false
+          required: [key, value]
+          properties:
+            key: { type: string, minLength: 1 }
+            value:
+              type: object
+              additionalProperties: false
+              required: [type, mutability, data]
+              properties:
+                type: { type: string, enum: [divider, latex] }
+                mutability: { type: string, enum: [immutable, mutable, segmented] }
+                data: { type: object, additionalProperties: false }
+      description: Entity keys must be unique decimal strings matching their zero-based array index (`"0"`, `"1"`, ...).
+
+    XArticleContentState:
+      type: object
+      additionalProperties: false
+      externalDocs:
+        description: Official X Article content format reference
+        url: https://docs.x.com/x-api/articles/create-draft-article
+      required: [blocks, entities]
+      properties:
+        blocks:
+          type: array
+          minItems: 1
+          items: { $ref: '#/components/schemas/XArticleBlock' }
+        entities:
+          type: array
+          items: { $ref: '#/components/schemas/XArticleEntity' }
+      description: X's snake_case content-state shape. Standard DraftJS camelCase fields such as entityMap, inlineStyleRanges, and entityRanges are rejected.
+
+    XArticle:
+      type: object
+      additionalProperties: false
+      required: [title, content_state]
+      properties:
+        title: { type: string, minLength: 1 }
+        content_state: { $ref: '#/components/schemas/XArticleContentState' }
+        mode:
+          type: string
+          enum: [publish, draft]
+          default: publish
+          description: Publish creates an X Article draft and then publishes it. Draft stops after draft creation and returns the X draft ID without a public URL.
+        cover:
+          type: object
+          additionalProperties: false
+          required: [url]
+          properties:
+            url:
+              type: string
+              format: uri
+              pattern: '^https?://.+\.(?:[jJ][pP][eE]?[gG]|[pP][nN][gG]|[wW][eE][bB][pP])(?:[?#].*)?$'
+              description: Public JPG, JPEG, PNG, or WebP URL. GIF, MP4, AVIF, extensionless URLs, and caller-supplied native media IDs are rejected.
+            altText: { type: string, maxLength: 1000 }
+      description: |
+        Long-form X Article payload. X Articles require an eligible X Premium+ account.
+        Articles are mutually exclusive with top-level/custom tweet media and with threadItems,
+        poll, quoteTweetId, replyToTweetId, inReplyToTweetId, replySettings, sensitiveMedia,
+        paidPartnership, and madeWithAi. Publishing normally performs two billable X API
+        requests at $0.010 each (draft + publish, $0.020 total); mode `draft` performs only
+        the $0.010 draft request. `articleDraftId` is an internal recovery checkpoint and
+        must not be supplied by API clients.
+
     TwitterPlatformData:
       type: object
       properties:
+        article:
+          $ref: '#/components/schemas/XArticle'
         replyToTweetId:
           type: string
           description: ID of an existing tweet to reply to. The published tweet will appear as a reply in that tweet's thread. For threads, only the first tweet replies to the target; subsequent tweets chain normally. X only permits replying to your own posts or posts you are mentioned in; replying to an arbitrary other account's post is rejected by X.
@@ -4957,9 +5187,9 @@ components:
               type: boolean
               description: Content has other sensitive characteristics.
       description: >
-        X (Twitter) geo-restriction applies at the media level. Media in geo-restricted tweets will be
-        hidden for users outside the specified countries; the tweet text itself remains visible globally.
-        Requires media to be attached (ignored for text-only tweets).
+        X-specific post options. The article field creates a long-form X Article and is mutually
+        exclusive with tweet media and tweet-only options. Geo-restriction applies at the media
+        level: media is hidden outside the specified countries while tweet text remains visible.
 
     ThreadsPlatformData:
       type: object
@@ -13245,7 +13475,7 @@ paths:
                 lastVerified: "2026-03-26"
                 tiers:
                   - { tier: x_api_005, pricePerCallUsd: 0.005, operationCount: 13 }
-                  - { tier: x_api_010, pricePerCallUsd: 0.010, operationCount: 8 }
+                  - { tier: x_api_010, pricePerCallUsd: 0.010, operationCount: 10 }
                   - { tier: x_api_015, pricePerCallUsd: 0.015, operationCount: 3 }
                   - { tier: x_api_200, pricePerCallUsd: 0.200, operationCount: 1 }
                 operations:
@@ -13275,6 +13505,22 @@ paths:
                     tier: x_api_200
                     triggeredBy:
                       - { method: publishPost, metering: always }
+                  - operation: article_draft
+                    eventType: x_article_draft
+                    displayName: "X API: Article Draft"
+                    pricePerCallUsd: 0.010
+                    pricePerCallCents: 1.0
+                    tier: x_api_010
+                    triggeredBy:
+                      - { method: createArticleDraft, metering: always }
+                  - operation: article_publish
+                    eventType: x_article_publish
+                    displayName: "X API: Article Publish"
+                    pricePerCallUsd: 0.010
+                    pricePerCallCents: 1.0
+                    tier: x_api_010
+                    triggeredBy:
+                      - { method: publishArticle, metering: always }
         '401': { $ref: '#/components/responses/Unauthorized' }
   /v1/usage:
     get:
@@ -13720,7 +13966,7 @@ paths:
       summary: Create post
       description: |
         Create and optionally publish a post. Immediate posts (`publishNow: true`) include `platformPostUrl` in the response.
-        Content is optional when media is attached, all platforms have `customContent`, or every platform entry is a LinkedIn plain repost (`platformSpecificData.reshareUrl` with no text). See each platform's schema for media constraints.
+        Content is optional when media is attached, all platforms have `customContent`, every platform entry is an X Article (`platformSpecificData.article`), or every platform entry is a LinkedIn plain repost (`platformSpecificData.reshareUrl` with no text). See each platform's schema for media constraints.
 
         ## Idempotency
 
@@ -13754,7 +14000,7 @@ paths:
                 title: { type: string }
                 content:
                   type: string
-                  description: 'Post caption/text. Optional when media is attached, all platforms have customContent, or every platform entry is a LinkedIn plain repost (platformSpecificData.reshareUrl with no text). Required for text-only posts.'
+                  description: 'Post caption/text. Optional when media is attached, all platforms have customContent, every platform entry is an X Article (platformSpecificData.article), or every platform entry is a LinkedIn plain repost (platformSpecificData.reshareUrl with no text). Required for other text-only posts.'
                 mediaItems:
                   type: array
                   items: { $ref: '#/components/schemas/MediaItem' }
@@ -13832,6 +14078,69 @@ paths:
                     Only used when queuedFromProfile is also provided.
                     If omitted, uses the profile's default queue.
             examples:
+              twitterArticle:
+                summary: Publish a long-form X Article
+                description: |
+                  Creates an X Article draft and publishes it. This normally makes two
+                  billable X API calls at $0.010 each ($0.020 total). The account must
+                  be eligible for X Articles (X Premium+). Article media is supplied as
+                  public URLs; Zernio uploads it to X and builds the native media shape.
+                value:
+                  platforms:
+                    - platform: twitter
+                      accountId: "64e1f0a9e2b5af0012ab34cd"
+                      platformSpecificData:
+                        article:
+                          title: "Building a better publishing workflow"
+                          mode: publish
+                          cover:
+                            url: "https://cdn.example.com/article-cover.jpg"
+                          content_state:
+                            blocks:
+                              - type: header-one
+                                text: "A reliable publishing workflow"
+                              - type: unstyled
+                                text: "Long-form publishing should be observable. Read the implementation notes."
+                                inline_style_ranges:
+                                  - { offset: 0, length: 9, style: bold }
+                                entity_ranges:
+                                  - { key: 0, offset: 52, length: 20 }
+                              - type: atomic
+                                text: " "
+                                entity_ranges:
+                                  - { key: 1, offset: 0, length: 1 }
+                            entities:
+                              - key: "0"
+                                value:
+                                  type: link
+                                  mutability: mutable
+                                  data:
+                                    url: "https://example.com/implementation-notes"
+                              - key: "1"
+                                value:
+                                  type: image
+                                  mutability: immutable
+                                  data:
+                                    url: "https://cdn.example.com/workflow.png"
+                                    caption: "The publishing stages"
+                  publishNow: true
+              twitterArticleDraft:
+                summary: Save an X Article as a platform draft
+                description: Creates only the X Article draft ($0.010) and does not publish it publicly.
+                value:
+                  platforms:
+                    - platform: twitter
+                      accountId: "64e1f0a9e2b5af0012ab34cd"
+                      platformSpecificData:
+                        article:
+                          title: "Draft product update"
+                          mode: draft
+                          content_state:
+                            blocks:
+                              - type: unstyled
+                                text: "This Article is ready for final review."
+                            entities: []
+                  publishNow: true
               facebookDraft:
                 summary: Facebook draft post (visible in Publishing Tools)
                 value:

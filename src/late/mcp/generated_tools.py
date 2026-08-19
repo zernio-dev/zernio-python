@@ -12624,7 +12624,7 @@ def register_generated_tools(mcp, _get_client):
 
             Args:
                 title
-                content: Post caption/text. Optional when media is attached, all platforms have customContent, or every platform entry is a LinkedIn plain repost (platformSpecificData.reshareUrl with no text). Required for text-only posts.
+                content: Post caption/text. Optional when media is attached, all platforms have customContent, every platform entry is an X Article (platformSpecificData.article), or every platform entry is a LinkedIn plain repost (platformSpecificData.reshareUrl with no text). Required for other text-only posts.
                 media_items
                 platforms: Target platforms and accounts for this post. Required for non-draft posts (returns 400 if empty). Drafts can omit platforms.
                 scheduled_for
