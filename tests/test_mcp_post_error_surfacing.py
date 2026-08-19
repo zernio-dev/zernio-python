@@ -258,15 +258,22 @@ class TestEmptyPermalinkIsAccepted:
 
         assert target.platformPostUrl == ""
 
-    def test_model_still_accepts_a_real_permalink(self) -> None:
+    def test_a_real_permalink_comes_back_exactly_as_the_api_sent_it(self) -> None:
+        """No normalization: AnyUrl used to rewrite the value on the way in.
+
+        A bare-origin URL is the case that shows it. AnyUrl parses
+        "https://example.com" and renders it back as "https://example.com/",
+        so a consumer comparing the permalink against the platform's own copy
+        got a mismatch. Plain str hands back what the API sent.
+        """
         from late.models import PlatformTarget
 
-        url = "https://www.tiktok.com/@crezio.ai/video/7675444697107614990"
+        url = "https://example.com"
         target = PlatformTarget.model_validate(
             {"platform": "tiktok", "status": "published", "platformPostUrl": url}
         )
 
-        assert str(target.platformPostUrl) == url
+        assert target.platformPostUrl == url
 
 
 @pytest.mark.usefixtures("fake_api")
