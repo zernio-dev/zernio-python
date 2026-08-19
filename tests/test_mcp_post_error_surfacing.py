@@ -20,6 +20,10 @@ and an empty permalink.
 The legs that already published but still carry a stale ``errorMessage`` are
 deliberate: production posts do carry that combination, and a leg that
 published must never be reported as an error.
+
+Cancelled legs are covered too. Account-disconnect cleanup writes the only
+actionable reason onto them, so a failed post whose single leg was cancelled
+used to read "Unknown error" while the document held the answer.
 """
 
 from __future__ import annotations
@@ -95,7 +99,75 @@ MIXED_POST: dict[str, Any] = {
     ],
 }
 
-POSTS_BY_ID = {p["_id"]: p for p in (FAILED_POST, EMPTY_URL_POST, MIXED_POST)}
+# Failed post whose only leg was cancelled by account-disconnect cleanup. The
+# cancelled leg carries the one actionable reason, so skipping it leaves the
+# whole post reading "Unknown error".
+CANCELLED_POST: dict[str, Any] = {
+    "_id": "6a74056fa22ac1afb451b7da",
+    "content": "Weekly roundup",
+    "status": "failed",
+    "platforms": [
+        {
+            "platform": "linkedin",
+            "accountId": "a3",
+            "status": "cancelled",
+            "errorMessage": 'Account "Edward Hollis" was disconnected',
+            "errorCategory": "account_issue",
+            "errorSource": "user",
+        }
+    ],
+}
+
+# A cancelled leg next to failed ones: the disconnect is the actionable line,
+# the timeouts are the generic ones. Neither may displace the other.
+MIXED_CANCELLED_POST: dict[str, Any] = {
+    "_id": "698f117bdc985b51e808e3e4",
+    "content": "Campaign launch",
+    "status": "failed",
+    "platforms": [
+        {
+            "platform": "instagram",
+            "accountId": "a4",
+            "status": "failed",
+            "errorMessage": "Publishing failed due to timeout or max retries reached",
+        },
+        {
+            "platform": "facebook",
+            "accountId": "a5",
+            "status": "cancelled",
+            "errorMessage": 'Account "The clam Qalb" was disconnected',
+        },
+    ],
+}
+
+# A draft still holding a cancelled leg: retry never resets cancelled legs, so
+# unfiltered posts_list renders this one too. Deliberate, and pinned here.
+DRAFT_WITH_CANCELLED_LEG: dict[str, Any] = {
+    "_id": "69047ddcbb4db2cc1794478d",
+    "content": "Unfinished draft",
+    "status": "draft",
+    "platforms": [
+        {"platform": "youtube", "accountId": "a6", "status": "pending"},
+        {
+            "platform": "instagram",
+            "accountId": "a7",
+            "status": "cancelled",
+            "errorMessage": 'Account "Cody bailey" was disconnected',
+        },
+    ],
+}
+
+POSTS_BY_ID = {
+    p["_id"]: p
+    for p in (
+        FAILED_POST,
+        EMPTY_URL_POST,
+        MIXED_POST,
+        CANCELLED_POST,
+        MIXED_CANCELLED_POST,
+        DRAFT_WITH_CANCELLED_LEG,
+    )
+}
 
 
 class FakeZernioAPI:
@@ -214,3 +286,45 @@ class TestPlatformErrorIsSurfaced:
         joined = "\n".join(error_lines)
         assert "linkedin" in joined
         assert "instagram" not in joined
+
+
+@pytest.mark.usefixtures("fake_api")
+class TestCancelledLegIsSurfaced:
+    """Cancelled is the other terminal non-success status.
+
+    Account-disconnect cleanup writes the only actionable reason onto the
+    cancelled leg, so a post whose single leg was cancelled used to read
+    "Unknown error" while the document held the answer.
+    """
+
+    def test_posts_list_failed_shows_the_cancelled_reason(self) -> None:
+        result = mcp_server.posts_list_failed()
+
+        assert "Edward Hollis" in result
+        assert "Unknown error" not in result
+
+    def test_posts_get_shows_the_cancelled_reason(self) -> None:
+        result = mcp_server.posts_get("6a74056fa22ac1afb451b7da")
+
+        assert "Edward Hollis" in result
+        assert "linkedin" in result
+
+    def test_cancelled_reason_does_not_displace_the_failed_ones(self) -> None:
+        result = mcp_server.posts_get("698f117bdc985b51e808e3e4")
+
+        assert "The clam Qalb" in result
+        assert "timeout or max retries reached" in result
+
+    def test_draft_keeps_rendering_its_cancelled_leg(self) -> None:
+        """Retry never resets cancelled legs, so drafts carry them. Declared."""
+        result = mcp_server.posts_list(status="draft")
+
+        assert "Cody bailey" in result
+
+    def test_in_flight_legs_stay_silent(self) -> None:
+        """The draft's pending youtube leg must not produce an error line."""
+        result = mcp_server.posts_get("69047ddcbb4db2cc1794478d")
+
+        error_lines = [line for line in result.splitlines() if "Error" in line]
+        assert len(error_lines) == 1
+        assert "youtube" not in error_lines[0]

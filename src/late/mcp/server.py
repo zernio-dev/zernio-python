@@ -510,16 +510,23 @@ def profiles_delete(profile_id: str) -> str:
 
 
 def _platform_errors(post: Any) -> list[str]:
-    """One "Error (platform): message" line per leg that failed with an error.
+    """One "Error (platform): message" line per leg that terminally did not publish.
 
     The API never populates post.metadata["error"]; the real text lives per
     platform in PlatformTarget.errorMessage. A leg that later published can
     still carry a stale errorMessage, so the leg's own status is what selects
     it, not the presence of a message.
+
+    Both terminal non-success statuses count. Cancelled legs matter because
+    account-disconnect cleanup writes the only actionable reason onto them
+    ('Account "X" was disconnected'), so a failed post whose single leg was
+    cancelled would otherwise read "Unknown error". In-flight legs (pending,
+    processing, uploading) are excluded: every reset path clears their
+    errorMessage, so whatever is left on one is stale.
     """
     errors = []
     for target in post.platforms or []:
-        if target.status != "failed":
+        if target.status not in ("failed", "cancelled"):
             continue
         message = (target.errorMessage or "").strip()
         if message:
