@@ -510,19 +510,24 @@ def profiles_delete(profile_id: str) -> str:
 
 
 def _platform_errors(post: Any) -> list[str]:
-    """One "Error (platform): message" line per leg that terminally did not publish.
+    """One "Error (platform): message" line per platform that did not publish.
 
-    The API never populates post.metadata["error"]; the real text lives per
-    platform in PlatformTarget.errorMessage. A leg that later published can
-    still carry a stale errorMessage, so the leg's own status is what selects
-    it, not the presence of a message.
+    A post holds one entry in post.platforms[] per target platform, and each
+    entry tracks its own status and errorMessage. The API never populates
+    post.metadata["error"], so that is where the real text lives.
 
-    Both terminal non-success statuses count. Cancelled legs matter because
-    account-disconnect cleanup writes the only actionable reason onto them
-    ('Account "X" was disconnected'), so a failed post whose single leg was
-    cancelled would otherwise read "Unknown error". In-flight legs (pending,
-    processing, uploading) are excluded: every reset path clears their
-    errorMessage, so whatever is left on one is stale.
+    An entry that published can still carry an errorMessage left over from an
+    earlier attempt, so the entry's own status decides whether it counts, not
+    whether it has a message.
+
+    Two statuses count, the two that mean "this platform is done and did not
+    publish": failed and cancelled. Cancelled matters because
+    account-disconnect cleanup writes the only actionable reason onto that
+    entry ('Account "X" was disconnected'), so a failed post targeting one
+    platform that got cancelled would otherwise read "Unknown error".
+
+    The in-progress statuses (pending, processing, uploading) are excluded:
+    every reset path clears errorMessage, so anything still on one is stale.
     """
     errors = []
     for target in post.platforms or []:
@@ -857,7 +862,7 @@ def posts_list_failed(limit: int = 10) -> str:
         lines.append(f"- {content_preview}")
         lines.append(f"  Platforms: {platforms} | ID: {post.field_id}")
         # This view exists to show why posts failed, so it always carries an
-        # error line even when no leg recorded a message.
+        # error line even when no platform recorded a message.
         errors = _platform_errors(post) or ["Error: Unknown error"]
         lines.extend(f"  {error}" for error in errors)
         lines.append("")
