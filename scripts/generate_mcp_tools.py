@@ -21,6 +21,7 @@ from pathlib import Path
 from typing import Any
 
 import yaml
+from openapi_body import flatten_request_body_schema
 
 # Map OpenAPI tags to SDK resource names
 TAG_TO_RESOURCE: dict[str, str] = {
@@ -361,8 +362,20 @@ def extract_parameters(
         content = request_body.get("content", {})
         json_content = content.get("application/json", {})
         schema = json_content.get("schema", {})
-        properties = schema.get("properties", {})
-        required_props = schema.get("required", [])
+
+        flattened = flatten_request_body_schema(schema, spec or {})
+        if flattened is None:
+            add_param({
+                "name": "body",
+                "type": "dict[str, Any]",
+                "required": True,
+                "default": "",
+                "description": "Full request body as documented in the API reference.",
+                "sdk_name": "body",
+            })
+            return params
+        properties = flattened["properties"]
+        required_props = flattened["required"]
 
         for prop_name, prop_schema in properties.items():
             py_name = camel_to_snake(prop_name)

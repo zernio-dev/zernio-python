@@ -1981,11 +1981,14 @@ def register_generated_tools(mcp, _get_client):
             openWorldHint=True,
         )
     )
-    def ad_audiences_create_ad_audience() -> str:
-        """Create custom audience"""
+    def ad_audiences_create_ad_audience(body: dict[str, Any]) -> str:
+        """Create custom audience
+
+        Args:
+            body: Full request body as documented in the API reference. (required)"""
         client = _get_client()
         try:
-            response = client.ad_audiences.create_ad_audience()
+            response = client.ad_audiences.create_ad_audience(body=body)
             return _format_response(response)
         except Exception as e:
             return f"Error: {e}"
@@ -11749,11 +11752,179 @@ def register_generated_tools(mcp, _get_client):
             openWorldHint=True,
         )
     )
-    def messaging_ads_create_messaging_ad() -> str:
-        """Create click-to-message ad (WhatsApp / Messenger / Instagram Direct)"""
+    def messaging_ads_create_messaging_ad(
+        account_id: str,
+        ad_account_id: str,
+        name: str,
+        destination: str,
+        headline: str | None = None,
+        body: str | None = None,
+        image_url: str | None = None,
+        video: dict[str, Any] | None = None,
+        creatives: list[dict[str, Any]] | None = None,
+        ad_set_id: str | None = None,
+        budget_amount: float | None = None,
+        budget_type: str | None = None,
+        currency: str | None = None,
+        end_date: str | None = None,
+        countries: list[str] | None = None,
+        cities: list[dict[str, Any]] | None = None,
+        regions: list[dict[str, Any]] | None = None,
+        zips: list[dict[str, Any]] | None = None,
+        metros: list[dict[str, Any]] | None = None,
+        custom_locations: list[dict[str, Any]] | None = None,
+        age_min: int | None = None,
+        age_max: int | None = None,
+        interests: list[dict[str, Any]] | None = None,
+        audience_id: str | None = None,
+        placements: dict[str, Any] | None = None,
+        advantage_audience: int | None = None,
+        objective: str | None = None,
+        bid_strategy: str | None = None,
+        bid_amount: float | None = None,
+        roas_average_floor: float | None = None,
+        dsa_beneficiary: str | None = None,
+        dsa_payor: str | None = None,
+    ) -> str:
+        """Create click-to-message ad (WhatsApp / Messenger / Instagram Direct)
+
+            Args:
+                account_id: Facebook or Instagram SocialAccount ID. (required)
+                ad_account_id: Meta ad account ID, e.g. `act_123456789`. (required)
+                name: Ad display name. Used to derive campaign / ad set names.
+        On the multi-creative shape, each ad's Meta name gets a
+        " #N" suffix (1-indexed) so Ads Manager shows them as a
+        numbered batch.
+         (required)
+                headline: Single-creative shape only. Mutually exclusive with
+        `creatives[]`.
+                body: Primary text shown above the image / video. Single-creative
+        shape only. Mutually exclusive with `creatives[]`.
+                image_url: Image asset for single-creative shape. Mutually exclusive
+        with `video` and with `creatives[]`. Required on the
+        single-creative shape if `video` is not supplied.
+                video: Video creative for single-creative shape. Mutually
+        exclusive with `imageUrl` and with `creatives[]`. Required
+        on the single-creative shape if `imageUrl` is not supplied.
+                creatives: Multi-creative shape: N CTWA ads under one campaign + one
+        ad set, sharing budget and targeting. Mutually exclusive
+        with the top-level single-creative fields (`headline` /
+        `body` / `imageUrl` / `video`). Each entry must supply its
+        own headline, body, and exactly one of `imageUrl` /
+        `video`.
+                ad_set_id: Attach the creatives to this EXISTING messaging ad set instead of
+        building a campaign, so the ad set keeps its learning phase. It then
+        owns budget, targeting and schedule, so `budgetAmount`, `budgetType`,
+        `endDate`, `objective`, `countries`, `interests` and `audienceId` are
+        rejected with a 400 alongside it. Its `destination_type` must match
+        the ad's destination.
+                budget_amount: Budget amount in the ad account's currency major units
+        (e.g. dollars for USD, not cents). Must be > 0.
+        Required unless `adSetId` is set, where the ad set owns it.
+                budget_type: Required unless `adSetId` is set.
+                currency: ISO 4217 currency code matching the ad account's currency
+        (e.g. `USD`). Optional: Zernio resolves it from the ad account
+        when omitted. The value selects the minor-unit exponent Zernio
+        converts budget/bid amounts by before calling Meta (most
+        currencies are cents; zero-decimal currencies like JPY/KRW are
+        sent as-is).
+                end_date: ISO 8601 datetime. Required when `budgetType` is `lifetime`.
+                countries: ISO 3166-1 alpha-2 country codes. Defaults to `["US"]` only
+        when no other geo (`cities`, `regions`, `zips`, `metros`,
+        `customLocations`) is supplied.
+                cities: City-level geo targeting for local CTWA campaigns. Each entry maps to Meta's
+        TargetingGeoLocationCity. `key` is Meta's city ID. `radius`
+        and `distance_unit` are coupled: set both or neither.
+        Meta enforces a minimum city radius (~17 km / 10 mi);
+        smaller values resolve to a 0-size audience and the ad
+        fails at launch. For a tighter catchment use customLocations
+        (lat/lng).
+                regions: Region / state-level geo targeting. `key` is Meta's region
+        ID (lookupable via GET /v1/ads/targeting/search?type=region).
+                zips: ZIP / postal-code geo targeting. `key` is the platform's
+        postal id resolved via /v1/ads/targeting/search.
+                metros: DMA / metro-area geo targeting. `key` is Meta's metro id
+        (e.g. `DMA:807`).
+                custom_locations: Point-radius geo (Meta `geo_locations.custom_locations`).
+        Use for targeting a radius around a specific lat/long when
+        no Meta city/region key fits. `distanceUnit` is required.
+                age_min
+                age_max
+                interests
+                audience_id: Custom audience ID to target.
+                placements: Manual ad placements on the shared ad set. Omit
+        for automatic placements. When set, restricts delivery to the chosen surfaces,
+        mapped onto the ad set's `targeting.{publisher_platforms, facebook_positions, instagram_positions,
+        messenger_positions, audience_network_positions, threads_positions,
+        whatsapp_positions, device_platforms}`. Enum membership is validated here; Meta
+        additionally enforces co-selection rules and restricts which
+        placements are eligible for click-to-WhatsApp ads, returning an actionable
+        error which we surface.
+                advantage_audience: Meta's Advantage+ audience expansion. `0` (default) keeps
+        targeting strict; `1` lets Meta expand beyond the supplied
+        targeting when its delivery system finds better matches.
+        Always sent on CREATE (Meta requires it).
+                objective: Defaults to `OUTCOME_ENGAGEMENT`. `OUTCOME_SALES` and `OUTCOME_LEADS` require
+        additional account configuration (Dataset linked to the WABA
+        for sales) and may be rejected by Meta if missing.
+                bid_strategy: Meta bid strategy applied to the shared ad set. Defaults to
+        `LOWEST_COST_WITHOUT_CAP` (auto-bid) when omitted.
+        `LOWEST_COST_WITH_BID_CAP` and `COST_CAP` require
+        `bidAmount`. `LOWEST_COST_WITH_MIN_ROAS` requires
+        `roasAverageFloor`. CTWA's `optimization_goal` is fixed to
+        `CONVERSATIONS`, but the bid strategy is independent.
+                bid_amount: Whole currency units (e.g. `5` = $5.00 on a USD account).
+        Required when `bidStrategy` is `LOWEST_COST_WITH_BID_CAP`
+        or `COST_CAP`; rejected otherwise.
+                roas_average_floor: Decimal ROAS multiplier (e.g. `2.0` = 2.0× ROAS floor).
+        Required when `bidStrategy` is `LOWEST_COST_WITH_MIN_ROAS`;
+        rejected otherwise. Meta enforces its own upper bound
+        server-side.
+                dsa_beneficiary: Legal entity that benefits from the ad. Required when targeting EU users
+        (EU DSA, Article 26). Optional if the ad account has a default beneficiary:
+        set it once via `PATCH /v1/ads/accounts` or in Meta Ads Manager, and Meta
+        fills it in whenever the field is omitted.
+                dsa_payor: Legal entity that pays for the ad. Can differ from `dsaBeneficiary`
+        (for example, an agency paying for a client's ads). Same rules as
+        `dsaBeneficiary`: required for EU targeting unless the ad account has
+        a default payor.
+                destination: Where the conversation opens when the ad is tapped. (required)"""
         client = _get_client()
         try:
-            response = client.messaging_ads.create_messaging_ad()
+            response = client.messaging_ads.create_messaging_ad(
+                account_id=account_id,
+                ad_account_id=ad_account_id,
+                name=name,
+                headline=headline,
+                body=body,
+                image_url=image_url,
+                video=video,
+                creatives=creatives,
+                ad_set_id=ad_set_id,
+                budget_amount=budget_amount,
+                budget_type=budget_type,
+                currency=currency,
+                end_date=end_date,
+                countries=countries,
+                cities=cities,
+                regions=regions,
+                zips=zips,
+                metros=metros,
+                custom_locations=custom_locations,
+                age_min=age_min,
+                age_max=age_max,
+                interests=interests,
+                audience_id=audience_id,
+                placements=placements,
+                advantage_audience=advantage_audience,
+                objective=objective,
+                bid_strategy=bid_strategy,
+                bid_amount=bid_amount,
+                roas_average_floor=roas_average_floor,
+                dsa_beneficiary=dsa_beneficiary,
+                dsa_payor=dsa_payor,
+                destination=destination,
+            )
             return _format_response(response)
         except Exception as e:
             return f"Error: {e}"
@@ -11766,11 +11937,182 @@ def register_generated_tools(mcp, _get_client):
             openWorldHint=True,
         )
     )
-    def messaging_ads_create_call_ad() -> str:
-        """Create Click-to-Call ad"""
+    def messaging_ads_create_call_ad(
+        account_id: str,
+        ad_account_id: str,
+        name: str,
+        phone_number: str,
+        link_url: str,
+        headline: str | None = None,
+        body: str | None = None,
+        image_url: str | None = None,
+        video: dict[str, Any] | None = None,
+        creatives: list[dict[str, Any]] | None = None,
+        ad_set_id: str | None = None,
+        budget_amount: float | None = None,
+        budget_type: str | None = None,
+        currency: str | None = None,
+        end_date: str | None = None,
+        countries: list[str] | None = None,
+        cities: list[dict[str, Any]] | None = None,
+        regions: list[dict[str, Any]] | None = None,
+        zips: list[dict[str, Any]] | None = None,
+        metros: list[dict[str, Any]] | None = None,
+        custom_locations: list[dict[str, Any]] | None = None,
+        age_min: int | None = None,
+        age_max: int | None = None,
+        interests: list[dict[str, Any]] | None = None,
+        audience_id: str | None = None,
+        placements: dict[str, Any] | None = None,
+        advantage_audience: int | None = None,
+        objective: str | None = None,
+        bid_strategy: str | None = None,
+        bid_amount: float | None = None,
+        roas_average_floor: float | None = None,
+        dsa_beneficiary: str | None = None,
+        dsa_payor: str | None = None,
+    ) -> str:
+        """Create Click-to-Call ad
+
+            Args:
+                account_id: Facebook or Instagram SocialAccount ID. (required)
+                ad_account_id: Meta ad account ID, e.g. `act_123456789`. (required)
+                name: Ad display name. Used to derive campaign / ad set names.
+        On the multi-creative shape, each ad's Meta name gets a
+        " #N" suffix (1-indexed) so Ads Manager shows them as a
+        numbered batch.
+         (required)
+                headline: Single-creative shape only. Mutually exclusive with
+        `creatives[]`.
+                body: Primary text shown above the image / video. Single-creative
+        shape only. Mutually exclusive with `creatives[]`.
+                image_url: Image asset for single-creative shape. Mutually exclusive
+        with `video` and with `creatives[]`. Required on the
+        single-creative shape if `video` is not supplied.
+                video: Video creative for single-creative shape. Mutually
+        exclusive with `imageUrl` and with `creatives[]`. Required
+        on the single-creative shape if `imageUrl` is not supplied.
+                creatives: Multi-creative shape: N CTWA ads under one campaign + one
+        ad set, sharing budget and targeting. Mutually exclusive
+        with the top-level single-creative fields (`headline` /
+        `body` / `imageUrl` / `video`). Each entry must supply its
+        own headline, body, and exactly one of `imageUrl` /
+        `video`.
+                ad_set_id: Attach the creatives to this EXISTING messaging ad set instead of
+        building a campaign, so the ad set keeps its learning phase. It then
+        owns budget, targeting and schedule, so `budgetAmount`, `budgetType`,
+        `endDate`, `objective`, `countries`, `interests` and `audienceId` are
+        rejected with a 400 alongside it. Its `destination_type` must match
+        the ad's destination.
+                budget_amount: Budget amount in the ad account's currency major units
+        (e.g. dollars for USD, not cents). Must be > 0.
+        Required unless `adSetId` is set, where the ad set owns it.
+                budget_type: Required unless `adSetId` is set.
+                currency: ISO 4217 currency code matching the ad account's currency
+        (e.g. `USD`). Optional: Zernio resolves it from the ad account
+        when omitted. The value selects the minor-unit exponent Zernio
+        converts budget/bid amounts by before calling Meta (most
+        currencies are cents; zero-decimal currencies like JPY/KRW are
+        sent as-is).
+                end_date: ISO 8601 datetime. Required when `budgetType` is `lifetime`.
+                countries: ISO 3166-1 alpha-2 country codes. Defaults to `["US"]` only
+        when no other geo (`cities`, `regions`, `zips`, `metros`,
+        `customLocations`) is supplied.
+                cities: City-level geo targeting for local CTWA campaigns. Each entry maps to Meta's
+        TargetingGeoLocationCity. `key` is Meta's city ID. `radius`
+        and `distance_unit` are coupled: set both or neither.
+        Meta enforces a minimum city radius (~17 km / 10 mi);
+        smaller values resolve to a 0-size audience and the ad
+        fails at launch. For a tighter catchment use customLocations
+        (lat/lng).
+                regions: Region / state-level geo targeting. `key` is Meta's region
+        ID (lookupable via GET /v1/ads/targeting/search?type=region).
+                zips: ZIP / postal-code geo targeting. `key` is the platform's
+        postal id resolved via /v1/ads/targeting/search.
+                metros: DMA / metro-area geo targeting. `key` is Meta's metro id
+        (e.g. `DMA:807`).
+                custom_locations: Point-radius geo (Meta `geo_locations.custom_locations`).
+        Use for targeting a radius around a specific lat/long when
+        no Meta city/region key fits. `distanceUnit` is required.
+                age_min
+                age_max
+                interests
+                audience_id: Custom audience ID to target.
+                placements: Manual ad placements on the shared ad set. Omit
+        for automatic placements. When set, restricts delivery to the chosen surfaces,
+        mapped onto the ad set's `targeting.{publisher_platforms, facebook_positions, instagram_positions,
+        messenger_positions, audience_network_positions, threads_positions,
+        whatsapp_positions, device_platforms}`. Enum membership is validated here; Meta
+        additionally enforces co-selection rules and restricts which
+        placements are eligible for click-to-WhatsApp ads, returning an actionable
+        error which we surface.
+                advantage_audience: Meta's Advantage+ audience expansion. `0` (default) keeps
+        targeting strict; `1` lets Meta expand beyond the supplied
+        targeting when its delivery system finds better matches.
+        Always sent on CREATE (Meta requires it).
+                objective: Defaults to `OUTCOME_ENGAGEMENT`. `OUTCOME_SALES` and `OUTCOME_LEADS` require
+        additional account configuration (Dataset linked to the WABA
+        for sales) and may be rejected by Meta if missing.
+                bid_strategy: Meta bid strategy applied to the shared ad set. Defaults to
+        `LOWEST_COST_WITHOUT_CAP` (auto-bid) when omitted.
+        `LOWEST_COST_WITH_BID_CAP` and `COST_CAP` require
+        `bidAmount`. `LOWEST_COST_WITH_MIN_ROAS` requires
+        `roasAverageFloor`. CTWA's `optimization_goal` is fixed to
+        `CONVERSATIONS`, but the bid strategy is independent.
+                bid_amount: Whole currency units (e.g. `5` = $5.00 on a USD account).
+        Required when `bidStrategy` is `LOWEST_COST_WITH_BID_CAP`
+        or `COST_CAP`; rejected otherwise.
+                roas_average_floor: Decimal ROAS multiplier (e.g. `2.0` = 2.0× ROAS floor).
+        Required when `bidStrategy` is `LOWEST_COST_WITH_MIN_ROAS`;
+        rejected otherwise. Meta enforces its own upper bound
+        server-side.
+                dsa_beneficiary: Legal entity that benefits from the ad. Required when targeting EU users
+        (EU DSA, Article 26). Optional if the ad account has a default beneficiary:
+        set it once via `PATCH /v1/ads/accounts` or in Meta Ads Manager, and Meta
+        fills it in whenever the field is omitted.
+                dsa_payor: Legal entity that pays for the ad. Can differ from `dsaBeneficiary`
+        (for example, an agency paying for a client's ads). Same rules as
+        `dsaBeneficiary`: required for EU targeting unless the ad account has
+        a default payor.
+                phone_number: E.164 number the CALL_NOW CTA dials (e.g. +34600111222). (required)
+                link_url: Website shown as the creative's link. Required: Meta rejects tel: as link_data.link; the phone number rides only the CTA. (required)"""
         client = _get_client()
         try:
-            response = client.messaging_ads.create_call_ad()
+            response = client.messaging_ads.create_call_ad(
+                account_id=account_id,
+                ad_account_id=ad_account_id,
+                name=name,
+                headline=headline,
+                body=body,
+                image_url=image_url,
+                video=video,
+                creatives=creatives,
+                ad_set_id=ad_set_id,
+                budget_amount=budget_amount,
+                budget_type=budget_type,
+                currency=currency,
+                end_date=end_date,
+                countries=countries,
+                cities=cities,
+                regions=regions,
+                zips=zips,
+                metros=metros,
+                custom_locations=custom_locations,
+                age_min=age_min,
+                age_max=age_max,
+                interests=interests,
+                audience_id=audience_id,
+                placements=placements,
+                advantage_audience=advantage_audience,
+                objective=objective,
+                bid_strategy=bid_strategy,
+                bid_amount=bid_amount,
+                roas_average_floor=roas_average_floor,
+                dsa_beneficiary=dsa_beneficiary,
+                dsa_payor=dsa_payor,
+                phone_number=phone_number,
+                link_url=link_url,
+            )
             return _format_response(response)
         except Exception as e:
             return f"Error: {e}"
@@ -11783,11 +12125,176 @@ def register_generated_tools(mcp, _get_client):
             openWorldHint=True,
         )
     )
-    def messaging_ads_create_ctwa_ad() -> str:
-        """Create Click-to-WhatsApp ad (deprecated)"""
+    def messaging_ads_create_ctwa_ad(
+        account_id: str,
+        ad_account_id: str,
+        name: str,
+        headline: str | None = None,
+        body: str | None = None,
+        image_url: str | None = None,
+        video: dict[str, Any] | None = None,
+        creatives: list[dict[str, Any]] | None = None,
+        ad_set_id: str | None = None,
+        budget_amount: float | None = None,
+        budget_type: str | None = None,
+        currency: str | None = None,
+        end_date: str | None = None,
+        countries: list[str] | None = None,
+        cities: list[dict[str, Any]] | None = None,
+        regions: list[dict[str, Any]] | None = None,
+        zips: list[dict[str, Any]] | None = None,
+        metros: list[dict[str, Any]] | None = None,
+        custom_locations: list[dict[str, Any]] | None = None,
+        age_min: int | None = None,
+        age_max: int | None = None,
+        interests: list[dict[str, Any]] | None = None,
+        audience_id: str | None = None,
+        placements: dict[str, Any] | None = None,
+        advantage_audience: int | None = None,
+        objective: str | None = None,
+        bid_strategy: str | None = None,
+        bid_amount: float | None = None,
+        roas_average_floor: float | None = None,
+        dsa_beneficiary: str | None = None,
+        dsa_payor: str | None = None,
+    ) -> str:
+        """Create Click-to-WhatsApp ad (deprecated)
+
+            Args:
+                account_id: Facebook or Instagram SocialAccount ID. (required)
+                ad_account_id: Meta ad account ID, e.g. `act_123456789`. (required)
+                name: Ad display name. Used to derive campaign / ad set names.
+        On the multi-creative shape, each ad's Meta name gets a
+        " #N" suffix (1-indexed) so Ads Manager shows them as a
+        numbered batch.
+         (required)
+                headline: Single-creative shape only. Mutually exclusive with
+        `creatives[]`.
+                body: Primary text shown above the image / video. Single-creative
+        shape only. Mutually exclusive with `creatives[]`.
+                image_url: Image asset for single-creative shape. Mutually exclusive
+        with `video` and with `creatives[]`. Required on the
+        single-creative shape if `video` is not supplied.
+                video: Video creative for single-creative shape. Mutually
+        exclusive with `imageUrl` and with `creatives[]`. Required
+        on the single-creative shape if `imageUrl` is not supplied.
+                creatives: Multi-creative shape: N CTWA ads under one campaign + one
+        ad set, sharing budget and targeting. Mutually exclusive
+        with the top-level single-creative fields (`headline` /
+        `body` / `imageUrl` / `video`). Each entry must supply its
+        own headline, body, and exactly one of `imageUrl` /
+        `video`.
+                ad_set_id: Attach the creatives to this EXISTING messaging ad set instead of
+        building a campaign, so the ad set keeps its learning phase. It then
+        owns budget, targeting and schedule, so `budgetAmount`, `budgetType`,
+        `endDate`, `objective`, `countries`, `interests` and `audienceId` are
+        rejected with a 400 alongside it. Its `destination_type` must match
+        the ad's destination.
+                budget_amount: Budget amount in the ad account's currency major units
+        (e.g. dollars for USD, not cents). Must be > 0.
+        Required unless `adSetId` is set, where the ad set owns it.
+                budget_type: Required unless `adSetId` is set.
+                currency: ISO 4217 currency code matching the ad account's currency
+        (e.g. `USD`). Optional: Zernio resolves it from the ad account
+        when omitted. The value selects the minor-unit exponent Zernio
+        converts budget/bid amounts by before calling Meta (most
+        currencies are cents; zero-decimal currencies like JPY/KRW are
+        sent as-is).
+                end_date: ISO 8601 datetime. Required when `budgetType` is `lifetime`.
+                countries: ISO 3166-1 alpha-2 country codes. Defaults to `["US"]` only
+        when no other geo (`cities`, `regions`, `zips`, `metros`,
+        `customLocations`) is supplied.
+                cities: City-level geo targeting for local CTWA campaigns. Each entry maps to Meta's
+        TargetingGeoLocationCity. `key` is Meta's city ID. `radius`
+        and `distance_unit` are coupled: set both or neither.
+        Meta enforces a minimum city radius (~17 km / 10 mi);
+        smaller values resolve to a 0-size audience and the ad
+        fails at launch. For a tighter catchment use customLocations
+        (lat/lng).
+                regions: Region / state-level geo targeting. `key` is Meta's region
+        ID (lookupable via GET /v1/ads/targeting/search?type=region).
+                zips: ZIP / postal-code geo targeting. `key` is the platform's
+        postal id resolved via /v1/ads/targeting/search.
+                metros: DMA / metro-area geo targeting. `key` is Meta's metro id
+        (e.g. `DMA:807`).
+                custom_locations: Point-radius geo (Meta `geo_locations.custom_locations`).
+        Use for targeting a radius around a specific lat/long when
+        no Meta city/region key fits. `distanceUnit` is required.
+                age_min
+                age_max
+                interests
+                audience_id: Custom audience ID to target.
+                placements: Manual ad placements on the shared ad set. Omit
+        for automatic placements. When set, restricts delivery to the chosen surfaces,
+        mapped onto the ad set's `targeting.{publisher_platforms, facebook_positions, instagram_positions,
+        messenger_positions, audience_network_positions, threads_positions,
+        whatsapp_positions, device_platforms}`. Enum membership is validated here; Meta
+        additionally enforces co-selection rules and restricts which
+        placements are eligible for click-to-WhatsApp ads, returning an actionable
+        error which we surface.
+                advantage_audience: Meta's Advantage+ audience expansion. `0` (default) keeps
+        targeting strict; `1` lets Meta expand beyond the supplied
+        targeting when its delivery system finds better matches.
+        Always sent on CREATE (Meta requires it).
+                objective: Defaults to `OUTCOME_ENGAGEMENT`. `OUTCOME_SALES` and `OUTCOME_LEADS` require
+        additional account configuration (Dataset linked to the WABA
+        for sales) and may be rejected by Meta if missing.
+                bid_strategy: Meta bid strategy applied to the shared ad set. Defaults to
+        `LOWEST_COST_WITHOUT_CAP` (auto-bid) when omitted.
+        `LOWEST_COST_WITH_BID_CAP` and `COST_CAP` require
+        `bidAmount`. `LOWEST_COST_WITH_MIN_ROAS` requires
+        `roasAverageFloor`. CTWA's `optimization_goal` is fixed to
+        `CONVERSATIONS`, but the bid strategy is independent.
+                bid_amount: Whole currency units (e.g. `5` = $5.00 on a USD account).
+        Required when `bidStrategy` is `LOWEST_COST_WITH_BID_CAP`
+        or `COST_CAP`; rejected otherwise.
+                roas_average_floor: Decimal ROAS multiplier (e.g. `2.0` = 2.0× ROAS floor).
+        Required when `bidStrategy` is `LOWEST_COST_WITH_MIN_ROAS`;
+        rejected otherwise. Meta enforces its own upper bound
+        server-side.
+                dsa_beneficiary: Legal entity that benefits from the ad. Required when targeting EU users
+        (EU DSA, Article 26). Optional if the ad account has a default beneficiary:
+        set it once via `PATCH /v1/ads/accounts` or in Meta Ads Manager, and Meta
+        fills it in whenever the field is omitted.
+                dsa_payor: Legal entity that pays for the ad. Can differ from `dsaBeneficiary`
+        (for example, an agency paying for a client's ads). Same rules as
+        `dsaBeneficiary`: required for EU targeting unless the ad account has
+        a default payor."""
         client = _get_client()
         try:
-            response = client.messaging_ads.create_ctwa_ad()
+            response = client.messaging_ads.create_ctwa_ad(
+                account_id=account_id,
+                ad_account_id=ad_account_id,
+                name=name,
+                headline=headline,
+                body=body,
+                image_url=image_url,
+                video=video,
+                creatives=creatives,
+                ad_set_id=ad_set_id,
+                budget_amount=budget_amount,
+                budget_type=budget_type,
+                currency=currency,
+                end_date=end_date,
+                countries=countries,
+                cities=cities,
+                regions=regions,
+                zips=zips,
+                metros=metros,
+                custom_locations=custom_locations,
+                age_min=age_min,
+                age_max=age_max,
+                interests=interests,
+                audience_id=audience_id,
+                placements=placements,
+                advantage_audience=advantage_audience,
+                objective=objective,
+                bid_strategy=bid_strategy,
+                bid_amount=bid_amount,
+                roas_average_floor=roas_average_floor,
+                dsa_beneficiary=dsa_beneficiary,
+                dsa_payor=dsa_payor,
+            )
             return _format_response(response)
         except Exception as e:
             return f"Error: {e}"

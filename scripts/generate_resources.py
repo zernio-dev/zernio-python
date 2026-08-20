@@ -22,6 +22,7 @@ from pathlib import Path
 from typing import Any
 
 import yaml
+from openapi_body import flatten_request_body_schema
 
 # Map OpenAPI tags to resource class names
 TAG_TO_RESOURCE: dict[str, str] = {
@@ -127,7 +128,9 @@ def get_python_type(schema: dict[str, Any], required: bool = True) -> str:
     return base
 
 
-def extract_parameters(operation: dict[str, Any]) -> list[dict[str, Any]]:
+def extract_parameters(
+    operation: dict[str, Any], spec: dict[str, Any]
+) -> list[dict[str, Any]]:
     """Extract parameters from an operation."""
     params = []
 
@@ -179,20 +182,31 @@ def extract_parameters(operation: dict[str, Any]) -> list[dict[str, Any]]:
         json_content = content.get("application/json", {})
         schema = json_content.get("schema", {})
 
-        # Handle properties in request body
-        properties = schema.get("properties", {})
-        required_props = schema.get("required", [])
-
-        for prop_name, prop_schema in properties.items():
+        flattened = flatten_request_body_schema(schema, spec)
+        if flattened is None:
             params.append({
-                "name": camel_to_snake(prop_name),
-                "original_name": prop_name,
-                "type": get_python_type(prop_schema, prop_name in required_props),
-                "required": prop_name in required_props,
-                "description": prop_schema.get("description", ""),
-                "in": "body",
-                "default": prop_schema.get("default"),
+                "name": "body",
+                "original_name": "body",
+                "type": "dict[str, Any]",
+                "required": True,
+                "description": "Full request body as documented in the API reference.",
+                "in": "raw_body",
+                "default": None,
             })
+        else:
+            properties = flattened["properties"]
+            required_props = flattened["required"]
+
+            for prop_name, prop_schema in properties.items():
+                params.append({
+                    "name": camel_to_snake(prop_name),
+                    "original_name": prop_name,
+                    "type": get_python_type(prop_schema, prop_name in required_props),
+                    "required": prop_name in required_props,
+                    "description": prop_schema.get("description", ""),
+                    "in": "body",
+                    "default": prop_schema.get("default"),
+                })
 
     # Path/query params and body props share one kwarg list; two spec names that
     # snake_case to the same kwarg would emit a "duplicate argument" SyntaxError
@@ -278,6 +292,7 @@ def generate_method_body(
     # Build query params
     query_params = [p for p in params if p["in"] == "query"]
     body_params = [p for p in params if p["in"] == "body"]
+    raw_body_params = [p for p in params if p["in"] == "raw_body"]
     path_params = [p for p in params if p["in"] == "path"]
 
     # Handle path parameters
@@ -329,6 +344,8 @@ def generate_method_body(
         call_args = [path_expr]
         if body_params:
             call_args.append("data=payload")
+        elif raw_body_params:
+            call_args.append(f"data={raw_body_params[0]['name']}")
         if query_params:
             call_args.append("params=params")
         lines.append(
@@ -604,7 +621,7 @@ def main() -> int:
                 "path": path,
                 "summary": operation.get("summary", ""),
                 "description": operation.get("description", ""),
-                "params": extract_parameters(operation),
+                "params": extract_parameters(operation, spec),
             })
 
     # Paths
