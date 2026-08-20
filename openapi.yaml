@@ -20384,7 +20384,7 @@ paths:
         '403':
           description: Profile limit exceeded for this plan
         '409':
-          description: 'The phone number is a Zernio-provisioned number pinned to a different profile. Connect it from that profile, or move it first with PATCH /v1/whatsapp/phone-numbers/{id}/profile.'
+          description: 'Conflict with an existing connection. Either the phone number is a Zernio-provisioned number pinned to a different profile (code WHATSAPP_NUMBER_PINNED_TO_PROFILE, connect it from that profile or move it first with PATCH /v1/whatsapp/phone-numbers/{id}/profile), or the number is already actively connected on another profile or workspace (code WHATSAPP_NUMBER_ALREADY_CONNECTED, disconnect it there first). A number can only be live on one profile.'
 
   /v1/connect/whatsapp/select-phone-number:
     get:
@@ -20541,7 +20541,7 @@ paths:
             application/json:
               schema: { $ref: '#/components/schemas/ErrorResponse' }
         '409':
-          description: 'The phone number is a Zernio-provisioned number pinned to a different profile. Connect it from that profile, or move it first with PATCH /v1/whatsapp/phone-numbers/{id}/profile.'
+          description: 'Conflict with an existing connection. Either the phone number is a Zernio-provisioned number pinned to a different profile (code WHATSAPP_NUMBER_PINNED_TO_PROFILE, connect it from that profile or move it first with PATCH /v1/whatsapp/phone-numbers/{id}/profile), or the number is already actively connected on another profile or workspace (code WHATSAPP_NUMBER_ALREADY_CONNECTED, disconnect it there first). A number can only be live on one profile.'
         '500':
           description: Failed to bind phone number
           content:
