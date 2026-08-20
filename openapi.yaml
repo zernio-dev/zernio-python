@@ -4646,11 +4646,8 @@ components:
           description: 'Cover image. Still present when url is null.'
         mediaStatus:
           type: string
-          enum: [unavailable]
-          description: >-
-            'Present only when the media file could not be retrieved (url is null or,
-            for LinkedIn videos, a cover image standing in for the file). Absent means
-            the file is available at url.'
+          enum: [available, unavailable]
+          description: 'unavailable means the media file could not be retrieved (url is null or, for LinkedIn videos, a cover image standing in for the file). available or absent means the file is available at url (older synced items omit the field).'
         unavailableReason:
           type: string
           enum: [platform_withheld]
@@ -7025,8 +7022,8 @@ components:
                 description: Accessibility alt text set on the media, when present.
               mediaStatus:
                 type: string
-                enum: [unavailable]
-                description: 'Present only when the media file could not be retrieved. Absent means the file is available at url.'
+                enum: [available, unavailable]
+                description: 'unavailable means the media file could not be retrieved (url is null or, for LinkedIn videos, a cover image standing in for the file). available or absent means the file is available at url (older synced items omit the field).'
               unavailableReason:
                 type: string
                 enum: [platform_withheld]
