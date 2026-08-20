@@ -90,9 +90,9 @@ class AdAudiencesResource:
         )
         return self._client._get("/v1/ads/audiences", params=params)
 
-    def create_ad_audience(self) -> dict[str, Any]:
+    def create_ad_audience(self, body: dict[str, Any]) -> dict[str, Any]:
         """Create custom audience"""
-        return self._client._post("/v1/ads/audiences")
+        return self._client._post("/v1/ads/audiences", data=body)
 
     def get_ad_audience(self, audience_id: str) -> dict[str, Any]:
         """Get audience details"""
@@ -146,9 +146,9 @@ class AdAudiencesResource:
         )
         return await self._client._aget("/v1/ads/audiences", params=params)
 
-    async def acreate_ad_audience(self) -> dict[str, Any]:
+    async def acreate_ad_audience(self, body: dict[str, Any]) -> dict[str, Any]:
         """Create custom audience (async)"""
-        return await self._client._apost("/v1/ads/audiences")
+        return await self._client._apost("/v1/ads/audiences", data=body)
 
     async def aget_ad_audience(self, audience_id: str) -> dict[str, Any]:
         """Get audience details (async)"""
