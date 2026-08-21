@@ -16848,6 +16848,29 @@ def register_generated_tools(mcp, _get_client):
 
     @mcp.tool(
         annotations=ToolAnnotations(
+            title="List account notifications",
+            readOnlyHint=True,
+            destructiveHint=False,
+            openWorldHint=False,
+        )
+    )
+    def whatsapp_list_whats_app_account_events(account_id: str, limit: int = 50) -> str:
+        """List account notifications
+
+        Args:
+            account_id: WhatsApp social account ID (required)
+            limit: Maximum events to return"""
+        client = _get_client()
+        try:
+            response = client.whatsapp.list_whats_app_account_events(
+                account_id=account_id, limit=limit
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
             title="Get CTWA conversions dataset",
             readOnlyHint=True,
             destructiveHint=False,

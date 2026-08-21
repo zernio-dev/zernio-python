@@ -31611,6 +31611,47 @@ paths:
         '401': { $ref: '#/components/responses/Unauthorized' }
         '404': { description: WhatsApp account not found }
 
+  /v1/whatsapp/account-events:
+    get:
+      x-resource-group: "accounts"
+      operationId: listWhatsAppAccountEvents
+      tags: [WhatsApp]
+      summary: List account notifications
+      description: |
+        Returns Meta-originated events recorded for a WhatsApp account, newest
+        first: template review outcomes (approved, rejected, paused, category
+        changes) and WABA status changes (restricted, disabled, reinstated,
+        disconnected). Events are captured from Meta webhooks as they happen;
+        the feed starts at the account's first recorded event and is not
+        backfilled. Complements the push events `whatsapp.template.status_updated`
+        and `account.disconnected` with a pollable history.
+      security:
+        - bearerAuth: []
+      parameters:
+        - { name: accountId, in: query, required: true, schema: { type: string }, description: WhatsApp social account ID }
+        - { name: limit, in: query, required: false, schema: { type: integer, minimum: 1, maximum: 200, default: 50 }, description: Maximum events to return }
+      responses:
+        '200':
+          description: Recorded events, newest first
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  events:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id: { type: string }
+                        type: { type: string, description: 'Event kind, e.g. template_approved, template_rejected, account_restricted, account_disconnected' }
+                        severity: { type: string, enum: [info, success, warning, critical] }
+                        title: { type: string }
+                        detail: { type: [string, "null"] }
+                        createdAt: { type: string, format: date-time }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404': { description: WhatsApp account not found }
   /v1/whatsapp/dataset:
     get:
       x-resource-group: "accounts"

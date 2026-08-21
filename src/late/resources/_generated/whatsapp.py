@@ -294,6 +294,16 @@ class WhatsappResource:
         """Unblock users"""
         return self._client._delete("/v1/whatsapp/block-users")
 
+    def list_whats_app_account_events(
+        self, account_id: str, *, limit: int | None = 50
+    ) -> dict[str, Any]:
+        """List account notifications"""
+        params = self._build_params(
+            account_id=account_id,
+            limit=limit,
+        )
+        return self._client._get("/v1/whatsapp/account-events", params=params)
+
     def get_whats_app_dataset(self, account_id: str) -> dict[str, Any]:
         """Get CTWA conversions dataset"""
         params = self._build_params(
@@ -725,6 +735,16 @@ class WhatsappResource:
     ) -> dict[str, Any]:
         """Unblock users (async)"""
         return await self._client._adelete("/v1/whatsapp/block-users")
+
+    async def alist_whats_app_account_events(
+        self, account_id: str, *, limit: int | None = 50
+    ) -> dict[str, Any]:
+        """List account notifications (async)"""
+        params = self._build_params(
+            account_id=account_id,
+            limit=limit,
+        )
+        return await self._client._aget("/v1/whatsapp/account-events", params=params)
 
     async def aget_whats_app_dataset(self, account_id: str) -> dict[str, Any]:
         """Get CTWA conversions dataset (async)"""
