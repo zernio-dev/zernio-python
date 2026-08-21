@@ -16964,6 +16964,64 @@ paths:
         '500':
           description: 'Shopify API not configured (missing credentials).'
 
+  /v1/connect/shopify/token:
+    post:
+      x-resource-group: "accounts"
+      operationId: connectShopifyWithToken
+      tags: [Connect]
+      summary: Connect a Shopify store with a custom-app Admin token
+      description: |
+        Token-paste alternative to the OAuth flow: connect a store using the
+        Admin API access token of a custom app the merchant created in their
+        own Shopify admin (Settings → Apps and sales channels → Develop apps,
+        with the `read_content`/`write_content` scopes). Use this when the
+        one-click OAuth connect is unavailable or when your users prefer not
+        to install a third-party app on their store. The token is validated
+        against the store before anything is saved; custom-app tokens do not
+        expire. Connecting the same profile to a store again replaces the
+        stored token in place.
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [profileId, shop, accessToken]
+              properties:
+                profileId:
+                  type: string
+                  description: 'Your Zernio profile ID (get from /v1/profiles).'
+                shop:
+                  type: string
+                  description: 'The myshopify.com store domain, e.g. `your-store.myshopify.com` (the bare `your-store` prefix is accepted too).'
+                accessToken:
+                  type: string
+                  description: 'Admin API access token of the merchant-created custom app (starts with `shpat_`).'
+      responses:
+        '200':
+          description: Store connected as a platform account
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  account:
+                    type: object
+                    properties:
+                      _id: { type: string }
+                      platform: { type: string, enum: [shopify] }
+                      username: { type: string, description: 'The myshopify.com domain of the connected store.' }
+                      displayName: { type: string }
+                      profileId: { type: string }
+        '400':
+          description: 'Invalid `profileId` format, `shop` is not a myshopify.com store domain, or Shopify rejected the access token for that store.'
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '402': { $ref: '#/components/responses/PaymentRequired' }
+        '403':
+          description: 'API key does not have access to this profile.'
+
   /v1/connect/tiktok-ads:
     patch:
       x-resource-group: "accounts"

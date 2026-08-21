@@ -355,6 +355,7 @@ Both `from zernio import ...` and `from late import ...` work identically. The `
 | `connect.connect_ads()` | Connect ads for a platform |
 | `connect.connect_bluesky_credentials()` | Connect Bluesky account |
 | `connect.connect_open_ai_ads_credentials()` | Connect an OpenAI Ads account |
+| `connect.connect_shopify_with_token()` | Connect a Shopify store with a custom-app Admin token |
 | `connect.connect_whats_app_credentials()` | Connect WhatsApp via credentials |
 | `connect.handle_o_auth_callback()` | Complete OAuth callback |
 | `connect.initiate_telegram_connect()` | Connect Telegram directly |

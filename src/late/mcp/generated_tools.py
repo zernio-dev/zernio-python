@@ -7354,6 +7354,32 @@ def register_generated_tools(mcp, _get_client):
 
     @mcp.tool(
         annotations=ToolAnnotations(
+            title="Connect a Shopify store with a custom-app Admin token",
+            readOnlyHint=False,
+            destructiveHint=True,
+            openWorldHint=True,
+        )
+    )
+    def connect_shopify_with_token(
+        profile_id: str, shop: str, access_token: str
+    ) -> str:
+        """Connect a Shopify store with a custom-app Admin token
+
+        Args:
+            profile_id: Your Zernio profile ID (get from /v1/profiles). (required)
+            shop: The myshopify.com store domain, e.g. `your-store.myshopify.com` (the bare `your-store` prefix is accepted too). (required)
+            access_token: Admin API access token of the merchant-created custom app (starts with `shpat_`). (required)"""
+        client = _get_client()
+        try:
+            response = client.connect.connect_shopify_with_token(
+                profile_id=profile_id, shop=shop, access_token=access_token
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
             title="Set TikTok brand identity",
             readOnlyHint=False,
             destructiveHint=True,

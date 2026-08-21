@@ -139,6 +139,17 @@ class ConnectResource:
         )
         return self._client._get("/v1/connect/shopify", params=params)
 
+    def connect_shopify_with_token(
+        self, profile_id: str, shop: str, access_token: str
+    ) -> dict[str, Any]:
+        """Connect a Shopify store with a custom-app Admin token"""
+        payload = self._build_payload(
+            profile_id=profile_id,
+            shop=shop,
+            access_token=access_token,
+        )
+        return self._client._post("/v1/connect/shopify/token", data=payload)
+
     def configure_tik_tok_ads_brand_identity(
         self, account_id: str, display_name: str, image_url: str
     ) -> dict[str, Any]:
@@ -743,6 +754,17 @@ class ConnectResource:
             redirect_url=redirect_url,
         )
         return await self._client._aget("/v1/connect/shopify", params=params)
+
+    async def aconnect_shopify_with_token(
+        self, profile_id: str, shop: str, access_token: str
+    ) -> dict[str, Any]:
+        """Connect a Shopify store with a custom-app Admin token (async)"""
+        payload = self._build_payload(
+            profile_id=profile_id,
+            shop=shop,
+            access_token=access_token,
+        )
+        return await self._client._apost("/v1/connect/shopify/token", data=payload)
 
     async def aconfigure_tik_tok_ads_brand_identity(
         self, account_id: str, display_name: str, image_url: str
