@@ -24482,6 +24482,7 @@ paths:
           description: Webhook ID to delete
           schema:
             type: string
+            pattern: '^[a-fA-F0-9]{24}$'
       responses:
         '200':
           description: Webhook deleted successfully
@@ -24491,7 +24492,7 @@ paths:
                 type: object
                 properties:
                   success: { type: boolean }
-        '400': { description: Webhook ID required }
+        '400': { description: 'Webhook ID missing or not a valid ID' }
         '401': { $ref: '#/components/responses/Unauthorized' }
         '403': { $ref: '#/components/responses/ResourceGroupForbidden' }
 
