@@ -30083,6 +30083,7 @@ paths:
                   id: { type: string, description: Message ID }
                   conversationId: { type: string, description: Inbox conversation the message was threaded into. }
                   status: { type: string, enum: [sent] }
+        '400': { $ref: '#/components/responses/BadRequest' }
         '401': { $ref: '#/components/responses/Unauthorized' }
         '404': { description: "No SMS-enabled number matches `from`" }
         '409': { description: "Recipient has opted out (replied STOP), or the same Idempotency-Key is still in flight" }
