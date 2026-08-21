@@ -6608,12 +6608,18 @@ components:
       properties:
         billingSystem:
           type: string
-          enum: [metronome, stripe]
+          enum: [metronome, stripe, shopify]
         plan:
           type: object
           properties:
             name: { type: string }
             isUsageBased: { type: boolean }
+            isPaid:
+              type: boolean
+              description: 'True when the key belongs to an account with an active paid billing relationship (Stripe subscription, Metronome enrollment, or Shopify-managed billing).'
+        shopifyShopDomain:
+          type: [string, "null"]
+          description: 'myshopify.com domain owning the subscription; present only when billingSystem is shopify.'
         period:
           type: object
           description: Current billing cycle. `start`/`end` are resolved for usage-based accounts only.
