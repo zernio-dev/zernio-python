@@ -31807,6 +31807,7 @@ paths:
                         endUserFirstName: { type: [string, "null"] }
                         endUserLastName: { type: [string, "null"] }
                         regulatoryDeclineReason: { type: [string, "null"], description: Reviewer rejection reason when status is regulatory_declined. }
+                        callingEnabled: { type: boolean, description: 'Whether WhatsApp Business Calling is enabled on this number (manage via /v1/whatsapp/phone-numbers/{id}/calling).' }
                         createdAt: { type: string, format: date-time }
                   connected:
                     type: array
@@ -31824,6 +31825,7 @@ paths:
                         displayName: { type: [string, "null"] }
                         profileId: { type: [string, "null"] }
                         connectedAt: { type: [string, "null"], format: date-time }
+                        callingEnabled: { type: boolean, description: 'Whether WhatsApp Business Calling is enabled on this number.' }
                   sandbox:
                     type: [object, "null"]
                     description: |
@@ -32346,6 +32348,7 @@ paths:
                         endUserFirstName: { type: [string, "null"] }
                         endUserLastName: { type: [string, "null"] }
                         regulatoryDeclineReason: { type: [string, "null"], description: Reviewer rejection reason when status is regulatory_declined. }
+                        callingEnabled: { type: boolean, description: 'Whether WhatsApp Business Calling is enabled on this number (manage via /v1/whatsapp/phone-numbers/{id}/calling).' }
                         createdAt: { type: string, format: date-time }
                   connected:
                     type: array
@@ -32363,6 +32366,7 @@ paths:
                         displayName: { type: [string, "null"] }
                         profileId: { type: [string, "null"] }
                         connectedAt: { type: [string, "null"], format: date-time }
+                        callingEnabled: { type: boolean, description: 'Whether WhatsApp Business Calling is enabled on this number.' }
                   sandbox:
                     type: [object, "null"]
                     description: |
