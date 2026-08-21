@@ -38193,7 +38193,7 @@ paths:
                   - type: object
                     required: [backfillPending]
                     properties:
-                      backfillPending: { type: boolean, const: true }
+                      backfillPending: { type: boolean, description: 'Always true on this response. Part of the requested range is still being backfilled; retry until the request returns 200.' }
         '400': { $ref: '#/components/responses/BadRequest' }
         '401': { $ref: '#/components/responses/Unauthorized' }
         '403':
@@ -39343,7 +39343,7 @@ paths:
                   - type: object
                     required: [backfillPending]
                     properties:
-                      backfillPending: { type: boolean, const: true }
+                      backfillPending: { type: boolean, description: 'Always true on this response. Part of the requested range is still being backfilled; retry until the request returns 200.' }
         '401': { $ref: '#/components/responses/Unauthorized' }
         '403':
           description: Ads access required. Legacy plans need the Ads add-on; included by default on usage-based plans.
@@ -39396,7 +39396,7 @@ paths:
                   - type: object
                     required: [backfillPending]
                     properties:
-                      backfillPending: { type: boolean, const: true }
+                      backfillPending: { type: boolean, description: 'Always true on this response. Part of the requested range is still being backfilled; retry until the request returns 200.' }
         '400': { $ref: '#/components/responses/BadRequest' }
         '401': { $ref: '#/components/responses/Unauthorized' }
         '403':
@@ -39669,7 +39669,7 @@ paths:
                   - type: object
                     required: [backfillPending]
                     properties:
-                      backfillPending: { type: boolean, const: true }
+                      backfillPending: { type: boolean, description: 'Always true on this response. Part of the requested range is still being backfilled; retry until the request returns 200.' }
         '400':
           description: "Invalid parameter (e.g. an unknown `breakdowns` dimension). The message lists the offending value(s) and the supported set."
           content:
@@ -40101,7 +40101,7 @@ paths:
                   - type: object
                     required: [backfillPending]
                     properties:
-                      backfillPending: { type: boolean, const: true }
+                      backfillPending: { type: boolean, description: 'Always true on this response. Part of the requested range is still being backfilled; retry until the request returns 200.' }
         '400':
           description: "Invalid parameter (e.g. an unknown `breakdowns` dimension). The message lists the offending value(s) and the supported set."
           content:
