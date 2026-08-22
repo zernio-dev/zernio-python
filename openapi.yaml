@@ -1376,6 +1376,18 @@ components:
           description: Per-item media (for carousels / multi-media posts)
           items:
             type: object
+        mediaProductType:
+          type: string
+          description: 'Instagram only: the platform media product type (e.g. FEED, REELS, STORY, AD). Absent when the platform did not report it.'
+        isAiGenerated:
+          type: boolean
+          description: 'Instagram only: whether Instagram labeled the media as AI-generated. Absent when the platform did not report it.'
+        isSharedToFeed:
+          type: boolean
+          description: 'Instagram reels only: whether the reel is also shared to the main feed. Absent when the platform did not report it.'
+        mediaAudioType:
+          type: string
+          description: 'Instagram only: audio type of the media (MUSIC or ORIGINAL_SOUND). Absent when the platform did not report it.'
         analytics:
           type: object
           description: |
@@ -3097,6 +3109,18 @@ components:
         publishedAt:
           type: string
           format: date-time
+        mediaProductType:
+          type: string
+          description: 'Instagram only: the platform media product type (e.g. FEED, REELS, STORY, AD). Absent when the platform did not report it.'
+        isAiGenerated:
+          type: boolean
+          description: 'Instagram only: whether Instagram labeled the media as AI-generated. Absent when the platform did not report it.'
+        isSharedToFeed:
+          type: boolean
+          description: 'Instagram reels only: whether the reel is also shared to the main feed. Absent when the platform did not report it.'
+        mediaAudioType:
+          type: string
+          description: 'Instagram only: audio type of the media (MUSIC or ORIGINAL_SOUND). Absent when the platform did not report it.'
         source:
           type: string
           enum: [external]
@@ -7034,6 +7058,18 @@ components:
                 type: string
                 enum: [platform_withheld]
                 description: 'Why the file is missing. platform_withheld means the platform declined to return it and retrying will not help.'
+        mediaProductType:
+          type: string
+          description: 'Instagram only: the platform media product type (e.g. FEED, REELS, STORY, AD). Absent when the platform did not report it.'
+        isAiGenerated:
+          type: boolean
+          description: 'Instagram only: whether Instagram labeled the media as AI-generated. Absent when the platform did not report it.'
+        isSharedToFeed:
+          type: boolean
+          description: 'Instagram reels only: whether the reel is also shared to the main feed. Absent when the platform did not report it.'
+        mediaAudioType:
+          type: string
+          description: 'Instagram only: audio type of the media (MUSIC or ORIGINAL_SOUND). Absent when the platform did not report it.'
     AnalyticsListResponse:
       type: object
       properties:
@@ -7074,6 +7110,18 @@ components:
                     altText:
                       type: string
                       description: Accessibility alt text set on the media, when present.
+              mediaProductType:
+                type: string
+                description: 'Instagram only: the platform media product type (e.g. FEED, REELS, STORY, AD). Absent when the platform did not report it.'
+              isAiGenerated:
+                type: boolean
+                description: 'Instagram only: whether Instagram labeled the media as AI-generated. Absent when the platform did not report it.'
+              isSharedToFeed:
+                type: boolean
+                description: 'Instagram reels only: whether the reel is also shared to the main feed. Absent when the platform did not report it.'
+              mediaAudioType:
+                type: string
+                description: 'Instagram only: audio type of the media (MUSIC or ORIGINAL_SOUND). Absent when the platform did not report it.'
         pagination:
           $ref: '#/components/schemas/Pagination'
         accounts:
@@ -31645,6 +31693,7 @@ paths:
                       type: object
                       properties:
                         id: { type: string }
+                        accountId: { type: string, description: WhatsApp social account the event belongs to }
                         type: { type: string, description: 'Event kind, e.g. template_approved, template_rejected, account_restricted, account_disconnected' }
                         severity: { type: string, enum: [info, success, warning, critical] }
                         title: { type: string }
