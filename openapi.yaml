@@ -25335,9 +25335,16 @@ paths:
         '403':
           description: Inbox addon required or profile limit reached
         '404':
-          description: Account or recipient user not found
+          description: 'Account or recipient user not found (Reddit: PARTICIPANT_NOT_FOUND when the u/username does not exist)'
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error: { type: string }
+                  code: { type: string, enum: [account_not_found, PARTICIPANT_NOT_FOUND] }
         '422':
-          description: Recipient does not accept DMs from this account
+          description: 'Recipient does not accept DMs from this account (X/Twitter), or does not accept private messages from you (Reddit)'
           content:
             application/json:
               schema:
@@ -25346,7 +25353,14 @@ paths:
                   error: { type: string }
                   code: { type: string, enum: [DM_NOT_ALLOWED] }
         '429':
-          description: X API rate limit exceeded
+          description: 'X API rate limit exceeded, or Reddit rate limit reached for this account'
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error: { type: string }
+                  code: { type: string, enum: [rate_limited] }
   /v1/inbox/conversations/search:
     get:
       x-resource-group: "messages"
