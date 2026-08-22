@@ -25894,6 +25894,17 @@ paths:
         instead of sending the message a second time; same key + different body
         returns 422; a key still in flight returns 409. Works for JSON and
         multipart (file upload) requests alike. Keys are retained for 24 hours.
+
+        Only successful (2xx) responses are stored for replay: if the request
+        throws or returns a non-2xx status, the key is released so the same key
+        can be retried once the problem is fixed. The header therefore protects
+        the "request succeeded but the response was lost" case. For an ambiguous
+        failure (a 5xx or a network timeout), reconcile before retrying: a
+        failure after the platform already accepted the message also releases
+        the key, and a blind retry could send it twice. List the conversation's
+        messages first, and treat an empty result as inconclusive rather than
+        as proof nothing was sent, since a send that failed while being recorded
+        leaves no trace on our side.
       tags: [Messages]
       security: [{ bearerAuth: [] }]
       parameters:
@@ -26434,10 +26445,20 @@ paths:
                   data:
                     type: object
                     properties:
-                      messageId: { type: string, description: ID of the sent message (not returned for Reddit) }
-                      conversationId: { type: [string, "null"], description: Twitter conversation ID }
-                      sentAt: { type: [string, "null"], format: date-time, description: Bluesky sent timestamp }
-                      message: { type: [string, "null"], description: Success message (Reddit only) }
+                      messageId:
+                        type: string
+                        description: 'Platform id of the sent message (not returned for Reddit). For WhatsApp this is the raw Meta wamid, the same id delivered as message.platformMessageId on webhooks and delivery-status updates, and the value to pass as replyTo to quote-reply.'
+                      conversationId:
+                        type: string
+                        description: 'Zernio conversation id, echoed so the thread can be read back or replied to. It equals the id the list-conversations endpoint returns for Telegram, WhatsApp, SMS and Slack; for Facebook, Instagram, Bluesky and Reddit that endpoint returns the platform thread id instead, so do not correlate the two by equality. For X (Twitter), when the request addressed the conversation by its Twitter dm_conversation_id, that platform id is echoed back instead. Omitted when the send succeeded but the conversation could not be resolved to a stored record.'
+                      attachments:
+                        type: array
+                        description: 'Echo of the sent attachment with its resolved public URL, when one is available (Facebook, Instagram, Telegram, WhatsApp).'
+                        items:
+                          type: object
+                          properties:
+                            type: { type: string }
+                            url: { type: string }
         '400':
           description: 'Bad request (e.g., attachment not supported for platform, validation error, category combined with a template or attachment, category used on a non-WhatsApp account, or the WhatsApp Business Account is not eligible for Direct Send)'
           content:
