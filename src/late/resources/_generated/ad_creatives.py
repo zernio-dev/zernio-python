@@ -218,6 +218,25 @@ class AdCreativesResource:
         )
         return self._client._get("/v1/ads/images", params=params)
 
+    def list_ad_videos(
+        self,
+        account_id: str,
+        ad_account_id: str,
+        *,
+        fields: str | None = None,
+        limit: int | None = 25,
+        after: str | None = None,
+    ) -> dict[str, Any]:
+        """Ad video library"""
+        params = self._build_params(
+            account_id=account_id,
+            ad_account_id=ad_account_id,
+            fields=fields,
+            limit=limit,
+            after=after,
+        )
+        return self._client._get("/v1/ads/videos", params=params)
+
     def list_ad_catalogs(self, account_id: str, ad_account_id: str) -> dict[str, Any]:
         """List Meta product catalogs"""
         params = self._build_params(
@@ -389,6 +408,25 @@ class AdCreativesResource:
             after=after,
         )
         return await self._client._aget("/v1/ads/images", params=params)
+
+    async def alist_ad_videos(
+        self,
+        account_id: str,
+        ad_account_id: str,
+        *,
+        fields: str | None = None,
+        limit: int | None = 25,
+        after: str | None = None,
+    ) -> dict[str, Any]:
+        """Ad video library (async)"""
+        params = self._build_params(
+            account_id=account_id,
+            ad_account_id=ad_account_id,
+            fields=fields,
+            limit=limit,
+            after=after,
+        )
+        return await self._client._aget("/v1/ads/videos", params=params)
 
     async def alist_ad_catalogs(
         self, account_id: str, ad_account_id: str

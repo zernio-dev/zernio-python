@@ -454,6 +454,7 @@ Both `from zernio import ...` and `from late import ...` work identically. The `
 | `ad_creatives.list_ad_catalogs()` | List Meta product catalogs |
 | `ad_creatives.list_ad_creatives()` | Creative library |
 | `ad_creatives.list_ad_images()` | Ad image library |
+| `ad_creatives.list_ad_videos()` | Ad video library |
 | `ad_creatives.create_ad_creative()` | Create a standalone creative |
 | `ad_creatives.get_ad_creative()` | Creative details |
 | `ad_creatives.get_ad_previews()` | Render previews of an existing ad |
