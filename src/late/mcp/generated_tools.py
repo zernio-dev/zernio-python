@@ -2088,6 +2088,31 @@ def register_generated_tools(mcp, _get_client):
         except Exception as e:
             return f"Error: {e}"
 
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Replace audience companies",
+            readOnlyHint=False,
+            destructiveHint=True,
+            openWorldHint=True,
+        )
+    )
+    def ad_audiences_replace_ad_audience_companies(
+        audience_id: str, companies: list[dict[str, Any]] | None
+    ) -> str:
+        """Replace audience companies
+
+        Args:
+            audience_id: (required)
+            companies: The complete company list. Each row needs at least one of name, domain, website or linkedinPageUrl. (required)"""
+        client = _get_client()
+        try:
+            response = client.ad_audiences.replace_ad_audience_companies(
+                audience_id=audience_id, companies=companies
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
     # AD_CAMPAIGNS
 
     @mcp.tool(

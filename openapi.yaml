@@ -43784,11 +43784,21 @@ paths:
       summary: Create custom audience
       description: |
         Create a custom audience. `customer_list` is supported on Meta, Google, X, LinkedIn, TikTok, and Pinterest;
-        `website` and `lookalike` are Meta-only. `saved_targeting` stores a reusable TargetingSpec (no member upload,
-        no adAccountId) that you reference later via `savedTargetingId` on `POST /v1/ads/create`. Upload-backed audiences
-        are created empty, add members via `POST /v1/ads/audiences/{audienceId}/users`. On TikTok and Pinterest the
-        audience is provisioned lazily on the first member upload (until then its status is `pending`). Create is not
-        idempotent, never auto-retry.
+        `website` and `lookalike` are Meta-only; `company_list`, `engagement` and `website_retargeting` are LinkedIn-only.
+        `saved_targeting` stores a reusable TargetingSpec (no member upload, no adAccountId) that you reference later via
+        `savedTargetingId` on `POST /v1/ads/create`.
+
+        How the audience gets filled depends on the type:
+
+        - `customer_list` is created empty. Add members with `POST /v1/ads/audiences/{audienceId}/users`.
+          On TikTok and Pinterest the audience is provisioned lazily on that first upload (until then its status is `pending`).
+        - `company_list` is filled AT CREATION from the `companies` array below, which is required. To change the list
+          afterwards send the new full list to `POST /v1/ads/audiences/{audienceId}/companies` (a replace, not a merge).
+          The `/users` endpoint rejects these audiences with a 422.
+        - `website`, `website_retargeting`, `engagement`, `meta_engagement` and `lookalike` fill themselves from the pixel,
+          engagement source or seed audience you point them at. They take no member upload at all.
+
+        Create is not idempotent, never auto-retry.
       security:
         - bearerAuth: []
       requestBody:
@@ -43866,8 +43876,10 @@ paths:
                       description: |
                         Required for company_list audiences (LinkedIn only): plain-text
                         company rows for account targeting. Each row needs at least one
-                        identifier. LinkedIn recommends 1,000+ companies for a usable
-                        match rate and takes up to 48h to process the list.
+                        identifier. Not hashed, LinkedIn matches these against its own
+                        company graph. LinkedIn recommends 1,000+ companies for a usable
+                        match rate and takes up to 48h to process the list. Replace the
+                        list later with POST /v1/ads/audiences/{audienceId}/companies.
                       items:
                         type: object
                         additionalProperties: false
@@ -44069,6 +44081,9 @@ paths:
         Upload user data to a customer_list audience. Data is SHA256-hashed server-side before sending to the platform.
         Email is used on every platform; phone is used on Meta only (other platforms ignore it). On TikTok and Pinterest,
         the first upload also provisions the audience (deferred create). LinkedIn uploads are full-replace. Max 10,000 users per request.
+
+        customer_list only. A LinkedIn `company_list` audience takes company rows, not people: send those to
+        `POST /v1/ads/audiences/{audienceId}/companies`. This endpoint 422s for every other audience type.
       security:
         - bearerAuth: []
       parameters:
@@ -44109,6 +44124,73 @@ paths:
         '404': { $ref: '#/components/responses/NotFound' }
         '422':
           description: Audience is not a customer_list type or has no platform ID yet
+
+  /v1/ads/audiences/{audienceId}/companies:
+    post:
+      x-resource-group: "ads"
+      operationId: replaceAdAudienceCompanies
+      tags: ["Ad Audiences"]
+      x-platforms: ["linkedin"]
+      summary: Replace audience companies
+      description: |
+        Upload the company rows of a LinkedIn `company_list` audience (account-based marketing).
+        LinkedIn-only, every other platform returns 422.
+
+        A LinkedIn audience segment holds exactly one uploaded list, so the list you send here REPLACES the
+        segment's list instead of being appended to it: always send the full set of companies. LinkedIn returns
+        only the identifier of the uploaded file, never its rows, so the merge cannot be done for you, keep the
+        source list on your side. LinkedIn does not document how quickly companies dropped from the list stop
+        being targeted, so treat removals as eventual rather than immediate.
+        Rows are plain text (not hashed), matched against LinkedIn's own company graph. Matching is asynchronous:
+        LinkedIn takes up to 48h for a new audience and up to 24h for a later update, and the audience stays
+        `processing` meanwhile. LinkedIn recommends at least 1,000 companies for a usable match rate, and caps a
+        list at 300,000.
+
+        The initial list is sent with `companies` on `POST /v1/ads/audiences`; this endpoint is for every
+        change after that.
+      security:
+        - bearerAuth: []
+      parameters:
+        - { name: audienceId, in: path, required: true, schema: { type: string } }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [companies]
+              properties:
+                companies:
+                  type: array
+                  minItems: 1
+                  maxItems: 300000
+                  description: 'The complete company list. Each row needs at least one of name, domain, website or linkedinPageUrl.'
+                  items:
+                    type: object
+                    additionalProperties: false
+                    properties:
+                      name: { type: string, maxLength: 255 }
+                      domain: { type: string, maxLength: 100 }
+                      website: { type: string, maxLength: 100 }
+                      linkedinPageUrl: { type: string }
+      responses:
+        '200':
+          description: Companies uploaded
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message: { type: string }
+                  numReceived: { type: integer, description: 'Rows sent to LinkedIn. Matching happens asynchronously, so this is not the matched company count.' }
+        '400':
+          description: 'Invalid input (malformed audienceId, empty companies array, a row with no identifier)'
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403':
+          description: Ads access required. Legacy plans need the Ads add-on; included by default on usage-based plans.
+        '404': { $ref: '#/components/responses/NotFound' }
+        '422':
+          description: 'Audience is not a company_list type, is not on LinkedIn, or has no platform ID yet'
 
   /v1/ads/conversions/quality:
     get:

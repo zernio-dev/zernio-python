@@ -129,6 +129,17 @@ class AdAudiencesResource:
             f"/v1/ads/audiences/{audience_id}/users", data=payload
         )
 
+    def replace_ad_audience_companies(
+        self, audience_id: str, companies: list[dict[str, Any]]
+    ) -> dict[str, Any]:
+        """Replace audience companies"""
+        payload = self._build_payload(
+            companies=companies,
+        )
+        return self._client._post(
+            f"/v1/ads/audiences/{audience_id}/companies", data=payload
+        )
+
     async def alist_ad_audiences(
         self,
         account_id: str,
@@ -185,4 +196,15 @@ class AdAudiencesResource:
         )
         return await self._client._apost(
             f"/v1/ads/audiences/{audience_id}/users", data=payload
+        )
+
+    async def areplace_ad_audience_companies(
+        self, audience_id: str, companies: list[dict[str, Any]]
+    ) -> dict[str, Any]:
+        """Replace audience companies (async)"""
+        payload = self._build_payload(
+            companies=companies,
+        )
+        return await self._client._apost(
+            f"/v1/ads/audiences/{audience_id}/companies", data=payload
         )
