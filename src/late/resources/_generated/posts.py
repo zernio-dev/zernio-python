@@ -230,11 +230,19 @@ class PostsResource:
         )
         return self._client._post(f"/v1/posts/{post_id}/unpublish", data=payload)
 
-    def edit_post(self, post_id: str, platform: str, content: str) -> dict[str, Any]:
+    def edit_post(
+        self,
+        post_id: str,
+        platform: str,
+        content: str,
+        *,
+        account_id: str | None = None,
+    ) -> dict[str, Any]:
         """Edit published post"""
         payload = self._build_payload(
             platform=platform,
             content=content,
+            account_id=account_id,
         )
         return self._client._post(f"/v1/posts/{post_id}/edit", data=payload)
 
@@ -430,12 +438,18 @@ class PostsResource:
         return await self._client._apost(f"/v1/posts/{post_id}/unpublish", data=payload)
 
     async def aedit_post(
-        self, post_id: str, platform: str, content: str
+        self,
+        post_id: str,
+        platform: str,
+        content: str,
+        *,
+        account_id: str | None = None,
     ) -> dict[str, Any]:
         """Edit published post (async)"""
         payload = self._build_payload(
             platform=platform,
             content=content,
+            account_id=account_id,
         )
         return await self._client._apost(f"/v1/posts/{post_id}/edit", data=payload)
 

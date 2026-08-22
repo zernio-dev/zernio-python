@@ -13372,17 +13372,23 @@ def register_generated_tools(mcp, _get_client):
             openWorldHint=True,
         )
     )
-    def posts_edit_post(post_id: str, platform: str, content: str) -> str:
+    def posts_edit_post(
+        post_id: str, platform: str, content: str, account_id: str | None = None
+    ) -> str:
         """Edit published post
 
         Args:
             post_id: (required)
             platform: The platform to edit the post on. (required)
-            content: The new post text content (required)"""
+            content: The new post text content (required)
+            account_id: Which account's copy of the post to edit when the post was published to several accounts on the same platform; defaults to the first."""
         client = _get_client()
         try:
             response = client.posts.edit_post(
-                post_id=post_id, platform=platform, content=content
+                post_id=post_id,
+                platform=platform,
+                content=content,
+                account_id=account_id,
             )
             return _format_response(response)
         except Exception as e:
