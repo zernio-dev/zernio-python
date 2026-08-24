@@ -825,15 +825,18 @@ components:
             single-creative shape if `video` is not supplied.
         video:
           type: object
-          required: [url, thumbnailUrl]
           properties:
-            url: { type: string, format: uri }
+            url: { type: string, format: uri, description: "Public URL of the video to upload. Provide either `url` or `id`." }
+            id: { type: string, description: "Reuse a video already uploaded to this ad account (list them with GET /v1/ads/videos) instead of re-uploading. Wins over `url`. Provide either `url` or `id`." }
             thumbnailUrl:
               type: string
               format: uri
               description: |
-                Required by Meta for every video creative. Used as the
-                ad thumbnail.
+                OPTIONAL: when omitted, the poster is auto-generated from
+                Meta's own preferred video thumbnail. When Meta produces no
+                candidate the request fails with a 502 platform_error
+                (reason: video_thumbnail_unavailable) — retry, or supply
+                this field to control the poster frame exactly.
           description: |
             Video creative for single-creative shape. Mutually
             exclusive with `imageUrl` and with `creatives[]`. Required
@@ -871,15 +874,17 @@ components:
                   `video`. Required if `video` is not supplied.
               video:
                 type: object
-                required: [url, thumbnailUrl]
                 properties:
-                  url: { type: string, format: uri }
+                  url: { type: string, format: uri, description: "Public URL of the video to upload. Provide either `url` or `id`." }
+                  id: { type: string, description: "Reuse a video already uploaded to this ad account (list them with GET /v1/ads/videos) instead of re-uploading. Wins over `url`. Provide either `url` or `id`." }
                   thumbnailUrl:
                     type: string
                     format: uri
                     description: |
-                      Required by Meta for every video creative. Used
-                      as the ad thumbnail.
+                      OPTIONAL: when omitted, the poster is auto-generated
+                      from Meta's own preferred video thumbnail. When Meta
+                      produces no candidate the request fails with a 502
+                      platform_error (reason: video_thumbnail_unavailable).
                 description: |
                   Video creative. Mutually exclusive with this entry's
                   `imageUrl`. Required if `imageUrl` is not supplied.
@@ -889,9 +894,9 @@ components:
             Attach the creatives to this EXISTING messaging ad set instead of
             building a campaign, so the ad set keeps its learning phase. It then
             owns budget, targeting and schedule, so `budgetAmount`, `budgetType`,
-            `endDate`, `objective`, `countries`, `interests` and `audienceId` are
-            rejected with a 400 alongside it. Its `destination_type` must match
-            the ad's destination.
+            `endDate`, `objective`, `countries`, `interests`, `audienceId` and
+            `campaignStatus` are rejected with a 400 alongside it. Its
+            `destination_type` must match the ad's destination.
         budgetAmount:
           type: number
           exclusiveMinimum: 0
@@ -1057,6 +1062,22 @@ components:
             Defaults to `OUTCOME_ENGAGEMENT`. `OUTCOME_SALES` and `OUTCOME_LEADS` require
             additional account configuration (Dataset linked to the WABA
             for sales) and may be rejected by Meta if missing.
+        status:
+          type: string
+          enum: [ACTIVE, PAUSED]
+          description: |
+            Ad-level status. Defaults to `ACTIVE`. `PAUSED` skips activating the
+            newly created ad(s) after Meta accepts them.
+        campaignStatus:
+          type: string
+          enum: [ACTIVE, PAUSED]
+          description: |
+            Campaign-level status, same semantics as `POST /v1/ads/create`. Defaults
+            to `ACTIVE`. `PAUSED` holds activation at the campaign so it never
+            spends before the advertiser reviews it, while the ad set and ad still
+            switch on (one resume call brings the whole hierarchy live). Only
+            meaningful when a new campaign is being created; rejected with a 400
+            alongside `adSetId` (the attach shape reuses an existing campaign).
         bidStrategy:
           type: string
           enum:

@@ -11867,6 +11867,8 @@ def register_generated_tools(mcp, _get_client):
         placements: dict[str, Any] | None = None,
         advantage_audience: int | None = None,
         objective: str | None = None,
+        status: str | None = None,
+        campaign_status: str | None = None,
         bid_strategy: str | None = None,
         bid_amount: float | None = None,
         roas_average_floor: float | None = None,
@@ -11902,9 +11904,9 @@ def register_generated_tools(mcp, _get_client):
                 ad_set_id: Attach the creatives to this EXISTING messaging ad set instead of
         building a campaign, so the ad set keeps its learning phase. It then
         owns budget, targeting and schedule, so `budgetAmount`, `budgetType`,
-        `endDate`, `objective`, `countries`, `interests` and `audienceId` are
-        rejected with a 400 alongside it. Its `destination_type` must match
-        the ad's destination.
+        `endDate`, `objective`, `countries`, `interests`, `audienceId` and
+        `campaignStatus` are rejected with a 400 alongside it. Its
+        `destination_type` must match the ad's destination.
                 budget_amount: Budget amount in the ad account's currency major units
         (e.g. dollars for USD, not cents). Must be > 0.
         Required unless `adSetId` is set, where the ad set owns it.
@@ -11954,6 +11956,14 @@ def register_generated_tools(mcp, _get_client):
                 objective: Defaults to `OUTCOME_ENGAGEMENT`. `OUTCOME_SALES` and `OUTCOME_LEADS` require
         additional account configuration (Dataset linked to the WABA
         for sales) and may be rejected by Meta if missing.
+                status: Ad-level status. Defaults to `ACTIVE`. `PAUSED` skips activating the
+        newly created ad(s) after Meta accepts them.
+                campaign_status: Campaign-level status, same semantics as `POST /v1/ads/create`. Defaults
+        to `ACTIVE`. `PAUSED` holds activation at the campaign so it never
+        spends before the advertiser reviews it, while the ad set and ad still
+        switch on (one resume call brings the whole hierarchy live). Only
+        meaningful when a new campaign is being created; rejected with a 400
+        alongside `adSetId` (the attach shape reuses an existing campaign).
                 bid_strategy: Meta bid strategy applied to the shared ad set. Defaults to
         `LOWEST_COST_WITHOUT_CAP` (auto-bid) when omitted.
         `LOWEST_COST_WITH_BID_CAP` and `COST_CAP` require
@@ -12005,6 +12015,8 @@ def register_generated_tools(mcp, _get_client):
                 placements=placements,
                 advantage_audience=advantage_audience,
                 objective=objective,
+                status=status,
+                campaign_status=campaign_status,
                 bid_strategy=bid_strategy,
                 bid_amount=bid_amount,
                 roas_average_floor=roas_average_floor,
@@ -12053,6 +12065,8 @@ def register_generated_tools(mcp, _get_client):
         placements: dict[str, Any] | None = None,
         advantage_audience: int | None = None,
         objective: str | None = None,
+        status: str | None = None,
+        campaign_status: str | None = None,
         bid_strategy: str | None = None,
         bid_amount: float | None = None,
         roas_average_floor: float | None = None,
@@ -12088,9 +12102,9 @@ def register_generated_tools(mcp, _get_client):
                 ad_set_id: Attach the creatives to this EXISTING messaging ad set instead of
         building a campaign, so the ad set keeps its learning phase. It then
         owns budget, targeting and schedule, so `budgetAmount`, `budgetType`,
-        `endDate`, `objective`, `countries`, `interests` and `audienceId` are
-        rejected with a 400 alongside it. Its `destination_type` must match
-        the ad's destination.
+        `endDate`, `objective`, `countries`, `interests`, `audienceId` and
+        `campaignStatus` are rejected with a 400 alongside it. Its
+        `destination_type` must match the ad's destination.
                 budget_amount: Budget amount in the ad account's currency major units
         (e.g. dollars for USD, not cents). Must be > 0.
         Required unless `adSetId` is set, where the ad set owns it.
@@ -12140,6 +12154,14 @@ def register_generated_tools(mcp, _get_client):
                 objective: Defaults to `OUTCOME_ENGAGEMENT`. `OUTCOME_SALES` and `OUTCOME_LEADS` require
         additional account configuration (Dataset linked to the WABA
         for sales) and may be rejected by Meta if missing.
+                status: Ad-level status. Defaults to `ACTIVE`. `PAUSED` skips activating the
+        newly created ad(s) after Meta accepts them.
+                campaign_status: Campaign-level status, same semantics as `POST /v1/ads/create`. Defaults
+        to `ACTIVE`. `PAUSED` holds activation at the campaign so it never
+        spends before the advertiser reviews it, while the ad set and ad still
+        switch on (one resume call brings the whole hierarchy live). Only
+        meaningful when a new campaign is being created; rejected with a 400
+        alongside `adSetId` (the attach shape reuses an existing campaign).
                 bid_strategy: Meta bid strategy applied to the shared ad set. Defaults to
         `LOWEST_COST_WITHOUT_CAP` (auto-bid) when omitted.
         `LOWEST_COST_WITH_BID_CAP` and `COST_CAP` require
@@ -12192,6 +12214,8 @@ def register_generated_tools(mcp, _get_client):
                 placements=placements,
                 advantage_audience=advantage_audience,
                 objective=objective,
+                status=status,
+                campaign_status=campaign_status,
                 bid_strategy=bid_strategy,
                 bid_amount=bid_amount,
                 roas_average_floor=roas_average_floor,
@@ -12239,6 +12263,8 @@ def register_generated_tools(mcp, _get_client):
         placements: dict[str, Any] | None = None,
         advantage_audience: int | None = None,
         objective: str | None = None,
+        status: str | None = None,
+        campaign_status: str | None = None,
         bid_strategy: str | None = None,
         bid_amount: float | None = None,
         roas_average_floor: float | None = None,
@@ -12274,9 +12300,9 @@ def register_generated_tools(mcp, _get_client):
                 ad_set_id: Attach the creatives to this EXISTING messaging ad set instead of
         building a campaign, so the ad set keeps its learning phase. It then
         owns budget, targeting and schedule, so `budgetAmount`, `budgetType`,
-        `endDate`, `objective`, `countries`, `interests` and `audienceId` are
-        rejected with a 400 alongside it. Its `destination_type` must match
-        the ad's destination.
+        `endDate`, `objective`, `countries`, `interests`, `audienceId` and
+        `campaignStatus` are rejected with a 400 alongside it. Its
+        `destination_type` must match the ad's destination.
                 budget_amount: Budget amount in the ad account's currency major units
         (e.g. dollars for USD, not cents). Must be > 0.
         Required unless `adSetId` is set, where the ad set owns it.
@@ -12326,6 +12352,14 @@ def register_generated_tools(mcp, _get_client):
                 objective: Defaults to `OUTCOME_ENGAGEMENT`. `OUTCOME_SALES` and `OUTCOME_LEADS` require
         additional account configuration (Dataset linked to the WABA
         for sales) and may be rejected by Meta if missing.
+                status: Ad-level status. Defaults to `ACTIVE`. `PAUSED` skips activating the
+        newly created ad(s) after Meta accepts them.
+                campaign_status: Campaign-level status, same semantics as `POST /v1/ads/create`. Defaults
+        to `ACTIVE`. `PAUSED` holds activation at the campaign so it never
+        spends before the advertiser reviews it, while the ad set and ad still
+        switch on (one resume call brings the whole hierarchy live). Only
+        meaningful when a new campaign is being created; rejected with a 400
+        alongside `adSetId` (the attach shape reuses an existing campaign).
                 bid_strategy: Meta bid strategy applied to the shared ad set. Defaults to
         `LOWEST_COST_WITHOUT_CAP` (auto-bid) when omitted.
         `LOWEST_COST_WITH_BID_CAP` and `COST_CAP` require
@@ -12376,6 +12410,8 @@ def register_generated_tools(mcp, _get_client):
                 placements=placements,
                 advantage_audience=advantage_audience,
                 objective=objective,
+                status=status,
+                campaign_status=campaign_status,
                 bid_strategy=bid_strategy,
                 bid_amount=bid_amount,
                 roas_average_floor=roas_average_floor,
