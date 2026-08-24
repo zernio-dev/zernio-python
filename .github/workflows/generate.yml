@@ -27,7 +27,7 @@ jobs:
           # Explicit ref: for repository_dispatch, the default github.sha is
           # resolved at dispatch time, so a run queued behind another run
           # checks out a tip that misses the earlier push and then conflicts.
-          ref: main
+          ref: ${{ github.ref_name }}
           token: ${{ secrets.GITHUB_TOKEN }}
           fetch-depth: 0
 
