@@ -11898,9 +11898,11 @@ def register_generated_tools(mcp, _get_client):
                 creatives: Multi-creative shape: N CTWA ads under one campaign + one
         ad set, sharing budget and targeting. Mutually exclusive
         with the top-level single-creative fields (`headline` /
-        `body` / `imageUrl` / `video`). Each entry must supply its
-        own headline, body, and exactly one of `imageUrl` /
-        `video`.
+        `body` / `imageUrl` / `video`): setting both is a 400,
+        unlike `POST /v1/ads/create` where the top-level fields
+        are silently ignored in multi-creative mode. Each entry
+        must supply its own headline, body, and exactly one of
+        `imageUrl` / `video`.
                 ad_set_id: Attach the creatives to this EXISTING messaging ad set instead of
         building a campaign, so the ad set keeps its learning phase. It then
         owns budget, targeting and schedule, so `budgetAmount`, `budgetType`,
@@ -12096,9 +12098,11 @@ def register_generated_tools(mcp, _get_client):
                 creatives: Multi-creative shape: N CTWA ads under one campaign + one
         ad set, sharing budget and targeting. Mutually exclusive
         with the top-level single-creative fields (`headline` /
-        `body` / `imageUrl` / `video`). Each entry must supply its
-        own headline, body, and exactly one of `imageUrl` /
-        `video`.
+        `body` / `imageUrl` / `video`): setting both is a 400,
+        unlike `POST /v1/ads/create` where the top-level fields
+        are silently ignored in multi-creative mode. Each entry
+        must supply its own headline, body, and exactly one of
+        `imageUrl` / `video`.
                 ad_set_id: Attach the creatives to this EXISTING messaging ad set instead of
         building a campaign, so the ad set keeps its learning phase. It then
         owns budget, targeting and schedule, so `budgetAmount`, `budgetType`,
@@ -12294,9 +12298,11 @@ def register_generated_tools(mcp, _get_client):
                 creatives: Multi-creative shape: N CTWA ads under one campaign + one
         ad set, sharing budget and targeting. Mutually exclusive
         with the top-level single-creative fields (`headline` /
-        `body` / `imageUrl` / `video`). Each entry must supply its
-        own headline, body, and exactly one of `imageUrl` /
-        `video`.
+        `body` / `imageUrl` / `video`): setting both is a 400,
+        unlike `POST /v1/ads/create` where the top-level fields
+        are silently ignored in multi-creative mode. Each entry
+        must supply its own headline, body, and exactly one of
+        `imageUrl` / `video`.
                 ad_set_id: Attach the creatives to this EXISTING messaging ad set instead of
         building a campaign, so the ad set keeps its learning phase. It then
         owns budget, targeting and schedule, so `budgetAmount`, `budgetType`,
