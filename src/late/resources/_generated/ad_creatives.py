@@ -218,6 +218,25 @@ class AdCreativesResource:
         )
         return self._client._get("/v1/ads/images", params=params)
 
+    def upload_ad_video(
+        self,
+        account_id: str,
+        ad_account_id: str,
+        *,
+        video_url: str | None = None,
+        video_base64: str | None = None,
+        filename: str | None = None,
+    ) -> dict[str, Any]:
+        """Upload an ad video"""
+        payload = self._build_payload(
+            account_id=account_id,
+            ad_account_id=ad_account_id,
+            video_url=video_url,
+            video_base64=video_base64,
+            filename=filename,
+        )
+        return self._client._post("/v1/ads/videos", data=payload)
+
     def list_ad_videos(
         self,
         account_id: str,
@@ -236,6 +255,16 @@ class AdCreativesResource:
             after=after,
         )
         return self._client._get("/v1/ads/videos", params=params)
+
+    def delete_ad_video(
+        self, video_id: str, account_id: str, ad_account_id: str
+    ) -> dict[str, Any]:
+        """Delete an ad video"""
+        params = self._build_params(
+            account_id=account_id,
+            ad_account_id=ad_account_id,
+        )
+        return self._client._delete(f"/v1/ads/videos/{video_id}", params=params)
 
     def list_ad_catalogs(self, account_id: str, ad_account_id: str) -> dict[str, Any]:
         """List Meta product catalogs"""
@@ -409,6 +438,25 @@ class AdCreativesResource:
         )
         return await self._client._aget("/v1/ads/images", params=params)
 
+    async def aupload_ad_video(
+        self,
+        account_id: str,
+        ad_account_id: str,
+        *,
+        video_url: str | None = None,
+        video_base64: str | None = None,
+        filename: str | None = None,
+    ) -> dict[str, Any]:
+        """Upload an ad video (async)"""
+        payload = self._build_payload(
+            account_id=account_id,
+            ad_account_id=ad_account_id,
+            video_url=video_url,
+            video_base64=video_base64,
+            filename=filename,
+        )
+        return await self._client._apost("/v1/ads/videos", data=payload)
+
     async def alist_ad_videos(
         self,
         account_id: str,
@@ -427,6 +475,16 @@ class AdCreativesResource:
             after=after,
         )
         return await self._client._aget("/v1/ads/videos", params=params)
+
+    async def adelete_ad_video(
+        self, video_id: str, account_id: str, ad_account_id: str
+    ) -> dict[str, Any]:
+        """Delete an ad video (async)"""
+        params = self._build_params(
+            account_id=account_id,
+            ad_account_id=ad_account_id,
+        )
+        return await self._client._adelete(f"/v1/ads/videos/{video_id}", params=params)
 
     async def alist_ad_catalogs(
         self, account_id: str, ad_account_id: str

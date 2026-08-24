@@ -461,8 +461,10 @@ Both `from zernio import ...` and `from late import ...` work identically. The `
 | `ad_creatives.get_ad_previews()` | Render previews of an existing ad |
 | `ad_creatives.update_ad_creative()` | Rename a creative |
 | `ad_creatives.delete_ad_creative()` | Delete a creative |
+| `ad_creatives.delete_ad_video()` | Delete an ad video |
 | `ad_creatives.generate_ad_previews()` | Render pre-create ad previews |
 | `ad_creatives.upload_ad_image()` | Upload an ad image from base64 |
+| `ad_creatives.upload_ad_video()` | Upload an ad video |
 
 ### Ad Insights
 | Method | Description |

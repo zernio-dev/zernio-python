@@ -27254,6 +27254,11 @@ paths:
       description: |
         Returns posts with comment counts from all connected accounts. Aggregates data across multiple accounts.
 
+        Responses are cached for up to 10 minutes, so the feed may lag new comments by that
+        window. Do not poll this endpoint for real-time updates: subscribe to the
+        `comment.received` webhook, which fires for every new comment across your posts and
+        carries the post reference needed to keep this list current.
+
         For users with the Ads add-on (Metronome plans always qualify), the user's Meta ads
         (boosted/dark posts) are included too. There's one row per (ad, placement-with-comments):
         an ad that runs on both Facebook feed and Instagram feed produces up to two rows (the
@@ -27380,6 +27385,11 @@ paths:
         On Facebook and Instagram, passing a COMMENT id as `postId` is also supported and
         returns that comment's replies instead of the post's top-level comments. This is not
         available on YouTube, where `postId` must be a video id.
+
+        Responses are cached for up to 10 minutes, so a page may lag new comments by that
+        window. Do not poll this endpoint for real-time updates: subscribe to the
+        `comment.received` webhook, which delivers new comments as they arrive. Your own
+        writes (creating, replying to, or deleting a comment) refresh the cache immediately.
       tags: [Comments]
       security: [{ bearerAuth: [] }]
       parameters:
@@ -43640,6 +43650,59 @@ paths:
         '501': { description: Only supported on Meta (facebook/instagram) }
 
   /v1/ads/videos:
+    post:
+      x-resource-group: "ads"
+      operationId: uploadAdVideo
+      tags: ["Ad Creatives"]
+      x-platforms: ["meta"]
+      summary: Upload an ad video
+      description: |-
+        Standalone ad-video upload (parallel to POST /v1/ads/images), so a video creative can
+        be rendered via POST /v1/ads/preview or attached via `video.id` on POST /v1/ads/create
+        before an ad exists.
+
+        Accepts either an https `videoUrl` we download server-side (SSRF-guarded) or raw
+        `videoBase64` bytes; exactly one is required. `videoBase64` is capped by Vercel's body
+        limit — around 4.5 MB payload in practice, so larger videos must come via `videoUrl`.
+
+        Returns the Meta `video.id` (reusable wherever `video.id` is accepted) plus Meta's
+        auto-generated poster URL when available. The endpoint waits until Meta reports the
+        video ready (chunked upload + transcode can take minutes; the handler runs up to
+        800 s).
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [accountId, adAccountId]
+              properties:
+                accountId: { type: string, description: "Zernio SocialAccount id (posting or ads variant) used to resolve the Meta token." }
+                adAccountId: { type: string, description: "Meta ad account id (act_<n>)." }
+                videoUrl: { type: string, description: "Public https URL of the video; downloaded server-side (SSRF-guarded) before chunked upload. Provide exactly one of videoUrl or videoBase64." }
+                videoBase64: { type: string, description: "Raw base64 video bytes, or a full data URL (the data:video/...;base64, prefix is stripped). Capped by Vercel's body limit (~4.5 MB payload). Provide exactly one of videoUrl or videoBase64." }
+                filename: { type: string, description: "Optional filename shown alongside the upload session. Applied only when uploading via videoBase64." }
+      responses:
+        '201':
+          description: Video uploaded and ready
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  adAccountId: { type: string }
+                  video:
+                    type: object
+                    properties:
+                      id: { type: string, description: "Meta video id, reusable as video.id on POST /v1/ads/create and inside POST /v1/ads/preview creativeSpec." }
+                      thumbnailUrl: { type: [string, "null"], description: "Meta-hosted poster URL if available; null when Meta has not produced a poster yet." }
+        '400': { description: "Invalid input, or Meta rejected the upload" }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '501': { description: Only supported on Meta (facebook/instagram) }
+        '502': { description: "Meta accepted the request then failed to produce the media (upload session, chunk transfer, processing timeout, or a response with no video id). Inspect `platformError.reason`." }
+
     get:
       x-resource-group: "ads"
       operationId: listAdVideos
@@ -43656,7 +43719,7 @@ paths:
         tool); videos we uploaded also come back as `creative.videoId` on GET /v1/ads.
 
         Meta transcodes asynchronously, so a row is only usable once `status.video_status`
-        reads `ready`. There is no upload operation here: upload by URL inline via `video.url`
+        reads `ready`. Upload a new video via POST /v1/ads/videos, or inline via `video.url`
         on POST /v1/ads/create.
       security:
         - bearerAuth: []
@@ -43682,6 +43745,41 @@ paths:
                     type: object
                     properties:
                       after: { type: [string, "null"], description: "Cursor for the next page; null when exhausted." }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '501': { description: Only supported on Meta (facebook/instagram) }
+
+  /v1/ads/videos/{videoId}:
+    delete:
+      x-resource-group: "ads"
+      operationId: deleteAdVideo
+      tags: ["Ad Creatives"]
+      x-platforms: ["meta"]
+      summary: Delete an ad video
+      description: |-
+        Removes a video from the ad account's video library. Meta's canonical
+        `DELETE /{video_id}` fails with code 10 / subcode 1363055 for videos uploaded via
+        `/act_X/advideos` even with `ads_management`; this endpoint uses the working
+        account-scoped shape `DELETE /act_X/advideos?video_id=<id>` and returns Meta's
+        `{success: true}` verbatim. Deleting a video that lives in a different ad account,
+        or that Meta has already removed, returns Meta's error verbatim as a 4xx.
+      security:
+        - bearerAuth: []
+      parameters:
+        - { name: videoId, in: path, required: true, schema: { type: string }, description: "Meta ad video id (numeric)." }
+        - { name: accountId, in: query, required: true, schema: { type: string }, description: "Zernio SocialAccount id (posting or ads variant) used to resolve the Meta token." }
+        - { name: adAccountId, in: query, required: true, schema: { type: string }, description: "Meta ad account id (act_<n>) that owns the video." }
+      responses:
+        '200':
+          description: Video deleted
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  adAccountId: { type: string }
+                  videoId: { type: string }
+                  success: { type: boolean }
         '400': { $ref: '#/components/responses/BadRequest' }
         '401': { $ref: '#/components/responses/Unauthorized' }
         '501': { description: Only supported on Meta (facebook/instagram) }

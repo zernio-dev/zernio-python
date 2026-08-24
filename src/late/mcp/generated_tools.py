@@ -4026,6 +4026,42 @@ def register_generated_tools(mcp, _get_client):
 
     @mcp.tool(
         annotations=ToolAnnotations(
+            title="Upload an ad video",
+            readOnlyHint=False,
+            destructiveHint=True,
+            openWorldHint=True,
+        )
+    )
+    def ad_creatives_upload_ad_video(
+        account_id: str,
+        ad_account_id: str,
+        video_url: str | None = None,
+        video_base64: str | None = None,
+        filename: str | None = None,
+    ) -> str:
+        """Upload an ad video
+
+        Args:
+            account_id: Zernio SocialAccount id (posting or ads variant) used to resolve the Meta token. (required)
+            ad_account_id: Meta ad account id (act_<n>). (required)
+            video_url: Public https URL of the video; downloaded server-side (SSRF-guarded) before chunked upload. Provide exactly one of videoUrl or videoBase64.
+            video_base64: Raw base64 video bytes, or a full data URL (the data:video/...;base64, prefix is stripped). Capped by Vercel's body limit (~4.5 MB payload). Provide exactly one of videoUrl or videoBase64.
+            filename: Optional filename shown alongside the upload session. Applied only when uploading via videoBase64."""
+        client = _get_client()
+        try:
+            response = client.ad_creatives.upload_ad_video(
+                account_id=account_id,
+                ad_account_id=ad_account_id,
+                video_url=video_url,
+                video_base64=video_base64,
+                filename=filename,
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
             title="Ad video library",
             readOnlyHint=True,
             destructiveHint=False,
@@ -4055,6 +4091,32 @@ def register_generated_tools(mcp, _get_client):
                 fields=fields,
                 limit=limit,
                 after=after,
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Delete an ad video",
+            readOnlyHint=False,
+            destructiveHint=True,
+            openWorldHint=True,
+        )
+    )
+    def ad_creatives_delete_ad_video(
+        video_id: str, account_id: str, ad_account_id: str
+    ) -> str:
+        """Delete an ad video
+
+        Args:
+            video_id: Meta ad video id (numeric). (required)
+            account_id: Zernio SocialAccount id (posting or ads variant) used to resolve the Meta token. (required)
+            ad_account_id: Meta ad account id (act_<n>) that owns the video. (required)"""
+        client = _get_client()
+        try:
+            response = client.ad_creatives.delete_ad_video(
+                video_id=video_id, account_id=account_id, ad_account_id=ad_account_id
             )
             return _format_response(response)
         except Exception as e:
