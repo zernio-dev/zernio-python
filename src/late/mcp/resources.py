@@ -75,7 +75,7 @@ _OVERVIEW_VIEW_HTML = """\
 <head>
 <meta charset="utf-8">
 <meta name="color-scheme" content="light dark">
-<meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'unsafe-inline'; img-src 'self' data:; connect-src https://mcp.zernio.com; form-action https://zernio.com; frame-ancestors https://chatgpt.com https://claude.ai https://claude.com https://web.chatgpt.com">
 <title>Zernio</title>
 <style>
   body { font-family: system-ui, sans-serif; margin: 0; padding: 16px; color: #1a1a1a; background: #fff; }
@@ -128,7 +128,7 @@ def register_resources(mcp: FastMCP) -> None:
         "ui://zernio/overview.html",
         name="Zernio overview card",
         description="Self-contained MCP App view summarizing what this server does. No external origins.",
-        app=AppConfig(csp=ResourceCSP(connect_domains=[], resource_domains=[])),
+        app=AppConfig(csp=ResourceCSP(connect_domains=["https://mcp.zernio.com"], resource_domains=[])),
     )
     def overview_view() -> str:
         return _OVERVIEW_VIEW_HTML
