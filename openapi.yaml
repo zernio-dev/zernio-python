@@ -37152,6 +37152,16 @@ paths:
                       limit: { type: integer }
                       skip: { type: integer }
                       hasMore: { type: boolean }
+                  summary:
+                    type: object
+                    description: Delivery totals across all recipients in the broadcast, independent of pagination and status filtering.
+                    properties:
+                      total: { type: integer }
+                      pending: { type: integer }
+                      sent: { type: integer }
+                      delivered: { type: integer }
+                      read: { type: integer }
+                      failed: { type: integer }
         '400': { description: Invalid request }
         '401': { $ref: '#/components/responses/Unauthorized' }
         '404': { $ref: '#/components/responses/NotFound' }
