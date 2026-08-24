@@ -38,6 +38,7 @@ from mcp.types import ToolAnnotations
 from late import Late, MediaType, PostStatus
 
 from .auth import build_auth_provider
+from .resources import register_resources
 from .tool_definitions import TOOL_DEFINITIONS
 
 if TYPE_CHECKING:
@@ -168,6 +169,8 @@ of silently picking the first matching account has been removed.
     # pinned ergonomic tools remain always-visible.
     transforms=[_AnnotatedBM25SearchTransform(always_visible=_PINNED_TOOLS, max_results=8)],
 )
+
+register_resources(mcp)
 
 
 # Hand-written tools that only read data. Everything else is treated as a

@@ -177,6 +177,14 @@ async def verify_late_api_key(
     return verdict
 
 
+# Bearer injected by AnonymousDiscoveryMiddleware (http_server.py) for
+# unauthenticated discovery-only requests (initialize, tools/list,
+# resources/*). Verified locally with NO upstream call and empty scopes; a
+# client sending it by hand gains nothing — every tool call re-presents the
+# bearer to the Zernio API, which rejects it.
+ANONYMOUS_DISCOVERY_BEARER = "anonymous-discovery"
+
+
 class ZernioTokenVerifier(TokenVerifier):
     """Resource-server token verification for the Zernio MCP server.
 
@@ -193,6 +201,9 @@ class ZernioTokenVerifier(TokenVerifier):
         self._client = client
 
     async def verify_token(self, token: str) -> AccessToken | None:
+        if token == ANONYMOUS_DISCOVERY_BEARER:
+            return AccessToken(token=token, client_id="anonymous-discovery", scopes=[])
+
         token_key = hashlib.sha256(token.encode()).hexdigest()
         now = time.monotonic()
         verified_at = _VERIFIED_AT.get(token_key)
