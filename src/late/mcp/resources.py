@@ -3,6 +3,7 @@ without) authenticating. Content is bundled, not fetched, so resources/read
 never depends on the Zernio API being reachable."""
 
 from fastmcp import FastMCP
+from fastmcp.apps import AppConfig, ResourceCSP
 
 _OVERVIEW = """\
 # Zernio — social media and messaging API
@@ -67,6 +68,38 @@ Details: https://docs.zernio.com/guides/rate-limits
 """
 
 
+_OVERVIEW_VIEW_HTML = """\
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Zernio</title>
+<style>
+  body { font-family: system-ui, sans-serif; margin: 0; padding: 16px; color: #1a1a1a; background: #fff; }
+  h1 { font-size: 18px; margin: 0 0 4px; }
+  p { margin: 4px 0; font-size: 13px; color: #444; }
+  ul { margin: 8px 0 0; padding-left: 18px; font-size: 13px; }
+  li { margin: 2px 0; }
+  @media (prefers-color-scheme: dark) {
+    body { color: #eee; background: #111; }
+    p { color: #bbb; }
+  }
+</style>
+</head>
+<body>
+  <h1>Zernio</h1>
+  <p>Social media and messaging API: publish, schedule, and analyze across 16 platforms, plus unified inbox and ads on 7 networks.</p>
+  <ul>
+    <li>Post or schedule with <code>posts_create</code> / <code>posts_cross_post</code></li>
+    <li>Discover accounts with <code>accounts_list</code> and <code>profiles_list</code></li>
+    <li>Read metrics with <code>analytics_get_analytics</code></li>
+    <li>Find the long tail of tools with <code>search_tools</code></li>
+  </ul>
+</body>
+</html>
+"""
+
+
 def register_resources(mcp: FastMCP) -> None:
     """Attach the static discovery resources to the server."""
 
@@ -87,6 +120,15 @@ def register_resources(mcp: FastMCP) -> None:
     )
     def authentication() -> str:
         return _AUTHENTICATION
+
+    @mcp.resource(
+        "ui://zernio/overview.html",
+        name="Zernio overview card",
+        description="Self-contained MCP App view summarizing what this server does. No external origins.",
+        app=AppConfig(csp=ResourceCSP(connect_domains=[], resource_domains=[])),
+    )
+    def overview_view() -> str:
+        return _OVERVIEW_VIEW_HTML
 
     @mcp.resource(
         "zernio://docs/rate-limits",
