@@ -24,6 +24,10 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
         with:
+          # Explicit ref: for repository_dispatch, the default github.sha is
+          # resolved at dispatch time, so a run queued behind another run
+          # checks out a tip that misses the earlier push and then conflicts.
+          ref: main
           token: ${{ secrets.GITHUB_TOKEN }}
           fetch-depth: 0
 
@@ -132,7 +136,7 @@ jobs:
           for attempt in 1 2 3; do
             if git push; then break; fi
             echo "Push attempt $attempt failed; rebasing and retrying..."
-            git pull --rebase origin "${{ github.ref_name }}"
+            git pull --rebase -X theirs origin "${{ github.ref_name }}"
             sleep $((attempt * 5))
           done
 
