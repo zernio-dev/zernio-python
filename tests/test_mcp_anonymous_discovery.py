@@ -71,6 +71,41 @@ async def test_anonymous_resources_read_returns_content():
     assert "text/markdown" in response.text
 
 
+async def test_root_post_aliases_to_mcp_endpoint():
+    app = build_app()
+    transport = httpx.ASGITransport(app=app)
+    async with (
+        httpx.AsyncClient(transport=transport, base_url="http://test") as client,
+        app.router.lifespan_context(app),
+    ):
+        response = await client.post(
+            "/",
+            json=rpc(
+                "initialize",
+                {
+                    "protocolVersion": "2025-06-18",
+                    "capabilities": {},
+                    "clientInfo": {"name": "probe", "version": "1.0.0"},
+                },
+            ),
+            headers=HEADERS,
+        )
+    assert response.status_code == 200
+    assert '"serverInfo"' in response.text
+
+
+async def test_root_get_without_event_stream_still_serves_info():
+    app = build_app()
+    transport = httpx.ASGITransport(app=app)
+    async with (
+        httpx.AsyncClient(transport=transport, base_url="http://test") as client,
+        app.router.lifespan_context(app),
+    ):
+        response = await client.get("/")
+    assert response.status_code == 200
+    assert response.json()["service"]
+
+
 async def test_anonymous_tools_call_keeps_401_challenge():
     response = await request(
         build_app(), rpc("tools/call", {"name": "accounts_list", "arguments": {}})

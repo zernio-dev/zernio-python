@@ -113,6 +113,34 @@ _ANONYMOUS_METHODS = frozenset(
 _ANONYMOUS_MAX_BODY_BYTES = 64 * 1024
 
 
+class RootAliasMiddleware:
+    """Serve the MCP transport on the bare origin as well as /mcp.
+
+    Some clients and scanners (is-agentic's Ora among them) are handed
+    `https://mcp.zernio.com` and connect to `/` directly, where the JSON info
+    route answered 405 to POST. Alias protocol traffic to /mcp: every POST,
+    and GET/DELETE only when the client asks for an event stream, so the plain
+    GET / info document keeps working for browsers.
+    """
+
+    def __init__(self, app: ASGIApp) -> None:
+        self.app = app
+
+    async def __call__(self, scope: Scope, receive: Receive, send: Send) -> None:
+        if scope["type"] == "http" and scope["path"].rstrip("/") == "":
+            method = scope.get("method")
+            accept = next(
+                (v for k, v in scope["headers"] if k.lower() == b"accept"), b""
+            )
+            if method == "POST" or (
+                method in ("GET", "DELETE") and b"text/event-stream" in accept
+            ):
+                scope = dict(scope)
+                scope["path"] = ENDPOINT_MCP
+                scope["raw_path"] = ENDPOINT_MCP.encode()
+        await self.app(scope, receive, send)
+
+
 class AnonymousDiscoveryMiddleware:
     """Let discovery-only JSON-RPC requests through without credentials.
 
@@ -260,8 +288,12 @@ def build_app() -> Starlette:
         r for r in sse_app.routes if getattr(r, "path", "") in sse_paths
     )
 
+    # add_middleware order: last added runs first. RootAlias must rewrite the
+    # path before OriginGuard matches on it; AnonymousDiscovery runs last so
+    # it sees the aliased path too.
     app.add_middleware(AnonymousDiscoveryMiddleware)
     app.add_middleware(OriginGuardMiddleware)
+    app.add_middleware(RootAliasMiddleware)
     return app
 
 
