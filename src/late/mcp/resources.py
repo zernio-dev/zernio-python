@@ -4,6 +4,7 @@ never depends on the Zernio API being reachable."""
 
 from fastmcp import FastMCP
 from fastmcp.apps import AppConfig, ResourceCSP
+from mcp.types import ToolAnnotations
 
 _OVERVIEW = """\
 # Zernio — social media and messaging API
@@ -73,6 +74,8 @@ _OVERVIEW_VIEW_HTML = """\
 <html lang="en">
 <head>
 <meta charset="utf-8">
+<meta name="color-scheme" content="light dark">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline'">
 <title>Zernio</title>
 <style>
   body { font-family: system-ui, sans-serif; margin: 0; padding: 16px; color: #1a1a1a; background: #fff; }
@@ -129,6 +132,20 @@ def register_resources(mcp: FastMCP) -> None:
     )
     def overview_view() -> str:
         return _OVERVIEW_VIEW_HTML
+
+    @mcp.tool(
+        name="zernio_overview",
+        description="Show an overview of what this Zernio MCP server can do (accounts, posts, analytics, ads, inbox) and how to find the right tool.",
+        annotations=ToolAnnotations(
+            title="Zernio server overview",
+            readOnlyHint=True,
+            destructiveHint=False,
+            openWorldHint=False,
+        ),
+        app=AppConfig(resource_uri="ui://zernio/overview.html", visibility=["model"]),
+    )
+    def zernio_overview() -> str:
+        return _OVERVIEW
 
     @mcp.resource(
         "zernio://docs/rate-limits",

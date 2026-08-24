@@ -68,7 +68,7 @@ _PINNED_TOOLS = [
     "posts_list", "posts_get", "posts_create", "posts_publish_now", "posts_cross_post",
     "posts_update", "posts_delete", "posts_retry", "posts_list_failed", "posts_retry_all_failed",
     "media_generate_upload_link", "media_check_upload_status",
-    "docs_search",
+    "docs_search", "zernio_overview",
     # Posting operations not covered by the ergonomic set
     "posts_bulk_upload_posts", "posts_unpublish_post", "posts_edit_post",
     # Scheduling queue

@@ -87,6 +87,9 @@ _SERVER_CARD = {
         "plus ad management on 7 ad networks, via MCP."
     ),
     "icon": "https://media.zernio.com/site-assets/brand/icon-primary.png",
+    "websiteUrl": "https://zernio.com",
+    "repository": {"url": "https://github.com/zernio-dev/zernio-python", "source": "github"},
+    "remotes": [{"type": "streamable-http", "url": f"{MCP_PUBLIC_URL}{ENDPOINT_MCP}"}],
     "serverInfo": {
         "name": "zernio",
         "title": "Zernio Social Media API",
