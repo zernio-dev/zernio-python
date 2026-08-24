@@ -864,16 +864,23 @@ Both `from zernio import ...` and `from late import ...` work identically. The `
 ### Voice
 | Method | Description |
 |--------|-------------|
+| `voice.list_sip_trunks()` | List SIP trunks |
 | `voice.list_voice_calls()` | List phone calls |
+| `voice.create_sip_trunk()` | Create a SIP trunk |
 | `voice.create_voice_call()` | Place an outbound phone call |
 | `voice.create_voice_web_session()` | Mint a browser softphone session |
+| `voice.get_sip_trunk()` | Get a SIP trunk |
 | `voice.get_voice_call()` | Get a phone call |
 | `voice.get_voice_call_estimate()` | Estimate call cost |
 | `voice.get_voice_call_recording()` | Get a call recording |
+| `voice.delete_sip_trunk()` | Delete a SIP trunk |
+| `voice.attach_number_to_sip_trunk()` | Attach a number to a SIP trunk |
+| `voice.detach_number_from_sip_trunk()` | Detach a number from its SIP trunk |
 | `voice.dial_voice_web_call()` | Dial from the browser softphone |
 | `voice.disable_voice_on_number()` | Disable phone calling on a number |
 | `voice.enable_voice_on_number()` | Enable phone calling on a number |
 | `voice.end_voice_call()` | Hang up a live call |
+| `voice.rotate_sip_trunk_credentials()` | Rotate a SIP trunk's password |
 | `voice.transfer_voice_call()` | Blind-transfer a live call |
 
 ### WhatsApp

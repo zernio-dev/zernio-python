@@ -225,6 +225,52 @@ class VoiceResource:
         """Disable phone calling on a number"""
         return self._client._delete(f"/v1/phone-numbers/{id}/voice")
 
+    def create_sip_trunk(
+        self,
+        label: str,
+        sip_host: str,
+        *,
+        sip_port: int | None = None,
+        transport: str | None = None,
+    ) -> dict[str, Any]:
+        """Create a SIP trunk"""
+        payload = self._build_payload(
+            label=label,
+            sip_host=sip_host,
+            sip_port=sip_port,
+            transport=transport,
+        )
+        return self._client._post("/v1/phone-numbers/sip-trunks", data=payload)
+
+    def list_sip_trunks(self) -> dict[str, Any]:
+        """List SIP trunks"""
+        return self._client._get("/v1/phone-numbers/sip-trunks")
+
+    def get_sip_trunk(self, id: str) -> dict[str, Any]:
+        """Get a SIP trunk"""
+        return self._client._get(f"/v1/phone-numbers/sip-trunks/{id}")
+
+    def delete_sip_trunk(self, id: str) -> dict[str, Any]:
+        """Delete a SIP trunk"""
+        return self._client._delete(f"/v1/phone-numbers/sip-trunks/{id}")
+
+    def rotate_sip_trunk_credentials(self, id: str) -> dict[str, Any]:
+        """Rotate a SIP trunk's password"""
+        return self._client._post(
+            f"/v1/phone-numbers/sip-trunks/{id}/rotate-credentials"
+        )
+
+    def attach_number_to_sip_trunk(self, id: str, trunk_id: str) -> dict[str, Any]:
+        """Attach a number to a SIP trunk"""
+        payload = self._build_payload(
+            trunk_id=trunk_id,
+        )
+        return self._client._post(f"/v1/phone-numbers/{id}/sip-trunk", data=payload)
+
+    def detach_number_from_sip_trunk(self, id: str) -> dict[str, Any]:
+        """Detach a number from its SIP trunk"""
+        return self._client._delete(f"/v1/phone-numbers/{id}/sip-trunk")
+
     async def acreate_voice_call(
         self,
         to: str,
@@ -376,3 +422,53 @@ class VoiceResource:
     async def adisable_voice_on_number(self, id: str) -> dict[str, Any]:
         """Disable phone calling on a number (async)"""
         return await self._client._adelete(f"/v1/phone-numbers/{id}/voice")
+
+    async def acreate_sip_trunk(
+        self,
+        label: str,
+        sip_host: str,
+        *,
+        sip_port: int | None = None,
+        transport: str | None = None,
+    ) -> dict[str, Any]:
+        """Create a SIP trunk (async)"""
+        payload = self._build_payload(
+            label=label,
+            sip_host=sip_host,
+            sip_port=sip_port,
+            transport=transport,
+        )
+        return await self._client._apost("/v1/phone-numbers/sip-trunks", data=payload)
+
+    async def alist_sip_trunks(self) -> dict[str, Any]:
+        """List SIP trunks (async)"""
+        return await self._client._aget("/v1/phone-numbers/sip-trunks")
+
+    async def aget_sip_trunk(self, id: str) -> dict[str, Any]:
+        """Get a SIP trunk (async)"""
+        return await self._client._aget(f"/v1/phone-numbers/sip-trunks/{id}")
+
+    async def adelete_sip_trunk(self, id: str) -> dict[str, Any]:
+        """Delete a SIP trunk (async)"""
+        return await self._client._adelete(f"/v1/phone-numbers/sip-trunks/{id}")
+
+    async def arotate_sip_trunk_credentials(self, id: str) -> dict[str, Any]:
+        """Rotate a SIP trunk's password (async)"""
+        return await self._client._apost(
+            f"/v1/phone-numbers/sip-trunks/{id}/rotate-credentials"
+        )
+
+    async def aattach_number_to_sip_trunk(
+        self, id: str, trunk_id: str
+    ) -> dict[str, Any]:
+        """Attach a number to a SIP trunk (async)"""
+        payload = self._build_payload(
+            trunk_id=trunk_id,
+        )
+        return await self._client._apost(
+            f"/v1/phone-numbers/{id}/sip-trunk", data=payload
+        )
+
+    async def adetach_number_from_sip_trunk(self, id: str) -> dict[str, Any]:
+        """Detach a number from its SIP trunk (async)"""
+        return await self._client._adelete(f"/v1/phone-numbers/{id}/sip-trunk")

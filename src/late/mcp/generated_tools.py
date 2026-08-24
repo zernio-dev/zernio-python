@@ -16204,6 +16204,154 @@ def register_generated_tools(mcp, _get_client):
         except Exception as e:
             return f"Error: {e}"
 
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Create a SIP trunk",
+            readOnlyHint=False,
+            destructiveHint=True,
+            openWorldHint=True,
+        )
+    )
+    def voice_create_sip_trunk(
+        label: str,
+        sip_host: str,
+        sip_port: int | None = None,
+        transport: str | None = None,
+    ) -> str:
+        """Create a SIP trunk
+
+        Args:
+            label: Display name for the trunk. (required)
+            sip_host: Fully-qualified hostname inbound calls are delivered to (e.g. sip.rtc.elevenlabs.io, sip.retellai.com). (required)
+            sip_port: Defaults to 5061 for tls, 5060 otherwise.
+            transport: Signaling transport toward sipHost. Default tls (with SRTP media)."""
+        client = _get_client()
+        try:
+            response = client.voice.create_sip_trunk(
+                label=label, sip_host=sip_host, sip_port=sip_port, transport=transport
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="List SIP trunks",
+            readOnlyHint=True,
+            destructiveHint=False,
+            openWorldHint=False,
+        )
+    )
+    def voice_list_sip_trunks() -> str:
+        """List SIP trunks"""
+        client = _get_client()
+        try:
+            response = client.voice.list_sip_trunks()
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Get a SIP trunk",
+            readOnlyHint=True,
+            destructiveHint=False,
+            openWorldHint=False,
+        )
+    )
+    def voice_get_sip_trunk(id: str) -> str:
+        """Get a SIP trunk
+
+        Args:
+            id: (required)"""
+        client = _get_client()
+        try:
+            response = client.voice.get_sip_trunk(id=id)
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Delete a SIP trunk",
+            readOnlyHint=False,
+            destructiveHint=True,
+            openWorldHint=True,
+        )
+    )
+    def voice_delete_sip_trunk(id: str) -> str:
+        """Delete a SIP trunk
+
+        Args:
+            id: (required)"""
+        client = _get_client()
+        try:
+            response = client.voice.delete_sip_trunk(id=id)
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Rotate a SIP trunk's password",
+            readOnlyHint=False,
+            destructiveHint=True,
+            openWorldHint=True,
+        )
+    )
+    def voice_rotate_sip_trunk_credentials(id: str) -> str:
+        """Rotate a SIP trunk's password
+
+        Args:
+            id: (required)"""
+        client = _get_client()
+        try:
+            response = client.voice.rotate_sip_trunk_credentials(id=id)
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Attach a number to a SIP trunk",
+            readOnlyHint=False,
+            destructiveHint=True,
+            openWorldHint=True,
+        )
+    )
+    def voice_attach_number_to_sip_trunk(id: str, trunk_id: str) -> str:
+        """Attach a number to a SIP trunk
+
+        Args:
+            id: Phone number record ID (from GET /v1/phone-numbers). (required)
+            trunk_id: SIP trunk ID (from POST /v1/phone-numbers/sip-trunks). (required)"""
+        client = _get_client()
+        try:
+            response = client.voice.attach_number_to_sip_trunk(id=id, trunk_id=trunk_id)
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Detach a number from its SIP trunk",
+            readOnlyHint=False,
+            destructiveHint=True,
+            openWorldHint=True,
+        )
+    )
+    def voice_detach_number_from_sip_trunk(id: str) -> str:
+        """Detach a number from its SIP trunk
+
+        Args:
+            id: (required)"""
+        client = _get_client()
+        try:
+            response = client.voice.detach_number_from_sip_trunk(id=id)
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
     # WEBHOOKS
 
     @mcp.tool(

@@ -31938,6 +31938,7 @@ paths:
                         telnyxOrderId: { type: [string, "null"], description: Present once the number order has been placed (i.e. the requirement group was approved). Absent while still in identity review. }
                         monthlyCents: { type: integer, description: Per-country monthly price in cents ($2..$25). }
                         hostedByZernio: { type: boolean, description: "False for numbers you brought yourself (connected via Meta embedded signup) — they live on your own carrier, so SMS/Calls can't be enabled on them." }
+                        sipTrunkId: { type: [string, "null"], description: 'SIP trunk the number is attached to; null when not trunked. While attached, enabling Calls or WhatsApp calling, requesting WhatsApp verification, and releasing the number all return 409.' }
                         profileId: { type: object }
                         provisionedAt: { type: string, format: date-time }
                         metaPreverifiedId: { type: string }
@@ -32028,6 +32029,7 @@ paths:
                       endUserLastName: { type: [string, "null"] }
                       regulatoryDeclineReason: { type: [string, "null"], description: Reviewer rejection reason when status is regulatory_declined. }
                       provisionedAt: { type: string, format: date-time }
+                      sipTrunkId: { type: [string, "null"], description: 'SIP trunk the number is attached to; null when not trunked. While attached, enabling Calls or WhatsApp calling, requesting WhatsApp verification, and releasing the number all return 409.' }
         '401': { $ref: '#/components/responses/Unauthorized' }
         '404': { $ref: '#/components/responses/NotFound' }
     delete:
@@ -32069,6 +32071,7 @@ paths:
         '400': { description: Phone number is already released or being released }
         '401': { $ref: '#/components/responses/Unauthorized' }
         '404': { $ref: '#/components/responses/NotFound' }
+        '409': { description: 'The number is attached to a SIP trunk; detach it first (code invalid_resource_state).' }
 
   /v1/phone-numbers/purchase:
     post:
@@ -32479,6 +32482,7 @@ paths:
                         telnyxOrderId: { type: [string, "null"], description: Present once the number order has been placed (i.e. the requirement group was approved). Absent while still in identity review. }
                         monthlyCents: { type: integer, description: Per-country monthly price in cents ($2..$25). }
                         hostedByZernio: { type: boolean, description: "False for numbers you brought yourself (connected via Meta embedded signup) — they live on your own carrier, so SMS/Calls can't be enabled on them." }
+                        sipTrunkId: { type: [string, "null"], description: 'SIP trunk the number is attached to; null when not trunked. While attached, enabling Calls or WhatsApp calling, requesting WhatsApp verification, and releasing the number all return 409.' }
                         profileId: { type: object }
                         provisionedAt: { type: string, format: date-time }
                         metaPreverifiedId: { type: string }
@@ -34376,6 +34380,7 @@ paths:
                   ivrOptions: { type: array, items: { type: object, properties: { digit: { type: string }, forwardTo: { type: string }, label: { type: string } } } }
         '401': { $ref: '#/components/responses/Unauthorized' }
         '404': { description: Number not found }
+        '409': { description: 'This number is attached to a SIP trunk; detach it first (code invalid_resource_state).' }
         '422': { description: "This number is hosted by your own carrier (brought via WhatsApp embedded signup), so calls can't be enabled on it." }
     delete:
       x-resource-group: "telephony"
@@ -34399,6 +34404,266 @@ paths:
                 properties:
                   enabled: { type: boolean, description: Always false after a successful disable. }
                   phoneNumber: { type: string }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404': { description: Number not found }
+
+  /v1/phone-numbers/sip-trunks:
+    post:
+      x-resource-group: "telephony"
+      operationId: createSipTrunk
+      tags: [Voice]
+      summary: Create a SIP trunk
+      description: |
+        Creates a SIP trunk an external voice platform (Retell, ElevenLabs,
+        Vapi, or any SIP endpoint) can import your Zernio numbers into. The
+        trunk carries both directions: inbound calls on attached numbers are
+        delivered to `sipHost`, and the platform originates outbound calls
+        through `termination.uri` with the digest credentials.
+
+        The `digestPassword` is returned only by this call (and by
+        rotate-credentials); store it immediately. Attach any number of numbers
+        to a trunk. Several trunks may point at the same host — each carries its
+        own credentials and spend cap, so separate destination workspaces (e.g.
+        an agency's clients) stay isolated.
+
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [label, sipHost]
+              properties:
+                label: { type: string, maxLength: 80, description: Display name for the trunk. }
+                sipHost: { type: string, description: 'Fully-qualified hostname inbound calls are delivered to (e.g. sip.rtc.elevenlabs.io, sip.retellai.com).' }
+                sipPort: { type: integer, minimum: 1, maximum: 65535, description: 'Defaults to 5061 for tls, 5060 otherwise.' }
+                transport: { type: string, enum: [tls, tcp, udp], description: 'Signaling transport toward sipHost. Default tls (with SRTP media).' }
+      responses:
+        '201':
+          description: Trunk created. The digest password is shown only here and on rotate.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id: { type: string }
+                  label: { type: string }
+                  sipHost: { type: string }
+                  sipPort: { type: integer }
+                  transport: { type: string, enum: [tls, tcp, udp] }
+                  termination:
+                    type: object
+                    properties:
+                      uri: { type: string, description: 'Telnyx termination host the platform dials for outbound (sip.telnyx.com).' }
+                      username: { type: string, description: SIP digest username. }
+                  numbersAttached: { type: integer }
+                  createdAt: { type: [string, "null"], format: date-time }
+                  digestPassword: { type: string, description: 'SIP digest password, shown only in this response.' }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { description: 'SIP trunking is not enabled for this workspace, or the workspace is on legacy (non-usage-based) billing, which cannot invoice trunk call costs (code feature_not_available).' }
+        '409': { description: 'The workspace trunk limit was reached (code invalid_resource_state).' }
+        '422': { description: 'The host cannot be used as a trunk destination (e.g. a Zernio or carrier host).' }
+    get:
+      x-resource-group: "telephony"
+      operationId: listSipTrunks
+      tags: [Voice]
+      summary: List SIP trunks
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: The workspace's trunks. Passwords are never included.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  trunks:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id: { type: string }
+                        label: { type: string }
+                        sipHost: { type: string }
+                        sipPort: { type: integer }
+                        transport: { type: string, enum: [tls, tcp, udp] }
+                        termination:
+                          type: object
+                          properties:
+                            uri: { type: string }
+                            username: { type: string }
+                        numbersAttached: { type: integer }
+                        createdAt: { type: [string, "null"], format: date-time }
+                  enabled: { type: boolean, description: 'Whether this workspace can create SIP trunks. Managing existing trunks always works.' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+
+  /v1/phone-numbers/sip-trunks/{id}:
+    get:
+      x-resource-group: "telephony"
+      operationId: getSipTrunk
+      tags: [Voice]
+      summary: Get a SIP trunk
+      security:
+        - bearerAuth: []
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string } }
+      responses:
+        '200':
+          description: Trunk detail, including the attached numbers.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id: { type: string }
+                  label: { type: string }
+                  sipHost: { type: string }
+                  sipPort: { type: integer }
+                  transport: { type: string, enum: [tls, tcp, udp] }
+                  termination:
+                    type: object
+                    properties:
+                      uri: { type: string }
+                      username: { type: string }
+                  numbersAttached: { type: integer }
+                  createdAt: { type: [string, "null"], format: date-time }
+                  numbers:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id: { type: string, description: 'Phone number record ID.' }
+                        phoneNumber: { type: string }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404': { description: SIP trunk not found }
+    delete:
+      x-resource-group: "telephony"
+      operationId: deleteSipTrunk
+      tags: [Voice]
+      summary: Delete a SIP trunk
+      description: |
+        Tears down the trunk and its carrier-side objects. Refused while any
+        number is still attached: detach them first.
+      security:
+        - bearerAuth: []
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string } }
+      responses:
+        '200':
+          description: Trunk deleted.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  deleted: { type: boolean }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404': { description: SIP trunk not found }
+        '409': { description: 'Numbers are still attached to this trunk (code invalid_resource_state).' }
+
+  /v1/phone-numbers/sip-trunks/{id}/rotate-credentials:
+    post:
+      x-resource-group: "telephony"
+      operationId: rotateSipTrunkCredentials
+      tags: [Voice]
+      summary: Rotate a SIP trunk's password
+      description: |
+        Mints a new digest password on the trunk. The old password stops
+        working immediately, so update the destination platform right away.
+      security:
+        - bearerAuth: []
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string } }
+      responses:
+        '200':
+          description: New credentials. The password is shown only here.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  termination:
+                    type: object
+                    properties:
+                      uri: { type: string, description: 'Telnyx termination host the platform dials for outbound (sip.telnyx.com).' }
+                      username: { type: string, description: SIP digest username. }
+                  digestPassword: { type: string }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404': { description: SIP trunk not found }
+
+  /v1/phone-numbers/{id}/sip-trunk:
+    post:
+      x-resource-group: "telephony"
+      operationId: attachNumberToSipTrunk
+      tags: [Voice]
+      summary: Attach a number to a SIP trunk
+      description: |
+        Routes the number's calls to the trunk: the external platform receives
+        its inbound directly and can present it as outbound caller ID. While
+        attached, Zernio-side voice features are off for this number (call
+        forwarding, IVR, voicemail, recording, the softphone, and WhatsApp
+        calling), so the number must have Calls and WhatsApp calling disabled
+        before attaching. SMS and WhatsApp messaging are unaffected.
+      security:
+        - bearerAuth: []
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string }, description: "Phone number record ID (from GET /v1/phone-numbers)." }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [trunkId]
+              properties:
+                trunkId: { type: string, description: 'SIP trunk ID (from POST /v1/phone-numbers/sip-trunks).' }
+      responses:
+        '200':
+          description: Number attached (idempotent for the same trunk).
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  attached: { type: boolean }
+                  phoneNumber: { type: string }
+                  trunkId: { type: string }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { description: 'SIP trunking is not enabled for this workspace, or the workspace is on legacy (non-usage-based) billing, which cannot invoice trunk call costs (code feature_not_available).' }
+        '404': { description: Number or trunk not found }
+        '409': { description: 'The number still has Calls or WhatsApp calling enabled, is mid WhatsApp verification, is not active, or is attached to another trunk (code invalid_resource_state).' }
+        '422': { description: 'This number is hosted by your own carrier (brought via WhatsApp embedded signup), so it cannot be trunked.' }
+    delete:
+      x-resource-group: "telephony"
+      operationId: detachNumberFromSipTrunk
+      tags: [Voice]
+      summary: Detach a number from its SIP trunk
+      description: |
+        Returns the number's calls to Zernio routing. Idempotent when the
+        number is not attached to any trunk.
+      security:
+        - bearerAuth: []
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string } }
+      responses:
+        '200':
+          description: Number detached.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  attached: { type: boolean, description: Always false after a successful detach. }
+                  phoneNumber: { type: string }
+        '400': { $ref: '#/components/responses/BadRequest' }
         '401': { $ref: '#/components/responses/Unauthorized' }
         '404': { description: Number not found }
 
@@ -34615,6 +34880,7 @@ paths:
         '400': { description: 'Invalid request (including forwardTo set to the number itself)' }
         '401': { $ref: '#/components/responses/Unauthorized' }
         '404': { description: Phone number not found }
+        '409': { description: 'This number is attached to a SIP trunk; detach it first (code invalid_resource_state).' }
         '422': { description: "Not eligible to enable calling: not on usage-based billing, or the number's messaging limit is below Meta's ~2,000-daily-recipient threshold (TIER_250). Warm the number up to raise the limit." }
     patch:
       x-resource-group: "telephony"
@@ -34802,6 +35068,7 @@ paths:
                       endUserLastName: { type: [string, "null"] }
                       regulatoryDeclineReason: { type: [string, "null"], description: Reviewer rejection reason when status is regulatory_declined. }
                       provisionedAt: { type: string, format: date-time }
+                      sipTrunkId: { type: [string, "null"], description: 'SIP trunk the number is attached to; null when not trunked. While attached, enabling Calls or WhatsApp calling, requesting WhatsApp verification, and releasing the number all return 409.' }
         '401': { $ref: '#/components/responses/Unauthorized' }
         '404': { $ref: '#/components/responses/NotFound' }
     delete:
@@ -34847,6 +35114,7 @@ paths:
         '400': { description: Phone number is already released or being released }
         '401': { $ref: '#/components/responses/Unauthorized' }
         '404': { $ref: '#/components/responses/NotFound' }
+        '409': { description: 'The number is attached to a SIP trunk; detach it first (code invalid_resource_state).' }
 
   # ─── WhatsApp Sandbox (shared test number) ──────────────────────
   #
