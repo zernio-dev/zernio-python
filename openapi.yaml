@@ -20492,6 +20492,12 @@ paths:
         5. Generate a permanent access token
         6. Get the WABA ID from WhatsApp Manager > Account Tools > Phone Numbers
         7. Get the Phone Number ID from the same page (click on the number)
+
+        Warning: connecting subscribes your own Meta app to this WABA with an override
+        callback that redirects its webhook delivery to Zernio. This WABA's events stop
+        reaching any callback URL you had configured before, immediately and with no
+        overlap window. Do not unsubscribe your app from the WABA afterward: that also
+        cuts off Zernio's delivery, and recovery requires calling this endpoint again.
       security:
         - bearerAuth: []
       requestBody:
@@ -20536,6 +20542,9 @@ paths:
                   registrationWarning:
                     type: string
                     description: 'Present when the account was created but Meta rejected the Cloud API registration. The number cannot send messages until this is resolved.'
+                  webhookNotice:
+                    type: string
+                    description: 'Present when the WABA webhook subscription (with the Zernio override callback) succeeded. Explains the delivery cutover and warns against unsubscribing the app from the WABA afterward.'
                   account:
                     type: object
                     properties:
@@ -20544,7 +20553,9 @@ paths:
                       username: { type: string, description: Display phone number }
                       displayName: { type: string, description: Meta-verified business name }
                       isActive: { type: boolean }
-                      selectedPhoneNumber: { type: string, description: The connected phone number }
+                      phoneNumber: { type: string, description: The connected phone number }
+                      verifiedName: { type: string, description: Meta-verified business name for the phone number }
+                      qualityRating: { type: string, description: 'Meta quality rating for the phone number (e.g. GREEN, YELLOW, RED, UNKNOWN)' }
               example:
                 message: "WhatsApp connected successfully"
                 account:
@@ -20553,7 +20564,9 @@ paths:
                   username: "+1 555-123-4567"
                   displayName: "Acme Corp"
                   isActive: true
-                  selectedPhoneNumber: "+1 555-123-4567"
+                  phoneNumber: "+1 555-123-4567"
+                  verifiedName: "Acme Corp"
+                  qualityRating: "GREEN"
         '400':
           description: |
             Invalid request. Missing fields, a `pin` that is not 6 digits, or the
