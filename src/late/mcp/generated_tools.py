@@ -18082,6 +18082,7 @@ def register_generated_tools(mcp, _get_client):
         categories: list[str] | None,
         clone_flow_id: str | None = None,
         as_version: bool | None = None,
+        endpoint_uri: str | None = None,
     ) -> str:
         """Create flow
 
@@ -18090,7 +18091,8 @@ def register_generated_tools(mcp, _get_client):
             name: Flow display name (required)
             categories: Flow categories (required)
             clone_flow_id: Optional: ID of an existing flow to clone the Flow JSON from
-            as_version: When cloning, true keeps the clone in cloneFlowId's version lineage (auto-numbered next version); false/absent creates an independent flow. Ignored without cloneFlowId."""
+            as_version: When cloning, true keeps the clone in cloneFlowId's version lineage (auto-numbered next version); false/absent creates an independent flow. Ignored without cloneFlowId.
+            endpoint_uri: HTTPS-only data exchange endpoint for the flow. Settable only while the flow is in DRAFT, and the flow's uploaded Flow JSON must declare data_api_version "3.0" for the endpoint to be used."""
         client = _get_client()
         try:
             response = client.whatsapp_flows.create_whats_app_flow(
@@ -18099,6 +18101,7 @@ def register_generated_tools(mcp, _get_client):
                 categories=categories,
                 clone_flow_id=clone_flow_id,
                 as_version=as_version,
+                endpoint_uri=endpoint_uri,
             )
             return _format_response(response)
         except Exception as e:
@@ -18143,6 +18146,7 @@ def register_generated_tools(mcp, _get_client):
         account_id: str,
         name: str | None = None,
         categories: list[str] | None = None,
+        endpoint_uri: str | None = None,
     ) -> str:
         """Update flow
 
@@ -18150,11 +18154,16 @@ def register_generated_tools(mcp, _get_client):
             flow_id: Flow ID (required)
             account_id: WhatsApp social account ID (required)
             name: New flow name
-            categories"""
+            categories
+            endpoint_uri: HTTPS-only data exchange endpoint for the flow. Settable only while the flow is in DRAFT, and the flow's uploaded Flow JSON must declare data_api_version "3.0" for the endpoint to be used."""
         client = _get_client()
         try:
             response = client.whatsapp_flows.update_whats_app_flow(
-                flow_id=flow_id, account_id=account_id, name=name, categories=categories
+                flow_id=flow_id,
+                account_id=account_id,
+                name=name,
+                categories=categories,
+                endpoint_uri=endpoint_uri,
             )
             return _format_response(response)
         except Exception as e:

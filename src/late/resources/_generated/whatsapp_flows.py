@@ -88,6 +88,7 @@ class WhatsappFlowsResource:
         *,
         clone_flow_id: str | None = None,
         as_version: bool | None = None,
+        endpoint_uri: str | None = None,
     ) -> dict[str, Any]:
         """Create flow"""
         payload = self._build_payload(
@@ -96,6 +97,7 @@ class WhatsappFlowsResource:
             categories=categories,
             clone_flow_id=clone_flow_id,
             as_version=as_version,
+            endpoint_uri=endpoint_uri,
         )
         return self._client._post("/v1/whatsapp/flows", data=payload)
 
@@ -116,12 +118,14 @@ class WhatsappFlowsResource:
         *,
         name: str | None = None,
         categories: list[str] | None = None,
+        endpoint_uri: str | None = None,
     ) -> dict[str, Any]:
         """Update flow"""
         payload = self._build_payload(
             account_id=account_id,
             name=name,
             categories=categories,
+            endpoint_uri=endpoint_uri,
         )
         return self._client._patch(f"/v1/whatsapp/flows/{flow_id}", data=payload)
 
@@ -243,6 +247,7 @@ class WhatsappFlowsResource:
         *,
         clone_flow_id: str | None = None,
         as_version: bool | None = None,
+        endpoint_uri: str | None = None,
     ) -> dict[str, Any]:
         """Create flow (async)"""
         payload = self._build_payload(
@@ -251,6 +256,7 @@ class WhatsappFlowsResource:
             categories=categories,
             clone_flow_id=clone_flow_id,
             as_version=as_version,
+            endpoint_uri=endpoint_uri,
         )
         return await self._client._apost("/v1/whatsapp/flows", data=payload)
 
@@ -271,12 +277,14 @@ class WhatsappFlowsResource:
         *,
         name: str | None = None,
         categories: list[str] | None = None,
+        endpoint_uri: str | None = None,
     ) -> dict[str, Any]:
         """Update flow (async)"""
         payload = self._build_payload(
             account_id=account_id,
             name=name,
             categories=categories,
+            endpoint_uri=endpoint_uri,
         )
         return await self._client._apatch(f"/v1/whatsapp/flows/{flow_id}", data=payload)
 

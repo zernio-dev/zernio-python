@@ -35750,6 +35750,7 @@ paths:
                   description: Flow categories
                 cloneFlowId: { type: string, description: "Optional: ID of an existing flow to clone the Flow JSON from" }
                 asVersion: { type: boolean, description: "When cloning, true keeps the clone in cloneFlowId's version lineage (auto-numbered next version); false/absent creates an independent flow. Ignored without cloneFlowId." }
+                endpointUri: { type: string, format: uri, description: "HTTPS-only data exchange endpoint for the flow. Settable only while the flow is in DRAFT, and the flow's uploaded Flow JSON must declare data_api_version \"3.0\" for the endpoint to be used." }
             examples:
               basic:
                 summary: Create a lead generation flow
@@ -35830,7 +35831,7 @@ paths:
       tags: [WhatsApp Flows]
       summary: Update flow
       description: |
-        Update metadata (name, categories) of a DRAFT flow. Published flows are immutable.
+        Update metadata (name, categories, endpointUri) of a DRAFT flow. Published flows are immutable.
       security:
         - bearerAuth: []
       parameters:
@@ -35851,6 +35852,7 @@ paths:
                   items:
                     type: string
                     enum: [SIGN_UP, SIGN_IN, APPOINTMENT_BOOKING, LEAD_GENERATION, CONTACT_US, CUSTOMER_SUPPORT, SURVEY, OTHER]
+                endpointUri: { type: string, format: uri, description: "HTTPS-only data exchange endpoint for the flow. Settable only while the flow is in DRAFT, and the flow's uploaded Flow JSON must declare data_api_version \"3.0\" for the endpoint to be used." }
       responses:
         '200':
           description: Flow updated
@@ -35860,7 +35862,7 @@ paths:
                 type: object
                 properties:
                   success: { type: boolean }
-        '400': { description: "At least one of name or categories is required, or flow is not in DRAFT status" }
+        '400': { description: "At least one of name, categories or endpointUri is required, or flow is not in DRAFT status" }
         '401': { $ref: '#/components/responses/Unauthorized' }
         '404': { description: WhatsApp account or flow not found }
     delete:
