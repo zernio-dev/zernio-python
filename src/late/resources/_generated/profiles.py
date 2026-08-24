@@ -110,7 +110,7 @@ class ProfilesResource:
         profile_id: str,
         *,
         name: str | None = None,
-        description: str | None = None,
+        description: Any | None = None,
         color: str | None = None,
         is_default: bool | None = None,
     ) -> dict[str, Any]:
@@ -164,7 +164,7 @@ class ProfilesResource:
         profile_id: str,
         *,
         name: str | None = None,
-        description: str | None = None,
+        description: Any | None = None,
         color: str | None = None,
         is_default: bool | None = None,
     ) -> dict[str, Any]:

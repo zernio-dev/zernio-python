@@ -15620,9 +15620,10 @@ paths:
           application/json:
             schema:
               type: object
+              minProperties: 1
               properties:
-                name: { type: string }
-                description: { type: string }
+                name: { type: string, minLength: 1 }
+                description: { type: [string, "null"], description: 'Set to null to clear the description.' }
                 color: { type: string }
                 isDefault: { type: boolean }
             example:
@@ -15646,7 +15647,7 @@ paths:
                   color: "#2196F3"
                   isDefault: true
                   createdAt: "2024-11-01T10:00:00Z"
-        '400': { description: Invalid request }
+        '400': { description: 'Invalid request, including a body that carries none of name, description, color or isDefault (code: missing_required_field).' }
         '401': { $ref: '#/components/responses/Unauthorized' }
         '404': { $ref: '#/components/responses/NotFound' }
         '409': { description: "A profile with this name already exists (code: profile_name_conflict)." }
@@ -44185,9 +44186,7 @@ paths:
                       description: |
                         Required for meta_engagement audiences (Meta only): what people
                         engaged with. `page` = a Facebook Page, `instagram` = an IG
-                        professional account, `video` = a video. The source object must be
-                        eligible for engagement audiences or Meta rejects with subcode
-                        1713151 ("Invalid Event Name"), surfaced verbatim.
+                        professional account, `video` = a video.
                     sourceId: { type: string, description: "Required for meta_engagement: the Page / IG account / video id." }
                     event:
                       type: string

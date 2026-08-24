@@ -13613,7 +13613,7 @@ def register_generated_tools(mcp, _get_client):
         Args:
             profile_id: (required)
             name
-            description
+            description: Set to null to clear the description.
             color
             is_default"""
         client = _get_client()
