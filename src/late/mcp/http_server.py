@@ -34,6 +34,9 @@ from late.mcp.constants import (
     ENDPOINT_OAUTH_PROTECTED_RESOURCE,
     ENDPOINT_ROOT,
     ENDPOINT_SSE,
+    MCP_PUBLIC_URL,
+    OAUTH_AUTHORIZATION_SERVER,
+    OAUTH_SCOPES,
     SERVICE_NAME,
     SERVICE_VERSION,
     TRANSPORT_TYPE,
@@ -71,6 +74,76 @@ async def handle_health(_request: Request) -> JSONResponse:
             "version": SERVICE_VERSION,
             "transport": TRANSPORT_TYPE,
         }
+    )
+
+
+_SERVER_CARD = {
+    "$schema": "https://raw.githubusercontent.com/modelcontextprotocol/modelcontextprotocol/main/schema/server-card.schema.json",
+    "name": "zernio",
+    "title": "Zernio Social Media API",
+    "version": SERVICE_VERSION,
+    "description": (
+        "Post, schedule, and analyze social media content across 15+ platforms "
+        "plus ad management on 7 ad networks, via MCP."
+    ),
+    "icon": "https://media.zernio.com/site-assets/brand/icon-primary.png",
+    "serverInfo": {
+        "name": "zernio",
+        "title": "Zernio Social Media API",
+        "version": SERVICE_VERSION,
+        "vendor": "Zernio",
+        "homepage": "https://zernio.com",
+        "documentation": DOCS_URL,
+        "contact": {"email": "support@zernio.com", "url": "https://zernio.com/contact"},
+    },
+    "transport": {"type": "streamable-http", "endpoint": f"{MCP_PUBLIC_URL}{ENDPOINT_MCP}"},
+    "authentication": {
+        "type": "oauth2",
+        "authorization_endpoint": f"{OAUTH_AUTHORIZATION_SERVER}/oauth/authorize",
+        "token_endpoint": f"{OAUTH_AUTHORIZATION_SERVER}/api/oauth/token",
+        "registration_endpoint": f"{OAUTH_AUTHORIZATION_SERVER}/api/oauth/register",
+        "scopes_supported": list(OAUTH_SCOPES),
+    },
+    "capabilities": {
+        "tools": {"listChanged": True},
+        "resources": {"listChanged": True, "subscribe": False},
+        "prompts": {"listChanged": False},
+    },
+    "links": {
+        "canonical": "https://zernio.com/.well-known/mcp/server-card.json",
+        "serviceDesc": "https://zernio.com/openapi.json",
+        "serviceDoc": DOCS_URL,
+        "status": "https://status.zernio.com",
+    },
+}
+
+
+@mcp.custom_route("/.well-known/mcp/server-card.json", methods=["GET"])
+async def handle_server_card(_request: Request) -> JSONResponse:
+    """MCP server card on the server's own origin (public, no auth)."""
+    return JSONResponse(_SERVER_CARD, headers={"Cache-Control": "public, max-age=3600"})
+
+
+@mcp.custom_route("/mcp/server-card", methods=["GET"])
+async def handle_server_card_alias(_request: Request) -> JSONResponse:
+    """Alias path some scanners probe for the manifest (public, no auth)."""
+    return JSONResponse(_SERVER_CARD, headers={"Cache-Control": "public, max-age=3600"})
+
+
+@mcp.custom_route("/server.json", methods=["GET"])
+async def handle_registry_manifest(_request: Request) -> JSONResponse:
+    """MCP Registry manifest, mirroring the repo-root server.json (public)."""
+    return JSONResponse(
+        {
+            "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+            "name": "com.zernio/zernio",
+            "title": "Zernio",
+            "description": "Schedule, publish, and analyze social media across 15+ platforms, plus inbox, ads, and analytics.",
+            "version": "1.0.0",
+            "repository": {"url": "https://github.com/zernio-dev/zernio-python", "source": "github"},
+            "remotes": [{"type": "streamable-http", "url": f"{MCP_PUBLIC_URL}{ENDPOINT_MCP}"}],
+        },
+        headers={"Cache-Control": "public, max-age=3600"},
     )
 
 
