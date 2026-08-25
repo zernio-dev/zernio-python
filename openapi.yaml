@@ -2932,7 +2932,7 @@ components:
               description: 'Post thumbnail or first media item URL. Platform CDN URLs expire, fetch promptly.'
             permalink:
               type: [string, "null"]
-              description: 'Public URL of the post. Null for posts published through Zernio that were never re-synced.'
+              description: 'Public URL of the post. Null when no URL was ever stored for it, for example a platform draft or a post recovered without one.'
         account:
           type: object
           required: [id, platform, username]
