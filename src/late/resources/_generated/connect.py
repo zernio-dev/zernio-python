@@ -451,6 +451,55 @@ class ConnectResource:
             "/v1/connect/whatsapp/select-phone-number", data=payload
         )
 
+    def connect_whats_app_embedded_signup(
+        self,
+        code: str,
+        profile_id: str,
+        *,
+        waba_id: str | None = None,
+        phone_number_id: str | None = None,
+        is_coexistence: bool | None = None,
+        expected_phone_number: str | None = None,
+    ) -> dict[str, Any]:
+        """Connect WhatsApp from Embedded Signup"""
+        payload = self._build_payload(
+            code=code,
+            profile_id=profile_id,
+            waba_id=waba_id,
+            phone_number_id=phone_number_id,
+            is_coexistence=is_coexistence,
+            expected_phone_number=expected_phone_number,
+        )
+        return self._client._post("/v1/connect/whatsapp/embedded-signup", data=payload)
+
+    def connect_discord_channel(
+        self, guild_id: str, channel_id: str, profile_id: str
+    ) -> dict[str, Any]:
+        """Connect a Discord channel"""
+        payload = self._build_payload(
+            guild_id=guild_id,
+            channel_id=channel_id,
+            profile_id=profile_id,
+        )
+        return self._client._post("/v1/connect/discord", data=payload)
+
+    def connect_slack_channel(
+        self,
+        profile_id: str,
+        channel_id: str,
+        *,
+        pending_data_token: str | None = None,
+        account_id: str | None = None,
+    ) -> dict[str, Any]:
+        """Connect a Slack channel"""
+        payload = self._build_payload(
+            profile_id=profile_id,
+            channel_id=channel_id,
+            pending_data_token=pending_data_token,
+            account_id=account_id,
+        )
+        return self._client._post("/v1/connect/slack", data=payload)
+
     def get_telegram_connect_status(self, profile_id: str) -> dict[str, Any]:
         """Generate Telegram code"""
         params = self._build_params(
@@ -1096,6 +1145,57 @@ class ConnectResource:
         return await self._client._apost(
             "/v1/connect/whatsapp/select-phone-number", data=payload
         )
+
+    async def aconnect_whats_app_embedded_signup(
+        self,
+        code: str,
+        profile_id: str,
+        *,
+        waba_id: str | None = None,
+        phone_number_id: str | None = None,
+        is_coexistence: bool | None = None,
+        expected_phone_number: str | None = None,
+    ) -> dict[str, Any]:
+        """Connect WhatsApp from Embedded Signup (async)"""
+        payload = self._build_payload(
+            code=code,
+            profile_id=profile_id,
+            waba_id=waba_id,
+            phone_number_id=phone_number_id,
+            is_coexistence=is_coexistence,
+            expected_phone_number=expected_phone_number,
+        )
+        return await self._client._apost(
+            "/v1/connect/whatsapp/embedded-signup", data=payload
+        )
+
+    async def aconnect_discord_channel(
+        self, guild_id: str, channel_id: str, profile_id: str
+    ) -> dict[str, Any]:
+        """Connect a Discord channel (async)"""
+        payload = self._build_payload(
+            guild_id=guild_id,
+            channel_id=channel_id,
+            profile_id=profile_id,
+        )
+        return await self._client._apost("/v1/connect/discord", data=payload)
+
+    async def aconnect_slack_channel(
+        self,
+        profile_id: str,
+        channel_id: str,
+        *,
+        pending_data_token: str | None = None,
+        account_id: str | None = None,
+    ) -> dict[str, Any]:
+        """Connect a Slack channel (async)"""
+        payload = self._build_payload(
+            profile_id=profile_id,
+            channel_id=channel_id,
+            pending_data_token=pending_data_token,
+            account_id=account_id,
+        )
+        return await self._client._apost("/v1/connect/slack", data=payload)
 
     async def aget_telegram_connect_status(self, profile_id: str) -> dict[str, Any]:
         """Generate Telegram code (async)"""

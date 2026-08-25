@@ -16991,12 +16991,20 @@ paths:
       operationId: handleOAuthCallback
       tags: [Connect]
       summary: Complete OAuth callback
-      description: Exchange the OAuth authorization code for tokens and connect the account to the specified profile.
+      description: |
+        Exchange the OAuth authorization code for tokens and connect the account to the specified profile.
+
+        Facebook, Google Business, Snapchat and WhatsApp are not accepted here: their account identity is a destination chosen after OAuth, which this single-shot exchange cannot do. Connect them through the redirect flow from `GET /v1/connect/{platform}`, or, for WhatsApp Embedded Signup, through `POST /v1/connect/whatsapp/embedded-signup`.
       parameters:
         - name: platform
           in: path
           required: true
-          schema: { type: string }
+          description: |
+            Social platform to complete the connect for. Discord, Slack and Telegram are absent because they are
+            served by their own dedicated routes, documented separately.
+          schema:
+            type: string
+            enum: [instagram, twitter, threads, linkedin, youtube, tiktok, reddit, pinterest]
       requestBody:
         required: true
         content:
@@ -17010,11 +17018,14 @@ paths:
                 profileId: { type: string }
       responses:
         '200': { description: Account connected }
-        '400': { description: Invalid params }
+        '400': { description: 'Invalid params, or the platform requires choosing a destination (code: platform_requires_destination)' }
         '401': { $ref: '#/components/responses/Unauthorized' }
-        '403': { description: BYOK required for AppSumo Twitter }
+        '402': { $ref: '#/components/responses/PaymentRequired' }
+        '403': { description: 'No access to the profile, or BYOK required for AppSumo Twitter' }
+        '404': { description: Profile not found }
         '500': { description: 'Internal error while connecting the account' }
         '502': { description: 'The platform rejected the token exchange (type: platform_error; an upstream 4xx status is forwarded instead of 502)' }
+        '503': { description: 'Connections for this platform are temporarily disabled (code: platform_disabled)' }
 
   /v1/connect/{platform}/ads:
     get:
@@ -20876,6 +20887,86 @@ paths:
           content:
             application/json:
               schema: { $ref: '#/components/schemas/ErrorResponse' }
+
+  /v1/connect/whatsapp/embedded-signup:
+    post:
+      x-resource-group: "accounts"
+      operationId: connectWhatsAppEmbeddedSignup
+      tags: [Connect]
+      summary: Connect WhatsApp from Embedded Signup
+      description: 'Exchange the authorization code Meta Embedded Signup returns to your browser SDK. This is the headless completion path for WhatsApp: the code never passes through a redirect_uri, so POST /v1/connect/{platform} cannot accept it.'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [code, profileId]
+              properties:
+                code: { type: string, description: 'Authorization code from the WA_EMBEDDED_SIGNUP postMessage' }
+                profileId: { type: string }
+                wabaId: { type: string, description: 'WhatsApp Business Account id, when the SDK reported one' }
+                phoneNumberId: { type: string }
+                isCoexistence: { type: boolean, description: 'Number is also live in the WhatsApp Business app' }
+                expectedPhoneNumber: { type: string, description: 'Rejects the connect when Meta returns a different number' }
+      responses:
+        '200': { description: Number connected }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '402': { $ref: '#/components/responses/PaymentRequired' }
+        '409': { description: 'The number is already connected on another profile or workspace' }
+
+  /v1/connect/discord:
+    post:
+      x-resource-group: "accounts"
+      operationId: connectDiscordChannel
+      tags: [Connect]
+      summary: Connect a Discord channel
+      description: 'Finalize a Discord connect by binding one channel to a profile. Served by a dedicated route, so it is not reachable through POST /v1/connect/{platform}. One connected account per channel: repeat the call with a different channelId to add another.'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [guildId, channelId, profileId]
+              properties:
+                guildId: { type: string, description: 'Discord server (guild) the channel belongs to' }
+                channelId: { type: string, description: 'Text, announcement or forum channel to publish to' }
+                profileId: { type: string, description: 'Profile to connect the channel to' }
+      responses:
+        '200': { description: Channel connected }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '402': { $ref: '#/components/responses/PaymentRequired' }
+        '404': { description: Profile not found }
+
+  /v1/connect/slack:
+    post:
+      x-resource-group: "accounts"
+      operationId: connectSlackChannel
+      tags: [Connect]
+      summary: Connect a Slack channel
+      description: 'Finalize a Slack connect by creating the per-channel account. Served by a dedicated route, so it is not reachable through POST /v1/connect/{platform}. Send pendingDataToken for a first connect (the nonce from the OAuth redirect) or accountId to add another channel to a workspace already connected.'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [profileId, channelId]
+              properties:
+                profileId: { type: string }
+                channelId: { type: string, description: 'Slack channel id, C... or G...' }
+                pendingDataToken: { type: string, description: 'Nonce from the OAuth redirect. Required unless accountId is sent.' }
+                accountId: { type: string, description: 'Existing Slack account whose workspace token is reused. Required unless pendingDataToken is sent.' }
+      responses:
+        '200': { description: Channel connected }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '402': { $ref: '#/components/responses/PaymentRequired' }
+        '403': { description: Slack connections are temporarily unavailable }
+        '404': { description: Profile not found }
 
   /v1/connect/telegram:
     get:

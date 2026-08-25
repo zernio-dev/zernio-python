@@ -7389,11 +7389,13 @@ def register_generated_tools(mcp, _get_client):
     ) -> str:
         """Complete OAuth callback
 
-        Args:
-            platform: (required)
-            code: (required)
-            state: (required)
-            profile_id: (required)"""
+            Args:
+                platform: Social platform to complete the connect for. Discord, Slack and Telegram are absent because they are
+        served by their own dedicated routes, documented separately.
+         (required)
+                code: (required)
+                state: (required)
+                profile_id: (required)"""
         client = _get_client()
         try:
             response = client.connect.handle_o_auth_callback(
@@ -8106,6 +8108,102 @@ def register_generated_tools(mcp, _get_client):
                 temp_token=temp_token,
                 user_profile=user_profile,
                 redirect_url=redirect_url,
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Connect WhatsApp from Embedded Signup",
+            readOnlyHint=False,
+            destructiveHint=True,
+            openWorldHint=True,
+        )
+    )
+    def connect_whats_app_embedded_signup(
+        code: str,
+        profile_id: str,
+        waba_id: str | None = None,
+        phone_number_id: str | None = None,
+        is_coexistence: bool | None = None,
+        expected_phone_number: str | None = None,
+    ) -> str:
+        """Connect WhatsApp from Embedded Signup
+
+        Args:
+            code: Authorization code from the WA_EMBEDDED_SIGNUP postMessage (required)
+            profile_id: (required)
+            waba_id: WhatsApp Business Account id, when the SDK reported one
+            phone_number_id
+            is_coexistence: Number is also live in the WhatsApp Business app
+            expected_phone_number: Rejects the connect when Meta returns a different number"""
+        client = _get_client()
+        try:
+            response = client.connect.connect_whats_app_embedded_signup(
+                code=code,
+                profile_id=profile_id,
+                waba_id=waba_id,
+                phone_number_id=phone_number_id,
+                is_coexistence=is_coexistence,
+                expected_phone_number=expected_phone_number,
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Connect a Discord channel",
+            readOnlyHint=False,
+            destructiveHint=True,
+            openWorldHint=True,
+        )
+    )
+    def connect_discord_channel(guild_id: str, channel_id: str, profile_id: str) -> str:
+        """Connect a Discord channel
+
+        Args:
+            guild_id: Discord server (guild) the channel belongs to (required)
+            channel_id: Text, announcement or forum channel to publish to (required)
+            profile_id: Profile to connect the channel to (required)"""
+        client = _get_client()
+        try:
+            response = client.connect.connect_discord_channel(
+                guild_id=guild_id, channel_id=channel_id, profile_id=profile_id
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Connect a Slack channel",
+            readOnlyHint=False,
+            destructiveHint=True,
+            openWorldHint=True,
+        )
+    )
+    def connect_slack_channel(
+        profile_id: str,
+        channel_id: str,
+        pending_data_token: str | None = None,
+        account_id: str | None = None,
+    ) -> str:
+        """Connect a Slack channel
+
+        Args:
+            profile_id: (required)
+            channel_id: Slack channel id, C... or G... (required)
+            pending_data_token: Nonce from the OAuth redirect. Required unless accountId is sent.
+            account_id: Existing Slack account whose workspace token is reused. Required unless pendingDataToken is sent."""
+        client = _get_client()
+        try:
+            response = client.connect.connect_slack_channel(
+                profile_id=profile_id,
+                channel_id=channel_id,
+                pending_data_token=pending_data_token,
+                account_id=account_id,
             )
             return _format_response(response)
         except Exception as e:
