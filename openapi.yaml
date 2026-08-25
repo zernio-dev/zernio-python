@@ -25320,6 +25320,14 @@ paths:
                             code: { type: [string, "null"], description: Error code if available }
                             retryAfter: { type: [integer, "null"], description: Seconds to wait before retry (rate limits) }
                       lastUpdated: { type: string, format: date-time }
+                      accountsSkipped:
+                        type: array
+                        description: 'Connected accounts that were not queried: their platform does not support this feature, or the account is not enabled for it'
+                        items:
+                          type: object
+                          properties:
+                            accountId: { type: string }
+                            platform: { type: string }
         '401': { $ref: '#/components/responses/Unauthorized' }
         '403':
           description: Inbox addon required
@@ -27503,6 +27511,14 @@ paths:
                             code: { type: [string, "null"], description: Error code if available }
                             retryAfter: { type: [integer, "null"], description: Seconds to wait before retry (rate limits) }
                       lastUpdated: { type: string, format: date-time }
+                      accountsSkipped:
+                        type: array
+                        description: 'Connected accounts that were not queried: their platform does not support this feature, or the account is not enabled for it'
+                        items:
+                          type: object
+                          properties:
+                            accountId: { type: string }
+                            platform: { type: string }
         '401': { $ref: '#/components/responses/Unauthorized' }
         '403':
           description: Inbox addon required
@@ -29021,6 +29037,14 @@ paths:
                             code: { type: [string, "null"], description: Error code if available }
                             retryAfter: { type: [integer, "null"], description: Seconds to wait before retry (rate limits) }
                       lastUpdated: { type: string, format: date-time }
+                      accountsSkipped:
+                        type: array
+                        description: 'Connected accounts that were not queried: their platform does not support this feature, or the account is not enabled for it'
+                        items:
+                          type: object
+                          properties:
+                            accountId: { type: string }
+                            platform: { type: string }
                   summary:
                     type: object
                     properties:
