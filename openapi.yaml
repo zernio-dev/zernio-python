@@ -176,6 +176,7 @@ x-documentation:
     - `ad.status_changed` - Ad, ad set, or campaign changed status on the ad platform (Meta: `in_process_ad_objects` entry/exit and `with_issues_ad_objects` violations)
     - `whatsapp.template.status_updated` - WhatsApp Business template completed (re)review by Meta. `template.status` carries the new state (APPROVED, REJECTED, PENDING, PAUSED, DISABLED, IN_APPEAL, PENDING_DELETION); `template.reason` is Meta's free-form reason or "NONE".
     - `whatsapp.template.category_updated` - Meta reclassified a WhatsApp Business template's category (drives tariff and marketing opt-out applicability). `template.changeType` is `scheduled` (24h advance notice) or `applied`; `template.category` is always the category right now.
+    - `whatsapp.account.name_status_updated` - Meta finished reviewing a WhatsApp display-name change. `name.status` carries the outcome (APPROVED, DECLINED, PENDING_REVIEW). Fires only on a review outcome; a name applied without review (`name_status: AVAILABLE_WITHOUT_REVIEW`) produces no event.
     - `call.received` - An inbound call (phone/PSTN or WhatsApp) reached one of your numbers and was routed to its destination
     - `call.ended` - A call ended; carries duration, end reason, cost breakdown, and the recording when enabled
     - `call.failed` - A call failed with a hard error before or during bridging
@@ -429,10 +430,10 @@ tags:
   - name: Webhooks
     description: |
       Configure webhooks for real-time notifications. Webhooks can be created from the dashboard (Settings → Webhooks) or via this API.
-      Events: post.scheduled, post.published, post.failed, post.partial, post.cancelled, post.recycled, post.platform.published, post.platform.failed, post.platform.deleted, post.tiktok.url_resolved, post.external.created, post.external.updated, post.external.deleted, account.connected, account.disconnected, account.ads.initial_sync_completed, message.received, conversation.started, call.received, call.ended, call.failed, call.permission_request, message.sent, message.edited, message.deleted, message.delivered, message.read, message.failed, reaction.received, referral.received, comment.received, review.new, review.updated, lead.received, ad.status_changed, whatsapp.template.status_updated, whatsapp.template.category_updated, whatsapp.automatic_event, whatsapp.number.activated, whatsapp.number.declined, whatsapp.number.action_required, whatsapp.number.verification_required, whatsapp.number.suspended, whatsapp.number.reactivated, whatsapp.number.released, whatsapp.number.kyc_submitted, verification.approved, verification.failed, webhook.test.
+      Events: post.scheduled, post.published, post.failed, post.partial, post.cancelled, post.recycled, post.platform.published, post.platform.failed, post.platform.deleted, post.tiktok.url_resolved, post.external.created, post.external.updated, post.external.deleted, account.connected, account.disconnected, account.ads.initial_sync_completed, message.received, conversation.started, call.received, call.ended, call.failed, call.permission_request, message.sent, message.edited, message.deleted, message.delivered, message.read, message.failed, reaction.received, referral.received, comment.received, review.new, review.updated, lead.received, ad.status_changed, whatsapp.template.status_updated, whatsapp.template.category_updated, whatsapp.account.name_status_updated, whatsapp.automatic_event, whatsapp.number.activated, whatsapp.number.declined, whatsapp.number.action_required, whatsapp.number.verification_required, whatsapp.number.suspended, whatsapp.number.reactivated, whatsapp.number.released, whatsapp.number.kyc_submitted, verification.approved, verification.failed, webhook.test.
       Security: optional HMAC-SHA256 signature in X-Zernio-Signature header. Configure a secret key to enable verification. Custom headers supported.
 
-      Resource groups. Every event belongs to one group: post.* to publishing, message.*, reaction.*, conversation.*, call.* and whatsapp.automatic_event to messages, comment.* and review.* to engagement, lead.* to contacts, ad.* to ads, account.* and whatsapp.template.* to accounts, whatsapp.number.* and verification.* to telephony, webhook.test to webhooks. Two independent controls use that mapping. (1) A restricted (zrk_) API key can only subscribe to, test-fire, redeliver, or read delivery logs for events in the groups it holds, so it can never create a subscription broader than itself. (2) Each subscription carries its own `disabledResourceGroups` denylist: events in a disabled group are dropped before delivery to that endpoint, on live delivery and on every replay path, no matter which key or session created the subscription. Changing that denylist applies to every event emitted after the change; events already queued when it landed can still be delivered for up to five minutes after they were enqueued, because the delivery worker trusts a five-minute enqueue-time snapshot before re-checking. Absent or empty on a subscription means it receives everything it subscribes to, which is the behavior of every subscription created before the field existed.
+      Resource groups. Every event belongs to one group: post.* to publishing, message.*, reaction.*, conversation.*, call.* and whatsapp.automatic_event to messages, comment.* and review.* to engagement, lead.* to contacts, ad.* to ads, account.*, whatsapp.template.* and whatsapp.account.* to accounts, whatsapp.number.* and verification.* to telephony, webhook.test to webhooks. Two independent controls use that mapping. (1) A restricted (zrk_) API key can only subscribe to, test-fire, redeliver, or read delivery logs for events in the groups it holds, so it can never create a subscription broader than itself. (2) Each subscription carries its own `disabledResourceGroups` denylist: events in a disabled group are dropped before delivery to that endpoint, on live delivery and on every replay path, no matter which key or session created the subscription. Changing that denylist applies to every event emitted after the change; events already queued when it landed can still be delivered for up to five minutes after they were enqueued, because the delivery worker trusts a five-minute enqueue-time snapshot before re-checking. Absent or empty on a subscription means it receives everything it subscribes to, which is the behavior of every subscription created before the field existed.
   - name: Webhook Events
     description: |
       Incoming webhook deliveries sent by Zernio to your configured endpoint URL.
@@ -2399,7 +2400,7 @@ components:
           type: array
           items:
             type: string
-            enum: [post.scheduled, post.published, post.failed, post.partial, post.cancelled, post.recycled, post.platform.published, post.platform.failed, post.platform.deleted, post.tiktok.url_resolved, post.external.created, post.external.updated, post.external.deleted, account.connected, account.disconnected, account.ads.initial_sync_completed, message.received, conversation.started, call.received, call.ended, call.failed, call.permission_request, message.sent, message.edited, message.deleted, message.delivered, message.read, message.failed, reaction.received, referral.received, comment.received, review.new, review.updated, lead.received, ad.status_changed, whatsapp.template.status_updated, whatsapp.template.category_updated, whatsapp.automatic_event, whatsapp.number.activated, whatsapp.number.declined, whatsapp.number.action_required, whatsapp.number.verification_required, whatsapp.number.suspended, whatsapp.number.reactivated, whatsapp.number.released, whatsapp.number.kyc_submitted, verification.approved, verification.failed]
+            enum: [post.scheduled, post.published, post.failed, post.partial, post.cancelled, post.recycled, post.platform.published, post.platform.failed, post.platform.deleted, post.tiktok.url_resolved, post.external.created, post.external.updated, post.external.deleted, account.connected, account.disconnected, account.ads.initial_sync_completed, message.received, conversation.started, call.received, call.ended, call.failed, call.permission_request, message.sent, message.edited, message.deleted, message.delivered, message.read, message.failed, reaction.received, referral.received, comment.received, review.new, review.updated, lead.received, ad.status_changed, whatsapp.template.status_updated, whatsapp.template.category_updated, whatsapp.account.name_status_updated, whatsapp.automatic_event, whatsapp.number.activated, whatsapp.number.declined, whatsapp.number.action_required, whatsapp.number.verification_required, whatsapp.number.suspended, whatsapp.number.reactivated, whatsapp.number.released, whatsapp.number.kyc_submitted, verification.approved, verification.failed]
           description: Events subscribed to
         isActive:
           type: boolean
@@ -4597,6 +4598,54 @@ components:
               type: string
               format: date-time
               description: Present only when changeType is `scheduled`. ISO-8601 timestamp when the scheduled category takes effect.
+        timestamp:
+          type: string
+          format: date-time
+          description: 'UTC time at which Zernio generated this event (set once when the event payload is built, before delivery is queued). Retries and redeliveries keep the original value, so it reflects the event, not the delivery attempt.'
+    WebhookPayloadWhatsAppAccountNameStatusUpdated:
+      type: object
+      description: |
+        Webhook payload for the `whatsapp.account.name_status_updated` event.
+        Fired when Meta finishes reviewing a WhatsApp display-name change on a
+        connected number. Maps Meta's `phone_number_name_update` WABA webhook
+        field onto our event envelope. Fires only for a review outcome
+        (APPROVED, DECLINED, PENDING_REVIEW); a name applied without review
+        reports `name_status: AVAILABLE_WITHOUT_REVIEW` on the phone node
+        instead, and Meta never sends this webhook field for that case.
+      required: [id, event, account, name, timestamp]
+      properties:
+        id:
+          type: string
+          description: Stable webhook event ID
+        event:
+          type: string
+          enum: [whatsapp.account.name_status_updated]
+        account:
+          type: object
+          required: [accountId, profileId, platform, username]
+          properties:
+            accountId: { type: string }
+            profileId: { type: string }
+            platform: { type: string, enum: [whatsapp] }
+            username: { type: string }
+            displayName: { type: string }
+        name:
+          type: object
+          required: [status, requestedName, rejectionReason, displayPhoneNumber]
+          properties:
+            status:
+              type: string
+              enum: [APPROVED, DECLINED, PENDING_REVIEW]
+              description: 'Normalized from Meta''s `decision` (REJECTED -> DECLINED, DEFERRED -> PENDING_REVIEW; the review is still open on DEFERRED, not a rejection).'
+            requestedName:
+              type: [string, "null"]
+              description: The display name Meta reviewed. Null if Meta did not send one.
+            rejectionReason:
+              type: [string, "null"]
+              description: 'Meta''s free-form decline reason. Null on approval, or when Meta sends the literal string "NONE".'
+            displayPhoneNumber:
+              type: [string, "null"]
+              description: 'The phone number this review is for, as Meta reported it.'
         timestamp:
           type: string
           format: date-time
@@ -9586,6 +9635,31 @@ webhooks:
           application/json:
             schema:
               $ref: '#/components/schemas/WebhookPayloadWhatsAppTemplateCategoryUpdated'
+      responses:
+        '200':
+          description: Webhook received successfully
+  whatsapp.account.name_status_updated:
+    post:
+      operationId: onWhatsAppAccountNameStatusUpdated
+      summary: WhatsApp display-name review outcome event
+      description: |
+        Fired when Meta finishes reviewing a WhatsApp Business display-name
+        change. Forwarded from Meta's `phone_number_name_update` webhook
+        field on the WhatsApp Business Account. Fires only on a review
+        outcome (`name.status` APPROVED, DECLINED, or PENDING_REVIEW); a name
+        applied without review reports `name_status:
+        AVAILABLE_WITHOUT_REVIEW` on the phone node instead and produces no
+        event here. `decision` REJECTED maps to DECLINED and DEFERRED maps to
+        PENDING_REVIEW, matching the `name_status` vocabulary returned by
+        `GET /v1/whatsapp/number-info`. Delivery is at-least-once; dedupe on
+        `(account.accountId, name.status, name.requestedName)`.
+      tags: [Webhook Events]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/WebhookPayloadWhatsAppAccountNameStatusUpdated'
       responses:
         '200':
           description: Webhook received successfully
@@ -24485,7 +24559,7 @@ paths:
                   minItems: 1
                   items:
                     type: string
-                    enum: [post.scheduled, post.published, post.failed, post.partial, post.cancelled, post.recycled, post.platform.published, post.platform.failed, post.platform.deleted, post.tiktok.url_resolved, post.external.created, post.external.updated, post.external.deleted, account.connected, account.disconnected, account.ads.initial_sync_completed, message.received, conversation.started, call.received, call.ended, call.failed, call.permission_request, message.sent, message.edited, message.deleted, message.delivered, message.read, message.failed, reaction.received, referral.received, comment.received, review.new, review.updated, lead.received, ad.status_changed, whatsapp.template.status_updated, whatsapp.template.category_updated, whatsapp.automatic_event, whatsapp.number.activated, whatsapp.number.declined, whatsapp.number.action_required, whatsapp.number.verification_required, whatsapp.number.suspended, whatsapp.number.reactivated, whatsapp.number.released, whatsapp.number.kyc_submitted, verification.approved, verification.failed]
+                    enum: [post.scheduled, post.published, post.failed, post.partial, post.cancelled, post.recycled, post.platform.published, post.platform.failed, post.platform.deleted, post.tiktok.url_resolved, post.external.created, post.external.updated, post.external.deleted, account.connected, account.disconnected, account.ads.initial_sync_completed, message.received, conversation.started, call.received, call.ended, call.failed, call.permission_request, message.sent, message.edited, message.deleted, message.delivered, message.read, message.failed, reaction.received, referral.received, comment.received, review.new, review.updated, lead.received, ad.status_changed, whatsapp.template.status_updated, whatsapp.template.category_updated, whatsapp.account.name_status_updated, whatsapp.automatic_event, whatsapp.number.activated, whatsapp.number.declined, whatsapp.number.action_required, whatsapp.number.verification_required, whatsapp.number.suspended, whatsapp.number.reactivated, whatsapp.number.released, whatsapp.number.kyc_submitted, verification.approved, verification.failed]
                   description: Events to subscribe to (at least one required)
                 isActive:
                   type: boolean
@@ -24604,7 +24678,7 @@ paths:
                   minItems: 1
                   items:
                     type: string
-                    enum: [post.scheduled, post.published, post.failed, post.partial, post.cancelled, post.recycled, post.platform.published, post.platform.failed, post.platform.deleted, post.tiktok.url_resolved, post.external.created, post.external.updated, post.external.deleted, account.connected, account.disconnected, account.ads.initial_sync_completed, message.received, conversation.started, call.received, call.ended, call.failed, call.permission_request, message.sent, message.edited, message.deleted, message.delivered, message.read, message.failed, reaction.received, referral.received, comment.received, review.new, review.updated, lead.received, ad.status_changed, whatsapp.template.status_updated, whatsapp.template.category_updated, whatsapp.automatic_event, whatsapp.number.activated, whatsapp.number.declined, whatsapp.number.action_required, whatsapp.number.verification_required, whatsapp.number.suspended, whatsapp.number.reactivated, whatsapp.number.released, whatsapp.number.kyc_submitted, verification.approved, verification.failed]
+                    enum: [post.scheduled, post.published, post.failed, post.partial, post.cancelled, post.recycled, post.platform.published, post.platform.failed, post.platform.deleted, post.tiktok.url_resolved, post.external.created, post.external.updated, post.external.deleted, account.connected, account.disconnected, account.ads.initial_sync_completed, message.received, conversation.started, call.received, call.ended, call.failed, call.permission_request, message.sent, message.edited, message.deleted, message.delivered, message.read, message.failed, reaction.received, referral.received, comment.received, review.new, review.updated, lead.received, ad.status_changed, whatsapp.template.status_updated, whatsapp.template.category_updated, whatsapp.account.name_status_updated, whatsapp.automatic_event, whatsapp.number.activated, whatsapp.number.declined, whatsapp.number.action_required, whatsapp.number.verification_required, whatsapp.number.suspended, whatsapp.number.reactivated, whatsapp.number.released, whatsapp.number.kyc_submitted, verification.approved, verification.failed]
                   description: Events to subscribe to. Must contain at least one event if provided.
                 isActive:
                   type: boolean
