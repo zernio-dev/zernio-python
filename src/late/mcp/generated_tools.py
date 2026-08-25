@@ -3229,6 +3229,7 @@ def register_generated_tools(mcp, _get_client):
         negative_keywords: list[str] | None = None,
         additional_headlines: list[str] | None = None,
         additional_descriptions: list[str] | None = None,
+        sitelinks: list[dict[str, Any]] | None = None,
         advantage_audience: int | None = None,
         attribution_spec: list[dict[str, Any]] | None = None,
         gender: str = "all",
@@ -3502,6 +3503,13 @@ def register_generated_tools(mcp, _get_client):
                 negative_keywords: Google Search only; other platforms return 400. BROAD-match negative keywords on the new ad group. Editable later via PUT /v1/ads/{adId} targeting.negativeKeywords.
                 additional_headlines: Google Search RSA only. Extra headlines.
                 additional_descriptions: Google Search RSA only. Extra descriptions.
+                sitelinks: Google Search only. Sitelink assets to create and attach at the campaign level.
+        Each entry becomes an Asset (with sitelink_asset + Asset.final_urls) plus a
+        CampaignAsset link (field_type SITELINK). Approval is async — Google reviews
+        assets after creation; poll asset.policy_summary later to read the verdict.
+        Google requires at least two sitelinks to surface them on an ad; four or more
+        is Google's own recommendation for maximum visibility. The response's
+        creative.sitelinks[] echoes each input plus its Google resourceName.
                 advantage_audience: Meta only. Controls the Advantage audience feature (targeting_automation). 0 = disabled (default), 1 = enabled. Meta Marketing API requires this field on all ad set creation requests.
                 attribution_spec: Meta only. Conversion attribution window for the ad set — maps 1:1 to Meta's
         ad-set `attribution_spec`. Only honored for conversion goals (`conversions`,
@@ -3707,6 +3715,7 @@ def register_generated_tools(mcp, _get_client):
                 negative_keywords=negative_keywords,
                 additional_headlines=additional_headlines,
                 additional_descriptions=additional_descriptions,
+                sitelinks=sitelinks,
                 advantage_audience=advantage_audience,
                 attribution_spec=attribution_spec,
                 gender=gender,

@@ -43180,6 +43180,26 @@ paths:
                 negativeKeywords: { type: array, items: { type: string, maxLength: 80 }, description: "Google Search only; other platforms return 400. BROAD-match negative keywords on the new ad group. Editable later via PUT /v1/ads/{adId} targeting.negativeKeywords." }
                 additionalHeadlines: { type: array, items: { type: string }, description: "Google Search RSA only. Extra headlines." }
                 additionalDescriptions: { type: array, items: { type: string }, description: "Google Search RSA only. Extra descriptions." }
+                sitelinks:
+                  type: array
+                  minItems: 2
+                  maxItems: 20
+                  description: |
+                    Google Search only. Sitelink assets to create and attach at the campaign level.
+                    Each entry becomes an Asset (with sitelink_asset + Asset.final_urls) plus a
+                    CampaignAsset link (field_type SITELINK). Approval is async — Google reviews
+                    assets after creation; poll asset.policy_summary later to read the verdict.
+                    Google requires at least two sitelinks to surface them on an ad; four or more
+                    is Google's own recommendation for maximum visibility. The response's
+                    creative.sitelinks[] echoes each input plus its Google resourceName.
+                  items:
+                    type: object
+                    required: [text, linkUrl]
+                    properties:
+                      text: { type: string, minLength: 1, maxLength: 25, description: "The clickable link text shown under the ad. 25-char cap comes from Google." }
+                      linkUrl: { type: string, format: uri, description: "Final URL the sitelink navigates to." }
+                      description1: { type: string, minLength: 1, maxLength: 35, description: "First description line under the link text (optional). 35-char cap." }
+                      description2: { type: string, minLength: 1, maxLength: 35, description: "Second description line (optional; usually paired with description1)." }
                 advantageAudience: { type: integer, enum: [0, 1], description: "Meta only. Controls the Advantage audience feature (targeting_automation). 0 = disabled (default), 1 = enabled. Meta Marketing API requires this field on all ad set creation requests." }
                 attributionSpec:
                   type: array
