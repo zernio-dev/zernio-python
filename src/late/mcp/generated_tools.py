@@ -11910,6 +11910,7 @@ def register_generated_tools(mcp, _get_client):
         body: str | None = None,
         image_url: str | None = None,
         video: dict[str, Any] | None = None,
+        welcome_message: dict[str, Any] | None = None,
         creatives: list[dict[str, Any]] | None = None,
         ad_set_id: str | None = None,
         budget_amount: float | None = None,
@@ -11957,6 +11958,9 @@ def register_generated_tools(mcp, _get_client):
                 video: Video creative for single-creative shape. Mutually
         exclusive with `imageUrl` and with `creatives[]`. Required
         on the single-creative shape if `imageUrl` is not supplied.
+                welcome_message: Custom chat welcome message (Meta's `page_welcome_message`,
+        "Mensaje de bienvenida" / "Mensaje predefinido" in Ads Manager).
+        Single-creative shape only; for `creatives[]` set it per entry.
                 creatives: Multi-creative shape: N CTWA ads under one campaign + one
         ad set, sharing budget and targeting. Mutually exclusive
         with the top-level single-creative fields (`headline` /
@@ -12060,6 +12064,7 @@ def register_generated_tools(mcp, _get_client):
                 body=body,
                 image_url=image_url,
                 video=video,
+                welcome_message=welcome_message,
                 creatives=creatives,
                 ad_set_id=ad_set_id,
                 budget_amount=budget_amount,
@@ -12110,6 +12115,7 @@ def register_generated_tools(mcp, _get_client):
         body: str | None = None,
         image_url: str | None = None,
         video: dict[str, Any] | None = None,
+        welcome_message: dict[str, Any] | None = None,
         creatives: list[dict[str, Any]] | None = None,
         ad_set_id: str | None = None,
         budget_amount: float | None = None,
@@ -12157,6 +12163,9 @@ def register_generated_tools(mcp, _get_client):
                 video: Video creative for single-creative shape. Mutually
         exclusive with `imageUrl` and with `creatives[]`. Required
         on the single-creative shape if `imageUrl` is not supplied.
+                welcome_message: Custom chat welcome message (Meta's `page_welcome_message`,
+        "Mensaje de bienvenida" / "Mensaje predefinido" in Ads Manager).
+        Single-creative shape only; for `creatives[]` set it per entry.
                 creatives: Multi-creative shape: N CTWA ads under one campaign + one
         ad set, sharing budget and targeting. Mutually exclusive
         with the top-level single-creative fields (`headline` /
@@ -12261,6 +12270,7 @@ def register_generated_tools(mcp, _get_client):
                 body=body,
                 image_url=image_url,
                 video=video,
+                welcome_message=welcome_message,
                 creatives=creatives,
                 ad_set_id=ad_set_id,
                 budget_amount=budget_amount,
@@ -12310,6 +12320,7 @@ def register_generated_tools(mcp, _get_client):
         body: str | None = None,
         image_url: str | None = None,
         video: dict[str, Any] | None = None,
+        welcome_message: dict[str, Any] | None = None,
         creatives: list[dict[str, Any]] | None = None,
         ad_set_id: str | None = None,
         budget_amount: float | None = None,
@@ -12357,6 +12368,9 @@ def register_generated_tools(mcp, _get_client):
                 video: Video creative for single-creative shape. Mutually
         exclusive with `imageUrl` and with `creatives[]`. Required
         on the single-creative shape if `imageUrl` is not supplied.
+                welcome_message: Custom chat welcome message (Meta's `page_welcome_message`,
+        "Mensaje de bienvenida" / "Mensaje predefinido" in Ads Manager).
+        Single-creative shape only; for `creatives[]` set it per entry.
                 creatives: Multi-creative shape: N CTWA ads under one campaign + one
         ad set, sharing budget and targeting. Mutually exclusive
         with the top-level single-creative fields (`headline` /
@@ -12459,6 +12473,7 @@ def register_generated_tools(mcp, _get_client):
                 body=body,
                 image_url=image_url,
                 video=video,
+                welcome_message=welcome_message,
                 creatives=creatives,
                 ad_set_id=ad_set_id,
                 budget_amount=budget_amount,
