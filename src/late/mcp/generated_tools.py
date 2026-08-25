@@ -3435,7 +3435,8 @@ def register_generated_tools(mcp, _get_client):
                 carousel_cards: Meta only. Hand-built carousel: 2-10 authored cards in DETERMINISTIC order, mapped to
         the creative's `link_data.child_attachments`. Unlike `dynamicCreative`,
         you control the card order and per-card copy/link. Requires top-level `body`,
-        `linkUrl` and `callToAction`.
+        `linkUrl` and `callToAction`. Those become the ad's own Destination and
+        button (`link_data.link` / `link_data.call_to_action`), and double as the per-card fallback when a card omits its own.
         Mutually exclusive with `imageUrl`/`video`, `creatives[]`, `dynamicCreative`,
         `placementAssets`, `existingCreativeId`, `adSetId`, `leadGenFormId` and goal
         `catalog_sales`.
