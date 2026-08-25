@@ -3786,6 +3786,26 @@ def register_generated_tools(mcp, _get_client):
 
     @mcp.tool(
         annotations=ToolAnnotations(
+            title="Direct video and image URLs for an ad",
+            readOnlyHint=True,
+            destructiveHint=False,
+            openWorldHint=False,
+        )
+    )
+    def ad_creatives_get_ad_media(ad_id: str) -> str:
+        """Direct video and image URLs for an ad
+
+        Args:
+            ad_id: Zernio ad id (24-char hex) or platform ad id. (required)"""
+        client = _get_client()
+        try:
+            response = client.ad_creatives.get_ad_media(ad_id=ad_id)
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
             title="Creative library",
             readOnlyHint=True,
             destructiveHint=False,

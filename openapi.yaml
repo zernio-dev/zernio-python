@@ -40277,6 +40277,55 @@ paths:
         '429': { description: Meta rate limit reached }
         '501': { description: Only supported on Meta (facebook/instagram) }
 
+  /v1/ads/{adId}/media:
+    get:
+      x-resource-group: "ads"
+      operationId: getAdMedia
+      tags: ["Ad Creatives"]
+      x-platforms: ["meta"]
+      summary: Direct video and image URLs for an ad
+      description: |-
+        Returns the direct signed URLs for every video and image asset used by an ad's live
+        creative, normalised across shapes: single image/video, carousel,
+        Reels/Story (`object_story_spec.video_data`) and dynamic
+        creative (`asset_feed_spec`). Video items include Meta's poster thumbnail and the
+        video's Meta id when available.
+
+        Reads Meta live rather than the stored creative blob because Meta's signed fbcdn
+        URLs carry an `oe=<hex>` expiration (image_url ~24 h, video source ~12 d). Treat
+        URLs as short-lived — re-fetch this endpoint before serving or downloading assets
+        instead of caching URLs beyond that window.
+      security:
+        - bearerAuth: []
+      parameters:
+        - { name: adId, in: path, required: true, schema: { type: string }, description: "Zernio ad id (24-char hex) or platform ad id." }
+      responses:
+        '200':
+          description: Media assets
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  adId: { type: string }
+                  platform: { type: string, description: "'facebook' or 'instagram' — only Meta is supported for now." }
+                  media:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        type: { type: string, enum: [image, video] }
+                        url: { type: string, description: "Direct file URL (signed; short-lived — see description)." }
+                        thumbnailUrl: { type: string, description: "Video poster URL (videos only)." }
+                        videoId: { type: string, description: "Meta video id (videos only), reusable as video.id on the create endpoints." }
+                        length: { type: number, description: "Video length in seconds (videos only)." }
+                        index: { type: integer, description: "0-based position for carousel children or asset_feed_spec entries." }
+        '400': { description: "Invalid input" }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404': { description: Ad not found }
+        '422': { description: No active Meta connection for this ad. Reconnect the account. }
+        '501': { description: Only supported on Meta (facebook/instagram) }
+
   /v1/ads/keywords/ideas:
     post:
       x-resource-group: "ads"

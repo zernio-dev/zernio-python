@@ -101,6 +101,10 @@ class AdCreativesResource:
         )
         return self._client._get(f"/v1/ads/{ad_id}/preview", params=params)
 
+    def get_ad_media(self, ad_id: str) -> dict[str, Any]:
+        """Direct video and image URLs for an ad"""
+        return self._client._get(f"/v1/ads/{ad_id}/media")
+
     def list_ad_creatives(
         self,
         account_id: str,
@@ -312,6 +316,10 @@ class AdCreativesResource:
             formats=formats,
         )
         return await self._client._aget(f"/v1/ads/{ad_id}/preview", params=params)
+
+    async def aget_ad_media(self, ad_id: str) -> dict[str, Any]:
+        """Direct video and image URLs for an ad (async)"""
+        return await self._client._aget(f"/v1/ads/{ad_id}/media")
 
     async def alist_ad_creatives(
         self,
