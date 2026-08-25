@@ -29239,6 +29239,11 @@ paths:
       description: |
         Update a message template's components. Only certain fields can be updated depending on
         the template's current approval state. Approved templates can only have components updated.
+
+        A successful update sends the template back to Meta for review, so the `status` returned
+        here is normally `PENDING`. The final outcome arrives later on the
+        `whatsapp.template.status_updated` webhook. A template already in `PENDING` cannot be
+        edited again until Meta finishes reviewing it.
       security:
         - bearerAuth: []
       parameters:
@@ -29292,7 +29297,10 @@ paths:
                     properties:
                       id: { type: string }
                       name: { type: string }
-                      status: { type: string }
+                      status:
+                        type: string
+                        description: 'Approval state read back from Meta after the update, normally PENDING. If the state cannot be read back, the last known status is returned instead.'
+                        example: PENDING
         '400': { description: Validation error (missing fields) }
         '401': { $ref: '#/components/responses/Unauthorized' }
         '404': { $ref: '#/components/responses/NotFound' }
