@@ -11606,8 +11606,7 @@ def register_generated_tools(mcp, _get_client):
         commerce messages (single product, product list, catalog, and
         carousel). When set, takes priority over `buttons` and
         `quickReplies`. The shape mirrors Meta's Cloud API `interactive`
-        object verbatim, so any payload that works against Meta directly
-        will also work here.
+        object for the types in the enum below.
 
         Use `buttons` / `quickReplies` for simple button replies
         (WhatsApp's `interactive.type: "button"`): the abstraction caps at
@@ -11652,6 +11651,18 @@ def register_generated_tools(mcp, _get_client):
 
         For `catalog_message`, `action` may also be omitted (we default it
         to `{ "name": "catalog_message" }`).
+
+        For `address_message`, `parameters.country` is required (Meta
+        rejects the whole send without it); everything else in
+        `parameters` (`values`, `saved_addresses`, `validation_errors`)
+        is forwarded to Meta as-is. This is Meta's native structured
+        shipping-address capture, generally available in India as of
+        2026-08; check Meta's documentation for current country
+        availability before relying on it elsewhere. The submitted
+        address arrives as an `nfm_reply` on the `message.received`
+        webhook, same as a Flow submission, but with
+        `metadata.nfmReplyName` set to `address_message` so you can
+        tell the two apart.
 
         Tap events come back via the `message.received` webhook with
         `metadata.interactiveType` set to `list_reply` or `nfm_reply`.
