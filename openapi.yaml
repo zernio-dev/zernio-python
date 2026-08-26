@@ -39609,7 +39609,7 @@ paths:
       x-resource-group: "ads"
       operationId: deleteAdCampaign
       tags: ["Ad Campaigns"]
-      x-platforms: ["meta", "tiktok"]
+      x-platforms: ["meta", "tiktok", "google"]
       summary: Delete a campaign
       description: |
         Deletes the whole campaign on the platform, cascading to its ad sets
@@ -39635,7 +39635,7 @@ paths:
               type: object
               required: [platform]
               properties:
-                platform: { type: string, enum: [facebook, instagram] }
+                platform: { type: string, enum: [facebook, instagram, google] }
                 accountId: { type: string, description: "Zernio SocialAccount id owning the ad account. Required only to delete an EMPTY campaign (zero ads), which has no local Ad documents to resolve a token from." }
       responses:
         '200':
