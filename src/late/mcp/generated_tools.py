@@ -7441,7 +7441,16 @@ def register_generated_tools(mcp, _get_client):
         omit to enter ads-only mode (no TikTok posting account linked; ad creation uses
         a Brand Identity instead of a TT_USER). Ignored for same-token (`facebook`,
         `instagram`, `linkedin`, `pinterest`) and standalone (`googleads`) platforms.
-                redirect_url: Custom redirect URL after OAuth completes (same-token platforms only). Accepts an http(s) URL, a custom app scheme for mobile deeplinks (e.g. myapp://callback), or a relative path.
+                redirect_url: Custom URL the browser is sent to once the OAuth flow finishes. Honored on
+        every ads platform, including the separate-token (`tiktok`, `twitter`) and
+        standalone (`googleads`) flows. Accepts an http(s) URL, a custom app scheme
+        for mobile deeplinks (e.g. myapp://callback), or a relative path. On success
+        `tiktok`, `twitter` and `googleads` land on the URL unchanged, while the
+        same-token platforms (`facebook`, `instagram`, `linkedin`, `pinterest`)
+        append `connected`, `profileId`, `accountId`, `username` and, on API-key
+        calls, `connect_token`. On failure every platform appends error details,
+        starting with `error` and `platform`. When omitted, the browser lands on
+        the Zernio dashboard.
                 headless: Enable headless mode (same-token platforms only)
                 force: Force a fresh OAuth even when an account already exists. Normally the
         endpoint returns `alreadyConnected: true` whenever a connected account
