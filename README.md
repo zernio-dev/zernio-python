@@ -201,6 +201,7 @@ Both `from zernio import ...` and `from late import ...` work identically. The `
 | `accounts.get_account_health()` | Check account health |
 | `accounts.get_bluesky_settings()` | Get Bluesky account settings |
 | `accounts.get_follower_stats()` | Get follower stats |
+| `accounts.get_google_business_review()` | Get a review |
 | `accounts.get_google_business_reviews()` | Get reviews |
 | `accounts.get_instagram_follow_status()` | Check whether an Instagram user follows the account |
 | `accounts.get_linked_in_mentions()` | Resolve LinkedIn mention |

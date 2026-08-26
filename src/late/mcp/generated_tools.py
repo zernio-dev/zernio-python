@@ -1164,6 +1164,32 @@ def register_generated_tools(mcp, _get_client):
 
     @mcp.tool(
         annotations=ToolAnnotations(
+            title="Get a review",
+            readOnlyHint=True,
+            destructiveHint=False,
+            openWorldHint=False,
+        )
+    )
+    def accounts_get_google_business_review(
+        account_id: str, review_id: str, location_id: str | None = None
+    ) -> str:
+        """Get a review
+
+        Args:
+            account_id: The Zernio account ID (from /v1/accounts) (required)
+            review_id: The review ID portion (e.g. "AIe9_BGx1234567890"), not the full resource name (required)
+            location_id: Override which location to read the review from. If omitted, uses the account's selected location. Use GET /gmb-locations to list valid IDs."""
+        client = _get_client()
+        try:
+            response = client.accounts.get_google_business_review(
+                account_id=account_id, review_id=review_id, location_id=location_id
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
             title="Reply to a review",
             readOnlyHint=False,
             destructiveHint=True,

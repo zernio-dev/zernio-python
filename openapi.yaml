@@ -163,7 +163,7 @@ x-documentation:
     - `conversation.started` - A new conversation opened between one of your accounts and a contact, in either direction (any DM platform, and SMS); fires only the first time the thread appears
     - `message.sent` - DM sent via the API
     - `message.edited` - A sender edited a message (Instagram, Messenger, Telegram)
-    - `message.deleted` - A sender deleted ("unsent") a message (Instagram; WhatsApp when the business deletes a sent message)
+    - `message.deleted` - A sender deleted ("unsent") a message (Instagram; WhatsApp in both directions, whether the business deleted a message it sent or the customer deleted one they sent). `message.direction` tells the two apart.
     - `message.delivered` - An outgoing message was delivered (WhatsApp, Messenger, SMS)
     - `message.read` - An outgoing message was read by the recipient (WhatsApp, Messenger, Instagram)
     - `message.failed` - An outgoing message failed delivery (WhatsApp, SMS; on SMS the carrier's error code rides in `error`)
@@ -740,6 +740,36 @@ components:
                   effective_account_limit: 2000
                   current_account_count: 2000
   schemas:
+    GoogleBusinessReview:
+      type: object
+      description: A Google Business Profile review, as returned by every gmb-reviews read endpoint.
+      properties:
+        id: { type: string, description: Review ID }
+        name: { type: string, description: Full resource name }
+        reviewer:
+          type: object
+          properties:
+            displayName: { type: string }
+            profilePhotoUrl: { type: [string, "null"] }
+            isAnonymous: { type: boolean }
+        rating: { type: integer, minimum: 0, maximum: 5, description: 'Numeric star rating (0 when Google sends no rating)' }
+        starRating: { type: string, enum: [ONE, TWO, THREE, FOUR, FIVE], description: "Google's string rating" }
+        comment: { type: string, description: Review text }
+        createTime: { type: string, format: date-time }
+        updateTime: { type: string, format: date-time }
+        reviewReply:
+          type: [object, "null"]
+          properties:
+            comment: { type: string, description: Business owner reply }
+            updateTime: { type: string, format: date-time }
+        photoCount: { type: integer, description: 'Number of photos attached to the review (photos only, videos are not counted)' }
+        photos:
+          type: array
+          description: Photos attached to the review by the reviewer
+          items:
+            type: object
+            properties:
+              url: { type: string, format: uri }
     Verification:
       type: object
       description: 'A managed OTP verification. The code itself is never returned or stored (hash only).'
@@ -4059,8 +4089,10 @@ components:
       description: |
         Webhook payload for message.deleted events. Fires when the sender
         deletes (unsends) a message. Supported platforms: Instagram (incoming
-        unsend) and WhatsApp (when the business deletes an outgoing message
-        via the Cloud API).
+        unsend) and WhatsApp, in both directions: an outgoing message the
+        business deleted (via the Cloud API, or from the WhatsApp Business app
+        on a Coexistence number) and an incoming message the customer deleted.
+        Read `message.direction` to tell the two apart.
 
         The message.text and message.attachments fields retain the content
         that existed before the delete. The Zernio dashboard UI does not show
@@ -9270,10 +9302,13 @@ webhooks:
       summary: Message deleted event
       description: |
         Fired when a sender deletes (unsends) a message. Supported on Instagram
-        (incoming unsend) and WhatsApp (when the business deletes an outgoing
-        message via the Cloud API). The payload retains the pre-delete text
-        and attachments so API consumers can access the original content for
-        moderation or compliance — the Zernio dashboard UI hides it.
+        (incoming unsend) and WhatsApp in both directions: an outgoing message
+        the business deleted (via the Cloud API, or from the WhatsApp Business
+        app on a Coexistence number) and an incoming message the customer
+        deleted. Read `message.direction` to tell the two apart. The payload
+        retains the pre-delete text and attachments so API consumers can access
+        the original content for moderation or compliance; the Zernio dashboard
+        UI hides it.
       tags: [Webhook Events]
       requestBody:
         required: true
@@ -17908,35 +17943,7 @@ paths:
                   locationId: { type: string }
                   reviews:
                     type: array
-                    items:
-                      type: object
-                      properties:
-                        id: { type: string, description: Review ID }
-                        name: { type: string, description: Full resource name }
-                        reviewer:
-                          type: object
-                          properties:
-                            displayName: { type: string }
-                            profilePhotoUrl: { type: [string, "null"] }
-                            isAnonymous: { type: boolean }
-                        rating: { type: integer, minimum: 1, maximum: 5, description: Numeric star rating }
-                        starRating: { type: string, enum: [ONE, TWO, THREE, FOUR, FIVE], description: Google's string rating }
-                        comment: { type: string, description: Review text }
-                        createTime: { type: string, format: date-time }
-                        updateTime: { type: string, format: date-time }
-                        reviewReply:
-                          type: [object, "null"]
-                          properties:
-                            comment: { type: string, description: Business owner reply }
-                            updateTime: { type: string, format: date-time }
-                        photoCount: { type: integer, description: 'Number of photos attached to the review (photos only, videos are not counted)' }
-                        photos:
-                          type: array
-                          description: Photos attached to the review by the reviewer
-                          items:
-                            type: object
-                            properties:
-                              url: { type: string, format: uri }
+                    items: { $ref: '#/components/schemas/GoogleBusinessReview' }
                   averageRating: { type: number, description: Overall average rating }
                   totalReviewCount: { type: integer, description: Total number of reviews }
                   nextPageToken: { type: [string, "null"], description: Token for next page }
@@ -19778,6 +19785,86 @@ paths:
               schema: { $ref: '#/components/schemas/ErrorResponse' }
         '401':
           description: Unauthorized
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ErrorResponse' }
+
+  /v1/accounts/{accountId}/gmb-reviews/{reviewId}:
+    get:
+      x-resource-group: "engagement"
+      operationId: getGoogleBusinessReview
+      tags: [GMB Reviews]
+      summary: Get a review
+      description: |
+        Returns one Google Business review, in the same shape as the entries of GET /v1/accounts/{accountId}/gmb-reviews.
+        The review is read from the account's selected location unless locationId overrides it, and Google returns 404 for a review id that belongs to another location.
+        Read the review before replying if a human may have answered it already: replies are overwritten in place and Google keeps no history.
+      parameters:
+        - name: accountId
+          in: path
+          required: true
+          schema: { type: string }
+          description: The Zernio account ID (from /v1/accounts)
+        - name: reviewId
+          in: path
+          required: true
+          schema: { type: string }
+          description: The review ID portion (e.g. "AIe9_BGx1234567890"), not the full resource name
+        - name: locationId
+          in: query
+          schema: { type: string }
+          description: Override which location to read the review from. If omitted, uses the account's selected location. Use GET /gmb-locations to list valid IDs.
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Review fetched successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success: { type: boolean }
+                  accountId: { type: string }
+                  locationId: { type: string }
+                  review: { $ref: '#/components/schemas/GoogleBusinessReview' }
+              example:
+                success: true
+                accountId: "64e1f0a9e2b5af0012ab34cd"
+                locationId: "9281089117903930794"
+                review:
+                  id: "AIe9_BGx1234567890"
+                  name: "accounts/123456789/locations/9281089117903930794/reviews/AIe9_BGx1234567890"
+                  reviewer:
+                    displayName: "John Smith"
+                    profilePhotoUrl: "https://lh3.googleusercontent.com/a/..."
+                    isAnonymous: false
+                  rating: 5
+                  starRating: "FIVE"
+                  comment: "Great service and friendly staff! Highly recommend."
+                  createTime: "2024-01-15T10:30:00Z"
+                  updateTime: "2024-01-15T10:30:00Z"
+                  reviewReply:
+                    comment: "Thank you for your kind words! We appreciate your support."
+                    updateTime: "2024-01-16T08:00:00Z"
+                  photoCount: 0
+                  photos: []
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401':
+          description: Unauthorized or token invalid (account must be reconnected)
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ErrorResponse' }
+              example:
+                error: "Access token invalid. Please reconnect your Google Business Profile account."
+                code: "token_invalid"
+        '404':
+          description: Account not found, or no such review on this location
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ErrorResponse' }
+        '500':
+          description: Failed to fetch the review
           content:
             application/json:
               schema: { $ref: '#/components/schemas/ErrorResponse' }

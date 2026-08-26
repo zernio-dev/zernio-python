@@ -481,6 +481,17 @@ class AccountsResource:
             f"/v1/accounts/{account_id}/gmb-reviews/batch", data=payload
         )
 
+    def get_google_business_review(
+        self, account_id: str, review_id: str, *, location_id: str | None = None
+    ) -> dict[str, Any]:
+        """Get a review"""
+        params = self._build_params(
+            location_id=location_id,
+        )
+        return self._client._get(
+            f"/v1/accounts/{account_id}/gmb-reviews/{review_id}", params=params
+        )
+
     def reply_to_google_business_review(
         self, account_id: str, review_id: str, comment: str
     ) -> dict[str, Any]:
@@ -955,6 +966,17 @@ class AccountsResource:
         )
         return await self._client._apost(
             f"/v1/accounts/{account_id}/gmb-reviews/batch", data=payload
+        )
+
+    async def aget_google_business_review(
+        self, account_id: str, review_id: str, *, location_id: str | None = None
+    ) -> dict[str, Any]:
+        """Get a review (async)"""
+        params = self._build_params(
+            location_id=location_id,
+        )
+        return await self._client._aget(
+            f"/v1/accounts/{account_id}/gmb-reviews/{review_id}", params=params
         )
 
     async def areply_to_google_business_review(
