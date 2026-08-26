@@ -109,6 +109,7 @@ class MessagesResource:
         link_preview: bool | None = True,
         template_language: str | None = None,
         template_params: list[str] | None = None,
+        template_button_params: list[dict[str, Any]] | None = None,
         header_media: dict[str, Any] | None = None,
     ) -> dict[str, Any]:
         """Create conversation"""
@@ -123,6 +124,7 @@ class MessagesResource:
             link_preview=link_preview,
             template_language=template_language,
             template_params=template_params,
+            template_button_params=template_button_params,
             header_media=header_media,
         )
         return self._client._post("/v1/inbox/conversations", data=payload)
@@ -379,6 +381,7 @@ class MessagesResource:
         link_preview: bool | None = True,
         template_language: str | None = None,
         template_params: list[str] | None = None,
+        template_button_params: list[dict[str, Any]] | None = None,
         header_media: dict[str, Any] | None = None,
     ) -> dict[str, Any]:
         """Create conversation (async)"""
@@ -393,6 +396,7 @@ class MessagesResource:
             link_preview=link_preview,
             template_language=template_language,
             template_params=template_params,
+            template_button_params=template_button_params,
             header_media=header_media,
         )
         return await self._client._apost("/v1/inbox/conversations", data=payload)

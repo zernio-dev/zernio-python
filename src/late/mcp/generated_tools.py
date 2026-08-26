@@ -4999,7 +4999,7 @@ def register_generated_tools(mcp, _get_client):
             to_date: Inclusive upper bound (YYYY-MM-DD). Defaults to today if omitted.
             limit: Page size (default 50)
             page: Page number (default 1)
-            sort_by: Sort by date, engagement, or a specific metric
+            sort_by: Sort by date, engagement, or a specific metric. Instagram-only metrics (follows, reposts, reels_skip_rate, ig_reels_*) sort posts with no value as 0.
             order: Sort order"""
         client = _get_client()
         try:
@@ -11540,6 +11540,7 @@ def register_generated_tools(mcp, _get_client):
         link_preview: bool = True,
         template_language: str | None = None,
         template_params: list[str] | None = None,
+        template_button_params: list[dict[str, Any]] | None = None,
         header_media: dict[str, Any] | None = None,
     ) -> str:
         """Create conversation
@@ -11554,7 +11555,8 @@ def register_generated_tools(mcp, _get_client):
             category: WhatsApp only (Meta Direct Send). Combined with message and without templateName, starts the conversation with a business-initiated UTILITY message and no pre-approved template; Meta matches or auto-creates a template asynchronously. The WhatsApp Business Account must be eligible for Direct Send, otherwise the send fails with an error telling you to use an approved message template instead. Cannot be combined with templateName (templates are already categorized at creation). Utility messages only; marketing content is not allowed under this category. Accepted on the JSON body only, not on multipart requests.
             link_preview: WhatsApp only. Set false to send the Direct Send (category: 'utility') text message without a link-preview thumbnail for the first URL in the text. Defaults to true, which is how every WhatsApp text has been sent to date. Does not apply to template sends. Accepted on the JSON body only, not on multipart requests.
             template_language: WhatsApp only. Template language code (e.g. en_US).
-            template_params: WhatsApp only. Template variable values as one flat array, in the order the variables appear across the whole template: text-header variables first, then body variables, then one value per dynamic URL button (in button order). Works with positional placeholders ({{1}}, {{2}}, ...) and with named placeholders ({{name}}, {{company}} - how Meta Business Manager creates templates), where values fill the named slots in order of appearance. Example - a body with {{1}}, {{2}} plus a URL button https://example.com/{{1}} takes three values: [body1, body2, buttonSuffix]. Media headers (image, video, document) are filled automatically from the approved template and take no value here (use headerMedia to override the header asset per send).
+            template_params: WhatsApp only. Template variable values as one flat array, in the order the variables appear across the whole template: text-header variables first, then body variables, then one value per dynamic URL button (in button order). Works with positional placeholders ({{1}}, {{2}}, ...) and with named placeholders ({{name}}, {{company}} - how Meta Business Manager creates templates), where values fill the named slots in order of appearance. Example - a body with {{1}}, {{2}} plus a URL button https://example.com/{{1}} takes three values: [body1, body2, buttonSuffix]. Media headers (image, video, document) are filled automatically from the approved template and take no value here (use headerMedia to override the header asset per send). Buttons that are not dynamic-URL buttons (copy-code, flow) take no value here either; use templateButtonParams.
+            template_button_params: WhatsApp only. Values for template buttons that carry one at send time, each addressed by the button's position in the approved template. This is the only way to send a copy-code button's payload (a Pix payment code, a coupon) or a flow token, because templateParams is a flat array of text variables and covers dynamic URL buttons only. Supplying a button here overrides whatever templateParams would have derived for that same index, so the send never carries one button twice; repeating an index within this array is rejected with 400. Each index must name a button of the matching kind on the approved template, which is also checked before the send and returns 400 (INVALID_TEMPLATE_BUTTON_PARAM) rather than a Meta rejection.
             header_media: WhatsApp only. Overrides a media-header template's header asset for THIS send, so a template with an image/video/document header can carry a different asset per message (e.g. each recipient their own invoice PDF). Without it, the template's approved sample asset is sent. Provide exactly one of link or id."""
         client = _get_client()
         try:
@@ -11569,6 +11571,7 @@ def register_generated_tools(mcp, _get_client):
                 link_preview=link_preview,
                 template_language=template_language,
                 template_params=template_params,
+                template_button_params=template_button_params,
                 header_media=header_media,
             )
             return _format_response(response)
