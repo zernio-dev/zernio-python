@@ -74,21 +74,23 @@ class WhatsappTemplatesResource:
         return result
 
     def get_whats_app_library_template(
-        self, account_id: str, name: str
+        self, account_id: str, name: str, *, language: str | None = None
     ) -> dict[str, Any]:
         """Look up a library template"""
         params = self._build_params(
             account_id=account_id,
             name=name,
+            language=language,
         )
         return self._client._get("/v1/whatsapp/template-library", params=params)
 
     async def aget_whats_app_library_template(
-        self, account_id: str, name: str
+        self, account_id: str, name: str, *, language: str | None = None
     ) -> dict[str, Any]:
         """Look up a library template (async)"""
         params = self._build_params(
             account_id=account_id,
             name=name,
+            language=language,
         )
         return await self._client._aget("/v1/whatsapp/template-library", params=params)

@@ -19267,17 +19267,18 @@ def register_generated_tools(mcp, _get_client):
         )
     )
     def whatsapp_templates_get_whats_app_library_template(
-        account_id: str, name: str
+        account_id: str, name: str, language: str | None = None
     ) -> str:
         """Look up a library template
 
         Args:
             account_id: WhatsApp social account ID (required)
-            name: Exact library template name (required)"""
+            name: Exact library template name (required)
+            language: Desired language variant (e.g. es, en_US). If the template is not offered in it, the first available variant is returned and named in the response language field."""
         client = _get_client()
         try:
             response = client.whatsapp_templates.get_whats_app_library_template(
-                account_id=account_id, name=name
+                account_id=account_id, name=name, language=language
             )
             return _format_response(response)
         except Exception as e:

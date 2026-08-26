@@ -31531,6 +31531,7 @@ paths:
       parameters:
         - { name: accountId, in: query, required: true, schema: { type: string }, description: WhatsApp social account ID }
         - { name: name, in: query, required: true, schema: { type: string }, description: Exact library template name }
+        - { name: language, in: query, required: false, schema: { type: string }, description: 'Desired language variant (e.g. es, en_US). If the template is not offered in it, the first available variant is returned and named in the response language field.' }
       responses:
         '200':
           description: Library template (or null if no exact match)
@@ -31547,6 +31548,7 @@ paths:
                       category: { type: string }
                       body: { type: string }
                       body_params: { type: array, items: { type: string } }
+                      availableLanguages: { type: array, items: { type: string } }
                       buttons:
                         type: array
                         items:
