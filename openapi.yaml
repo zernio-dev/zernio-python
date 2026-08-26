@@ -5947,6 +5947,9 @@ components:
         boardId:
           type: string
           description: Target Pinterest board ID. If omitted, the first available board is used.
+        boardSectionId:
+          type: string
+          description: 'Target section inside the board. Optional; the pin lands on the board itself when omitted. Pinterest rejects the pin if the section does not belong to boardId, so send both together.'
         link:
           type: string
           format: uri
@@ -5958,6 +5961,10 @@ components:
         coverImageKeyFrameTime:
           type: integer
           description: Optional key frame time in seconds for derived video cover
+        isAiGenerated:
+          type: boolean
+          default: false
+          description: 'When true, the Pin is created with Pinterest''s AI_MODIFIED disclosure (ai_disclosures), which shows an "AI modified" label. Applies to image and video Pins. Pinterest offers no "not AI" value, so false simply omits the disclosure. Pinterest may still label a Pin on its own detection.'
 
     YouTubePlatformData:
       type: object
