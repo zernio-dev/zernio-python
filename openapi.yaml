@@ -3676,8 +3676,8 @@ components:
               description: |
                 platformMessageId of the message this one is a quote-reply to.
                 WhatsApp (`context.id`), Instagram and Facebook Messenger
-                (`reply_to.mid`). On `message.sent` echoes (operator replied
-                from the native app) this is the only metadata field populated.
+                (`reply_to.mid`). Outgoing quote-replies carry the same field on
+                `message.sent`; see WebhookPayloadMessageSent.metadata.
             quickReplyPayload:
               type: string
               description: Payload from a quick reply tap (Facebook/Instagram Messenger).
@@ -3964,7 +3964,8 @@ components:
               description: Internal conversation ID
             platform:
               type: string
-              enum: [instagram, facebook, telegram, whatsapp]
+              enum: [instagram, facebook, telegram, whatsapp, twitter, reddit, bluesky, slack]
+              description: 'Every platform whose outgoing messages Zernio observes. sms is absent on purpose: its carrier receipts update delivery status and never raise message.sent.'
             platformMessageId:
               type: string
               description: Platform's message ID
@@ -4024,6 +4025,25 @@ components:
           $ref: '#/components/schemas/InboxWebhookConversation'
         account:
           $ref: '#/components/schemas/InboxWebhookAccount'
+        metadata:
+          type: object
+          description: 'Platform-specific context for the sent message. The key is present only when the send carried some context, and absent otherwise: it is never null and never an empty object.'
+          properties:
+            quotedMessageId:
+              type: string
+              description: |
+                platformMessageId of the message this send is a quote-reply to.
+                Set when the reply was sent through Zernio with `replyTo` on the
+                inbox send API (WhatsApp and Telegram), and when the operator
+                replied from the native WhatsApp Business, Instagram or Messenger
+                app. WhatsApp API sends carry it on the event fired from the
+                delivery status, so it arrives on the same `message.sent` as any
+                other WhatsApp send.
+            threadTs:
+              type: string
+              description: |
+                Slack only. Parent thread ts of the sent message. Pass it back as
+                `replyTo` on the inbox send API to keep replying inside the thread.
         timestamp:
           type: string
           format: date-time
@@ -9267,7 +9287,11 @@ webhooks:
     post:
       operationId: onMessageSent
       summary: Message sent event
-      description: Fired when a message is sent via the API, or from the WhatsApp Business app on Coexistence numbers.
+      description: |
+        Fired when a message is sent via the API, or from the WhatsApp Business app on
+        Coexistence numbers. Sends that carry platform-specific context deliver it under
+        `metadata`, so a quote-reply arrives with `metadata.quotedMessageId` and mirroring
+        CRMs can thread it without a lookup.
       tags: [Webhook Events]
       requestBody:
         required: true
@@ -15605,6 +15629,10 @@ paths:
                           type: array
                           items: { type: string }
                         createdAt: { type: string, format: date-time }
+                        lastLoginAt:
+                          type: string
+                          format: date-time
+                          description: 'Last sign-in, stamped at most once an hour, so it is accurate to within an hour rather than to the exact session. Omitted for members with no recorded sign-in since the field shipped, which does not mean they never signed in.'
               example:
                 currentUserId: "6507a1b2c3d4e5f6a7b8c9d0"
                 users:
@@ -15615,6 +15643,7 @@ paths:
                     isRoot: true
                     profileAccess: ["all"]
                     createdAt: "2024-01-15T10:30:00Z"
+                    lastLoginAt: "2024-06-02T09:12:00Z"
                   - _id: "6507a1b2c3d4e5f6a7b8c9d1"
                     name: "Jane Smith"
                     email: "jane@example.com"
@@ -15624,6 +15653,7 @@ paths:
                       - "64f0a1b2c3d4e5f6a7b8c9d0"
                       - "64f0a1b2c3d4e5f6a7b8c9d1"
                     createdAt: "2024-03-20T14:45:00Z"
+                    lastLoginAt: "2024-05-28T16:03:00Z"
         '401': { $ref: '#/components/responses/Unauthorized' }
   /v1/users/{userId}:
     get:
