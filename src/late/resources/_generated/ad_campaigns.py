@@ -502,6 +502,26 @@ class AdCampaignsResource:
         )
         return self._client._put(f"/v1/ads/{ad_id}/status", data=payload)
 
+    def attach_campaign_assets(
+        self,
+        campaign_id: str,
+        account_id: str,
+        *,
+        sitelinks: list[dict[str, Any]] | None = None,
+        callouts: list[str] | None = None,
+        structured_snippets: list[dict[str, Any]] | None = None,
+    ) -> dict[str, Any]:
+        """Attach extension assets to a Google Search campaign"""
+        payload = self._build_payload(
+            account_id=account_id,
+            sitelinks=sitelinks,
+            callouts=callouts,
+            structured_snippets=structured_snippets,
+        )
+        return self._client._post(
+            f"/v1/ads/campaigns/{campaign_id}/assets", data=payload
+        )
+
     def boost_post(
         self,
         account_id: str,
@@ -639,6 +659,8 @@ class AdCampaignsResource:
         additional_headlines: list[str] | None = None,
         additional_descriptions: list[str] | None = None,
         sitelinks: list[dict[str, Any]] | None = None,
+        callouts: list[str] | None = None,
+        structured_snippets: list[dict[str, Any]] | None = None,
         advantage_audience: int | None = None,
         attribution_spec: list[dict[str, Any]] | None = None,
         gender: str | None = "all",
@@ -728,6 +750,8 @@ class AdCampaignsResource:
             additional_headlines=additional_headlines,
             additional_descriptions=additional_descriptions,
             sitelinks=sitelinks,
+            callouts=callouts,
+            structured_snippets=structured_snippets,
             advantage_audience=advantage_audience,
             attribution_spec=attribution_spec,
             gender=gender,
@@ -1177,6 +1201,26 @@ class AdCampaignsResource:
         )
         return await self._client._aput(f"/v1/ads/{ad_id}/status", data=payload)
 
+    async def aattach_campaign_assets(
+        self,
+        campaign_id: str,
+        account_id: str,
+        *,
+        sitelinks: list[dict[str, Any]] | None = None,
+        callouts: list[str] | None = None,
+        structured_snippets: list[dict[str, Any]] | None = None,
+    ) -> dict[str, Any]:
+        """Attach extension assets to a Google Search campaign (async)"""
+        payload = self._build_payload(
+            account_id=account_id,
+            sitelinks=sitelinks,
+            callouts=callouts,
+            structured_snippets=structured_snippets,
+        )
+        return await self._client._apost(
+            f"/v1/ads/campaigns/{campaign_id}/assets", data=payload
+        )
+
     async def aboost_post(
         self,
         account_id: str,
@@ -1314,6 +1358,8 @@ class AdCampaignsResource:
         additional_headlines: list[str] | None = None,
         additional_descriptions: list[str] | None = None,
         sitelinks: list[dict[str, Any]] | None = None,
+        callouts: list[str] | None = None,
+        structured_snippets: list[dict[str, Any]] | None = None,
         advantage_audience: int | None = None,
         attribution_spec: list[dict[str, Any]] | None = None,
         gender: str | None = "all",
@@ -1403,6 +1449,8 @@ class AdCampaignsResource:
             additional_headlines=additional_headlines,
             additional_descriptions=additional_descriptions,
             sitelinks=sitelinks,
+            callouts=callouts,
+            structured_snippets=structured_snippets,
             advantage_audience=advantage_audience,
             attribution_spec=attribution_spec,
             gender=gender,

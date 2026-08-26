@@ -8186,8 +8186,8 @@ components:
                   distanceUnit: { type: string, enum: [mile, kilometer] }
                   name: { type: string }
                   address: { type: string, description: "Optional label, sent to Meta as `address_string`. latitude/longitude take precedence for the pin location." }
-        ageMin: { type: integer, minimum: 13, maximum: 100 }
-        ageMax: { type: integer, minimum: 13, maximum: 100 }
+        ageMin: { type: integer, minimum: 13, maximum: 100, description: "Minimum age. Applied on Meta, TikTok and Pinterest; ignored on Google, LinkedIn and X. Each platform clamps to its own range: Meta and Pinterest effectively cap at 65 (65 = 65+), TikTok maps up to 100. Pinterest has no under-18 bucket, so an ageMin below 18 starts at 18 there." }
+        ageMax: { type: integer, minimum: 13, maximum: 100, description: "Maximum age. Same per-platform application and clamping as ageMin." }
         gender: { type: string, enum: [all, male, female], description: "Restrict by gender. 'all' (default) targets everyone. Applied on Meta, TikTok and Pinterest. Ignored on Google, LinkedIn and X." }
         incomeTier:
           type: string
@@ -8552,8 +8552,12 @@ components:
           description: "Google-only. Raw campaign.advertising_channel_type (SEARCH, PERFORMANCE_MAX, LOCAL_SERVICES, VIDEO, DEMAND_GEN, DISPLAY, SHOPPING, ...). Serving surface, distinct from platformObjective (advertiser intent). Null/absent for non-Google platforms."
         platformObjective: { type: [string, "null"], description: "Raw Meta campaign objective (e.g. OUTCOME_SALES, OUTCOME_LEADS, OUTCOME_TRAFFIC)" }
         optimizationGoal:
-          type: [string, array]
-          items: { type: string }
+          # anyOf, not type: [string, array]: hey-api resolves a type-array carrying items
+          # through the array branch and drops the string one (@zernio/node 0.2.640).
+          anyOf:
+            - type: string
+            - type: array
+              items: { type: string }
           description: 'A single string when every ad set shares one optimization goal; a JSON array of the distinct goals when ad sets differ (never a comma-joined string); array element order is not guaranteed, treat it as an unordered set; the key is absent when no ad set carries a goal. Meta: e.g. OFFSITE_CONVERSIONS, VALUE, LEAD_GENERATION. LinkedIn: the campaign optimizationTargetType (e.g. MAX_CLICK, MAX_IMPRESSION, NONE); `NONE` with a manual costType is a campaign LinkedIn will not deliver.'
         bidStrategy:
           anyOf:
@@ -8630,8 +8634,12 @@ components:
           description: "Google-only. Raw campaign.advertising_channel_type. See AdTreeCampaign.advertisingChannelType."
         platformObjective: { type: [string, "null"], description: "Raw Meta campaign objective (e.g. OUTCOME_SALES, OUTCOME_LEADS, OUTCOME_TRAFFIC)" }
         optimizationGoal:
-          type: [string, array]
-          items: { type: string }
+          # anyOf, not type: [string, array]: hey-api resolves a type-array carrying items
+          # through the array branch and drops the string one (@zernio/node 0.2.640).
+          anyOf:
+            - type: string
+            - type: array
+              items: { type: string }
           description: 'A single string when every ad set shares one optimization goal; a JSON array of the distinct goals when ad sets differ (never a comma-joined string); array element order is not guaranteed, treat it as an unordered set; the key is absent when no ad set carries a goal. Meta: e.g. OFFSITE_CONVERSIONS, VALUE, LEAD_GENERATION. LinkedIn: the campaign optimizationTargetType (e.g. MAX_CLICK, MAX_IMPRESSION, NONE); `NONE` with a manual costType is a campaign LinkedIn will not deliver.'
         bidStrategy:
           anyOf:
@@ -40508,6 +40516,85 @@ paths:
         '401': { $ref: '#/components/responses/Unauthorized' }
         '404': { description: Ad not found }
 
+  /v1/ads/campaigns/{campaignId}/assets:
+    post:
+      x-resource-group: "ads"
+      operationId: attachCampaignAssets
+      tags: ["Ad Campaigns"]
+      x-platforms: ["google"]
+      summary: Attach extension assets to a Google Search campaign
+      description: |-
+        Attach sitelinks, callouts and/or structured snippets to an already-existing Google
+        Search campaign — the same builders POST /v1/ads/create uses, but without rebuilding
+        the hierarchy. At least one of sitelinks, callouts or structuredSnippets is required.
+
+        Google-only. Other platforms have no equivalent extension surface and return 501.
+
+        Approval status is Google-async; poll `asset.policy_summary` after review. Assets
+        stay in the account library even if the campaign is later deleted.
+      security:
+        - bearerAuth: []
+      parameters:
+        - { name: campaignId, in: path, required: true, schema: { type: string }, description: "Numeric Google platform campaign id." }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [accountId]
+              properties:
+                accountId: { type: string, description: "Zernio Google Ads SocialAccount id — resolves the customer id + refresh token." }
+                sitelinks:
+                  type: array
+                  minItems: 2
+                  maxItems: 20
+                  description: "See POST /v1/ads/create sitelinks — same shape."
+                  items:
+                    type: object
+                    required: [text, linkUrl]
+                    properties:
+                      text: { type: string, minLength: 1, maxLength: 25 }
+                      linkUrl: { type: string, format: uri }
+                      description1: { type: string, minLength: 1, maxLength: 35 }
+                      description2: { type: string, minLength: 1, maxLength: 35 }
+                callouts:
+                  type: array
+                  minItems: 1
+                  maxItems: 20
+                  items: { type: string, minLength: 1, maxLength: 25 }
+                structuredSnippets:
+                  type: array
+                  minItems: 1
+                  maxItems: 20
+                  items:
+                    type: object
+                    required: [header, values]
+                    properties:
+                      header:
+                        type: string
+                        enum: [Amenities, Brands, Courses, Degree programs, Destinations, Featured hotels, Insurance coverage, Models, Neighborhoods, Service catalog, Shows, Styles, Types]
+                      values:
+                        type: array
+                        minItems: 3
+                        maxItems: 10
+                        items: { type: string, minLength: 1, maxLength: 25 }
+      responses:
+        '201':
+          description: Assets attached
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  campaignId: { type: string }
+                  sitelinkAssetResourceNames: { type: array, items: { type: string } }
+                  calloutAssetResourceNames: { type: array, items: { type: string } }
+                  structuredSnippetAssetResourceNames: { type: array, items: { type: string } }
+        '400': { description: "Invalid input, or Google rejected the assets" }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '501': { description: Only supported on Google Ads }
+
   /v1/ads/campaigns/{campaignId}/analytics:
     get:
       x-resource-group: "ads"
@@ -43349,6 +43436,39 @@ paths:
                       linkUrl: { type: string, format: uri, description: "Final URL the sitelink navigates to." }
                       description1: { type: string, minLength: 1, maxLength: 35, description: "First description line under the link text (optional). 35-char cap." }
                       description2: { type: string, minLength: 1, maxLength: 35, description: "Second description line (optional; usually paired with description1)." }
+                callouts:
+                  type: array
+                  minItems: 1
+                  maxItems: 20
+                  items: { type: string, minLength: 1, maxLength: 25 }
+                  description: |
+                    Google Search only. Short callout texts (max 25 chars each) that appear as
+                    non-clickable annotations under the ad, e.g. "Free shipping", "24/7 support".
+                    Each becomes one Asset (`callout_asset`) plus a CampaignAsset link with
+                    field_type CALLOUT. Response's creative.callouts[] echoes each input plus
+                    its Google resourceName.
+                structuredSnippets:
+                  type: array
+                  minItems: 1
+                  maxItems: 20
+                  description: |
+                    Google Search only. Structured snippets — one header from Google's
+                    predefined list plus 3-10 values (max 25 chars each). Each becomes one
+                    Asset (`structured_snippet_asset`) plus a CampaignAsset link with
+                    field_type STRUCTURED_SNIPPET.
+                  items:
+                    type: object
+                    required: [header, values]
+                    properties:
+                      header:
+                        type: string
+                        enum: [Amenities, Brands, Courses, Degree programs, Destinations, Featured hotels, Insurance coverage, Models, Neighborhoods, Service catalog, Shows, Styles, Types]
+                        description: "One of Google's 13 predefined snippet headers."
+                      values:
+                        type: array
+                        minItems: 3
+                        maxItems: 10
+                        items: { type: string, minLength: 1, maxLength: 25 }
                 advantageAudience: { type: integer, enum: [0, 1], description: "Meta only. Controls the Advantage audience feature (targeting_automation). 0 = disabled (default), 1 = enabled. Meta Marketing API requires this field on all ad set creation requests." }
                 attributionSpec:
                   type: array

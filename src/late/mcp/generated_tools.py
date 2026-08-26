@@ -2996,6 +2996,42 @@ def register_generated_tools(mcp, _get_client):
 
     @mcp.tool(
         annotations=ToolAnnotations(
+            title="Attach extension assets to a Google Search campaign",
+            readOnlyHint=False,
+            destructiveHint=True,
+            openWorldHint=True,
+        )
+    )
+    def ad_campaigns_attach_campaign_assets(
+        campaign_id: str,
+        account_id: str,
+        sitelinks: list[dict[str, Any]] | None = None,
+        callouts: list[str] | None = None,
+        structured_snippets: list[dict[str, Any]] | None = None,
+    ) -> str:
+        """Attach extension assets to a Google Search campaign
+
+        Args:
+            campaign_id: Numeric Google platform campaign id. (required)
+            account_id: Zernio Google Ads SocialAccount id — resolves the customer id + refresh token. (required)
+            sitelinks: See POST /v1/ads/create sitelinks — same shape.
+            callouts
+            structured_snippets"""
+        client = _get_client()
+        try:
+            response = client.ad_campaigns.attach_campaign_assets(
+                campaign_id=campaign_id,
+                account_id=account_id,
+                sitelinks=sitelinks,
+                callouts=callouts,
+                structured_snippets=structured_snippets,
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
             title="Boost post as ad",
             readOnlyHint=False,
             destructiveHint=True,
@@ -3256,6 +3292,8 @@ def register_generated_tools(mcp, _get_client):
         additional_headlines: list[str] | None = None,
         additional_descriptions: list[str] | None = None,
         sitelinks: list[dict[str, Any]] | None = None,
+        callouts: list[str] | None = None,
+        structured_snippets: list[dict[str, Any]] | None = None,
         advantage_audience: int | None = None,
         attribution_spec: list[dict[str, Any]] | None = None,
         gender: str = "all",
@@ -3536,6 +3574,15 @@ def register_generated_tools(mcp, _get_client):
         Google requires at least two sitelinks to surface them on an ad; four or more
         is Google's own recommendation for maximum visibility. The response's
         creative.sitelinks[] echoes each input plus its Google resourceName.
+                callouts: Google Search only. Short callout texts (max 25 chars each) that appear as
+        non-clickable annotations under the ad, e.g. "Free shipping", "24/7 support".
+        Each becomes one Asset (`callout_asset`) plus a CampaignAsset link with
+        field_type CALLOUT. Response's creative.callouts[] echoes each input plus
+        its Google resourceName.
+                structured_snippets: Google Search only. Structured snippets — one header from Google's
+        predefined list plus 3-10 values (max 25 chars each). Each becomes one
+        Asset (`structured_snippet_asset`) plus a CampaignAsset link with
+        field_type STRUCTURED_SNIPPET.
                 advantage_audience: Meta only. Controls the Advantage audience feature (targeting_automation). 0 = disabled (default), 1 = enabled. Meta Marketing API requires this field on all ad set creation requests.
                 attribution_spec: Meta only. Conversion attribution window for the ad set — maps 1:1 to Meta's
         ad-set `attribution_spec`. Only honored for conversion goals (`conversions`,
@@ -3742,6 +3789,8 @@ def register_generated_tools(mcp, _get_client):
                 additional_headlines=additional_headlines,
                 additional_descriptions=additional_descriptions,
                 sitelinks=sitelinks,
+                callouts=callouts,
+                structured_snippets=structured_snippets,
                 advantage_audience=advantage_audience,
                 attribution_spec=attribution_spec,
                 gender=gender,
