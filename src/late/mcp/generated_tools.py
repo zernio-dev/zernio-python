@@ -11970,7 +11970,7 @@ def register_generated_tools(mcp, _get_client):
 
         Args:
             conversation_id: The conversation ID (required)
-            message_id: The platform message ID to react to (required)
+            message_id: The platform message ID (as returned by GET /messages) or the Zernio message ID (as returned by the reaction webhook) (required)
             account_id: Social account ID (required)
             emoji: Emoji character (e.g. "👍", "❤️") (required)"""
         client = _get_client()
@@ -12000,7 +12000,7 @@ def register_generated_tools(mcp, _get_client):
 
         Args:
             conversation_id: The conversation ID (required)
-            message_id: The platform message ID (required)
+            message_id: The platform message ID (as returned by GET /messages) or the Zernio message ID (as returned by the reaction webhook) (required)
             account_id: Social account ID (required)"""
         client = _get_client()
         try:

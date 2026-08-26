@@ -27164,7 +27164,7 @@ paths:
           in: path
           required: true
           schema: { type: string }
-          description: The platform message ID to react to
+          description: 'The platform message ID (as returned by GET /messages) or the Zernio message ID (as returned by the reaction webhook)'
       requestBody:
         required: true
         content:
@@ -27177,20 +27177,22 @@ paths:
                 emoji: { type: string, description: 'Emoji character (e.g. "👍", "❤️")', example: '👍' }
       responses:
         '200':
-          description: Reaction added
+          description: 'The platform accepted the reaction request. This does not guarantee the reaction was placed: the platform never confirms what it acted on.'
           content:
             application/json:
               schema:
                 type: object
                 properties:
                   success: { type: boolean }
+                  messageId: { type: string, description: 'The Zernio message ID the reaction was resolved against' }
+                  platformMessageId: { type: string, description: 'The platform message ID the reaction was sent for' }
         '400':
           description: Platform does not support reactions or invalid request
         '401': { $ref: '#/components/responses/Unauthorized' }
         '403':
           description: Inbox addon required
         '404':
-          description: Account or conversation not found
+          description: 'Account, conversation or message not found (message_not_found when messageId does not resolve to a message in this conversation)'
     delete:
       x-resource-group: "messages"
       operationId: removeMessageReaction
@@ -27214,7 +27216,7 @@ paths:
           in: path
           required: true
           schema: { type: string }
-          description: The platform message ID
+          description: 'The platform message ID (as returned by GET /messages) or the Zernio message ID (as returned by the reaction webhook)'
         - name: accountId
           in: query
           required: true
@@ -27222,20 +27224,22 @@ paths:
           description: Social account ID
       responses:
         '200':
-          description: Reaction removed
+          description: 'The platform accepted the removal request. This does not guarantee a reaction was removed: the platform never confirms what it acted on, and a reaction placed by the other participant cannot be removed (platform rule). Check `fromMe` on GET /messages to know who placed a reaction.'
           content:
             application/json:
               schema:
                 type: object
                 properties:
                   success: { type: boolean }
+                  messageId: { type: string, description: 'The Zernio message ID the removal was resolved against' }
+                  platformMessageId: { type: string, description: 'The platform message ID the removal was sent for' }
         '400':
           description: Platform does not support reactions or invalid request
         '401': { $ref: '#/components/responses/Unauthorized' }
         '403':
           description: Inbox addon required
         '404':
-          description: Account or conversation not found
+          description: 'Account, conversation or message not found (message_not_found when messageId does not resolve to a message in this conversation)'
 
   /v1/media/upload-direct:
     post:
@@ -43814,7 +43818,9 @@ paths:
                         thankYouButtonText: { type: string }
                         thankYouButtonType: { type: string, example: VIEW_WEBSITE }
                         thankYouWebsiteUrl: { type: string, format: uri }
+                        thankYouEnableMessenger: { type: boolean, default: false, description: "Adds a 'Continue in Messenger' option to the thank-you page (Meta thank_you_page.enable_messenger), so the lead can carry on chatting with the Page. Set thankYouButtonType to MESSAGE_BUSINESS or P2B_MESSENGER to make the chat the primary button." }
                         isOptimizedForQuality: { type: boolean, description: 'Set true for a higher-intent form (adds a review step before submit).' }
+                        isPhoneSmsVerifyEnabled: { type: boolean, default: false, description: "Requires the lead to verify their phone number over SMS before the form submits (Meta is_phone_sms_verify_enabled). Only meaningful on a form with a PHONE question. Meta can restrict this parameter to apps holding a capability: when it does, the create fails with a 422 naming platformSpecificData.isPhoneSmsVerifyEnabled, and the toggle then has to be set in Meta's form builder." }
                         blockDisplayForNonTargetedViewer: { type: boolean }
                         questionPageCustomHeadline: { type: string }
                         contextCard:
@@ -43886,7 +43892,7 @@ paths:
         '400': { $ref: '#/components/responses/BadRequest' }
         '401': { $ref: '#/components/responses/Unauthorized' }
         '403': { description: Ads add-on required. }
-        '422': { description: "Meta rejected the lead form with error code 3. The Facebook Page normally needs a Page admin to accept the Lead Ads Terms of Service." }
+        '422': { description: "Meta rejected the lead form. Code 3 is Meta's generic app-capability error and does not name a field; when the request set isPhoneSmsVerifyEnabled, the response names that field as the one to drop first." }
 
   /v1/ads/lead-forms/{formId}:
     get:
