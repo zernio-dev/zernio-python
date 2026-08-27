@@ -447,6 +447,7 @@ Both `from zernio import ...` and `from late import ...` work identically. The `
 | `ad_campaigns.update_ad_status()` | Pause or resume a single ad |
 | `ad_campaigns.delete_ad()` | Cancel an ad |
 | `ad_campaigns.delete_ad_campaign()` | Delete a campaign |
+| `ad_campaigns.delete_ad_set()` | Delete an ad set |
 | `ad_campaigns.attach_campaign_assets()` | Attach extension assets to a Google Search campaign |
 | `ad_campaigns.boost_post()` | Boost post as ad |
 | `ad_campaigns.duplicate_ad()` | Duplicate an ad |

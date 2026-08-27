@@ -395,6 +395,10 @@ class AdCampaignsResource:
         )
         return self._client._put(f"/v1/ads/ad-sets/{ad_set_id}", data=payload)
 
+    def delete_ad_set(self, ad_set_id: str) -> dict[str, Any]:
+        """Delete an ad set"""
+        return self._client._delete(f"/v1/ads/ad-sets/{ad_set_id}")
+
     def update_ad_set_status(
         self, ad_set_id: str, status: str, platform: str
     ) -> dict[str, Any]:
@@ -1091,6 +1095,10 @@ class AdCampaignsResource:
             platform_specific_data=platform_specific_data,
         )
         return await self._client._aput(f"/v1/ads/ad-sets/{ad_set_id}", data=payload)
+
+    async def adelete_ad_set(self, ad_set_id: str) -> dict[str, Any]:
+        """Delete an ad set (async)"""
+        return await self._client._adelete(f"/v1/ads/ad-sets/{ad_set_id}")
 
     async def aupdate_ad_set_status(
         self, ad_set_id: str, status: str, platform: str

@@ -2753,6 +2753,26 @@ def register_generated_tools(mcp, _get_client):
 
     @mcp.tool(
         annotations=ToolAnnotations(
+            title="Delete an ad set",
+            readOnlyHint=False,
+            destructiveHint=True,
+            openWorldHint=True,
+        )
+    )
+    def ad_campaigns_delete_ad_set(ad_set_id: str) -> str:
+        """Delete an ad set
+
+        Args:
+            ad_set_id: Platform ad set ID (required)"""
+        client = _get_client()
+        try:
+            response = client.ad_campaigns.delete_ad_set(ad_set_id=ad_set_id)
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
             title="Pause or resume a single ad set",
             readOnlyHint=False,
             destructiveHint=True,

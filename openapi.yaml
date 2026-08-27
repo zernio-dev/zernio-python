@@ -39651,7 +39651,7 @@ paths:
       x-resource-group: "ads"
       operationId: updateAdCampaign
       tags: ["Ad Campaigns"]
-      x-platforms: ["meta", "google"]
+      x-platforms: ["meta", "google", "tiktok", "linkedin", "pinterest", "x", "openai"]
       summary: Update a campaign
       description: |
         Campaign-level edits. Send at least one of `budget`, `bidStrategy`, `name`
@@ -39734,7 +39734,7 @@ paths:
       x-resource-group: "ads"
       operationId: deleteAdCampaign
       tags: ["Ad Campaigns"]
-      x-platforms: ["meta", "tiktok", "google"]
+      x-platforms: ["meta", "google", "tiktok", "linkedin", "pinterest", "x", "openai"]
       summary: Delete a campaign
       description: |
         Deletes the whole campaign on the platform, cascading to its ad sets
@@ -40083,7 +40083,7 @@ paths:
       x-resource-group: "ads"
       operationId: updateAdSet
       tags: ["Ad Campaigns"]
-      x-platforms: ["meta", "tiktok", "openai"]
+      x-platforms: ["meta", "google", "tiktok", "linkedin", "pinterest", "x", "openai"]
       summary: Update an ad set
       description: |
         Ad-set-level writes. Use this for ABO budget updates, ad-set-scoped
@@ -40236,6 +40236,38 @@ paths:
         '409': { description: "Campaign is CBO — route to /v1/ads/campaigns/{campaignId} instead" }
         '422': { description: "bidStrategy is LOWEST_COST_WITH_MIN_ROAS on OpenAI (unsupported: no ROAS-based bidding)" }
         '501': { description: "bidStrategy not supported on the platform (Meta, TikTok, and OpenAI only)" }
+    delete:
+      x-resource-group: "ads"
+      operationId: deleteAdSet
+      tags: ["Ad Campaigns"]
+      x-platforms: ["meta", "google", "tiktok", "linkedin", "pinterest", "x"]
+      summary: Delete an ad set
+      description: |
+        Deletes the ad set on the platform, cascading to its ads only (never the
+        campaign). Locally, every Ad document under the ad set is marked
+        `status: cancelled`.
+
+        Delete is soft on platforms that have no hard delete: LinkedIn moves the
+        campaign to `PENDING_DELETION`, Pinterest archives the ad group, and X
+        soft-flags the line item. Google removes the ad group. All remain readable
+        for reporting.
+      security:
+        - bearerAuth: []
+      parameters:
+        - { name: adSetId, in: path, required: true, schema: { type: string }, description: Platform ad set ID }
+      responses:
+        '200':
+          description: Ad set deleted
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  deleted: { type: boolean }
+                  adCount: { type: integer, description: Local Ad documents marked cancelled }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404': { description: Ad set not found }
+        '501': { description: Operation not supported on this platform }
 
   /v1/ads/ad-sets/{adSetId}/status:
     put:
