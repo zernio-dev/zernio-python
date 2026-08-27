@@ -4864,6 +4864,34 @@ components:
           type: string
           enum: [platform_withheld]
           description: 'Why the file is missing. platform_withheld means the platform declined to return it and retrying will not help.'
+    MediaContentType:
+      type: string
+      description: >-
+        MIME type of the file to upload. Rejected with a 400 (INVALID_FIELD_VALUE
+        on contentType) when it is not one of these values, so generic types such
+        as application/octet-stream are not accepted here.
+      example: "video/mp4"
+      enum:
+        - image/jpeg
+        - image/jpg
+        - image/png
+        - image/webp
+        - image/gif
+        - video/mp4
+        - video/mpeg
+        - video/quicktime
+        - video/avi
+        - video/x-msvideo
+        - video/webm
+        - video/x-m4v
+        - application/pdf
+        - audio/mpeg
+        - audio/mp4
+        - audio/aac
+        - audio/ogg
+        - audio/wav
+        - audio/webm
+        - audio/x-m4a
     PlatformTarget:
       type: object
       properties:
@@ -4887,24 +4915,18 @@ components:
           format: date-time
           description: Optional per-platform scheduled time override (uses post.scheduledFor when omitted)
         platformSpecificData:
-          description: Platform-specific overrides and options.
-          oneOf:
-            - $ref: '#/components/schemas/TwitterPlatformData'
-            - $ref: '#/components/schemas/ThreadsPlatformData'
-            - $ref: '#/components/schemas/FacebookPlatformData'
-            - $ref: '#/components/schemas/InstagramPlatformData'
-            - $ref: '#/components/schemas/LinkedInPlatformData'
-            - $ref: '#/components/schemas/PinterestPlatformData'
-            - $ref: '#/components/schemas/YouTubePlatformData'
-            - $ref: '#/components/schemas/GoogleBusinessPlatformData'
-            - $ref: '#/components/schemas/TikTokPlatformData'
-            - $ref: '#/components/schemas/TelegramPlatformData'
-            - $ref: '#/components/schemas/SnapchatPlatformData'
-            - $ref: '#/components/schemas/RedditPlatformData'
-            - $ref: '#/components/schemas/BlueskyPlatformData'
-            - $ref: '#/components/schemas/DiscordPlatformData'
-            - $ref: '#/components/schemas/SlackPlatformData'
+          type: object
           additionalProperties: true
+          description: >-
+            The platform-specific options stored on this target, echoed back as
+            they were sent. Typed per platform on the way in (see the
+            *PlatformData schemas on the request body); free-form on the way
+            out, because a response is not guaranteed to match exactly one of
+            those variants and generated clients that pick a variant by
+            structure reject the entire response when it doesn't. Zernio's
+            internal publishing state (snapshots, container ids, publish stage)
+            is never returned here, and the key is omitted rather than sent as
+            an empty object.
         status:
           type: string
           example: pending
@@ -13506,30 +13528,7 @@ paths:
                   description: Name of the file to upload
                   example: "my-video.mp4"
                 contentType:
-                  type: string
-                  description: MIME type of the file
-                  enum:
-                    - image/jpeg
-                    - image/jpg
-                    - image/png
-                    - image/webp
-                    - image/gif
-                    - video/mp4
-                    - video/mpeg
-                    - video/quicktime
-                    - video/avi
-                    - video/x-msvideo
-                    - video/webm
-                    - video/x-m4v
-                    - application/pdf
-                    - audio/mpeg
-                    - audio/mp4
-                    - audio/aac
-                    - audio/ogg
-                    - audio/wav
-                    - audio/webm
-                    - audio/x-m4a
-                  example: "video/mp4"
+                  $ref: '#/components/schemas/MediaContentType'
                 size:
                   type: integer
                   description: Optional file size in bytes for pre-validation (max 5GB)

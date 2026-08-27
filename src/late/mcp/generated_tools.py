@@ -11398,7 +11398,7 @@ def register_generated_tools(mcp, _get_client):
 
         Args:
             filename: Name of the file to upload (required)
-            content_type: MIME type of the file (required)
+            content_type: (required)
             size: Optional file size in bytes for pre-validation (max 5GB)"""
         client = _get_client()
         try:
