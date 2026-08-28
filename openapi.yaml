@@ -546,7 +546,7 @@ components:
     IdempotencyKeyInFlight:
       description: Same Idempotency-Key still processing; retry after a short backoff
     IdempotencyKeyReused:
-      description: Idempotency-Key reused with a different body
+      description: Idempotency-Key reused with a different request
     BadRequest:
       description: Invalid request
       content:
@@ -28262,7 +28262,24 @@ paths:
       x-resource-group: "engagement"
       operationId: replyToInboxPost
       summary: Reply to comment
-      description: Post a reply to a post or specific comment. Requires accountId in request body.
+      description: |
+        Post a reply to a post or specific comment. Requires accountId in request body.
+
+        **Idempotency:** send an `Idempotency-Key` header to make retries safe
+        (e.g. after a client-side timeout where delivery is unknown): same key +
+        same body replays the original response (with `Idempotent-Replayed: true`)
+        instead of posting the comment a second time; same key + different body
+        returns 422; a key still in flight returns 409. Keys are retained for 24
+        hours and are scoped to the credential and to this exact path, so reusing
+        a key against a different postId returns 422 rather than replaying the
+        other post's response.
+
+        Only successful (2xx) responses are stored for replay. If the request
+        throws or returns a non-2xx status the key is released, so the header
+        protects the "request succeeded but the response was lost" case. After an
+        ambiguous failure (a 5xx or a network timeout) list the post's comments
+        before retrying with the same key, and treat an empty result as
+        inconclusive rather than as proof nothing was posted.
       tags: [Comments]
       security: [{ bearerAuth: [] }]
       parameters:
@@ -28271,6 +28288,7 @@ paths:
           required: true
           description: Zernio post ID or platform-specific post ID. LinkedIn third-party posts accept full activity URN or numeric ID.
           schema: { type: string }
+        - $ref: '#/components/parameters/IdempotencyKeyHeader'
       requestBody:
         required: true
         content:
@@ -28309,6 +28327,8 @@ paths:
         '401': { $ref: '#/components/responses/Unauthorized' }
         '403':
           description: 'Inbox addon required, or the connected account is not permitted to comment on this post on the platform (code platform_api_error, type platform_error)'
+        '409': { $ref: '#/components/responses/IdempotencyKeyInFlight' }
+        '422': { $ref: '#/components/responses/IdempotencyKeyReused' }
         '429': { $ref: '#/components/responses/RateLimited' }
         '502':
           description: 'Upstream platform error (code platform_api_error, type platform_error)'
@@ -29684,7 +29704,24 @@ paths:
       x-resource-group: "engagement"
       operationId: replyToInboxReview
       summary: Reply to review
-      description: Post a reply to a review. Requires accountId in request body.
+      description: |
+        Post a reply to a review. Requires accountId in request body.
+
+        **Idempotency:** send an `Idempotency-Key` header to make retries safe
+        (e.g. after a client-side timeout where delivery is unknown): same key +
+        same body replays the original response (with `Idempotent-Replayed: true`)
+        instead of sending the reply to the platform again; same key + different
+        body returns 422; a key still in flight returns 409. Keys are retained for
+        24 hours and are scoped to the credential and to this exact path, so
+        reusing a key against a different reviewId returns 422 rather than
+        replaying the other review's response.
+
+        Only successful (2xx) responses are stored for replay. If the request
+        throws or returns a non-2xx status the key is released, so the header
+        protects the "request succeeded but the response was lost" case. After an
+        ambiguous failure (a 5xx or a network timeout) fetch the review before
+        retrying with the same key, and treat a missing reply as inconclusive
+        rather than as proof nothing was sent.
       tags: [Reviews]
       security: [{ bearerAuth: [] }]
       parameters:
@@ -29693,6 +29730,7 @@ paths:
           required: true
           schema: { type: string }
           description: Review ID (URL-encoded for Google Business)
+        - $ref: '#/components/parameters/IdempotencyKeyHeader'
       requestBody:
         required: true
         content:
@@ -29722,6 +29760,8 @@ paths:
         '401': { $ref: '#/components/responses/Unauthorized' }
         '403':
           description: Inbox addon required
+        '409': { $ref: '#/components/responses/IdempotencyKeyInFlight' }
+        '422': { $ref: '#/components/responses/IdempotencyKeyReused' }
     delete:
       x-resource-group: "engagement"
       operationId: deleteInboxReviewReply
