@@ -162,7 +162,7 @@ x-documentation:
     - `message.received` - New inbound DM or SMS received (SMS arrives with `platform: "sms"`)
     - `conversation.started` - A new conversation opened between one of your accounts and a contact, in either direction (any DM platform, and SMS); fires only the first time the thread appears
     - `message.sent` - DM sent via the API
-    - `message.edited` - A sender edited a message (Instagram, Messenger, Telegram)
+    - `message.edited` - A sender edited a message (Instagram, Messenger, Telegram, WhatsApp)
     - `message.deleted` - A sender deleted ("unsent") a message (Instagram; WhatsApp in both directions, whether the business deleted a message it sent or the customer deleted one they sent). `message.direction` tells the two apart.
     - `message.delivered` - An outgoing message was delivered (WhatsApp, Messenger, SMS)
     - `message.read` - An outgoing message was read by the recipient (WhatsApp, Messenger, Instagram)
@@ -4138,7 +4138,7 @@ components:
       description: |
         Webhook payload for message.edited events. Fires when the sender
         edits a previously-sent message. Supported platforms: Instagram,
-        Facebook Messenger, Telegram. The message object reflects the
+        Facebook Messenger, Telegram, WhatsApp. The message object reflects the
         LATEST state; editHistory contains every prior version in order
         (oldest first), so the last entry is the version immediately before
         the current content.
@@ -9459,8 +9459,8 @@ webhooks:
       summary: Message edited event
       description: |
         Fired when a sender edits a previously-sent message. Supported on
-        Instagram, Facebook Messenger, and Telegram. The payload includes the
-        full editHistory so consumers can show prior versions.
+        Instagram, Facebook Messenger, Telegram, and WhatsApp. The payload
+        includes the full editHistory so consumers can show prior versions.
       tags: [Webhook Events]
       requestBody:
         required: true
