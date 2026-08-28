@@ -16651,6 +16651,80 @@ paths:
         '400': { $ref: '#/components/responses/BadRequest' }
         '401': { $ref: '#/components/responses/Unauthorized' }
         '404': { $ref: '#/components/responses/NotFound' }
+  /v1/accounts/{accountId}/posts:
+    get:
+      x-resource-group: "accounts"
+      operationId: getAccountPosts
+      tags: [Accounts]
+      x-platforms: ["facebook", "instagram", "twitter", "bluesky", "threads", "youtube", "linkedin", "reddit", "tiktok", "pinterest"]
+      summary: List posts published on the platform
+      description: |
+        Returns the 25 most recent posts that exist on the platform for a connected account, read
+        live from the platform API. This covers everything on the account, including posts that
+        were never created through Zernio.
+
+        Use it to obtain the platform's own post id, which the analytics endpoints take as input.
+        On YouTube the returned `id` is the video ID that `GET /v1/analytics/youtube/daily-views`,
+        `/video-retention` and `/demographics` expect as `videoId`, so this endpoint is what backs
+        a video picker in your own UI.
+
+        Not every field applies to every platform: `reactionCount` is Facebook and LinkedIn,
+        `shareCount` is platform dependent, `cid` is the Bluesky content id needed to reply, and
+        `subreddit` is Reddit only. Absent fields are omitted from the response.
+
+        The account's token is refreshed before the call when it has expired. When the refresh
+        cannot recover it, the response is a 401 with code `TOKEN_EXPIRED` and the account has to
+        be reconnected.
+      parameters:
+        - name: accountId
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        '200':
+          description: Posts list
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status: { type: string, enum: [success] }
+                  posts:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id: { type: string, description: "The platform's own post id (the video ID on YouTube)" }
+                        platform: { type: string }
+                        message: { type: string, description: 'Caption or title, empty string when the post has no text' }
+                        createdTime: { type: string, format: date-time }
+                        permalink: { type: string, description: 'Public URL of the post on the platform' }
+                        picture: { type: string, description: 'Thumbnail or media URL' }
+                        mediaType: { type: string }
+                        commentCount: { type: integer }
+                        likeCount: { type: integer }
+                        reactionCount: { type: integer, description: 'Facebook and LinkedIn only' }
+                        shareCount: { type: integer }
+                        cid: { type: string, description: 'Bluesky content id, required to reply to the post' }
+                        subreddit: { type: string, description: 'Reddit only' }
+                  lastUpdated: { type: string, format: date-time }
+              example:
+                status: "success"
+                posts:
+                  - id: "dQw4w9WgXcQ"
+                    platform: "youtube"
+                    message: "How to schedule a post\n\nA short walkthrough."
+                    createdTime: "2026-08-21T09:14:03.000Z"
+                    permalink: "https://www.youtube.com/watch?v=dQw4w9WgXcQ"
+                    picture: "https://i.ytimg.com/vi/dQw4w9WgXcQ/maxresdefault.jpg"
+                    mediaType: "video"
+                    commentCount: 12
+                    likeCount: 340
+                lastUpdated: "2026-08-28T11:02:44.512Z"
+        '400':
+          description: 'Invalid accountId, platform does not support posts listing, or the account has no access token'
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404': { $ref: '#/components/responses/NotFound' }
   /v1/accounts/{accountId}/follow-status/{userId}:
     get:
       operationId: getInstagramFollowStatus
@@ -26628,6 +26702,13 @@ paths:
         Send a message in a conversation. Supports text, attachments, quick replies,
         buttons, templates, and message tags. Attachment and interactive message
         support varies by platform.
+
+        WhatsApp per-recipient rate limit: WhatsApp caps how many messages you may
+        send to the same recipient in a short window and rejects the excess with
+        error code `131056` ("Too many messages sent to this recipient"). Pace
+        sends to a single recipient at roughly 10 per minute; bursts above that
+        return a `400` with code `131056`. Sends to other recipients are
+        unaffected, so parallelise across recipients rather than flooding one.
 
         WhatsApp template messages: to send an approved template into this
         conversation (required when the 24-hour customer-service window is

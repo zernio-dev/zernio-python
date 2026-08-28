@@ -161,6 +161,10 @@ class AccountsResource:
         """Check account health"""
         return self._client._get(f"/v1/accounts/{account_id}/health")
 
+    def get_account_posts(self, account_id: str) -> dict[str, Any]:
+        """List posts published on the platform"""
+        return self._client._get(f"/v1/accounts/{account_id}/posts")
+
     def get_instagram_follow_status(
         self, account_id: str, user_id: str, *, refresh: bool | None = None
     ) -> dict[str, Any]:
@@ -645,6 +649,10 @@ class AccountsResource:
     async def aget_account_health(self, account_id: str) -> dict[str, Any]:
         """Check account health (async)"""
         return await self._client._aget(f"/v1/accounts/{account_id}/health")
+
+    async def aget_account_posts(self, account_id: str) -> dict[str, Any]:
+        """List posts published on the platform (async)"""
+        return await self._client._aget(f"/v1/accounts/{account_id}/posts")
 
     async def aget_instagram_follow_status(
         self, account_id: str, user_id: str, *, refresh: bool | None = None
