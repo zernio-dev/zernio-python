@@ -91,10 +91,20 @@ class WhatsappResource:
         )
         return self._client._get(f"/v1/whatsapp/media/{media_id}", params=params)
 
-    def get_whats_app_templates(self, account_id: str) -> dict[str, Any]:
+    def get_whats_app_templates(
+        self,
+        account_id: str,
+        *,
+        name: str | None = None,
+        language: str | None = None,
+        status: str | None = None,
+    ) -> dict[str, Any]:
         """List templates"""
         params = self._build_params(
             account_id=account_id,
+            name=name,
+            language=language,
+            status=status,
         )
         return self._client._get("/v1/whatsapp/templates", params=params)
 
@@ -126,22 +136,29 @@ class WhatsappResource:
         return self._client._post("/v1/whatsapp/templates", data=payload)
 
     def get_whats_app_template(
-        self, template_name: str, account_id: str
+        self, template_name: str, account_id: str, *, language: str | None = None
     ) -> dict[str, Any]:
         """Get template"""
         params = self._build_params(
             account_id=account_id,
+            language=language,
         )
         return self._client._get(
             f"/v1/whatsapp/templates/{template_name}", params=params
         )
 
     def update_whats_app_template(
-        self, template_name: str, account_id: str, components: list[Any]
+        self,
+        template_name: str,
+        account_id: str,
+        components: list[Any],
+        *,
+        language: str | None = None,
     ) -> dict[str, Any]:
         """Update template"""
         payload = self._build_payload(
             account_id=account_id,
+            language=language,
             components=components,
         )
         return self._client._patch(
@@ -149,14 +166,49 @@ class WhatsappResource:
         )
 
     def delete_whats_app_template(
-        self, template_name: str, account_id: str
+        self, template_name: str, account_id: str, *, language: str | None = None
     ) -> dict[str, Any]:
         """Delete template"""
         params = self._build_params(
             account_id=account_id,
+            language=language,
         )
         return self._client._delete(
             f"/v1/whatsapp/templates/{template_name}", params=params
+        )
+
+    def get_whats_app_template_by_id(
+        self, template_id: str, account_id: str
+    ) -> dict[str, Any]:
+        """Get template by id"""
+        params = self._build_params(
+            account_id=account_id,
+        )
+        return self._client._get(
+            f"/v1/whatsapp/templates/id/{template_id}", params=params
+        )
+
+    def update_whats_app_template_by_id(
+        self, template_id: str, account_id: str, components: list[Any]
+    ) -> dict[str, Any]:
+        """Update template by id"""
+        payload = self._build_payload(
+            account_id=account_id,
+            components=components,
+        )
+        return self._client._patch(
+            f"/v1/whatsapp/templates/id/{template_id}", data=payload
+        )
+
+    def delete_whats_app_template_by_id(
+        self, template_id: str, account_id: str
+    ) -> dict[str, Any]:
+        """Delete template by id"""
+        params = self._build_params(
+            account_id=account_id,
+        )
+        return self._client._delete(
+            f"/v1/whatsapp/templates/id/{template_id}", params=params
         )
 
     def get_whats_app_business_profile(self, account_id: str) -> dict[str, Any]:
@@ -525,10 +577,20 @@ class WhatsappResource:
         )
         return await self._client._aget(f"/v1/whatsapp/media/{media_id}", params=params)
 
-    async def aget_whats_app_templates(self, account_id: str) -> dict[str, Any]:
+    async def aget_whats_app_templates(
+        self,
+        account_id: str,
+        *,
+        name: str | None = None,
+        language: str | None = None,
+        status: str | None = None,
+    ) -> dict[str, Any]:
         """List templates (async)"""
         params = self._build_params(
             account_id=account_id,
+            name=name,
+            language=language,
+            status=status,
         )
         return await self._client._aget("/v1/whatsapp/templates", params=params)
 
@@ -560,22 +622,29 @@ class WhatsappResource:
         return await self._client._apost("/v1/whatsapp/templates", data=payload)
 
     async def aget_whats_app_template(
-        self, template_name: str, account_id: str
+        self, template_name: str, account_id: str, *, language: str | None = None
     ) -> dict[str, Any]:
         """Get template (async)"""
         params = self._build_params(
             account_id=account_id,
+            language=language,
         )
         return await self._client._aget(
             f"/v1/whatsapp/templates/{template_name}", params=params
         )
 
     async def aupdate_whats_app_template(
-        self, template_name: str, account_id: str, components: list[Any]
+        self,
+        template_name: str,
+        account_id: str,
+        components: list[Any],
+        *,
+        language: str | None = None,
     ) -> dict[str, Any]:
         """Update template (async)"""
         payload = self._build_payload(
             account_id=account_id,
+            language=language,
             components=components,
         )
         return await self._client._apatch(
@@ -583,14 +652,49 @@ class WhatsappResource:
         )
 
     async def adelete_whats_app_template(
-        self, template_name: str, account_id: str
+        self, template_name: str, account_id: str, *, language: str | None = None
     ) -> dict[str, Any]:
         """Delete template (async)"""
         params = self._build_params(
             account_id=account_id,
+            language=language,
         )
         return await self._client._adelete(
             f"/v1/whatsapp/templates/{template_name}", params=params
+        )
+
+    async def aget_whats_app_template_by_id(
+        self, template_id: str, account_id: str
+    ) -> dict[str, Any]:
+        """Get template by id (async)"""
+        params = self._build_params(
+            account_id=account_id,
+        )
+        return await self._client._aget(
+            f"/v1/whatsapp/templates/id/{template_id}", params=params
+        )
+
+    async def aupdate_whats_app_template_by_id(
+        self, template_id: str, account_id: str, components: list[Any]
+    ) -> dict[str, Any]:
+        """Update template by id (async)"""
+        payload = self._build_payload(
+            account_id=account_id,
+            components=components,
+        )
+        return await self._client._apatch(
+            f"/v1/whatsapp/templates/id/{template_id}", data=payload
+        )
+
+    async def adelete_whats_app_template_by_id(
+        self, template_id: str, account_id: str
+    ) -> dict[str, Any]:
+        """Delete template by id (async)"""
+        params = self._build_params(
+            account_id=account_id,
+        )
+        return await self._client._adelete(
+            f"/v1/whatsapp/templates/id/{template_id}", params=params
         )
 
     async def aget_whats_app_business_profile(self, account_id: str) -> dict[str, Any]:

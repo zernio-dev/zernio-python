@@ -17088,14 +17088,24 @@ def register_generated_tools(mcp, _get_client):
             openWorldHint=False,
         )
     )
-    def whatsapp_get_whats_app_templates(account_id: str) -> str:
+    def whatsapp_get_whats_app_templates(
+        account_id: str,
+        name: str | None = None,
+        language: str | None = None,
+        status: str | None = None,
+    ) -> str:
         """List templates
 
         Args:
-            account_id: WhatsApp social account ID (required)"""
+            account_id: WhatsApp social account ID (required)
+            name: Exact template name; returns every language variant of that family.
+            language: Exact language code (e.g. en_US).
+            status"""
         client = _get_client()
         try:
-            response = client.whatsapp.get_whats_app_templates(account_id=account_id)
+            response = client.whatsapp.get_whats_app_templates(
+                account_id=account_id, name=name, language=language, status=status
+            )
             return _format_response(response)
         except Exception as e:
             return f"Error: {e}"
@@ -17161,16 +17171,19 @@ def register_generated_tools(mcp, _get_client):
             openWorldHint=False,
         )
     )
-    def whatsapp_get_whats_app_template(template_name: str, account_id: str) -> str:
+    def whatsapp_get_whats_app_template(
+        template_name: str, account_id: str, language: str | None = None
+    ) -> str:
         """Get template
 
         Args:
-            template_name: Template name (required)
-            account_id: WhatsApp social account ID (required)"""
+            template_name: Template name (the family). (required)
+            account_id: WhatsApp social account ID (required)
+            language: Language code of the variant (e.g. en_US, es, pt_BR). Required when the family has several languages."""
         client = _get_client()
         try:
             response = client.whatsapp.get_whats_app_template(
-                template_name=template_name, account_id=account_id
+                template_name=template_name, account_id=account_id, language=language
             )
             return _format_response(response)
         except Exception as e:
@@ -17185,19 +17198,24 @@ def register_generated_tools(mcp, _get_client):
         )
     )
     def whatsapp_update_whats_app_template(
-        template_name: str, account_id: str, components: list[dict[str, Any]] | None
+        template_name: str,
+        account_id: str,
+        components: list[dict[str, Any]] | None,
+        language: str | None = None,
     ) -> str:
         """Update template
 
         Args:
-            template_name: Template name (required)
+            template_name: Template name (the family). (required)
             account_id: WhatsApp social account ID (required)
+            language: Language code of the variant to edit (e.g. en_US, es, pt_BR). Required when the family has several languages. Body only: a language query parameter on PATCH is a 400.
             components: Updated template components (required)"""
         client = _get_client()
         try:
             response = client.whatsapp.update_whats_app_template(
                 template_name=template_name,
                 account_id=account_id,
+                language=language,
                 components=components,
             )
             return _format_response(response)
@@ -17212,16 +17230,93 @@ def register_generated_tools(mcp, _get_client):
             openWorldHint=True,
         )
     )
-    def whatsapp_delete_whats_app_template(template_name: str, account_id: str) -> str:
+    def whatsapp_delete_whats_app_template(
+        template_name: str, account_id: str, language: str | None = None
+    ) -> str:
         """Delete template
 
         Args:
-            template_name: Template name (required)
-            account_id: WhatsApp social account ID (required)"""
+            template_name: Template name (the family). (required)
+            account_id: WhatsApp social account ID (required)
+            language: Delete only this language variant (e.g. es). Omit to delete the whole family."""
         client = _get_client()
         try:
             response = client.whatsapp.delete_whats_app_template(
-                template_name=template_name, account_id=account_id
+                template_name=template_name, account_id=account_id, language=language
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Get template by id",
+            readOnlyHint=True,
+            destructiveHint=False,
+            openWorldHint=False,
+        )
+    )
+    def whatsapp_get_whats_app_template_by_id(template_id: str, account_id: str) -> str:
+        """Get template by id
+
+        Args:
+            template_id: Meta template id (numeric). (required)
+            account_id: WhatsApp social account ID (required)"""
+        client = _get_client()
+        try:
+            response = client.whatsapp.get_whats_app_template_by_id(
+                template_id=template_id, account_id=account_id
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Update template by id",
+            readOnlyHint=False,
+            destructiveHint=True,
+            openWorldHint=True,
+        )
+    )
+    def whatsapp_update_whats_app_template_by_id(
+        template_id: str, account_id: str, components: list[dict[str, Any]] | None
+    ) -> str:
+        """Update template by id
+
+        Args:
+            template_id: Meta template id (numeric). (required)
+            account_id: WhatsApp social account ID (required)
+            components: Updated template components (required)"""
+        client = _get_client()
+        try:
+            response = client.whatsapp.update_whats_app_template_by_id(
+                template_id=template_id, account_id=account_id, components=components
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Delete template by id",
+            readOnlyHint=False,
+            destructiveHint=True,
+            openWorldHint=True,
+        )
+    )
+    def whatsapp_delete_whats_app_template_by_id(
+        template_id: str, account_id: str
+    ) -> str:
+        """Delete template by id
+
+        Args:
+            template_id: Meta template id (numeric). (required)
+            account_id: WhatsApp social account ID (required)"""
+        client = _get_client()
+        try:
+            response = client.whatsapp.delete_whats_app_template_by_id(
+                template_id=template_id, account_id=account_id
             )
             return _format_response(response)
         except Exception as e:

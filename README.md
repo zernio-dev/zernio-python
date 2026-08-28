@@ -916,6 +916,7 @@ Both `from zernio import ...` and `from late import ...` work identically. The `
 | `whatsapp.get_whats_app_group_chat()` | Get group info |
 | `whatsapp.get_whats_app_media()` | Download WhatsApp media |
 | `whatsapp.get_whats_app_template()` | Get template |
+| `whatsapp.get_whats_app_template_by_id()` | Get template by id |
 | `whatsapp.get_whats_app_templates()` | List templates |
 | `whatsapp.get_whatsapp_business_username()` | Get business username |
 | `whatsapp.get_whatsapp_business_username_suggestions()` | Get username suggestions |
@@ -923,8 +924,10 @@ Both `from zernio import ...` and `from late import ...` work identically. The `
 | `whatsapp.update_whats_app_display_name()` | Request display name change |
 | `whatsapp.update_whats_app_group_chat()` | Update group settings |
 | `whatsapp.update_whats_app_template()` | Update template |
+| `whatsapp.update_whats_app_template_by_id()` | Update template by id |
 | `whatsapp.delete_whats_app_group_chat()` | Delete group |
 | `whatsapp.delete_whats_app_template()` | Delete template |
+| `whatsapp.delete_whats_app_template_by_id()` | Delete template by id |
 | `whatsapp.delete_whatsapp_business_username()` | Delete business username |
 | `whatsapp.add_whats_app_group_participants()` | Add participants |
 | `whatsapp.approve_whats_app_group_join_requests()` | Approve join requests |
