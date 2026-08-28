@@ -22513,6 +22513,122 @@ paths:
         '404': { description: Account not found }
         '502': { description: Pinterest rejected the request (e.g. duplicate board name) }
 
+  /v1/accounts/{accountId}/youtube-captions:
+    get:
+      x-resource-group: "accounts"
+      operationId: getYoutubeCaptions
+      tags: [Connect]
+      summary: Get a YouTube video transcript
+      description: |
+        Returns the caption track YouTube already holds for one of the connected channel's own videos, as plain text plus timed cues. Use it instead of downloading and transcribing the video yourself.
+
+        Auto-generated (ASR) tracks are included: YouTube serves them to the channel owner, which is what the connected account is. Uploaded tracks win over auto-generated ones when both exist for a language.
+
+        Caching: we store the transcript on first read and serve it from there afterwards, so you do not need to cache it yourself. A cached read costs no YouTube quota and does not call YouTube at all. `source` tells you which happened (`youtube` on the first read, `cache` after). Pass `refresh=true` only when the captions actually changed on YouTube, since that re-downloads.
+
+        Notes:
+        - Only videos owned by this connected channel. Anything else returns 404.
+        - `contentDetails.caption` in YouTube's own API reads `false` on videos that DO have a serving auto-generated track, so it is not a usable availability signal. Call this endpoint and handle the 404.
+        - YouTube generates auto-captions only for videos with recognisable speech, and can take a few hours after upload to publish them.
+      parameters:
+        - name: accountId
+          in: path
+          required: true
+          schema: { type: string }
+          description: The connected YouTube account.
+        - name: videoId
+          in: query
+          required: true
+          schema: { type: string }
+          description: 'The YouTube video id (the `platformPostId` on a synced external post).'
+        - name: language
+          in: query
+          schema: { type: string }
+          description: 'BCP-47 language tag as YouTube labels the track. `en` also matches an `en-GB` track. Omit to take the best available track.'
+        - name: format
+          in: query
+          schema: { type: string, enum: [json, srt], default: json }
+          description: '`json` returns timed `cues`; `srt` returns the raw SubRip body instead. `text` is present either way.'
+        - name: refresh
+          in: query
+          schema: { type: boolean, default: false }
+          description: 'Re-download from YouTube instead of serving the stored copy. Spends 200 quota units.'
+      responses:
+        '200':
+          description: The transcript.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  accountId: { type: string }
+                  videoId: { type: string }
+                  language: { type: string, description: The language of the returned track. }
+                  trackId: { type: string, description: YouTube's own caption track id. }
+                  trackKind:
+                    type: string
+                    enum: [asr, standard]
+                    description: '`asr` is YouTube''s auto-generated track; `standard` was uploaded by the channel.'
+                  source:
+                    type: string
+                    enum: [cache, youtube]
+                    description: '`cache` when served from our stored copy, `youtube` when this call spent the quota units.'
+                  fetchedAt: { type: string, format: date-time, description: When the stored copy was downloaded from YouTube. }
+                  text: { type: string, description: 'The whole transcript as one paragraph, no timings.' }
+                  cues:
+                    type: array
+                    description: 'Timed cues. Present when format is json. Auto-generated cues overlap in time by design (captions roll), so `start` can precede the previous cue''s `end`.'
+                    items:
+                      type: object
+                      properties:
+                        start: { type: number, description: 'Seconds from the start of the video.' }
+                        end: { type: number }
+                        text: { type: string }
+                  srt: { type: string, description: Raw SubRip body. Present when format is srt. }
+                  availableTracks:
+                    type: array
+                    description: 'Every track on the video, so you can re-request another language. On a cached read this is the listing as it stood when we downloaded, so a language added to the video since then appears only after a `refresh=true` or when you request that language directly.'
+                    items:
+                      type: object
+                      properties:
+                        trackId: { type: string }
+                        language: { type: string }
+                        trackKind: { type: string, enum: [asr, standard] }
+                        name: { type: string, description: 'The track''s display name. Empty for auto-generated tracks.' }
+              example:
+                accountId: "68a1f2c3d4e5f6a7b8c9d0e1"
+                videoId: "sdw1FML60tM"
+                language: "en"
+                trackId: "AUieDaanCEjmJQdL7wfZbe1QDQTbseX-hToYw99pmOJitlJz868"
+                trackKind: "asr"
+                source: "cache"
+                fetchedAt: "2026-08-27T21:09:54.000Z"
+                text: "Hey, this is Mickey. I'm the founder of this portfolio of three websites which are mainly monetized via AdSense."
+                cues:
+                  - start: 1.6
+                    end: 8.88
+                    text: "Hey, this is Mickey. I'm the founder of"
+                  - start: 5.04
+                    end: 12.8
+                    text: "this portfolio of three websites"
+                availableTracks:
+                  - trackId: "AUieDaanCEjmJQdL7wfZbe1QDQTbseX-hToYw99pmOJitlJz868"
+                    language: "en"
+                    trackKind: "asr"
+                    name: ""
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404':
+          description: 'Account not found, the video does not belong to this channel (`video_not_found`), or the video has no caption track in the requested language (`captions_not_found`).'
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ErrorResponse' }
+              example:
+                error: "This video has no caption tracks. YouTube generates them only for videos with recognisable speech, and it can take a few hours after upload."
+                type: "not_found"
+                code: "captions_not_found"
+                param: "videoId"
+
   /v1/accounts/{accountId}/youtube-playlists:
     get:
       x-resource-group: "accounts"

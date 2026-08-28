@@ -8564,6 +8564,42 @@ def register_generated_tools(mcp, _get_client):
 
     @mcp.tool(
         annotations=ToolAnnotations(
+            title="Get a YouTube video transcript",
+            readOnlyHint=True,
+            destructiveHint=False,
+            openWorldHint=False,
+        )
+    )
+    def connect_get_youtube_captions(
+        account_id: str,
+        video_id: str,
+        language: str | None = None,
+        format: str = "json",
+        refresh: bool = False,
+    ) -> str:
+        """Get a YouTube video transcript
+
+        Args:
+            account_id: The connected YouTube account. (required)
+            video_id: The YouTube video id (the `platformPostId` on a synced external post). (required)
+            language: BCP-47 language tag as YouTube labels the track. `en` also matches an `en-GB` track. Omit to take the best available track.
+            format: `json` returns timed `cues`; `srt` returns the raw SubRip body instead. `text` is present either way.
+            refresh: Re-download from YouTube instead of serving the stored copy. Spends 200 quota units."""
+        client = _get_client()
+        try:
+            response = client.connect.get_youtube_captions(
+                account_id=account_id,
+                video_id=video_id,
+                language=language,
+                format=format,
+                refresh=refresh,
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
             title="List YouTube playlists",
             readOnlyHint=True,
             destructiveHint=False,

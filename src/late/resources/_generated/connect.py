@@ -604,6 +604,26 @@ class ConnectResource:
             f"/v1/accounts/{account_id}/pinterest-boards", data=payload
         )
 
+    def get_youtube_captions(
+        self,
+        account_id: str,
+        video_id: str,
+        *,
+        language: str | None = None,
+        format: str | None = "json",
+        refresh: bool | None = False,
+    ) -> dict[str, Any]:
+        """Get a YouTube video transcript"""
+        params = self._build_params(
+            video_id=video_id,
+            language=language,
+            format=format,
+            refresh=refresh,
+        )
+        return self._client._get(
+            f"/v1/accounts/{account_id}/youtube-captions", params=params
+        )
+
     def get_youtube_playlists(self, account_id: str) -> dict[str, Any]:
         """List YouTube playlists"""
         return self._client._get(f"/v1/accounts/{account_id}/youtube-playlists")
@@ -1301,6 +1321,26 @@ class ConnectResource:
         )
         return await self._client._apost(
             f"/v1/accounts/{account_id}/pinterest-boards", data=payload
+        )
+
+    async def aget_youtube_captions(
+        self,
+        account_id: str,
+        video_id: str,
+        *,
+        language: str | None = None,
+        format: str | None = "json",
+        refresh: bool | None = False,
+    ) -> dict[str, Any]:
+        """Get a YouTube video transcript (async)"""
+        params = self._build_params(
+            video_id=video_id,
+            language=language,
+            format=format,
+            refresh=refresh,
+        )
+        return await self._client._aget(
+            f"/v1/accounts/{account_id}/youtube-captions", params=params
         )
 
     async def aget_youtube_playlists(self, account_id: str) -> dict[str, Any]:

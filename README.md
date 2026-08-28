@@ -342,6 +342,7 @@ Both `from zernio import ...` and `from late import ...` work identically. The `
 | `connect.get_shopify_connect_url()` | Get Shopify OAuth connect URL |
 | `connect.get_subreddit_rules()` | Get subreddit rules |
 | `connect.get_telegram_connect_status()` | Generate Telegram code |
+| `connect.get_youtube_captions()` | Get a YouTube video transcript |
 | `connect.get_youtube_playlists()` | List YouTube playlists |
 | `connect.update_facebook_page()` | Update Facebook page |
 | `connect.update_gmb_location()` | Update GBP location |
