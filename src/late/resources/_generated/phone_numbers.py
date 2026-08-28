@@ -392,6 +392,21 @@ class PhoneNumbersResource:
             f"/v1/phone-numbers/{id}/remediate/respond", data=payload
         )
 
+    def create_phone_number_stock_watch(self, country: str) -> dict[str, Any]:
+        """Watch an out-of-stock country"""
+        payload = self._build_payload(
+            country=country,
+        )
+        return self._client._post("/v1/phone-numbers/stock-watches", data=payload)
+
+    def list_phone_number_stock_watches(self) -> dict[str, Any]:
+        """List stock watches"""
+        return self._client._get("/v1/phone-numbers/stock-watches")
+
+    def delete_phone_number_stock_watch(self, id: str) -> dict[str, Any]:
+        """Stop watching a country"""
+        return self._client._delete(f"/v1/phone-numbers/stock-watches/{id}")
+
     async def alist_phone_numbers(
         self, *, status: str | None = None, profile_id: str | None = None
     ) -> dict[str, Any]:
@@ -718,3 +733,20 @@ class PhoneNumbersResource:
         return await self._client._apost(
             f"/v1/phone-numbers/{id}/remediate/respond", data=payload
         )
+
+    async def acreate_phone_number_stock_watch(self, country: str) -> dict[str, Any]:
+        """Watch an out-of-stock country (async)"""
+        payload = self._build_payload(
+            country=country,
+        )
+        return await self._client._apost(
+            "/v1/phone-numbers/stock-watches", data=payload
+        )
+
+    async def alist_phone_number_stock_watches(self) -> dict[str, Any]:
+        """List stock watches (async)"""
+        return await self._client._aget("/v1/phone-numbers/stock-watches")
+
+    async def adelete_phone_number_stock_watch(self, id: str) -> dict[str, Any]:
+        """Stop watching a country (async)"""
+        return await self._client._adelete(f"/v1/phone-numbers/stock-watches/{id}")

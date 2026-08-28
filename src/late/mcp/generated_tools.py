@@ -13526,6 +13526,65 @@ def register_generated_tools(mcp, _get_client):
         except Exception as e:
             return f"Error: {e}"
 
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Watch an out-of-stock country",
+            readOnlyHint=False,
+            destructiveHint=True,
+            openWorldHint=True,
+        )
+    )
+    def phone_numbers_create_phone_number_stock_watch(country: str) -> str:
+        """Watch an out-of-stock country
+
+        Args:
+            country: ISO 3166-1 alpha-2 code of a country listed by GET /v1/phone-numbers/countries. (required)"""
+        client = _get_client()
+        try:
+            response = client.phone_numbers.create_phone_number_stock_watch(
+                country=country
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="List stock watches",
+            readOnlyHint=True,
+            destructiveHint=False,
+            openWorldHint=False,
+        )
+    )
+    def phone_numbers_list_phone_number_stock_watches() -> str:
+        """List stock watches"""
+        client = _get_client()
+        try:
+            response = client.phone_numbers.list_phone_number_stock_watches()
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Stop watching a country",
+            readOnlyHint=False,
+            destructiveHint=True,
+            openWorldHint=True,
+        )
+    )
+    def phone_numbers_delete_phone_number_stock_watch(id: str) -> str:
+        """Stop watching a country
+
+        Args:
+            id: (required)"""
+        client = _get_client()
+        try:
+            response = client.phone_numbers.delete_phone_number_stock_watch(id=id)
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
     # POSTS
 
     @mcp.tool(
