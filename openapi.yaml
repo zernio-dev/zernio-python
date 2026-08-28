@@ -6960,14 +6960,14 @@ components:
               totalUsd: { type: number }
               quantity: { type: number }
         peaks:
-          type: object
-          description: Peak counts over the window (Metronome COUNT metrics + live active-number count).
+          type: [object, "null"]
+          description: 'Peak counts over the window (Metronome COUNT metrics + live active-number count). Null when `profileId` / `accountId` is set.'
           properties:
             accounts: { type: integer }
             numbers: { type: integer }
         callUsage:
-          type: object
-          description: Billable call volumes over the window.
+          type: [object, "null"]
+          description: 'Billable call volumes over the window. Null when `profileId` / `accountId` is set.'
           properties:
             whatsapp:
               type: object
@@ -7001,6 +7001,61 @@ components:
             ratePercent: { type: [number, "null"], description: "Combined rate percentage, e.g. 21." }
             jurisdictionLabel: { type: [string, "null"], description: 'Human jurisdiction label, e.g. "ES VAT" or "WA sales tax".' }
             reverseCharge: { type: boolean, description: True for EU/UK B2B reverse charge (0 tax added by design). }
+        attribution:
+          type: object
+          description: 'Present with `groupBy`. The window''s spend split per profile or account; `sum(groups) + unattributed` equals `totals` per product.'
+          properties:
+            groupBy:
+              type: string
+              enum: [profile, account]
+            groups:
+              type: array
+              items:
+                $ref: '#/components/schemas/UsageAttributionGroup'
+            unattributed:
+              $ref: '#/components/schemas/UsageAttributionSlice'
+              description: 'Spend no profile/account can claim: credits, 10DLC fees, Verify, and usage whose record no longer resolves to an account. Zero for a restricted principal.'
+            totals:
+              $ref: '#/components/schemas/UsageAttributionSlice'
+              description: 'The window totals; for a restricted principal, the sum of the visible groups.'
+            restricted:
+              type: boolean
+              description: 'True when the caller (profile-scoped API key or member) cannot see every profile: `groups` are filtered, `totals` sum them, `unattributed` is zero, and the top-level `days` / `totals` / `lineItems` are projected onto the visible groups with `peaks`, `callUsage` and `tax` null.'
+        scope:
+          description: 'Present with `profileId` / `accountId`: echoes the group the payload was projected onto.'
+          oneOf:
+            - type: object
+              required: [profileId]
+              properties:
+                profileId: { type: string }
+            - type: object
+              required: [accountId]
+              properties:
+                accountId: { type: string }
+    UsageAttributionGroup:
+      allOf:
+        - $ref: '#/components/schemas/UsageAttributionSlice'
+        - type: object
+          required: [key]
+          properties:
+            key: { type: string, description: 'Profile id or account id, per `groupBy`.' }
+    UsageAttributionSlice:
+      type: object
+      properties:
+        byProduct:
+          type: object
+          description: USD per product family.
+          properties:
+            accounts: { type: number }
+            numbers: { type: number }
+            calls: { type: number }
+            sms: { type: number }
+            verify: { type: number }
+            dlc: { type: number }
+            xApi: { type: number }
+            credits: { type: number }
+            other: { type: number }
+        totalUsd: { type: number }
     UsageStats:
       type: object
       description: |
@@ -13856,6 +13911,20 @@ paths:
         Also served at `GET /v1/usage/daily`. Usage-based accounts only —
         legacy Stripe accounts get `{ "supported": false, "days": [] }`.
 
+        **Attribution (metering mode):** `groupBy=profile|account` adds an
+        `attribution` breakdown of the window's spend per profile or account,
+        assembled from your own records and pro-rated against the invoice so
+        `sum(groups) + unattributed` equals `totals` exactly. `profileId` /
+        `accountId` instead project the whole payload (`days`, `totals`,
+        `lineItems`) onto that one group; `peaks`, `callUsage` and `tax` are
+        then `null` (workspace-level facts). Projected `days` spread the
+        group's period share over each day (usage is attributed per period,
+        not per day). Profile-scoped API keys and members only see their
+        profiles' groups (`attribution.restricted: true`, with `totals`
+        summing the visible groups). Credits, 10DLC fees and Verify are always
+        unattributed. `profileId` / `accountId` on their own do not select
+        metering mode: pair them with `range`.
+
         For per-domain consumption *volumes* use `GET /v1/usage/calls` and
         `GET /v1/usage/sms`. For the billing statement (balance, credits,
         caps, payment status) use `GET /v1/billing`.
@@ -13902,6 +13971,23 @@ paths:
             Bucketing of the `days` series: `day` (one row per UTC day),
             `month` (one row per calendar month, dated to the 1st), or `total`
             (no series — read `totals`). Does not affect `totals`.
+        - name: groupBy
+          in: query
+          required: false
+          schema:
+            type: string
+            enum: [profile, account]
+          description: 'Metering mode. Adds `attribution`: the window''s spend split per profile or per account (keys are ids; resolve names via `GET /v1/profiles` / `GET /v1/accounts`).'
+        - name: profileId
+          in: query
+          required: false
+          schema: { type: string }
+          description: 'Metering mode (pair with `range`). Project the payload onto this profile''s attributed share. Mutually exclusive with `accountId`, and `groupBy` (if given) must be `profile`; 404 when the profile is not in your workspace (or outside a scoped key''s profiles).'
+        - name: accountId
+          in: query
+          required: false
+          schema: { type: string }
+          description: 'Metering mode (pair with `range`). Project the payload onto this account''s attributed share. Mutually exclusive with `profileId`, and `groupBy` (if given) must be `account`; 404 when the account is not visible to the caller.'
       responses:
         '200':
           description: |

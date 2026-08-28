@@ -91,6 +91,9 @@ class UsageResource:
         from_: str | None = None,
         to: str | None = None,
         granularity: str | None = "day",
+        group_by: str | None = None,
+        profile_id: str | None = None,
+        account_id: str | None = None,
     ) -> dict[str, Any]:
         """Usage snapshot (default) or billed-spend metering (with params)"""
         params = self._build_params(
@@ -99,6 +102,9 @@ class UsageResource:
             from_=from_,
             to=to,
             granularity=granularity,
+            group_by=group_by,
+            profile_id=profile_id,
+            account_id=account_id,
         )
         return self._client._get("/v1/usage", params=params)
 
@@ -161,6 +167,9 @@ class UsageResource:
         from_: str | None = None,
         to: str | None = None,
         granularity: str | None = "day",
+        group_by: str | None = None,
+        profile_id: str | None = None,
+        account_id: str | None = None,
     ) -> dict[str, Any]:
         """Usage snapshot (default) or billed-spend metering (with params) (async)"""
         params = self._build_params(
@@ -169,6 +178,9 @@ class UsageResource:
             from_=from_,
             to=to,
             granularity=granularity,
+            group_by=group_by,
+            profile_id=profile_id,
+            account_id=account_id,
         )
         return await self._client._aget("/v1/usage", params=params)
 

@@ -15937,6 +15937,9 @@ def register_generated_tools(mcp, _get_client):
         from_: str | None = None,
         to: str | None = None,
         granularity: str = "day",
+        group_by: str | None = None,
+        profile_id: str | None = None,
+        account_id: str | None = None,
     ) -> str:
         """Usage snapshot (default) or billed-spend metering (with params)
 
@@ -15952,7 +15955,10 @@ def register_generated_tools(mcp, _get_client):
                 to: Inclusive end (UTC date). Required when `range=custom`. Max span 366 days.
                 granularity: Bucketing of the `days` series: `day` (one row per UTC day),
         `month` (one row per calendar month, dated to the 1st), or `total`
-        (no series — read `totals`). Does not affect `totals`."""
+        (no series — read `totals`). Does not affect `totals`.
+                group_by: Metering mode. Adds `attribution`: the window's spend split per profile or per account (keys are ids; resolve names via `GET /v1/profiles` / `GET /v1/accounts`).
+                profile_id: Metering mode (pair with `range`). Project the payload onto this profile's attributed share. Mutually exclusive with `accountId`, and `groupBy` (if given) must be `profile`; 404 when the profile is not in your workspace (or outside a scoped key's profiles).
+                account_id: Metering mode (pair with `range`). Project the payload onto this account's attributed share. Mutually exclusive with `profileId`, and `groupBy` (if given) must be `account`; 404 when the account is not visible to the caller."""
         client = _get_client()
         try:
             response = client.usage.get_usage(
@@ -15961,6 +15967,9 @@ def register_generated_tools(mcp, _get_client):
                 from_=from_,
                 to=to,
                 granularity=granularity,
+                group_by=group_by,
+                profile_id=profile_id,
+                account_id=account_id,
             )
             return _format_response(response)
         except Exception as e:
