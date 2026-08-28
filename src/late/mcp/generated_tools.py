@@ -11618,6 +11618,7 @@ def register_generated_tools(mcp, _get_client):
         template_params: list[str] | None = None,
         template_button_params: list[dict[str, Any]] | None = None,
         header_media: dict[str, Any] | None = None,
+        header_location: dict[str, Any] | None = None,
     ) -> str:
         """Create conversation
 
@@ -11633,7 +11634,8 @@ def register_generated_tools(mcp, _get_client):
             template_language: WhatsApp only. Template language code (e.g. en_US).
             template_params: WhatsApp only. Template variable values as one flat array, in the order the variables appear across the whole template: text-header variables first, then body variables, then one value per dynamic URL button (in button order). Works with positional placeholders ({{1}}, {{2}}, ...) and with named placeholders ({{name}}, {{company}} - how Meta Business Manager creates templates), where values fill the named slots in order of appearance. Example - a body with {{1}}, {{2}} plus a URL button https://example.com/{{1}} takes three values: [body1, body2, buttonSuffix]. Media headers (image, video, document) are filled automatically from the approved template and take no value here (use headerMedia to override the header asset per send). Buttons that are not dynamic-URL buttons (copy-code, flow) take no value here either; use templateButtonParams.
             template_button_params: WhatsApp only. Values for template buttons that carry one at send time, each addressed by the button's position in the approved template. This is the only way to send a copy-code button's payload (a Pix payment code, a coupon) or a flow token, because templateParams is a flat array of text variables and covers dynamic URL buttons only. Supplying a button here overrides whatever templateParams would have derived for that same index, so the send never carries one button twice; repeating an index within this array is rejected with 400. Each index must name a button of the matching kind on the approved template, which is also checked before the send and returns 400 (INVALID_TEMPLATE_BUTTON_PARAM) rather than a Meta rejection.
-            header_media: WhatsApp only. Overrides a media-header template's header asset for THIS send, so a template with an image/video/document header can carry a different asset per message (e.g. each recipient their own invoice PDF). Without it, the template's approved sample asset is sent. Provide exactly one of link or id."""
+            header_media: WhatsApp only. Overrides a media-header template's header asset for THIS send, so a template with an image/video/document header can carry a different asset per message (e.g. each recipient their own invoice PDF). Without it, the template's approved sample asset is sent. Provide exactly one of link or id.
+            header_location: WhatsApp only. Required to send a template whose approved header format is LOCATION: Meta only accepts the location's lat/long at send time, never at template creation, so there is nothing to fill in automatically. Cannot be combined with headerMedia (a template has exactly one header)."""
         client = _get_client()
         try:
             response = client.messages.create_inbox_conversation(
@@ -11649,6 +11651,7 @@ def register_generated_tools(mcp, _get_client):
                 template_params=template_params,
                 template_button_params=template_button_params,
                 header_media=header_media,
+                header_location=header_location,
             )
             return _format_response(response)
         except Exception as e:

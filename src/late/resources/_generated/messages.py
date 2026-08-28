@@ -111,6 +111,7 @@ class MessagesResource:
         template_params: list[str] | None = None,
         template_button_params: list[dict[str, Any]] | None = None,
         header_media: dict[str, Any] | None = None,
+        header_location: dict[str, Any] | None = None,
     ) -> dict[str, Any]:
         """Create conversation"""
         payload = self._build_payload(
@@ -126,6 +127,7 @@ class MessagesResource:
             template_params=template_params,
             template_button_params=template_button_params,
             header_media=header_media,
+            header_location=header_location,
         )
         return self._client._post("/v1/inbox/conversations", data=payload)
 
@@ -383,6 +385,7 @@ class MessagesResource:
         template_params: list[str] | None = None,
         template_button_params: list[dict[str, Any]] | None = None,
         header_media: dict[str, Any] | None = None,
+        header_location: dict[str, Any] | None = None,
     ) -> dict[str, Any]:
         """Create conversation (async)"""
         payload = self._build_payload(
@@ -398,6 +401,7 @@ class MessagesResource:
             template_params=template_params,
             template_button_params=template_button_params,
             header_media=header_media,
+            header_location=header_location,
         )
         return await self._client._apost("/v1/inbox/conversations", data=payload)
 
