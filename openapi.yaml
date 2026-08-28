@@ -27344,6 +27344,24 @@ paths:
                           properties:
                             type: { type: string }
                             url: { type: string }
+                      messageIds:
+                        type: array
+                        description: 'Facebook/Instagram only. Present when an attachment and text were both requested: Meta has no single body shape for both, so the send is two Meta messages under the hood. First element === messageId (the attachment); second is the follow-up text.'
+                        items: { type: string }
+                      partialFailure:
+                        type: object
+                        description: 'Facebook/Instagram only. The attachment was delivered but the follow-up text message was rejected by Meta and was not stored; the response is still a 200 because the attachment send succeeded.'
+                        properties:
+                          part: { type: string, enum: [text] }
+                          error: { type: string }
+                          platformError:
+                            type: object
+                            description: "Meta's own diagnostic fields for the rejected follow-up, same shape as the 400 response's platformError."
+                            properties:
+                              code: { type: integer, description: "Meta error code" }
+                              subcode: { type: integer, description: "Meta error_subcode" }
+                              fbtraceId: { type: string, description: "Meta fbtrace_id, quote this in a Meta bug report" }
+                              type: { type: string, description: "Meta error type (e.g. OAuthException)" }
         '400':
           description: 'Bad request (e.g., attachment not supported for platform, validation error, category combined with a template or attachment, category used on a non-WhatsApp account, or the WhatsApp Business Account is not eligible for Direct Send)'
           content:
