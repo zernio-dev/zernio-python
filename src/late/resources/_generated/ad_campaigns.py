@@ -511,6 +511,7 @@ class AdCampaignsResource:
         campaign_id: str,
         account_id: str,
         *,
+        customer_id: str | None = None,
         sitelinks: list[dict[str, Any]] | None = None,
         callouts: list[str] | None = None,
         structured_snippets: list[dict[str, Any]] | None = None,
@@ -518,6 +519,7 @@ class AdCampaignsResource:
         """Attach extension assets to a Google Search campaign"""
         payload = self._build_payload(
             account_id=account_id,
+            customer_id=customer_id,
             sitelinks=sitelinks,
             callouts=callouts,
             structured_snippets=structured_snippets,
@@ -1214,6 +1216,7 @@ class AdCampaignsResource:
         campaign_id: str,
         account_id: str,
         *,
+        customer_id: str | None = None,
         sitelinks: list[dict[str, Any]] | None = None,
         callouts: list[str] | None = None,
         structured_snippets: list[dict[str, Any]] | None = None,
@@ -1221,6 +1224,7 @@ class AdCampaignsResource:
         """Attach extension assets to a Google Search campaign (async)"""
         payload = self._build_payload(
             account_id=account_id,
+            customer_id=customer_id,
             sitelinks=sitelinks,
             callouts=callouts,
             structured_snippets=structured_snippets,

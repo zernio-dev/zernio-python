@@ -41450,6 +41450,7 @@ paths:
               required: [accountId]
               properties:
                 accountId: { type: string, description: "Zernio Google Ads SocialAccount id — resolves the customer id + refresh token." }
+                customerId: { type: string, description: "Numeric Google Ads customer id. Required when the connection has multiple Google Ads accounts; optional (and inferred) when it has only one." }
                 sitelinks:
                   type: array
                   minItems: 2
@@ -41496,8 +41497,9 @@ paths:
                   sitelinkAssetResourceNames: { type: array, items: { type: string } }
                   calloutAssetResourceNames: { type: array, items: { type: string } }
                   structuredSnippetAssetResourceNames: { type: array, items: { type: string } }
-        '400': { description: "Invalid input, or Google rejected the assets" }
+        '400': { description: "Invalid input, Google rejected the assets, an unknown customerId (not one of this connection's Google Ads accounts), or a required customerId missing when the connection has multiple Google Ads accounts" }
         '401': { $ref: '#/components/responses/Unauthorized' }
+        '422': { description: "No Google Ads customer accounts on this connection. Reconnect Google Ads." }
         '501': { description: Only supported on Google Ads }
 
   /v1/ads/campaigns/{campaignId}/analytics:

@@ -3045,6 +3045,7 @@ def register_generated_tools(mcp, _get_client):
     def ad_campaigns_attach_campaign_assets(
         campaign_id: str,
         account_id: str,
+        customer_id: str | None = None,
         sitelinks: list[dict[str, Any]] | None = None,
         callouts: list[str] | None = None,
         structured_snippets: list[dict[str, Any]] | None = None,
@@ -3054,6 +3055,7 @@ def register_generated_tools(mcp, _get_client):
         Args:
             campaign_id: Numeric Google platform campaign id. (required)
             account_id: Zernio Google Ads SocialAccount id — resolves the customer id + refresh token. (required)
+            customer_id: Numeric Google Ads customer id. Required when the connection has multiple Google Ads accounts; optional (and inferred) when it has only one.
             sitelinks: See POST /v1/ads/create sitelinks — same shape.
             callouts
             structured_snippets"""
@@ -3062,6 +3064,7 @@ def register_generated_tools(mcp, _get_client):
             response = client.ad_campaigns.attach_campaign_assets(
                 campaign_id=campaign_id,
                 account_id=account_id,
+                customer_id=customer_id,
                 sitelinks=sitelinks,
                 callouts=callouts,
                 structured_snippets=structured_snippets,
