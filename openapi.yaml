@@ -8364,8 +8364,8 @@ components:
         companySizes: { type: array, items: { type: string }, description: "LinkedIn B2B only." }
         seniorities: { type: array, items: { type: string }, description: "LinkedIn B2B only." }
         jobFunctions: { type: array, items: { type: string }, description: "LinkedIn B2B only." }
-        audienceInclude: { type: array, items: { type: string }, description: "Platform audience IDs to include." }
-        audienceExclude: { type: array, items: { type: string }, description: "Platform audience IDs to exclude." }
+        audienceInclude: { type: array, items: { type: string }, description: 'Platform audience IDs to include. Not supported on any platform (no builder maps it): rejected with a 400 on ad create, boost, and reach estimate.' }
+        audienceExclude: { type: array, items: { type: string }, description: 'Platform audience IDs to exclude. Not supported on any platform (no builder maps it): rejected with a 400 on ad create, boost, and reach estimate.' }
     Ad:
       type: object
       properties:
