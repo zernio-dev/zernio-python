@@ -5030,8 +5030,7 @@ components:
             - $ref: '#/components/schemas/User'
         title:
           type: string
-          description: |
-            YouTube: title must be ≤ 100 characters.
+          description: "Stored on the post for reference/display only. This field is NOT used as the video title when publishing. To set a YouTube video title, use platformSpecificData.title on the youtube platform target (falls back to the first line of content when omitted)."
         content: { type: string }
         mediaItems:
           type: array
@@ -5048,6 +5047,7 @@ components:
           items: { type: string }
         hashtags:
           type: array
+          description: "Stored for reference only. Hashtags are NOT automatically appended to the caption when publishing. Include hashtags directly in the content field (platforms like Instagram only support hashtags as caption text). For YouTube keywords, use the tags field instead."
           items: { type: string }
         mentions:
           type: array
@@ -14459,7 +14459,9 @@ paths:
             schema:
               type: object
               properties:
-                title: { type: string }
+                title:
+                  type: string
+                  description: "Stored on the post for reference/display only. This field is NOT used as the video title when publishing. To set a YouTube video title, use platformSpecificData.title on the youtube platform target (falls back to the first line of content when omitted)."
                 content:
                   type: string
                   description: 'Post caption/text. Optional when media is attached, all platforms have customContent, every platform entry is an X Article (platformSpecificData.article), or every platform entry is a LinkedIn text-free reshare (platformSpecificData.reshareUrl with no text). Required for other text-only posts.'
@@ -14515,6 +14517,7 @@ paths:
                   items: { type: string }
                 hashtags:
                   type: array
+                  description: "Stored for reference only. Hashtags are NOT automatically appended to the caption when publishing. Include hashtags directly in the content field (platforms like Instagram only support hashtags as caption text). For YouTube keywords, use the tags field instead."
                   items: { type: string }
                 mentions:
                   type: array
@@ -15157,7 +15160,9 @@ paths:
             schema:
               type: object
               properties:
-                title: { type: string }
+                title:
+                  type: string
+                  description: "Stored on the post for reference/display only. This field is NOT used as the video title when publishing. To set a YouTube video title, use platformSpecificData.title on the youtube platform target (falls back to the first line of content when omitted)."
                 content: { type: string }
                 mediaItems:
                   type: array
@@ -15197,6 +15202,7 @@ paths:
                   items: { type: string }
                 hashtags:
                   type: array
+                  description: "Stored for reference only. Hashtags are NOT automatically appended to the caption when publishing. Include hashtags directly in the content field (platforms like Instagram only support hashtags as caption text). For YouTube keywords, use the tags field instead."
                   items: { type: string }
                 mentions:
                   type: array
