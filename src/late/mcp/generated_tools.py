@@ -2968,9 +2968,9 @@ def register_generated_tools(mcp, _get_client):
                 ad_id: (required)
                 status
                 budget
-                targeting: Meta + TikTok (demographics/interests) and Google (keyword edits only).
-        Pinterest / X / LinkedIn return 501.
-                creative: Replace the ad's creative. Meta + TikTok only.
+                targeting: Meta + TikTok (demographics/interests), Google (keyword edits only),
+        and LinkedIn (geo countries). Pinterest / X return 501.
+                creative: Replace the ad's creative. Meta, TikTok, and LinkedIn.
 
         - **Meta**: requires `headline`, `body`, `callToAction`, `linkUrl`, `imageUrl`. The
           ad's existing creative is replaced via a new `/act_X/adcreatives` upload + ad
@@ -2978,6 +2978,9 @@ def register_generated_tools(mcp, _get_client):
         - **TikTok**: patch-style. Pass any subset; `headline` is ignored (TikTok creatives
           have no headline slot). `body` becomes the in-feed `ad_text`; `linkUrl` becomes
           `landing_page_url`; `videoUrl` triggers a fresh upload.
+        - **LinkedIn**: uploads new media (image via `imageUrl` or video via `videoUrl`),
+          creates a new inline media creative on the same campaign, and pauses the old
+          creative (best-effort). The old creative is retained for historical reporting.
                 name: Rename the ad. Now propagated to Meta (POST /{ad-id}); non-Meta platforms return 501."""
         client = _get_client()
         try:
@@ -3108,6 +3111,8 @@ def register_generated_tools(mcp, _get_client):
         spark_auth_code: str | None = None,
         dsa_beneficiary: str | None = None,
         dsa_payor: str | None = None,
+        lead_gen_form_id: str | None = None,
+        status: str | None = None,
         optimization_goal: str | None = None,
     ) -> str:
         """Boost post as ad
@@ -3212,6 +3217,8 @@ def register_generated_tools(mcp, _get_client):
         (for example, an agency paying for a client's ads). Same rules as
         `dsaBeneficiary`: required for EU targeting unless the ad account has
         a default payor.
+                lead_gen_form_id: Lead Gen form ID to attach to the boosted ad's creative. REQUIRED when `goal` is `lead_generation`. On Meta this is the leadgen_forms ID (create one via POST /v1/ads/lead-forms). On LinkedIn this is the adForm ID (create one via POST /v1/ads/lead-forms with a LinkedIn account); the creative's `leadgenCallToAction.destination` is set to `urn:li:adForm:{id}`. Ignored for other goals.
+                status: Meta, TikTok, and LinkedIn. Publish state of the created entities. Omitted or ACTIVE publishes live (default); PAUSED creates them paused so you can review before they spend. On LinkedIn the whole campaign group, campaign, and creative hierarchy stays PAUSED (intendedStatus PAUSED on each).
                 optimization_goal: Meta only. Explicit ad-set `optimization_goal` override. When omitted,
         defaults to the value derived from `goal`. The value must be compatible
         with the objective Meta derives from `goal`, not with the objective used
@@ -3249,6 +3256,8 @@ def register_generated_tools(mcp, _get_client):
                 spark_auth_code=spark_auth_code,
                 dsa_beneficiary=dsa_beneficiary,
                 dsa_payor=dsa_payor,
+                lead_gen_form_id=lead_gen_form_id,
+                status=status,
                 optimization_goal=optimization_goal,
             )
             return _format_response(response)
@@ -3378,8 +3387,9 @@ def register_generated_tools(mcp, _get_client):
 
         **LinkedIn**
         - `engagement`, `traffic`, `awareness` and `video_views` create standalone Direct Sponsored Content ads. `traffic` requires `linkUrl`; `video_views` requires `video`.
+        - `lead_generation`: requires `leadGenFormId` (an adForm ID from POST /v1/ads/lead-forms). The campaign objective is set to MAX_LEAD and the creative's `leadgenCallToAction` destination is set to `urn:li:adForm:{id}`.
         - `job_applicants` requires a `platformSpecificData.jobs` creative.
-        - For `lead_generation` or `conversions` on LinkedIn, or to promote an existing post, use POST /v1/ads/boost.
+        - For `conversions` on LinkedIn, or to promote an existing post, use POST /v1/ads/boost.
 
         **OpenAI Ads**
         - Only `traffic`, `awareness`, and `conversions` are supported (other goals return 400). Maps to OpenAI's `bidding_type` (clicks, impressions, conversions respectively). `conversions` requires an active conversion event setting on the account; create a tracking tag with `defaultEventType` via the tracking-tags API (`POST /v1/accounts/{accountId}/tracking-tags`), or configure a conversion event in OpenAI Ads Manager, or the request returns 422.
@@ -3392,7 +3402,7 @@ def register_generated_tools(mcp, _get_client):
                 validate_only: Meta only, single standalone shape only (no creatives[], adSetId, or RESERVED). Dry-run: each node runs Meta's execution_options validate_only and NOTHING is created or persisted. Children need real parents, so a fresh tree validates the campaign + creative (the ad set needs its campaign to exist — pass existingCampaignId to validate it too; the ad itself is never validatable pre-create). A Meta validation failure returns the 400 verbatim; success returns 200 with per-node results instead of an ad.
                 budget_amount: Budget in WHOLE currency units (USD: 50 = $50.00), NOT cents — Meta's own Marketing API takes this same number in minor units, so it is an easy and expensive mix-up. Required on legacy + multi-creative shapes. Inherited on attach. OpenAI Ads requires a $1 minimum (its budget is lifetime-only, see budgetType).
                 budget_type: Required on legacy + multi-creative shapes. Inherited on attach. OpenAI Ads accepts lifetime only (no daily-budget concept on the platform); sending daily returns 422. OpenAI Ads lifetime budgets require `endDate` to give the lifetime cap a spend window.
-                status: Meta and TikTok. Publish state of the created entities. Omitted or ACTIVE publishes live (default, back-compat); PAUSED creates them paused so you can review before they spend. On Meta the pause is held on the campaign this call creates, leaving the ad set and ad switched on, so a single PUT /v1/ads/campaigns/{campaignId}/status with `active` brings the whole thing live. It is held at every level instead when the pause cannot rely on the campaign: `existingCampaignId` (that campaign may be running and is never touched) or `campaignStatus: ACTIVE`. On TikTok the whole campaign > ad group > ad hierarchy stays paused.
+                status: Meta, TikTok, and LinkedIn. Publish state of the created entities. Omitted or ACTIVE publishes live (default, back-compat); PAUSED creates them paused so you can review before they spend. On Meta the pause is held on the campaign this call creates, leaving the ad set and ad switched on, so a single PUT /v1/ads/campaigns/{campaignId}/status with `active` brings the whole thing live. It is held at every level instead when the pause cannot rely on the campaign: `existingCampaignId` (that campaign may be running and is never touched) or `campaignStatus: ACTIVE`. On TikTok the whole campaign > ad group > ad hierarchy stays paused. On LinkedIn the whole campaign group, campaign, and creative hierarchy stays PAUSED (intendedStatus PAUSED on each).
                 campaign_status: Meta only. Overrides `status` for the campaign level alone, so you can create a live campaign whose ad set and ad stay paused, or the reverse. Omitted, it follows `status`.
                 budget_level: Meta only. Where the budget lives, which selects the Meta budget model:
           - `adset` (default): ABO (Ad-set Budget Optimization). The budget is set on the
@@ -3409,7 +3419,7 @@ def register_generated_tools(mcp, _get_client):
                 description: Meta only (facebook/instagram). Link description — the secondary text shown below the headline (Meta's link_data.description; on video creatives mapped to video_data.link_description). When omitted, Meta auto-pulls the destination URL's OpenGraph description. Applies on legacy, attach, and placementAssets shapes; for multi-creative use creatives[].description (this field is the shared fallback). For multi-text variations use dynamicCreative.descriptions instead.
                 call_to_action: Required on legacy + attach shapes for Meta. Honoured on TikTok (passes through to the Spark Ad creative's `call_to_action`) and on LinkedIn (the CTA button on the ad; defaults to LEARN_MORE when `linkUrl` is set). LinkedIn accepts: LEARN_MORE, SIGN_UP, DOWNLOAD, SUBSCRIBE, REGISTER, JOIN, ATTEND, REQUEST_DEMO, VIEW_QUOTE, APPLY, SEE_MORE, SHOP_NOW, BUY_NOW. Ignored by Google, Pinterest, and X/Twitter.
                 link_url: Required on legacy + attach shapes (skip for multi-creative). On LinkedIn it's the ad's destination URL; required for `traffic` ads, optional for `engagement` / `awareness`. NOT required when `goal` is `lead_generation` (the ad opens a Lead Gen form instead of a destination). On LinkedIn, `imageUrl` + `linkUrl` publishes an ARTICLE-content creative; this is LinkedIn's article ad format, with the image as thumbnail and `longHeadline` as description. Required for OpenAI Ads (the chat card's target_url).
-                lead_gen_form_id: Meta Lead Gen forms only (facebook/instagram). The leadgen_forms ID to attach to the ad's creative — create one via POST /v1/ads/lead-forms. REQUIRED when `goal` is `lead_generation`, and on every ATTACH (`adSetId`) call that targets a lead ad set (the form attaches per-ad; Meta rejects a formless ad in a lead ad set). Ignored otherwise. The ad set's promoted_object.page_id + LEAD_GENERATION optimization + destination_type ON_AD are derived automatically from the goal. Both `placementAssets` (per-placement creative) and `dynamicCreative` (multi-text / multi-asset pool, e.g. multiple headlines and primary texts) ARE supported on instant-form lead ads — the form is attached for you, and for `dynamicCreative` the ad set is created as a Dynamic Creative ad set automatically (Meta requires that for any multi-text feed; there is no non-DCO multi-text path). Send a single `imageUrls` (or `videoUrls`) entry plus your text variations to get Meta's "Multiple Text Options" behavior on a lead ad.
+                lead_gen_form_id: Lead Gen form ID to attach to the ad's creative. REQUIRED when `goal` is `lead_generation`. Create one via POST /v1/ads/lead-forms. On Meta (facebook/instagram) this is the leadgen_forms ID; the ad set's promoted_object.page_id + LEAD_GENERATION optimization + destination_type ON_AD are derived automatically from the goal. On LinkedIn this is the adForm ID; the creative's `leadgenCallToAction.destination` is set to `urn:li:adForm:{id}` and the campaign objective is set to MAX_LEAD. Forms must be owned by the sponsoredAccount (not the organization) for the URN to resolve. Also required on every Meta ATTACH (`adSetId`) call that targets a lead ad set (the form attaches per-ad; Meta rejects a formless ad in a lead ad set). Both `placementAssets` (per-placement creative) and `dynamicCreative` (multi-text / multi-asset pool, e.g. multiple headlines and primary texts) ARE supported on Meta instant-form lead ads.
                 image_url: Image creative for Meta/Google/Pinterest/LinkedIn on legacy + attach shapes (mutually exclusive with `video`). Required for LinkedIn ads unless `video` is set. Not required for Google Search campaigns. For TikTok, this field carries the VIDEO URL (the TikTok ads endpoint is video-only; the field retains the `imageUrl` name for cross-platform consistency). Ignored for X/Twitter. For Google Display, treated as the landscape image (alias of `images.landscape`); supply `images.square` alongside or the request is rejected. For LinkedIn the image is uploaded to LinkedIn under the authoring Company Page (see `organizationId`); recommended ratio 1.91:1 (e.g. 1200×627). Required for OpenAI Ads (uploaded as the chat card's image; OpenAI has no video ad format).
                 images: Google Display (Responsive Display Ads) only. Google RDA requires both a landscape (1.91:1) and a square (1:1) marketing image; sending only one is rejected upstream as 'Too few.' (NOT_ENOUGH_*_MARKETING_IMAGE_ASSET). Supply both URLs here. Either this field or the legacy `imageUrl` can provide the landscape, but `square` has no legacy counterpart so it must be set here for Display.
                 video: Meta (facebook, instagram) and LinkedIn. Creates a single VIDEO ad. Mutually exclusive with `imageUrl`. Supply `url` to upload a file, or `id` to reuse a video already on the ad account (list them with GET /v1/ads/videos). Works on the single-ad and attach (`adSetId`) shapes; for Meta multi-creative, set `video` per entry inside `creatives[]` instead. For LinkedIn the video is uploaded to LinkedIn under the authoring Company Page (see `organizationId`) and the campaign format is set to SINGLE_VIDEO; LinkedIn ignores `thumbnailUrl` (it auto-generates the poster frame) — supply MP4 H.264/AAC, 3s-30min, 75KB-500MB.

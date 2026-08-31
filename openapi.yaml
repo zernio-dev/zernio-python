@@ -1384,7 +1384,7 @@ components:
                 items: { type: string }
         warnings:
           type: array
-          description: "Top-level advisory warnings (e.g. `rows_exceed_advisory_limit:500`). Empty when none."
+          description: "Top-level advisory warnings, e.g. `rows_exceed_advisory_limit:500` or `unknown_columns:<a,b,c>` (comma-separated unrecognized CSV column names). Empty when none."
           items: { type: string }
         rateLimitedAccounts:
           type: array
@@ -15304,7 +15304,26 @@ paths:
       operationId: bulkUploadPosts
       tags: [Posts]
       summary: Bulk upload from CSV
-      description: Create multiple posts by uploading a CSV file. Use dryRun=true to validate without creating posts.
+      description: |
+        Create multiple posts by uploading a CSV file. Use dryRun=true to validate without creating posts.
+
+        CSV columns:
+        - Required: `platforms`, `profiles`, and a schedule (one of `schedule_time`, a `schedule_time_<platform>` override, `publish_now=true`, `use_queue=true`, or `is_draft=true`).
+        - Content: at least one of `post_content`, `title`, or `media_urls` is required.
+        - Aliases: a handful of columns accept the JSON field name from POST /v1/posts, since integrators infer the CSV shape from that endpoint's body. When both are present the real CSV column wins, unless it is blank for that row, in which case the alias value is used.
+          - `content` aliases `post_content`
+          - `timezone` aliases `tz`
+          - `scheduledFor` aliases `schedule_time`
+          - `mediaUrls` aliases `media_urls`
+        - Per-platform overrides use three dynamic column prefixes, one column per platform (e.g. `schedule_time_instagram`, `custom_content_tiktok`, `custom_media_youtube`): `schedule_time_<platform>`, `custom_content_<platform>`, `custom_media_<platform>`.
+        - Any other column is not read. It does not error, but it is reported in the response's `warnings` array as `unknown_columns:<a,b,c>` (see BulkUploadResult), so a misnamed or unsupported column is never silently dropped.
+        - Row limits: 5000 rows is a hard cap that returns 400 above it. 500 rows is only an advisory threshold, it adds `rows_exceed_advisory_limit:500` to `warnings` and the request still processes.
+
+        Example row (header + one data row):
+        ```
+        post_content,platforms,profiles,schedule_time,tz
+        "Hello world",instagram,MyProfile,2026-09-01 10:00,America/New_York
+        ```
       parameters:
         - name: dryRun
           in: query
@@ -41295,7 +41314,10 @@ paths:
           kind on the ad group (criteria not in the list are removed); a kind left out is
           untouched. Any other `targeting` field returns 400: Google cannot mutate broad
           targeting post-create without recreating the campaign. `creative` returns 501.
-        - **Pinterest / X / LinkedIn / OpenAI Ads**: status + budget only. Sending
+        - **LinkedIn**: status, budget, targeting (geo countries only, applied to the
+          LinkedIn Campaign via PARTIAL_UPDATE), and creative (uploads new media, creates a
+          replacement inline creative on the same campaign, pauses the old one).
+        - **Pinterest / X / OpenAI Ads**: status + budget only. Sending
           `targeting` or `creative` returns 501 with code `unsupported_platform_operation`.
           OpenAI Ads budget is lifetime-only (see `budget.type` below).
       security:
@@ -41318,8 +41340,8 @@ paths:
                 targeting:
                   type: object
                   description: |
-                    Meta + TikTok (demographics/interests) and Google (keyword edits only).
-                    Pinterest / X / LinkedIn return 501.
+                    Meta + TikTok (demographics/interests), Google (keyword edits only),
+                    and LinkedIn (geo countries). Pinterest / X return 501.
                   properties:
                     keywords:
                       type: array
@@ -41351,7 +41373,7 @@ paths:
                 creative:
                   type: object
                   description: |
-                    Replace the ad's creative. Meta + TikTok only.
+                    Replace the ad's creative. Meta, TikTok, and LinkedIn.
 
                     - **Meta**: requires `headline`, `body`, `callToAction`, `linkUrl`, `imageUrl`. The
                       ad's existing creative is replaced via a new `/act_X/adcreatives` upload + ad
@@ -41359,6 +41381,9 @@ paths:
                     - **TikTok**: patch-style. Pass any subset; `headline` is ignored (TikTok creatives
                       have no headline slot). `body` becomes the in-feed `ad_text`; `linkUrl` becomes
                       `landing_page_url`; `videoUrl` triggers a fresh upload.
+                    - **LinkedIn**: uploads new media (image via `imageUrl` or video via `videoUrl`),
+                      creates a new inline media creative on the same campaign, and pauses the old
+                      creative (best-effort). The old creative is retained for historical reporting.
                   properties:
                     headline: { type: string, description: "Meta only" }
                     body: { type: string }
@@ -41381,7 +41406,7 @@ paths:
           description: Invalid status transition or budget below minimum
         '401': { $ref: '#/components/responses/Unauthorized' }
         '404': { $ref: '#/components/responses/NotFound' }
-        '501': { description: "targeting or creative not supported on the platform (Meta + TikTok only)" }
+        '501': { description: "targeting or creative not supported on the platform (supported on Meta, TikTok, and LinkedIn)" }
         '502': { description: "Meta accepted the request then failed to produce the media (upload session, chunk transfer, processing timeout, or a response with no image hash). Inspect `platformError.reason`." }
     delete:
       x-resource-group: "ads"
@@ -43670,6 +43695,11 @@ paths:
                     (for example, an agency paying for a client's ads). Same rules as
                     `dsaBeneficiary`: required for EU targeting unless the ad account has
                     a default payor.
+                leadGenFormId: { type: string, description: "Lead Gen form ID to attach to the boosted ad's creative. REQUIRED when `goal` is `lead_generation`. On Meta this is the leadgen_forms ID (create one via POST /v1/ads/lead-forms). On LinkedIn this is the adForm ID (create one via POST /v1/ads/lead-forms with a LinkedIn account); the creative's `leadgenCallToAction.destination` is set to `urn:li:adForm:{id}`. Ignored for other goals." }
+                status:
+                  type: string
+                  enum: [ACTIVE, PAUSED]
+                  description: 'Meta, TikTok, and LinkedIn. Publish state of the created entities. Omitted or ACTIVE publishes live (default); PAUSED creates them paused so you can review before they spend. On LinkedIn the whole campaign group, campaign, and creative hierarchy stays PAUSED (intendedStatus PAUSED on each).'
                 optimizationGoal:
                   type: string
                   description: |
@@ -43796,8 +43826,9 @@ paths:
 
                     **LinkedIn**
                     - `engagement`, `traffic`, `awareness` and `video_views` create standalone Direct Sponsored Content ads. `traffic` requires `linkUrl`; `video_views` requires `video`.
+                    - `lead_generation`: requires `leadGenFormId` (an adForm ID from POST /v1/ads/lead-forms). The campaign objective is set to MAX_LEAD and the creative's `leadgenCallToAction` destination is set to `urn:li:adForm:{id}`.
                     - `job_applicants` requires a `platformSpecificData.jobs` creative.
-                    - For `lead_generation` or `conversions` on LinkedIn, or to promote an existing post, use POST /v1/ads/boost.
+                    - For `conversions` on LinkedIn, or to promote an existing post, use POST /v1/ads/boost.
 
                     **OpenAI Ads**
                     - Only `traffic`, `awareness`, and `conversions` are supported (other goals return 400). Maps to OpenAI's `bidding_type` (clicks, impressions, conversions respectively). `conversions` requires an active conversion event setting on the account; create a tracking tag with `defaultEventType` via the tracking-tags API (`POST /v1/accounts/{accountId}/tracking-tags`), or configure a conversion event in OpenAI Ads Manager, or the request returns 422.
@@ -43821,7 +43852,7 @@ paths:
                 status:
                   type: string
                   enum: [ACTIVE, PAUSED]
-                  description: "Meta and TikTok. Publish state of the created entities. Omitted or ACTIVE publishes live (default, back-compat); PAUSED creates them paused so you can review before they spend. On Meta the pause is held on the campaign this call creates, leaving the ad set and ad switched on, so a single PUT /v1/ads/campaigns/{campaignId}/status with `active` brings the whole thing live. It is held at every level instead when the pause cannot rely on the campaign: `existingCampaignId` (that campaign may be running and is never touched) or `campaignStatus: ACTIVE`. On TikTok the whole campaign > ad group > ad hierarchy stays paused."
+                  description: "Meta, TikTok, and LinkedIn. Publish state of the created entities. Omitted or ACTIVE publishes live (default, back-compat); PAUSED creates them paused so you can review before they spend. On Meta the pause is held on the campaign this call creates, leaving the ad set and ad switched on, so a single PUT /v1/ads/campaigns/{campaignId}/status with `active` brings the whole thing live. It is held at every level instead when the pause cannot rely on the campaign: `existingCampaignId` (that campaign may be running and is never touched) or `campaignStatus: ACTIVE`. On TikTok the whole campaign > ad group > ad hierarchy stays paused. On LinkedIn the whole campaign group, campaign, and creative hierarchy stays PAUSED (intendedStatus PAUSED on each)."
                 campaignStatus:
                   type: string
                   enum: [ACTIVE, PAUSED]
@@ -43846,7 +43877,7 @@ paths:
                 description: { type: string, maxLength: 255, description: "Meta only (facebook/instagram). Link description — the secondary text shown below the headline (Meta's link_data.description; on video creatives mapped to video_data.link_description). When omitted, Meta auto-pulls the destination URL's OpenGraph description. Applies on legacy, attach, and placementAssets shapes; for multi-creative use creatives[].description (this field is the shared fallback). For multi-text variations use dynamicCreative.descriptions instead." }
                 callToAction: { type: string, enum: [LEARN_MORE, SHOP_NOW, SIGN_UP, BOOK_TRAVEL, CONTACT_US, DOWNLOAD, GET_OFFER, GET_QUOTE, SUBSCRIBE, WATCH_MORE, ADD_TO_CART, APPLY_NOW, BOOK_NOW, BUY_TICKETS, DONATE, DONATE_NOW, GET_DIRECTIONS, GET_SHOWTIMES, LISTEN_NOW, ORDER_NOW, PLAY_GAME, REQUEST_TIME, SEE_MENU, START_ORDER, INSTALL_MOBILE_APP, USE_APP, REGISTER, JOIN, ATTEND, REQUEST_DEMO, VIEW_QUOTE, APPLY, SEE_MORE, BUY_NOW], description: "Required on legacy + attach shapes for Meta. Honoured on TikTok (passes through to the Spark Ad creative's `call_to_action`) and on LinkedIn (the CTA button on the ad; defaults to LEARN_MORE when `linkUrl` is set). LinkedIn accepts: LEARN_MORE, SIGN_UP, DOWNLOAD, SUBSCRIBE, REGISTER, JOIN, ATTEND, REQUEST_DEMO, VIEW_QUOTE, APPLY, SEE_MORE, SHOP_NOW, BUY_NOW. Ignored by Google, Pinterest, and X/Twitter." }
                 linkUrl: { type: string, format: uri, description: "Required on legacy + attach shapes (skip for multi-creative). On LinkedIn it's the ad's destination URL; required for `traffic` ads, optional for `engagement` / `awareness`. NOT required when `goal` is `lead_generation` (the ad opens a Lead Gen form instead of a destination). On LinkedIn, `imageUrl` + `linkUrl` publishes an ARTICLE-content creative; this is LinkedIn's article ad format, with the image as thumbnail and `longHeadline` as description. Required for OpenAI Ads (the chat card's target_url)." }
-                leadGenFormId: { type: string, description: "Meta Lead Gen forms only (facebook/instagram). The leadgen_forms ID to attach to the ad's creative — create one via POST /v1/ads/lead-forms. REQUIRED when `goal` is `lead_generation`, and on every ATTACH (`adSetId`) call that targets a lead ad set (the form attaches per-ad; Meta rejects a formless ad in a lead ad set). Ignored otherwise. The ad set's promoted_object.page_id + LEAD_GENERATION optimization + destination_type ON_AD are derived automatically from the goal. Both `placementAssets` (per-placement creative) and `dynamicCreative` (multi-text / multi-asset pool, e.g. multiple headlines and primary texts) ARE supported on instant-form lead ads — the form is attached for you, and for `dynamicCreative` the ad set is created as a Dynamic Creative ad set automatically (Meta requires that for any multi-text feed; there is no non-DCO multi-text path). Send a single `imageUrls` (or `videoUrls`) entry plus your text variations to get Meta's \"Multiple Text Options\" behavior on a lead ad." }
+                leadGenFormId: { type: string, description: "Lead Gen form ID to attach to the ad's creative. REQUIRED when `goal` is `lead_generation`. Create one via POST /v1/ads/lead-forms. On Meta (facebook/instagram) this is the leadgen_forms ID; the ad set's promoted_object.page_id + LEAD_GENERATION optimization + destination_type ON_AD are derived automatically from the goal. On LinkedIn this is the adForm ID; the creative's `leadgenCallToAction.destination` is set to `urn:li:adForm:{id}` and the campaign objective is set to MAX_LEAD. Forms must be owned by the sponsoredAccount (not the organization) for the URN to resolve. Also required on every Meta ATTACH (`adSetId`) call that targets a lead ad set (the form attaches per-ad; Meta rejects a formless ad in a lead ad set). Both `placementAssets` (per-placement creative) and `dynamicCreative` (multi-text / multi-asset pool, e.g. multiple headlines and primary texts) ARE supported on Meta instant-form lead ads." }
                 imageUrl: { type: string, format: uri, description: "Image creative for Meta/Google/Pinterest/LinkedIn on legacy + attach shapes (mutually exclusive with `video`). Required for LinkedIn ads unless `video` is set. Not required for Google Search campaigns. For TikTok, this field carries the VIDEO URL (the TikTok ads endpoint is video-only; the field retains the `imageUrl` name for cross-platform consistency). Ignored for X/Twitter. For Google Display, treated as the landscape image (alias of `images.landscape`); supply `images.square` alongside or the request is rejected. For LinkedIn the image is uploaded to LinkedIn under the authoring Company Page (see `organizationId`); recommended ratio 1.91:1 (e.g. 1200×627). Required for OpenAI Ads (uploaded as the chat card's image; OpenAI has no video ad format)." }
                 images:
                   type: object
