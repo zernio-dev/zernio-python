@@ -16728,6 +16728,7 @@ paths:
         '400':
           description: 'Invalid accountId, platform does not support posts listing, or the account has no access token'
         '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { description: 'X analytics capability not enabled for this account (code X_ANALYTICS_NOT_ENABLED)' }
         '404': { $ref: '#/components/responses/NotFound' }
   /v1/accounts/{accountId}/follow-status/{userId}:
     get:
@@ -28219,7 +28220,7 @@ paths:
                             accountUsername: { type: [string, "null"] }
                             platform: { type: string }
                             error: { type: string }
-                            code: { type: [string, "null"], description: Error code if available }
+                            code: { type: [string, "null"], description: 'Error code if available (e.g. TOKEN_EXPIRED, or X_INBOX_NOT_ENABLED for an X account whose owner has not enabled X inbox)' }
                             retryAfter: { type: [integer, "null"], description: Seconds to wait before retry (rate limits) }
                       lastUpdated: { type: string, format: date-time }
                       accountsSkipped:
