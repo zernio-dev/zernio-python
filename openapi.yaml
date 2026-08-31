@@ -155,7 +155,7 @@ x-documentation:
     - `post.tiktok.url_resolved` - A published TikTok post's public URL became available. TikTok exposes the numeric video id asynchronously, so `post.published` / `post.platform.published` can carry an empty `publishedUrl` for TikTok; this event delivers the URL once resolved (at most once per platform target). Never fires for drafts or private posts, which have no public URL.
     - `post.external.created` - A native post authored outside Zernio (e.g. a Google Business Profile localPost created in the Google UI) was detected by our sync for the first time. Poll-driven (~hourly), not real-time. Payload carries `post.source: "external"`.
     - `post.external.updated` - A tracked native post's text or media changed on the platform. Edits are detected by comparing text/media structure and (where the platform exposes it) the platform's own edit timestamp; media-URL-only refreshes do not fire this.
-    - `post.external.deleted` - A tracked native post was detected as removed from the platform. `post.deletedAt` carries the detection time. Coverage is bounded to the most recent posts the platform listing returns.
+    - `post.external.deleted` - A tracked native post was detected as removed from the platform. `post.deletedAt` carries the detection time. Coverage is bounded to the most recent posts the platform listing returns, and detection is a diff against posts a prior sync already indexed, so an account for which no post has ever been indexed never emits it.
     - `account.connected` - Social account connected
     - `account.disconnected` - Social account disconnected (token expired)
     - `account.ads.initial_sync_completed` - Initial ads sync (discovery + 90-day backfill) completed for an ads-enabled account
@@ -9244,7 +9244,10 @@ webhooks:
         target. `platform.deletedAt` carries the detection time. Detection
         is listing-based: a false positive self-heals in Zernio's data when
         the post reappears, but the event is not retracted. Coverage is
-        bounded to the posts the platform listing returns.
+        bounded to the posts the platform listing returns. Detection is a diff
+        against the posts a prior sync already indexed, so an account for which no
+        post has ever been indexed can never emit this event, no matter how the
+        subscription is configured.
       tags: [Webhook Events]
       requestBody:
         required: true
@@ -9692,7 +9695,10 @@ webhooks:
       description: |
         Fired when a tracked native post is detected as removed from the platform.
         `post.deletedAt` carries the detection time. Coverage is bounded to the
-        most recent posts the platform listing returns.
+        most recent posts the platform listing returns. Detection is a diff against
+        the posts a prior sync already indexed, so an account for which no post has
+        ever been indexed can never emit this event, no matter how the subscription
+        is configured.
       tags: [Webhook Events]
       requestBody:
         required: true
