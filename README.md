@@ -280,6 +280,7 @@ Both `from zernio import ...` and `from late import ...` work identically. The `
 | `webhooks.get_webhook_settings()` | List webhooks |
 | `webhooks.update_webhook_settings()` | Update webhook |
 | `webhooks.delete_webhook_settings()` | Delete webhook |
+| `webhooks.redeliver_webhook_event()` | Redeliver a webhook event |
 | `webhooks.test_webhook()` | Send test webhook |
 
 ### API Keys

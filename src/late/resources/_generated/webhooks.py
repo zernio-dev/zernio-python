@@ -153,6 +153,14 @@ class WebhooksResource:
         )
         return self._client._get("/v1/webhooks/logs", params=params)
 
+    def redeliver_webhook_event(self, webhook_id: str, event_id: str) -> dict[str, Any]:
+        """Redeliver a webhook event"""
+        payload = self._build_payload(
+            webhook_id=webhook_id,
+            event_id=event_id,
+        )
+        return self._client._post("/v1/webhooks/logs/redeliver", data=payload)
+
     def test_webhook(self, webhook_id: str) -> dict[str, Any]:
         """Send test webhook"""
         payload = self._build_payload(
@@ -239,6 +247,16 @@ class WebhooksResource:
             event_id=event_id,
         )
         return await self._client._aget("/v1/webhooks/logs", params=params)
+
+    async def aredeliver_webhook_event(
+        self, webhook_id: str, event_id: str
+    ) -> dict[str, Any]:
+        """Redeliver a webhook event (async)"""
+        payload = self._build_payload(
+            webhook_id=webhook_id,
+            event_id=event_id,
+        )
+        return await self._client._apost("/v1/webhooks/logs/redeliver", data=payload)
 
     async def atest_webhook(self, webhook_id: str) -> dict[str, Any]:
         """Send test webhook (async)"""

@@ -17025,6 +17025,29 @@ def register_generated_tools(mcp, _get_client):
 
     @mcp.tool(
         annotations=ToolAnnotations(
+            title="Redeliver a webhook event",
+            readOnlyHint=False,
+            destructiveHint=True,
+            openWorldHint=True,
+        )
+    )
+    def webhooks_redeliver_webhook_event(webhook_id: str, event_id: str) -> str:
+        """Redeliver a webhook event
+
+        Args:
+            webhook_id: ID of the webhook subscription that delivered the event (required)
+            event_id: Stable event ID of the delivery to replay (required)"""
+        client = _get_client()
+        try:
+            response = client.webhooks.redeliver_webhook_event(
+                webhook_id=webhook_id, event_id=event_id
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
             title="Send test webhook",
             readOnlyHint=False,
             destructiveHint=True,
