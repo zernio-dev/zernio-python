@@ -7484,6 +7484,59 @@ def register_generated_tools(mcp, _get_client):
                 platform: Social media platform to connect (required)
                 profile_id: Your Zernio profile ID (get from /v1/profiles). For WhatsApp, a Zernio-provisioned number can only be connected on the profile it was provisioned to; connecting from any other profile is rejected with a 409. (required)
                 redirect_url: Your custom redirect URL after connection completes. Accepts an http(s) URL, a custom app scheme for mobile deeplinks (e.g. myapp://callback), or a relative path. Result params are appended with the URL API, so an existing query string is preserved. Standard mode appends connected={platform}&profileId=X&accountId=Y&username=Z. Headless mode appends OAuth data params for platforms requiring selection (e.g. LinkedIn orgs, Facebook pages). If no selection is needed, the account is created directly and the redirect includes accountId.
+
+        On failure, the browser is sent to the same redirect_url with `error` and `platform` appended.
+        `error` and `platform` are always present. `error_message`, `is_user_fixable`, `reason` and
+        `dashboard_url` are conditional and must be treated as optional.
+
+        This list is NOT exhaustive and new values may be added at any time. Treat an unrecognized
+        value as a generic failure rather than matching it exhaustively. Existing values are not
+        renamed or removed without notice.
+
+        OAuth and callback:
+          oauth_denied, invalid_callback, invalid_state, unsupported_platform, connection_failed,
+          internal_error, token_exchange_failed, byok_config_error, personal_account_not_supported,
+          missing_google_permissions, platform_requires_destination, reconnect_account_mismatch,
+          invalid_request
+
+        Access and limits:
+          profile_not_found, invalid_profile_id, access_denied, account_limit_exceeded,
+          profile_limit_exceeded, payment_required
+
+        Destination selection:
+          no_facebook_pages, facebook_pages_error, no_google_locations, google_locations_error,
+          google_permission_denied, no_snapchat_public_profiles, snapchat_profiles_error,
+          discord_no_guild, slack_no_team
+
+        WhatsApp:
+          whatsapp_error, one_whatsapp_per_profile, whatsapp_number_already_connected,
+          whatsapp_number_pinned_to_profile, connection_cancelled
+
+        Google Ads (platform=googleads):
+          google_ads_auth_failed, google_ads_invalid_state, google_ads_config_error,
+          google_ads_token_failed, google_ads_quota_exhausted, google_ads_callback_error
+
+        TikTok Ads (platform=tiktokads):
+          tiktok_ads_auth_failed, tiktok_ads_invalid_state, tiktok_ads_access_denied,
+          tiktok_ads_config_error, tiktok_ads_token_failed, tiktok_ads_account_not_found,
+          tiktok_ads_callback_error
+
+        X Ads (platform=xads):
+          x_ads_denied, x_ads_auth_failed, x_ads_config_error, x_ads_account_not_found,
+          x_ads_state_error, x_ads_token_failed, x_ads_token_missing, x_ads_callback_error
+
+        Shopify (platform=shopify):
+          shopify_auth_failed, shopify_config_error, shopify_invalid_state, shopify_invalid_hmac,
+          shopify_invalid_shop, shopify_missing_scopes, shopify_callback_error
+
+        1. On this endpoint every upstream OAuth error is collapsed into `oauth_denied`. The
+        provider's own value (for example Meta's `access_denied`) is not forwarded. The dedicated
+        ads flows below are different: they use their own denial slugs and `google_ads_auth_failed`
+        and `tiktok_ads_auth_failed` may carry the provider's raw error string in `error_message`.
+
+        2. On the tiktok and twitter ads flows `platform` carries the ads platform id
+        (`tiktokads`, `xads`), not the value used in the request path. The googleads and shopify
+        flows report `googleads` and `shopify`.
                 headless: When true, the user is redirected to your redirect_url with raw OAuth data (code, state) instead of Zernio's default account selection UI. Use this to build a custom connect experience.
                 login_method: Instagram only. Which of the two Instagram connection methods to use. Ignored for every other platform.
 
@@ -7563,7 +7616,12 @@ def register_generated_tools(mcp, _get_client):
         """Connect ads for a platform
 
             Args:
-                platform: Platform to connect ads for. Only platforms with ads support are accepted. (required)
+                platform: Platform to connect ads for. Only platforms with ads support are accepted.
+
+        `instagram` requires an Instagram account connected with loginMethod=facebook_login whose
+        token carries ads_management and ads_read. With an account connected through the default
+        instagram_login flow no ads account can be created; do not use this value for those accounts.
+         (required)
                 profile_id: Your Zernio profile ID (required)
                 account_id: Existing SocialAccount ID. Required for `twitter` (X Ads). Optional for `tiktok` —
         omit to enter ads-only mode (no TikTok posting account linked; ad creation uses
@@ -7576,8 +7634,12 @@ def register_generated_tools(mcp, _get_client):
         `tiktok`, `twitter` and `googleads` land on the URL unchanged, while the
         same-token platforms (`facebook`, `instagram`, `linkedin`, `pinterest`)
         append `connected`, `profileId`, `accountId`, `username` and, on API-key
-        calls, `connect_token`. On failure every platform appends error details,
-        starting with `error` and `platform`. When omitted, the browser lands on
+        calls, `connect_token`. On failure the same error contract applies as on
+        GET /v1/connect/{platform}: `error` and `platform` are always appended,
+        other params are optional, and the value list there is not exhaustive.
+        Note that on the tiktok, twitter and googleads flows `platform` carries
+        the ads platform id (`tiktokads`, `xads`, `googleads`), not the value
+        used in the request path. When omitted, the browser lands on
         the Zernio dashboard.
                 headless: Enable headless mode (same-token platforms only)
                 force: Force a fresh OAuth even when an account already exists. Normally the
@@ -12195,7 +12257,7 @@ def register_generated_tools(mcp, _get_client):
             conversation_id: The conversation ID (Zernio id or platform conversation id) (required)
             message_id: The message id as returned by the list-messages endpoint (the platform message id) (required)
             index: Zero-based position of the attachment in the message's attachments array (required)
-            account_id: Social account ID (required)
+            account_id: Social account ID. Required: without it the request returns 400 missing_required_field. (required)
             format: `redirect` (default) answers 302 to the media; `json` returns the url in the body"""
         client = _get_client()
         try:
