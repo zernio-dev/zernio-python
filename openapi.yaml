@@ -8412,12 +8412,39 @@ components:
             properties:
               id: { type: string }
               name: { type: string }
+        workPositions:
+          type: array
+          description: "Meta only. Job title entities from /v1/ads/targeting/search?dimension=workPosition. Not interchangeable with the LinkedIn `jobTitles` URN fragments."
+          items:
+            type: object
+            required: [id]
+            properties:
+              id: { type: string }
+              name: { type: string }
+        workEmployers:
+          type: array
+          description: "Meta only. Employer entities from /v1/ads/targeting/search?dimension=workEmployer."
+          items:
+            type: object
+            required: [id]
+            properties:
+              id: { type: string }
+              name: { type: string }
+        workIndustries:
+          type: array
+          description: "Meta only. Work-industry entities from /v1/ads/targeting/search?dimension=workIndustry. Not interchangeable with the LinkedIn `industries` URN fragments."
+          items:
+            type: object
+            required: [id]
+            properties:
+              id: { type: string }
+              name: { type: string }
         industries: { type: array, items: { type: string }, description: "LinkedIn B2B only. Industry URN id fragments." }
         companySizes: { type: array, items: { type: string }, description: "LinkedIn B2B only." }
         seniorities: { type: array, items: { type: string }, description: "LinkedIn B2B only." }
         jobFunctions: { type: array, items: { type: string }, description: "LinkedIn B2B only." }
-        audienceInclude: { type: array, items: { type: string }, description: 'Platform audience IDs to include. Not supported on any platform (no builder maps it): rejected with a 400 on ad create, boost, and reach estimate.' }
-        audienceExclude: { type: array, items: { type: string }, description: 'Platform audience IDs to exclude. Not supported on any platform (no builder maps it): rejected with a 400 on ad create, boost, and reach estimate.' }
+        audienceInclude: { type: array, items: { type: string }, description: 'Platform audience IDs to include, as returned by GET /v1/ads/audiences (Meta custom audience ids, TikTok audience ids, Pinterest customer list ids, LinkedIn segment ids (bare, urn:li:adSegment or urn:li:dmpSegment forms accepted), Google user list ids, X custom audience ids). Not supported on OpenAI (400).' }
+        audienceExclude: { type: array, items: { type: string }, description: 'Platform audience IDs to exclude; same ID formats as audienceInclude. Not supported on OpenAI (400).' }
     Ad:
       type: object
       properties:
@@ -40209,6 +40236,7 @@ paths:
         - { name: pageId, in: query, schema: { type: string }, description: "Meta only: Facebook Page ID. Returns only ads whose creative is backed by this Page (a Meta ad account serves ads for every Page in the Business Manager). Matches each ad's `creative.pageId`; ads with no page signal (rare IG-only creatives) never match. Mirrors the same filter on /v1/ads/campaigns and /v1/ads/tree." }
         - { name: profileId, in: query, schema: { type: string }, description: Profile ID }
         - { name: campaignId, in: query, schema: { type: string }, description: Platform campaign ID (filter ads within a campaign) }
+        - { name: adSetId, in: query, schema: { type: string }, description: "Platform ad set ID (filter ads within an ad set, the /{adset_id}/ads read of an adset-centric dashboard)." }
         - { name: platformAdId, in: query, schema: { type: string }, description: "Meta ad ID. Returns the ad with this platform-side ad ID." }
         - { name: effectiveObjectStoryId, in: query, schema: { type: string }, description: "Facebook `{pageId}_{postId}` of the post the ad's engagement lives on (Meta `effective_object_story_id`). Use to map a Business-Manager-visible post back to the Zernio ad." }
         - { name: effectiveInstagramMediaId, in: query, schema: { type: string }, description: "Instagram media ID of the boosted post (Meta `effective_instagram_media_id`). Use to map a Business-Manager-visible IG post back to the Zernio ad." }
@@ -41589,24 +41617,37 @@ paths:
                 creative:
                   type: object
                   description: |
-                    Replace the ad's creative. Meta, TikTok, and LinkedIn.
+                    Replace or patch the ad's creative. Meta, TikTok, and LinkedIn.
 
-                    - **Meta**: requires `headline`, `body`, `callToAction`, `linkUrl`, `imageUrl`. The
-                      ad's existing creative is replaced via a new `/act_X/adcreatives` upload + ad
-                      update. The old creative is retained on the ad account for historical reporting.
+                    - **Meta**: patch-style. Pass any subset — fields you omit are preserved from the
+                      live creative, including media (`image_hash`/`video_id` are reused, no re-upload)
+                      and `url_tags`. Sending the full set (`headline`, `body`, `callToAction`,
+                      `linkUrl`, `imageUrl`) rebuilds the creative from scratch instead. Partial
+                      patching reads the live `object_story_spec`, which Meta strips on SHARE /
+                      page-post / dark / asset_feed creatives — those return 422 asking for the full
+                      set. A `videoUrl`/`videoId` on an image creative is a type change and also
+                      needs the full set. `existingCreativeId` repoints the ad at a creative from
+                      GET /v1/ads/creatives and ignores every other field. Meta creatives are
+                      immutable, so any change creates a new creative and repoints the ad; the old
+                      creative is retained on the ad account for historical reporting.
                     - **TikTok**: patch-style. Pass any subset; `headline` is ignored (TikTok creatives
                       have no headline slot). `body` becomes the in-feed `ad_text`; `linkUrl` becomes
-                      `landing_page_url`; `videoUrl` triggers a fresh upload.
+                      `landing_page_url`; `videoUrl` triggers a fresh upload. `description`, `videoId`
+                      and `existingCreativeId` are Meta-only and return 400.
                     - **LinkedIn**: uploads new media (image via `imageUrl` or video via `videoUrl`),
                       creates a new inline media creative on the same campaign, and pauses the old
                       creative (best-effort). The old creative is retained for historical reporting.
+                      `videoId` and `existingCreativeId` are Meta-only and return 400.
                   properties:
-                    headline: { type: string, description: "Meta only" }
+                    headline: { type: string, description: "Meta and LinkedIn (TikTok has no headline slot)" }
                     body: { type: string }
+                    description: { type: string, maxLength: 255, description: "Link description slot (Meta `link_data.description` / `video_data.link_description`, LinkedIn creative description)." }
                     callToAction: { type: string }
                     linkUrl: { type: string, format: uri }
                     imageUrl: { type: string, format: uri }
                     videoUrl: { type: string, format: uri }
+                    videoId: { type: string, description: "Meta only. Reuse an already-uploaded ad video (from POST /v1/ads/videos or GET /v1/ads/videos) instead of re-uploading via videoUrl." }
+                    existingCreativeId: { type: string, description: "Meta only. Repoint the ad at an existing library creative (from GET /v1/ads/creatives); all other creative fields are ignored." }
                 name: { type: string, maxLength: 255, description: "Rename the ad. Now propagated to Meta (POST /{ad-id}); non-Meta platforms return 501." }
       responses:
         '200':
@@ -44277,6 +44318,33 @@ paths:
                     properties:
                       id: { type: string }
                       name: { type: string }
+                workPositions:
+                  type: array
+                  description: "Meta only. Job title entities from /v1/ads/targeting/search?dimension=workPosition. Each must include id. Rejected on other platforms (use LinkedIn's `jobTitles` there)."
+                  items:
+                    type: object
+                    required: [id]
+                    properties:
+                      id: { type: string }
+                      name: { type: string }
+                workEmployers:
+                  type: array
+                  description: "Meta only. Employer entities from /v1/ads/targeting/search?dimension=workEmployer. Each must include id."
+                  items:
+                    type: object
+                    required: [id]
+                    properties:
+                      id: { type: string }
+                      name: { type: string }
+                workIndustries:
+                  type: array
+                  description: "Meta only. Work-industry entities from /v1/ads/targeting/search?dimension=workIndustry. Each must include id. Rejected on other platforms (use LinkedIn's `industries` there)."
+                  items:
+                    type: object
+                    required: [id]
+                    properties:
+                      id: { type: string }
+                      name: { type: string }
                 incomeTier:
                   type: string
                   enum: [top_5, top_10, top_10_25, top_25_50]
@@ -45623,8 +45691,13 @@ paths:
         `POST /v1/ads/targeting/reach-estimate`, and `saved_targeting` audiences.
 
         The `dimension` param selects what is searched, `geo` (locations, further scoped
-        by `geoType`), `interest`, `behavior`, or `income`. Availability of each dimension
-        varies by platform (e.g. behaviours are Meta/TikTok only). Results are normalized
+        by `geoType`), `interest`, `behavior`, `income`, or the Meta-only work
+        demographics `workPosition`, `workEmployer` and `workIndustry` (their ids feed
+        `TargetingSpec.workPositions`/`workEmployers`/`workIndustries`). Availability of
+        each dimension varies by platform (e.g. behaviours are Meta/TikTok only).
+        Work industries are a fixed ~30-entry Meta catalog with no server-side query,
+        so `workIndustry` matching, ranking and `limit` happen in Zernio.
+        Results are normalized
         across platforms into a single shape, so the same client code consumes Meta,
         TikTok, LinkedIn, X, Pinterest, and Google results.
 
@@ -45674,7 +45747,7 @@ paths:
       parameters:
         - { name: accountId, in: query, required: true, schema: { type: string }, description: "Social account ID (a connected account on the target ad platform)." }
         - { name: q, in: query, required: true, schema: { type: string }, description: "Search query. For geo, the locality name only (no region/country suffix)." }
-        - { name: dimension, in: query, required: false, schema: { type: string, enum: [geo, interest, behavior, income], default: interest }, description: "What to search. `geo` resolves locations (scope further with `geoType`), `interest`/`behavior` resolve audience entities, `income` resolves income-tier options. Defaults to `interest` for backward compatibility with the deprecated /v1/ads/interests alias." }
+        - { name: dimension, in: query, required: false, schema: { type: string, enum: [geo, interest, behavior, income, workPosition, workEmployer, workIndustry], default: interest }, description: "What to search. `geo` resolves locations (scope further with `geoType`), `interest`/`behavior` resolve audience entities, `income` resolves income-tier options, `workPosition`/`workEmployer`/`workIndustry` resolve Meta work demographics. Defaults to `interest` for backward compatibility with the deprecated /v1/ads/interests alias." }
         - { name: geoType, in: query, required: false, schema: { type: string, enum: [all, country, region, city, subcity, neighborhood, place, zip, metro_area, geo_market], default: city }, description: "Only used when `dimension=geo`. The kind of location to resolve. `all` searches every type in one relevance-ranked call. Defaults to `city`." }
         - { name: countryCode, in: query, required: false, schema: { type: string, minLength: 2, maxLength: 2 }, description: "ISO 3166-1 alpha-2 country code (e.g. NL) to scope a geo search." }
         - { name: limit, in: query, required: false, schema: { type: integer, minimum: 1, maximum: 100, default: 25 }, description: "Maximum results to return." }

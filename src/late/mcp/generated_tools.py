@@ -2180,6 +2180,7 @@ def register_generated_tools(mcp, _get_client):
         page_id: str | None = None,
         profile_id: str | None = None,
         campaign_id: str | None = None,
+        ad_set_id: str | None = None,
         platform_ad_id: str | None = None,
         effective_object_story_id: str | None = None,
         effective_instagram_media_id: str | None = None,
@@ -2199,6 +2200,7 @@ def register_generated_tools(mcp, _get_client):
             page_id: Meta only: Facebook Page ID. Returns only ads whose creative is backed by this Page (a Meta ad account serves ads for every Page in the Business Manager). Matches each ad's `creative.pageId`; ads with no page signal (rare IG-only creatives) never match. Mirrors the same filter on /v1/ads/campaigns and /v1/ads/tree.
             profile_id: Profile ID
             campaign_id: Platform campaign ID (filter ads within a campaign)
+            ad_set_id: Platform ad set ID (filter ads within an ad set, the /{adset_id}/ads read of an adset-centric dashboard).
             platform_ad_id: Meta ad ID. Returns the ad with this platform-side ad ID.
             effective_object_story_id: Facebook `{pageId}_{postId}` of the post the ad's engagement lives on (Meta `effective_object_story_id`). Use to map a Business-Manager-visible post back to the Zernio ad.
             effective_instagram_media_id: Instagram media ID of the boosted post (Meta `effective_instagram_media_id`). Use to map a Business-Manager-visible IG post back to the Zernio ad.
@@ -2217,6 +2219,7 @@ def register_generated_tools(mcp, _get_client):
                 page_id=page_id,
                 profile_id=profile_id,
                 campaign_id=campaign_id,
+                ad_set_id=ad_set_id,
                 platform_ad_id=platform_ad_id,
                 effective_object_story_id=effective_object_story_id,
                 effective_instagram_media_id=effective_instagram_media_id,
@@ -2970,17 +2973,27 @@ def register_generated_tools(mcp, _get_client):
                 budget
                 targeting: Meta + TikTok (demographics/interests), Google (keyword edits only),
         and LinkedIn (geo countries). Pinterest / X return 501.
-                creative: Replace the ad's creative. Meta, TikTok, and LinkedIn.
+                creative: Replace or patch the ad's creative. Meta, TikTok, and LinkedIn.
 
-        - **Meta**: requires `headline`, `body`, `callToAction`, `linkUrl`, `imageUrl`. The
-          ad's existing creative is replaced via a new `/act_X/adcreatives` upload + ad
-          update. The old creative is retained on the ad account for historical reporting.
+        - **Meta**: patch-style. Pass any subset — fields you omit are preserved from the
+          live creative, including media (`image_hash`/`video_id` are reused, no re-upload)
+          and `url_tags`. Sending the full set (`headline`, `body`, `callToAction`,
+          `linkUrl`, `imageUrl`) rebuilds the creative from scratch instead. Partial
+          patching reads the live `object_story_spec`, which Meta strips on SHARE /
+          page-post / dark / asset_feed creatives — those return 422 asking for the full
+          set. A `videoUrl`/`videoId` on an image creative is a type change and also
+          needs the full set. `existingCreativeId` repoints the ad at a creative from
+          GET /v1/ads/creatives and ignores every other field. Meta creatives are
+          immutable, so any change creates a new creative and repoints the ad; the old
+          creative is retained on the ad account for historical reporting.
         - **TikTok**: patch-style. Pass any subset; `headline` is ignored (TikTok creatives
           have no headline slot). `body` becomes the in-feed `ad_text`; `linkUrl` becomes
-          `landing_page_url`; `videoUrl` triggers a fresh upload.
+          `landing_page_url`; `videoUrl` triggers a fresh upload. `description`, `videoId`
+          and `existingCreativeId` are Meta-only and return 400.
         - **LinkedIn**: uploads new media (image via `imageUrl` or video via `videoUrl`),
           creates a new inline media creative on the same campaign, and pauses the old
           creative (best-effort). The old creative is retained for historical reporting.
+          `videoId` and `existingCreativeId` are Meta-only and return 400.
                 name: Rename the ad. Now propagated to Meta (POST /{ad-id}); non-Meta platforms return 501."""
         client = _get_client()
         try:
@@ -3322,6 +3335,9 @@ def register_generated_tools(mcp, _get_client):
         metros: list[dict[str, Any]] | None = None,
         custom_locations: list[dict[str, Any]] | None = None,
         behaviors: list[dict[str, Any]] | None = None,
+        work_positions: list[dict[str, Any]] | None = None,
+        work_employers: list[dict[str, Any]] | None = None,
+        work_industries: list[dict[str, Any]] | None = None,
         income_tier: str | None = None,
         languages: list[str] | None = None,
         placements: dict[str, Any] | None = None,
@@ -3494,6 +3510,9 @@ def register_generated_tools(mcp, _get_client):
                 metros: DMA / metro-area geo targeting (Meta and TikTok). `key` is the platform's metro ID from /v1/ads/targeting/search?dimension=geo&geoType=metro (TikTok metros appear as type `metro`, e.g. the New York DMA).
                 custom_locations: Point-radius (lat/lng) geo targeting. Meta only (custom_locations). Rejected on platforms without radius support.
                 behaviors: Behaviour entities from /v1/ads/targeting/search?dimension=behavior. Supported on Meta and TikTok. Each must include id.
+                work_positions: Meta only. Job title entities from /v1/ads/targeting/search?dimension=workPosition. Each must include id. Rejected on other platforms (use LinkedIn's `jobTitles` there).
+                work_employers: Meta only. Employer entities from /v1/ads/targeting/search?dimension=workEmployer. Each must include id.
+                work_industries: Meta only. Work-industry entities from /v1/ads/targeting/search?dimension=workIndustry. Each must include id. Rejected on other platforms (use LinkedIn's `industries` there).
                 income_tier: Normalized household-income tier. Meta and TikTok express all four; Google maps only
         `top_10`; rejected on LinkedIn, X, and Pinterest. On Meta, income targeting is incompatible
         with housing/employment/credit `specialAdCategories`.
@@ -3820,6 +3839,9 @@ def register_generated_tools(mcp, _get_client):
                 metros=metros,
                 custom_locations=custom_locations,
                 behaviors=behaviors,
+                work_positions=work_positions,
+                work_employers=work_employers,
+                work_industries=work_industries,
                 income_tier=income_tier,
                 languages=languages,
                 placements=placements,
@@ -4847,7 +4869,7 @@ def register_generated_tools(mcp, _get_client):
         Args:
             account_id: Social account ID (a connected account on the target ad platform). (required)
             q: Search query. For geo, the locality name only (no region/country suffix). (required)
-            dimension: What to search. `geo` resolves locations (scope further with `geoType`), `interest`/`behavior` resolve audience entities, `income` resolves income-tier options. Defaults to `interest` for backward compatibility with the deprecated /v1/ads/interests alias.
+            dimension: What to search. `geo` resolves locations (scope further with `geoType`), `interest`/`behavior` resolve audience entities, `income` resolves income-tier options, `workPosition`/`workEmployer`/`workIndustry` resolve Meta work demographics. Defaults to `interest` for backward compatibility with the deprecated /v1/ads/interests alias.
             geo_type: Only used when `dimension=geo`. The kind of location to resolve. `all` searches every type in one relevance-ranked call. Defaults to `city`.
             country_code: ISO 3166-1 alpha-2 country code (e.g. NL) to scope a geo search.
             limit: Maximum results to return."""
