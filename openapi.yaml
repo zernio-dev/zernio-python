@@ -40722,6 +40722,8 @@ paths:
         '400':
           description: Invalid input or campaign spans multiple social accounts
         '401': { $ref: '#/components/responses/Unauthorized' }
+        '403':
+          description: 'Returned with code `ads_allowance_exceeded` when the team has no payment method on file and has reached the 500 free live ads: add a card to resume.'
         '404':
           description: No ads found for this campaign
 
@@ -40805,6 +40807,8 @@ paths:
                   platformSpecificData: { type: object }
         '400': { description: "Invalid input, or a field the resolved platform does not support at the campaign level (see the support table)" }
         '401': { $ref: '#/components/responses/Unauthorized' }
+        '403':
+          description: 'Returned with code `ads_allowance_exceeded` when the team has no payment method on file and has reached the 500 free live ads: add a card to resume.'
         '404': { description: Campaign not found }
         '409': { description: "Campaign is ABO — route to /v1/ads/ad-sets/{adSetId} instead" }
         '501': { description: Operation not supported on this platform }
@@ -40914,6 +40918,8 @@ paths:
         '400': { description: Invalid input }
         '401': { $ref: '#/components/responses/Unauthorized' }
 
+        '403':
+          description: 'Returned with code `ads_allowance_exceeded` when the team has no payment method on file and has reached the 500 free live ads: add a card to resume.'
   /v1/ads/campaigns/{campaignId}/duplicate:
     post:
       x-resource-group: "ads"
@@ -41008,6 +41014,8 @@ paths:
                     description: Platform-native response from the copy endpoint (Meta includes ad_object_ids for child copies)
         '400': { description: Invalid input }
         '401': { $ref: '#/components/responses/Unauthorized' }
+        '403':
+          description: 'Returned with code `ads_allowance_exceeded` when the team has no payment method on file and has reached the 500 free live ads: add a card to resume.'
         '404': { description: Source campaign not found }
         '501': { description: Operation not supported on this platform }
 
@@ -41069,6 +41077,8 @@ paths:
                   raw: { type: object, description: Meta's native copy response (includes ad_object_ids for child copies) }
         '400': { description: Invalid input }
         '401': { $ref: '#/components/responses/Unauthorized' }
+        '403':
+          description: 'Returned with code `ads_allowance_exceeded` when the team has no payment method on file and has reached the 500 free live ads: add a card to resume.'
         '404': { description: Source ad set not found }
         '501': { description: Only supported on Meta (facebook/instagram) }
 
@@ -41124,6 +41134,8 @@ paths:
                   raw: { type: object }
         '400': { description: Invalid input }
         '401': { $ref: '#/components/responses/Unauthorized' }
+        '403':
+          description: 'Returned with code `ads_allowance_exceeded` when the team has no payment method on file and has reached the 500 free live ads: add a card to resume.'
         '404': { description: Ad not found }
         '501': { description: Only supported on Meta (facebook/instagram) }
 
@@ -41311,6 +41323,8 @@ paths:
                   platformSpecificData: { type: object }
         '400': { description: Invalid input }
         '401': { $ref: '#/components/responses/Unauthorized' }
+        '403':
+          description: 'Returned with code `ads_allowance_exceeded` when the team has no payment method on file and has reached the 500 free live ads: add a card to resume.'
         '404': { description: Ad set not found }
         '409': { description: "Campaign is CBO — route to /v1/ads/campaigns/{campaignId} instead" }
         '422': { description: "bidStrategy is LOWEST_COST_WITH_MIN_ROAS on OpenAI (unsupported: no ROAS-based bidding)" }
@@ -41406,6 +41420,8 @@ paths:
                   message: { type: string, description: 'Present only where the platform has no ad-set switch and no child ad was actionable' }
         '400': { description: Invalid input }
         '401': { $ref: '#/components/responses/Unauthorized' }
+        '403':
+          description: 'Returned with code `ads_allowance_exceeded` when the team has no payment method on file and has reached the 500 free live ads: add a card to resume.'
         '404': { description: Ad set not found }
 
   /v1/ads/tree:
@@ -41692,6 +41708,8 @@ paths:
         '400':
           description: 'Invalid status transition, budget below minimum, or a LinkedIn creative update without imageUrl or videoUrl'
         '401': { $ref: '#/components/responses/Unauthorized' }
+        '403':
+          description: 'Returned with code `ads_allowance_exceeded` when the team has no payment method on file and has reached the 500 free live ads: add a card to resume.'
         '404': { $ref: '#/components/responses/NotFound' }
         '501': { description: "targeting or creative not supported on the platform (supported on Meta, TikTok, and LinkedIn)" }
         '502': { description: "Meta accepted the request then failed to produce the media (upload session, chunk transfer, processing timeout, or a response with no image hash). Inspect `platformError.reason`." }
@@ -41762,6 +41780,8 @@ paths:
                   message: { type: string, description: "Human-readable summary (present only when skipped)" }
         '400': { description: Invalid input }
         '401': { $ref: '#/components/responses/Unauthorized' }
+        '403':
+          description: 'Returned with code `ads_allowance_exceeded` when the team has no payment method on file and has reached the 500 free live ads: add a card to resume.'
         '404': { description: Ad not found }
 
   /v1/ads/campaigns/{campaignId}/assets:
@@ -41842,6 +41862,8 @@ paths:
                   structuredSnippetAssetResourceNames: { type: array, items: { type: string } }
         '400': { description: "Invalid input, Google rejected the assets, an unknown customerId (not one of this connection's Google Ads accounts), or a required customerId missing when the connection has multiple Google Ads accounts" }
         '401': { $ref: '#/components/responses/Unauthorized' }
+        '403':
+          description: 'Returned with code `ads_allowance_exceeded` when the team has no payment method on file and has reached the 500 free live ads: add a card to resume.'
         '422': { description: "No Google Ads customer accounts on this connection. Reconnect Google Ads." }
         '501': { description: Only supported on Google Ads }
 
@@ -42488,6 +42510,8 @@ paths:
       responses:
         '200': { description: "Updated" }
         '401': { $ref: '#/components/responses/Unauthorized' }
+        '403':
+          description: 'Returned with code `ads_allowance_exceeded` when the team has no payment method on file and has reached the 500 free live ads: add a card to resume.'
         '404': { description: "Ad not found" }
         '405': { description: "Platform has no click-URL tracking surface" }
         '422': { description: "Meta creative cannot be rebuilt (e.g. placement-customized/asset-feed/dark creative)" }
@@ -44012,7 +44036,7 @@ paths:
           description: Missing required fields or invalid values
         '401': { $ref: '#/components/responses/Unauthorized' }
         '403':
-          description: Ads access required. Legacy plans need the Ads add-on; included by default on usage-based plans.
+          description: 'Ads access required. Legacy plans need the Ads add-on; included by default on usage-based plans. Also returned with code `ads_allowance_exceeded` when the team has no payment method on file and has reached the 500 free live ads: add a card to resume.'
         '409':
           description: |
             An identical boost request is already in progress (with or without
@@ -45069,7 +45093,7 @@ paths:
           description: 'Missing required fields, invalid values, non-Meta platform used with creatives[] / adSetId, or a Meta validateOnly validation failure (verbatim)'
         '401': { $ref: '#/components/responses/Unauthorized' }
         '403':
-          description: Ads access required. Legacy plans need the Ads add-on; included by default on usage-based plans.
+          description: 'Ads access required. Legacy plans need the Ads add-on; included by default on usage-based plans. Also returned with code `ads_allowance_exceeded` when the team has no payment method on file and has reached the 500 free live ads: add a card to resume.'
         '422':
           description: Platform ads connection required (TikTok Ads, X Ads) or missing linked account
         '502':
@@ -47759,6 +47783,8 @@ paths:
           description: Ad(s) created and submitted for review
         '400': { description: Invalid input }
         '401': { $ref: '#/components/responses/Unauthorized' }
+        '403':
+          description: 'Returned with code `ads_allowance_exceeded` when the team has no payment method on file and has reached the 500 free live ads: add a card to resume.'
         '404': { description: Account not found }
         '422': { description: "No Facebook Page resolved for the account" }
         '502': { description: "Meta accepted the request then failed to produce the media (upload session, chunk transfer, processing timeout, or a response with no image hash). Inspect `platformError.reason`." }
@@ -47799,6 +47825,8 @@ paths:
           description: Ad(s) created and submitted for review
         '400': { description: Invalid input }
         '401': { $ref: '#/components/responses/Unauthorized' }
+        '403':
+          description: 'Returned with code `ads_allowance_exceeded` when the team has no payment method on file and has reached the 500 free live ads: add a card to resume.'
         '404': { description: Account not found }
         '422': { description: "No Facebook Page resolved for the account" }
         '502': { description: "Meta accepted the request then failed to produce the media (upload session, chunk transfer, processing timeout, or a response with no image hash). Inspect `platformError.reason`." }
@@ -47861,7 +47889,8 @@ paths:
                     multi: '#/components/schemas/CtwaMultiResponse'
         '400': { description: Invalid body. }
         '401': { $ref: '#/components/responses/Unauthorized' }
-        '403': { description: "Ads access required. Legacy plans need the Ads add-on; included by default on usage-based plans." }
+        '403':
+          description: 'Forbidden. Also returned with code `ads_allowance_exceeded` when the team has no payment method on file and has reached the 500 free live ads: add a card to resume.'
         '404': { description: SocialAccount not found. }
         '422':
           description: Page is not connected to a verified WhatsApp number.
