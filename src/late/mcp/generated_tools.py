@@ -9109,7 +9109,7 @@ def register_generated_tools(mcp, _get_client):
             is_subscribed
             notes
             account_id: Optional. Creates a channel if provided with platform + platformIdentifier
-            platform
+            platform: Channel platform. Only the enum values support contact channels; any other platform is rejected with code platform_not_supported.
             platform_identifier
             display_identifier"""
         client = _get_client()
