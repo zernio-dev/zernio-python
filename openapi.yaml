@@ -40605,14 +40605,19 @@ paths:
       x-resource-group: "ads"
       operationId: createAdCampaign
       tags: ["Ad Campaigns"]
-      x-platforms: ["meta"]
+      x-platforms: ["meta", "google", "linkedin", "tiktok", "x", "pinterest", "openai"]
       summary: Create a standalone campaign
       description: |-
-        Creates a campaign WITHOUT its first ad set / ad (the ODAX shell only). Ad sets join it
-        later via `existingCampaignId` on the create endpoints. A budget here is campaign-level
-        (CBO) by definition; omit it for ABO (each ad set carries its own budget). Created
-        `PAUSED` unless `status: ACTIVE`. The campaign materializes in `/v1/ads/tree` via the
-        next sync discovery pass.
+        Creates a campaign WITHOUT its first ad set / ad, on the platform of the given
+        `accountId`. Ad sets join it later via `existingCampaignId` on the create endpoints.
+        Platform notes: on Meta a budget here is campaign-level (CBO) by definition; omit it
+        for ABO (each ad set carries its own budget), and `specialAdCategories` /
+        `bidStrategy` are Meta-only (400 elsewhere). Google, X and OpenAI require a budget
+        (422 without one; OpenAI accepts only `budgetType: lifetime`). LinkedIn creates the
+        campaign GROUP (our campaign level) and rejects a budget, which lives on the
+        campaign (ad set) level there; it comes back `status: DRAFT`. TikTok campaigns are
+        created without a status and report `ENABLE`. Created `PAUSED` unless
+        `status: ACTIVE` where the platform supports it.
 
         **Idempotency:** send an `Idempotency-Key` header to make retries safe.
       security:
@@ -40636,8 +40641,8 @@ paths:
               type: object
               required: [accountId, adAccountId, name, goal]
               properties:
-                accountId: { type: string, description: "Zernio SocialAccount id (posting or ads variant) used to resolve the Meta token." }
-                adAccountId: { type: string, description: "Meta ad account id (act_<n>)." }
+                accountId: { type: string, description: "Zernio SocialAccount id (posting or ads variant); its platform decides where the campaign is created." }
+                adAccountId: { type: string, description: "Platform ad account id (Meta act_<n>, Google customer id, LinkedIn account id, ...)." }
                 name: { type: string, maxLength: 255 }
                 goal:
                   type: string
@@ -41955,7 +41960,7 @@ paths:
               required: [accountId, adAccountId]
               properties:
                 accountId: { type: string, description: "Zernio SocialAccount id used to resolve the Meta token." }
-                adAccountId: { type: string, description: "Meta ad account id (act_<n>)." }
+                adAccountId: { type: string, description: "Platform ad account id (Meta act_<n>, Google customer id, LinkedIn account id, ...)." }
                 formats:
                   type: array
                   minItems: 1
@@ -42722,7 +42727,7 @@ paths:
               required: [accountId, adAccountId, startDate, endDate]
               properties:
                 accountId: { type: string, description: "Zernio SocialAccount id (posting or ads variant)." }
-                adAccountId: { type: string, description: "Meta ad account id (act_<n>)." }
+                adAccountId: { type: string, description: "Platform ad account id (Meta act_<n>, Google customer id, LinkedIn account id, ...)." }
                 budgetAmount: { type: number, description: "Whole currency units. Exactly one of budgetAmount / reach." }
                 reach: { type: integer, description: "Target unique reach. Exactly one of budgetAmount / reach." }
                 startDate: { type: string, format: date-time, description: "Campaign window start (must be in the future)." }
@@ -43096,7 +43101,7 @@ paths:
               required: [accountId, adAccountId, headline, body, linkUrl]
               properties:
                 accountId: { type: string, description: "Zernio SocialAccount id (posting or ads variant) used to resolve the Meta token and Page." }
-                adAccountId: { type: string, description: "Meta ad account id (act_<n>)." }
+                adAccountId: { type: string, description: "Platform ad account id (Meta act_<n>, Google customer id, LinkedIn account id, ...)." }
                 headline: { type: string, maxLength: 255 }
                 body: { type: string, description: Primary text }
                 description: { type: string, maxLength: 255, description: "Link description below the headline; omitted = Meta scrapes the destination's OG description." }
@@ -43192,7 +43197,7 @@ paths:
               type: object
               required: [accountId, name]
               properties:
-                accountId: { type: string, description: "Zernio SocialAccount id (posting or ads variant) used to resolve the Meta token." }
+                accountId: { type: string, description: "Zernio SocialAccount id (posting or ads variant); its platform decides where the campaign is created." }
                 name: { type: string, maxLength: 255 }
       responses:
         '200':
@@ -43335,8 +43340,8 @@ paths:
               type: object
               required: [accountId, adAccountId, name, rules]
               properties:
-                accountId: { type: string, description: "Zernio SocialAccount id (posting or ads variant) used to resolve the Meta token." }
-                adAccountId: { type: string, description: "Meta ad account id (act_<n>)." }
+                accountId: { type: string, description: "Zernio SocialAccount id (posting or ads variant); its platform decides where the campaign is created." }
+                adAccountId: { type: string, description: "Platform ad account id (Meta act_<n>, Google customer id, LinkedIn account id, ...)." }
                 name: { type: string, minLength: 1, maxLength: 255 }
                 rules:
                   type: array
@@ -43426,7 +43431,7 @@ paths:
               type: object
               required: [accountId, name, rules]
               properties:
-                accountId: { type: string, description: "Zernio SocialAccount id (posting or ads variant) used to resolve the Meta token." }
+                accountId: { type: string, description: "Zernio SocialAccount id (posting or ads variant); its platform decides where the campaign is created." }
                 name: { type: string, minLength: 1, maxLength: 255, description: "Required: the update replaces the whole set." }
                 rules:
                   type: array
@@ -45492,8 +45497,8 @@ paths:
               type: object
               required: [accountId, adAccountId, imageBase64]
               properties:
-                accountId: { type: string, description: "Zernio SocialAccount id (posting or ads variant) used to resolve the Meta token." }
-                adAccountId: { type: string, description: "Meta ad account id (act_<n>)." }
+                accountId: { type: string, description: "Zernio SocialAccount id (posting or ads variant); its platform decides where the campaign is created." }
+                adAccountId: { type: string, description: "Platform ad account id (Meta act_<n>, Google customer id, LinkedIn account id, ...)." }
                 imageBase64: { type: string, description: "Raw base64 image bytes, or a full data URL (the data:image/...;base64, prefix is stripped)." }
                 filename: { type: string, description: "Optional filename shown in Meta's image library. Defaults to ad_image.jpg." }
       responses:
@@ -45584,8 +45589,8 @@ paths:
               type: object
               required: [accountId, adAccountId]
               properties:
-                accountId: { type: string, description: "Zernio SocialAccount id (posting or ads variant) used to resolve the Meta token." }
-                adAccountId: { type: string, description: "Meta ad account id (act_<n>)." }
+                accountId: { type: string, description: "Zernio SocialAccount id (posting or ads variant); its platform decides where the campaign is created." }
+                adAccountId: { type: string, description: "Platform ad account id (Meta act_<n>, Google customer id, LinkedIn account id, ...)." }
                 videoUrl: { type: string, description: "Public https URL of the video; downloaded server-side (SSRF-guarded) before chunked upload. Provide exactly one of videoUrl or videoBase64." }
                 videoBase64: { type: string, description: "Raw base64 video bytes, or a full data URL (the data:video/...;base64, prefix is stripped). Capped by Vercel's body limit (~4.5 MB payload). Provide exactly one of videoUrl or videoBase64." }
                 filename: { type: string, description: "Optional filename shown alongside the upload session. Applied only when uploading via videoBase64." }
@@ -47958,7 +47963,7 @@ paths:
               type: object
               required: [adAccountId, name, pixelId, customEventType, rule]
               properties:
-                adAccountId: { type: string, description: "Meta ad account id (act_<n>)." }
+                adAccountId: { type: string, description: "Platform ad account id (Meta act_<n>, Google customer id, LinkedIn account id, ...)." }
                 name: { type: string, maxLength: 255, description: "Also the reuse key, together with pixelId." }
                 pixelId: { type: string, description: "Meta pixel id (event_source_id). From GET /v1/accounts/{accountId}/tracking-tags." }
                 customEventType: { type: string, description: "Meta custom_event_type, e.g. LEAD, PURCHASE, OTHER." }

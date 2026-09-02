@@ -1697,8 +1697,8 @@ def register_generated_tools(mcp, _get_client):
         """Create a value rule set
 
         Args:
-            account_id: Zernio SocialAccount id (posting or ads variant) used to resolve the Meta token. (required)
-            ad_account_id: Meta ad account id (act_<n>). (required)
+            account_id: Zernio SocialAccount id (posting or ads variant); its platform decides where the campaign is created. (required)
+            ad_account_id: Platform ad account id (Meta act_<n>, Google customer id, LinkedIn account id, ...). (required)
             name: (required)
             rules: Evaluated in order; the first matching rule wins. (required)"""
         client = _get_client()
@@ -1754,7 +1754,7 @@ def register_generated_tools(mcp, _get_client):
 
         Args:
             value_rule_set_id: Platform value rule set id. (required)
-            account_id: Zernio SocialAccount id (posting or ads variant) used to resolve the Meta token. (required)
+            account_id: Zernio SocialAccount id (posting or ads variant); its platform decides where the campaign is created. (required)
             name: Required: the update replaces the whole set. (required)
             rules: The COMPLETE rule list. Omitting a rule deletes it on Meta. (required)"""
         client = _get_client()
@@ -1965,7 +1965,7 @@ def register_generated_tools(mcp, _get_client):
 
         Args:
             account_id: Meta ads SocialAccount id. (required)
-            ad_account_id: Meta ad account id (act_<n>). (required)
+            ad_account_id: Platform ad account id (Meta act_<n>, Google customer id, LinkedIn account id, ...). (required)
             name: Also the reuse key, together with pixelId. (required)
             pixel_id: Meta pixel id (event_source_id). From GET /v1/accounts/{accountId}/tracking-tags. (required)
             custom_event_type: Meta custom_event_type, e.g. LEAD, PURCHASE, OTHER. (required)
@@ -2371,8 +2371,8 @@ def register_generated_tools(mcp, _get_client):
         """Create a standalone campaign
 
         Args:
-            account_id: Zernio SocialAccount id (posting or ads variant) used to resolve the Meta token. (required)
-            ad_account_id: Meta ad account id (act_<n>). (required)
+            account_id: Zernio SocialAccount id (posting or ads variant); its platform decides where the campaign is created. (required)
+            ad_account_id: Platform ad account id (Meta act_<n>, Google customer id, LinkedIn account id, ...). (required)
             name: (required)
             goal: Mapped to the ODAX objective (same mapping as POST /v1/ads/create). (required)
             special_ad_categories
@@ -3908,7 +3908,7 @@ def register_generated_tools(mcp, _get_client):
 
         Args:
             account_id: Zernio SocialAccount id used to resolve the Meta token. (required)
-            ad_account_id: Meta ad account id (act_<n>). (required)
+            ad_account_id: Platform ad account id (Meta act_<n>, Google customer id, LinkedIn account id, ...). (required)
             formats: Meta ad_format values, one preview per format. Defaults to [DESKTOP_FEED_STANDARD].
             existing_creative_id: Preview an existing ad-account creative by id. Mutually exclusive with creativeSpec.
             creative_spec: Raw Meta creative spec forwarded verbatim to /generatepreviews. Mutually exclusive with existingCreativeId."""
@@ -4029,7 +4029,7 @@ def register_generated_tools(mcp, _get_client):
 
         Args:
             account_id: Zernio SocialAccount id (posting or ads variant) used to resolve the Meta token and Page. (required)
-            ad_account_id: Meta ad account id (act_<n>). (required)
+            ad_account_id: Platform ad account id (Meta act_<n>, Google customer id, LinkedIn account id, ...). (required)
             headline: (required)
             body: Primary text (required)
             description: Link description below the headline; omitted = Meta scrapes the destination's OG description.
@@ -4103,7 +4103,7 @@ def register_generated_tools(mcp, _get_client):
 
         Args:
             creative_id: Platform creative id (required)
-            account_id: Zernio SocialAccount id (posting or ads variant) used to resolve the Meta token. (required)
+            account_id: Zernio SocialAccount id (posting or ads variant); its platform decides where the campaign is created. (required)
             name: (required)"""
         client = _get_client()
         try:
@@ -4154,8 +4154,8 @@ def register_generated_tools(mcp, _get_client):
         """Upload an ad image from base64
 
         Args:
-            account_id: Zernio SocialAccount id (posting or ads variant) used to resolve the Meta token. (required)
-            ad_account_id: Meta ad account id (act_<n>). (required)
+            account_id: Zernio SocialAccount id (posting or ads variant); its platform decides where the campaign is created. (required)
+            ad_account_id: Platform ad account id (Meta act_<n>, Google customer id, LinkedIn account id, ...). (required)
             image_base64: Raw base64 image bytes, or a full data URL (the data:image/...;base64, prefix is stripped). (required)
             filename: Optional filename shown in Meta's image library. Defaults to ad_image.jpg."""
         client = _get_client()
@@ -4224,8 +4224,8 @@ def register_generated_tools(mcp, _get_client):
         """Upload an ad video
 
         Args:
-            account_id: Zernio SocialAccount id (posting or ads variant) used to resolve the Meta token. (required)
-            ad_account_id: Meta ad account id (act_<n>). (required)
+            account_id: Zernio SocialAccount id (posting or ads variant); its platform decides where the campaign is created. (required)
+            ad_account_id: Platform ad account id (Meta act_<n>, Google customer id, LinkedIn account id, ...). (required)
             video_url: Public https URL of the video; downloaded server-side (SSRF-guarded) before chunked upload. Provide exactly one of videoUrl or videoBase64.
             video_base64: Raw base64 video bytes, or a full data URL (the data:video/...;base64, prefix is stripped). Capped by Vercel's body limit (~4.5 MB payload). Provide exactly one of videoUrl or videoBase64.
             filename: Optional filename shown alongside the upload session. Applied only when uploading via videoBase64."""
@@ -14437,7 +14437,7 @@ def register_generated_tools(mcp, _get_client):
 
         Args:
             account_id: Zernio SocialAccount id (posting or ads variant). (required)
-            ad_account_id: Meta ad account id (act_<n>). (required)
+            ad_account_id: Platform ad account id (Meta act_<n>, Google customer id, LinkedIn account id, ...). (required)
             budget_amount: Whole currency units. Exactly one of budgetAmount / reach.
             reach: Target unique reach. Exactly one of budgetAmount / reach.
             start_date: Campaign window start (must be in the future). (required)
