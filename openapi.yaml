@@ -1174,6 +1174,10 @@ components:
             (for example, an agency paying for a client's ads). Same rules as
             `dsaBeneficiary`: required for EU targeting unless the ad account has
             a default payor.
+        regionalRegulatedCategories:
+          type: array
+          description: 'Meta only. Regional regulation categories required when the ad set targets certain countries (e.g. SINGAPORE_UNIVERSAL, TAIWAN_UNIVERSAL, THAILAND_UNIVERSAL, AUSTRALIA_FINSERV, INDIA_FINSERV). Forwarded to the ad set.'
+          items: { type: string }
     WorkflowNode:
       type: object
       required: [id, type]
@@ -43956,6 +43960,10 @@ paths:
                   type: array
                   description: 'Meta (metaads) only. 2-letter ISO country codes the special ad category applies to. Requires specialAdCategories to be set (400 otherwise).'
                   items: { type: string }
+                regionalRegulatedCategories:
+                  type: array
+                  description: 'Meta only. Regional regulation categories required when the ad set targets certain countries (e.g. SINGAPORE_UNIVERSAL, TAIWAN_UNIVERSAL, THAILAND_UNIVERSAL, AUSTRALIA_FINSERV, INDIA_FINSERV). Forwarded to the ad set.'
+                  items: { type: string }
                 linkUrl:
                   type: string
                   format: uri
@@ -44492,6 +44500,14 @@ paths:
                     Meta (metaads) only. 2-letter ISO country codes the special ad category applies to. Requires
                     specialAdCategories to be set (400 otherwise). Ignored when joining an existing campaign via
                     existingCampaignId (the existing campaign's category/country already governs it).
+                  items: { type: string }
+                regionalRegulatedCategories:
+                  type: array
+                  description: |
+                    Meta only. Regional regulation categories required when the ad set targets certain countries.
+                    Known values: SINGAPORE_UNIVERSAL, TAIWAN_UNIVERSAL, THAILAND_UNIVERSAL, AUSTRALIA_FINSERV,
+                    INDIA_FINSERV, TAIWAN_FINSERV. Meta rejects the ad set without this when the targeting geo
+                    includes the corresponding country.
                   items: { type: string }
                 endDate: { type: string, format: date-time, description: Required for lifetime budgets }
                 startDate:

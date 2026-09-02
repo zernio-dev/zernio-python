@@ -3120,6 +3120,7 @@ def register_generated_tools(mcp, _get_client):
         tracking: dict[str, Any] | None = None,
         special_ad_categories: list[str] | None = None,
         special_ad_category_country: list[str] | None = None,
+        regional_regulated_categories: list[str] | None = None,
         link_url: str | None = None,
         call_to_action: str | None = None,
         spark_auth_code: str | None = None,
@@ -3194,6 +3195,7 @@ def register_generated_tools(mcp, _get_client):
                 tracking: Meta only. Tracking specs (pixel, URL tags).
                 special_ad_categories: Meta only. Required for housing, employment, credit, or political ads.
                 special_ad_category_country: Meta (metaads) only. 2-letter ISO country codes the special ad category applies to. Requires specialAdCategories to be set (400 otherwise).
+                regional_regulated_categories: Meta only. Regional regulation categories required when the ad set targets certain countries (e.g. SINGAPORE_UNIVERSAL, TAIWAN_UNIVERSAL, THAILAND_UNIVERSAL, AUSTRALIA_FINSERV, INDIA_FINSERV). Forwarded to the ad set.
                 link_url: Destination URL for the CTA button. Send it together with `callToAction`.
 
         **Meta**: adds a top-level `call_to_action` to the post-reference creative.
@@ -3265,6 +3267,7 @@ def register_generated_tools(mcp, _get_client):
                 tracking=tracking,
                 special_ad_categories=special_ad_categories,
                 special_ad_category_country=special_ad_category_country,
+                regional_regulated_categories=regional_regulated_categories,
                 link_url=link_url,
                 call_to_action=call_to_action,
                 spark_auth_code=spark_auth_code,
@@ -3346,6 +3349,7 @@ def register_generated_tools(mcp, _get_client):
         raw_targeting: dict[str, Any] | None = None,
         special_ad_categories: list[str] | None = None,
         special_ad_category_country: list[str] | None = None,
+        regional_regulated_categories: list[str] | None = None,
         end_date: str | None = None,
         start_date: str | None = None,
         instagram_account_id: str | None = None,
@@ -3554,6 +3558,10 @@ def register_generated_tools(mcp, _get_client):
                 special_ad_category_country: Meta (metaads) only. 2-letter ISO country codes the special ad category applies to. Requires
         specialAdCategories to be set (400 otherwise). Ignored when joining an existing campaign via
         existingCampaignId (the existing campaign's category/country already governs it).
+                regional_regulated_categories: Meta only. Regional regulation categories required when the ad set targets certain countries.
+        Known values: SINGAPORE_UNIVERSAL, TAIWAN_UNIVERSAL, THAILAND_UNIVERSAL, AUSTRALIA_FINSERV,
+        INDIA_FINSERV, TAIWAN_FINSERV. Meta rejects the ad set without this when the targeting geo
+        includes the corresponding country.
                 end_date: Required for lifetime budgets
                 start_date: Meta only. Ad-set start time (ISO 8601, e.g. "2026-06-10T09:00:00Z"), mapped to the
         ad set's `start_time`. When omitted the ad starts delivering immediately. For lifetime
@@ -3850,6 +3858,7 @@ def register_generated_tools(mcp, _get_client):
                 raw_targeting=raw_targeting,
                 special_ad_categories=special_ad_categories,
                 special_ad_category_country=special_ad_category_country,
+                regional_regulated_categories=regional_regulated_categories,
                 end_date=end_date,
                 start_date=start_date,
                 instagram_account_id=instagram_account_id,
@@ -12341,6 +12350,7 @@ def register_generated_tools(mcp, _get_client):
         roas_average_floor: float | None = None,
         dsa_beneficiary: str | None = None,
         dsa_payor: str | None = None,
+        regional_regulated_categories: list[str] | None = None,
     ) -> str:
         """Create click-to-message ad (WhatsApp / Messenger / Instagram Direct)
 
@@ -12457,6 +12467,7 @@ def register_generated_tools(mcp, _get_client):
         (for example, an agency paying for a client's ads). Same rules as
         `dsaBeneficiary`: required for EU targeting unless the ad account has
         a default payor.
+                regional_regulated_categories: Meta only. Regional regulation categories required when the ad set targets certain countries (e.g. SINGAPORE_UNIVERSAL, TAIWAN_UNIVERSAL, THAILAND_UNIVERSAL, AUSTRALIA_FINSERV, INDIA_FINSERV). Forwarded to the ad set.
                 destination: Where the conversation opens when the ad is tapped. (required)"""
         client = _get_client()
         try:
@@ -12495,6 +12506,7 @@ def register_generated_tools(mcp, _get_client):
                 roas_average_floor=roas_average_floor,
                 dsa_beneficiary=dsa_beneficiary,
                 dsa_payor=dsa_payor,
+                regional_regulated_categories=regional_regulated_categories,
                 destination=destination,
             )
             return _format_response(response)
@@ -12546,6 +12558,7 @@ def register_generated_tools(mcp, _get_client):
         roas_average_floor: float | None = None,
         dsa_beneficiary: str | None = None,
         dsa_payor: str | None = None,
+        regional_regulated_categories: list[str] | None = None,
     ) -> str:
         """Create Click-to-Call ad
 
@@ -12662,6 +12675,7 @@ def register_generated_tools(mcp, _get_client):
         (for example, an agency paying for a client's ads). Same rules as
         `dsaBeneficiary`: required for EU targeting unless the ad account has
         a default payor.
+                regional_regulated_categories: Meta only. Regional regulation categories required when the ad set targets certain countries (e.g. SINGAPORE_UNIVERSAL, TAIWAN_UNIVERSAL, THAILAND_UNIVERSAL, AUSTRALIA_FINSERV, INDIA_FINSERV). Forwarded to the ad set.
                 phone_number: E.164 number the CALL_NOW CTA dials (e.g. +34600111222). (required)
                 link_url: Website shown as the creative's link. Required: Meta rejects tel: as link_data.link; the phone number rides only the CTA. (required)"""
         client = _get_client()
@@ -12701,6 +12715,7 @@ def register_generated_tools(mcp, _get_client):
                 roas_average_floor=roas_average_floor,
                 dsa_beneficiary=dsa_beneficiary,
                 dsa_payor=dsa_payor,
+                regional_regulated_categories=regional_regulated_categories,
                 phone_number=phone_number,
                 link_url=link_url,
             )
@@ -12751,6 +12766,7 @@ def register_generated_tools(mcp, _get_client):
         roas_average_floor: float | None = None,
         dsa_beneficiary: str | None = None,
         dsa_payor: str | None = None,
+        regional_regulated_categories: list[str] | None = None,
     ) -> str:
         """Create Click-to-WhatsApp ad (deprecated)
 
@@ -12866,7 +12882,8 @@ def register_generated_tools(mcp, _get_client):
                 dsa_payor: Legal entity that pays for the ad. Can differ from `dsaBeneficiary`
         (for example, an agency paying for a client's ads). Same rules as
         `dsaBeneficiary`: required for EU targeting unless the ad account has
-        a default payor."""
+        a default payor.
+                regional_regulated_categories: Meta only. Regional regulation categories required when the ad set targets certain countries (e.g. SINGAPORE_UNIVERSAL, TAIWAN_UNIVERSAL, THAILAND_UNIVERSAL, AUSTRALIA_FINSERV, INDIA_FINSERV). Forwarded to the ad set."""
         client = _get_client()
         try:
             response = client.messaging_ads.create_ctwa_ad(
@@ -12904,6 +12921,7 @@ def register_generated_tools(mcp, _get_client):
                 roas_average_floor=roas_average_floor,
                 dsa_beneficiary=dsa_beneficiary,
                 dsa_payor=dsa_payor,
+                regional_regulated_categories=regional_regulated_categories,
             )
             return _format_response(response)
         except Exception as e:
