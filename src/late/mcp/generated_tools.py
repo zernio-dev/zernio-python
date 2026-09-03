@@ -11876,7 +11876,7 @@ def register_generated_tools(mcp, _get_client):
         """Get conversation
 
         Args:
-            conversation_id: The conversation ID (id field from list conversations endpoint). This is the platform-specific conversation identifier, not an internal database ID. (required)
+            conversation_id: Opaque conversation identifier, accepted verbatim from the list endpoint or from the conversationId on inbox webhooks. Format not to be assumed. (required)
             account_id: The social account ID (required)"""
         client = _get_client()
         try:
@@ -11901,7 +11901,7 @@ def register_generated_tools(mcp, _get_client):
         """Update conversation status
 
         Args:
-            conversation_id: The conversation ID (id field from list conversations endpoint). This is the platform-specific conversation identifier, not an internal database ID. (required)
+            conversation_id: Opaque conversation identifier, accepted verbatim from the list endpoint or from the conversationId on inbox webhooks. Format not to be assumed. (required)
             account_id: Social account ID (required)
             status: (required)"""
         client = _get_client()
@@ -11931,7 +11931,7 @@ def register_generated_tools(mcp, _get_client):
         """List messages
 
             Args:
-                conversation_id: The conversation ID (id field from list conversations endpoint). This is the platform-specific conversation identifier, not an internal database ID. (required)
+                conversation_id: Opaque conversation identifier, accepted verbatim from the list endpoint or from the conversationId on inbox webhooks. Format not to be assumed. (required)
                 account_id: Social account ID (required)
                 limit: Number of messages to return per page. Default 100, max 100.
                 cursor: Opaque pagination cursor. Pass `pagination.nextCursor` from a prior response verbatim: a cursor we cannot parse returns 400 rather than silently restarting from the first page.

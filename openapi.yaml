@@ -27032,7 +27032,7 @@ paths:
           in: path
           required: true
           schema: { type: string }
-          description: The conversation ID (id field from list conversations endpoint). This is the platform-specific conversation identifier, not an internal database ID.
+          description: 'Opaque conversation identifier, accepted verbatim from the list endpoint or from the conversationId on inbox webhooks. Format not to be assumed.'
         - name: accountId
           in: query
           required: true
@@ -27169,7 +27169,7 @@ paths:
           in: path
           required: true
           schema: { type: string }
-          description: The conversation ID (id field from list conversations endpoint). This is the platform-specific conversation identifier, not an internal database ID.
+          description: 'Opaque conversation identifier, accepted verbatim from the list endpoint or from the conversationId on inbox webhooks. Format not to be assumed.'
       requestBody:
         required: true
         content:
@@ -27249,7 +27249,7 @@ paths:
           in: path
           required: true
           schema: { type: string }
-          description: The conversation ID (id field from list conversations endpoint). This is the platform-specific conversation identifier, not an internal database ID.
+          description: 'Opaque conversation identifier, accepted verbatim from the list endpoint or from the conversationId on inbox webhooks. Format not to be assumed.'
         - name: accountId
           in: query
           required: true
