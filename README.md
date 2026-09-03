@@ -972,11 +972,13 @@ Both `from zernio import ...` and `from late import ...` work identically. The `
 | `whatsapp_flows.get_whats_app_flow()` | Get flow |
 | `whatsapp_flows.get_whats_app_flow_json()` | Get flow JSON asset |
 | `whatsapp_flows.get_whats_app_flow_preview()` | Get flow preview URL |
+| `whatsapp_flows.get_whats_app_flows_encryption_key()` | Get Flows encryption key status |
 | `whatsapp_flows.update_whats_app_flow()` | Update flow |
 | `whatsapp_flows.delete_whats_app_flow()` | Delete flow |
 | `whatsapp_flows.deprecate_whats_app_flow()` | Deprecate flow |
 | `whatsapp_flows.publish_whats_app_flow()` | Publish flow |
 | `whatsapp_flows.send_whats_app_flow_message()` | Send flow message |
+| `whatsapp_flows.set_whats_app_flows_encryption_key()` | Register a Flows encryption key |
 | `whatsapp_flows.upload_whats_app_flow_json()` | Upload flow JSON |
 
 ### WhatsApp Phone Numbers

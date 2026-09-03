@@ -190,6 +190,23 @@ class WhatsappFlowsResource:
             f"/v1/whatsapp/flows/{flow_id}/deprecate", data=payload
         )
 
+    def get_whats_app_flows_encryption_key(self, account_id: str) -> dict[str, Any]:
+        """Get Flows encryption key status"""
+        params = self._build_params(
+            account_id=account_id,
+        )
+        return self._client._get("/v1/whatsapp/flows/encryption-key", params=params)
+
+    def set_whats_app_flows_encryption_key(
+        self, account_id: str, business_public_key: str
+    ) -> dict[str, Any]:
+        """Register a Flows encryption key"""
+        payload = self._build_payload(
+            account_id=account_id,
+            business_public_key=business_public_key,
+        )
+        return self._client._post("/v1/whatsapp/flows/encryption-key", data=payload)
+
     def send_whats_app_flow_message(
         self,
         account_id: str,
@@ -365,6 +382,29 @@ class WhatsappFlowsResource:
         )
         return await self._client._apost(
             f"/v1/whatsapp/flows/{flow_id}/deprecate", data=payload
+        )
+
+    async def aget_whats_app_flows_encryption_key(
+        self, account_id: str
+    ) -> dict[str, Any]:
+        """Get Flows encryption key status (async)"""
+        params = self._build_params(
+            account_id=account_id,
+        )
+        return await self._client._aget(
+            "/v1/whatsapp/flows/encryption-key", params=params
+        )
+
+    async def aset_whats_app_flows_encryption_key(
+        self, account_id: str, business_public_key: str
+    ) -> dict[str, Any]:
+        """Register a Flows encryption key (async)"""
+        payload = self._build_payload(
+            account_id=account_id,
+            business_public_key=business_public_key,
+        )
+        return await self._client._apost(
+            "/v1/whatsapp/flows/encryption-key", data=payload
         )
 
     async def asend_whats_app_flow_message(

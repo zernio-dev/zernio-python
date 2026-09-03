@@ -19164,6 +19164,53 @@ def register_generated_tools(mcp, _get_client):
 
     @mcp.tool(
         annotations=ToolAnnotations(
+            title="Get Flows encryption key status",
+            readOnlyHint=True,
+            destructiveHint=False,
+            openWorldHint=False,
+        )
+    )
+    def whatsapp_flows_get_whats_app_flows_encryption_key(account_id: str) -> str:
+        """Get Flows encryption key status
+
+        Args:
+            account_id: WhatsApp social account ID (required)"""
+        client = _get_client()
+        try:
+            response = client.whatsapp_flows.get_whats_app_flows_encryption_key(
+                account_id=account_id
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Register a Flows encryption key",
+            readOnlyHint=False,
+            destructiveHint=True,
+            openWorldHint=True,
+        )
+    )
+    def whatsapp_flows_set_whats_app_flows_encryption_key(
+        account_id: str, business_public_key: str
+    ) -> str:
+        """Register a Flows encryption key
+
+        Args:
+            account_id: WhatsApp social account ID (required)
+            business_public_key: RSA public key in PEM format. Rejected if it is a private key or not a valid RSA public key PEM. (required)"""
+        client = _get_client()
+        try:
+            response = client.whatsapp_flows.set_whats_app_flows_encryption_key(
+                account_id=account_id, business_public_key=business_public_key
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
             title="Send flow message",
             readOnlyHint=False,
             destructiveHint=True,

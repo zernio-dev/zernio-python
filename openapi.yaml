@@ -38227,6 +38227,85 @@ paths:
         '401': { $ref: '#/components/responses/Unauthorized' }
         '404': { description: WhatsApp account not found }
 
+  /v1/whatsapp/flows/encryption-key:
+    get:
+      x-resource-group: "accounts"
+      operationId: getWhatsAppFlowsEncryptionKey
+      tags: [WhatsApp Flows]
+      summary: Get Flows encryption key status
+      description: |
+        Read the RSA business public key registered on the phone number for WhatsApp Flows
+        endpoint encryption. Only one key is active per phone number at a time. Flows that
+        use flow_action: data_exchange (an endpoint-backed flow) stop working at runtime
+        until the endpoint serves the matching private key, and Meta rejects publish with
+        error code 139002 ("Missing Flows Signed Public Key") when no key is registered.
+        `registered` reflects whether a key is present, never `signatureStatus` alone:
+        Meta reports an unregistered key as MISMATCH rather than a null/absent value.
+      security:
+        - bearerAuth: []
+      parameters:
+        - { name: accountId, in: query, required: true, schema: { type: string }, description: WhatsApp social account ID }
+      responses:
+        '200':
+          description: Encryption key status retrieved
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  publicKey:
+                    type: [string, "null"]
+                    description: The registered RSA public key in PEM format, or null when none is registered.
+                  signatureStatus:
+                    type: [string, "null"]
+                    description: "VALID (key matches Meta's records) or MISMATCH (no key registered, or the key does not match); null when unknown."
+                    enum: [VALID, MISMATCH]
+                  registered:
+                    type: boolean
+                    description: Whether a key is currently registered. Derived from publicKey, not signatureStatus.
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/ResourceGroupForbidden' }
+        '404': { description: WhatsApp account not found }
+        '502': { description: Meta rejected the request }
+    post:
+      x-resource-group: "accounts"
+      operationId: setWhatsAppFlowsEncryptionKey
+      tags: [WhatsApp Flows]
+      summary: Register a Flows encryption key
+      description: |
+        Register (or replace) the RSA business public key for WhatsApp Flows endpoint
+        encryption on the phone number. Uploading a new key replaces the previous one:
+        only one key is active per phone number. The corresponding private key must be
+        served by the flow's endpoint, or endpoint-backed flows (flow_action:
+        data_exchange) will fail at runtime even though the key is registered.
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [accountId, businessPublicKey]
+              properties:
+                accountId: { type: string, description: WhatsApp social account ID }
+                businessPublicKey: { type: string, description: RSA public key in PEM format. Rejected if it is a private key or not a valid RSA public key PEM. }
+      responses:
+        '200':
+          description: Encryption key registered
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success: { type: boolean }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/ResourceGroupForbidden' }
+        '404': { description: WhatsApp account not found }
+        '502': { description: Meta rejected the request }
+
   /v1/whatsapp/flows/send:
     post:
       x-resource-group: "messages"
