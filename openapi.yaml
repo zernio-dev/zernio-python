@@ -159,6 +159,7 @@ x-documentation:
     - `account.connected` - Social account connected
     - `account.disconnected` - Social account disconnected (token expired)
     - `account.ads.initial_sync_completed` - Initial ads sync (discovery + 90-day backfill) completed for an ads-enabled account
+    - `analytics.synced` - One connected account's analytics sync cycle finished. A trigger, not a transport: it carries no metrics and no cursor, so call `GET /v1/analytics/delta` with your own last `nextCursor` to read what changed across every account. Poll-driven (~hourly per account), not real-time. High volume: subscribe to it on a dedicated endpoint.
     - `message.received` - New inbound DM or SMS received (SMS arrives with `platform: "sms"`)
     - `conversation.started` - A new conversation opened between one of your accounts and a contact, in either direction (any DM platform, and SMS); fires only the first time the thread appears
     - `message.sent` - DM sent via the API
@@ -431,10 +432,10 @@ tags:
   - name: Webhooks
     description: |
       Configure webhooks for real-time notifications. Webhooks can be created from the dashboard (Settings → Webhooks) or via this API.
-      Events: post.scheduled, post.published, post.failed, post.partial, post.cancelled, post.recycled, post.platform.published, post.platform.failed, post.platform.deleted, post.tiktok.url_resolved, post.external.created, post.external.updated, post.external.deleted, account.connected, account.disconnected, account.ads.initial_sync_completed, message.received, conversation.started, call.received, call.ended, call.failed, call.permission_request, message.sent, message.edited, message.deleted, message.delivered, message.read, message.failed, reaction.received, referral.received, comment.received, review.new, review.updated, lead.received, ad.status_changed, whatsapp.template.status_updated, whatsapp.template.category_updated, whatsapp.account.name_status_updated, whatsapp.automatic_event, whatsapp.number.activated, whatsapp.number.declined, whatsapp.number.action_required, whatsapp.number.verification_required, whatsapp.number.suspended, whatsapp.number.reactivated, whatsapp.number.released, whatsapp.number.kyc_submitted, phone_number.stock_available, verification.approved, verification.failed, webhook.test.
+      Events: post.scheduled, post.published, post.failed, post.partial, post.cancelled, post.recycled, post.platform.published, post.platform.failed, post.platform.deleted, post.tiktok.url_resolved, post.external.created, post.external.updated, post.external.deleted, account.connected, account.disconnected, account.ads.initial_sync_completed, analytics.synced, message.received, conversation.started, call.received, call.ended, call.failed, call.permission_request, message.sent, message.edited, message.deleted, message.delivered, message.read, message.failed, reaction.received, referral.received, comment.received, review.new, review.updated, lead.received, ad.status_changed, whatsapp.template.status_updated, whatsapp.template.category_updated, whatsapp.account.name_status_updated, whatsapp.automatic_event, whatsapp.number.activated, whatsapp.number.declined, whatsapp.number.action_required, whatsapp.number.verification_required, whatsapp.number.suspended, whatsapp.number.reactivated, whatsapp.number.released, whatsapp.number.kyc_submitted, phone_number.stock_available, verification.approved, verification.failed, webhook.test.
       Security: optional HMAC-SHA256 signature in X-Zernio-Signature header. Configure a secret key to enable verification. Custom headers supported.
 
-      Resource groups. Every event belongs to one group: post.* to publishing, message.*, reaction.*, conversation.*, call.* and whatsapp.automatic_event to messages, comment.* and review.* to engagement, lead.* to contacts, ad.* to ads, account.*, whatsapp.template.* and whatsapp.account.* to accounts, whatsapp.number.* and verification.* to telephony, webhook.test to webhooks. Two independent controls use that mapping. (1) A restricted (zrk_) API key can only subscribe to, test-fire, redeliver, or read delivery logs for events in the groups it holds, so it can never create a subscription broader than itself. (2) Each subscription carries its own `disabledResourceGroups` denylist: events in a disabled group are dropped before delivery to that endpoint, on live delivery and on every replay path, no matter which key or session created the subscription. Changing that denylist applies to every event emitted after the change; events already queued when it landed can still be delivered for up to five minutes after they were enqueued, because the delivery worker trusts a five-minute enqueue-time snapshot before re-checking. Absent or empty on a subscription means it receives everything it subscribes to, which is the behavior of every subscription created before the field existed.
+      Resource groups. Every event belongs to one group: post.* to publishing, message.*, reaction.*, conversation.*, call.* and whatsapp.automatic_event to messages, comment.* and review.* to engagement, lead.* to contacts, ad.* to ads, account.*, whatsapp.template.* and whatsapp.account.* to accounts, analytics.* to analytics, whatsapp.number.* and verification.* to telephony, webhook.test to webhooks. Two independent controls use that mapping. (1) A restricted (zrk_) API key can only subscribe to, test-fire, redeliver, or read delivery logs for events in the groups it holds, so it can never create a subscription broader than itself. (2) Each subscription carries its own `disabledResourceGroups` denylist: events in a disabled group are dropped before delivery to that endpoint, on live delivery and on every replay path, no matter which key or session created the subscription. Changing that denylist applies to every event emitted after the change; events already queued when it landed can still be delivered for up to five minutes after they were enqueued, because the delivery worker trusts a five-minute enqueue-time snapshot before re-checking. Absent or empty on a subscription means it receives everything it subscribes to, which is the behavior of every subscription created before the field existed.
   - name: Webhook Events
     description: |
       Incoming webhook deliveries sent by Zernio to your configured endpoint URL.
@@ -1176,8 +1177,23 @@ components:
             a default payor.
         regionalRegulatedCategories:
           type: array
-          description: 'Meta only. Regional regulation categories required when the ad set targets certain countries (e.g. SINGAPORE_UNIVERSAL, TAIWAN_UNIVERSAL, THAILAND_UNIVERSAL, AUSTRALIA_FINSERV, INDIA_FINSERV). Forwarded to the ad set.'
+          description: 'Meta only. Regional regulation categories required when the ad set targets certain countries (e.g. BRAZIL_REGULATION, SINGAPORE_UNIVERSAL, TAIWAN_UNIVERSAL, THAILAND_UNIVERSAL, AUSTRALIA_FINSERV, INDIA_FINSERV, TAIWAN_FINSERV). Forwarded to the ad set.'
           items: { type: string }
+        regionalRegulationIdentities:
+          type: object
+          additionalProperties: { type: integer }
+          description: |
+            Meta only. Beneficiary/payer entity IDs required alongside regionalRegulatedCategories.
+            Values are numeric IDs from the advertiser's Meta verification/authorization setup.
+            Keys depend on the declared category: BRAZIL_REGULATION and THAILAND_UNIVERSAL use
+            universal_beneficiary / universal_payer; SINGAPORE_UNIVERSAL uses
+            singapore_universal_beneficiary / singapore_universal_payer; TAIWAN_UNIVERSAL uses
+            taiwan_universal_beneficiary / taiwan_universal_payer; TAIWAN_FINSERV uses
+            taiwan_finserv_beneficiary / taiwan_finserv_payer; AUSTRALIA_FINSERV uses
+            australia_finserv_beneficiary / australia_finserv_payer; INDIA_FINSERV uses
+            india_finserv_beneficiary / india_finserv_payer.
+            Both beneficiary and payer must be included. If omitted and the advertiser has
+            set defaults in Meta Ads Manager advertising settings, Meta auto-fills them.
     WorkflowNode:
       type: object
       required: [id, type]
@@ -2435,7 +2451,7 @@ components:
           type: array
           items:
             type: string
-            enum: [post.scheduled, post.published, post.failed, post.partial, post.cancelled, post.recycled, post.platform.published, post.platform.failed, post.platform.deleted, post.tiktok.url_resolved, post.external.created, post.external.updated, post.external.deleted, account.connected, account.disconnected, account.ads.initial_sync_completed, message.received, conversation.started, call.received, call.ended, call.failed, call.permission_request, message.sent, message.edited, message.deleted, message.delivered, message.read, message.failed, reaction.received, referral.received, comment.received, review.new, review.updated, lead.received, ad.status_changed, whatsapp.template.status_updated, whatsapp.template.category_updated, whatsapp.account.name_status_updated, whatsapp.automatic_event, whatsapp.number.activated, whatsapp.number.declined, whatsapp.number.action_required, whatsapp.number.verification_required, whatsapp.number.suspended, whatsapp.number.reactivated, whatsapp.number.released, whatsapp.number.kyc_submitted, phone_number.stock_available, verification.approved, verification.failed]
+            enum: [post.scheduled, post.published, post.failed, post.partial, post.cancelled, post.recycled, post.platform.published, post.platform.failed, post.platform.deleted, post.tiktok.url_resolved, post.external.created, post.external.updated, post.external.deleted, account.connected, account.disconnected, account.ads.initial_sync_completed, analytics.synced, message.received, conversation.started, call.received, call.ended, call.failed, call.permission_request, message.sent, message.edited, message.deleted, message.delivered, message.read, message.failed, reaction.received, referral.received, comment.received, review.new, review.updated, lead.received, ad.status_changed, whatsapp.template.status_updated, whatsapp.template.category_updated, whatsapp.account.name_status_updated, whatsapp.automatic_event, whatsapp.number.activated, whatsapp.number.declined, whatsapp.number.action_required, whatsapp.number.verification_required, whatsapp.number.suspended, whatsapp.number.reactivated, whatsapp.number.released, whatsapp.number.kyc_submitted, phone_number.stock_available, verification.approved, verification.failed]
           description: Events subscribed to
         isActive:
           type: boolean
@@ -2877,6 +2893,80 @@ components:
           type: string
           format: date-time
           description: 'UTC time at which Zernio generated this event (set once when the event payload is built, before delivery is queued). Retries and redeliveries keep the original value, so it reflects the event, not the delivery attempt.'
+    WebhookPayloadAnalyticsSynced:
+      type: object
+      description: |
+        Webhook payload for `analytics.synced`. Fired once per connected account each
+        time its analytics sync cycle completes successfully. Poll-driven (roughly
+        hourly per account), not real-time, and never fired for a skipped or failed
+        cycle.
+
+        A TRIGGER, not a transport: it deliberately carries no metrics and no cursor.
+        When it arrives, call `GET /v1/analytics/delta` with YOUR OWN last `nextCursor`
+        to read what changed, across every account, in one paginated stream.
+
+        The absent cursor is deliberate. The feed's ordering position is assigned inside
+        the analytics store when the row is materialized, which normally has not
+        happened yet at the moment this event fires, so a cursor minted here could sit
+        ahead of the very rows the event announces and make you skip them. Your own
+        `nextCursor` is always in the feed's own ordering and can never do that.
+
+        Because of that same lag, a delta read issued the instant this event lands can
+        legitimately come back empty. That is not "nothing changed": poll again with the
+        same cursor you just used rather than treating the account as done.
+
+        Subscribe to this event on a DEDICATED webhook endpoint. It is high volume
+        (roughly one delivery per connected account per hour) and a subscription's
+        consecutive-failure count is shared across all of its events, so an outage while
+        this event is flowing can suppress the low-volume publishing events that share
+        the same subscription.
+      required: [id, event, account, sync, timestamp]
+      properties:
+        id:
+          type: string
+          description: Stable webhook event ID
+        event:
+          type: string
+          enum: [analytics.synced]
+        account:
+          type: object
+          required: [accountId, profileId, platform, username]
+          properties:
+            accountId:
+              type: string
+              description: 'The account''s unique identifier (same as used in /v1/accounts/{accountId})'
+            profileId:
+              type: string
+              description: The profile this account belongs to
+            platform:
+              type: string
+              example: youtube
+            username:
+              type: string
+        sync:
+          type: object
+          description: Summary of the analytics sync cycle that just completed.
+          required: [syncedAt, postsUpdated]
+          properties:
+            syncedAt:
+              type: string
+              format: date-time
+              description: |
+                When the cycle COMPLETED. Not a join key for the delta feed: the rows a
+                cycle produces carry a `syncedAt` stamped when the cycle STARTED, which
+                is measured at around one second earlier at the median and up to a
+                couple of minutes earlier in the tail. Correlate on `account.accountId`.
+            postsUpdated:
+              type: integer
+              description: |
+                Post records created or modified by this cycle. Not the number of delta
+                feed rows the cycle produced, which the syncer does not report, so a
+                cycle with a non-zero `postsUpdated` can still yield an empty delta page.
+              example: 42
+        timestamp:
+          type: string
+          format: date-time
+          description: 'UTC time at which Zernio generated this event (set once when the event payload is built, before delivery is queued).'
     WebhookPayloadComment:
       type: object
       description: Webhook payload for comment received events (Instagram, Facebook, Twitter/X, YouTube, LinkedIn, Bluesky, Reddit)
@@ -7521,6 +7611,89 @@ components:
         hasAnalyticsAccess:
           type: boolean
           description: Whether user has analytics add-on access
+    AnalyticsDeltaEntry:
+      type: object
+      description: |
+        One changed analytics snapshot. Metrics are the absolute values recorded at
+        `syncedAt`, not the amount they moved by since the previous snapshot, so a later
+        entry for the same `postId` always supersedes an earlier one.
+      required: [postId, accountId, profileId, platform, platformPostId, publishedAt, syncedAt, isDeleted, metrics]
+      properties:
+        postId:
+          type: string
+          description: 'External post ID. The same identifier as `posts[]._id` in GET /v1/analytics.'
+        accountId:
+          type: string
+          description: Social account this post was published through
+        profileId:
+          type: string
+          description: Profile the account belongs to
+        platform:
+          type: string
+          example: youtube
+        platformPostId:
+          type: string
+          description: 'Platform-side post ID (for example the YouTube video ID)'
+        publishedAt:
+          type: string
+          format: date-time
+          description: 'When the post was published, ISO-8601 UTC'
+        syncedAt:
+          type: string
+          format: date-time
+          description: |
+            When the sync cycle that produced this snapshot STARTED, ISO-8601 UTC. This
+            is NOT the order entries arrive in and it is not a resume point: a slow cycle
+            writes its rows after a faster cycle that started later, so `syncedAt` can go
+            backwards between consecutive entries. Use `nextCursor` to resume.
+        isDeleted:
+          type: boolean
+          description: 'True when the post was detected as deleted on the platform at this sync'
+        metrics:
+          type: object
+          description: 'Metrics a platform does not report are 0, not absent.'
+          required: [impressions, reach, likes, comments, shares, saves, sends, clicks, views, follows, igReelsAvgWatchTime, igReelsVideoViewTotalTime, reposts, reelsSkipRate]
+          properties:
+            impressions: { type: integer }
+            reach: { type: integer }
+            likes: { type: integer }
+            comments: { type: integer }
+            shares: { type: integer }
+            saves: { type: integer }
+            sends: { type: integer }
+            clicks: { type: integer }
+            views: { type: integer }
+            follows: { type: integer, description: 'Follows attributed to this post (Instagram)' }
+            igReelsAvgWatchTime: { type: integer, description: 'Instagram Reels average watch time, in milliseconds' }
+            igReelsVideoViewTotalTime: { type: integer, description: 'Instagram Reels total watch time, in milliseconds' }
+            reposts: { type: integer }
+            reelsSkipRate: { type: number, description: 'Instagram Reels skip rate, 0 to 1' }
+    AnalyticsDeltaResponse:
+      type: object
+      required: [data, nextCursor, hasMore]
+      properties:
+        data:
+          type: array
+          description: |
+            Changed snapshots, oldest first, in the order the feed received them. Empty on
+            the bootstrap call (no `cursor` supplied) and whenever nothing has changed
+            since your cursor.
+          items:
+            $ref: '#/components/schemas/AnalyticsDeltaEntry'
+        nextCursor:
+          type: string
+          description: |
+            Cursor to send on the next call. ALWAYS present, including on an empty page,
+            so you always have something to advance with, and it never moves backwards.
+            Opaque: pass it back verbatim, and do not parse, construct or compare cursors.
+          example: v1.WyIyMDI2LTA5LTAxIDE3OjEyOjA0IiwiNjVmMWMwYTllMmI1YWYwMDEyYWIzNGNkIl0
+        hasMore:
+          type: boolean
+          description: |
+            True when more changes are already waiting past `nextCursor`, so call again
+            immediately. False means you are caught up: keep `nextCursor` and poll again
+            later. This feed never ends, so `hasMore: false` does NOT mean `nextCursor`
+            is null.
     # LinkedIn Aggregate Analytics Responses
     LinkedInAggregateAnalyticsTotalResponse:
       type: object
@@ -9426,6 +9599,38 @@ webhooks:
       responses:
         '200':
           description: Webhook received successfully
+  analytics.synced:
+    post:
+      operationId: onAnalyticsSynced
+      summary: Analytics synced event
+      description: |
+        Fired once per connected account each time its analytics sync cycle completes
+        successfully. Poll-driven (roughly hourly per account), not real-time, and never
+        fired for a skipped or failed cycle.
+
+        A trigger, not a transport: the payload carries no metrics and no cursor. On
+        receipt, call `GET /v1/analytics/delta` with your own last `nextCursor` to read
+        every post whose analytics changed, across every account, in one paginated
+        stream instead of polling analytics once per account.
+
+        The feed holds back its most recent few seconds of writes, so a read issued the
+        instant this event lands often returns an empty page for that account. Poll again
+        with the same cursor rather than reading an empty page as "nothing changed".
+
+        High volume (roughly one delivery per connected account per hour). Subscribe to
+        it on a dedicated webhook endpoint: a subscription's consecutive-failure count is
+        shared across all of its events, so an outage while this event is flowing can
+        suppress the low-volume publishing events on the same subscription.
+      tags: [Webhook Events]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/WebhookPayloadAnalyticsSynced'
+      responses:
+        '200':
+          description: Webhook received successfully
   message.received:
     post:
       operationId: onMessageReceived
@@ -10904,6 +11109,171 @@ paths:
                 $ref: '#/components/schemas/AnalyticsSinglePostResponse'
         '500':
           description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /v1/analytics/delta:
+    get:
+      x-resource-group: "analytics"
+      operationId: getAnalyticsDelta
+      tags: [Analytics]
+      summary: Analytics changed since a cursor
+      description: |
+        Cursor feed of the analytics snapshots that CHANGED, across every account you can
+        read, in one paginated stream. Built for integrations that would otherwise call
+        `GET /v1/analytics` once per connected account. Each page carries changes from
+        many accounts at once, so your call count scales with how much actually changed
+        rather than with how many accounts you have. Measured against a fleet of roughly
+        1,600 connected accounts: about 1,599 per-account analytics calls an hour became
+        about 205 delta calls an hour, a 7.8x reduction.
+
+        **Bootstrap once, then stay in sync.** Load your baseline from
+        `GET /v1/analytics`, which is the historical endpoint. This one is a rolling
+        7-day change log and cannot replay history. Then call this endpoint with NO
+        `cursor`: it answers with an empty `data` array plus the feed's current position
+        in `nextCursor`. Send that `nextCursor` back on the next call and you receive
+        everything written since. `nextCursor` is present on every response, empty pages
+        included, so you always have something to advance with.
+
+        **Ordering.** Entries come back oldest first, in the order the feed received
+        them. That order is NOT `syncedAt`: `syncedAt` is stamped when an account's sync
+        cycle started, and a slow cycle writes its rows after a faster cycle that started
+        later, so `syncedAt` can go backwards between consecutive entries. Do not sort,
+        filter or resume on it. The cursor is the only stable position, and it is opaque:
+        pass it back verbatim, and do not parse, construct or compare cursors.
+
+        **`hasMore: false` does not mean the feed ended.** This stream has no end and
+        `nextCursor` is never null. `hasMore: true` means more changes are already
+        waiting, so call again straight away. `hasMore: false` means you are caught up:
+        keep the cursor and poll again on your normal interval.
+
+        **The newest changes settle before they are served.** The feed deliberately holds
+        back its last few seconds of writes, so that a row can never become visible
+        behind a cursor you have already advanced past. A read issued the instant an
+        `analytics.synced` webhook lands will therefore often return an empty page for
+        that account. Do not read an empty page as "nothing changed": poll again with the
+        SAME cursor you just used rather than advancing.
+
+        **Repeats inside one instant.** A sync cycle occasionally records the same post
+        twice at the same feed position. When that happens the feed delivers one of those
+        rows, not both. Measured over a day of production traffic, about 1.3% of rows
+        fall in such a group and 99.4% of those groups are identical rows, so this is far
+        more often deduplication than loss. Metrics are absolute values rather than
+        increments, so a later entry for the same post supersedes an earlier one.
+
+        **Retention is 7 days.** Changes older than that leave the feed. A cursor older
+        than 6 days is rejected with a `400` (a day of margin, because expiry is lazy).
+        Recover by re-bootstrapping from `GET /v1/analytics` and taking a fresh cursor
+        from a call to this endpoint with no `cursor`. A consumer that polls at least
+        daily never reaches this.
+
+        Pairs with the `analytics.synced` webhook, so changes can be read on notification
+        instead of on a timer. That event carries no cursor of its own: keep using the
+        `nextCursor` this endpoint gave you.
+
+        Requires the same analytics access as `GET /v1/analytics`, and shares the
+        stricter per-second rate-limit window applied to analytics endpoints.
+      parameters:
+        - name: cursor
+          in: query
+          schema: { type: string }
+          description: |
+            Opaque cursor from a previous response's `nextCursor`. Omit it to start from
+            now: the response is then an empty page carrying the feed's current position.
+            Rejected with a `400` when malformed, or when older than the retention window.
+          example: v1.WyIyMDI2LTA5LTAxIDE3OjEyOjA0IiwiNjVmMWMwYTllMmI1YWYwMDEyYWIzNGNkIl0
+        - name: limit
+          in: query
+          schema: { type: integer, minimum: 1, maximum: 100, default: 50 }
+          description: 'Page size. Out-of-range values are a 400, never a silent clamp.'
+        - name: platform
+          in: query
+          schema: { type: string }
+          description: 'Filter to a single platform (for example "youtube"). Omit for every platform.'
+        - name: profileId
+          in: query
+          schema: { type: string, default: all }
+          description: 'Filter by profile ID (default "all"). Must be a valid profile ID or "all".'
+      responses:
+        '200':
+          description: One page of changed analytics
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AnalyticsDeltaResponse'
+              examples:
+                bootstrap:
+                  summary: 'First call, no cursor: an empty page carrying the feed position'
+                  value:
+                    data: []
+                    nextCursor: "v1.WyIyMDI2LTA5LTAxIDE3OjA4OjUxIiwiIl0"
+                    hasMore: false
+                page:
+                  summary: A page of changed snapshots
+                  value:
+                    data:
+                      - postId: "65f1c0a9e2b5af0012ab34cd"
+                        accountId: "64e1f0a9e2b5af0012ab34cd"
+                        profileId: "64e1f0a9e2b5af0012ab34aa"
+                        platform: "youtube"
+                        platformPostId: "dQw4w9WgXcQ"
+                        publishedAt: "2026-08-28T10:00:05Z"
+                        syncedAt: "2026-09-01T17:11:38Z"
+                        isDeleted: false
+                        metrics:
+                          impressions: 15420
+                          reach: 12350
+                          likes: 342
+                          comments: 28
+                          shares: 45
+                          saves: 12
+                          sends: 0
+                          clicks: 189
+                          views: 9310
+                          follows: 4
+                          igReelsAvgWatchTime: 0
+                          igReelsVideoViewTotalTime: 0
+                          reposts: 0
+                          reelsSkipRate: 0
+                    nextCursor: "v1.WyIyMDI2LTA5LTAxIDE3OjEyOjA0IiwiNjVmMWMwYTllMmI1YWYwMDEyYWIzNGNkIl0"
+                    hasMore: true
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '402':
+          description: Analytics access required. Legacy plans need the Analytics add-on; included by default on usage-based plans.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error: { type: string, example: Analytics add-on required }
+                  code: { type: string, example: analytics_addon_required }
+        '403':
+          description: |
+            The caller cannot read the requested profile, the API key is scoped to other
+            profiles, or the profile sits outside the plan's profile limit (`code`
+            `PROFILE_OVER_LIMIT`).
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404': { $ref: '#/components/responses/NotFound' }
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '503':
+          description: |
+            The delta feed is temporarily unavailable, for example in the minutes between
+            an application release and the analytics store catching up with it. Nothing is
+            wrong with the request: retry it unchanged, honouring `Retry-After`. The feed
+            answers this rather than an empty page, because an empty page is
+            indistinguishable from "nothing changed" and would advance you past a window
+            you never received.
           content:
             application/json:
               schema:
@@ -25387,7 +25757,7 @@ paths:
                   minItems: 1
                   items:
                     type: string
-                    enum: [post.scheduled, post.published, post.failed, post.partial, post.cancelled, post.recycled, post.platform.published, post.platform.failed, post.platform.deleted, post.tiktok.url_resolved, post.external.created, post.external.updated, post.external.deleted, account.connected, account.disconnected, account.ads.initial_sync_completed, message.received, conversation.started, call.received, call.ended, call.failed, call.permission_request, message.sent, message.edited, message.deleted, message.delivered, message.read, message.failed, reaction.received, referral.received, comment.received, review.new, review.updated, lead.received, ad.status_changed, whatsapp.template.status_updated, whatsapp.template.category_updated, whatsapp.account.name_status_updated, whatsapp.automatic_event, whatsapp.number.activated, whatsapp.number.declined, whatsapp.number.action_required, whatsapp.number.verification_required, whatsapp.number.suspended, whatsapp.number.reactivated, whatsapp.number.released, whatsapp.number.kyc_submitted, phone_number.stock_available, verification.approved, verification.failed]
+                    enum: [post.scheduled, post.published, post.failed, post.partial, post.cancelled, post.recycled, post.platform.published, post.platform.failed, post.platform.deleted, post.tiktok.url_resolved, post.external.created, post.external.updated, post.external.deleted, account.connected, account.disconnected, account.ads.initial_sync_completed, analytics.synced, message.received, conversation.started, call.received, call.ended, call.failed, call.permission_request, message.sent, message.edited, message.deleted, message.delivered, message.read, message.failed, reaction.received, referral.received, comment.received, review.new, review.updated, lead.received, ad.status_changed, whatsapp.template.status_updated, whatsapp.template.category_updated, whatsapp.account.name_status_updated, whatsapp.automatic_event, whatsapp.number.activated, whatsapp.number.declined, whatsapp.number.action_required, whatsapp.number.verification_required, whatsapp.number.suspended, whatsapp.number.reactivated, whatsapp.number.released, whatsapp.number.kyc_submitted, phone_number.stock_available, verification.approved, verification.failed]
                   description: Events to subscribe to (at least one required)
                 isActive:
                   type: boolean
@@ -25506,7 +25876,7 @@ paths:
                   minItems: 1
                   items:
                     type: string
-                    enum: [post.scheduled, post.published, post.failed, post.partial, post.cancelled, post.recycled, post.platform.published, post.platform.failed, post.platform.deleted, post.tiktok.url_resolved, post.external.created, post.external.updated, post.external.deleted, account.connected, account.disconnected, account.ads.initial_sync_completed, message.received, conversation.started, call.received, call.ended, call.failed, call.permission_request, message.sent, message.edited, message.deleted, message.delivered, message.read, message.failed, reaction.received, referral.received, comment.received, review.new, review.updated, lead.received, ad.status_changed, whatsapp.template.status_updated, whatsapp.template.category_updated, whatsapp.account.name_status_updated, whatsapp.automatic_event, whatsapp.number.activated, whatsapp.number.declined, whatsapp.number.action_required, whatsapp.number.verification_required, whatsapp.number.suspended, whatsapp.number.reactivated, whatsapp.number.released, whatsapp.number.kyc_submitted, phone_number.stock_available, verification.approved, verification.failed]
+                    enum: [post.scheduled, post.published, post.failed, post.partial, post.cancelled, post.recycled, post.platform.published, post.platform.failed, post.platform.deleted, post.tiktok.url_resolved, post.external.created, post.external.updated, post.external.deleted, account.connected, account.disconnected, account.ads.initial_sync_completed, analytics.synced, message.received, conversation.started, call.received, call.ended, call.failed, call.permission_request, message.sent, message.edited, message.deleted, message.delivered, message.read, message.failed, reaction.received, referral.received, comment.received, review.new, review.updated, lead.received, ad.status_changed, whatsapp.template.status_updated, whatsapp.template.category_updated, whatsapp.account.name_status_updated, whatsapp.automatic_event, whatsapp.number.activated, whatsapp.number.declined, whatsapp.number.action_required, whatsapp.number.verification_required, whatsapp.number.suspended, whatsapp.number.reactivated, whatsapp.number.released, whatsapp.number.kyc_submitted, phone_number.stock_available, verification.approved, verification.failed]
                   description: Events to subscribe to. Must contain at least one event if provided.
                 isActive:
                   type: boolean
@@ -43965,8 +44335,12 @@ paths:
                   items: { type: string }
                 regionalRegulatedCategories:
                   type: array
-                  description: 'Meta only. Regional regulation categories required when the ad set targets certain countries (e.g. SINGAPORE_UNIVERSAL, TAIWAN_UNIVERSAL, THAILAND_UNIVERSAL, AUSTRALIA_FINSERV, INDIA_FINSERV). Forwarded to the ad set.'
+                  description: 'Meta only. Regional regulation categories required when the ad set targets certain countries (e.g. BRAZIL_REGULATION, SINGAPORE_UNIVERSAL, TAIWAN_UNIVERSAL, THAILAND_UNIVERSAL, AUSTRALIA_FINSERV, INDIA_FINSERV, TAIWAN_FINSERV). Forwarded to the ad set.'
                   items: { type: string }
+                regionalRegulationIdentities:
+                  type: object
+                  additionalProperties: { type: integer }
+                  description: 'Meta only. Beneficiary/payer entity IDs for regionalRegulatedCategories. Values are numeric IDs from Meta verification. Keys vary by category (e.g. universal_beneficiary / universal_payer for BRAZIL_REGULATION and THAILAND_UNIVERSAL). If omitted, Meta uses Ads Manager defaults when configured.'
                 linkUrl:
                   type: string
                   format: uri
@@ -44508,10 +44882,18 @@ paths:
                   type: array
                   description: |
                     Meta only. Regional regulation categories required when the ad set targets certain countries.
-                    Known values: SINGAPORE_UNIVERSAL, TAIWAN_UNIVERSAL, THAILAND_UNIVERSAL, AUSTRALIA_FINSERV,
-                    INDIA_FINSERV, TAIWAN_FINSERV. Meta rejects the ad set without this when the targeting geo
-                    includes the corresponding country.
+                    Known values: BRAZIL_REGULATION, SINGAPORE_UNIVERSAL, TAIWAN_UNIVERSAL, THAILAND_UNIVERSAL,
+                    AUSTRALIA_FINSERV, INDIA_FINSERV, TAIWAN_FINSERV. Meta rejects the ad set without this when
+                    the targeting geo includes the corresponding country.
                   items: { type: string }
+                regionalRegulationIdentities:
+                  type: object
+                  additionalProperties: { type: integer }
+                  description: |
+                    Meta only. Beneficiary/payer entity IDs for regionalRegulatedCategories. Values are
+                    numeric IDs from Meta verification. Keys vary by category (e.g. universal_beneficiary /
+                    universal_payer for BRAZIL_REGULATION and THAILAND_UNIVERSAL). If omitted, Meta uses
+                    Ads Manager defaults when configured.
                 endDate: { type: string, format: date-time, description: Required for lifetime budgets }
                 startDate:
                   type: string

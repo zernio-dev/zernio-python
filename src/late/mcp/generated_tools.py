@@ -3121,6 +3121,7 @@ def register_generated_tools(mcp, _get_client):
         special_ad_categories: list[str] | None = None,
         special_ad_category_country: list[str] | None = None,
         regional_regulated_categories: list[str] | None = None,
+        regional_regulation_identities: dict[str, Any] | None = None,
         link_url: str | None = None,
         call_to_action: str | None = None,
         spark_auth_code: str | None = None,
@@ -3195,7 +3196,8 @@ def register_generated_tools(mcp, _get_client):
                 tracking: Meta only. Tracking specs (pixel, URL tags).
                 special_ad_categories: Meta only. Required for housing, employment, credit, or political ads.
                 special_ad_category_country: Meta (metaads) only. 2-letter ISO country codes the special ad category applies to. Requires specialAdCategories to be set (400 otherwise).
-                regional_regulated_categories: Meta only. Regional regulation categories required when the ad set targets certain countries (e.g. SINGAPORE_UNIVERSAL, TAIWAN_UNIVERSAL, THAILAND_UNIVERSAL, AUSTRALIA_FINSERV, INDIA_FINSERV). Forwarded to the ad set.
+                regional_regulated_categories: Meta only. Regional regulation categories required when the ad set targets certain countries (e.g. BRAZIL_REGULATION, SINGAPORE_UNIVERSAL, TAIWAN_UNIVERSAL, THAILAND_UNIVERSAL, AUSTRALIA_FINSERV, INDIA_FINSERV, TAIWAN_FINSERV). Forwarded to the ad set.
+                regional_regulation_identities: Meta only. Beneficiary/payer entity IDs for regionalRegulatedCategories. Values are numeric IDs from Meta verification. Keys vary by category (e.g. universal_beneficiary / universal_payer for BRAZIL_REGULATION and THAILAND_UNIVERSAL). If omitted, Meta uses Ads Manager defaults when configured.
                 link_url: Destination URL for the CTA button. Send it together with `callToAction`.
 
         **Meta**: adds a top-level `call_to_action` to the post-reference creative.
@@ -3268,6 +3270,7 @@ def register_generated_tools(mcp, _get_client):
                 special_ad_categories=special_ad_categories,
                 special_ad_category_country=special_ad_category_country,
                 regional_regulated_categories=regional_regulated_categories,
+                regional_regulation_identities=regional_regulation_identities,
                 link_url=link_url,
                 call_to_action=call_to_action,
                 spark_auth_code=spark_auth_code,
@@ -3350,6 +3353,7 @@ def register_generated_tools(mcp, _get_client):
         special_ad_categories: list[str] | None = None,
         special_ad_category_country: list[str] | None = None,
         regional_regulated_categories: list[str] | None = None,
+        regional_regulation_identities: dict[str, Any] | None = None,
         end_date: str | None = None,
         start_date: str | None = None,
         instagram_account_id: str | None = None,
@@ -3559,9 +3563,13 @@ def register_generated_tools(mcp, _get_client):
         specialAdCategories to be set (400 otherwise). Ignored when joining an existing campaign via
         existingCampaignId (the existing campaign's category/country already governs it).
                 regional_regulated_categories: Meta only. Regional regulation categories required when the ad set targets certain countries.
-        Known values: SINGAPORE_UNIVERSAL, TAIWAN_UNIVERSAL, THAILAND_UNIVERSAL, AUSTRALIA_FINSERV,
-        INDIA_FINSERV, TAIWAN_FINSERV. Meta rejects the ad set without this when the targeting geo
-        includes the corresponding country.
+        Known values: BRAZIL_REGULATION, SINGAPORE_UNIVERSAL, TAIWAN_UNIVERSAL, THAILAND_UNIVERSAL,
+        AUSTRALIA_FINSERV, INDIA_FINSERV, TAIWAN_FINSERV. Meta rejects the ad set without this when
+        the targeting geo includes the corresponding country.
+                regional_regulation_identities: Meta only. Beneficiary/payer entity IDs for regionalRegulatedCategories. Values are
+        numeric IDs from Meta verification. Keys vary by category (e.g. universal_beneficiary /
+        universal_payer for BRAZIL_REGULATION and THAILAND_UNIVERSAL). If omitted, Meta uses
+        Ads Manager defaults when configured.
                 end_date: Required for lifetime budgets
                 start_date: Meta only. Ad-set start time (ISO 8601, e.g. "2026-06-10T09:00:00Z"), mapped to the
         ad set's `start_time`. When omitted the ad starts delivering immediately. For lifetime
@@ -3859,6 +3867,7 @@ def register_generated_tools(mcp, _get_client):
                 special_ad_categories=special_ad_categories,
                 special_ad_category_country=special_ad_category_country,
                 regional_regulated_categories=regional_regulated_categories,
+                regional_regulation_identities=regional_regulation_identities,
                 end_date=end_date,
                 start_date=start_date,
                 instagram_account_id=instagram_account_id,
@@ -5100,6 +5109,38 @@ def register_generated_tools(mcp, _get_client):
                 page=page,
                 sort_by=sort_by,
                 order=order,
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Analytics changed since a cursor",
+            readOnlyHint=True,
+            destructiveHint=False,
+            openWorldHint=False,
+        )
+    )
+    def analytics_get_analytics_delta(
+        cursor: str | None = None,
+        limit: int = 50,
+        platform: str | None = None,
+        profile_id: str = "all",
+    ) -> str:
+        """Analytics changed since a cursor
+
+            Args:
+                cursor: Opaque cursor from a previous response's `nextCursor`. Omit it to start from
+        now: the response is then an empty page carrying the feed's current position.
+        Rejected with a `400` when malformed, or when older than the retention window.
+                limit: Page size. Out-of-range values are a 400, never a silent clamp.
+                platform: Filter to a single platform (for example "youtube"). Omit for every platform.
+                profile_id: Filter by profile ID (default "all"). Must be a valid profile ID or "all"."""
+        client = _get_client()
+        try:
+            response = client.analytics.get_analytics_delta(
+                cursor=cursor, limit=limit, platform=platform, profile_id=profile_id
             )
             return _format_response(response)
         except Exception as e:
@@ -12351,6 +12392,7 @@ def register_generated_tools(mcp, _get_client):
         dsa_beneficiary: str | None = None,
         dsa_payor: str | None = None,
         regional_regulated_categories: list[str] | None = None,
+        regional_regulation_identities: dict[str, Any] | None = None,
     ) -> str:
         """Create click-to-message ad (WhatsApp / Messenger / Instagram Direct)
 
@@ -12467,7 +12509,18 @@ def register_generated_tools(mcp, _get_client):
         (for example, an agency paying for a client's ads). Same rules as
         `dsaBeneficiary`: required for EU targeting unless the ad account has
         a default payor.
-                regional_regulated_categories: Meta only. Regional regulation categories required when the ad set targets certain countries (e.g. SINGAPORE_UNIVERSAL, TAIWAN_UNIVERSAL, THAILAND_UNIVERSAL, AUSTRALIA_FINSERV, INDIA_FINSERV). Forwarded to the ad set.
+                regional_regulated_categories: Meta only. Regional regulation categories required when the ad set targets certain countries (e.g. BRAZIL_REGULATION, SINGAPORE_UNIVERSAL, TAIWAN_UNIVERSAL, THAILAND_UNIVERSAL, AUSTRALIA_FINSERV, INDIA_FINSERV, TAIWAN_FINSERV). Forwarded to the ad set.
+                regional_regulation_identities: Meta only. Beneficiary/payer entity IDs required alongside regionalRegulatedCategories.
+        Values are numeric IDs from the advertiser's Meta verification/authorization setup.
+        Keys depend on the declared category: BRAZIL_REGULATION and THAILAND_UNIVERSAL use
+        universal_beneficiary / universal_payer; SINGAPORE_UNIVERSAL uses
+        singapore_universal_beneficiary / singapore_universal_payer; TAIWAN_UNIVERSAL uses
+        taiwan_universal_beneficiary / taiwan_universal_payer; TAIWAN_FINSERV uses
+        taiwan_finserv_beneficiary / taiwan_finserv_payer; AUSTRALIA_FINSERV uses
+        australia_finserv_beneficiary / australia_finserv_payer; INDIA_FINSERV uses
+        india_finserv_beneficiary / india_finserv_payer.
+        Both beneficiary and payer must be included. If omitted and the advertiser has
+        set defaults in Meta Ads Manager advertising settings, Meta auto-fills them.
                 destination: Where the conversation opens when the ad is tapped. (required)"""
         client = _get_client()
         try:
@@ -12507,6 +12560,7 @@ def register_generated_tools(mcp, _get_client):
                 dsa_beneficiary=dsa_beneficiary,
                 dsa_payor=dsa_payor,
                 regional_regulated_categories=regional_regulated_categories,
+                regional_regulation_identities=regional_regulation_identities,
                 destination=destination,
             )
             return _format_response(response)
@@ -12559,6 +12613,7 @@ def register_generated_tools(mcp, _get_client):
         dsa_beneficiary: str | None = None,
         dsa_payor: str | None = None,
         regional_regulated_categories: list[str] | None = None,
+        regional_regulation_identities: dict[str, Any] | None = None,
     ) -> str:
         """Create Click-to-Call ad
 
@@ -12675,7 +12730,18 @@ def register_generated_tools(mcp, _get_client):
         (for example, an agency paying for a client's ads). Same rules as
         `dsaBeneficiary`: required for EU targeting unless the ad account has
         a default payor.
-                regional_regulated_categories: Meta only. Regional regulation categories required when the ad set targets certain countries (e.g. SINGAPORE_UNIVERSAL, TAIWAN_UNIVERSAL, THAILAND_UNIVERSAL, AUSTRALIA_FINSERV, INDIA_FINSERV). Forwarded to the ad set.
+                regional_regulated_categories: Meta only. Regional regulation categories required when the ad set targets certain countries (e.g. BRAZIL_REGULATION, SINGAPORE_UNIVERSAL, TAIWAN_UNIVERSAL, THAILAND_UNIVERSAL, AUSTRALIA_FINSERV, INDIA_FINSERV, TAIWAN_FINSERV). Forwarded to the ad set.
+                regional_regulation_identities: Meta only. Beneficiary/payer entity IDs required alongside regionalRegulatedCategories.
+        Values are numeric IDs from the advertiser's Meta verification/authorization setup.
+        Keys depend on the declared category: BRAZIL_REGULATION and THAILAND_UNIVERSAL use
+        universal_beneficiary / universal_payer; SINGAPORE_UNIVERSAL uses
+        singapore_universal_beneficiary / singapore_universal_payer; TAIWAN_UNIVERSAL uses
+        taiwan_universal_beneficiary / taiwan_universal_payer; TAIWAN_FINSERV uses
+        taiwan_finserv_beneficiary / taiwan_finserv_payer; AUSTRALIA_FINSERV uses
+        australia_finserv_beneficiary / australia_finserv_payer; INDIA_FINSERV uses
+        india_finserv_beneficiary / india_finserv_payer.
+        Both beneficiary and payer must be included. If omitted and the advertiser has
+        set defaults in Meta Ads Manager advertising settings, Meta auto-fills them.
                 phone_number: E.164 number the CALL_NOW CTA dials (e.g. +34600111222). (required)
                 link_url: Website shown as the creative's link. Required: Meta rejects tel: as link_data.link; the phone number rides only the CTA. (required)"""
         client = _get_client()
@@ -12716,6 +12782,7 @@ def register_generated_tools(mcp, _get_client):
                 dsa_beneficiary=dsa_beneficiary,
                 dsa_payor=dsa_payor,
                 regional_regulated_categories=regional_regulated_categories,
+                regional_regulation_identities=regional_regulation_identities,
                 phone_number=phone_number,
                 link_url=link_url,
             )
@@ -12767,6 +12834,7 @@ def register_generated_tools(mcp, _get_client):
         dsa_beneficiary: str | None = None,
         dsa_payor: str | None = None,
         regional_regulated_categories: list[str] | None = None,
+        regional_regulation_identities: dict[str, Any] | None = None,
     ) -> str:
         """Create Click-to-WhatsApp ad (deprecated)
 
@@ -12883,7 +12951,18 @@ def register_generated_tools(mcp, _get_client):
         (for example, an agency paying for a client's ads). Same rules as
         `dsaBeneficiary`: required for EU targeting unless the ad account has
         a default payor.
-                regional_regulated_categories: Meta only. Regional regulation categories required when the ad set targets certain countries (e.g. SINGAPORE_UNIVERSAL, TAIWAN_UNIVERSAL, THAILAND_UNIVERSAL, AUSTRALIA_FINSERV, INDIA_FINSERV). Forwarded to the ad set."""
+                regional_regulated_categories: Meta only. Regional regulation categories required when the ad set targets certain countries (e.g. BRAZIL_REGULATION, SINGAPORE_UNIVERSAL, TAIWAN_UNIVERSAL, THAILAND_UNIVERSAL, AUSTRALIA_FINSERV, INDIA_FINSERV, TAIWAN_FINSERV). Forwarded to the ad set.
+                regional_regulation_identities: Meta only. Beneficiary/payer entity IDs required alongside regionalRegulatedCategories.
+        Values are numeric IDs from the advertiser's Meta verification/authorization setup.
+        Keys depend on the declared category: BRAZIL_REGULATION and THAILAND_UNIVERSAL use
+        universal_beneficiary / universal_payer; SINGAPORE_UNIVERSAL uses
+        singapore_universal_beneficiary / singapore_universal_payer; TAIWAN_UNIVERSAL uses
+        taiwan_universal_beneficiary / taiwan_universal_payer; TAIWAN_FINSERV uses
+        taiwan_finserv_beneficiary / taiwan_finserv_payer; AUSTRALIA_FINSERV uses
+        australia_finserv_beneficiary / australia_finserv_payer; INDIA_FINSERV uses
+        india_finserv_beneficiary / india_finserv_payer.
+        Both beneficiary and payer must be included. If omitted and the advertiser has
+        set defaults in Meta Ads Manager advertising settings, Meta auto-fills them."""
         client = _get_client()
         try:
             response = client.messaging_ads.create_ctwa_ad(
@@ -12922,6 +13001,7 @@ def register_generated_tools(mcp, _get_client):
                 dsa_beneficiary=dsa_beneficiary,
                 dsa_payor=dsa_payor,
                 regional_regulated_categories=regional_regulated_categories,
+                regional_regulation_identities=regional_regulation_identities,
             )
             return _format_response(response)
         except Exception as e:

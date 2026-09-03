@@ -106,6 +106,23 @@ class AnalyticsResource:
         )
         return self._client._get("/v1/analytics", params=params)
 
+    def get_analytics_delta(
+        self,
+        *,
+        cursor: str | None = None,
+        limit: int | None = 50,
+        platform: str | None = None,
+        profile_id: str | None = "all",
+    ) -> dict[str, Any]:
+        """Analytics changed since a cursor"""
+        params = self._build_params(
+            cursor=cursor,
+            limit=limit,
+            platform=platform,
+            profile_id=profile_id,
+        )
+        return self._client._get("/v1/analytics/delta", params=params)
+
     def get_you_tube_channel_insights(
         self,
         account_id: str,
@@ -535,6 +552,23 @@ class AnalyticsResource:
             order=order,
         )
         return await self._client._aget("/v1/analytics", params=params)
+
+    async def aget_analytics_delta(
+        self,
+        *,
+        cursor: str | None = None,
+        limit: int | None = 50,
+        platform: str | None = None,
+        profile_id: str | None = "all",
+    ) -> dict[str, Any]:
+        """Analytics changed since a cursor (async)"""
+        params = self._build_params(
+            cursor=cursor,
+            limit=limit,
+            platform=platform,
+            profile_id=profile_id,
+        )
+        return await self._client._aget("/v1/analytics/delta", params=params)
 
     async def aget_you_tube_channel_insights(
         self,

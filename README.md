@@ -230,6 +230,7 @@ Both `from zernio import ...` and `from late import ...` work identically. The `
 | Method | Description |
 |--------|-------------|
 | `analytics.get_analytics()` | Get post analytics |
+| `analytics.get_analytics_delta()` | Analytics changed since a cursor |
 | `analytics.get_best_time_to_post()` | Get best times to post |
 | `analytics.get_content_decay()` | Get content performance decay |
 | `analytics.get_daily_metrics()` | Get daily aggregated metrics |

@@ -114,6 +114,7 @@ class MessagingAdsResource:
         dsa_beneficiary: str | None = None,
         dsa_payor: str | None = None,
         regional_regulated_categories: list[str] | None = None,
+        regional_regulation_identities: dict[str, Any] | None = None,
     ) -> dict[str, Any]:
         """Create click-to-message ad (WhatsApp / Messenger / Instagram Direct)"""
         payload = self._build_payload(
@@ -152,6 +153,7 @@ class MessagingAdsResource:
             dsa_beneficiary=dsa_beneficiary,
             dsa_payor=dsa_payor,
             regional_regulated_categories=regional_regulated_categories,
+            regional_regulation_identities=regional_regulation_identities,
             destination=destination,
         )
         return self._client._post("/v1/ads/messaging", data=payload)
@@ -196,6 +198,7 @@ class MessagingAdsResource:
         dsa_beneficiary: str | None = None,
         dsa_payor: str | None = None,
         regional_regulated_categories: list[str] | None = None,
+        regional_regulation_identities: dict[str, Any] | None = None,
     ) -> dict[str, Any]:
         """Create Click-to-Call ad"""
         payload = self._build_payload(
@@ -234,6 +237,7 @@ class MessagingAdsResource:
             dsa_beneficiary=dsa_beneficiary,
             dsa_payor=dsa_payor,
             regional_regulated_categories=regional_regulated_categories,
+            regional_regulation_identities=regional_regulation_identities,
             phone_number=phone_number,
             link_url=link_url,
         )
@@ -277,6 +281,7 @@ class MessagingAdsResource:
         dsa_beneficiary: str | None = None,
         dsa_payor: str | None = None,
         regional_regulated_categories: list[str] | None = None,
+        regional_regulation_identities: dict[str, Any] | None = None,
     ) -> dict[str, Any]:
         """Create Click-to-WhatsApp ad (deprecated)"""
         payload = self._build_payload(
@@ -315,6 +320,7 @@ class MessagingAdsResource:
             dsa_beneficiary=dsa_beneficiary,
             dsa_payor=dsa_payor,
             regional_regulated_categories=regional_regulated_categories,
+            regional_regulation_identities=regional_regulation_identities,
         )
         return self._client._post("/v1/ads/ctwa", data=payload)
 
@@ -357,6 +363,7 @@ class MessagingAdsResource:
         dsa_beneficiary: str | None = None,
         dsa_payor: str | None = None,
         regional_regulated_categories: list[str] | None = None,
+        regional_regulation_identities: dict[str, Any] | None = None,
     ) -> dict[str, Any]:
         """Create click-to-message ad (WhatsApp / Messenger / Instagram Direct) (async)"""
         payload = self._build_payload(
@@ -395,6 +402,7 @@ class MessagingAdsResource:
             dsa_beneficiary=dsa_beneficiary,
             dsa_payor=dsa_payor,
             regional_regulated_categories=regional_regulated_categories,
+            regional_regulation_identities=regional_regulation_identities,
             destination=destination,
         )
         return await self._client._apost("/v1/ads/messaging", data=payload)
@@ -439,6 +447,7 @@ class MessagingAdsResource:
         dsa_beneficiary: str | None = None,
         dsa_payor: str | None = None,
         regional_regulated_categories: list[str] | None = None,
+        regional_regulation_identities: dict[str, Any] | None = None,
     ) -> dict[str, Any]:
         """Create Click-to-Call ad (async)"""
         payload = self._build_payload(
@@ -477,6 +486,7 @@ class MessagingAdsResource:
             dsa_beneficiary=dsa_beneficiary,
             dsa_payor=dsa_payor,
             regional_regulated_categories=regional_regulated_categories,
+            regional_regulation_identities=regional_regulation_identities,
             phone_number=phone_number,
             link_url=link_url,
         )
@@ -520,6 +530,7 @@ class MessagingAdsResource:
         dsa_beneficiary: str | None = None,
         dsa_payor: str | None = None,
         regional_regulated_categories: list[str] | None = None,
+        regional_regulation_identities: dict[str, Any] | None = None,
     ) -> dict[str, Any]:
         """Create Click-to-WhatsApp ad (deprecated) (async)"""
         payload = self._build_payload(
@@ -558,5 +569,6 @@ class MessagingAdsResource:
             dsa_beneficiary=dsa_beneficiary,
             dsa_payor=dsa_payor,
             regional_regulated_categories=regional_regulated_categories,
+            regional_regulation_identities=regional_regulation_identities,
         )
         return await self._client._apost("/v1/ads/ctwa", data=payload)
