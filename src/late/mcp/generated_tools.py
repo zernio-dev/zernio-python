@@ -3749,6 +3749,9 @@ def register_generated_tools(mcp, _get_client):
         Sending the bid fields in BOTH places returns a 400
         (`mutually_exclusive_fields`), and sending any of them in
         `adSetId` attach mode is a 400 too (the ad set already has its bid).
+        `dailyMinSpendTarget` / `lifetimeMinSpendTarget` set the new ad set's
+        minimum spend and live here only; they are rejected in `adSetId` attach
+        mode as well.
                 dsa_beneficiary: Legal entity that benefits from the ad. Required when targeting EU users
         (EU DSA, Article 26). Optional if the ad account has a default beneficiary:
         set it once via `PATCH /v1/ads/accounts` or in Meta Ads Manager, and Meta
