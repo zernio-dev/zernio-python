@@ -35,6 +35,22 @@ def _resolve_sdk_version() -> str:
     return "0.0.0+unknown"
 
 
+def _parse_error_body(response: httpx.Response) -> dict[str, Any]:
+    """Best-effort parse of an error response body.
+
+    Returns {} when the body is empty, when it isn't valid JSON (e.g. an
+    HTML 401 from a proxy in front of the API), or when the parsed value
+    isn't a dict.
+    """
+    if not response.content:
+        return {}
+    try:
+        data = response.json()
+    except ValueError:
+        return {}
+    return data if isinstance(data, dict) else {}
+
+
 class BaseClient:
     """
     Base HTTP client supporting both sync and async operations.
@@ -115,17 +131,23 @@ class BaseClient:
 
         # Handle errors
         if response.status_code == 401:
-            raise LateAuthenticationError("Invalid API key")
+            error_data = _parse_error_body(response)
+            raise LateAuthenticationError(
+                error_data.get("error", "Invalid API key"), details=error_data
+            )
 
         if response.status_code == 403:
-            error_data = response.json() if response.content else {}
+            error_data = _parse_error_body(response)
             raise LateForbiddenError(
-                error_data.get("error", "Access forbidden - check your plan")
+                error_data.get("error", "Access forbidden - check your plan"),
+                details=error_data,
             )
 
         if response.status_code == 404:
-            error_data = response.json() if response.content else {}
-            raise LateNotFoundError(error_data.get("error", "Resource not found"))
+            error_data = _parse_error_body(response)
+            raise LateNotFoundError(
+                error_data.get("error", "Resource not found"), details=error_data
+            )
 
         if response.status_code == 429:
             raise LateRateLimitError(
@@ -136,7 +158,7 @@ class BaseClient:
             )
 
         if response.status_code >= 400:
-            error_data = response.json() if response.content else {}
+            error_data = _parse_error_body(response)
             # Pass the entire response body through as `details` so callers
             # (and __str__) can surface the field name (`param`), the stable
             # error code (`code`), and platform-specific context. The API
@@ -146,7 +168,7 @@ class BaseClient:
             raise LateAPIError(
                 message=error_data.get("error", f"HTTP {response.status_code}"),
                 status_code=response.status_code,
-                details=error_data if isinstance(error_data, dict) else None,
+                details=error_data,
             )
 
         # Return parsed JSON or empty dict
@@ -200,10 +222,13 @@ class BaseClient:
         self,
         path: str,
         params: dict[str, Any] | None = None,
+        headers: dict[str, str] | None = None,
     ) -> dict[str, Any]:
         """Make a sync GET request."""
         with self._sync_client() as client:
-            return self._request_with_retry(client, "GET", path, params=params)
+            return self._request_with_retry(
+                client, "GET", path, params=params, headers=headers
+            )
 
     def _post(
         self,
@@ -211,24 +236,27 @@ class BaseClient:
         data: dict[str, Any] | None = None,
         files: dict[str, Any] | list[tuple[str, Any]] | None = None,
         params: dict[str, Any] | None = None,
+        headers: dict[str, str] | None = None,
     ) -> dict[str, Any]:
         """Make a sync POST request."""
         if files:
             # For file uploads, create a fresh client without Content-Type
             # (httpx sets the correct multipart Content-Type automatically)
-            headers = {k: v for k, v in self._headers.items() if k != "Content-Type"}
+            client_headers = {
+                k: v for k, v in self._headers.items() if k != "Content-Type"
+            }
             with httpx.Client(
                 base_url=self.base_url,
-                headers=headers,
+                headers=client_headers,
                 timeout=self.timeout,
             ) as client:
                 return self._request_with_retry(
-                    client, "POST", path, files=files, params=params
+                    client, "POST", path, files=files, params=params, headers=headers
                 )
 
         with self._sync_client() as client:
             return self._request_with_retry(
-                client, "POST", path, json=data, params=params
+                client, "POST", path, json=data, params=params, headers=headers
             )
 
     def _put(
@@ -338,10 +366,13 @@ class BaseClient:
         self,
         path: str,
         params: dict[str, Any] | None = None,
+        headers: dict[str, str] | None = None,
     ) -> dict[str, Any]:
         """Make an async GET request."""
         async with self._async_client() as client:
-            return await self._arequest_with_retry(client, "GET", path, params=params)
+            return await self._arequest_with_retry(
+                client, "GET", path, params=params, headers=headers
+            )
 
     async def _apost(
         self,
@@ -349,23 +380,26 @@ class BaseClient:
         data: dict[str, Any] | None = None,
         files: dict[str, Any] | list[tuple[str, Any]] | None = None,
         params: dict[str, Any] | None = None,
+        headers: dict[str, str] | None = None,
     ) -> dict[str, Any]:
         """Make an async POST request."""
         if files:
             # For file uploads, create a fresh client without Content-Type
-            headers = {k: v for k, v in self._headers.items() if k != "Content-Type"}
+            client_headers = {
+                k: v for k, v in self._headers.items() if k != "Content-Type"
+            }
             async with httpx.AsyncClient(
                 base_url=self.base_url,
-                headers=headers,
+                headers=client_headers,
                 timeout=self.timeout,
             ) as client:
                 return await self._arequest_with_retry(
-                    client, "POST", path, files=files, params=params
+                    client, "POST", path, files=files, params=params, headers=headers
                 )
 
         async with self._async_client() as client:
             return await self._arequest_with_retry(
-                client, "POST", path, json=data, params=params
+                client, "POST", path, json=data, params=params, headers=headers
             )
 
     async def _aput(

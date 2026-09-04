@@ -294,6 +294,7 @@ def generate_method_body(
     body_params = [p for p in params if p["in"] == "body"]
     raw_body_params = [p for p in params if p["in"] == "raw_body"]
     path_params = [p for p in params if p["in"] == "path"]
+    header_params = [p for p in params if p["in"] == "header"]
 
     # Handle path parameters
     path_expr = f'"{path}"'
@@ -314,6 +315,9 @@ def generate_method_body(
     use_query_params = http_method.upper() in ("GET", "DELETE") and query_params
     use_body_params = http_method.upper() in ("POST", "PUT", "PATCH") and body_params
     use_query_on_post = http_method.upper() in ("POST", "PUT", "PATCH") and query_params
+    # Only _get and _post accept a `headers` kwarg (see BaseClient); no
+    # operation on PUT/PATCH/DELETE currently has a header param.
+    use_headers = http_method.upper() in ("GET", "POST") and header_params
 
     # Build params dict if needed
     if use_query_params or use_query_on_post:
@@ -329,12 +333,38 @@ def generate_method_body(
             lines.append(f"            {p['name']}={p['name']},")
         lines.append("        )")
 
+    # Build headers dict if needed. Keyed on original_name, never the snake_case
+    # param name: the wire name is `x-request-id`, and _build_params would have
+    # camelCased it to `xRequestId`.
+    if use_headers:
+        if all(p["required"] for p in header_params):
+            entries = ", ".join(
+                f'"{p["original_name"]}": {p["name"]}' for p in header_params
+            )
+            lines.append(f"        headers = {{{entries}}}")
+        else:
+            lines.append("        headers: dict[str, str] = {}")
+            for p in header_params:
+                if p["required"]:
+                    lines.append(
+                        f'        headers["{p["original_name"]}"] = {p["name"]}'
+                    )
+                else:
+                    lines.append(f"        if {p['name']} is not None:")
+                    lines.append(
+                        f'            headers["{p["original_name"]}"] = {p["name"]}'
+                    )
+
     # Make the request
     if http_method.upper() == "GET":
+        call_args = [path_expr]
         if query_params:
-            lines.append(f"        return {await_prefix}self._client.{client_method}({path_expr}, params=params)")
-        else:
-            lines.append(f"        return {await_prefix}self._client.{client_method}({path_expr})")
+            call_args.append("params=params")
+        if use_headers:
+            call_args.append("headers=headers")
+        lines.append(
+            f"        return {await_prefix}self._client.{client_method}({', '.join(call_args)})"
+        )
     elif http_method.upper() == "DELETE":
         if query_params:
             lines.append(f"        return {await_prefix}self._client.{client_method}({path_expr}, params=params)")
@@ -348,6 +378,8 @@ def generate_method_body(
             call_args.append(f"data={raw_body_params[0]['name']}")
         if query_params:
             call_args.append("params=params")
+        if use_headers:
+            call_args.append("headers=headers")
         lines.append(
             f"        return {await_prefix}self._client.{client_method}({', '.join(call_args)})"
         )

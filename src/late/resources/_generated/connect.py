@@ -301,7 +301,10 @@ class ConnectResource:
             profile_id=profile_id,
             temp_token=temp_token,
         )
-        return self._client._get("/v1/connect/pinterest/select-board", params=params)
+        headers = {"X-Connect-Token": x_connect_token}
+        return self._client._get(
+            "/v1/connect/pinterest/select-board", params=params, headers=headers
+        )
 
     def select_pinterest_board(
         self,
@@ -336,7 +339,10 @@ class ConnectResource:
             profile_id=profile_id,
             temp_token=temp_token,
         )
-        return self._client._get("/v1/connect/snapchat/select-profile", params=params)
+        headers = {"X-Connect-Token": x_connect_token}
+        return self._client._get(
+            "/v1/connect/snapchat/select-profile", params=params, headers=headers
+        )
 
     def select_snapchat_profile(
         self,
@@ -360,7 +366,12 @@ class ConnectResource:
             expires_in=expires_in,
             redirect_url=redirect_url,
         )
-        return self._client._post("/v1/connect/snapchat/select-profile", data=payload)
+        headers: dict[str, str] = {}
+        if x_connect_token is not None:
+            headers["X-Connect-Token"] = x_connect_token
+        return self._client._post(
+            "/v1/connect/snapchat/select-profile", data=payload, headers=headers
+        )
 
     def connect_bluesky_credentials(
         self,
@@ -423,8 +434,11 @@ class ConnectResource:
             profile_id=profile_id,
             temp_token=temp_token,
         )
+        headers: dict[str, str] = {}
+        if x_connect_token is not None:
+            headers["X-Connect-Token"] = x_connect_token
         return self._client._get(
-            "/v1/connect/whatsapp/select-phone-number", params=params
+            "/v1/connect/whatsapp/select-phone-number", params=params, headers=headers
         )
 
     def complete_whats_app_phone_selection(
@@ -447,8 +461,11 @@ class ConnectResource:
             user_profile=user_profile,
             redirect_url=redirect_url,
         )
+        headers: dict[str, str] = {}
+        if x_connect_token is not None:
+            headers["X-Connect-Token"] = x_connect_token
         return self._client._post(
-            "/v1/connect/whatsapp/select-phone-number", data=payload
+            "/v1/connect/whatsapp/select-phone-number", data=payload, headers=headers
         )
 
     def connect_whats_app_embedded_signup(
@@ -1002,8 +1019,9 @@ class ConnectResource:
             profile_id=profile_id,
             temp_token=temp_token,
         )
+        headers = {"X-Connect-Token": x_connect_token}
         return await self._client._aget(
-            "/v1/connect/pinterest/select-board", params=params
+            "/v1/connect/pinterest/select-board", params=params, headers=headers
         )
 
     async def aselect_pinterest_board(
@@ -1041,8 +1059,9 @@ class ConnectResource:
             profile_id=profile_id,
             temp_token=temp_token,
         )
+        headers = {"X-Connect-Token": x_connect_token}
         return await self._client._aget(
-            "/v1/connect/snapchat/select-profile", params=params
+            "/v1/connect/snapchat/select-profile", params=params, headers=headers
         )
 
     async def aselect_snapchat_profile(
@@ -1067,8 +1086,11 @@ class ConnectResource:
             expires_in=expires_in,
             redirect_url=redirect_url,
         )
+        headers: dict[str, str] = {}
+        if x_connect_token is not None:
+            headers["X-Connect-Token"] = x_connect_token
         return await self._client._apost(
-            "/v1/connect/snapchat/select-profile", data=payload
+            "/v1/connect/snapchat/select-profile", data=payload, headers=headers
         )
 
     async def aconnect_bluesky_credentials(
@@ -1138,8 +1160,11 @@ class ConnectResource:
             profile_id=profile_id,
             temp_token=temp_token,
         )
+        headers: dict[str, str] = {}
+        if x_connect_token is not None:
+            headers["X-Connect-Token"] = x_connect_token
         return await self._client._aget(
-            "/v1/connect/whatsapp/select-phone-number", params=params
+            "/v1/connect/whatsapp/select-phone-number", params=params, headers=headers
         )
 
     async def acomplete_whats_app_phone_selection(
@@ -1162,8 +1187,11 @@ class ConnectResource:
             user_profile=user_profile,
             redirect_url=redirect_url,
         )
+        headers: dict[str, str] = {}
+        if x_connect_token is not None:
+            headers["X-Connect-Token"] = x_connect_token
         return await self._client._apost(
-            "/v1/connect/whatsapp/select-phone-number", data=payload
+            "/v1/connect/whatsapp/select-phone-number", data=payload, headers=headers
         )
 
     async def aconnect_whats_app_embedded_signup(
