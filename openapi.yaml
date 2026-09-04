@@ -28127,6 +28127,13 @@ paths:
                       subcode: { type: integer, description: "Meta error_subcode" }
                       fbtraceId: { type: string, description: "Meta fbtrace_id, quote this in a Meta bug report" }
                       type: { type: string, description: "Meta error type (e.g. OAuthException)" }
+        '500':
+          description: >-
+            The platform rejected or failed the send. Zernio does NOT retry a
+            send internally: a message send is not idempotent, and an opaque
+            upstream failure (for example WhatsApp 131000) does not say whether
+            the message was delivered. Retrying this request may deliver the
+            message twice. Retry only if your use case tolerates a duplicate.
         '401': { $ref: '#/components/responses/Unauthorized' }
         '403':
           description: Inbox addon required
