@@ -5,6 +5,7 @@ Base HTTP client with sync/async support.
 from __future__ import annotations
 
 import time
+import uuid
 from contextlib import asynccontextmanager, contextmanager
 from importlib.metadata import PackageNotFoundError, version
 from typing import TYPE_CHECKING, Any
@@ -49,6 +50,12 @@ def _parse_error_body(response: httpx.Response) -> dict[str, Any]:
     except ValueError:
         return {}
     return data if isinstance(data, dict) else {}
+
+
+def _with_request_id(headers: dict[str, str] | None) -> dict[str, str]:
+    merged = dict(headers or {})
+    merged.setdefault("x-request-id", str(uuid.uuid4()))
+    return merged
 
 
 class BaseClient:
@@ -185,6 +192,12 @@ class BaseClient:
     ) -> dict[str, Any]:
         """Make a request with automatic retry on transient errors."""
         last_error: Exception | None = None
+
+        # Mint the id once, outside the loop: every attempt must carry the SAME
+        # x-request-id or the server cannot match a replay to the original. httpx
+        # copies this dict per attempt rather than mutating it, so one assignment
+        # here is genuinely reused. setdefault keeps a caller-supplied id.
+        kwargs["headers"] = _with_request_id(kwargs.get("headers"))
 
         for attempt in range(self.max_retries):
             try:
@@ -332,6 +345,12 @@ class BaseClient:
         import asyncio
 
         last_error: Exception | None = None
+
+        # Mint the id once, outside the loop: every attempt must carry the SAME
+        # x-request-id or the server cannot match a replay to the original. httpx
+        # copies this dict per attempt rather than mutating it, so one assignment
+        # here is genuinely reused. setdefault keeps a caller-supplied id.
+        kwargs["headers"] = _with_request_id(kwargs.get("headers"))
 
         for attempt in range(self.max_retries):
             try:
