@@ -52,8 +52,12 @@ class LateAPIError(LateError):
 class LateAuthenticationError(LateAPIError):
     """Exception raised for authentication errors (401)."""
 
-    def __init__(self, message: str = "Authentication failed") -> None:
-        super().__init__(message, status_code=401)
+    def __init__(
+        self,
+        message: str = "Authentication failed",
+        details: dict[str, Any] | None = None,
+    ) -> None:
+        super().__init__(message, status_code=401, details=details)
 
 
 class LateRateLimitError(LateAPIError):
@@ -81,15 +85,23 @@ class LateRateLimitError(LateAPIError):
 class LateNotFoundError(LateAPIError):
     """Exception raised when a resource is not found (404)."""
 
-    def __init__(self, message: str = "Resource not found") -> None:
-        super().__init__(message, status_code=404)
+    def __init__(
+        self,
+        message: str = "Resource not found",
+        details: dict[str, Any] | None = None,
+    ) -> None:
+        super().__init__(message, status_code=404, details=details)
 
 
 class LateForbiddenError(LateAPIError):
     """Exception raised for forbidden access (403)."""
 
-    def __init__(self, message: str = "Access forbidden") -> None:
-        super().__init__(message, status_code=403)
+    def __init__(
+        self,
+        message: str = "Access forbidden",
+        details: dict[str, Any] | None = None,
+    ) -> None:
+        super().__init__(message, status_code=403, details=details)
 
 
 class LateValidationError(LateError):
