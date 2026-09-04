@@ -41171,7 +41171,8 @@ paths:
         Platform notes: on Meta a budget here is campaign-level (CBO) by definition; omit it
         for ABO (each ad set carries its own budget), and `specialAdCategories` /
         `bidStrategy` are Meta-only (400 elsewhere). Google, X and OpenAI require a budget
-        (422 without one; OpenAI accepts only `budgetType: lifetime`). LinkedIn creates the
+        (422 without one; OpenAI accepts only `budgetType: lifetime`, Google only
+        `budgetType: daily`). LinkedIn creates the
         campaign GROUP (our campaign level) and rejects a budget, which lives on the
         campaign (ad set) level there; it comes back `status: DRAFT`. TikTok campaigns are
         created without a status and report `ENABLE`. Created `PAUSED` unless
@@ -45353,7 +45354,7 @@ paths:
                                 items: { type: string, enum: [mobile, desktop] }
                 audienceId: { type: string, description: Custom audience ID for targeting }
                 campaignType: { type: string, enum: [display, search], default: display, description: Google only }
-                keywords: { type: array, items: { type: string }, description: "Google Search only. BROAD-match keywords on the new ad group (first 20)." }
+                keywords: { type: array, maxItems: 1000, items: { type: string, maxLength: 80 }, description: "Google Search only. BROAD-match keywords on the new ad group. Editable later via PUT /v1/ads/{adId} targeting.keywords, which also sets match types." }
                 negativeKeywords: { type: array, items: { type: string, maxLength: 80 }, description: "Google Search only; other platforms return 400. BROAD-match negative keywords on the new ad group. Editable later via PUT /v1/ads/{adId} targeting.negativeKeywords." }
                 additionalHeadlines: { type: array, items: { type: string }, description: "Google Search RSA only. Extra headlines." }
                 additionalDescriptions: { type: array, items: { type: string }, description: "Google Search RSA only. Extra descriptions." }

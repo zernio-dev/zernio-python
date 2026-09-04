@@ -3666,7 +3666,7 @@ def register_generated_tools(mcp, _get_client):
         posters; Meta auto-generates when omitted). Exactly one catch-all default is required.
                 audience_id: Custom audience ID for targeting
                 campaign_type: Google only
-                keywords: Google Search only. BROAD-match keywords on the new ad group (first 20).
+                keywords: Google Search only. BROAD-match keywords on the new ad group. Editable later via PUT /v1/ads/{adId} targeting.keywords, which also sets match types.
                 negative_keywords: Google Search only; other platforms return 400. BROAD-match negative keywords on the new ad group. Editable later via PUT /v1/ads/{adId} targeting.negativeKeywords.
                 additional_headlines: Google Search RSA only. Extra headlines.
                 additional_descriptions: Google Search RSA only. Extra descriptions.
