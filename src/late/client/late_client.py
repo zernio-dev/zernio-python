@@ -113,6 +113,7 @@ class Zernio(BaseClient):
         base_url: str | None = None,
         timeout: float = 30.0,
         max_retries: int = 3,
+        publish_timeout: float = 300.0,
     ) -> None:
         """
         Initialize the Zernio client.
@@ -123,6 +124,9 @@ class Zernio(BaseClient):
             base_url: Base URL (default: https://zernio.com/api)
             timeout: Request timeout in seconds
             max_retries: Maximum retries for failed requests
+            publish_timeout: Timeout in seconds for publishNow creates, which
+                             publish synchronously and can outlast `timeout`
+                             (default: 300)
 
         Raises:
             ValueError: If no API key is provided and neither ZERNIO_API_KEY
@@ -137,7 +141,11 @@ class Zernio(BaseClient):
             )
 
         super().__init__(
-            resolved_key, base_url=base_url, timeout=timeout, max_retries=max_retries
+            resolved_key,
+            base_url=base_url,
+            timeout=timeout,
+            max_retries=max_retries,
+            publish_timeout=publish_timeout,
         )
 
         # --- auto-registered resources (do not edit) ---
