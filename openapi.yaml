@@ -1544,7 +1544,10 @@ components:
         details:
           type: object
           additionalProperties: true
-          description: Additional structured context (e.g. field-level validation errors).
+          description: >-
+            Additional structured context (e.g. field-level validation errors), for example
+            `privateReplyConsumed` on the private-reply endpoint's 400 when the comment's
+            single reply is already spent.
     CommentAutomationAudience:
       type: object
       description: |
@@ -16986,6 +16989,14 @@ paths:
                         tokenExpiresAt: { type: string, format: date-time }
                         needsReconnect: { type: boolean }
                         issues: { type: array, items: { type: string } }
+                        messagingRestriction:
+                          type: [object, "null"]
+                          description: 'Observed from Meta''s own error subcodes on our own sends (2534122, 1893063, 2534029), not a live probe. Set on the first refused send and cleared when a later send succeeds, so it lags reality by one send in each direction.'
+                          properties:
+                            subcode: { type: integer }
+                            message: { type: string }
+                            firstSeenAt: { type: string, format: date-time }
+                            lastSeenAt: { type: string, format: date-time }
               example:
                 summary:
                   total: 5
@@ -17147,6 +17158,14 @@ paths:
                     type: array
                     items: { type: string }
                     description: Actionable recommendations to fix issues
+                  messagingRestriction:
+                    type: [object, "null"]
+                    description: 'Observed from Meta''s own error subcodes on our own sends (2534122, 1893063, 2534029), not a live probe. Set on the first refused send and cleared when a later send succeeds, so it lags reality by one send in each direction.'
+                    properties:
+                      subcode: { type: integer }
+                      message: { type: string }
+                      firstSeenAt: { type: string, format: date-time }
+                      lastSeenAt: { type: string, format: date-time }
                   platformConnection:
                     type: object
                     description: 'WhatsApp accounts only. Live probe of the Meta link behind the channel, performed at request time (the same read as GET /v1/whatsapp/number-info).'
@@ -29708,7 +29727,9 @@ paths:
         cards and attachments to commenters who do not follow the account (Meta code 2, subcode
         1545133, returned here as a non-retryable 400 that says so), and the failed call still
         consumes the comment's single private reply. To reach non-followers send plain text and
-        add buttons once they reply. `quickReplies` and `buttons` are mutually exclusive.
+        add buttons once they reply. `quickReplies` and `buttons` are mutually exclusive. When
+        the comment's single private reply is spent (by this call or an earlier one) the 400
+        carries `details.privateReplyConsumed: true`; never retry it.
       tags: [Comments]
       security: [{ bearerAuth: [] }]
       parameters:
@@ -29842,31 +29863,54 @@ paths:
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  error:
-                    type: string
-                  code:
-                    type: string
-                    enum: [PLATFORM_LIMITATION]
+                $ref: '#/components/schemas/ErrorResponse'
               examples:
                 platformNotSupported:
                   summary: Platform not supported
                   value:
                     error: "Private replies to comments are only supported on Instagram and Facebook."
-                    code: "PLATFORM_LIMITATION"
-                alreadyReplied:
-                  summary: Already sent a private reply
+                    type: "invalid_request_error"
+                    code: "invalid_field_value"
+                    param: "accountId"
+                followGated:
+                  summary: "Media refused, commenter does not follow the account (reply consumed)"
                   value:
-                    error: "A private reply has already been sent to this comment, or the 7-day reply window has expired. Only one private reply per comment is allowed within 7 days."
+                    error: "Instagram refused this private reply because it carries a card, buttons or an attachment and the commenter does not follow this account. Meta delivers only plain text to non-followers. This attempt consumed the comment's single private reply, so do not retry it; send a text-only private reply to reach non-followers."
+                    type: "platform_error"
+                    code: "platform_api_error"
+                    platform: "instagram"
+                    platformError:
+                      code: 2
+                      error_subcode: 1545133
+                      is_transient: false
+                      message: "Service temporarily unavailable"
+                      error_user_title: "Your message can't be delivered"
+                      error_user_msg: "You can't send media to Jejum de Daniel unless they follow you."
+                    details:
+                      privateReplyConsumed: true
+                alreadyReplied:
+                  summary: "Already sent a private reply (reply consumed, Meta subcode 2534023)"
+                  value:
+                    error: "A private reply has already been sent to this comment. Instagram only allows one private reply per comment."
+                    type: "platform_error"
+                    code: "platform_api_error"
+                    platform: "instagram"
+                    details:
+                      privateReplyConsumed: true
                 commentTooOld:
                   summary: Comment older than 7 days
                   value:
-                    error: "The comment is older than 7 days. Private replies can only be sent within 7 days of the comment being posted."
+                    error: "The comment is older than 7 days. Instagram only allows private replies within 7 days of the comment being posted."
+                    type: "platform_error"
+                    code: "platform_api_error"
+                    platform: "instagram"
                 missingMessage:
                   summary: Missing message
                   value:
                     error: "message is required and must be a non-empty string"
+                    type: "invalid_request_error"
+                    code: "missing_required_field"
+                    param: "message"
         '401': { $ref: '#/components/responses/Unauthorized' }
         '403':
           description: Inbox addon required
