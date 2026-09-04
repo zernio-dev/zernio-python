@@ -214,7 +214,10 @@ class AdCampaignsResource:
             bid_amount=bid_amount,
             roas_average_floor=roas_average_floor,
         )
-        return self._client._post("/v1/ads/campaigns", data=payload)
+        headers: dict[str, str] = {}
+        if idempotency_key is not None:
+            headers["Idempotency-Key"] = idempotency_key
+        return self._client._post("/v1/ads/campaigns", data=payload, headers=headers)
 
     def update_ad_campaign_status(
         self, campaign_id: str, status: str, platform: str
@@ -297,8 +300,11 @@ class AdCampaignsResource:
             rename_suffix=rename_suffix,
             sync_after=sync_after,
         )
+        headers: dict[str, str] = {}
+        if idempotency_key is not None:
+            headers["Idempotency-Key"] = idempotency_key
         return self._client._post(
-            f"/v1/ads/campaigns/{campaign_id}/duplicate", data=payload
+            f"/v1/ads/campaigns/{campaign_id}/duplicate", data=payload, headers=headers
         )
 
     def duplicate_ad_set(
@@ -330,8 +336,11 @@ class AdCampaignsResource:
             rename_suffix=rename_suffix,
             sync_after=sync_after,
         )
+        headers: dict[str, str] = {}
+        if idempotency_key is not None:
+            headers["Idempotency-Key"] = idempotency_key
         return self._client._post(
-            f"/v1/ads/ad-sets/{ad_set_id}/duplicate", data=payload
+            f"/v1/ads/ad-sets/{ad_set_id}/duplicate", data=payload, headers=headers
         )
 
     def duplicate_ad(
@@ -355,7 +364,12 @@ class AdCampaignsResource:
             rename_suffix=rename_suffix,
             sync_after=sync_after,
         )
-        return self._client._post(f"/v1/ads/{ad_id}/duplicate", data=payload)
+        headers: dict[str, str] = {}
+        if idempotency_key is not None:
+            headers["Idempotency-Key"] = idempotency_key
+        return self._client._post(
+            f"/v1/ads/{ad_id}/duplicate", data=payload, headers=headers
+        )
 
     def get_ad_set_details(
         self, ad_set_id: str, account_id: str, *, fields: str | None = None
@@ -941,7 +955,12 @@ class AdCampaignsResource:
             bid_amount=bid_amount,
             roas_average_floor=roas_average_floor,
         )
-        return await self._client._apost("/v1/ads/campaigns", data=payload)
+        headers: dict[str, str] = {}
+        if idempotency_key is not None:
+            headers["Idempotency-Key"] = idempotency_key
+        return await self._client._apost(
+            "/v1/ads/campaigns", data=payload, headers=headers
+        )
 
     async def aupdate_ad_campaign_status(
         self, campaign_id: str, status: str, platform: str
@@ -1026,8 +1045,11 @@ class AdCampaignsResource:
             rename_suffix=rename_suffix,
             sync_after=sync_after,
         )
+        headers: dict[str, str] = {}
+        if idempotency_key is not None:
+            headers["Idempotency-Key"] = idempotency_key
         return await self._client._apost(
-            f"/v1/ads/campaigns/{campaign_id}/duplicate", data=payload
+            f"/v1/ads/campaigns/{campaign_id}/duplicate", data=payload, headers=headers
         )
 
     async def aduplicate_ad_set(
@@ -1059,8 +1081,11 @@ class AdCampaignsResource:
             rename_suffix=rename_suffix,
             sync_after=sync_after,
         )
+        headers: dict[str, str] = {}
+        if idempotency_key is not None:
+            headers["Idempotency-Key"] = idempotency_key
         return await self._client._apost(
-            f"/v1/ads/ad-sets/{ad_set_id}/duplicate", data=payload
+            f"/v1/ads/ad-sets/{ad_set_id}/duplicate", data=payload, headers=headers
         )
 
     async def aduplicate_ad(
@@ -1084,7 +1109,12 @@ class AdCampaignsResource:
             rename_suffix=rename_suffix,
             sync_after=sync_after,
         )
-        return await self._client._apost(f"/v1/ads/{ad_id}/duplicate", data=payload)
+        headers: dict[str, str] = {}
+        if idempotency_key is not None:
+            headers["Idempotency-Key"] = idempotency_key
+        return await self._client._apost(
+            f"/v1/ads/{ad_id}/duplicate", data=payload, headers=headers
+        )
 
     async def aget_ad_set_details(
         self, ad_set_id: str, account_id: str, *, fields: str | None = None

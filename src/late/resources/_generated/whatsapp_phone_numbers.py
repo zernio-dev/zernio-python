@@ -192,7 +192,10 @@ class WhatsappPhoneNumbersResource:
 
     def upload_whats_app_number_kyc_document(self, x_filename: str) -> dict[str, Any]:
         """Upload a KYC document"""
-        return self._client._post("/v1/whatsapp/phone-numbers/kyc/upload-document")
+        headers = {"X-Filename": x_filename}
+        return self._client._post(
+            "/v1/whatsapp/phone-numbers/kyc/upload-document", headers=headers
+        )
 
     def validate_whats_app_number_kyc_address(
         self,
@@ -402,8 +405,9 @@ class WhatsappPhoneNumbersResource:
         self, x_filename: str
     ) -> dict[str, Any]:
         """Upload a KYC document (async)"""
+        headers = {"X-Filename": x_filename}
         return await self._client._apost(
-            "/v1/whatsapp/phone-numbers/kyc/upload-document"
+            "/v1/whatsapp/phone-numbers/kyc/upload-document", headers=headers
         )
 
     async def avalidate_whats_app_number_kyc_address(

@@ -154,7 +154,10 @@ class PostsResource:
             queued_from_profile=queued_from_profile,
             queue_id=queue_id,
         )
-        return self._client._post("/v1/posts", data=payload)
+        headers: dict[str, str] = {}
+        if x_request_id is not None:
+            headers["x-request-id"] = x_request_id
+        return self._client._post("/v1/posts", data=payload, headers=headers)
 
     def get_post(self, post_id: str) -> dict[str, Any]:
         """Get post"""
@@ -359,7 +362,10 @@ class PostsResource:
             queued_from_profile=queued_from_profile,
             queue_id=queue_id,
         )
-        return await self._client._apost("/v1/posts", data=payload)
+        headers: dict[str, str] = {}
+        if x_request_id is not None:
+            headers["x-request-id"] = x_request_id
+        return await self._client._apost("/v1/posts", data=payload, headers=headers)
 
     async def aget_post(self, post_id: str) -> dict[str, Any]:
         """Get post (async)"""
