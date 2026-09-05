@@ -39492,7 +39492,7 @@ paths:
                       nodeCount: { type: integer }
                       entryNodeId: { type: string }
                       createdAt: { type: string, format: date-time }
-        '400': { description: "Invalid graph (duplicate node ids, edges referencing missing nodes, or a WhatsApp-only node on another platform)" }
+        '400': { description: "Invalid graph (duplicate node ids, edges referencing missing nodes, a WhatsApp-only node on another platform, or a WhatsApp interactive list node whose sections carry no rows)" }
         '401': { $ref: '#/components/responses/Unauthorized' }
 
   /v1/workflows/{workflowId}:
@@ -39584,7 +39584,7 @@ paths:
                       entryNodeId: { type: string }
                       nodeCount: { type: integer }
                       updatedAt: { type: string, format: date-time }
-        '400': { description: "Invalid graph, or a graph edit attempted while the workflow is active" }
+        '400': { description: "Invalid graph (including a WhatsApp interactive list node whose sections carry no rows), or a graph edit attempted while the workflow is active" }
         '401': { $ref: '#/components/responses/Unauthorized' }
         '404': { $ref: '#/components/responses/NotFound' }
     delete:
