@@ -12178,6 +12178,39 @@ def register_generated_tools(mcp, _get_client):
 
     @mcp.tool(
         annotations=ToolAnnotations(
+            title="Create YouTube playlist",
+            readOnlyHint=False,
+            destructiveHint=True,
+            openWorldHint=True,
+        )
+    )
+    def connect_create_youtube_playlist(
+        account_id: str,
+        title: str,
+        description: str | None = None,
+        privacy: str = "private",
+    ) -> str:
+        """Create YouTube playlist
+
+        Args:
+            account_id: (required)
+            title: Playlist title. Leading and trailing whitespace is removed. (required)
+            description: Optional playlist description.
+            privacy"""
+        client = _get_client()
+        try:
+            response = client.connect.create_youtube_playlist(
+                account_id=account_id,
+                title=title,
+                description=description,
+                privacy=privacy,
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
             title="Set default YouTube playlist",
             readOnlyHint=False,
             destructiveHint=True,

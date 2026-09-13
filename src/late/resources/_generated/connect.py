@@ -704,6 +704,24 @@ class ConnectResource:
         """List YouTube playlists"""
         return self._client._get(f"/v1/accounts/{account_id}/youtube-playlists")
 
+    def create_youtube_playlist(
+        self,
+        account_id: str,
+        title: str,
+        *,
+        description: str | None = None,
+        privacy: str | None = "private",
+    ) -> dict[str, Any]:
+        """Create YouTube playlist"""
+        payload = self._build_payload(
+            title=title,
+            description=description,
+            privacy=privacy,
+        )
+        return self._client._post(
+            f"/v1/accounts/{account_id}/youtube-playlists", data=payload
+        )
+
     def update_youtube_default_playlist(
         self,
         account_id: str,
@@ -1494,6 +1512,24 @@ class ConnectResource:
     async def aget_youtube_playlists(self, account_id: str) -> dict[str, Any]:
         """List YouTube playlists (async)"""
         return await self._client._aget(f"/v1/accounts/{account_id}/youtube-playlists")
+
+    async def acreate_youtube_playlist(
+        self,
+        account_id: str,
+        title: str,
+        *,
+        description: str | None = None,
+        privacy: str | None = "private",
+    ) -> dict[str, Any]:
+        """Create YouTube playlist (async)"""
+        payload = self._build_payload(
+            title=title,
+            description=description,
+            privacy=privacy,
+        )
+        return await self._client._apost(
+            f"/v1/accounts/{account_id}/youtube-playlists", data=payload
+        )
 
     async def aupdate_youtube_default_playlist(
         self,

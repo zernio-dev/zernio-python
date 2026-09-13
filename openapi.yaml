@@ -25738,6 +25738,74 @@ paths:
         '400': { description: Not a YouTube account }
         '401': { $ref: '#/components/responses/Unauthorized' }
         '404': { description: Account not found }
+    post:
+      operationId: createYoutubePlaylist
+      x-resource-group: "accounts"
+      tags: [Connect]
+      summary: Create YouTube playlist
+      description: >
+        Creates an empty playlist on the connected YouTube channel. Requires a title;
+        privacy defaults to private. Returns the same playlist shape as the list endpoint.
+        Pass the returned playlist.id as platformSpecificData.playlistId when publishing
+        a video. Does not change the account's default playlist.
+        Requires the youtube or youtube.force-ssl OAuth scope. Costs 50 YouTube quota units.
+        This operation is not idempotent and is not automatically retried: repeating a
+        request can create another playlist, including after a timeout. List playlists
+        before retrying an ambiguous failure. Official series settings are not exposed
+        by YouTube's public API and must be enabled manually in YouTube's desktop playlist settings.
+      parameters:
+        - name: accountId
+          in: path
+          required: true
+          schema: { type: string }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [title]
+              properties:
+                title: { type: string, minLength: 1, description: "Playlist title. Leading and trailing whitespace is removed." }
+                description: { type: string, description: "Optional playlist description." }
+                privacy: { type: string, enum: [private, public, unlisted], default: private }
+            example:
+              title: "Tutorials"
+              description: "Step-by-step video tutorials"
+              privacy: "private"
+      responses:
+        '201':
+          description: Playlist created
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [playlist]
+                properties:
+                  playlist:
+                    type: object
+                    required: [id, title, description, privacy, itemCount, thumbnailUrl]
+                    properties:
+                      id: { type: string }
+                      title: { type: string }
+                      description: { type: string }
+                      privacy: { type: string, enum: [private, public, unlisted] }
+                      itemCount: { type: integer }
+                      thumbnailUrl: { type: string }
+              example:
+                playlist:
+                  id: "PLxxxxxxxxxxxxx"
+                  title: "Tutorials"
+                  description: "Step-by-step video tutorials"
+                  privacy: "private"
+                  itemCount: 0
+                  thumbnailUrl: ""
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { description: "API key lacks access to the account or YouTube denied permission." }
+        '404': { description: "Account not found or inaccessible." }
+        '429': { description: "YouTube rate limit exceeded." }
+        '502': { description: "YouTube request failed. Check existing playlists before retrying, because the playlist may have been created." }
     put:
       x-resource-group: "accounts"
       operationId: updateYoutubeDefaultPlaylist
