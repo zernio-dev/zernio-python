@@ -627,6 +627,31 @@ def register_generated_tools(mcp, _get_client):
 
     @mcp.tool(
         annotations=ToolAnnotations(
+            title="List trending commercial music",
+            readOnlyHint=True,
+            destructiveHint=False,
+            openWorldHint=False,
+        )
+    )
+    def accounts_list_tik_tok_commercial_music(
+        account_id: str, country_code: str | None = None
+    ) -> str:
+        """List trending commercial music
+
+        Args:
+            account_id: The TikTok account ID (required)
+            country_code: Two-letter ISO 3166-1 country code of the chart to read (for example ES). Defaults to TikTok's global chart."""
+        client = _get_client()
+        try:
+            response = client.accounts.list_tik_tok_commercial_music(
+                account_id=account_id, country_code=country_code
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
             title="Get TikTok creator info",
             readOnlyHint=True,
             destructiveHint=False,

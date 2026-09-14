@@ -176,6 +176,17 @@ class AccountsResource:
             f"/v1/accounts/{account_id}/follow-status/{user_id}", params=params
         )
 
+    def list_tik_tok_commercial_music(
+        self, account_id: str, *, country_code: str | None = None
+    ) -> dict[str, Any]:
+        """List trending commercial music"""
+        params = self._build_params(
+            country_code=country_code,
+        )
+        return self._client._get(
+            f"/v1/accounts/{account_id}/tiktok/commercial-music", params=params
+        )
+
     def get_tik_tok_creator_info(
         self, account_id: str, *, media_type: str | None = "video"
     ) -> dict[str, Any]:
@@ -681,6 +692,17 @@ class AccountsResource:
         )
         return await self._client._aget(
             f"/v1/accounts/{account_id}/follow-status/{user_id}", params=params
+        )
+
+    async def alist_tik_tok_commercial_music(
+        self, account_id: str, *, country_code: str | None = None
+    ) -> dict[str, Any]:
+        """List trending commercial music (async)"""
+        params = self._build_params(
+            country_code=country_code,
+        )
+        return await self._client._aget(
+            f"/v1/accounts/{account_id}/tiktok/commercial-music", params=params
         )
 
     async def aget_tik_tok_creator_info(
