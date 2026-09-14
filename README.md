@@ -491,6 +491,7 @@ Both `from zernio import ...` and `from late import ...` work identically. The `
 | `ad_campaigns.get_ad_set_details()` | Get live ad-set details |
 | `ad_campaigns.get_ad_tree()` | Get campaign tree |
 | `ad_campaigns.get_ads_timeline()` | Get daily account metrics |
+| `ad_campaigns.get_campaign_ad_schedule()` | Read a campaign's ad schedule (dayparting) |
 | `ad_campaigns.get_campaign_bidding()` | Read a campaign's current bidding |
 | `ad_campaigns.get_campaign_targeting()` | Read a Google campaign's device, location, and language targeting |
 | `ad_campaigns.update_ad()` | Update ad |
@@ -502,6 +503,7 @@ Both `from zernio import ...` and `from late import ...` work identically. The `
 | `ad_campaigns.update_ad_set_status()` | Pause or resume a single ad set |
 | `ad_campaigns.update_ad_status()` | Pause or resume a single ad |
 | `ad_campaigns.update_bid_strategy()` | Update portfolio bid strategy |
+| `ad_campaigns.update_campaign_ad_schedule()` | Replace a campaign's ad schedule (dayparting) |
 | `ad_campaigns.update_campaign_assets()` | Update campaign assets |
 | `ad_campaigns.update_campaign_targeting()` | Edit a Google campaign's device, location, or language targeting |
 | `ad_campaigns.delete_ad()` | Cancel an ad |

@@ -3481,6 +3481,70 @@ def register_generated_tools(mcp, _get_client):
 
     @mcp.tool(
         annotations=ToolAnnotations(
+            title="Read a campaign's ad schedule (dayparting)",
+            readOnlyHint=True,
+            destructiveHint=False,
+            openWorldHint=False,
+        )
+    )
+    def ad_campaigns_get_campaign_ad_schedule(
+        campaign_id: str,
+        platform: str | None = None,
+        include_performance: bool | None = None,
+        window_days: int = 30,
+        from_date: str | None = None,
+        to_date: str | None = None,
+    ) -> str:
+        """Read a campaign's ad schedule (dayparting)
+
+        Args:
+            campaign_id: Numeric Google platform campaign id. (required)
+            platform: Disambiguates the campaign id when the connection spans platforms.
+            include_performance: Also return delivery by day of week and by hour. Costs one extra Google call.
+            window_days: Trailing window for the performance split. Ignored when fromDate and toDate are both given.
+            from_date: Start of an explicit performance range (YYYY-MM-DD). Use together with toDate.
+            to_date: End of an explicit performance range (YYYY-MM-DD). Must be on or after fromDate."""
+        client = _get_client()
+        try:
+            response = client.ad_campaigns.get_campaign_ad_schedule(
+                campaign_id=campaign_id,
+                platform=platform,
+                include_performance=include_performance,
+                window_days=window_days,
+                from_date=from_date,
+                to_date=to_date,
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Replace a campaign's ad schedule (dayparting)",
+            readOnlyHint=False,
+            destructiveHint=True,
+            openWorldHint=True,
+        )
+    )
+    def ad_campaigns_update_campaign_ad_schedule(
+        campaign_id: str, schedule: list[dict[str, Any]] | None
+    ) -> str:
+        """Replace a campaign's ad schedule (dayparting)
+
+        Args:
+            campaign_id: Numeric Google platform campaign id. (required)
+            schedule: The complete set of windows. Required, so clearing the schedule is always deliberate rather than an omission. (required)"""
+        client = _get_client()
+        try:
+            response = client.ad_campaigns.update_campaign_ad_schedule(
+                campaign_id=campaign_id, schedule=schedule
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
             title="Read a campaign's current bidding",
             readOnlyHint=True,
             destructiveHint=False,

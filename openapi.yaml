@@ -10202,7 +10202,29 @@ components:
         matchType: { type: string, enum: [exact, phrase, broad, unknown] }
         status: { type: string, enum: [active, paused] }
         negative: { type: boolean }
-        qualityScore: { type: [integer, "null"], description: 'Google Quality Score, 1-10. Null when unrated.' }
+        qualityScore: { type: [integer, "null"], description: 'Deprecated, use `quality.score`. Google Quality Score, 1-10. Null when unrated.' }
+        quality:
+          type: object
+          description: |
+            Google Quality Score and the three component ratings behind it
+            (`ad_group_criterion.quality_info`). Every field is null until Google has rated the
+            keyword: a keyword with too little traffic is unrated, and negatives are never rated.
+            Google's own UNKNOWN / UNSPECIFIED buckets are reported as null so "unrated" has a
+            single representation.
+          properties:
+            score: { type: [integer, "null"], description: 'Quality Score, 1-10.' }
+            expectedCtr:
+              type: [string, "null"]
+              enum: [BELOW_AVERAGE, AVERAGE, ABOVE_AVERAGE, null]
+              description: 'How the click-through rate compares with other ads in the same position (`search_predicted_ctr`).'
+            adRelevance:
+              type: [string, "null"]
+              enum: [BELOW_AVERAGE, AVERAGE, ABOVE_AVERAGE, null]
+              description: 'How closely the ad matches the intent behind the search (`creative_quality_score`).'
+            landingPageExperience:
+              type: [string, "null"]
+              enum: [BELOW_AVERAGE, AVERAGE, ABOVE_AVERAGE, null]
+              description: 'How relevant and useful the landing page is to people who click (`post_click_quality_score`).'
         syncedAt: { type: [string, "null"], format: date-time }
         metrics:
           type: [object, "null"]
@@ -10215,6 +10237,18 @@ components:
             conversions: { type: number }
             firstPageCpc: { type: [number, "null"], description: Account currency }
             firstPositionCpc: { type: [number, "null"], description: Account currency }
+    AdScheduleWindow:
+      type: object
+      description: 'One ad schedule window as Google stores it. Half-open: it is exclusive of the end minute, so 09:00-12:00 and 12:00-17:00 are adjacent, not overlapping.'
+      properties:
+        criterionId: { type: string, description: 'Google campaign criterion id. Changes whenever the window is rewritten, because Google cannot edit a schedule in place.' }
+        resourceName: { type: string }
+        dayOfWeek: { type: string, enum: [MONDAY, TUESDAY, WEDNESDAY, THURSDAY, FRIDAY, SATURDAY, SUNDAY] }
+        startHour: { type: integer, minimum: 0, maximum: 23 }
+        startMinute: { type: integer, enum: [0, 15, 30, 45] }
+        endHour: { type: integer, minimum: 0, maximum: 24, description: '24 means midnight at the end of the day.' }
+        endMinute: { type: integer, enum: [0, 15, 30, 45] }
+        bidModifier: { type: [number, "null"], description: 'Bid adjustment for this window, 0.1-10.0. Null when the window runs at the campaign bid.' }
     KeywordEntry:
       description: 'A Google Search keyword: a bare string (BROAD match), or an object naming the match type.'
       oneOf:
@@ -44411,6 +44445,171 @@ paths:
           description: 'Returned with code `ads_allowance_exceeded` when the team has no payment method on file and has reached the 500 free live ads: add a card to resume.'
         '404':
           description: No ads found for this campaign
+
+  /v1/ads/campaigns/{campaignId}/ad-schedule:
+    get:
+      x-resource-group: "ads"
+      operationId: getCampaignAdSchedule
+      tags: ["Ad Campaigns"]
+      x-platforms: ["google"]
+      summary: Read a campaign's ad schedule (dayparting)
+      description: |
+        The windows a Google campaign serves in, with the bid modifier on each, plus the
+        criterion ids Google minted for them.
+
+        An EMPTY `schedule` is meaningful and is not a failed lookup: Google has no
+        "all day" criterion, so a campaign with no ad schedule serves around the clock.
+        `servesAroundTheClock` states that explicitly.
+
+        Set `includePerformance=true` to also get delivery split by day of week and by hour,
+        which is the evidence for deciding what the schedule should be. It is one extra
+        Google call segmented by both dimensions at once, so the two views always agree.
+
+        Google Ads only. The response carries `cachedAt` and `stale`, set when a
+        quota-exhausted call falls back to the last-good copy instead of a live read.
+      security:
+        - bearerAuth: []
+      parameters:
+        - { name: campaignId, in: path, required: true, schema: { type: string }, description: "Numeric Google platform campaign id." }
+        - { name: platform, in: query, required: false, schema: { type: string, enum: [google] }, description: "Disambiguates the campaign id when the connection spans platforms." }
+        - { name: includePerformance, in: query, required: false, schema: { type: boolean }, description: "Also return delivery by day of week and by hour. Costs one extra Google call." }
+        - { name: windowDays, in: query, required: false, schema: { type: integer, minimum: 1, maximum: 90, default: 30 }, description: "Trailing window for the performance split. Ignored when fromDate and toDate are both given." }
+        - { name: fromDate, in: query, required: false, schema: { type: string, format: date }, description: "Start of an explicit performance range (YYYY-MM-DD). Use together with toDate." }
+        - { name: toDate, in: query, required: false, schema: { type: string, format: date }, description: "End of an explicit performance range (YYYY-MM-DD). Must be on or after fromDate." }
+      responses:
+        '200':
+          description: The campaign's ad schedule
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  campaignId: { type: string }
+                  schedule:
+                    type: array
+                    items: { $ref: '#/components/schemas/AdScheduleWindow' }
+                  servesAroundTheClock: { type: boolean, description: 'True when the campaign carries no ad schedule at all, so it can serve at any time.' }
+                  cachedAt: { type: [string, "null"], format: date-time }
+                  stale: { type: boolean, description: 'True when a quota-exhausted read served the last-good copy.' }
+                  performance:
+                    type: object
+                    description: 'Only present when includePerformance=true.'
+                    properties:
+                      windowDays: { type: [integer, "null"], description: 'The trailing window used, or null when an explicit fromDate/toDate range was given.' }
+                      byDayOfWeek:
+                        type: array
+                        description: 'One entry per day that delivered, Monday first.'
+                        items:
+                          type: object
+                          properties:
+                            dayOfWeek: { type: string, enum: [MONDAY, TUESDAY, WEDNESDAY, THURSDAY, FRIDAY, SATURDAY, SUNDAY] }
+                            impressions: { type: integer }
+                            clicks: { type: integer }
+                            cost: { type: number, description: 'Account currency, not USD-normalized.' }
+                            conversions: { type: number }
+                      byHour:
+                        type: array
+                        description: 'One entry per hour that delivered, 0-23 in the account time zone.'
+                        items:
+                          type: object
+                          properties:
+                            hour: { type: integer, minimum: 0, maximum: 23 }
+                            impressions: { type: integer }
+                            clicks: { type: integer }
+                            cost: { type: number, description: 'Account currency, not USD-normalized.' }
+                            conversions: { type: number }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403':
+          description: "Ads access required. Legacy plans need the Ads add-on; included by default on usage-based plans."
+        '404': { $ref: '#/components/responses/AccountUnavailable' }
+        '501':
+          description: "Not a Google Ads campaign: ad schedules are a Google criterion."
+    put:
+      x-resource-group: "ads"
+      operationId: updateCampaignAdSchedule
+      tags: ["Ad Campaigns"]
+      x-platforms: ["google"]
+      summary: Replace a campaign's ad schedule (dayparting)
+      description: |
+        Replaces the campaign's whole ad schedule with the windows you send. This is a
+        REPLACE, not a merge: windows you leave out stop serving.
+
+        Send `schedule: []` to clear dayparting, which returns the campaign to serving around
+        the clock.
+
+        Google rules enforced here, so you get a named field instead of a criterion error:
+        at most 6 windows per day, a window must end after it starts, windows on the same day
+        may not overlap, `endHour` 24 is midnight and cannot carry minutes, and minutes are
+        quarter-hours only (0, 15, 30, 45). `bidModifier` is 0.1-10.0; Google's 0 means
+        "off" for devices only, so a window is switched off by leaving it out.
+
+        Windows are half-open (Google is exclusive of the end minute), so 09:00-12:00 and
+        12:00-17:00 on the same day are adjacent and both valid.
+
+        Google cannot edit an ad schedule in place (every AdScheduleInfo field is prohibited on
+        update), so this removes the live criteria and creates the new ones in a single atomic
+        mutate. The response is read back from Google and carries the new criterion ids.
+      security:
+        - bearerAuth: []
+      parameters:
+        - { name: campaignId, in: path, required: true, schema: { type: string }, description: "Numeric Google platform campaign id." }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [schedule]
+              properties:
+                schedule:
+                  type: array
+                  maxItems: 42
+                  description: 'The complete set of windows. Required, so clearing the schedule is always deliberate rather than an omission.'
+                  items:
+                    type: object
+                    required: [dayOfWeek, startHour, endHour]
+                    properties:
+                      dayOfWeek: { type: string, enum: [MONDAY, TUESDAY, WEDNESDAY, THURSDAY, FRIDAY, SATURDAY, SUNDAY] }
+                      startHour: { type: integer, minimum: 0, maximum: 23 }
+                      startMinute: { type: integer, enum: [0, 15, 30, 45], default: 0, description: 'Quarter-hours only.' }
+                      endHour: { type: integer, minimum: 0, maximum: 24, description: '24 means midnight at the end of the day.' }
+                      endMinute: { type: integer, enum: [0, 15, 30, 45], default: 0, description: 'Quarter-hours only. Must be 0 when endHour is 24.' }
+                      bidModifier: { type: [number, "null"], minimum: 0.1, maximum: 10, default: null, description: 'Bid adjustment for this window. Null runs it at the campaign bid.' }
+            examples:
+              officeHours:
+                summary: Weekday office hours, bidding up over lunch
+                value:
+                  schedule:
+                    - { dayOfWeek: MONDAY, startHour: 9, endHour: 17 }
+                    - { dayOfWeek: TUESDAY, startHour: 9, endHour: 17 }
+                    - { dayOfWeek: WEDNESDAY, startHour: 9, endHour: 12, bidModifier: 1.5 }
+                    - { dayOfWeek: WEDNESDAY, startHour: 12, endHour: 17 }
+              clearSchedule:
+                summary: Serve around the clock again
+                value: { schedule: [] }
+      responses:
+        '200':
+          description: The schedule as Google stored it
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  campaignId: { type: string }
+                  schedule:
+                    type: array
+                    items: { $ref: '#/components/schemas/AdScheduleWindow' }
+                  servesAroundTheClock: { type: boolean }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403':
+          description: "Ads access required. Legacy plans need the Ads add-on; included by default on usage-based plans."
+        '404': { $ref: '#/components/responses/AccountUnavailable' }
+        '422':
+          description: "The schedule breaks a Google rule: too many windows on a day, an overlap, a window that ends before it starts, minutes on hour 24, or a bid modifier outside 0.1-10.0."
+        '501':
+          description: "Not a Google Ads campaign: ad schedules are a Google criterion."
 
   /v1/ads/campaigns/{campaignId}/bidding:
     get:

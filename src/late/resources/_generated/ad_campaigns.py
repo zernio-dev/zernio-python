@@ -331,6 +331,39 @@ class AdCampaignsResource:
             f"/v1/ads/campaigns/{campaign_id}/status", data=payload
         )
 
+    def get_campaign_ad_schedule(
+        self,
+        campaign_id: str,
+        *,
+        platform: str | None = None,
+        include_performance: bool | None = None,
+        window_days: int | None = 30,
+        from_date: str | None = None,
+        to_date: str | None = None,
+    ) -> dict[str, Any]:
+        """Read a campaign's ad schedule (dayparting)"""
+        params = self._build_params(
+            platform=platform,
+            include_performance=include_performance,
+            window_days=window_days,
+            from_date=from_date,
+            to_date=to_date,
+        )
+        return self._client._get(
+            f"/v1/ads/campaigns/{campaign_id}/ad-schedule", params=params
+        )
+
+    def update_campaign_ad_schedule(
+        self, campaign_id: str, schedule: list[dict[str, Any]]
+    ) -> dict[str, Any]:
+        """Replace a campaign's ad schedule (dayparting)"""
+        payload = self._build_payload(
+            schedule=schedule,
+        )
+        return self._client._put(
+            f"/v1/ads/campaigns/{campaign_id}/ad-schedule", data=payload
+        )
+
     def get_campaign_bidding(
         self,
         campaign_id: str,
@@ -1449,6 +1482,39 @@ class AdCampaignsResource:
         )
         return await self._client._aput(
             f"/v1/ads/campaigns/{campaign_id}/status", data=payload
+        )
+
+    async def aget_campaign_ad_schedule(
+        self,
+        campaign_id: str,
+        *,
+        platform: str | None = None,
+        include_performance: bool | None = None,
+        window_days: int | None = 30,
+        from_date: str | None = None,
+        to_date: str | None = None,
+    ) -> dict[str, Any]:
+        """Read a campaign's ad schedule (dayparting) (async)"""
+        params = self._build_params(
+            platform=platform,
+            include_performance=include_performance,
+            window_days=window_days,
+            from_date=from_date,
+            to_date=to_date,
+        )
+        return await self._client._aget(
+            f"/v1/ads/campaigns/{campaign_id}/ad-schedule", params=params
+        )
+
+    async def aupdate_campaign_ad_schedule(
+        self, campaign_id: str, schedule: list[dict[str, Any]]
+    ) -> dict[str, Any]:
+        """Replace a campaign's ad schedule (dayparting) (async)"""
+        payload = self._build_payload(
+            schedule=schedule,
+        )
+        return await self._client._aput(
+            f"/v1/ads/campaigns/{campaign_id}/ad-schedule", data=payload
         )
 
     async def aget_campaign_bidding(
