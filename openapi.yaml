@@ -4738,12 +4738,20 @@ components:
             code: { type: integer }
             title: { type: string }
             message: { type: string }
+            details:
+              type: string
+              description: "Platform's extended detail for `code` (WhatsApp: Meta's `error_data.details`), when the platform sent one. Absent on SMS."
+            href:
+              type: string
+              format: uri
+              description: "Link to the platform's documentation for `code`, when the platform sent one."
             explanation:
               type: [string, "null"]
               description: |
                 Plain-language translation of `code` (e.g. for 131026, that the
                 recipient has likely opted out of marketing messages while utility
-                templates are unaffected). Null for unmapped codes; fall back to
+                templates are unaffected, or for 131031, that Meta restricted the
+                WhatsApp Business Account). Null for unmapped codes; fall back to
                 title/message.
         conversation:
           $ref: '#/components/schemas/InboxWebhookConversation'
@@ -29751,6 +29759,13 @@ paths:
                             code: { type: integer }
                             title: { type: string }
                             message: { type: string }
+                            details:
+                              type: string
+                              description: "Platform's extended detail for `code` (WhatsApp: Meta's `error_data.details`), when the platform sent one. Absent on SMS."
+                            href:
+                              type: string
+                              format: uri
+                              description: "Link to the platform's documentation for `code`, when the platform sent one."
                         reactions:
                           type: array
                           description: Emoji reactions on this message (WhatsApp / Telegram). At most one per party in a 1:1 thread.
