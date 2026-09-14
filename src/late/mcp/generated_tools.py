@@ -4922,6 +4922,7 @@ def register_generated_tools(mcp, _get_client):
         organization_id: str | None = None,
         targeting: dict[str, Any] | None = None,
         countries: list[str] | None = None,
+        country_groups: list[str] | None = None,
         cities: list[dict[str, Any]] | None = None,
         regions: list[dict[str, Any]] | None = None,
         age_min: int | None = None,
@@ -5139,6 +5140,10 @@ def register_generated_tools(mcp, _get_client):
         flat fields (a flat field present on the body replaces the nested value entirely).
         Both forms are equivalent; use whichever your integration already builds.
                 countries: ISO 3166-1 alpha-2 country codes (e.g. ['NL']). Defaults to ['US'] when no other geo targeting (flat or nested `targeting`) is provided. (LinkedIn and OpenAI Ads currently honour country-level targeting only; any other targeting field returns 400 for OpenAI Ads.)
+                country_groups: Meta only. Continents and trade blocs (`geo_locations.country_groups`),
+        for targeting a whole region without listing its countries. Combines with
+        `countries` rather than replacing it. Discoverable via
+        `GET /v1/ads/targeting/search?dimension=geo&geoType=country_group`.
                 cities: City-level geo targeting (Meta and TikTok). Each city is targeted by the platform's opaque `key` (the city ID) which can be looked up via `GET /v1/ads/targeting/search?dimension=geo&q=<name>&countryCode=<ISO>`. Optional `radius` + `distance_unit` (Meta only) extend the targeting beyond the city limits (e.g. radius 25 km around the city center). Both must be set together, or both omitted (Meta defaults to ~16 km when omitted).
 
         On Meta, cannot overlap with the same country in `countries` (Meta returns a "locations overlap" error). Either drop the country or scope it to a different country. On TikTok, keys are numeric location ids and can be sent without `countries`.
@@ -5482,6 +5487,7 @@ def register_generated_tools(mcp, _get_client):
                 organization_id=organization_id,
                 targeting=targeting,
                 countries=countries,
+                country_groups=country_groups,
                 cities=cities,
                 regions=regions,
                 age_min=age_min,
