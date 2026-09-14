@@ -1277,6 +1277,17 @@ components:
             properties:
               key: { type: string, minLength: 1 }
               name: { type: string }
+        countryGroups:
+          type: array
+          description: |
+            Meta only. Continents and trade blocs (`geo_locations.country_groups`),
+            for targeting a whole region without listing its countries. Combines
+            with `countries` rather than replacing it, and is also accepted under
+            `excludedLocations`. Discoverable via
+            `GET /v1/ads/targeting/search?dimension=geo&geoType=country_group`.
+          items:
+            type: string
+            enum: [africa, asia, europe, north_america, south_america, oceania, central_america, caribbean, eea, euro_area, nafta, mercosur, afta, apec, gcc, cisfta, emerging_markets, itunes_app_store, android_free_store, android_paid_store]
         customLocations:
           type: array
           description: |
@@ -9213,6 +9224,17 @@ components:
             properties:
               key: { type: string }
               name: { type: string }
+        countryGroups:
+          type: array
+          description: |
+            Meta only. Continents and trade blocs (`geo_locations.country_groups`),
+            for targeting a whole region without listing its countries. Combines
+            with `countries` rather than replacing it, and is also accepted under
+            `excludedLocations`. Discoverable via
+            `GET /v1/ads/targeting/search?dimension=geo&geoType=country_group`.
+          items:
+            type: string
+            enum: [africa, asia, europe, north_america, south_america, oceania, central_america, caribbean, eea, euro_area, nafta, mercosur, afta, apec, gcc, cisfta, emerging_markets, itunes_app_store, android_free_store, android_paid_store]
         customLocations:
           type: array
           description: "Point-radius (lat/lng) targeting (Meta custom_locations / Google proximity). Honoured on Meta and Google; ignored on platforms without radius support."
@@ -53325,7 +53347,7 @@ paths:
         - { name: accountId, in: query, required: true, schema: { type: string }, description: "Account ID (a connected account on the target ad platform)." }
         - { name: q, in: query, required: true, schema: { type: string }, description: "Search query. For geo, the locality name only (no region/country suffix)." }
         - { name: dimension, in: query, required: false, schema: { type: string, enum: [geo, interest, behavior, income, language, workPosition, workEmployer, workIndustry, industry, jobFunction, seniority, companySize], default: interest }, description: "What to search. `geo` resolves locations (scope further with `geoType`), `interest`/`behavior` resolve audience entities, `income` resolves income-tier options, `language` resolves Google's targetable language_constant table (Google only), `workPosition`/`workEmployer`/`workIndustry` resolve Meta work demographics, `industry`/`jobFunction`/`seniority`/`companySize` resolve LinkedIn B2B facets (LinkedIn only). Defaults to `interest` for backward compatibility with the deprecated /v1/ads/interests alias." }
-        - { name: geoType, in: query, required: false, schema: { type: string, enum: [all, country, region, city, subcity, neighborhood, place, zip, metro_area, geo_market], default: city }, description: "Only used when `dimension=geo`. The kind of location to resolve. `all` searches every type in one relevance-ranked call. Defaults to `city`." }
+        - { name: geoType, in: query, required: false, schema: { type: string, enum: [all, country, country_group, region, city, subcity, neighborhood, place, zip, metro_area, geo_market], default: city }, description: "Only used when `dimension=geo`. The kind of location to resolve. `all` searches every type in one relevance-ranked call. Defaults to `city`." }
         - { name: countryCode, in: query, required: false, schema: { type: string, minLength: 2, maxLength: 2 }, description: "ISO 3166-1 alpha-2 country code (e.g. NL) to scope a geo search." }
         - { name: limit, in: query, required: false, schema: { type: integer, minimum: 1, maximum: 100, default: 25 }, description: "Maximum results to return." }
       responses:

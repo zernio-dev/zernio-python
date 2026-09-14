@@ -15913,6 +15913,7 @@ def register_generated_tools(mcp, _get_client):
         regions: list[dict[str, Any]] | None = None,
         zips: list[dict[str, Any]] | None = None,
         metros: list[dict[str, Any]] | None = None,
+        country_groups: list[str] | None = None,
         custom_locations: list[dict[str, Any]] | None = None,
         age_min: int | None = None,
         age_max: int | None = None,
@@ -16000,6 +16001,11 @@ def register_generated_tools(mcp, _get_client):
         postal id resolved via /v1/ads/targeting/search.
                 metros: DMA / metro-area geo targeting. `key` is Meta's metro id
         (e.g. `DMA:807`).
+                country_groups: Meta only. Continents and trade blocs (`geo_locations.country_groups`),
+        for targeting a whole region without listing its countries. Combines
+        with `countries` rather than replacing it, and is also accepted under
+        `excludedLocations`. Discoverable via
+        `GET /v1/ads/targeting/search?dimension=geo&geoType=country_group`.
                 custom_locations: Point-radius geo (Meta `geo_locations.custom_locations`).
         Use for targeting a radius around a specific lat/long when
         no Meta city/region key fits. `distanceUnit` is required.
@@ -16091,6 +16097,7 @@ def register_generated_tools(mcp, _get_client):
                 regions=regions,
                 zips=zips,
                 metros=metros,
+                country_groups=country_groups,
                 custom_locations=custom_locations,
                 age_min=age_min,
                 age_max=age_max,
@@ -16149,6 +16156,7 @@ def register_generated_tools(mcp, _get_client):
         regions: list[dict[str, Any]] | None = None,
         zips: list[dict[str, Any]] | None = None,
         metros: list[dict[str, Any]] | None = None,
+        country_groups: list[str] | None = None,
         custom_locations: list[dict[str, Any]] | None = None,
         age_min: int | None = None,
         age_max: int | None = None,
@@ -16236,6 +16244,11 @@ def register_generated_tools(mcp, _get_client):
         postal id resolved via /v1/ads/targeting/search.
                 metros: DMA / metro-area geo targeting. `key` is Meta's metro id
         (e.g. `DMA:807`).
+                country_groups: Meta only. Continents and trade blocs (`geo_locations.country_groups`),
+        for targeting a whole region without listing its countries. Combines
+        with `countries` rather than replacing it, and is also accepted under
+        `excludedLocations`. Discoverable via
+        `GET /v1/ads/targeting/search?dimension=geo&geoType=country_group`.
                 custom_locations: Point-radius geo (Meta `geo_locations.custom_locations`).
         Use for targeting a radius around a specific lat/long when
         no Meta city/region key fits. `distanceUnit` is required.
@@ -16328,6 +16341,7 @@ def register_generated_tools(mcp, _get_client):
                 regions=regions,
                 zips=zips,
                 metros=metros,
+                country_groups=country_groups,
                 custom_locations=custom_locations,
                 age_min=age_min,
                 age_max=age_max,
@@ -16385,6 +16399,7 @@ def register_generated_tools(mcp, _get_client):
         regions: list[dict[str, Any]] | None = None,
         zips: list[dict[str, Any]] | None = None,
         metros: list[dict[str, Any]] | None = None,
+        country_groups: list[str] | None = None,
         custom_locations: list[dict[str, Any]] | None = None,
         age_min: int | None = None,
         age_max: int | None = None,
@@ -16472,6 +16487,11 @@ def register_generated_tools(mcp, _get_client):
         postal id resolved via /v1/ads/targeting/search.
                 metros: DMA / metro-area geo targeting. `key` is Meta's metro id
         (e.g. `DMA:807`).
+                country_groups: Meta only. Continents and trade blocs (`geo_locations.country_groups`),
+        for targeting a whole region without listing its countries. Combines
+        with `countries` rather than replacing it, and is also accepted under
+        `excludedLocations`. Discoverable via
+        `GET /v1/ads/targeting/search?dimension=geo&geoType=country_group`.
                 custom_locations: Point-radius geo (Meta `geo_locations.custom_locations`).
         Use for targeting a radius around a specific lat/long when
         no Meta city/region key fits. `distanceUnit` is required.
@@ -16562,6 +16582,7 @@ def register_generated_tools(mcp, _get_client):
                 regions=regions,
                 zips=zips,
                 metros=metros,
+                country_groups=country_groups,
                 custom_locations=custom_locations,
                 age_min=age_min,
                 age_max=age_max,
