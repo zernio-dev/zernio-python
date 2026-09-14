@@ -6970,7 +6970,7 @@ components:
           properties:
             musicSoundId:
               type: string
-              description: 'The commercial_music_id of the track.'
+              description: 'The id field of a track from GET /v1/accounts/{accountId}/tiktok/commercial-music (a song clip id). TikTok fails the publish with a generic 51065 when given the commercial music id instead.'
             musicSoundVolume:
               type: integer
               minimum: 0
@@ -19175,7 +19175,8 @@ paths:
                     items:
                       type: object
                       properties:
-                        id: { type: string, description: 'The commercial_music_id to send as musicSoundId' }
+                        id: { type: string, description: 'The id to send as musicSoundId (the full track''s song clip id). TikTok rejects the commercial music id itself at publish time.' }
+                        commercialMusicId: { type: string, description: 'TikTok''s commercial_music_id, for reference only' }
                         name: { type: string }
                         artist: { type: string }
                         durationSec: { type: integer }
@@ -19185,8 +19186,9 @@ paths:
                         rank: { type: integer, description: 'Position in the trending chart, 1 first' }
                         clip:
                           type: object
-                          description: 'The trending excerpt of the track, when TikTok provides one'
+                          description: 'The trending excerpt of the track, when TikTok provides one. Its id is also accepted as musicSoundId.'
                           properties:
+                            id: { type: string }
                             durationSec: { type: integer }
                             previewUrl: { type: string }
         '400':
