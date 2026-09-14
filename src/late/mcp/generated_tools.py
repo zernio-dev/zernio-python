@@ -10277,7 +10277,7 @@ def register_generated_tools(mcp, _get_client):
 
         Args:
             profile_id: Filter by profile ID
-            platform: Filter by platform. `metaads` is a synthetic value meaning the user's ads (boosted/dark posts) only; `facebook`/`instagram` return organic posts only.
+            platform: Filter by platform. `metaads` is a synthetic value meaning the user's ads (boosted/dark posts) only; `facebook`/`instagram` return organic posts only. `tiktok` covers accounts connected through the TikTok Business app only; developer-app TikTok accounts are returned under `meta.accountsSkipped`.
             min_comments: Minimum comment count
             since: Posts created after this date
             sort_by: Sort field

@@ -20315,8 +20315,11 @@ paths:
               tempToken: "EAAxxxxx..."
               userProfile:
                 id: "987654321"
-                name: "John Doe"
+                username: "john.doe"
+                displayName: "John Doe"
                 profilePicture: "https://..."
+                profileUrl: "https://facebook.com/987654321"
+                bio: null
               redirect_url: "https://yourdomain.com/integrations/callback"
       security:
         - bearerAuth: []
@@ -31324,8 +31327,8 @@ paths:
           description: Filter by profile ID
         - name: platform
           in: query
-          schema: { type: string, enum: [facebook, instagram, twitter, bluesky, threads, youtube, linkedin, reddit, metaads] }
-          description: "Filter by platform. `metaads` is a synthetic value meaning the user's ads (boosted/dark posts) only; `facebook`/`instagram` return organic posts only."
+          schema: { type: string, enum: [facebook, instagram, twitter, bluesky, threads, youtube, linkedin, reddit, tiktok, metaads] }
+          description: "Filter by platform. `metaads` is a synthetic value meaning the user's ads (boosted/dark posts) only; `facebook`/`instagram` return organic posts only. `tiktok` covers accounts connected through the TikTok Business app only; developer-app TikTok accounts are returned under `meta.accountsSkipped`."
         - name: minComments
           in: query
           schema: { type: integer, minimum: 0 }
