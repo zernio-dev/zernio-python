@@ -1844,6 +1844,13 @@ components:
             also carries `quotaScope`: `DEVELOPER` means the shared developer-token budget
             (every Google account is affected and there is nothing to change on your side),
             `ACCOUNT` means your own ad account. A Meta 429 carries neither field.
+
+            A Zernio Google Ads budget 429 carries `budgetScope` instead, and never
+            `quotaExhausted`: these are Zernio's own limits, applied before the call
+            reaches Google. `user` is your own burst or daily allowance, so the work is
+            yours to reschedule; `platform` is the fleet-wide daily budget shared with
+            every other customer, so only waiting for the reset clears it. The two
+            scopes are separate axes from `quotaScope`, not the same pool named twice.
           properties:
             quotaExhausted:
               type: boolean
@@ -1852,6 +1859,10 @@ components:
               type: string
               enum: [DEVELOPER, ACCOUNT]
               description: 'Google Ads 429 only, when Google names the scope. DEVELOPER is the shared developer-token budget; ACCOUNT is your ad account.'
+            budgetScope:
+              type: string
+              enum: [user, platform]
+              description: "Zernio Google Ads operations-budget 429 only (never set alongside `quotaExhausted`). `user` is your own burst/daily allowance; `platform` is the fleet-wide daily budget shared across customers."
     CommentAutomationAudience:
       type: object
       description: |
