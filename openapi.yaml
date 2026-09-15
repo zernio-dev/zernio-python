@@ -6993,6 +6993,15 @@ components:
         videoMadeWithAi:
           type: boolean
           description: 'Set true to disclose AI-generated content. Accounts connected through the TikTok for Business app carry the disclosure on video posts only: the business photo endpoint has no AI disclosure field, so true on a direct photo post is rejected at creation rather than published undisclosed. Send draft true to publish such a photo post and set the disclosure in the TikTok app.'
+        locationId:
+          type: string
+          description: 'Location tag to attach, as the id of a result from GET /v1/accounts/{accountId}/tiktok/locations. Accounts connected through the TikTok for Business app and video posts only: a developer-app account rejects the post at publish time with a message that says so, and a direct photo post is rejected at creation since the business photo endpoint has no location field. Requires locationName. Ignored on drafts, where TikTok ignores every post_info field.'
+        locationName:
+          type: string
+          description: 'Display name of the location tag, as returned next to its id. Required with locationId; a locationId without it is rejected at creation.'
+        isAdsOnly:
+          type: boolean
+          description: 'Set true to publish the video as an "Only show in ads" post: it is kept off the profile and exists to be used as a Spark Ad. Accounts connected through the TikTok for Business app and video posts only, with the same rejections as locationId. Ignored on drafts.'
         description:
           type: string
           maxLength: 4000
@@ -19225,6 +19234,45 @@ paths:
                             id: { type: string }
                             durationSec: { type: integer }
                             previewUrl: { type: string }
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          description: Account not found
+
+  /v1/accounts/{accountId}/tiktok/locations:
+    get:
+      x-resource-group: "accounts"
+      operationId: searchTikTokLocations
+      tags: [Accounts]
+      summary: Search TikTok location tags
+      description: 'Searches the location tags a TikTok account connected through the TikTok for Business app can attach to a video post. Send a result''s id and name as tiktokSettings.locationId and locationName when creating a post. TikTok answers the 20 closest matches and fills the list with fuzzy matches when nothing matches, so an unrelated result does not mean the place is missing.'
+      parameters:
+        - name: accountId
+          in: path
+          required: true
+          schema: { type: string }
+          description: The TikTok account ID
+        - name: query
+          in: query
+          required: true
+          schema: { type: string, minLength: 1, maxLength: 100 }
+          description: 'Place name to search, for example a city, a venue or an address'
+      responses:
+        '200':
+          description: The closest location tags, best match first
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  locations:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id: { type: string, description: 'The value to send as locationId' }
+                        name: { type: string, description: 'The value to send as locationName' }
+                        address: { type: string, description: 'Address or region TikTok shows for the place, for disambiguation' }
         '400':
           $ref: '#/components/responses/BadRequest'
         '404':

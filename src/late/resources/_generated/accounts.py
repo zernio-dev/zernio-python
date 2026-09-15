@@ -187,6 +187,15 @@ class AccountsResource:
             f"/v1/accounts/{account_id}/tiktok/commercial-music", params=params
         )
 
+    def search_tik_tok_locations(self, account_id: str, query: str) -> dict[str, Any]:
+        """Search TikTok location tags"""
+        params = self._build_params(
+            query=query,
+        )
+        return self._client._get(
+            f"/v1/accounts/{account_id}/tiktok/locations", params=params
+        )
+
     def get_tik_tok_creator_info(
         self, account_id: str, *, media_type: str | None = "video"
     ) -> dict[str, Any]:
@@ -703,6 +712,17 @@ class AccountsResource:
         )
         return await self._client._aget(
             f"/v1/accounts/{account_id}/tiktok/commercial-music", params=params
+        )
+
+    async def asearch_tik_tok_locations(
+        self, account_id: str, query: str
+    ) -> dict[str, Any]:
+        """Search TikTok location tags (async)"""
+        params = self._build_params(
+            query=query,
+        )
+        return await self._client._aget(
+            f"/v1/accounts/{account_id}/tiktok/locations", params=params
         )
 
     async def aget_tik_tok_creator_info(

@@ -217,6 +217,7 @@ Both `from zernio import ...` and `from late import ...` work identically. The `
 | `accounts.batch_get_google_business_reviews()` | Batch get reviews |
 | `accounts.move_account_to_profile()` | Move account to another profile |
 | `accounts.reply_to_google_business_review()` | Reply to a review |
+| `accounts.search_tik_tok_locations()` | Search TikTok location tags |
 
 ### Profiles
 | Method | Description |

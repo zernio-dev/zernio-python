@@ -652,6 +652,29 @@ def register_generated_tools(mcp, _get_client):
 
     @mcp.tool(
         annotations=ToolAnnotations(
+            title="Search TikTok location tags",
+            readOnlyHint=True,
+            destructiveHint=False,
+            openWorldHint=False,
+        )
+    )
+    def accounts_search_tik_tok_locations(account_id: str, query: str) -> str:
+        """Search TikTok location tags
+
+        Args:
+            account_id: The TikTok account ID (required)
+            query: Place name to search, for example a city, a venue or an address (required)"""
+        client = _get_client()
+        try:
+            response = client.accounts.search_tik_tok_locations(
+                account_id=account_id, query=query
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
             title="Get TikTok creator info",
             readOnlyHint=True,
             destructiveHint=False,
