@@ -44684,7 +44684,7 @@ paths:
                       startMinute: { type: integer, enum: [0, 15, 30, 45], default: 0, description: 'Quarter-hours only.' }
                       endHour: { type: integer, minimum: 0, maximum: 24, description: '24 means midnight at the end of the day.' }
                       endMinute: { type: integer, enum: [0, 15, 30, 45], default: 0, description: 'Quarter-hours only. Must be 0 when endHour is 24.' }
-                      bidModifier: { type: [number, "null"], minimum: 0.1, maximum: 10, default: null, description: 'Bid adjustment for this window. Null runs it at the campaign bid.' }
+                      bidModifier: { type: [number, "null"], minimum: 0.1, maximum: 10, description: 'Bid adjustment for this window. Null runs it at the campaign bid.' }
             examples:
               officeHours:
                 summary: Weekday office hours, bidding up over lunch
