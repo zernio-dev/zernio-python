@@ -38,8 +38,9 @@ Tools are named by resource: `accounts_*`, `profiles_*`, `posts_*`, `media_*`,
 _AUTHENTICATION = """\
 # Authenticating to the Zernio MCP server
 
-Discovery (initialize, tools/list, resources) works without credentials.
-Calling tools requires one of:
+All MCP requests, including initialize, tools/list, and resources, require
+authentication. Health, OAuth discovery, and server cards remain public.
+Authenticate using one of:
 
 1. **OAuth 2.0** (interactive clients: Claude, ChatGPT, Cursor): connect to
    `https://mcp.zernio.com/mcp` and complete the flow the 401 challenge
