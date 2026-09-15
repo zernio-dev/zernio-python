@@ -3044,6 +3044,9 @@ components:
           type: [string, "null"]
           enum: [local, mobile, national, toll_free, null]
           description: 'The watched number type, or null when the watch covers every type in the country.'
+        areaCode:
+          type: [string, "null"]
+          description: 'The watched area code (NDC), or null when the watch covers every area.'
         createdAt: { type: string, format: date-time }
     WebhookPayloadPhoneNumberStockAvailable:
       type: object
@@ -3072,6 +3075,8 @@ components:
                 properties:
                   numberType: { type: string, description: 'local, mobile, national or toll_free.' }
                   availableCount: { type: integer, description: 'Deliverable numbers at sweep time; first come, first served.' }
+            areaCode: { type: string, description: 'Set when the watch named an area: the area code (NDC) that is back in stock.' }
+            areaName: { type: string, description: 'The name of that area, when known.' }
         timestamp:
           type: string
           format: date-time
@@ -37357,6 +37362,19 @@ paths:
                         ndc: { type: string, description: 'Area code (national destination code), e.g. "11".' }
                         name: { type: string, description: 'Area name: "City, ST" for US/CA (e.g. "Miami, FL"), city otherwise (e.g. "Sao Paulo").' }
                         count: { type: integer, description: 'Numbers available in this area: country-wide count for US/CA, numbers seen on the latest inventory page otherwise.' }
+                  soldOutAreas:
+                    type: array
+                    description: >
+                      Areas that had stock in the last 90 days and have none
+                      now. Pass one as `areaCode` with `preOrder: true` on the
+                      KYC submit when `preOrderable` is true, or watch it with
+                      POST /v1/phone-numbers/stock-watches.
+                    items:
+                      type: object
+                      properties:
+                        ndc: { type: string, description: 'Area code (national destination code).' }
+                        name: { type: string, description: 'Area name.' }
+                        preOrderable: { type: boolean, description: 'Whether this area can be pre-ordered: the carrier sources a number in it (usually 2 to 4 weeks, never guaranteed).' }
         '400': { description: 'Country not offerable, or the inventory provider rejected the lookup (its 4xx status is forwarded as-is).' }
         '401': { $ref: '#/components/responses/Unauthorized' }
         '502': { description: 'The inventory provider was unreachable or returned an unclassified error.' }
@@ -37753,6 +37771,19 @@ paths:
                         ndc: { type: string, description: 'Area code (national destination code), e.g. "11".' }
                         name: { type: string, description: 'Area name: "City, ST" for US/CA (e.g. "Miami, FL"), city otherwise (e.g. "Sao Paulo").' }
                         count: { type: integer, description: 'Numbers available in this area: country-wide count for US/CA, numbers seen on the latest inventory page otherwise.' }
+                  soldOutAreas:
+                    type: array
+                    description: >
+                      Areas that had stock in the last 90 days and have none
+                      now. Pass one as `areaCode` with `preOrder: true` on the
+                      KYC submit when `preOrderable` is true, or watch it with
+                      POST /v1/phone-numbers/stock-watches.
+                    items:
+                      type: object
+                      properties:
+                        ndc: { type: string, description: 'Area code (national destination code).' }
+                        name: { type: string, description: 'Area name.' }
+                        preOrderable: { type: boolean, description: 'Whether this area can be pre-ordered: the carrier sources a number in it (usually 2 to 4 weeks, never guaranteed).' }
         '400': { description: 'Country not offerable, or the inventory provider rejected the lookup (its 4xx status is forwarded as-is).' }
         '401': { $ref: '#/components/responses/Unauthorized' }
         '502': { description: 'The inventory provider was unreachable or returned an unclassified error.' }
@@ -37868,6 +37899,7 @@ paths:
                 reuseOptionId: { type: string, description: 'Which reusable verification to use (GET reusable.options[].id). The unambiguous selection key. Omitted = the approved default. No match = 409.' }
                 reuseFrom: { type: string, description: 'Legacy fallback for `reuseOptionId`: the source phone number (GET reusable.options[].fromPhoneNumber). Ambiguous when a number labels two verifications, so prefer `reuseOptionId`. Omitted = the approved default. No match = 409.' }
                 areaCode: { type: string, pattern: '^\d{1,4}$', description: 'Area code (NDC) the number must be in. Hard constraint: an empty area pool fails with 409 code AREA_CODE_UNAVAILABLE instead of ordering from another area. Omit for any area. Options come from GET /v1/phone-numbers/availability (areaOptions); the purchase 202 kycUrl echoes the areaCode picked at purchase time so it can be passed here.' }
+                preOrder: { type: boolean, description: 'With areaCode: pre-order that area when it has no stock (an area listed in soldOutAreas with preOrderable true) instead of failing with AREA_CODE_UNAVAILABLE. The carrier sources a number in that area.' }
                 endUserFirstName: { type: string, description: End user's legal first name. Required when the country has an action/ID-verification (Onfido) requirement. }
                 endUserLastName: { type: string, description: End user's legal last name. Same condition as endUserFirstName. }
                 values:
@@ -38862,6 +38894,7 @@ paths:
                 reuseOptionId: { type: string, description: 'Which reusable verification to use (GET reusable.options[].id). The unambiguous selection key. Omitted = the approved default. No match = 409.' }
                 reuseFrom: { type: string, description: 'Legacy fallback for `reuseOptionId`: the source phone number (GET reusable.options[].fromPhoneNumber). Ambiguous when a number labels two verifications, so prefer `reuseOptionId`. Omitted = the approved default. No match = 409.' }
                 areaCode: { type: string, pattern: '^\d{1,4}$', description: 'Area code (NDC) the number must be in. Hard constraint: an empty area pool fails with 409 code AREA_CODE_UNAVAILABLE instead of ordering from another area. Omit for any area. Options come from GET /v1/phone-numbers/availability (areaOptions); the purchase 202 kycUrl echoes the areaCode picked at purchase time so it can be passed here.' }
+                preOrder: { type: boolean, description: 'With areaCode: pre-order that area when it has no stock (an area listed in soldOutAreas with preOrderable true) instead of failing with AREA_CODE_UNAVAILABLE. The carrier sources a number in that area.' }
                 endUserFirstName: { type: string, description: End user's legal first name. Required when the country has an action/ID-verification (Onfido) requirement. }
                 endUserLastName: { type: string, description: End user's legal last name. Same condition as endUserFirstName. }
                 values:
@@ -39382,6 +39415,11 @@ paths:
         GET /v1/phone-numbers/countries can also be watched, but anything with
         `preOrderable: true` does not need a watch: submit KYC and the carrier
         sources the number to order.
+
+        Pass `areaCode` (with `numberType`) to watch one sold-out area, for
+        example an entry of `soldOutAreas` from
+        GET /v1/phone-numbers/availability. Area stock is checked live on the
+        same 6h cadence.
       security:
         - bearerAuth: []
       requestBody:
@@ -39397,6 +39435,7 @@ paths:
                   type: string
                   enum: [local, mobile, national, toll_free]
                   description: 'Narrow the watch to one number type. Omit to be notified when any type in the country is back.'
+                areaCode: { type: string, pattern: '^\d{1,4}$', description: 'Narrow the watch to one area code (NDC). Requires numberType.' }
       responses:
         '201':
           description: Watch created.
@@ -39412,7 +39451,7 @@ paths:
                 $ref: '#/components/schemas/PhoneNumberStockWatch'
         '400': { $ref: '#/components/responses/BadRequest' }
         '401': { $ref: '#/components/responses/Unauthorized' }
-        '409': { description: 'The country is in stock right now (buy instead of watching), or the 20-country watch limit is reached (code invalid_resource_state).' }
+        '409': { description: 'The country (or the watched area) is in stock right now (buy instead of watching), or the 20-watch limit is reached (code invalid_resource_state).' }
     get:
       x-resource-group: "telephony"
       operationId: listPhoneNumberStockWatches

@@ -181,6 +181,7 @@ class PhoneNumbersResource:
         reuse_option_id: str | None = None,
         reuse_from: str | None = None,
         area_code: str | None = None,
+        pre_order: bool | None = None,
         end_user_first_name: str | None = None,
         end_user_last_name: str | None = None,
         values: dict[str, Any] | None = None,
@@ -197,6 +198,7 @@ class PhoneNumbersResource:
             reuse_option_id=reuse_option_id,
             reuse_from=reuse_from,
             area_code=area_code,
+            pre_order=pre_order,
             end_user_first_name=end_user_first_name,
             end_user_last_name=end_user_last_name,
             values=values,
@@ -398,12 +400,17 @@ class PhoneNumbersResource:
         )
 
     def create_phone_number_stock_watch(
-        self, country: str, *, number_type: str | None = None
+        self,
+        country: str,
+        *,
+        number_type: str | None = None,
+        area_code: str | None = None,
     ) -> dict[str, Any]:
         """Watch an out-of-stock country"""
         payload = self._build_payload(
             country=country,
             number_type=number_type,
+            area_code=area_code,
         )
         return self._client._post("/v1/phone-numbers/stock-watches", data=payload)
 
@@ -521,6 +528,7 @@ class PhoneNumbersResource:
         reuse_option_id: str | None = None,
         reuse_from: str | None = None,
         area_code: str | None = None,
+        pre_order: bool | None = None,
         end_user_first_name: str | None = None,
         end_user_last_name: str | None = None,
         values: dict[str, Any] | None = None,
@@ -537,6 +545,7 @@ class PhoneNumbersResource:
             reuse_option_id=reuse_option_id,
             reuse_from=reuse_from,
             area_code=area_code,
+            pre_order=pre_order,
             end_user_first_name=end_user_first_name,
             end_user_last_name=end_user_last_name,
             values=values,
@@ -748,12 +757,17 @@ class PhoneNumbersResource:
         )
 
     async def acreate_phone_number_stock_watch(
-        self, country: str, *, number_type: str | None = None
+        self,
+        country: str,
+        *,
+        number_type: str | None = None,
+        area_code: str | None = None,
     ) -> dict[str, Any]:
         """Watch an out-of-stock country (async)"""
         payload = self._build_payload(
             country=country,
             number_type=number_type,
+            area_code=area_code,
         )
         return await self._client._apost(
             "/v1/phone-numbers/stock-watches", data=payload
