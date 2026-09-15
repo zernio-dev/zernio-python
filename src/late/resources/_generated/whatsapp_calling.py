@@ -164,6 +164,7 @@ class WhatsappCallingResource:
         account_id: str,
         to: str,
         *,
+        idempotency_key: str | None = None,
         action: str | None = None,
         body_text: str | None = None,
         forward_to: str | None = None,
@@ -180,7 +181,10 @@ class WhatsappCallingResource:
             record_override=record_override,
             biz_opaque_callback_data=biz_opaque_callback_data,
         )
-        return self._client._post("/v1/whatsapp/calls", data=payload)
+        headers: dict[str, str] = {}
+        if idempotency_key is not None:
+            headers["Idempotency-Key"] = idempotency_key
+        return self._client._post("/v1/whatsapp/calls", data=payload, headers=headers)
 
     def list_whats_app_calls(
         self,
@@ -418,6 +422,7 @@ class WhatsappCallingResource:
         account_id: str,
         to: str,
         *,
+        idempotency_key: str | None = None,
         action: str | None = None,
         body_text: str | None = None,
         forward_to: str | None = None,
@@ -434,7 +439,12 @@ class WhatsappCallingResource:
             record_override=record_override,
             biz_opaque_callback_data=biz_opaque_callback_data,
         )
-        return await self._client._apost("/v1/whatsapp/calls", data=payload)
+        headers: dict[str, str] = {}
+        if idempotency_key is not None:
+            headers["Idempotency-Key"] = idempotency_key
+        return await self._client._apost(
+            "/v1/whatsapp/calls", data=payload, headers=headers
+        )
 
     async def alist_whats_app_calls(
         self,

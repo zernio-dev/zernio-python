@@ -103,14 +103,24 @@ class ReviewsResource:
         return self._client._get("/v1/inbox/reviews", params=params)
 
     def reply_to_inbox_review(
-        self, review_id: str, account_id: str, message: str
+        self,
+        review_id: str,
+        account_id: str,
+        message: str,
+        *,
+        idempotency_key: str | None = None,
     ) -> dict[str, Any]:
         """Reply to review"""
         payload = self._build_payload(
             account_id=account_id,
             message=message,
         )
-        return self._client._post(f"/v1/inbox/reviews/{review_id}/reply", data=payload)
+        headers: dict[str, str] = {}
+        if idempotency_key is not None:
+            headers["Idempotency-Key"] = idempotency_key
+        return self._client._post(
+            f"/v1/inbox/reviews/{review_id}/reply", data=payload, headers=headers
+        )
 
     def delete_inbox_review_reply(
         self, review_id: str, account_id: str
@@ -148,15 +158,23 @@ class ReviewsResource:
         return await self._client._aget("/v1/inbox/reviews", params=params)
 
     async def areply_to_inbox_review(
-        self, review_id: str, account_id: str, message: str
+        self,
+        review_id: str,
+        account_id: str,
+        message: str,
+        *,
+        idempotency_key: str | None = None,
     ) -> dict[str, Any]:
         """Reply to review (async)"""
         payload = self._build_payload(
             account_id=account_id,
             message=message,
         )
+        headers: dict[str, str] = {}
+        if idempotency_key is not None:
+            headers["Idempotency-Key"] = idempotency_key
         return await self._client._apost(
-            f"/v1/inbox/reviews/{review_id}/reply", data=payload
+            f"/v1/inbox/reviews/{review_id}/reply", data=payload, headers=headers
         )
 
     async def adelete_inbox_review_reply(

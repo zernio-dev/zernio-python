@@ -128,6 +128,7 @@ class CommentsResource:
         account_id: str,
         message: str,
         *,
+        idempotency_key: str | None = None,
         attachment_url: str | None = None,
         comment_id: str | None = None,
         parent_cid: str | None = None,
@@ -144,7 +145,12 @@ class CommentsResource:
             root_uri=root_uri,
             root_cid=root_cid,
         )
-        return self._client._post(f"/v1/inbox/comments/{post_id}", data=payload)
+        headers: dict[str, str] = {}
+        if idempotency_key is not None:
+            headers["Idempotency-Key"] = idempotency_key
+        return self._client._post(
+            f"/v1/inbox/comments/{post_id}", data=payload, headers=headers
+        )
 
     def delete_inbox_comment(
         self, post_id: str, account_id: str, comment_id: str
@@ -375,6 +381,7 @@ class CommentsResource:
         account_id: str,
         message: str,
         *,
+        idempotency_key: str | None = None,
         attachment_url: str | None = None,
         comment_id: str | None = None,
         parent_cid: str | None = None,
@@ -391,7 +398,12 @@ class CommentsResource:
             root_uri=root_uri,
             root_cid=root_cid,
         )
-        return await self._client._apost(f"/v1/inbox/comments/{post_id}", data=payload)
+        headers: dict[str, str] = {}
+        if idempotency_key is not None:
+            headers["Idempotency-Key"] = idempotency_key
+        return await self._client._apost(
+            f"/v1/inbox/comments/{post_id}", data=payload, headers=headers
+        )
 
     async def adelete_inbox_comment(
         self, post_id: str, account_id: str, comment_id: str

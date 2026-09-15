@@ -80,6 +80,7 @@ class SmsResource:
         from_: str,
         to: str,
         *,
+        idempotency_key: str | None = None,
         text: str | None = None,
         media_urls: list[str] | None = None,
         send_at: datetime | str | None = None,
@@ -92,7 +93,10 @@ class SmsResource:
             media_urls=media_urls,
             send_at=send_at,
         )
-        return self._client._post("/v1/sms/messages", data=payload)
+        headers: dict[str, str] = {}
+        if idempotency_key is not None:
+            headers["Idempotency-Key"] = idempotency_key
+        return self._client._post("/v1/sms/messages", data=payload, headers=headers)
 
     def lookup_sms_number(self, number: str) -> dict[str, Any]:
         """Look up carrier + line type"""
@@ -270,6 +274,7 @@ class SmsResource:
         from_: str,
         to: str,
         *,
+        idempotency_key: str | None = None,
         text: str | None = None,
         media_urls: list[str] | None = None,
         send_at: datetime | str | None = None,
@@ -282,7 +287,12 @@ class SmsResource:
             media_urls=media_urls,
             send_at=send_at,
         )
-        return await self._client._apost("/v1/sms/messages", data=payload)
+        headers: dict[str, str] = {}
+        if idempotency_key is not None:
+            headers["Idempotency-Key"] = idempotency_key
+        return await self._client._apost(
+            "/v1/sms/messages", data=payload, headers=headers
+        )
 
     async def alookup_sms_number(self, number: str) -> dict[str, Any]:
         """Look up carrier + line type (async)"""

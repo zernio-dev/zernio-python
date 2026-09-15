@@ -91,7 +91,12 @@ class ProfilesResource:
         return self._client._get("/v1/profiles", params=params)
 
     def create_profile(
-        self, name: str, *, description: str | None = None, color: str | None = None
+        self,
+        name: str,
+        *,
+        idempotency_key: str | None = None,
+        description: str | None = None,
+        color: str | None = None,
     ) -> dict[str, Any]:
         """Create profile"""
         payload = self._build_payload(
@@ -99,7 +104,10 @@ class ProfilesResource:
             description=description,
             color=color,
         )
-        return self._client._post("/v1/profiles", data=payload)
+        headers: dict[str, str] = {}
+        if idempotency_key is not None:
+            headers["Idempotency-Key"] = idempotency_key
+        return self._client._post("/v1/profiles", data=payload, headers=headers)
 
     def get_profile(self, profile_id: str) -> dict[str, Any]:
         """Get profile"""
@@ -145,7 +153,12 @@ class ProfilesResource:
         return await self._client._aget("/v1/profiles", params=params)
 
     async def acreate_profile(
-        self, name: str, *, description: str | None = None, color: str | None = None
+        self,
+        name: str,
+        *,
+        idempotency_key: str | None = None,
+        description: str | None = None,
+        color: str | None = None,
     ) -> dict[str, Any]:
         """Create profile (async)"""
         payload = self._build_payload(
@@ -153,7 +166,10 @@ class ProfilesResource:
             description=description,
             color=color,
         )
-        return await self._client._apost("/v1/profiles", data=payload)
+        headers: dict[str, str] = {}
+        if idempotency_key is not None:
+            headers["Idempotency-Key"] = idempotency_key
+        return await self._client._apost("/v1/profiles", data=payload, headers=headers)
 
     async def aget_profile(self, profile_id: str) -> dict[str, Any]:
         """Get profile (async)"""

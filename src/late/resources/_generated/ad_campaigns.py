@@ -933,6 +933,7 @@ class AdCampaignsResource:
         name: str,
         goal: str,
         *,
+        idempotency_key: str | None = None,
         creative_features: Any | None = None,
         post_id: str | None = None,
         platform_post_id: str | None = None,
@@ -1001,7 +1002,10 @@ class AdCampaignsResource:
             status=status,
             optimization_goal=optimization_goal,
         )
-        return self._client._post("/v1/ads/boost", data=payload)
+        headers: dict[str, str] = {}
+        if idempotency_key is not None:
+            headers["Idempotency-Key"] = idempotency_key
+        return self._client._post("/v1/ads/boost", data=payload, headers=headers)
 
     def list_google_asset_groups(self, campaign_id: str) -> dict[str, Any]:
         """List Performance Max asset groups"""
@@ -1013,6 +1017,7 @@ class AdCampaignsResource:
         ad_account_id: str,
         name: str,
         *,
+        idempotency_key: str | None = None,
         campaign_name: str | None = None,
         ad_set_name: str | None = None,
         ad_name: str | None = None,
@@ -1224,7 +1229,10 @@ class AdCampaignsResource:
             campaign_attribution=campaign_attribution,
             promoted_object=promoted_object,
         )
-        return self._client._post("/v1/ads/create", data=payload)
+        headers: dict[str, str] = {}
+        if idempotency_key is not None:
+            headers["Idempotency-Key"] = idempotency_key
+        return self._client._post("/v1/ads/create", data=payload, headers=headers)
 
     async def alist_ads(
         self,
@@ -2102,6 +2110,7 @@ class AdCampaignsResource:
         name: str,
         goal: str,
         *,
+        idempotency_key: str | None = None,
         creative_features: Any | None = None,
         post_id: str | None = None,
         platform_post_id: str | None = None,
@@ -2170,7 +2179,10 @@ class AdCampaignsResource:
             status=status,
             optimization_goal=optimization_goal,
         )
-        return await self._client._apost("/v1/ads/boost", data=payload)
+        headers: dict[str, str] = {}
+        if idempotency_key is not None:
+            headers["Idempotency-Key"] = idempotency_key
+        return await self._client._apost("/v1/ads/boost", data=payload, headers=headers)
 
     async def alist_google_asset_groups(self, campaign_id: str) -> dict[str, Any]:
         """List Performance Max asset groups (async)"""
@@ -2182,6 +2194,7 @@ class AdCampaignsResource:
         ad_account_id: str,
         name: str,
         *,
+        idempotency_key: str | None = None,
         campaign_name: str | None = None,
         ad_set_name: str | None = None,
         ad_name: str | None = None,
@@ -2393,4 +2406,9 @@ class AdCampaignsResource:
             campaign_attribution=campaign_attribution,
             promoted_object=promoted_object,
         )
-        return await self._client._apost("/v1/ads/create", data=payload)
+        headers: dict[str, str] = {}
+        if idempotency_key is not None:
+            headers["Idempotency-Key"] = idempotency_key
+        return await self._client._apost(
+            "/v1/ads/create", data=payload, headers=headers
+        )

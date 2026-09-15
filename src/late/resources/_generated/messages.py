@@ -204,6 +204,7 @@ class MessagesResource:
         conversation_id: str,
         account_id: str,
         *,
+        idempotency_key: str | None = None,
         message: str | None = None,
         attachment_url: str | None = None,
         category: str | None = None,
@@ -243,8 +244,13 @@ class MessagesResource:
             location=location,
             contacts=contacts,
         )
+        headers: dict[str, str] = {}
+        if idempotency_key is not None:
+            headers["Idempotency-Key"] = idempotency_key
         return self._client._post(
-            f"/v1/inbox/conversations/{conversation_id}/messages", data=payload
+            f"/v1/inbox/conversations/{conversation_id}/messages",
+            data=payload,
+            headers=headers,
         )
 
     def edit_inbox_message(
@@ -500,6 +506,7 @@ class MessagesResource:
         conversation_id: str,
         account_id: str,
         *,
+        idempotency_key: str | None = None,
         message: str | None = None,
         attachment_url: str | None = None,
         category: str | None = None,
@@ -539,8 +546,13 @@ class MessagesResource:
             location=location,
             contacts=contacts,
         )
+        headers: dict[str, str] = {}
+        if idempotency_key is not None:
+            headers["Idempotency-Key"] = idempotency_key
         return await self._client._apost(
-            f"/v1/inbox/conversations/{conversation_id}/messages", data=payload
+            f"/v1/inbox/conversations/{conversation_id}/messages",
+            data=payload,
+            headers=headers,
         )
 
     async def aedit_inbox_message(

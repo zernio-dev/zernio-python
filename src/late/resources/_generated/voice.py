@@ -79,6 +79,7 @@ class VoiceResource:
         self,
         to: str,
         *,
+        idempotency_key: str | None = None,
         from_number: str | None = None,
         forward_to: str | None = None,
         greeting: str | None = None,
@@ -100,7 +101,10 @@ class VoiceResource:
             amd=amd,
             voicemail_drop_message=voicemail_drop_message,
         )
-        return self._client._post("/v1/voice/calls", data=payload)
+        headers: dict[str, str] = {}
+        if idempotency_key is not None:
+            headers["Idempotency-Key"] = idempotency_key
+        return self._client._post("/v1/voice/calls", data=payload, headers=headers)
 
     def list_voice_calls(
         self,
@@ -275,6 +279,7 @@ class VoiceResource:
         self,
         to: str,
         *,
+        idempotency_key: str | None = None,
         from_number: str | None = None,
         forward_to: str | None = None,
         greeting: str | None = None,
@@ -296,7 +301,12 @@ class VoiceResource:
             amd=amd,
             voicemail_drop_message=voicemail_drop_message,
         )
-        return await self._client._apost("/v1/voice/calls", data=payload)
+        headers: dict[str, str] = {}
+        if idempotency_key is not None:
+            headers["Idempotency-Key"] = idempotency_key
+        return await self._client._apost(
+            "/v1/voice/calls", data=payload, headers=headers
+        )
 
     async def alist_voice_calls(
         self,

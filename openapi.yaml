@@ -37922,6 +37922,7 @@ paths:
                         properties:
                           requirementId: { type: string }
                           documentId: { type: string, description: Id from POST /v1/phone-numbers/kyc/upload-document. }
+                          issuedAt: { type: string, format: date, description: 'Date printed on the document (YYYY-MM-DD), for slots the regulator windows such as proof of address. The pre-submit review trusts it over its own read of the PDF.' }
                 address:
                   type: object
                   properties:
@@ -38551,6 +38552,7 @@ paths:
                     properties:
                       requirementId: { type: string }
                       documentId: { type: string, description: Id from POST /v1/phone-numbers/kyc/upload-document. }
+                      issuedAt: { type: string, format: date, description: 'Date printed on the document (YYYY-MM-DD), for slots the regulator windows such as proof of address. The pre-submit review trusts it over its own read of the PDF.' }
       responses:
         '200':
           description: Advisories (empty when the packet looks fine or the review was unavailable).
@@ -38736,6 +38738,7 @@ paths:
                       filename: { type: string }
                       base64: { type: string, description: Base64-encoded file bytes (or supply documentId instead). }
                       documentId: { type: string, description: Id of a document already uploaded out-of-band. }
+                      issuedAt: { type: string, format: date, description: 'Date printed on the document (YYYY-MM-DD), for slots the regulator windows such as proof of address. The pre-submit review trusts it over its own read of the PDF.' }
                 address:
                   type: object
                   description: A corrected address record, keyed to its requirement.
