@@ -15,7 +15,6 @@ the Streamable HTTP endpoint.
 """
 
 import argparse
-import json
 import sys
 
 import uvicorn
@@ -24,7 +23,7 @@ from starlette.requests import Request
 from starlette.responses import JSONResponse, RedirectResponse
 from starlette.types import ASGIApp, Receive, Scope, Send
 
-from late.mcp.auth import ANONYMOUS_DISCOVERY_BEARER, is_allowed_origin
+from late.mcp.auth import is_allowed_origin
 from late.mcp.config import ServerConfig, validate_environment
 from late.mcp.constants import (
     DOCS_URL,
@@ -165,30 +164,6 @@ async def handle_oauth_protected_resource_legacy(_request: Request) -> RedirectR
     )
 
 
-# JSON-RPC methods that carry no user data and are safe to serve without a
-# bearer: the connection handshake plus catalog listings/reads. tools/call is
-# deliberately absent — an unauthenticated tools/call still gets the HTTP 401
-# + WWW-Authenticate challenge, which is what triggers a client's OAuth flow
-# (MCP auth spec: clients begin authorization on any 401, mid-session
-# included). Discovery succeeding anonymously must not change that.
-_ANONYMOUS_METHODS = frozenset(
-    {
-        "initialize",
-        "notifications/initialized",
-        "ping",
-        "tools/list",
-        "prompts/list",
-        "resources/list",
-        "resources/read",
-        "resources/templates/list",
-    }
-)
-
-# Only parse bodies up to this size when deciding anonymity; larger
-# unauthenticated bodies skip the parse and hit the normal 401.
-_ANONYMOUS_MAX_BODY_BYTES = 64 * 1024
-
-
 class RootAliasMiddleware:
     """Serve the MCP transport on the bare origin as well as /mcp.
 
@@ -215,79 +190,6 @@ class RootAliasMiddleware:
                 scope["path"] = ENDPOINT_MCP
                 scope["raw_path"] = ENDPOINT_MCP.encode()
         await self.app(scope, receive, send)
-
-
-class AnonymousDiscoveryMiddleware:
-    """Let discovery-only JSON-RPC requests through without credentials.
-
-    Scanners, agent registries, and MCP clients probe `initialize` and the
-    list methods before any auth flow. FastMCP's bearer middleware rejects
-    those with an empty-body 401, so a public catalog is invisible to anything
-    that cannot complete OAuth (headless crawlers). For an unauthenticated
-    POST to the MCP endpoint whose single JSON-RPC message is in
-    _ANONYMOUS_METHODS, inject the local discovery bearer (auth.py verifies it
-    without an upstream call and grants no scopes); everything else passes
-    through untouched and keeps the 401 challenge.
-
-    Pure ASGI (not BaseHTTPMiddleware) so the streamable-HTTP response is
-    never buffered; only the REQUEST body is read, then replayed.
-    """
-
-    def __init__(self, app: ASGIApp) -> None:
-        self.app = app
-
-    async def __call__(self, scope: Scope, receive: Receive, send: Send) -> None:
-        if not self._eligible(scope):
-            await self.app(scope, receive, send)
-            return
-
-        consumed: list[dict] = []
-        body = b""
-        complete = True
-        while True:
-            message = await receive()
-            consumed.append(message)
-            if message["type"] != "http.request":
-                complete = False
-                break
-            body += message.get("body", b"")
-            if not message.get("more_body", False):
-                break
-            if len(body) > _ANONYMOUS_MAX_BODY_BYTES:
-                complete = False
-                break
-
-        if complete and len(body) <= _ANONYMOUS_MAX_BODY_BYTES and self._is_discovery(body):
-            scope = dict(scope)
-            scope["headers"] = [
-                *scope["headers"],
-                (b"authorization", b"Bearer " + ANONYMOUS_DISCOVERY_BEARER.encode()),
-            ]
-
-        replay = iter(consumed)
-
-        async def replaying_receive() -> dict:
-            for message in replay:
-                return message
-            return await receive()
-
-        await self.app(scope, replaying_receive, send)
-
-    @staticmethod
-    def _eligible(scope: Scope) -> bool:
-        if scope["type"] != "http" or scope.get("method") != "POST":
-            return False
-        if scope["path"].rstrip("/") != ENDPOINT_MCP.rstrip("/"):
-            return False
-        return not any(k.lower() == b"authorization" for k, _ in scope["headers"])
-
-    @staticmethod
-    def _is_discovery(body: bytes) -> bool:
-        try:
-            parsed = json.loads(body)
-        except (ValueError, UnicodeDecodeError):
-            return False
-        return isinstance(parsed, dict) and parsed.get("method") in _ANONYMOUS_METHODS
 
 
 _ORIGIN_GUARDED_PATHS = (
@@ -365,9 +267,8 @@ def build_app() -> Starlette:
     )
 
     # add_middleware order: last added runs first. RootAlias must rewrite the
-    # path before OriginGuard matches on it; AnonymousDiscovery runs last so
-    # it sees the aliased path too.
-    app.add_middleware(AnonymousDiscoveryMiddleware)
+    # path before OriginGuard matches on it. FastMCP authenticates all MCP
+    # requests, including initialize and catalog discovery, before processing.
     app.add_middleware(OriginGuardMiddleware)
     app.add_middleware(RootAliasMiddleware)
     return app

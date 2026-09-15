@@ -136,31 +136,17 @@ def extract_parameters(
 
     # Query/path parameters
     for param in operation.get("parameters", []):
-        # Skip $ref parameters (they reference common params we'll handle differently)
-        if "$ref" in param:
-            # Handle common parameters by name
+        # Resolve reusable parameters before extracting their name and location.
+        # Silently dropping a path parameter produces broken URL templates.
+        seen_refs: set[str] = set()
+        while "$ref" in param:
             ref = param["$ref"]
-            if "PageParam" in ref:
-                params.append({
-                    "name": "page",
-                    "original_name": "page",
-                    "type": "int | None",
-                    "required": False,
-                    "description": "Page number (1-based)",
-                    "in": "query",
-                    "default": 1,
-                })
-            elif "LimitParam" in ref:
-                params.append({
-                    "name": "limit",
-                    "original_name": "limit",
-                    "type": "int | None",
-                    "required": False,
-                    "description": "Page size",
-                    "in": "query",
-                    "default": 10,
-                })
-            continue
+            if not ref.startswith("#/") or ref in seen_refs:
+                raise ValueError(f"Unsupported or cyclic parameter reference: {ref}")
+            seen_refs.add(ref)
+            param = spec
+            for part in ref[2:].split("/"):
+                param = param[part.replace("~1", "/").replace("~0", "~")]
 
         if "name" not in param:
             continue

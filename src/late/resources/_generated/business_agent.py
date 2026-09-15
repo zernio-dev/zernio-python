@@ -73,27 +73,28 @@ class BusinessAgentResource:
                 result[to_camel(k)] = v
         return result
 
-    def get_business_agent_status(self) -> dict[str, Any]:
+    def get_business_agent_status(self, account_id: str) -> dict[str, Any]:
         """Get agent setup status"""
-        return self._client._get("/v1/accounts/{accountId}/business-agent")
+        return self._client._get(f"/v1/accounts/{account_id}/business-agent")
 
-    def onboard_business_agent(self) -> dict[str, Any]:
+    def onboard_business_agent(self, account_id: str) -> dict[str, Any]:
         """Create the agent"""
-        return self._client._post("/v1/accounts/{accountId}/business-agent/onboard")
+        return self._client._post(f"/v1/accounts/{account_id}/business-agent/onboard")
 
     def list_business_agent_settings(
-        self, *, agent_id: str | None = None
+        self, account_id: str, *, agent_id: str | None = None
     ) -> dict[str, Any]:
         """List agent settings"""
         params = self._build_params(
             agent_id=agent_id,
         )
         return self._client._get(
-            "/v1/accounts/{accountId}/business-agent/settings", params=params
+            f"/v1/accounts/{account_id}/business-agent/settings", params=params
         )
 
     def update_business_agent_settings(
         self,
+        account_id: str,
         *,
         agent_id: str | None = None,
         rollout: dict[str, Any] | None = None,
@@ -114,40 +115,45 @@ class BusinessAgentResource:
             never_say_phrases=never_say_phrases,
         )
         return self._client._patch(
-            "/v1/accounts/{accountId}/business-agent/settings",
+            f"/v1/accounts/{account_id}/business-agent/settings",
             data=payload,
             params=params,
         )
 
-    def list_business_agent_allowlist(self) -> dict[str, Any]:
+    def list_business_agent_allowlist(self, account_id: str) -> dict[str, Any]:
         """List allowlisted consumers"""
-        return self._client._get("/v1/accounts/{accountId}/business-agent/allowlist")
+        return self._client._get(f"/v1/accounts/{account_id}/business-agent/allowlist")
 
     def add_business_agent_allowlist_entry(
-        self, consumer_phone_number: str
+        self, account_id: str, consumer_phone_number: str
     ) -> dict[str, Any]:
         """Allowlist a consumer"""
         payload = self._build_payload(
             consumer_phone_number=consumer_phone_number,
         )
         return self._client._post(
-            "/v1/accounts/{accountId}/business-agent/allowlist", data=payload
+            f"/v1/accounts/{account_id}/business-agent/allowlist", data=payload
         )
 
-    def remove_business_agent_allowlist_entry(self, entry_id: str) -> dict[str, Any]:
+    def remove_business_agent_allowlist_entry(
+        self, account_id: str, entry_id: str
+    ) -> dict[str, Any]:
         """Remove an allowlisted consumer"""
         return self._client._delete(
-            f"/v1/accounts/{accountId}/business-agent/allowlist/{entry_id}"
+            f"/v1/accounts/{account_id}/business-agent/allowlist/{entry_id}"
         )
 
-    def get_business_agent_business_information(self) -> dict[str, Any]:
+    def get_business_agent_business_information(
+        self, account_id: str
+    ) -> dict[str, Any]:
         """Get business information"""
         return self._client._get(
-            "/v1/accounts/{accountId}/business-agent/business-information"
+            f"/v1/accounts/{account_id}/business-agent/business-information"
         )
 
     def replace_business_agent_business_information(
         self,
+        account_id: str,
         *,
         payment_method: str | None = None,
         return_policy: str | None = None,
@@ -166,21 +172,29 @@ class BusinessAgentResource:
             contact_info=contact_info,
         )
         return self._client._put(
-            "/v1/accounts/{accountId}/business-agent/business-information", data=payload
+            f"/v1/accounts/{account_id}/business-agent/business-information",
+            data=payload,
         )
 
-    def reset_business_agent_business_information(self) -> dict[str, Any]:
+    def reset_business_agent_business_information(
+        self, account_id: str
+    ) -> dict[str, Any]:
         """Reset business information"""
         return self._client._delete(
-            "/v1/accounts/{accountId}/business-agent/business-information"
+            f"/v1/accounts/{account_id}/business-agent/business-information"
         )
 
-    def list_business_agent_faqs(self) -> dict[str, Any]:
+    def list_business_agent_faqs(self, account_id: str) -> dict[str, Any]:
         """List FAQs"""
-        return self._client._get("/v1/accounts/{accountId}/business-agent/faqs")
+        return self._client._get(f"/v1/accounts/{account_id}/business-agent/faqs")
 
     def create_business_agent_faq(
-        self, question: str, answer: str, *, metadata: dict[str, Any] | None = None
+        self,
+        account_id: str,
+        question: str,
+        answer: str,
+        *,
+        metadata: dict[str, Any] | None = None,
     ) -> dict[str, Any]:
         """Create a FAQ"""
         payload = self._build_payload(
@@ -189,17 +203,18 @@ class BusinessAgentResource:
             metadata=metadata,
         )
         return self._client._post(
-            "/v1/accounts/{accountId}/business-agent/faqs", data=payload
+            f"/v1/accounts/{account_id}/business-agent/faqs", data=payload
         )
 
-    def get_business_agent_faq(self, faq_id: str) -> dict[str, Any]:
+    def get_business_agent_faq(self, account_id: str, faq_id: str) -> dict[str, Any]:
         """Get a FAQ"""
         return self._client._get(
-            f"/v1/accounts/{accountId}/business-agent/faqs/{faq_id}"
+            f"/v1/accounts/{account_id}/business-agent/faqs/{faq_id}"
         )
 
     def update_business_agent_faq(
         self,
+        account_id: str,
         faq_id: str,
         question: str,
         answer: str,
@@ -213,21 +228,22 @@ class BusinessAgentResource:
             metadata=metadata,
         )
         return self._client._put(
-            f"/v1/accounts/{accountId}/business-agent/faqs/{faq_id}", data=payload
+            f"/v1/accounts/{account_id}/business-agent/faqs/{faq_id}", data=payload
         )
 
-    def delete_business_agent_faq(self, faq_id: str) -> dict[str, Any]:
+    def delete_business_agent_faq(self, account_id: str, faq_id: str) -> dict[str, Any]:
         """Delete a FAQ"""
         return self._client._delete(
-            f"/v1/accounts/{accountId}/business-agent/faqs/{faq_id}"
+            f"/v1/accounts/{account_id}/business-agent/faqs/{faq_id}"
         )
 
-    def list_business_agent_websites(self) -> dict[str, Any]:
+    def list_business_agent_websites(self, account_id: str) -> dict[str, Any]:
         """List crawled websites"""
-        return self._client._get("/v1/accounts/{accountId}/business-agent/websites")
+        return self._client._get(f"/v1/accounts/{account_id}/business-agent/websites")
 
     def add_business_agent_website(
         self,
+        account_id: str,
         url: str,
         *,
         included_sub_domains: list[str] | None = None,
@@ -246,17 +262,20 @@ class BusinessAgentResource:
             single_urls=single_urls,
         )
         return self._client._post(
-            "/v1/accounts/{accountId}/business-agent/websites", data=payload
+            f"/v1/accounts/{account_id}/business-agent/websites", data=payload
         )
 
-    def get_business_agent_website(self, website_id: str) -> dict[str, Any]:
+    def get_business_agent_website(
+        self, account_id: str, website_id: str
+    ) -> dict[str, Any]:
         """Get a crawled website"""
         return self._client._get(
-            f"/v1/accounts/{accountId}/business-agent/websites/{website_id}"
+            f"/v1/accounts/{account_id}/business-agent/websites/{website_id}"
         )
 
     def update_business_agent_website(
         self,
+        account_id: str,
         website_id: str,
         url: str,
         *,
@@ -276,22 +295,24 @@ class BusinessAgentResource:
             single_urls=single_urls,
         )
         return self._client._put(
-            f"/v1/accounts/{accountId}/business-agent/websites/{website_id}",
+            f"/v1/accounts/{account_id}/business-agent/websites/{website_id}",
             data=payload,
         )
 
-    def delete_business_agent_website(self, website_id: str) -> dict[str, Any]:
+    def delete_business_agent_website(
+        self, account_id: str, website_id: str
+    ) -> dict[str, Any]:
         """Remove a crawled website"""
         return self._client._delete(
-            f"/v1/accounts/{accountId}/business-agent/websites/{website_id}"
+            f"/v1/accounts/{account_id}/business-agent/websites/{website_id}"
         )
 
-    def list_business_agent_files(self) -> dict[str, Any]:
+    def list_business_agent_files(self, account_id: str) -> dict[str, Any]:
         """List knowledge files"""
-        return self._client._get("/v1/accounts/{accountId}/business-agent/files")
+        return self._client._get(f"/v1/accounts/{account_id}/business-agent/files")
 
     def upload_business_agent_file(
-        self, url: str, *, file_name: str | None = None
+        self, account_id: str, url: str, *, file_name: str | None = None
     ) -> dict[str, Any]:
         """Upload a knowledge file"""
         payload = self._build_payload(
@@ -299,27 +320,34 @@ class BusinessAgentResource:
             file_name=file_name,
         )
         return self._client._post(
-            "/v1/accounts/{accountId}/business-agent/files", data=payload
+            f"/v1/accounts/{account_id}/business-agent/files", data=payload
         )
 
-    def get_business_agent_file(self, file_id: str) -> dict[str, Any]:
+    def get_business_agent_file(self, account_id: str, file_id: str) -> dict[str, Any]:
         """Get a knowledge file"""
         return self._client._get(
-            f"/v1/accounts/{accountId}/business-agent/files/{file_id}"
+            f"/v1/accounts/{account_id}/business-agent/files/{file_id}"
         )
 
-    def delete_business_agent_file(self, file_id: str) -> dict[str, Any]:
+    def delete_business_agent_file(
+        self, account_id: str, file_id: str
+    ) -> dict[str, Any]:
         """Delete a knowledge file"""
         return self._client._delete(
-            f"/v1/accounts/{accountId}/business-agent/files/{file_id}"
+            f"/v1/accounts/{account_id}/business-agent/files/{file_id}"
         )
 
-    def list_business_agent_skills(self) -> dict[str, Any]:
+    def list_business_agent_skills(self, account_id: str) -> dict[str, Any]:
         """List skills"""
-        return self._client._get("/v1/accounts/{accountId}/business-agent/skills")
+        return self._client._get(f"/v1/accounts/{account_id}/business-agent/skills")
 
     def create_business_agent_skill(
-        self, skill: str, *, title: str | None = None, description: str | None = None
+        self,
+        account_id: str,
+        skill: str,
+        *,
+        title: str | None = None,
+        description: str | None = None,
     ) -> dict[str, Any]:
         """Create a skill"""
         payload = self._build_payload(
@@ -328,17 +356,20 @@ class BusinessAgentResource:
             skill=skill,
         )
         return self._client._post(
-            "/v1/accounts/{accountId}/business-agent/skills", data=payload
+            f"/v1/accounts/{account_id}/business-agent/skills", data=payload
         )
 
-    def get_business_agent_skill(self, skill_id: str) -> dict[str, Any]:
+    def get_business_agent_skill(
+        self, account_id: str, skill_id: str
+    ) -> dict[str, Any]:
         """Get a skill"""
         return self._client._get(
-            f"/v1/accounts/{accountId}/business-agent/skills/{skill_id}"
+            f"/v1/accounts/{account_id}/business-agent/skills/{skill_id}"
         )
 
     def update_business_agent_skill(
         self,
+        account_id: str,
         skill_id: str,
         skill: str,
         *,
@@ -352,17 +383,20 @@ class BusinessAgentResource:
             skill=skill,
         )
         return self._client._put(
-            f"/v1/accounts/{accountId}/business-agent/skills/{skill_id}", data=payload
+            f"/v1/accounts/{account_id}/business-agent/skills/{skill_id}", data=payload
         )
 
-    def delete_business_agent_skill(self, skill_id: str) -> dict[str, Any]:
+    def delete_business_agent_skill(
+        self, account_id: str, skill_id: str
+    ) -> dict[str, Any]:
         """Delete a skill"""
         return self._client._delete(
-            f"/v1/accounts/{accountId}/business-agent/skills/{skill_id}"
+            f"/v1/accounts/{account_id}/business-agent/skills/{skill_id}"
         )
 
     def list_business_agent_ui_skills(
         self,
+        account_id: str,
         *,
         before: str | None = None,
         after: str | None = None,
@@ -375,11 +409,12 @@ class BusinessAgentResource:
             limit=limit,
         )
         return self._client._get(
-            "/v1/accounts/{accountId}/business-agent/ui-skills", params=params
+            f"/v1/accounts/{account_id}/business-agent/ui-skills", params=params
         )
 
     def create_business_agent_ui_skill(
         self,
+        account_id: str,
         component_type: str,
         status: str,
         instruction: str,
@@ -396,17 +431,20 @@ class BusinessAgentResource:
             flow_id=flow_id,
         )
         return self._client._post(
-            "/v1/accounts/{accountId}/business-agent/ui-skills", data=payload
+            f"/v1/accounts/{account_id}/business-agent/ui-skills", data=payload
         )
 
-    def get_business_agent_ui_skill(self, ui_skill_id: str) -> dict[str, Any]:
+    def get_business_agent_ui_skill(
+        self, account_id: str, ui_skill_id: str
+    ) -> dict[str, Any]:
         """Get a UI skill"""
         return self._client._get(
-            f"/v1/accounts/{accountId}/business-agent/ui-skills/{ui_skill_id}"
+            f"/v1/accounts/{account_id}/business-agent/ui-skills/{ui_skill_id}"
         )
 
     def update_business_agent_ui_skill(
         self,
+        account_id: str,
         ui_skill_id: str,
         component_type: str,
         status: str,
@@ -424,22 +462,25 @@ class BusinessAgentResource:
             flow_id=flow_id,
         )
         return self._client._put(
-            f"/v1/accounts/{accountId}/business-agent/ui-skills/{ui_skill_id}",
+            f"/v1/accounts/{account_id}/business-agent/ui-skills/{ui_skill_id}",
             data=payload,
         )
 
-    def delete_business_agent_ui_skill(self, ui_skill_id: str) -> dict[str, Any]:
+    def delete_business_agent_ui_skill(
+        self, account_id: str, ui_skill_id: str
+    ) -> dict[str, Any]:
         """Delete a UI skill"""
         return self._client._delete(
-            f"/v1/accounts/{accountId}/business-agent/ui-skills/{ui_skill_id}"
+            f"/v1/accounts/{account_id}/business-agent/ui-skills/{ui_skill_id}"
         )
 
-    def list_business_agent_connectors(self) -> dict[str, Any]:
+    def list_business_agent_connectors(self, account_id: str) -> dict[str, Any]:
         """List connectors"""
-        return self._client._get("/v1/accounts/{accountId}/business-agent/connectors")
+        return self._client._get(f"/v1/accounts/{account_id}/business-agent/connectors")
 
     def create_business_agent_connector(
         self,
+        account_id: str,
         name: str,
         base_url: str,
         auth_type: str,
@@ -462,17 +503,21 @@ class BusinessAgentResource:
             requires_certificate=requires_certificate,
         )
         return self._client._post(
-            "/v1/accounts/{accountId}/business-agent/connectors", data=payload
+            f"/v1/accounts/{account_id}/business-agent/connectors", data=payload
         )
 
-    def get_business_agent_connector(self) -> dict[str, Any]:
+    def get_business_agent_connector(
+        self, account_id: str, connector_id: str
+    ) -> dict[str, Any]:
         """Get a connector"""
         return self._client._get(
-            "/v1/accounts/{accountId}/business-agent/connectors/{connectorId}"
+            f"/v1/accounts/{account_id}/business-agent/connectors/{connector_id}"
         )
 
     def update_business_agent_connector(
         self,
+        account_id: str,
+        connector_id: str,
         name: str,
         base_url: str,
         auth_type: str,
@@ -495,33 +540,39 @@ class BusinessAgentResource:
             requires_certificate=requires_certificate,
         )
         return self._client._put(
-            "/v1/accounts/{accountId}/business-agent/connectors/{connectorId}",
+            f"/v1/accounts/{account_id}/business-agent/connectors/{connector_id}",
             data=payload,
         )
 
-    def delete_business_agent_connector(self) -> dict[str, Any]:
+    def delete_business_agent_connector(
+        self, account_id: str, connector_id: str
+    ) -> dict[str, Any]:
         """Delete a connector"""
         return self._client._delete(
-            "/v1/accounts/{accountId}/business-agent/connectors/{connectorId}"
+            f"/v1/accounts/{account_id}/business-agent/connectors/{connector_id}"
         )
 
     def set_business_agent_connector_credentials(
-        self, body: dict[str, Any]
+        self, account_id: str, connector_id: str, body: dict[str, Any]
     ) -> dict[str, Any]:
         """Set connector credentials"""
         return self._client._post(
-            "/v1/accounts/{accountId}/business-agent/connectors/{connectorId}/credentials",
+            f"/v1/accounts/{account_id}/business-agent/connectors/{connector_id}/credentials",
             data=body,
         )
 
-    def refresh_business_agent_connector_tools(self) -> dict[str, Any]:
+    def refresh_business_agent_connector_tools(
+        self, account_id: str, connector_id: str
+    ) -> dict[str, Any]:
         """Refresh MCP connector tools"""
         return self._client._post(
-            "/v1/accounts/{accountId}/business-agent/connectors/{connectorId}/refresh-tools"
+            f"/v1/accounts/{account_id}/business-agent/connectors/{connector_id}/refresh-tools"
         )
 
     def get_business_agent_connector_logs(
         self,
+        account_id: str,
+        connector_id: str,
         *,
         start_time: int | None = None,
         end_time: int | None = None,
@@ -542,18 +593,22 @@ class BusinessAgentResource:
             top_n=top_n,
         )
         return self._client._get(
-            "/v1/accounts/{accountId}/business-agent/connectors/{connectorId}/logs",
+            f"/v1/accounts/{account_id}/business-agent/connectors/{connector_id}/logs",
             params=params,
         )
 
-    def list_business_agent_connector_tools(self) -> dict[str, Any]:
+    def list_business_agent_connector_tools(
+        self, account_id: str, connector_id: str
+    ) -> dict[str, Any]:
         """List connector tools"""
         return self._client._get(
-            "/v1/accounts/{accountId}/business-agent/connectors/{connectorId}/tools"
+            f"/v1/accounts/{account_id}/business-agent/connectors/{connector_id}/tools"
         )
 
     def create_business_agent_connector_tool(
         self,
+        account_id: str,
+        connector_id: str,
         name: str,
         description: str,
         request_definition: dict[str, Any],
@@ -572,18 +627,23 @@ class BusinessAgentResource:
             transformation_spec=transformation_spec,
         )
         return self._client._post(
-            "/v1/accounts/{accountId}/business-agent/connectors/{connectorId}/tools",
+            f"/v1/accounts/{account_id}/business-agent/connectors/{connector_id}/tools",
             data=payload,
         )
 
-    def get_business_agent_connector_tool(self) -> dict[str, Any]:
+    def get_business_agent_connector_tool(
+        self, account_id: str, connector_id: str, tool_id: str
+    ) -> dict[str, Any]:
         """Get a connector tool"""
         return self._client._get(
-            "/v1/accounts/{accountId}/business-agent/connectors/{connectorId}/tools/{toolId}"
+            f"/v1/accounts/{account_id}/business-agent/connectors/{connector_id}/tools/{tool_id}"
         )
 
     def update_business_agent_connector_tool(
         self,
+        account_id: str,
+        connector_id: str,
+        tool_id: str,
         name: str,
         description: str,
         request_definition: dict[str, Any],
@@ -602,41 +662,47 @@ class BusinessAgentResource:
             transformation_spec=transformation_spec,
         )
         return self._client._put(
-            "/v1/accounts/{accountId}/business-agent/connectors/{connectorId}/tools/{toolId}",
+            f"/v1/accounts/{account_id}/business-agent/connectors/{connector_id}/tools/{tool_id}",
             data=payload,
         )
 
-    def delete_business_agent_connector_tool(self) -> dict[str, Any]:
+    def delete_business_agent_connector_tool(
+        self, account_id: str, connector_id: str, tool_id: str
+    ) -> dict[str, Any]:
         """Delete a connector tool"""
         return self._client._delete(
-            "/v1/accounts/{accountId}/business-agent/connectors/{connectorId}/tools/{toolId}"
+            f"/v1/accounts/{account_id}/business-agent/connectors/{connector_id}/tools/{tool_id}"
         )
 
-    def run_business_agent_connector_tool(self, input: str) -> dict[str, Any]:
+    def run_business_agent_connector_tool(
+        self, account_id: str, connector_id: str, tool_id: str, input: str
+    ) -> dict[str, Any]:
         """Run a connector tool once"""
         payload = self._build_payload(
             input=input,
         )
         return self._client._post(
-            "/v1/accounts/{accountId}/business-agent/connectors/{connectorId}/tools/{toolId}/run",
+            f"/v1/accounts/{account_id}/business-agent/connectors/{connector_id}/tools/{tool_id}/run",
             data=payload,
         )
 
-    def get_business_agent_budget(self) -> dict[str, Any]:
+    def get_business_agent_budget(self, account_id: str) -> dict[str, Any]:
         """Get usage budgets"""
-        return self._client._get("/v1/accounts/{accountId}/business-agent/budget")
+        return self._client._get(f"/v1/accounts/{account_id}/business-agent/budget")
 
-    def replace_business_agent_budget(self, budgets: list[Any]) -> dict[str, Any]:
+    def replace_business_agent_budget(
+        self, account_id: str, budgets: list[Any]
+    ) -> dict[str, Any]:
         """Replace usage budgets"""
         payload = self._build_payload(
             budgets=budgets,
         )
         return self._client._put(
-            "/v1/accounts/{accountId}/business-agent/budget", data=payload
+            f"/v1/accounts/{account_id}/business-agent/budget", data=payload
         )
 
     def send_business_agent_test_message(
-        self, message: str, *, conversation_id: str | None = None
+        self, account_id: str, message: str, *, conversation_id: str | None = None
     ) -> dict[str, Any]:
         """Send a test message"""
         payload = self._build_payload(
@@ -644,11 +710,11 @@ class BusinessAgentResource:
             conversation_id=conversation_id,
         )
         return self._client._post(
-            "/v1/accounts/{accountId}/business-agent/test-messages", data=payload
+            f"/v1/accounts/{account_id}/business-agent/test-messages", data=payload
         )
 
     def send_business_agent_event(
-        self, to: str, type: str, description: str, payload: str
+        self, account_id: str, to: str, type: str, description: str, payload: str
     ) -> dict[str, Any]:
         """Send a business event"""
         payload = self._build_payload(
@@ -658,17 +724,20 @@ class BusinessAgentResource:
             payload=payload,
         )
         return self._client._post(
-            "/v1/accounts/{accountId}/business-agent/events", data=payload
+            f"/v1/accounts/{account_id}/business-agent/events", data=payload
         )
 
-    def get_business_agent_event(self, event_id: str) -> dict[str, Any]:
+    def get_business_agent_event(
+        self, account_id: str, event_id: str
+    ) -> dict[str, Any]:
         """Get a business event status"""
         return self._client._get(
-            f"/v1/accounts/{accountId}/business-agent/events/{event_id}"
+            f"/v1/accounts/{account_id}/business-agent/events/{event_id}"
         )
 
     def read_business_agent_evals(
         self,
+        account_id: str,
         *,
         job_id: str | None = None,
         summary_ids: str | None = None,
@@ -681,41 +750,44 @@ class BusinessAgentResource:
             eval_ids=eval_ids,
         )
         return self._client._get(
-            "/v1/accounts/{accountId}/business-agent/evals", params=params
+            f"/v1/accounts/{account_id}/business-agent/evals", params=params
         )
 
-    def start_business_agent_eval_run(self, eval_case_ids: list[str]) -> dict[str, Any]:
+    def start_business_agent_eval_run(
+        self, account_id: str, eval_case_ids: list[str]
+    ) -> dict[str, Any]:
         """Start an evaluation run"""
         payload = self._build_payload(
             eval_case_ids=eval_case_ids,
         )
         return self._client._post(
-            "/v1/accounts/{accountId}/business-agent/evals", data=payload
+            f"/v1/accounts/{account_id}/business-agent/evals", data=payload
         )
 
-    async def aget_business_agent_status(self) -> dict[str, Any]:
+    async def aget_business_agent_status(self, account_id: str) -> dict[str, Any]:
         """Get agent setup status (async)"""
-        return await self._client._aget("/v1/accounts/{accountId}/business-agent")
+        return await self._client._aget(f"/v1/accounts/{account_id}/business-agent")
 
-    async def aonboard_business_agent(self) -> dict[str, Any]:
+    async def aonboard_business_agent(self, account_id: str) -> dict[str, Any]:
         """Create the agent (async)"""
         return await self._client._apost(
-            "/v1/accounts/{accountId}/business-agent/onboard"
+            f"/v1/accounts/{account_id}/business-agent/onboard"
         )
 
     async def alist_business_agent_settings(
-        self, *, agent_id: str | None = None
+        self, account_id: str, *, agent_id: str | None = None
     ) -> dict[str, Any]:
         """List agent settings (async)"""
         params = self._build_params(
             agent_id=agent_id,
         )
         return await self._client._aget(
-            "/v1/accounts/{accountId}/business-agent/settings", params=params
+            f"/v1/accounts/{account_id}/business-agent/settings", params=params
         )
 
     async def aupdate_business_agent_settings(
         self,
+        account_id: str,
         *,
         agent_id: str | None = None,
         rollout: dict[str, Any] | None = None,
@@ -736,44 +808,47 @@ class BusinessAgentResource:
             never_say_phrases=never_say_phrases,
         )
         return await self._client._apatch(
-            "/v1/accounts/{accountId}/business-agent/settings",
+            f"/v1/accounts/{account_id}/business-agent/settings",
             data=payload,
             params=params,
         )
 
-    async def alist_business_agent_allowlist(self) -> dict[str, Any]:
+    async def alist_business_agent_allowlist(self, account_id: str) -> dict[str, Any]:
         """List allowlisted consumers (async)"""
         return await self._client._aget(
-            "/v1/accounts/{accountId}/business-agent/allowlist"
+            f"/v1/accounts/{account_id}/business-agent/allowlist"
         )
 
     async def aadd_business_agent_allowlist_entry(
-        self, consumer_phone_number: str
+        self, account_id: str, consumer_phone_number: str
     ) -> dict[str, Any]:
         """Allowlist a consumer (async)"""
         payload = self._build_payload(
             consumer_phone_number=consumer_phone_number,
         )
         return await self._client._apost(
-            "/v1/accounts/{accountId}/business-agent/allowlist", data=payload
+            f"/v1/accounts/{account_id}/business-agent/allowlist", data=payload
         )
 
     async def aremove_business_agent_allowlist_entry(
-        self, entry_id: str
+        self, account_id: str, entry_id: str
     ) -> dict[str, Any]:
         """Remove an allowlisted consumer (async)"""
         return await self._client._adelete(
-            f"/v1/accounts/{accountId}/business-agent/allowlist/{entry_id}"
+            f"/v1/accounts/{account_id}/business-agent/allowlist/{entry_id}"
         )
 
-    async def aget_business_agent_business_information(self) -> dict[str, Any]:
+    async def aget_business_agent_business_information(
+        self, account_id: str
+    ) -> dict[str, Any]:
         """Get business information (async)"""
         return await self._client._aget(
-            "/v1/accounts/{accountId}/business-agent/business-information"
+            f"/v1/accounts/{account_id}/business-agent/business-information"
         )
 
     async def areplace_business_agent_business_information(
         self,
+        account_id: str,
         *,
         payment_method: str | None = None,
         return_policy: str | None = None,
@@ -792,21 +867,31 @@ class BusinessAgentResource:
             contact_info=contact_info,
         )
         return await self._client._aput(
-            "/v1/accounts/{accountId}/business-agent/business-information", data=payload
+            f"/v1/accounts/{account_id}/business-agent/business-information",
+            data=payload,
         )
 
-    async def areset_business_agent_business_information(self) -> dict[str, Any]:
+    async def areset_business_agent_business_information(
+        self, account_id: str
+    ) -> dict[str, Any]:
         """Reset business information (async)"""
         return await self._client._adelete(
-            "/v1/accounts/{accountId}/business-agent/business-information"
+            f"/v1/accounts/{account_id}/business-agent/business-information"
         )
 
-    async def alist_business_agent_faqs(self) -> dict[str, Any]:
+    async def alist_business_agent_faqs(self, account_id: str) -> dict[str, Any]:
         """List FAQs (async)"""
-        return await self._client._aget("/v1/accounts/{accountId}/business-agent/faqs")
+        return await self._client._aget(
+            f"/v1/accounts/{account_id}/business-agent/faqs"
+        )
 
     async def acreate_business_agent_faq(
-        self, question: str, answer: str, *, metadata: dict[str, Any] | None = None
+        self,
+        account_id: str,
+        question: str,
+        answer: str,
+        *,
+        metadata: dict[str, Any] | None = None,
     ) -> dict[str, Any]:
         """Create a FAQ (async)"""
         payload = self._build_payload(
@@ -815,17 +900,20 @@ class BusinessAgentResource:
             metadata=metadata,
         )
         return await self._client._apost(
-            "/v1/accounts/{accountId}/business-agent/faqs", data=payload
+            f"/v1/accounts/{account_id}/business-agent/faqs", data=payload
         )
 
-    async def aget_business_agent_faq(self, faq_id: str) -> dict[str, Any]:
+    async def aget_business_agent_faq(
+        self, account_id: str, faq_id: str
+    ) -> dict[str, Any]:
         """Get a FAQ (async)"""
         return await self._client._aget(
-            f"/v1/accounts/{accountId}/business-agent/faqs/{faq_id}"
+            f"/v1/accounts/{account_id}/business-agent/faqs/{faq_id}"
         )
 
     async def aupdate_business_agent_faq(
         self,
+        account_id: str,
         faq_id: str,
         question: str,
         answer: str,
@@ -839,23 +927,26 @@ class BusinessAgentResource:
             metadata=metadata,
         )
         return await self._client._aput(
-            f"/v1/accounts/{accountId}/business-agent/faqs/{faq_id}", data=payload
+            f"/v1/accounts/{account_id}/business-agent/faqs/{faq_id}", data=payload
         )
 
-    async def adelete_business_agent_faq(self, faq_id: str) -> dict[str, Any]:
+    async def adelete_business_agent_faq(
+        self, account_id: str, faq_id: str
+    ) -> dict[str, Any]:
         """Delete a FAQ (async)"""
         return await self._client._adelete(
-            f"/v1/accounts/{accountId}/business-agent/faqs/{faq_id}"
+            f"/v1/accounts/{account_id}/business-agent/faqs/{faq_id}"
         )
 
-    async def alist_business_agent_websites(self) -> dict[str, Any]:
+    async def alist_business_agent_websites(self, account_id: str) -> dict[str, Any]:
         """List crawled websites (async)"""
         return await self._client._aget(
-            "/v1/accounts/{accountId}/business-agent/websites"
+            f"/v1/accounts/{account_id}/business-agent/websites"
         )
 
     async def aadd_business_agent_website(
         self,
+        account_id: str,
         url: str,
         *,
         included_sub_domains: list[str] | None = None,
@@ -874,17 +965,20 @@ class BusinessAgentResource:
             single_urls=single_urls,
         )
         return await self._client._apost(
-            "/v1/accounts/{accountId}/business-agent/websites", data=payload
+            f"/v1/accounts/{account_id}/business-agent/websites", data=payload
         )
 
-    async def aget_business_agent_website(self, website_id: str) -> dict[str, Any]:
+    async def aget_business_agent_website(
+        self, account_id: str, website_id: str
+    ) -> dict[str, Any]:
         """Get a crawled website (async)"""
         return await self._client._aget(
-            f"/v1/accounts/{accountId}/business-agent/websites/{website_id}"
+            f"/v1/accounts/{account_id}/business-agent/websites/{website_id}"
         )
 
     async def aupdate_business_agent_website(
         self,
+        account_id: str,
         website_id: str,
         url: str,
         *,
@@ -904,22 +998,26 @@ class BusinessAgentResource:
             single_urls=single_urls,
         )
         return await self._client._aput(
-            f"/v1/accounts/{accountId}/business-agent/websites/{website_id}",
+            f"/v1/accounts/{account_id}/business-agent/websites/{website_id}",
             data=payload,
         )
 
-    async def adelete_business_agent_website(self, website_id: str) -> dict[str, Any]:
+    async def adelete_business_agent_website(
+        self, account_id: str, website_id: str
+    ) -> dict[str, Any]:
         """Remove a crawled website (async)"""
         return await self._client._adelete(
-            f"/v1/accounts/{accountId}/business-agent/websites/{website_id}"
+            f"/v1/accounts/{account_id}/business-agent/websites/{website_id}"
         )
 
-    async def alist_business_agent_files(self) -> dict[str, Any]:
+    async def alist_business_agent_files(self, account_id: str) -> dict[str, Any]:
         """List knowledge files (async)"""
-        return await self._client._aget("/v1/accounts/{accountId}/business-agent/files")
+        return await self._client._aget(
+            f"/v1/accounts/{account_id}/business-agent/files"
+        )
 
     async def aupload_business_agent_file(
-        self, url: str, *, file_name: str | None = None
+        self, account_id: str, url: str, *, file_name: str | None = None
     ) -> dict[str, Any]:
         """Upload a knowledge file (async)"""
         payload = self._build_payload(
@@ -927,29 +1025,38 @@ class BusinessAgentResource:
             file_name=file_name,
         )
         return await self._client._apost(
-            "/v1/accounts/{accountId}/business-agent/files", data=payload
+            f"/v1/accounts/{account_id}/business-agent/files", data=payload
         )
 
-    async def aget_business_agent_file(self, file_id: str) -> dict[str, Any]:
+    async def aget_business_agent_file(
+        self, account_id: str, file_id: str
+    ) -> dict[str, Any]:
         """Get a knowledge file (async)"""
         return await self._client._aget(
-            f"/v1/accounts/{accountId}/business-agent/files/{file_id}"
+            f"/v1/accounts/{account_id}/business-agent/files/{file_id}"
         )
 
-    async def adelete_business_agent_file(self, file_id: str) -> dict[str, Any]:
+    async def adelete_business_agent_file(
+        self, account_id: str, file_id: str
+    ) -> dict[str, Any]:
         """Delete a knowledge file (async)"""
         return await self._client._adelete(
-            f"/v1/accounts/{accountId}/business-agent/files/{file_id}"
+            f"/v1/accounts/{account_id}/business-agent/files/{file_id}"
         )
 
-    async def alist_business_agent_skills(self) -> dict[str, Any]:
+    async def alist_business_agent_skills(self, account_id: str) -> dict[str, Any]:
         """List skills (async)"""
         return await self._client._aget(
-            "/v1/accounts/{accountId}/business-agent/skills"
+            f"/v1/accounts/{account_id}/business-agent/skills"
         )
 
     async def acreate_business_agent_skill(
-        self, skill: str, *, title: str | None = None, description: str | None = None
+        self,
+        account_id: str,
+        skill: str,
+        *,
+        title: str | None = None,
+        description: str | None = None,
     ) -> dict[str, Any]:
         """Create a skill (async)"""
         payload = self._build_payload(
@@ -958,17 +1065,20 @@ class BusinessAgentResource:
             skill=skill,
         )
         return await self._client._apost(
-            "/v1/accounts/{accountId}/business-agent/skills", data=payload
+            f"/v1/accounts/{account_id}/business-agent/skills", data=payload
         )
 
-    async def aget_business_agent_skill(self, skill_id: str) -> dict[str, Any]:
+    async def aget_business_agent_skill(
+        self, account_id: str, skill_id: str
+    ) -> dict[str, Any]:
         """Get a skill (async)"""
         return await self._client._aget(
-            f"/v1/accounts/{accountId}/business-agent/skills/{skill_id}"
+            f"/v1/accounts/{account_id}/business-agent/skills/{skill_id}"
         )
 
     async def aupdate_business_agent_skill(
         self,
+        account_id: str,
         skill_id: str,
         skill: str,
         *,
@@ -982,17 +1092,20 @@ class BusinessAgentResource:
             skill=skill,
         )
         return await self._client._aput(
-            f"/v1/accounts/{accountId}/business-agent/skills/{skill_id}", data=payload
+            f"/v1/accounts/{account_id}/business-agent/skills/{skill_id}", data=payload
         )
 
-    async def adelete_business_agent_skill(self, skill_id: str) -> dict[str, Any]:
+    async def adelete_business_agent_skill(
+        self, account_id: str, skill_id: str
+    ) -> dict[str, Any]:
         """Delete a skill (async)"""
         return await self._client._adelete(
-            f"/v1/accounts/{accountId}/business-agent/skills/{skill_id}"
+            f"/v1/accounts/{account_id}/business-agent/skills/{skill_id}"
         )
 
     async def alist_business_agent_ui_skills(
         self,
+        account_id: str,
         *,
         before: str | None = None,
         after: str | None = None,
@@ -1005,11 +1118,12 @@ class BusinessAgentResource:
             limit=limit,
         )
         return await self._client._aget(
-            "/v1/accounts/{accountId}/business-agent/ui-skills", params=params
+            f"/v1/accounts/{account_id}/business-agent/ui-skills", params=params
         )
 
     async def acreate_business_agent_ui_skill(
         self,
+        account_id: str,
         component_type: str,
         status: str,
         instruction: str,
@@ -1026,17 +1140,20 @@ class BusinessAgentResource:
             flow_id=flow_id,
         )
         return await self._client._apost(
-            "/v1/accounts/{accountId}/business-agent/ui-skills", data=payload
+            f"/v1/accounts/{account_id}/business-agent/ui-skills", data=payload
         )
 
-    async def aget_business_agent_ui_skill(self, ui_skill_id: str) -> dict[str, Any]:
+    async def aget_business_agent_ui_skill(
+        self, account_id: str, ui_skill_id: str
+    ) -> dict[str, Any]:
         """Get a UI skill (async)"""
         return await self._client._aget(
-            f"/v1/accounts/{accountId}/business-agent/ui-skills/{ui_skill_id}"
+            f"/v1/accounts/{account_id}/business-agent/ui-skills/{ui_skill_id}"
         )
 
     async def aupdate_business_agent_ui_skill(
         self,
+        account_id: str,
         ui_skill_id: str,
         component_type: str,
         status: str,
@@ -1054,24 +1171,27 @@ class BusinessAgentResource:
             flow_id=flow_id,
         )
         return await self._client._aput(
-            f"/v1/accounts/{accountId}/business-agent/ui-skills/{ui_skill_id}",
+            f"/v1/accounts/{account_id}/business-agent/ui-skills/{ui_skill_id}",
             data=payload,
         )
 
-    async def adelete_business_agent_ui_skill(self, ui_skill_id: str) -> dict[str, Any]:
+    async def adelete_business_agent_ui_skill(
+        self, account_id: str, ui_skill_id: str
+    ) -> dict[str, Any]:
         """Delete a UI skill (async)"""
         return await self._client._adelete(
-            f"/v1/accounts/{accountId}/business-agent/ui-skills/{ui_skill_id}"
+            f"/v1/accounts/{account_id}/business-agent/ui-skills/{ui_skill_id}"
         )
 
-    async def alist_business_agent_connectors(self) -> dict[str, Any]:
+    async def alist_business_agent_connectors(self, account_id: str) -> dict[str, Any]:
         """List connectors (async)"""
         return await self._client._aget(
-            "/v1/accounts/{accountId}/business-agent/connectors"
+            f"/v1/accounts/{account_id}/business-agent/connectors"
         )
 
     async def acreate_business_agent_connector(
         self,
+        account_id: str,
         name: str,
         base_url: str,
         auth_type: str,
@@ -1094,17 +1214,21 @@ class BusinessAgentResource:
             requires_certificate=requires_certificate,
         )
         return await self._client._apost(
-            "/v1/accounts/{accountId}/business-agent/connectors", data=payload
+            f"/v1/accounts/{account_id}/business-agent/connectors", data=payload
         )
 
-    async def aget_business_agent_connector(self) -> dict[str, Any]:
+    async def aget_business_agent_connector(
+        self, account_id: str, connector_id: str
+    ) -> dict[str, Any]:
         """Get a connector (async)"""
         return await self._client._aget(
-            "/v1/accounts/{accountId}/business-agent/connectors/{connectorId}"
+            f"/v1/accounts/{account_id}/business-agent/connectors/{connector_id}"
         )
 
     async def aupdate_business_agent_connector(
         self,
+        account_id: str,
+        connector_id: str,
         name: str,
         base_url: str,
         auth_type: str,
@@ -1127,33 +1251,39 @@ class BusinessAgentResource:
             requires_certificate=requires_certificate,
         )
         return await self._client._aput(
-            "/v1/accounts/{accountId}/business-agent/connectors/{connectorId}",
+            f"/v1/accounts/{account_id}/business-agent/connectors/{connector_id}",
             data=payload,
         )
 
-    async def adelete_business_agent_connector(self) -> dict[str, Any]:
+    async def adelete_business_agent_connector(
+        self, account_id: str, connector_id: str
+    ) -> dict[str, Any]:
         """Delete a connector (async)"""
         return await self._client._adelete(
-            "/v1/accounts/{accountId}/business-agent/connectors/{connectorId}"
+            f"/v1/accounts/{account_id}/business-agent/connectors/{connector_id}"
         )
 
     async def aset_business_agent_connector_credentials(
-        self, body: dict[str, Any]
+        self, account_id: str, connector_id: str, body: dict[str, Any]
     ) -> dict[str, Any]:
         """Set connector credentials (async)"""
         return await self._client._apost(
-            "/v1/accounts/{accountId}/business-agent/connectors/{connectorId}/credentials",
+            f"/v1/accounts/{account_id}/business-agent/connectors/{connector_id}/credentials",
             data=body,
         )
 
-    async def arefresh_business_agent_connector_tools(self) -> dict[str, Any]:
+    async def arefresh_business_agent_connector_tools(
+        self, account_id: str, connector_id: str
+    ) -> dict[str, Any]:
         """Refresh MCP connector tools (async)"""
         return await self._client._apost(
-            "/v1/accounts/{accountId}/business-agent/connectors/{connectorId}/refresh-tools"
+            f"/v1/accounts/{account_id}/business-agent/connectors/{connector_id}/refresh-tools"
         )
 
     async def aget_business_agent_connector_logs(
         self,
+        account_id: str,
+        connector_id: str,
         *,
         start_time: int | None = None,
         end_time: int | None = None,
@@ -1174,18 +1304,22 @@ class BusinessAgentResource:
             top_n=top_n,
         )
         return await self._client._aget(
-            "/v1/accounts/{accountId}/business-agent/connectors/{connectorId}/logs",
+            f"/v1/accounts/{account_id}/business-agent/connectors/{connector_id}/logs",
             params=params,
         )
 
-    async def alist_business_agent_connector_tools(self) -> dict[str, Any]:
+    async def alist_business_agent_connector_tools(
+        self, account_id: str, connector_id: str
+    ) -> dict[str, Any]:
         """List connector tools (async)"""
         return await self._client._aget(
-            "/v1/accounts/{accountId}/business-agent/connectors/{connectorId}/tools"
+            f"/v1/accounts/{account_id}/business-agent/connectors/{connector_id}/tools"
         )
 
     async def acreate_business_agent_connector_tool(
         self,
+        account_id: str,
+        connector_id: str,
         name: str,
         description: str,
         request_definition: dict[str, Any],
@@ -1204,18 +1338,23 @@ class BusinessAgentResource:
             transformation_spec=transformation_spec,
         )
         return await self._client._apost(
-            "/v1/accounts/{accountId}/business-agent/connectors/{connectorId}/tools",
+            f"/v1/accounts/{account_id}/business-agent/connectors/{connector_id}/tools",
             data=payload,
         )
 
-    async def aget_business_agent_connector_tool(self) -> dict[str, Any]:
+    async def aget_business_agent_connector_tool(
+        self, account_id: str, connector_id: str, tool_id: str
+    ) -> dict[str, Any]:
         """Get a connector tool (async)"""
         return await self._client._aget(
-            "/v1/accounts/{accountId}/business-agent/connectors/{connectorId}/tools/{toolId}"
+            f"/v1/accounts/{account_id}/business-agent/connectors/{connector_id}/tools/{tool_id}"
         )
 
     async def aupdate_business_agent_connector_tool(
         self,
+        account_id: str,
+        connector_id: str,
+        tool_id: str,
         name: str,
         description: str,
         request_definition: dict[str, Any],
@@ -1234,45 +1373,49 @@ class BusinessAgentResource:
             transformation_spec=transformation_spec,
         )
         return await self._client._aput(
-            "/v1/accounts/{accountId}/business-agent/connectors/{connectorId}/tools/{toolId}",
+            f"/v1/accounts/{account_id}/business-agent/connectors/{connector_id}/tools/{tool_id}",
             data=payload,
         )
 
-    async def adelete_business_agent_connector_tool(self) -> dict[str, Any]:
+    async def adelete_business_agent_connector_tool(
+        self, account_id: str, connector_id: str, tool_id: str
+    ) -> dict[str, Any]:
         """Delete a connector tool (async)"""
         return await self._client._adelete(
-            "/v1/accounts/{accountId}/business-agent/connectors/{connectorId}/tools/{toolId}"
+            f"/v1/accounts/{account_id}/business-agent/connectors/{connector_id}/tools/{tool_id}"
         )
 
-    async def arun_business_agent_connector_tool(self, input: str) -> dict[str, Any]:
+    async def arun_business_agent_connector_tool(
+        self, account_id: str, connector_id: str, tool_id: str, input: str
+    ) -> dict[str, Any]:
         """Run a connector tool once (async)"""
         payload = self._build_payload(
             input=input,
         )
         return await self._client._apost(
-            "/v1/accounts/{accountId}/business-agent/connectors/{connectorId}/tools/{toolId}/run",
+            f"/v1/accounts/{account_id}/business-agent/connectors/{connector_id}/tools/{tool_id}/run",
             data=payload,
         )
 
-    async def aget_business_agent_budget(self) -> dict[str, Any]:
+    async def aget_business_agent_budget(self, account_id: str) -> dict[str, Any]:
         """Get usage budgets (async)"""
         return await self._client._aget(
-            "/v1/accounts/{accountId}/business-agent/budget"
+            f"/v1/accounts/{account_id}/business-agent/budget"
         )
 
     async def areplace_business_agent_budget(
-        self, budgets: list[Any]
+        self, account_id: str, budgets: list[Any]
     ) -> dict[str, Any]:
         """Replace usage budgets (async)"""
         payload = self._build_payload(
             budgets=budgets,
         )
         return await self._client._aput(
-            "/v1/accounts/{accountId}/business-agent/budget", data=payload
+            f"/v1/accounts/{account_id}/business-agent/budget", data=payload
         )
 
     async def asend_business_agent_test_message(
-        self, message: str, *, conversation_id: str | None = None
+        self, account_id: str, message: str, *, conversation_id: str | None = None
     ) -> dict[str, Any]:
         """Send a test message (async)"""
         payload = self._build_payload(
@@ -1280,11 +1423,11 @@ class BusinessAgentResource:
             conversation_id=conversation_id,
         )
         return await self._client._apost(
-            "/v1/accounts/{accountId}/business-agent/test-messages", data=payload
+            f"/v1/accounts/{account_id}/business-agent/test-messages", data=payload
         )
 
     async def asend_business_agent_event(
-        self, to: str, type: str, description: str, payload: str
+        self, account_id: str, to: str, type: str, description: str, payload: str
     ) -> dict[str, Any]:
         """Send a business event (async)"""
         payload = self._build_payload(
@@ -1294,17 +1437,20 @@ class BusinessAgentResource:
             payload=payload,
         )
         return await self._client._apost(
-            "/v1/accounts/{accountId}/business-agent/events", data=payload
+            f"/v1/accounts/{account_id}/business-agent/events", data=payload
         )
 
-    async def aget_business_agent_event(self, event_id: str) -> dict[str, Any]:
+    async def aget_business_agent_event(
+        self, account_id: str, event_id: str
+    ) -> dict[str, Any]:
         """Get a business event status (async)"""
         return await self._client._aget(
-            f"/v1/accounts/{accountId}/business-agent/events/{event_id}"
+            f"/v1/accounts/{account_id}/business-agent/events/{event_id}"
         )
 
     async def aread_business_agent_evals(
         self,
+        account_id: str,
         *,
         job_id: str | None = None,
         summary_ids: str | None = None,
@@ -1317,16 +1463,16 @@ class BusinessAgentResource:
             eval_ids=eval_ids,
         )
         return await self._client._aget(
-            "/v1/accounts/{accountId}/business-agent/evals", params=params
+            f"/v1/accounts/{account_id}/business-agent/evals", params=params
         )
 
     async def astart_business_agent_eval_run(
-        self, eval_case_ids: list[str]
+        self, account_id: str, eval_case_ids: list[str]
     ) -> dict[str, Any]:
         """Start an evaluation run (async)"""
         payload = self._build_payload(
             eval_case_ids=eval_case_ids,
         )
         return await self._client._apost(
-            "/v1/accounts/{accountId}/business-agent/evals", data=payload
+            f"/v1/accounts/{account_id}/business-agent/evals", data=payload
         )
