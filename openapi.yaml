@@ -33502,6 +33502,11 @@ paths:
                       text: { type: string }
                       created: { type: string, format: date-time }
                   platform: { type: string }
+        '400':
+          description: "Facebook refused the reply for this review (code platform_api_error, platform facebook, Meta error 12 echoed in platformError). Permanent for that review: Graph cannot address its underlying post, and it usually already carries a reply from the Page, which the review listing reports under hasReply. Do not retry."
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ErrorResponse' }
         '401': { $ref: '#/components/responses/Unauthorized' }
         '403':
           description: Inbox addon required
