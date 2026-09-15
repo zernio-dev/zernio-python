@@ -31886,7 +31886,7 @@ paths:
       operationId: deleteInboxComment
       summary: Delete comment
       description: |
-        Delete a comment on a post. Supported by Facebook, Instagram, Bluesky, Reddit, YouTube, and LinkedIn.
+        Delete a comment on a post. Supported by Facebook, Instagram, Threads, LinkedIn, Reddit, Bluesky, X (Twitter), YouTube, and TikTok (accounts connected through the TikTok for Business app). Not supported on Google Business (reviews only).
         Requires accountId and commentId query parameters.
       tags: [Comments]
       security: [{ bearerAuth: [] }]
@@ -44325,8 +44325,7 @@ paths:
                 buyingType:
                   type: string
                   enum: [AUCTION, RESERVED]
-                  default: AUCTION
-                  description: 'Meta only. Defaults to AUCTION and is explicitly sent on new campaigns, including validateOnly. SKAdNetwork app promotion requires AUCTION.'
+                  description: 'Meta only. OMIT on non-Meta platforms (Google Ads, etc.): any value is rejected with a 400. On Meta the server applies AUCTION when omitted, so it does not need to be sent; RESERVED = Reach & Frequency. SKAdNetwork app promotion requires AUCTION.'
                 validateOnly:
                   type: boolean
                   description: 'Meta only. Runs campaign validation without creating or persisting a campaign; Idempotency-Key storage is bypassed. Returns HTTP 200 with validateOnly true and status VALIDATED.'
