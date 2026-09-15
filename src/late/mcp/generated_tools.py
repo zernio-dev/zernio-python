@@ -4879,9 +4879,13 @@ def register_generated_tools(mcp, _get_client):
         advertiser. Maps to `auth_code` on the creative entry of /v2/ad/create/.
                 promoted_object: TikTok-only on this endpoint. The pixel a Website Conversion ad group
         optimizes toward, so a Spark Ad built from an existing organic post can
-        optimize for a conversion instead of only engagement or traffic. Required
-        when `goal` is `conversions`; ignored on every other goal, because only a
-        WEB_CONVERSIONS ad group accepts these fields.
+        optimize for a conversion instead of only engagement or traffic.
+
+        Required when `goal` is `conversions`, and BOTH fields are required:
+        TikTok refuses a conversion ad group with no pixel ("Please select a
+        pixel") and equally one that has a pixel but no event ("Select a pixel
+        event."), because the event is what the ad group optimizes toward. Ignored
+        on every other goal, since only a WEB_CONVERSIONS ad group accepts them.
 
         Combine freely with `platformPostId` + `sparkAuthCode`: the pixel lives on
         the ad group and the Spark item on the creative, so they never conflict.
