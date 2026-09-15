@@ -2389,7 +2389,7 @@ wheels = [
 
 [[package]]
 name = "zernio-sdk"
-version = "1.4.775"
+version = "1.4.776"
 source = { editable = "." }
 dependencies = [
     { name = "httpx" },

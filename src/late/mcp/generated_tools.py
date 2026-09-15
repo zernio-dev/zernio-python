@@ -4770,6 +4770,7 @@ def register_generated_tools(mcp, _get_client):
         link_url: str | None = None,
         call_to_action: str | None = None,
         spark_auth_code: str | None = None,
+        promoted_object: dict[str, Any] | None = None,
         dsa_beneficiary: str | None = None,
         dsa_payor: str | None = None,
         lead_gen_form_id: str | None = None,
@@ -4876,6 +4877,14 @@ def register_generated_tools(mcp, _get_client):
         account running the ads (same-BC creators only). The creator generates the
         code in their TikTok app's Promote settings and shares it with the
         advertiser. Maps to `auth_code` on the creative entry of /v2/ad/create/.
+                promoted_object: TikTok-only on this endpoint. The pixel a Website Conversion ad group
+        optimizes toward, so a Spark Ad built from an existing organic post can
+        optimize for a conversion instead of only engagement or traffic. Required
+        when `goal` is `conversions`; ignored on every other goal, because only a
+        WEB_CONVERSIONS ad group accepts these fields.
+
+        Combine freely with `platformPostId` + `sparkAuthCode`: the pixel lives on
+        the ad group and the Spark item on the creative, so they never conflict.
                 dsa_beneficiary: Legal entity that benefits from the ad. Required when targeting EU users
         (EU DSA, Article 26). Optional if the ad account has a default beneficiary:
         set it once via `PATCH /v1/ads/accounts` or in Meta Ads Manager, and Meta
@@ -4926,6 +4935,7 @@ def register_generated_tools(mcp, _get_client):
                 link_url=link_url,
                 call_to_action=call_to_action,
                 spark_auth_code=spark_auth_code,
+                promoted_object=promoted_object,
                 dsa_beneficiary=dsa_beneficiary,
                 dsa_payor=dsa_payor,
                 lead_gen_form_id=lead_gen_form_id,
