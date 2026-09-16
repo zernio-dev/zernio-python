@@ -141,6 +141,7 @@ class AdCreativesResource:
         promotion: Any | None = None,
         creative_features: Any | None = None,
         multi_advertiser: str | None = None,
+        ai_disclosure: str | None = None,
     ) -> dict[str, Any]:
         """Create a standalone creative"""
         payload = self._build_payload(
@@ -158,6 +159,7 @@ class AdCreativesResource:
             promotion=promotion,
             creative_features=creative_features,
             multi_advertiser=multi_advertiser,
+            ai_disclosure=ai_disclosure,
         )
         return self._client._post("/v1/ads/creatives", data=payload)
 
@@ -397,6 +399,7 @@ class AdCreativesResource:
         promotion: Any | None = None,
         creative_features: Any | None = None,
         multi_advertiser: str | None = None,
+        ai_disclosure: str | None = None,
     ) -> dict[str, Any]:
         """Create a standalone creative (async)"""
         payload = self._build_payload(
@@ -414,6 +417,7 @@ class AdCreativesResource:
             promotion=promotion,
             creative_features=creative_features,
             multi_advertiser=multi_advertiser,
+            ai_disclosure=ai_disclosure,
         )
         return await self._client._apost("/v1/ads/creatives", data=payload)
 
