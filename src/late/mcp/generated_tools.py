@@ -17913,7 +17913,7 @@ def register_generated_tools(mcp, _get_client):
             tags: Array of keyword tags (max 500 characters combined for YouTube)
             category_id: YouTube video category ID
             privacy_status: Video privacy setting
-            thumbnail_url: Public URL of a custom thumbnail image (JPEG, PNG, or GIF, max 2 MB, recommended 1280x720). Works on any video you own, including existing videos not published through Zernio. The channel must be verified (phone verification) to set custom thumbnails.
+            thumbnail_url: Public URL of a custom thumbnail image (JPEG, PNG, or GIF, max 50 MB, recommended 1280x720). Works on any video you own, including existing videos not published through Zernio. The channel must be verified (phone verification) to set custom thumbnails.
             made_for_kids: COPPA compliance flag. Set true for child-directed content (restricts comments, notifications, ad targeting).
             contains_synthetic_media: AI-generated content disclosure. Set true if the video contains synthetic content that could be mistaken for real. YouTube may add a label.
             playlist_id: YouTube playlist ID to add the video to (e.g. 'PLxxxxxxxxxxxxx'). Use GET /v1/accounts/{id}/youtube-playlists to list available playlists. Only playlists owned by the channel are supported."""
