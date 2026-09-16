@@ -913,6 +913,13 @@ Both `from zernio import ...` and `from late import ...` work identically. The `
 | `phone_numbers.validate_phone_number_kyc_address()` | Pre-validate KYC address |
 | `phone_numbers.view_phone_number_kyc_document()` | View a KYC document on file |
 
+### Products
+| Method | Description |
+|--------|-------------|
+| `products.list_products()` | List products |
+| `products.get_product()` | Get a product |
+| `products.update_product()` | Update a product |
+
 ### Reach and Frequency
 | Method | Description |
 |--------|-------------|

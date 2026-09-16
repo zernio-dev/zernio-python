@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.6.0"
+  version: "1.7.0"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -232,6 +232,15 @@ tags:
       for Shopify accounts (scopes read_content and write_content). Blogs are
       the containers; articles are the posts inside them. All content lives on
       the platform; Zernio proxies it and stores nothing.
+  - name: Products
+    description: |
+      Read and edit the product catalog on connected accounts. Currently
+      supported for Shopify accounts (scopes read_products and write_products).
+      Products are listed with their variants, options and images; edits cover
+      the product's own fields (title, description, handle, tags, vendor, type,
+      status, SEO) and variant prices. No product creation, inventory or
+      orders. All data lives on the platform; Zernio proxies it and stores
+      nothing.
   - name: Users
     description: |
       Read the authenticated user and team members.
@@ -10578,6 +10587,73 @@ components:
         publishedAt: { type: [string, "null"], format: date-time, description: 'When the article was (or is scheduled to be) published; null for drafts.' }
         createdAt: { type: [string, "null"], format: date-time }
         updatedAt: { type: [string, "null"], format: date-time }
+    ProductImage:
+      type: object
+      properties:
+        url: { type: string }
+        altText: { type: [string, "null"] }
+    ProductVariant:
+      type: object
+      description: 'A purchasable variant of a product (one per option combination).'
+      properties:
+        id: { type: string, description: 'Platform-native variant id (numeric string for Shopify).' }
+        title: { type: string, description: 'Option combination label, e.g. "S / Blue".' }
+        sku: { type: [string, "null"] }
+        barcode: { type: [string, "null"] }
+        price: { type: string, description: 'Decimal amount in the store currency, e.g. "19.90".' }
+        compareAtPrice: { type: [string, "null"], description: 'Strike-through price; null when the variant is not on sale.' }
+        inventoryQuantity: { type: [integer, "null"], description: 'Units on hand across locations; null when inventory is not tracked.' }
+        availableForSale: { type: boolean }
+        selectedOptions:
+          type: array
+          items:
+            type: object
+            properties:
+              name: { type: string }
+              value: { type: string }
+    Product:
+      type: object
+      description: 'A product on the connected platform with its variants, options and images. All data lives on the platform; Zernio proxies it and stores nothing.'
+      properties:
+        id: { type: string, description: 'Platform-native product id (numeric string for Shopify).' }
+        platform: { type: string, enum: [shopify] }
+        title: { type: string }
+        handle: { type: string, description: 'URL slug of the product.' }
+        descriptionHtml: { type: [string, "null"], description: 'Product description as HTML.' }
+        vendor: { type: [string, "null"] }
+        productType: { type: [string, "null"], description: 'Free-text product type as set on the store.' }
+        tags: { type: array, items: { type: string } }
+        status: { type: string, enum: [active, draft, archived] }
+        featuredImage:
+          oneOf:
+            - $ref: '#/components/schemas/ProductImage'
+            - type: "null"
+        images:
+          type: array
+          description: 'First 20 images in the product media, in store order.'
+          items: { $ref: '#/components/schemas/ProductImage' }
+        options:
+          type: array
+          description: 'Option axes (e.g. Size, Color) and their values.'
+          items:
+            type: object
+            properties:
+              name: { type: string }
+              values: { type: array, items: { type: string } }
+        variants:
+          type: array
+          description: 'First 100 variants.'
+          items: { $ref: '#/components/schemas/ProductVariant' }
+        seo:
+          type: object
+          properties:
+            title: { type: [string, "null"] }
+            description: { type: [string, "null"] }
+        totalInventory: { type: [integer, "null"] }
+        onlineStoreUrl: { type: [string, "null"], description: 'Public storefront URL; null while the product is not published to the online store.' }
+        createdAt: { type: [string, "null"], format: date-time }
+        updatedAt: { type: [string, "null"], format: date-time }
+        publishedAt: { type: [string, "null"], format: date-time }
     BusinessAgentSettings:
       type: object
       description: 'Meta Business Agent settings for one WhatsApp number, as Meta returns them.'
@@ -20355,14 +20431,17 @@ paths:
       description: |
         Initiate the Shopify OAuth flow for a store. Shopify is a connect-only
         platform: the connected account does not publish social posts, it powers
-        the Blogs API (`/v1/accounts/{accountId}/blogs`). Returns an `authUrl`
+        the Blogs API (`/v1/accounts/{accountId}/blogs`) and the Products API
+        (`/v1/accounts/{accountId}/products`). Returns an `authUrl`
         to redirect the merchant to; after they approve the install, Shopify
         redirects their browser to Zernio's callback, the account is created on
         the profile (platform `shopify`), and the browser is redirected to
         `redirect_url` (or the Zernio dashboard when omitted). Requested scopes
-        are `read_content` and `write_content` (content only; no customer or
-        order data). Connecting the same profile to a store again refreshes the
-        stored token in place.
+        are `read_content`, `write_content`, `read_products` and
+        `write_products` (content and products only; no customer or order
+        data). Connecting the same profile to a store again refreshes the
+        stored token in place, and is how a store connected under the older
+        content-only grant picks up product access.
       security:
         - bearerAuth: []
       parameters:
@@ -20416,7 +20495,8 @@ paths:
         Token-paste alternative to the OAuth flow: connect a store using the
         Admin API access token of a custom app the merchant created in their
         own Shopify admin (Settings → Apps and sales channels → Develop apps,
-        with the `read_content`/`write_content` scopes). Use this when the
+        with the `read_content`, `write_content`, `read_products` and
+        `write_products` scopes). Use this when the
         one-click OAuth connect is unavailable or when your users prefer not
         to install a third-party app on their store. The token is validated
         against the store before anything is saved; custom-app tokens do not
@@ -58721,6 +58801,169 @@ paths:
         '403': { description: 'The platform rejected the request (code insufficient_permissions); reconnect the Shopify account to restore access.' }
         '404': { description: 'Account not found or not accessible (code account_not_found), blog not found (code blog_not_found), or article not found (code blog_article_not_found).' }
         '405': { description: Platform does not support deleting an article. }
+        '429': { description: 'Rate limited, either by Zernio or by Shopify. Retry later.' }
+
+  /v1/accounts/{accountId}/products:
+    get:
+      x-resource-group: "publishing"
+      operationId: listProducts
+      tags: ["Products"]
+      x-platforms: ["shopify"]
+      summary: List products
+      description: |
+        Lists the products on the connected store in the platform's default
+        order, each with its variants, options and images. Cursor-paginated:
+        pass `limit` (1-50, default 20) and the `cursor` from a previous
+        response's `nextCursor`; `nextCursor` is null when there are no more
+        pages. Filter with `status` and/or `query` (the platform's product
+        search syntax, e.g. `title:*shirt* vendor:Acme tag:summer`).
+
+        Supported on Shopify (platform `shopify`); accounts on other
+        platforms return 400. A store connected before product access was
+        added answers 403 insufficient_permissions until the merchant
+        reconnects it through `GET /v1/connect/shopify`.
+      security:
+        - bearerAuth: []
+      parameters:
+        - { name: accountId, in: path, required: true, schema: { type: string }, description: 'Connected Shopify SocialAccount id.' }
+        - { name: limit, in: query, required: false, schema: { type: integer, minimum: 1, maximum: 50, default: 20 }, description: 'Page size (1-50).' }
+        - { name: cursor, in: query, required: false, schema: { type: string }, description: 'Opaque cursor from a previous response. Omit for the first page.' }
+        - { name: status, in: query, required: false, schema: { type: string, enum: [active, draft, archived] }, description: 'Only products in this status.' }
+        - { name: query, in: query, required: false, schema: { type: string, maxLength: 500 }, description: 'Platform product search syntax, passed through verbatim (Shopify: title, vendor, product_type, tag, sku, handle, created_at, updated_at, ...).' }
+      responses:
+        '200':
+          description: Products listed
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  platform: { type: string, enum: [shopify] }
+                  products:
+                    type: array
+                    items: { $ref: '#/components/schemas/Product' }
+                  nextCursor: { type: [string, "null"], description: 'Cursor for the next page; null when there are no more pages.' }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { description: 'The platform rejected the request (code insufficient_permissions). The store lacks the product scopes or the token was revoked; reconnect the Shopify account.' }
+        '404': { description: 'Account not found or not accessible (code account_not_found).' }
+        '429': { description: 'Rate limited, either by Zernio or by Shopify. Retry later.' }
+
+  /v1/accounts/{accountId}/products/{productId}:
+    get:
+      x-resource-group: "publishing"
+      operationId: getProduct
+      tags: ["Products"]
+      x-platforms: ["shopify"]
+      summary: Get a product
+      description: |
+        Fetches a single product with its variants, options and images.
+        `productId` is the platform's numeric product id from
+        `GET /v1/accounts/{accountId}/products`, not a Zernio id.
+
+        Supported on Shopify (platform `shopify`); accounts on other
+        platforms return 400.
+      security:
+        - bearerAuth: []
+      parameters:
+        - { name: accountId, in: path, required: true, schema: { type: string }, description: 'Connected Shopify SocialAccount id.' }
+        - { name: productId, in: path, required: true, schema: { type: string, pattern: '^\d+$' }, description: 'Platform-native numeric product id. Non-numeric values return 400.' }
+      responses:
+        '200':
+          description: Product fetched
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  platform: { type: string, enum: [shopify] }
+                  product: { $ref: '#/components/schemas/Product' }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { description: 'The platform rejected the request (code insufficient_permissions). The store lacks the product scopes or the token was revoked; reconnect the Shopify account.' }
+        '404': { description: 'Account not found or not accessible (code account_not_found), or product not found (code product_not_found).' }
+        '429': { description: 'Rate limited, either by Zernio or by Shopify. Retry later.' }
+
+    patch:
+      x-resource-group: "publishing"
+      operationId: updateProduct
+      tags: ["Products"]
+      x-platforms: ["shopify"]
+      summary: Update a product
+      description: |
+        Partial-updates a product. Send any subset of `title`,
+        `descriptionHtml`, `handle`, `vendor`, `productType`, `tags`, `status`,
+        `seo` and `variants`; at least one field is required (an empty body
+        returns 400). `tags` replaces the full tag list. `variants` updates
+        the price and compare-at price of the listed variant ids only; other
+        variants are untouched, and a variant id that does not belong to the
+        product is a 400. Responds with the product as it is after the update.
+
+        Supported on Shopify (platform `shopify`); accounts on other
+        platforms return 400. A store connected before product access was
+        added answers 403 insufficient_permissions until the merchant
+        reconnects it through `GET /v1/connect/shopify`.
+      security:
+        - bearerAuth: []
+      parameters:
+        - { name: accountId, in: path, required: true, schema: { type: string }, description: 'Connected Shopify SocialAccount id.' }
+        - { name: productId, in: path, required: true, schema: { type: string, pattern: '^\d+$' }, description: 'Platform-native numeric product id. Non-numeric values return 400.' }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              description: 'At least one field is required.'
+              properties:
+                title: { type: string, minLength: 1 }
+                descriptionHtml: { type: string, description: 'Product description as HTML.' }
+                handle: { type: string, minLength: 1, description: 'URL slug of the product.' }
+                vendor: { type: string }
+                productType: { type: string }
+                tags: { type: array, items: { type: string }, description: 'Replaces the full tag list.' }
+                status: { type: string, enum: [active, draft, archived], description: 'archived hides the product everywhere; draft keeps it editable but unpublished.' }
+                seo:
+                  type: object
+                  description: 'Search-engine title and description overrides.'
+                  properties:
+                    title: { type: string }
+                    description: { type: string }
+                variants:
+                  type: array
+                  minItems: 1
+                  maxItems: 100
+                  description: 'Price changes per variant. Only the listed variants change.'
+                  items:
+                    type: object
+                    required: [id]
+                    properties:
+                      id: { type: string, pattern: '^\d+$', description: 'Variant id from the product response.' }
+                      price:
+                        oneOf:
+                          - { type: number, minimum: 0 }
+                          - { type: string, pattern: '^\d+(\.\d{1,2})?$' }
+                        description: 'Decimal amount in the store currency. Numbers are formatted to two decimals.'
+                      compareAtPrice:
+                        oneOf:
+                          - { type: number, minimum: 0 }
+                          - { type: string, pattern: '^\d+(\.\d{1,2})?$' }
+                          - { type: "null" }
+                        description: 'Strike-through price. Send null to remove it.'
+      responses:
+        '200':
+          description: Product updated
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  platform: { type: string, enum: [shopify] }
+                  product: { $ref: '#/components/schemas/Product' }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { description: 'The platform rejected the request (code insufficient_permissions). The store lacks the product scopes or the token was revoked; reconnect the Shopify account.' }
+        '404': { description: 'Account not found or not accessible (code account_not_found), or product not found (code product_not_found).' }
         '429': { description: 'Rate limited, either by Zernio or by Shopify. Retry later.' }
 
   /v1/verify/verifications:

@@ -17956,6 +17956,121 @@ def register_generated_tools(mcp, _get_client):
         except Exception as e:
             return f"Error: {e}"
 
+    # PRODUCTS
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="List products",
+            readOnlyHint=True,
+            destructiveHint=False,
+            openWorldHint=False,
+        )
+    )
+    def products_list_products(
+        account_id: str,
+        limit: int = 20,
+        cursor: str | None = None,
+        status: str | None = None,
+        query: str | None = None,
+    ) -> str:
+        """List products
+
+        Args:
+            account_id: Connected Shopify SocialAccount id. (required)
+            limit: Page size (1-50).
+            cursor: Opaque cursor from a previous response. Omit for the first page.
+            status: Only products in this status.
+            query: Platform product search syntax, passed through verbatim (Shopify: title, vendor, product_type, tag, sku, handle, created_at, updated_at, ...)."""
+        client = _get_client()
+        try:
+            response = client.products.list_products(
+                account_id=account_id,
+                limit=limit,
+                cursor=cursor,
+                status=status,
+                query=query,
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Get a product",
+            readOnlyHint=True,
+            destructiveHint=False,
+            openWorldHint=False,
+        )
+    )
+    def products_get_product(account_id: str, product_id: str) -> str:
+        """Get a product
+
+        Args:
+            account_id: Connected Shopify SocialAccount id. (required)
+            product_id: Platform-native numeric product id. Non-numeric values return 400. (required)"""
+        client = _get_client()
+        try:
+            response = client.products.get_product(
+                account_id=account_id, product_id=product_id
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Update a product",
+            readOnlyHint=False,
+            destructiveHint=True,
+            openWorldHint=True,
+        )
+    )
+    def products_update_product(
+        account_id: str,
+        product_id: str,
+        title: str | None = None,
+        description_html: str | None = None,
+        handle: str | None = None,
+        vendor: str | None = None,
+        product_type: str | None = None,
+        tags: list[str] | None = None,
+        status: str | None = None,
+        seo: dict[str, Any] | None = None,
+        variants: list[dict[str, Any]] | None = None,
+    ) -> str:
+        """Update a product
+
+        Args:
+            account_id: Connected Shopify SocialAccount id. (required)
+            product_id: Platform-native numeric product id. Non-numeric values return 400. (required)
+            title
+            description_html: Product description as HTML.
+            handle: URL slug of the product.
+            vendor
+            product_type
+            tags: Replaces the full tag list.
+            status: archived hides the product everywhere; draft keeps it editable but unpublished.
+            seo: Search-engine title and description overrides.
+            variants: Price changes per variant. Only the listed variants change."""
+        client = _get_client()
+        try:
+            response = client.products.update_product(
+                account_id=account_id,
+                product_id=product_id,
+                title=title,
+                description_html=description_html,
+                handle=handle,
+                vendor=vendor,
+                product_type=product_type,
+                tags=tags,
+                status=status,
+                seo=seo,
+                variants=variants,
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
     # PROFILES
 
     @mcp.tool(

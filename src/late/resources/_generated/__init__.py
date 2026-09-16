@@ -39,6 +39,7 @@ from .messages import MessagesResource
 from .messaging_ads import MessagingAdsResource
 from .phone_numbers import PhoneNumbersResource
 from .posts import PostsResource
+from .products import ProductsResource
 from .profiles import ProfilesResource
 from .queue import QueueResource
 from .reach_and_frequency import ReachAndFrequencyResource
@@ -102,6 +103,7 @@ __all__ = [
     "MessagingAdsResource",
     "PhoneNumbersResource",
     "PostsResource",
+    "ProductsResource",
     "ProfilesResource",
     "QueueResource",
     "ReachAndFrequencyResource",
