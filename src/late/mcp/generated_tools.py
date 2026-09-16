@@ -4772,6 +4772,8 @@ def register_generated_tools(mcp, _get_client):
         creative_features: dict[str, Any] | None = None,
         post_id: str | None = None,
         platform_post_id: str | None = None,
+        campaign_name: str | None = None,
+        ad_set_name: str | None = None,
         ad_set_id: str | None = None,
         budget: dict[str, Any] | None = None,
         instagram_account_id: str | None = None,
@@ -4809,6 +4811,8 @@ def register_generated_tools(mcp, _get_client):
                 account_id: Account ID (required)
                 ad_account_id: Platform ad account ID (required)
                 name: (required)
+                campaign_name: Exact name for the campaign this boost provisions. Omitted keeps the default `<name> - Campaign`. Every platform: on LinkedIn it names the campaign group. Ignored on the Meta attach shape (`adSetId`), which creates no campaign.
+                ad_set_name: Exact name for the ad-group level this boost provisions. Omitted keeps the default `<name> - Ad Group`. Meta: ad set; TikTok, Pinterest, Google: ad group; X: line item; LinkedIn: the campaign under the campaign group. Ignored on the Meta attach shape.
                 goal: Available goals vary by platform. Meta (Facebook/Instagram) and TikTok support all 7. LinkedIn supports all except app_promotion. X supports engagement, traffic, awareness, video_views, app_promotion. Pinterest and Google Ads support only engagement, traffic, awareness, video_views. (required)
                 ad_set_id: Meta only. Attach the boosted post to this existing ad set instead of creating a campaign. The ad set then owns budget, schedule and targeting; sending those too is a 400.
                 budget: Required unless adSetId is set.
@@ -4940,6 +4944,8 @@ def register_generated_tools(mcp, _get_client):
                 account_id=account_id,
                 ad_account_id=ad_account_id,
                 name=name,
+                campaign_name=campaign_name,
+                ad_set_name=ad_set_name,
                 goal=goal,
                 ad_set_id=ad_set_id,
                 budget=budget,
