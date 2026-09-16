@@ -11091,6 +11091,7 @@ def register_generated_tools(mcp, _get_client):
         platform: str,
         profile_id: str,
         login_mode: str = "classic",
+        permission_level: str = "full",
         page_id: str | None = None,
         account_id: str | None = None,
         redirect_url: str | None = None,
@@ -11103,6 +11104,7 @@ def register_generated_tools(mcp, _get_client):
 
             Args:
                 login_mode: Meta ads authorization mode. Business login is opt-in for Facebook and Instagram; classic preserves the posting-account flow.
+                permission_level: Business login only. Ad-account permission the connection's system user will hold. `full` asks the owner for Full control (MANAGE; required to create pixels and other account-level assets through Zernio). `advertise` asks for Manage campaigns (ADVERTISE), enough for campaigns, ad sets, creatives, ads, media and reporting, for owners who will not grant billing-level control to an integration. Either way Meta only lets a business admin complete the grant. 503 if the advertise configuration is not set up.
                 page_id: Business login only. Facebook Page ID to select from the token grants for ad creatives and lead forms.
                 platform: Platform to connect ads for. Only platforms with ads support are accepted.
 
@@ -11160,6 +11162,7 @@ def register_generated_tools(mcp, _get_client):
         try:
             response = client.connect.connect_ads(
                 login_mode=login_mode,
+                permission_level=permission_level,
                 page_id=page_id,
                 platform=platform,
                 profile_id=profile_id,

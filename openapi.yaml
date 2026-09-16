@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.5.0"
+  version: "1.6.0"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -20160,6 +20160,11 @@ paths:
           schema: { type: string, enum: [classic, business], default: classic }
           description: "Meta ads authorization mode. Business login is opt-in for Facebook and Instagram; classic preserves the posting-account flow."
           example: business
+        - name: permissionLevel
+          in: query
+          schema: { type: string, enum: [full, advertise], default: full }
+          description: "Business login only. Ad-account permission the connection's system user will hold. `full` asks the owner for Full control (MANAGE; required to create pixels and other account-level assets through Zernio). `advertise` asks for Manage campaigns (ADVERTISE), enough for campaigns, ad sets, creatives, ads, media and reporting, for owners who will not grant billing-level control to an integration. Either way Meta only lets a business admin complete the grant. 503 if the advertise configuration is not set up."
+          example: advertise
         - name: pageId
           in: query
           schema: { type: string, pattern: '^\d+$' }

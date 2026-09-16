@@ -118,6 +118,7 @@ class ConnectResource:
         profile_id: str,
         *,
         login_mode: str | None = "classic",
+        permission_level: str | None = "full",
         page_id: str | None = None,
         account_id: str | None = None,
         redirect_url: str | None = None,
@@ -129,6 +130,7 @@ class ConnectResource:
         """Connect ads for a platform"""
         params = self._build_params(
             login_mode=login_mode,
+            permission_level=permission_level,
             page_id=page_id,
             profile_id=profile_id,
             account_id=account_id,
@@ -897,6 +899,7 @@ class ConnectResource:
         profile_id: str,
         *,
         login_mode: str | None = "classic",
+        permission_level: str | None = "full",
         page_id: str | None = None,
         account_id: str | None = None,
         redirect_url: str | None = None,
@@ -908,6 +911,7 @@ class ConnectResource:
         """Connect ads for a platform (async)"""
         params = self._build_params(
             login_mode=login_mode,
+            permission_level=permission_level,
             page_id=page_id,
             profile_id=profile_id,
             account_id=account_id,
