@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.2.1"
+  version: "1.3.0"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -7992,6 +7992,17 @@ components:
         reelsSkipRate: { type: number, example: 48.8, description: 'Instagram Reels only: percentage (0-100) of initial views that skipped the reel within its first 3 seconds, as reported by Meta. Meta labels the metric estimated and in development, so it can move between syncs. 0 for non-Reels media and other platforms. When a post is published to several accounts, the aggregate is weighted by views.' }
         completionRate: { type: number, example: 0, description: 'TikTok accounts connected through the TikTok for Business app only: share of viewers who watched the video to the end, 0 to 1, as TikTok reports it (T+24-48h, only for posts active in the last 7 days). 0 for other platforms. When a post is published to several accounts, the aggregate is weighted by views.' }
         profileViews: { type: integer, example: 0, description: 'TikTok accounts connected through the TikTok for Business app only: profile views from users who reached the profile through this post (T+24-48h). 0 for other platforms.' }
+        websiteClicks: { type: integer, example: 0, description: 'TikTok accounts connected through the TikTok for Business app only: clicks on the profile website link attributed to this post (T+24-48h). Also counted inside `clicks`, which sums every profile-link type (website, phone, email, address, app download). 0 for other platforms.' }
+        impressionSources:
+          type: object
+          additionalProperties: { type: number }
+          example: { forYou: 0.84, follow: 0.05, search: 0.06, personalProfile: 0.03, sound: 0.01, directMessage: 0, other: 0.01 }
+          description: 'TikTok accounts connected through the TikTok for Business app only: share of views by surface, as fractions 0 to 1 (T+24-48h, only for posts active in the last 7 days). Keys: `forYou`, `follow`, `search`, `personalProfile`, `sound`, `directMessage`, `other`; a surface TikTok adds later appears under a camelCase key derived from its name. Empty object when TikTok reports nothing, and for other platforms. When a post is published to several accounts, each share is weighted by views.'
+        audienceTypes:
+          type: object
+          additionalProperties: { type: number }
+          example: { follower: 0.1, nonFollower: 0.9, newViewer: 0.99, returnViewer: 0.01 }
+          description: 'TikTok accounts connected through the TikTok for Business app only: two viewer splits as fractions 0 to 1 (T+24-48h). Each pair sums to 1 when present, `follower` + `nonFollower` and `newViewer` + `returnViewer`; TikTok can report one pair without the other. Empty object when TikTok reports nothing, and for other platforms. Views-weighted across accounts like impressionSources.'
         reposts: { type: integer, example: 0, description: 'Instagram accounts connected with Facebook Login only: reposts of the media by other users, minus deleted reposts, on feed posts, reels and stories. Meta does not expose this metric for accounts connected with Instagram Login, so those always report 0. 0 for other platforms, including Threads, where reposts are counted in shares instead.' }
         videoDurationSeconds: { type: [integer, "null"], example: 30, description: 'Video length in seconds. Currently Instagram Reels only; combine with igReelsAvgWatchTime (ms) to estimate retention. Null when unknown (other platforms, non-video media, or when Instagram does not expose the media URL, e.g. reels with copyrighted audio).' }
         engagementRate: { type: number, example: 6.59, description: 'Percentage, rounded to 2 decimals: (likes + comments + shares + saves) / (impressions or reach or views) * 100. Clicks and follows are never counted. The denominator is the FIRST of impressions, reach, views that is non-zero, so it is not the same basis on every post: a post with impressions divides by impressions, one without falls back to reach, then to views. If you need a single consistent basis (e.g. interactions / reach), compute it from the raw fields above. The engagementRate on the LinkedIn account endpoints is a different formula.' }
@@ -8195,7 +8206,7 @@ components:
         metrics:
           type: object
           description: 'Metrics a platform does not report are 0, not absent.'
-          required: [impressions, reach, likes, comments, shares, saves, sends, clicks, views, follows, igReelsAvgWatchTime, igReelsVideoViewTotalTime, reposts, reelsSkipRate, completionRate, profileViews]
+          required: [impressions, reach, likes, comments, shares, saves, sends, clicks, views, follows, igReelsAvgWatchTime, igReelsVideoViewTotalTime, reposts, reelsSkipRate, completionRate, profileViews, websiteClicks, impressionSources, audienceTypes]
           properties:
             impressions: { type: integer }
             reach: { type: integer }
@@ -8213,6 +8224,9 @@ components:
             reelsSkipRate: { type: number, description: 'Instagram Reels skip rate, 0 to 1' }
             completionRate: { type: number, description: 'TikTok business lane: share of viewers who watched to the end, 0 to 1' }
             profileViews: { type: integer, description: 'TikTok business lane: profile views attributed to the post' }
+            websiteClicks: { type: integer, description: 'TikTok business lane: website-link clicks attributed to the post (also inside clicks)' }
+            impressionSources: { type: object, additionalProperties: { type: number }, description: 'TikTok business lane: share of views by surface (forYou, follow, search, personalProfile, sound, directMessage, other), fractions 0 to 1. Empty object elsewhere.' }
+            audienceTypes: { type: object, additionalProperties: { type: number }, description: 'TikTok business lane: follower / nonFollower and newViewer / returnViewer shares, fractions 0 to 1. Empty object elsewhere.' }
     AnalyticsDeltaResponse:
       type: object
       required: [data, nextCursor, hasMore]
@@ -12524,8 +12538,8 @@ paths:
           description: Page number (default 1)
         - name: sortBy
           in: query
-          schema: { type: string, enum: [date, engagement, impressions, reach, likes, comments, shares, saves, clicks, views, follows, ig_reels_avg_watch_time, ig_reels_video_view_total_time, reposts, reels_skip_rate, completion_rate, profile_views], default: date }
-          description: 'Sort by date, engagement, or a specific metric. Platform-specific metrics (follows, reposts, reels_skip_rate, ig_reels_*, completion_rate, profile_views) sort a null value as 0.'
+          schema: { type: string, enum: [date, engagement, impressions, reach, likes, comments, shares, saves, clicks, views, follows, ig_reels_avg_watch_time, ig_reels_video_view_total_time, reposts, reels_skip_rate, completion_rate, profile_views, website_clicks], default: date }
+          description: 'Sort by date, engagement, or a specific metric. Platform-specific metrics (follows, reposts, reels_skip_rate, ig_reels_*, completion_rate, profile_views, website_clicks) sort a null value as 0.'
         - name: order
           in: query
           schema: { type: string, enum: [asc, desc], default: desc }
@@ -12837,6 +12851,9 @@ paths:
                           reelsSkipRate: 0
                           completionRate: 0
                           profileViews: 0
+                          websiteClicks: 0
+                          impressionSources: {}
+                          audienceTypes: {}
                     nextCursor: "v1.WyIyMDI2LTA5LTAxIDE3OjEyOjA0IiwiNjVmMWMwYTllMmI1YWYwMDEyYWIzNGNkIl0"
                     hasMore: true
         '400': { $ref: '#/components/responses/BadRequest' }
@@ -14627,6 +14644,12 @@ paths:
                         saves: { type: integer, description: "Total saves on this date" }
                         clicks: { type: integer, description: "Total clicks on this date" }
                         views: { type: integer, description: "Total views on this date" }
+                        follows: { type: integer, description: "Follows attributed to the post on this date (Instagram feed and stories, TikTok business lane); 0 elsewhere" }
+                        completionRate: { type: number, description: "TikTok business lane: share of viewers who watched to the end on this date, 0 to 1; 0 elsewhere" }
+                        profileViews: { type: integer, description: "TikTok business lane: profile views attributed to the post on this date; 0 elsewhere" }
+                        websiteClicks: { type: integer, description: "TikTok business lane: website-link clicks attributed to the post on this date (also inside clicks); 0 elsewhere" }
+                        impressionSources: { type: object, additionalProperties: { type: number }, description: "TikTok business lane: share of views by surface on this date (forYou, follow, search, personalProfile, sound, directMessage, other), fractions 0 to 1; empty object elsewhere" }
+                        audienceTypes: { type: object, additionalProperties: { type: number }, description: "TikTok business lane: follower / nonFollower and newViewer / returnViewer shares on this date, fractions 0 to 1; empty object elsewhere" }
               examples:
                 single_platform:
                   summary: Single-platform post timeline
@@ -14644,6 +14667,12 @@ paths:
                         saves: 8
                         clicks: 25
                         views: 0
+                        follows: 2
+                        completionRate: 0
+                        profileViews: 0
+                        websiteClicks: 0
+                        impressionSources: {}
+                        audienceTypes: {}
                       - date: "2025-01-16"
                         platform: "instagram"
                         platformPostId: "17902345678901234"
@@ -14655,6 +14684,51 @@ paths:
                         saves: 15
                         clicks: 48
                         views: 0
+                        follows: 5
+                        completionRate: 0
+                        profileViews: 0
+                        websiteClicks: 0
+                        impressionSources: {}
+                        audienceTypes: {}
+                multi_platform:
+                  summary: One row per platform and day; the TikTok row comes from an account connected through the TikTok for Business app
+                  value:
+                    postId: "6507a1b2c3d4e5f6a7b8c9d0"
+                    timeline:
+                      - date: "2025-01-16"
+                        platform: "instagram"
+                        platformPostId: "17902345678901234"
+                        impressions: 2400
+                        reach: 1850
+                        likes: 92
+                        comments: 7
+                        shares: 21
+                        saves: 15
+                        clicks: 48
+                        views: 0
+                        follows: 5
+                        completionRate: 0
+                        profileViews: 0
+                        websiteClicks: 0
+                        impressionSources: {}
+                        audienceTypes: {}
+                      - date: "2025-01-16"
+                        platform: "tiktok"
+                        platformPostId: "7685731010461371662"
+                        impressions: 0
+                        reach: 1100
+                        likes: 60
+                        comments: 4
+                        shares: 9
+                        saves: 3
+                        clicks: 14
+                        views: 1320
+                        follows: 3
+                        completionRate: 0.18
+                        profileViews: 22
+                        websiteClicks: 6
+                        impressionSources: { forYou: 0.84, follow: 0.05, search: 0.06, personalProfile: 0.03, sound: 0.01, directMessage: 0, other: 0.01 }
+                        audienceTypes: { follower: 0.1, nonFollower: 0.9, newViewer: 0.99, returnViewer: 0.01 }
         '400':
           description: Missing required postId parameter
           content:
