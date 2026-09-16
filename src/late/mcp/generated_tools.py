@@ -3442,7 +3442,7 @@ def register_generated_tools(mcp, _get_client):
             goal: Mapped to the ODAX objective (same mapping as POST /v1/ads/create). (required)
             is_skadnetwork_attribution: Meta app promotion only. Immutable campaign flag. Set true for iOS 14+ SKAdNetwork campaigns and supply promotedObject.applicationId plus promotedObject.objectStoreUrl. The campaign receives promotedObject only when this flag is true. Cannot be changed on an existing campaign.
             promoted_object
-            buying_type: Meta only. OMIT on non-Meta platforms (Google Ads, etc.): any value is rejected with a 400. On Meta the server applies AUCTION when omitted, so it does not need to be sent; RESERVED = Reach & Frequency. SKAdNetwork app promotion requires AUCTION.
+            buying_type: Every platform buys at auction by default, so this only needs sending on Meta, and only to choose RESERVED. `AUCTION` is accepted on every platform and changes nothing. `RESERVED` (Reach & Frequency) is Meta-only and is rejected with a 400 elsewhere. SKAdNetwork app promotion requires AUCTION.
             validate_only: Meta only. Runs campaign validation without creating or persisting a campaign; Idempotency-Key storage is bypassed. Returns HTTP 200 with validateOnly true and status VALIDATED.
             special_ad_categories
             budget_amount: Campaign-level (CBO) budget in WHOLE currency units (USD: 50 = $50.00), NOT cents. Meta's own Marketing API takes this same number in minor units, so it is an easy and expensive mix-up. Requires budgetType.
