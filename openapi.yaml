@@ -37268,6 +37268,15 @@ paths:
                 properties:
                   error: { type: string }
                   code: { type: string, enum: [PURCHASE_VELOCITY, AREA_CODE_UNAVAILABLE, PHONE_NUMBER_UNAVAILABLE] }
+        '503':
+          description: 'The carrier could not take the order just now (code CARRIER_UNAVAILABLE); the number is not taken, retry the same request in a minute.'
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error: { type: string }
+                  code: { type: string, enum: [CARRIER_UNAVAILABLE] }
         '202':
           description: Country requires end-user KYC before the number can be ordered.
           content:
@@ -37699,6 +37708,15 @@ paths:
                 properties:
                   error: { type: string }
                   code: { type: string, enum: [PURCHASE_VELOCITY, AREA_CODE_UNAVAILABLE, PHONE_NUMBER_UNAVAILABLE] }
+        '503':
+          description: 'The carrier could not take the order just now (code CARRIER_UNAVAILABLE); the number is not taken, retry the same request in a minute.'
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error: { type: string }
+                  code: { type: string, enum: [CARRIER_UNAVAILABLE] }
         '202':
           description: Country requires end-user KYC before the number can be ordered.
           content:
