@@ -4795,6 +4795,7 @@ def register_generated_tools(mcp, _get_client):
         link_url: str | None = None,
         call_to_action: str | None = None,
         spark_auth_code: str | None = None,
+        smart_plus: bool | None = None,
         promoted_object: dict[str, Any] | None = None,
         dsa_beneficiary: str | None = None,
         dsa_payor: str | None = None,
@@ -4904,6 +4905,7 @@ def register_generated_tools(mcp, _get_client):
         account running the ads (same-BC creators only). The creator generates the
         code in their TikTok app's Promote settings and shares it with the
         advertiser. Maps to `auth_code` on the creative entry of /v2/ad/create/.
+                smart_plus: TikTok only. Run the Spark post in a Smart+ campaign (goal `conversions` = Smart+ Web Conversions, `lead_generation` = Smart+ Lead Generation) instead of a regular campaign. Requires `sparkAuthCode` (the Smart+ ad runs the post under the identity that redeeming its Spark code creates; a Business Center-owned post is not accepted there) and `promotedObject.pixelId` + `customEventType`. `app_promotion` is not available on a Spark post. Rejected with a 400 on other platforms.
                 promoted_object: TikTok-only on this endpoint. The pixel a Website Conversion ad group
         optimizes toward, so a Spark Ad built from an existing organic post can
         optimize for a conversion instead of only engagement or traffic.
@@ -4968,6 +4970,7 @@ def register_generated_tools(mcp, _get_client):
                 link_url=link_url,
                 call_to_action=call_to_action,
                 spark_auth_code=spark_auth_code,
+                smart_plus=smart_plus,
                 promoted_object=promoted_object,
                 dsa_beneficiary=dsa_beneficiary,
                 dsa_payor=dsa_payor,
