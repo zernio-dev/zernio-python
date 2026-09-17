@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.15.0"
+  version: "1.16.0"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -51864,7 +51864,7 @@ paths:
                 creativeFeatures: { $ref: '#/components/schemas/MetaCreativeFeatures' }
                 postId: { type: string, description: Zernio post ID (provide this or platformPostId) }
                 platformPostId: { type: string, description: Platform post ID (alternative to postId) }
-                accountId: { type: string, description: Account ID }
+                accountId: { type: string, description: "Zernio account id. Normally the connected posting account (facebook, instagram, tiktok, linkedin, pinterest, twitter) or a googleads account. TikTok: the TikTok Ads connection (platform tiktokads) is accepted too when the post brings its own authorization (sparkAuthCode or sparkPosts), so Spark ads need no organic TikTok account connected; such a call must use platformPostId, not postId." }
                 adAccountId: { type: string, description: Platform ad account ID }
                 name: { type: string, maxLength: 255 }
                 campaignName: { type: string, maxLength: 255, description: "Exact name for the campaign this boost provisions. Omitted keeps the default `<name> - Campaign`. Every platform: on LinkedIn it names the campaign group. Ignored on the Meta attach shape (`adSetId`), which creates no campaign." }

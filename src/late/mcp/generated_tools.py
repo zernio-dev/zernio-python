@@ -4811,7 +4811,7 @@ def register_generated_tools(mcp, _get_client):
                 creative_features
                 post_id: Zernio post ID (provide this or platformPostId)
                 platform_post_id: Platform post ID (alternative to postId)
-                account_id: Account ID (required)
+                account_id: Zernio account id. Normally the connected posting account (facebook, instagram, tiktok, linkedin, pinterest, twitter) or a googleads account. TikTok: the TikTok Ads connection (platform tiktokads) is accepted too when the post brings its own authorization (sparkAuthCode or sparkPosts), so Spark ads need no organic TikTok account connected; such a call must use platformPostId, not postId. (required)
                 ad_account_id: Platform ad account ID (required)
                 name: (required)
                 campaign_name: Exact name for the campaign this boost provisions. Omitted keeps the default `<name> - Campaign`. Every platform: on LinkedIn it names the campaign group. Ignored on the Meta attach shape (`adSetId`), which creates no campaign.
