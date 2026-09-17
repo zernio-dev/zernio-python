@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.8.1"
+  version: "1.9.0"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -3877,7 +3877,7 @@ components:
         id: { type: string, description: Internal conversation ID }
         platform:
           type: string
-          enum: [instagram, facebook, telegram, whatsapp, twitter, reddit, bluesky, sms, slack]
+          enum: [instagram, facebook, telegram, whatsapp, twitter, reddit, bluesky, sms, slack, tiktok]
         platformConversationId: { type: string }
         participantId: { type: string, description: "Contact's platform identifier (IGSID, PSID, wa_id, etc.)" }
         participantName: { type: string }
@@ -4066,7 +4066,7 @@ components:
               description: Internal conversation ID
             platform:
               type: string
-              enum: [instagram, facebook, telegram, whatsapp, sms]
+              enum: [instagram, facebook, telegram, whatsapp, sms, twitter, bluesky, reddit, slack, tiktok]
             platformMessageId:
               type: string
               description: Platform's message ID
@@ -4213,7 +4213,7 @@ components:
           $ref: '#/components/schemas/InboxWebhookAccount'
         metadata:
           type: [object, "null"]
-          description: 'Platform-specific message context (present when the message is a quick reply tap, postback button tap, inline keyboard callback, a quote-reply to an earlier message, or a WhatsApp inbound that Meta Business Agent is answering)'
+          description: 'Platform-specific message context (present when the message is a quick reply tap, postback button tap, inline keyboard callback, a quote-reply to an earlier message, a WhatsApp inbound that Meta Business Agent is answering, or a TikTok DM that is not plain text)'
           properties:
             standby:
               type: boolean
@@ -4514,6 +4514,9 @@ components:
                 (WhatsApp only, carries Meta's error code/title/details): this
                 field has no error envelope, only the boolean. Absence means
                 "not flagged", never "checked and renderable".
+            tiktokMessageType:
+              type: string
+              description: 'TikTok only. The message type as TikTok reports it, forwarded verbatim (for example image, video, sticker, share_post, emoji, reaction, template). Present on every TikTok DM that is not plain text; those arrive with text empty and, for image and video, an attachment.'
         timestamp:
           type: string
           format: date-time
@@ -4541,7 +4544,7 @@ components:
               description: Internal conversation ID
             platform:
               type: string
-              enum: [instagram, facebook, telegram, whatsapp, twitter, reddit, bluesky, slack]
+              enum: [instagram, facebook, telegram, whatsapp, twitter, reddit, bluesky, slack, tiktok]
               description: 'Every platform whose outgoing messages Zernio observes. sms is absent on purpose: its carrier receipts update delivery status and never raise message.sent.'
             platformMessageId:
               type: string
@@ -4641,7 +4644,7 @@ components:
           $ref: '#/components/schemas/InboxWebhookAccount'
         metadata:
           type: object
-          description: 'Platform-specific context for the sent message: a quote-reply reference, a WhatsApp location pin or WhatsApp contact cards. The key is present only when the send carried some context, and absent otherwise: it is never null and never an empty object. Read it to tell a location or contact-card message from a text one without a GET on the message.'
+          description: 'Platform-specific context for the sent message: a quote-reply reference, a WhatsApp location pin, WhatsApp contact cards or the TikTok message type. The key is present only when the send carried some context, and absent otherwise: it is never null and never an empty object. Read it to tell a location or contact-card message from a text one without a GET on the message.'
           properties:
             location:
               type: object
@@ -4698,6 +4701,9 @@ components:
               description: |
                 Slack only. Parent thread ts of the sent message. Pass it back as
                 `replyTo` on the inbox send API to keep replying inside the thread.
+            tiktokMessageType:
+              type: string
+              description: 'TikTok only. The message type as TikTok reports it, forwarded verbatim (for example image, video, sticker, share_post, emoji, reaction, template). Present on every TikTok DM that is not plain text; those arrive with text empty and, for image and video, an attachment. Absent on image sends made through the Zernio API, which carry the image in attachments.'
         timestamp:
           type: string
           format: date-time
@@ -4851,7 +4857,7 @@ components:
         Fired once when a new conversation begins, in either direction. A conversation
         starts the first time an account and a contact exchange a message on any DM
         platform (Instagram, Messenger/Facebook, Telegram, WhatsApp, X, Reddit,
-        Bluesky, SMS). Platform-agnostic: one subscription covers every DM platform.
+        Bluesky, SMS, TikTok). Platform-agnostic: one subscription covers every DM platform.
       required: [id, event, conversation, account, startedAt, timestamp]
       properties:
         id: { type: string, description: Stable webhook event ID }
@@ -11309,7 +11315,7 @@ webhooks:
       description: |
         Fired once when a new conversation begins between one of your connected accounts and a
         contact, in either direction. Works across every DM platform (Instagram, Messenger/Facebook,
-        Telegram, WhatsApp, X, Reddit, Bluesky). Naturally deduped: a given conversation
+        Telegram, WhatsApp, X, Reddit, Bluesky, TikTok). Naturally deduped: a given conversation
         only fires this event the very first time it appears.
       tags: [Webhook Events]
       requestBody:
