@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.8.0"
+  version: "1.8.1"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -5599,7 +5599,7 @@ components:
           example: "1234567890123456789"
         platformPostUrl:
           type: [string, "null"]
-          description: Public URL of the published post. Included in the response for immediate posts; for scheduled posts, fetch via GET /v1/posts/{postId} after publish time. Empty when the platform confirmed the publish without returning an id a permalink can be built from (TikTok returns a publish id for some uploads); the TikTok reconcile cron backfills it later.
+          description: Public URL of the published post. Included in the response for immediate posts; for scheduled posts, fetch via GET /v1/posts/{postId} after publish time. Empty when the platform confirmed the publish without returning an id a permalink can be built from (TikTok returns a publish id for some uploads); the TikTok reconcile cron backfills it later. If TikTok never returns one, /v1/analytics reports that entry as syncStatus unavailable.
           example: "https://twitter.com/acmecorp/status/1234567890123456789"
         publishedAt:
           type: string
@@ -8030,7 +8030,7 @@ components:
             - type: "null"
         syncStatus: { type: string, enum: [synced, pending, unavailable], description: 'Sync state of analytics for this platform' }
         platformPostUrl: { type: [string, "null"], format: uri }
-        errorMessage: { type: [string, "null"], description: 'Error details when status is failed' }
+        errorMessage: { type: [string, "null"], description: 'Error details when status is failed, or why analytics are unavailable for a published entry (e.g. Google Business Profile, a TikTok upload that never received a video id)' }
     AnalyticsOverview:
       type: object
       properties:
