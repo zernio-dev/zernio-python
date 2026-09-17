@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.9.3"
+  version: "1.10.0"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -30136,7 +30136,7 @@ paths:
                             type: object
                             properties:
                               id: { type: string }
-                              type: { type: string, enum: [image, video, audio, file, sticker, share] }
+                              type: { type: string, enum: [image, video, audio, file, sticker, share, template] }
                               originalType:
                                 type: string
                                 description: 'Instagram and Facebook only, and present only when it differs from `type`. Meta''s own type before normalization: `ig_reel` and `reel` become `video`, while `ig_post`, `post`, `ig_story` and `story_mention` become `share`. A story mention is `type: "share"` with `originalType: "story_mention"`; render on this field, since `share` alone is ambiguous.'
@@ -30148,6 +30148,10 @@ paths:
                                 description: 'Instagram and Facebook only. Endpoint that resolves this attachment to a working url every time, re-minting it from Meta when the stored one has expired. Safe to store and render indefinitely.'
                               filename: { type: [string, "null"] }
                               previewUrl: { type: [string, "null"] }
+                              payload:
+                                type: object
+                                additionalProperties: true
+                                description: 'Template content (title, subtitle, image, buttons) when type is template'
                         subject: { type: [string, "null"], description: Reddit message subject }
                         storyReply: { type: [boolean, "null"], description: Instagram story reply }
                         isStoryMention: { type: [boolean, "null"], description: Instagram story mention }
