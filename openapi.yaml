@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.11.0"
+  version: "1.12.0"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -47962,7 +47962,7 @@ paths:
         - { name: level, in: query, schema: { type: string, enum: [ad, adset, campaign, account] }, description: Row granularity }
         - { name: fields, in: query, schema: { type: string }, description: "Comma-separated Graph insights fields (e.g. spend,impressions,frequency,website_purchase_roas). Omitted = Meta's default set." }
         - { name: breakdowns, in: query, schema: { type: string }, description: "Comma-separated Graph breakdowns (e.g. age,gender or publisher_platform)." }
-        - { name: actionBreakdowns, in: query, schema: { type: string }, description: "Comma-separated Graph action breakdowns. Segments the actions[] arrays in each row." }
+        - { name: actionBreakdowns, in: query, schema: { type: string }, description: "Comma-separated Graph action breakdowns; segments the actions[] arrays in each row. Pass `none` to clear Meta's default action_type breakdown, required to combine some non-action breakdowns such as instagram_ads_follow_type (otherwise Meta returns a (#100) invalid-combination error)." }
         - { name: actionAttributionWindows, in: query, schema: { type: string }, description: "Comma-separated Meta attribution windows. Action values are returned keyed per window." }
         - { name: actionReportTime, in: query, schema: { type: string }, description: "When actions are counted: impression, conversion or mixed." }
         - { name: useUnifiedAttributionSetting, in: query, schema: { type: boolean }, description: "Use the ad sets' own attribution settings for action counting." }
@@ -48026,7 +48026,7 @@ paths:
                 level: { type: string, enum: [ad, adset, campaign, account] }
                 fields: { type: string, description: "Comma-separated Graph insights fields." }
                 breakdowns: { type: string, description: "Comma-separated Graph breakdowns." }
-                actionBreakdowns: { type: string, description: "Comma-separated Graph action breakdowns (e.g. action_type,action_destination)." }
+                actionBreakdowns: { type: string, description: "Comma-separated Graph action breakdowns (e.g. action_type,action_destination). Pass `none` to clear Meta's default action_type breakdown, needed for some non-action breakdowns such as instagram_ads_follow_type." }
                 actionAttributionWindows:
                   type: array
                   items: { type: string }

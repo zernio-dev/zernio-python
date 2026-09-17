@@ -6548,7 +6548,7 @@ def register_generated_tools(mcp, _get_client):
             level: Row granularity
             fields: Comma-separated Graph insights fields (e.g. spend,impressions,frequency,website_purchase_roas). Omitted = Meta's default set.
             breakdowns: Comma-separated Graph breakdowns (e.g. age,gender or publisher_platform).
-            action_breakdowns: Comma-separated Graph action breakdowns. Segments the actions[] arrays in each row.
+            action_breakdowns: Comma-separated Graph action breakdowns; segments the actions[] arrays in each row. Pass `none` to clear Meta's default action_type breakdown, required to combine some non-action breakdowns such as instagram_ads_follow_type (otherwise Meta returns a (#100) invalid-combination error).
             action_attribution_windows: Comma-separated Meta attribution windows. Action values are returned keyed per window.
             action_report_time: When actions are counted: impression, conversion or mixed.
             use_unified_attribution_setting: Use the ad sets' own attribution settings for action counting.
@@ -6618,7 +6618,7 @@ def register_generated_tools(mcp, _get_client):
             level
             fields: Comma-separated Graph insights fields.
             breakdowns: Comma-separated Graph breakdowns.
-            action_breakdowns: Comma-separated Graph action breakdowns (e.g. action_type,action_destination).
+            action_breakdowns: Comma-separated Graph action breakdowns (e.g. action_type,action_destination). Pass `none` to clear Meta's default action_type breakdown, needed for some non-action breakdowns such as instagram_ads_follow_type.
             action_attribution_windows: Meta attribution windows (e.g. ["7d_click", "1d_view"]). Action values are returned keyed per window.
             action_report_time: When actions are counted: impression, conversion or mixed.
             use_unified_attribution_setting: Use the ad sets' own attribution settings for action counting.
