@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.16.0"
+  version: "1.16.1"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -34574,10 +34574,10 @@ paths:
                     type: string
                     enum: [business, platform]
                     description: 'Caller ID the forward-leg callee sees on tel: forwards. business = this WhatsApp number; platform = a Zernio number (customer-brought number without verified caller ID).'
-        '400': { description: 'Invalid request (including forwardTo set to the number itself)' }
+        '400': { description: 'Invalid request (including forwardTo set to the number itself), or Meta refused enablement (platform_api_error with platformError.code 138015, for example a production number below the 2,000-recipient messaging tier; Meta public test numbers and Sandbox accounts are exempt)' }
         '401': { $ref: '#/components/responses/Unauthorized' }
         '404': { description: WhatsApp phone number not found }
-        '422': { description: "Not eligible to enable calling: not on usage-based billing, or the number's messaging limit is below Meta's ~2,000-daily-recipient threshold (TIER_250). Warm the number up to raise the limit." }
+        '422': { description: 'Not eligible to enable calling: not on usage-based billing.' }
     patch:
       x-resource-group: "telephony"
       operationId: updateWhatsAppCallingLegacy
@@ -40292,11 +40292,11 @@ paths:
                     type: string
                     enum: [business, platform]
                     description: 'Caller ID the forward-leg callee sees on tel: forwards. business = this WhatsApp number; platform = a Zernio number (customer-brought number without verified caller ID).'
-        '400': { description: 'Invalid request (including forwardTo set to the number itself)' }
+        '400': { description: 'Invalid request (including forwardTo set to the number itself), or Meta refused enablement (platform_api_error with platformError.code 138015, for example a production number below the 2,000-recipient messaging tier; Meta public test numbers and Sandbox accounts are exempt)' }
         '401': { $ref: '#/components/responses/Unauthorized' }
         '404': { description: Phone number not found }
         '409': { description: 'This number is attached to a SIP trunk; detach it first (code invalid_resource_state).' }
-        '422': { description: "Not eligible to enable calling: not on usage-based billing, or the number's messaging limit is below Meta's ~2,000-daily-recipient threshold (TIER_250). Warm the number up to raise the limit." }
+        '422': { description: 'Not eligible to enable calling: not on usage-based billing.' }
     patch:
       x-resource-group: "telephony"
       operationId: updateWhatsAppCalling
