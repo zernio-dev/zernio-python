@@ -5254,7 +5254,11 @@ def register_generated_tools(mcp, _get_client):
         `budgetAmount`/`budgetType` and bidding fields
         (`bidStrategy`, `bidAmount`, `portfolioBidStrategyId`)
         return 400 on this shape; the ad group already owns them.
-                existing_campaign_id: Meta, Google Ads, and LinkedIn. On Meta: add the new ad
+                existing_campaign_id: Meta, Google Ads, LinkedIn and TikTok. On TikTok: creates
+        the ad group and the ad under this existing campaign; the
+        campaign is neither created nor activated and its
+        objective must fit `goal`; not with `smartPlus`.
+        On Meta: add the new ad
         set under this EXISTING campaign instead of creating a new
         one (multi-ad-set audience testing). The new ad set's
         budget is matched to the campaign's mode automatically:
