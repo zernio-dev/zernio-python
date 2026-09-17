@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.18.1"
+  version: "1.18.2"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -46777,7 +46777,7 @@ paths:
 
         Per-platform support:
         - **Meta** (Facebook + Instagram): all fields supported.
-        - **TikTok**: status, budget, targeting (via `/v2/adgroup/update/`), and creative
+        - **TikTok**: status, budget, `name` (renames the ad), targeting (via `/v2/adgroup/update/`), and creative
           (via `/v2/ad/update/` patch-style: `headline` is ignored, `body` becomes `ad_text`).
         - **Google**: status, budget, KEYWORD edits via `targeting.keywords` /
           `targeting.negativeKeywords`, DEVICE bid adjustments via `targeting.devices`,
