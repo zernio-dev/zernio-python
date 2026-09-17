@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.12.0"
+  version: "1.12.1"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -52092,7 +52092,7 @@ paths:
                     account running the ads (same-BC creators only). The creator generates the
                     code in their TikTok app's Promote settings and shares it with the
                     advertiser. Maps to `auth_code` on the creative entry of /v2/ad/create/.
-                smartPlus: { type: boolean, description: "TikTok only. Run the Spark post in a Smart+ campaign (goal `conversions` = Smart+ Web Conversions, `lead_generation` = Smart+ Lead Generation) instead of a regular campaign. Requires `sparkAuthCode` (the Smart+ ad runs the post under the identity that redeeming its Spark code creates; a Business Center-owned post is not accepted there) and `promotedObject.pixelId` + `customEventType`. `app_promotion` is not available on a Spark post. Rejected with a 400 on other platforms." }
+                smartPlus: { type: boolean, description: "TikTok only. Run the Spark post in a Smart+ campaign (goal `conversions` = Smart+ Web Conversions, `lead_generation` = Smart+ Lead Generation) instead of a regular campaign. Requires `sparkAuthCode` (the Smart+ ad runs the post under the identity that redeeming its Spark code creates; a Business Center-owned post is not accepted there) and `promotedObject.pixelId` + `customEventType`. `app_promotion` is not available on a Spark post. Rejected with a 400 on other platforms. On a Smart+ Spark ad `callToAction` is only sent when given; omit it to run the post with its own call to action." }
                 promotedObject:
                   type: object
                   description: |
