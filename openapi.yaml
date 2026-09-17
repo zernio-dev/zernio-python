@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.9.1"
+  version: "1.9.2"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -8036,7 +8036,7 @@ components:
             - type: "null"
         syncStatus: { type: string, enum: [synced, pending, unavailable], description: 'Sync state of analytics for this platform' }
         platformPostUrl: { type: [string, "null"], format: uri }
-        errorMessage: { type: [string, "null"], description: 'Error details when status is failed, or why analytics are unavailable for a published entry (e.g. Google Business Profile, a TikTok upload that never received a video id)' }
+        errorMessage: { type: [string, "null"], description: 'Failure detail. On failed entries, why the post failed to publish. On unavailable entries, why analytics cannot be synced (e.g. Google Business Profile, a TikTok upload that never received a video id). On pending entries, the most recent analytics sync error for the account (null while no sync has failed), cleared after the next successful sync.' }
     AnalyticsOverview:
       type: object
       properties:
@@ -12766,7 +12766,7 @@ paths:
                         isActive: true
                     hasAnalyticsAccess: true
         '202':
-          description: Analytics are being synced from the platform (single post lookup only). The response body matches AnalyticsSinglePostResponse with syncStatus "pending" and a message.
+          description: 'Analytics are being synced from the platform (single post lookup only). The response body matches AnalyticsSinglePostResponse with syncStatus "pending" and a message. Pending platforms whose account failed its last analytics sync carry that error in platformAnalytics[].errorMessage, and the message says so.'
           content:
             application/json:
               schema:
