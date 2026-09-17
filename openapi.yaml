@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.10.0"
+  version: "1.11.0"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -28,6 +28,9 @@ info:
     Facebook, YouTube, Threads, Reddit, Pinterest, Bluesky, Telegram, Google Business Profile, Snapchat,
     Discord, and Slack, all from a single REST API. Run paid ads on Meta (Facebook + Instagram), Google,
     TikTok, LinkedIn, Pinterest, X, and OpenAI from the same account.
+
+    Connect Shopify and WordPress as blog accounts to list sites and manage
+    articles, drafts, featured images, tags, authors, and native scheduling.
 
     Key features: Unified posting to 16 platforms, ads management on 7 ad networks (via /v1/ads), aggregated analytics, unified inbox (DMs, comments, reviews), webhooks, OAuth connect, queue scheduling, and white-label support for agencies managing unlimited accounts.
 
@@ -63,7 +66,7 @@ x-documentation:
   readme: |
     # Zernio API
 
-    The social media API that replaces 14 integrations. Build social media features into your app in minutes, not months.
+    The social media API that replaces 16 integrations. Build social media and blog publishing features into your app in minutes, not months.
 
     ## Quick Start
 
@@ -83,8 +86,9 @@ x-documentation:
     | Concept | Description |
     |---------|-------------|
     | **Profiles** | Containers that organize accounts into brands or projects |
-    | **Accounts** | Connected accounts belonging to a profile |
+    | **Accounts** | Connected social, ads, commerce, and blog accounts belonging to a profile |
     | **Posts** | Content scheduled or published to one or more accounts |
+    | **Blogs** | Articles managed on connected Shopify and WordPress sites |
     | **Queue** | Recurring time slots for automatic post scheduling |
 
     ## Create a Post
@@ -565,7 +569,9 @@ components:
       description: |
         Short-lived connect token for API users during OAuth flows. 
         Automatically generated when initiating OAuth without a browser session.
-        Valid for 15 minutes. Used to authenticate Facebook page selection API calls.
+        Valid for 15 minutes. Connect tokens are scoped to the intended profile
+        and platform and are accepted only by connection-flow endpoints that
+        explicitly list this security scheme.
   parameters:
     BusinessAgentAccountId:
       name: accountId
@@ -7425,7 +7431,7 @@ components:
         _id: { type: string }
         platform:
           type: string
-          enum: [tiktok, instagram, facebook, youtube, linkedin, twitter, threads, pinterest, reddit, bluesky, googlebusiness, telegram, snapchat, discord, slack, whatsapp, linkedinads, metaads, pinterestads, tiktokads, xads, googleads, openaiads, sms, phone, rcs]
+          enum: [tiktok, instagram, facebook, youtube, linkedin, twitter, threads, pinterest, reddit, bluesky, googlebusiness, telegram, snapchat, discord, slack, whatsapp, shopify, wordpress, linkedinads, metaads, pinterestads, tiktokads, xads, googleads, openaiads, sms, phone, rcs]
         profileId:
           oneOf:
             - type: string
@@ -10568,22 +10574,22 @@ components:
       type: object
       description: 'A blog container on the connected platform. All content lives on the platform; Zernio proxies it and stores nothing.'
       properties:
-        id: { type: string, description: 'Platform-native blog id (numeric string for Shopify).' }
-        platform: { type: string, enum: [shopify] }
+        id: { type: string, description: 'Platform-native blog id. Shopify uses a numeric blog id. WordPress.com uses the numeric site id; self-hosted WordPress uses `1`, scoped to the connected account.' }
+        platform: { type: string, enum: [shopify, wordpress] }
         title: { type: string }
-        handle: { type: string, description: 'URL slug of the blog.' }
+        handle: { type: string, description: 'URL slug on Shopify; site hostname on WordPress.' }
     BlogArticle:
       type: object
       description: 'An article inside a blog on the connected platform.'
       properties:
-        id: { type: string, description: 'Platform-native article id (numeric string for Shopify).' }
+        id: { type: string, description: 'Platform-native numeric article/post id.' }
         blogId: { type: string, description: 'Platform-native id of the blog the article belongs to.' }
-        platform: { type: string, enum: [shopify] }
+        platform: { type: string, enum: [shopify, wordpress] }
         title: { type: string }
         bodyHtml: { type: [string, "null"], description: 'Article body as HTML.' }
         handle: { type: string, description: 'URL slug of the article.' }
-        tags: { type: array, items: { type: string } }
-        author: { type: [string, "null"], description: 'Display name of the article author.' }
+        tags: { type: array, items: { type: string }, description: 'Tag names. On WordPress, missing tag names are created and matching is case-insensitive.' }
+        author: { type: [string, "null"], description: 'Shopify author display name, or numeric WordPress user id serialized as a string.' }
         excerpt: { type: [string, "null"], description: 'Short summary shown in blog listings.' }
         image:
           type: [object, "null"]
@@ -10592,9 +10598,11 @@ components:
             url: { type: string }
             altText: { type: [string, "null"] }
         isPublished: { type: boolean, description: 'False while the article is a draft or its publish date is still in the future.' }
-        publishedAt: { type: [string, "null"], format: date-time, description: 'When the article was (or is scheduled to be) published; null for drafts.' }
-        createdAt: { type: [string, "null"], format: date-time }
-        updatedAt: { type: [string, "null"], format: date-time }
+        publishedAt: { type: [string, "null"], format: date-time, description: 'Publication time. On WordPress this is present only when status is `publish`; null for drafts, pending/private posts, and scheduled posts.' }
+        status: { type: string, enum: [publish, future, draft, pending, private], description: 'WordPress only. Native post status returned by WordPress; omitted for Shopify.' }
+        publishDate: { type: [string, "null"], format: date-time, description: 'WordPress only. Scheduled publication time in UTC when status is `future`; null for other WordPress statuses and omitted for Shopify.' }
+        createdAt: { type: [string, "null"], format: date-time, description: 'Creation time when the platform exposes one. WordPress returns null because its core date is the editable publication date.' }
+        updatedAt: { type: [string, "null"], format: date-time, description: 'Last modification time. WordPress returns modified_gmt as UTC.' }
     ProductImage:
       type: object
       properties:
@@ -20551,6 +20559,112 @@ paths:
         '402': { $ref: '#/components/responses/PaymentRequired' }
         '403':
           description: 'API key does not have access to this profile.'
+
+  /v1/connect/wordpress:
+    get:
+      x-resource-group: "accounts"
+      operationId: getWordPressAuthUrl
+      tags: [Connect]
+      summary: Get WordPress.com OAuth connect URL
+      description: |
+        Initiates OAuth for a WordPress.com site or a Jetpack-connected site.
+        WordPress is a connect-only blog platform: the connected account powers
+        the Blogs API (`/v1/accounts/{accountId}/blogs`) and does not support
+        social posts, inbox, analytics, ads, or Shopify product operations.
+        Redirect the user to `authUrl`; after authorization, WordPress returns
+        the browser to Zernio's internal callback and Zernio redirects to
+        `redirect_url` (or the dashboard when omitted). Reconnecting the same
+        site and profile updates the stored connection in place. The consent
+        request omits `scope` to use WordPress.com's default single-site grant.
+        Granular scopes cannot access the `/wp/v2` article API. Zernio checks
+        that API before saving the connection and does not request explicit
+        `global` authorization across all sites.
+      security:
+        - bearerAuth: []
+        - connectToken: []
+      parameters:
+        - name: profileId
+          in: query
+          required: true
+          schema: { type: string }
+          description: 'Your Zernio profile ID (get from /v1/profiles).'
+        - name: redirect_url
+          in: query
+          schema: { type: string }
+          description: 'Custom redirect after connection. Must be an absolute http(s) URL or custom app scheme such as `myapp://callback`; relative and unsafe URLs return 400.'
+      responses:
+        '200':
+          description: OAuth authorization URL and authenticated state
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [authUrl, state]
+                properties:
+                  authUrl: { type: string, format: uri, description: 'WordPress.com URL to open in the user agent.' }
+                  state: { type: string, description: 'Authenticated, expiring OAuth state handled by the callback.' }
+        '400': { description: 'Invalid `profileId` or `redirect_url`.' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '402': { $ref: '#/components/responses/PaymentRequired' }
+        '403': { description: 'API key does not have access to this profile.' }
+        '404': { description: 'Profile not found or access denied.' }
+        '503': { description: 'WordPress.com OAuth or state signing is not configured.' }
+
+  /v1/connect/wordpress/token:
+    post:
+      x-resource-group: "accounts"
+      operationId: connectWordPressWithApplicationPassword
+      tags: [Connect]
+      summary: Connect self-hosted WordPress with an application password
+      description: |
+        Connects one self-hosted WordPress site using a WordPress username and
+        application password. `siteUrl` must use HTTPS and may include the path
+        where WordPress is installed. Zernio discovers the REST API, verifies
+        the credentials and required post/media/taxonomy capabilities, then
+        stores the password encrypted. Create an application password in the
+        WordPress user's profile; do not send the user's login password.
+        Reconnecting the same site and profile updates the connection in place.
+      security:
+        - bearerAuth: []
+        - connectToken: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required: [profileId, siteUrl, username, applicationPassword]
+              properties:
+                profileId: { type: string, description: 'Your Zernio profile ID (get from /v1/profiles).' }
+                siteUrl: { type: string, format: uri, pattern: '^https://', description: 'HTTPS base URL of the WordPress installation, including a subdirectory path when applicable.' }
+                username: { type: string, minLength: 1, maxLength: 255, pattern: '^[^:\r\n]+$', description: 'WordPress login name. A colon is not allowed.' }
+                applicationPassword: { type: string, minLength: 1, maxLength: 1024, writeOnly: true, description: 'Application password created for the WordPress user. Spaces in WordPress display formatting are accepted.' }
+      responses:
+        '200':
+          description: WordPress site connected as a platform account
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [account]
+                properties:
+                  account:
+                    type: object
+                    required: [_id, platform, username, displayName, profileId]
+                    properties:
+                      _id: { type: string }
+                      platform: { type: string, enum: [wordpress] }
+                      username: { type: string, description: 'Hostname of the connected WordPress site.' }
+                      displayName: { type: string, description: 'WordPress site title.' }
+                      profileId: { type: string }
+        '400': { description: 'Malformed body, non-HTTPS `siteUrl`, invalid username, unavailable REST API, or a site that cannot support the required WordPress operations.' }
+        '401': { description: 'Invalid API key or WordPress application password.' }
+        '402': { $ref: '#/components/responses/PaymentRequired' }
+        '403': { description: 'No access to the Zernio profile, or the WordPress user lacks required capabilities.' }
+        '404': { description: 'Zernio profile not found or WordPress REST endpoint not found.' }
+        '502': { description: 'The WordPress site returned an unclassified upstream error.' }
+        '503': { description: 'The WordPress site could not be reached.' }
 
   /v1/connect/tiktok-ads:
     patch:
@@ -58379,21 +58493,20 @@ paths:
       x-resource-group: "publishing"
       operationId: listBlogs
       tags: ["Blogs"]
-      x-platforms: ["shopify"]
+      x-platforms: ["shopify", "wordpress"]
       summary: List blogs
       description: |
-        Lists the blogs on the connected store, newest-first as the platform
-        returns them. Cursor-paginated: pass `limit` (1-50, default 20) and the
-        `cursor` from a previous response's `nextCursor`; `nextCursor` is null
-        when there are no more pages.
+        Lists blogs on the connected account. Shopify returns its store blogs
+        with cursor pagination. A WordPress account represents one site and
+        always returns exactly that one blog with `nextCursor: null`.
 
-        Supported on Shopify (platform `shopify`). Accounts on platforms
-        without blogs support return 400; a blogs-capable platform that lacks
-        this specific operation returns 405.
+        `limit` is 1-50 (default 20). Treat `nextCursor` as opaque; pass it
+        unchanged on the next request. Supported on Shopify (`shopify`) and
+        WordPress (`wordpress`).
       security:
         - bearerAuth: []
       parameters:
-        - { name: accountId, in: path, required: true, schema: { type: string }, description: 'Connected Shopify SocialAccount id.' }
+        - { name: accountId, in: path, required: true, schema: { type: string }, description: 'Connected Shopify or WordPress account id.' }
         - { name: limit, in: query, required: false, schema: { type: integer, minimum: 1, maximum: 50, default: 20 }, description: 'Page size (1-50).' }
         - { name: cursor, in: query, required: false, schema: { type: string }, description: 'Opaque cursor from a previous response. Omit for the first page.' }
       responses:
@@ -58404,17 +58517,18 @@ paths:
               schema:
                 type: object
                 properties:
-                  platform: { type: string, enum: [shopify] }
+                  platform: { type: string, enum: [shopify, wordpress] }
                   blogs:
                     type: array
                     items: { $ref: '#/components/schemas/Blog' }
                   nextCursor: { type: [string, "null"], description: 'Cursor for the next page; null when there are no more pages.' }
         '400': { $ref: '#/components/responses/BadRequest' }
         '401': { $ref: '#/components/responses/Unauthorized' }
-        '403': { description: 'The platform rejected the request (code insufficient_permissions); reconnect the Shopify account to restore access.' }
+        '403': { description: 'The platform rejected the request (code insufficient_permissions); reconnect the account or restore the WordPress user capabilities.' }
         '404': { description: 'Account not found or not accessible (code account_not_found).' }
         '405': { description: Platform does not support listing blogs. }
-        '429': { description: 'Rate limited, either by Zernio or by Shopify. Retry later.' }
+        '429': { description: 'Rate limited by Zernio or the connected platform. Retry later.' }
+        '502': { description: 'The connected platform returned an unclassified upstream error.' }
 
     post:
       x-resource-group: "publishing"
@@ -58426,9 +58540,8 @@ paths:
         Creates a blog on the connected store. The platform generates the URL
         `handle` from the title when omitted.
 
-        Supported on Shopify (platform `shopify`). Accounts on platforms
-        without blogs support return 400; a blogs-capable platform that lacks
-        this specific operation returns 405.
+        Supported on Shopify (platform `shopify`). A WordPress connection is
+        its existing site, so WordPress returns 405 for blog creation.
       security:
         - bearerAuth: []
       parameters:
@@ -58465,20 +58578,18 @@ paths:
       x-resource-group: "publishing"
       operationId: getBlog
       tags: ["Blogs"]
-      x-platforms: ["shopify"]
+      x-platforms: ["shopify", "wordpress"]
       summary: Get a blog
       description: |
-        Fetches a single blog. `blogId` is the platform's numeric blog id from
-        `GET /v1/accounts/{accountId}/blogs`, not a Zernio id.
-
-        Supported on Shopify (platform `shopify`). Accounts on platforms
-        without blogs support return 400; a blogs-capable platform that lacks
-        this specific operation returns 405.
+        Fetches a single blog. Use the platform-native `blogId` returned by
+        `GET /v1/accounts/{accountId}/blogs`: a Shopify numeric blog id, the
+        WordPress.com numeric site id, or `1` for a self-hosted WordPress site.
+        The self-hosted id is scoped to its connected account.
       security:
         - bearerAuth: []
       parameters:
-        - { name: accountId, in: path, required: true, schema: { type: string }, description: 'Connected Shopify SocialAccount id.' }
-        - { name: blogId, in: path, required: true, schema: { type: string, pattern: '^\d+$' }, description: 'Platform-native numeric blog id. Non-numeric values return 400.' }
+        - { name: accountId, in: path, required: true, schema: { type: string }, description: 'Connected Shopify or WordPress account id.' }
+        - { name: blogId, in: path, required: true, schema: { type: string, pattern: '^\d+$' }, description: 'Platform-native numeric blog/site id returned by the list operation.' }
       responses:
         '200':
           description: Blog fetched
@@ -58487,14 +58598,15 @@ paths:
               schema:
                 type: object
                 properties:
-                  platform: { type: string, enum: [shopify] }
+                  platform: { type: string, enum: [shopify, wordpress] }
                   blog: { $ref: '#/components/schemas/Blog' }
         '400': { $ref: '#/components/responses/BadRequest' }
         '401': { $ref: '#/components/responses/Unauthorized' }
-        '403': { description: 'The platform rejected the request (code insufficient_permissions); reconnect the Shopify account to restore access.' }
+        '403': { description: 'The platform rejected the request (code insufficient_permissions); reconnect the account or restore the WordPress user capabilities.' }
         '404': { description: 'Account not found or not accessible (code account_not_found), or blog not found (code blog_not_found).' }
         '405': { description: Platform does not support fetching a blog. }
-        '429': { description: 'Rate limited, either by Zernio or by Shopify. Retry later.' }
+        '429': { description: 'Rate limited by Zernio or the connected platform. Retry later.' }
+        '502': { description: 'The connected platform returned an unclassified upstream error.' }
 
     patch:
       x-resource-group: "publishing"
@@ -58506,9 +58618,8 @@ paths:
         Partial-updates a blog. Send any subset of `title` and `handle`; at
         least one field is required (an empty body returns 400).
 
-        Supported on Shopify (platform `shopify`). Accounts on platforms
-        without blogs support return 400; a blogs-capable platform that lacks
-        this specific operation returns 405.
+        Supported on Shopify (platform `shopify`). WordPress site settings are
+        not writable through this API, so WordPress returns 405.
       security:
         - bearerAuth: []
       parameters:
@@ -58551,9 +58662,8 @@ paths:
         Deletes the blog AND every article in it. The delete happens on the
         platform and is permanent; Zernio stores nothing to restore it from.
 
-        Supported on Shopify (platform `shopify`). Accounts on platforms
-        without blogs support return 400; a blogs-capable platform that lacks
-        this specific operation returns 405.
+        Supported on Shopify (platform `shopify`). Disconnect a WordPress
+        account instead of deleting its site; WordPress returns 405 here.
       security:
         - bearerAuth: []
       parameters:
@@ -58573,21 +58683,20 @@ paths:
       x-resource-group: "publishing"
       operationId: listBlogArticles
       tags: ["Blogs"]
-      x-platforms: ["shopify"]
+      x-platforms: ["shopify", "wordpress"]
       summary: List blog articles
       description: |
         Lists the articles of a blog. Cursor-paginated: pass `limit` (1-50,
         default 20) and the `cursor` from a previous response's `nextCursor`;
-        `nextCursor` is null when there are no more pages.
-
-        Supported on Shopify (platform `shopify`). Accounts on platforms
-        without blogs support return 400; a blogs-capable platform that lacks
-        this specific operation returns 405.
+        `nextCursor` is null when there are no more pages. Treat cursors as
+        opaque and pass them unchanged. Supported on Shopify (`shopify`) and
+        WordPress (`wordpress`). WordPress results include native `status` and
+        include `publishDate` only for scheduled (`future`) posts.
       security:
         - bearerAuth: []
       parameters:
-        - { name: accountId, in: path, required: true, schema: { type: string }, description: 'Connected Shopify SocialAccount id.' }
-        - { name: blogId, in: path, required: true, schema: { type: string, pattern: '^\d+$' }, description: 'Platform-native numeric blog id. Non-numeric values return 400.' }
+        - { name: accountId, in: path, required: true, schema: { type: string }, description: 'Connected Shopify or WordPress account id.' }
+        - { name: blogId, in: path, required: true, schema: { type: string, pattern: '^\d+$' }, description: 'Platform-native numeric blog/site id returned by the list operation.' }
         - { name: limit, in: query, required: false, schema: { type: integer, minimum: 1, maximum: 50, default: 20 }, description: 'Page size (1-50).' }
         - { name: cursor, in: query, required: false, schema: { type: string }, description: 'Opaque cursor from a previous response. Omit for the first page.' }
       responses:
@@ -58598,43 +58707,48 @@ paths:
               schema:
                 type: object
                 properties:
-                  platform: { type: string, enum: [shopify] }
+                  platform: { type: string, enum: [shopify, wordpress] }
                   articles:
                     type: array
                     items: { $ref: '#/components/schemas/BlogArticle' }
                   nextCursor: { type: [string, "null"], description: 'Cursor for the next page; null when there are no more pages.' }
         '400': { $ref: '#/components/responses/BadRequest' }
         '401': { $ref: '#/components/responses/Unauthorized' }
-        '403': { description: 'The platform rejected the request (code insufficient_permissions); reconnect the Shopify account to restore access.' }
+        '403': { description: 'The platform rejected the request (code insufficient_permissions); reconnect the account or restore the WordPress user capabilities.' }
         '404': { description: 'Account not found or not accessible (code account_not_found), or blog not found (code blog_not_found).' }
         '405': { description: Platform does not support listing articles. }
-        '429': { description: 'Rate limited, either by Zernio or by Shopify. Retry later.' }
+        '429': { description: 'Rate limited by Zernio or the connected platform. Retry later.' }
+        '502': { description: 'The connected platform returned an unclassified upstream error.' }
 
     post:
       x-resource-group: "publishing"
       operationId: createBlogArticle
       tags: ["Blogs"]
-      x-platforms: ["shopify"]
+      x-platforms: ["shopify", "wordpress"]
       summary: Create a blog article
       description: |
         Creates an article on the blog. Publishing behavior:
 
-        - `isPublished: false` keeps the article as a draft.
+        - WordPress defaults to a draft when both publishing fields are omitted.
+        - `isPublished: false` keeps the article as a draft and takes priority
+          over a future `publishDate`.
         - A future `publishDate` schedules publication natively on the
           platform; the platform publishes it at that time with no Zernio
           queue involved.
+        - `isPublished: true` publishes immediately when there is no future
+          `publishDate`.
         - `seo.title` / `seo.description` map to Shopify's global `title_tag`
           and `description_tag` metafields (the fields Shopify themes read for
-          the page title and meta description).
+          the page title and meta description). WordPress rejects `seo`; SEO
+          plugin and custom-field writes are not supported.
 
-        Supported on Shopify (platform `shopify`). Accounts on platforms
-        without blogs support return 400; a blogs-capable platform that lacks
-        this specific operation returns 405.
+        Supported on Shopify (`shopify`) and WordPress (`wordpress`). WordPress
+        native scheduling depends on the site's scheduler/WP-Cron.
       security:
         - bearerAuth: []
       parameters:
-        - { name: accountId, in: path, required: true, schema: { type: string }, description: 'Connected Shopify SocialAccount id.' }
-        - { name: blogId, in: path, required: true, schema: { type: string, pattern: '^\d+$' }, description: 'Platform-native numeric blog id. Non-numeric values return 400.' }
+        - { name: accountId, in: path, required: true, schema: { type: string }, description: 'Connected Shopify or WordPress account id.' }
+        - { name: blogId, in: path, required: true, schema: { type: string, pattern: '^\d+$' }, description: 'Platform-native numeric blog/site id returned by the list operation.' }
       requestBody:
         required: true
         content:
@@ -58646,23 +58760,23 @@ paths:
                 title: { type: string, minLength: 1 }
                 bodyHtml: { type: string, description: 'Article body as HTML.' }
                 handle: { type: string, description: 'URL slug. Generated from the title when omitted.' }
-                tags: { type: array, items: { type: string } }
-                author: { type: string, description: 'Display name of the article author.' }
+                tags: { type: array, maxItems: 100, items: { type: string, minLength: 1 }, description: 'Tag names. WordPress resolves existing names case-insensitively and creates missing tags.' }
+                author: { type: string, description: 'Shopify author display name, or numeric WordPress user id serialized as a string. Assigning another WordPress user may require elevated capability.' }
                 excerpt: { type: string, description: 'Short summary shown in blog listings.' }
                 image:
                   type: object
                   required: [url]
-                  description: 'Featured image. The platform downloads it, so the URL must be publicly reachable.'
+                  description: 'Featured image from a public URL. WordPress downloads it into the media library; JPEG, PNG, GIF and WebP are accepted up to 10 MB.'
                   properties:
                     url: { type: string, format: uri }
                     altText: { type: string }
                 seo:
                   type: object
-                  description: 'Search-engine overrides. Maps to Shopify global metafields (title_tag and description_tag).'
+                  description: 'Shopify only. Search-engine overrides mapped to global title_tag and description_tag metafields. WordPress rejects this field.'
                   properties:
                     title: { type: string }
                     description: { type: string }
-                isPublished: { type: boolean, description: 'Set false to create the article as a draft.' }
+                isPublished: { type: boolean, description: 'Set false for a draft or true to publish. On WordPress false takes priority over a future publishDate; omission with no date defaults to draft.' }
                 publishDate: { type: string, format: date-time, description: 'ISO 8601 datetime with offset (or Z). A future date schedules publication natively on the platform.' }
       responses:
         '201':
@@ -58672,34 +58786,35 @@ paths:
               schema:
                 type: object
                 properties:
-                  platform: { type: string, enum: [shopify] }
+                  platform: { type: string, enum: [shopify, wordpress] }
                   article: { $ref: '#/components/schemas/BlogArticle' }
         '400': { $ref: '#/components/responses/BadRequest' }
         '401': { $ref: '#/components/responses/Unauthorized' }
-        '403': { description: 'The platform rejected the request (code insufficient_permissions); reconnect the Shopify account to restore access.' }
+        '403': { description: 'The platform rejected the request (code insufficient_permissions); reconnect the account or restore the WordPress user capabilities.' }
         '404': { description: 'Account not found or not accessible (code account_not_found), or blog not found (code blog_not_found).' }
         '405': { description: Platform does not support creating articles. }
-        '429': { description: 'Rate limited, either by Zernio or by Shopify. Retry later.' }
+        '429': { description: 'Rate limited by Zernio or the connected platform. Retry later.' }
+        '502': { description: 'The connected platform returned an unclassified upstream error. Article mutations are not blindly retried.' }
 
   /v1/accounts/{accountId}/blogs/{blogId}/articles/{articleId}:
     get:
       x-resource-group: "publishing"
       operationId: getBlogArticle
       tags: ["Blogs"]
-      x-platforms: ["shopify"]
+      x-platforms: ["shopify", "wordpress"]
       summary: Get a blog article
       description: |
         Fetches a single article. An article addressed through a blog it does
         not belong to is a 404 (code blog_article_not_found).
 
-        Supported on Shopify (platform `shopify`). Accounts on platforms
-        without blogs support return 400; a blogs-capable platform that lacks
-        this specific operation returns 405.
+        Supported on Shopify (`shopify`) and WordPress (`wordpress`). WordPress
+        returns its native `status`; `publishedAt` is present only for a
+        published post and `publishDate` only for a scheduled post.
       security:
         - bearerAuth: []
       parameters:
-        - { name: accountId, in: path, required: true, schema: { type: string }, description: 'Connected Shopify SocialAccount id.' }
-        - { name: blogId, in: path, required: true, schema: { type: string, pattern: '^\d+$' }, description: 'Platform-native numeric blog id. Non-numeric values return 400.' }
+        - { name: accountId, in: path, required: true, schema: { type: string }, description: 'Connected Shopify or WordPress account id.' }
+        - { name: blogId, in: path, required: true, schema: { type: string, pattern: '^\d+$' }, description: 'Platform-native numeric blog/site id returned by the list operation.' }
         - { name: articleId, in: path, required: true, schema: { type: string, pattern: '^\d+$' }, description: 'Platform-native numeric article id. Non-numeric values return 400.' }
       responses:
         '200':
@@ -58709,20 +58824,21 @@ paths:
               schema:
                 type: object
                 properties:
-                  platform: { type: string, enum: [shopify] }
+                  platform: { type: string, enum: [shopify, wordpress] }
                   article: { $ref: '#/components/schemas/BlogArticle' }
         '400': { $ref: '#/components/responses/BadRequest' }
         '401': { $ref: '#/components/responses/Unauthorized' }
-        '403': { description: 'The platform rejected the request (code insufficient_permissions); reconnect the Shopify account to restore access.' }
+        '403': { description: 'The platform rejected the request (code insufficient_permissions); reconnect the account or restore the WordPress user capabilities.' }
         '404': { description: 'Account not found or not accessible (code account_not_found), blog not found (code blog_not_found), or article not found (code blog_article_not_found).' }
         '405': { description: Platform does not support fetching an article. }
-        '429': { description: 'Rate limited, either by Zernio or by Shopify. Retry later.' }
+        '429': { description: 'Rate limited by Zernio or the connected platform. Retry later.' }
+        '502': { description: 'The connected platform returned an unclassified upstream error.' }
 
     patch:
       x-resource-group: "publishing"
       operationId: updateBlogArticle
       tags: ["Blogs"]
-      x-platforms: ["shopify"]
+      x-platforms: ["shopify", "wordpress"]
       summary: Update a blog article
       description: |
         Partial-updates an article. Send any subset of the create fields
@@ -58731,15 +58847,17 @@ paths:
         (an empty body returns 400). `isPublished` and `publishDate` behave as
         on create: `isPublished: false` unpublishes back to a draft and a
         future `publishDate` schedules publication natively on the platform.
+        Omitting both fields preserves the current WordPress status. Omitting
+        `image` preserves the current featured image; removal is not supported.
+        WordPress rejects `seo` and does not support SEO-plugin/custom-field,
+        category, or custom-post-type writes.
 
-        Supported on Shopify (platform `shopify`). Accounts on platforms
-        without blogs support return 400; a blogs-capable platform that lacks
-        this specific operation returns 405.
+        Supported on Shopify (`shopify`) and WordPress (`wordpress`).
       security:
         - bearerAuth: []
       parameters:
-        - { name: accountId, in: path, required: true, schema: { type: string }, description: 'Connected Shopify SocialAccount id.' }
-        - { name: blogId, in: path, required: true, schema: { type: string, pattern: '^\d+$' }, description: 'Platform-native numeric blog id. Non-numeric values return 400.' }
+        - { name: accountId, in: path, required: true, schema: { type: string }, description: 'Connected Shopify or WordPress account id.' }
+        - { name: blogId, in: path, required: true, schema: { type: string, pattern: '^\d+$' }, description: 'Platform-native numeric blog/site id returned by the list operation.' }
         - { name: articleId, in: path, required: true, schema: { type: string, pattern: '^\d+$' }, description: 'Platform-native numeric article id. Non-numeric values return 400.' }
       requestBody:
         required: true
@@ -58752,23 +58870,23 @@ paths:
                 title: { type: string, minLength: 1 }
                 bodyHtml: { type: string, description: 'Article body as HTML.' }
                 handle: { type: string, description: 'URL slug of the article.' }
-                tags: { type: array, items: { type: string }, description: 'Replaces the full tag list.' }
-                author: { type: string, description: 'Display name of the article author.' }
+                tags: { type: array, maxItems: 100, items: { type: string, minLength: 1 }, description: 'Replaces the full tag-name list. WordPress resolves existing names case-insensitively and creates missing tags.' }
+                author: { type: string, description: 'Shopify author display name, or numeric WordPress user id serialized as a string. Assigning another WordPress user may require elevated capability.' }
                 excerpt: { type: string, description: 'Short summary shown in blog listings.' }
                 image:
                   type: object
                   required: [url]
-                  description: 'Featured image. The platform downloads it, so the URL must be publicly reachable.'
+                  description: 'Featured image from a public URL. WordPress downloads it into the media library; JPEG, PNG, GIF and WebP are accepted up to 10 MB. Omit to preserve it; null removal is not supported.'
                   properties:
                     url: { type: string, format: uri }
                     altText: { type: string }
                 seo:
                   type: object
-                  description: 'Search-engine overrides. Maps to Shopify global metafields (title_tag and description_tag).'
+                  description: 'Shopify only. Search-engine overrides mapped to global title_tag and description_tag metafields. WordPress rejects this field.'
                   properties:
                     title: { type: string }
                     description: { type: string }
-                isPublished: { type: boolean, description: 'Set false to unpublish the article back to a draft.' }
+                isPublished: { type: boolean, description: 'Set false to move to draft or true to publish. On WordPress false takes priority over a future publishDate; omission preserves status unless publishDate is sent.' }
                 publishDate: { type: string, format: date-time, description: 'ISO 8601 datetime with offset (or Z). A future date schedules publication natively on the platform.' }
       responses:
         '200':
@@ -58778,42 +58896,44 @@ paths:
               schema:
                 type: object
                 properties:
-                  platform: { type: string, enum: [shopify] }
+                  platform: { type: string, enum: [shopify, wordpress] }
                   article: { $ref: '#/components/schemas/BlogArticle' }
         '400': { $ref: '#/components/responses/BadRequest' }
         '401': { $ref: '#/components/responses/Unauthorized' }
-        '403': { description: 'The platform rejected the request (code insufficient_permissions); reconnect the Shopify account to restore access.' }
+        '403': { description: 'The platform rejected the request (code insufficient_permissions); reconnect the account or restore the WordPress user capabilities.' }
         '404': { description: 'Account not found or not accessible (code account_not_found), blog not found (code blog_not_found), or article not found (code blog_article_not_found).' }
         '405': { description: Platform does not support updating an article. }
-        '429': { description: 'Rate limited, either by Zernio or by Shopify. Retry later.' }
+        '429': { description: 'Rate limited by Zernio or the connected platform. Retry later.' }
+        '502': { description: 'The connected platform returned an unclassified upstream error. Article mutations are not blindly retried.' }
 
     delete:
       x-resource-group: "publishing"
       operationId: deleteBlogArticle
       tags: ["Blogs"]
-      x-platforms: ["shopify"]
+      x-platforms: ["shopify", "wordpress"]
       summary: Delete a blog article
       description: |
         Deletes the article. The delete happens on the platform and is
-        permanent; Zernio stores nothing to restore it from.
+        permanent; Zernio stores nothing to restore it from. On WordPress the
+        post is force-deleted, while uploaded attachments and tags remain in
+        the site's media library and taxonomy.
 
-        Supported on Shopify (platform `shopify`). Accounts on platforms
-        without blogs support return 400; a blogs-capable platform that lacks
-        this specific operation returns 405.
+        Supported on Shopify (`shopify`) and WordPress (`wordpress`).
       security:
         - bearerAuth: []
       parameters:
-        - { name: accountId, in: path, required: true, schema: { type: string }, description: 'Connected Shopify SocialAccount id.' }
-        - { name: blogId, in: path, required: true, schema: { type: string, pattern: '^\d+$' }, description: 'Platform-native numeric blog id. Non-numeric values return 400.' }
+        - { name: accountId, in: path, required: true, schema: { type: string }, description: 'Connected Shopify or WordPress account id.' }
+        - { name: blogId, in: path, required: true, schema: { type: string, pattern: '^\d+$' }, description: 'Platform-native numeric blog/site id returned by the list operation.' }
         - { name: articleId, in: path, required: true, schema: { type: string, pattern: '^\d+$' }, description: 'Platform-native numeric article id. Non-numeric values return 400.' }
       responses:
         '204': { description: Article deleted (no content). }
         '400': { $ref: '#/components/responses/BadRequest' }
         '401': { $ref: '#/components/responses/Unauthorized' }
-        '403': { description: 'The platform rejected the request (code insufficient_permissions); reconnect the Shopify account to restore access.' }
+        '403': { description: 'The platform rejected the request (code insufficient_permissions); reconnect the account or restore the WordPress user capabilities.' }
         '404': { description: 'Account not found or not accessible (code account_not_found), blog not found (code blog_not_found), or article not found (code blog_article_not_found).' }
         '405': { description: Platform does not support deleting an article. }
-        '429': { description: 'Rate limited, either by Zernio or by Shopify. Retry later.' }
+        '429': { description: 'Rate limited by Zernio or the connected platform. Retry later.' }
+        '502': { description: 'The connected platform returned an unclassified upstream error. Article deletion is not blindly retried.' }
 
   /v1/accounts/{accountId}/products:
     get:

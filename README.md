@@ -356,6 +356,7 @@ Both `from zernio import ...` and `from late import ...` work identically. The `
 | `connect.get_subreddit_rules()` | Get subreddit rules |
 | `connect.get_telegram_connect_status()` | Generate Telegram code |
 | `connect.get_whats_app_sdk_config()` | Get Embedded Signup SDK config |
+| `connect.get_word_press_auth_url()` | Get WordPress.com OAuth connect URL |
 | `connect.get_youtube_captions()` | Get a YouTube video transcript |
 | `connect.get_youtube_playlists()` | List YouTube playlists |
 | `connect.update_facebook_page()` | Update Facebook page |
@@ -377,6 +378,7 @@ Both `from zernio import ...` and `from late import ...` work identically. The `
 | `connect.connect_slack_channel()` | Connect a Slack channel |
 | `connect.connect_whats_app_credentials()` | Connect WhatsApp via credentials |
 | `connect.connect_whats_app_embedded_signup()` | Connect WhatsApp from Embedded Signup |
+| `connect.connect_word_press_with_application_password()` | Connect self-hosted WordPress with an application password |
 | `connect.handle_o_auth_callback()` | Complete OAuth callback |
 | `connect.initiate_telegram_connect()` | Connect Telegram directly |
 | `connect.resync_page_webhook_subscription()` | Re-subscribe a Facebook Page to Zernio's webhooks |

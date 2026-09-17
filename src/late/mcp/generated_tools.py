@@ -8082,7 +8082,7 @@ def register_generated_tools(mcp, _get_client):
         """List blogs
 
         Args:
-            account_id: Connected Shopify SocialAccount id. (required)
+            account_id: Connected Shopify or WordPress account id. (required)
             limit: Page size (1-50).
             cursor: Opaque cursor from a previous response. Omit for the first page."""
         client = _get_client()
@@ -8132,8 +8132,8 @@ def register_generated_tools(mcp, _get_client):
         """Get a blog
 
         Args:
-            account_id: Connected Shopify SocialAccount id. (required)
-            blog_id: Platform-native numeric blog id. Non-numeric values return 400. (required)"""
+            account_id: Connected Shopify or WordPress account id. (required)
+            blog_id: Platform-native numeric blog/site id returned by the list operation. (required)"""
         client = _get_client()
         try:
             response = client.blogs.get_blog(account_id=account_id, blog_id=blog_id)
@@ -8206,8 +8206,8 @@ def register_generated_tools(mcp, _get_client):
         """List blog articles
 
         Args:
-            account_id: Connected Shopify SocialAccount id. (required)
-            blog_id: Platform-native numeric blog id. Non-numeric values return 400. (required)
+            account_id: Connected Shopify or WordPress account id. (required)
+            blog_id: Platform-native numeric blog/site id returned by the list operation. (required)
             limit: Page size (1-50).
             cursor: Opaque cursor from a previous response. Omit for the first page."""
         client = _get_client()
@@ -8244,17 +8244,17 @@ def register_generated_tools(mcp, _get_client):
         """Create a blog article
 
         Args:
-            account_id: Connected Shopify SocialAccount id. (required)
-            blog_id: Platform-native numeric blog id. Non-numeric values return 400. (required)
+            account_id: Connected Shopify or WordPress account id. (required)
+            blog_id: Platform-native numeric blog/site id returned by the list operation. (required)
             title: (required)
             body_html: Article body as HTML.
             handle: URL slug. Generated from the title when omitted.
-            tags
-            author: Display name of the article author.
+            tags: Tag names. WordPress resolves existing names case-insensitively and creates missing tags.
+            author: Shopify author display name, or numeric WordPress user id serialized as a string. Assigning another WordPress user may require elevated capability.
             excerpt: Short summary shown in blog listings.
-            image: Featured image. The platform downloads it, so the URL must be publicly reachable.
-            seo: Search-engine overrides. Maps to Shopify global metafields (title_tag and description_tag).
-            is_published: Set false to create the article as a draft.
+            image: Featured image from a public URL. WordPress downloads it into the media library; JPEG, PNG, GIF and WebP are accepted up to 10 MB.
+            seo: Shopify only. Search-engine overrides mapped to global title_tag and description_tag metafields. WordPress rejects this field.
+            is_published: Set false for a draft or true to publish. On WordPress false takes priority over a future publishDate; omission with no date defaults to draft.
             publish_date: ISO 8601 datetime with offset (or Z). A future date schedules publication natively on the platform."""
         client = _get_client()
         try:
@@ -8288,8 +8288,8 @@ def register_generated_tools(mcp, _get_client):
         """Get a blog article
 
         Args:
-            account_id: Connected Shopify SocialAccount id. (required)
-            blog_id: Platform-native numeric blog id. Non-numeric values return 400. (required)
+            account_id: Connected Shopify or WordPress account id. (required)
+            blog_id: Platform-native numeric blog/site id returned by the list operation. (required)
             article_id: Platform-native numeric article id. Non-numeric values return 400. (required)"""
         client = _get_client()
         try:
@@ -8326,18 +8326,18 @@ def register_generated_tools(mcp, _get_client):
         """Update a blog article
 
         Args:
-            account_id: Connected Shopify SocialAccount id. (required)
-            blog_id: Platform-native numeric blog id. Non-numeric values return 400. (required)
+            account_id: Connected Shopify or WordPress account id. (required)
+            blog_id: Platform-native numeric blog/site id returned by the list operation. (required)
             article_id: Platform-native numeric article id. Non-numeric values return 400. (required)
             title
             body_html: Article body as HTML.
             handle: URL slug of the article.
-            tags: Replaces the full tag list.
-            author: Display name of the article author.
+            tags: Replaces the full tag-name list. WordPress resolves existing names case-insensitively and creates missing tags.
+            author: Shopify author display name, or numeric WordPress user id serialized as a string. Assigning another WordPress user may require elevated capability.
             excerpt: Short summary shown in blog listings.
-            image: Featured image. The platform downloads it, so the URL must be publicly reachable.
-            seo: Search-engine overrides. Maps to Shopify global metafields (title_tag and description_tag).
-            is_published: Set false to unpublish the article back to a draft.
+            image: Featured image from a public URL. WordPress downloads it into the media library; JPEG, PNG, GIF and WebP are accepted up to 10 MB. Omit to preserve it; null removal is not supported.
+            seo: Shopify only. Search-engine overrides mapped to global title_tag and description_tag metafields. WordPress rejects this field.
+            is_published: Set false to move to draft or true to publish. On WordPress false takes priority over a future publishDate; omission preserves status unless publishDate is sent.
             publish_date: ISO 8601 datetime with offset (or Z). A future date schedules publication natively on the platform."""
         client = _get_client()
         try:
@@ -8374,8 +8374,8 @@ def register_generated_tools(mcp, _get_client):
         """Delete a blog article
 
         Args:
-            account_id: Connected Shopify SocialAccount id. (required)
-            blog_id: Platform-native numeric blog id. Non-numeric values return 400. (required)
+            account_id: Connected Shopify or WordPress account id. (required)
+            blog_id: Platform-native numeric blog/site id returned by the list operation. (required)
             article_id: Platform-native numeric article id. Non-numeric values return 400. (required)"""
         client = _get_client()
         try:
@@ -11250,6 +11250,61 @@ def register_generated_tools(mcp, _get_client):
         try:
             response = client.connect.connect_shopify_with_token(
                 profile_id=profile_id, shop=shop, access_token=access_token
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Get WordPress.com OAuth connect URL",
+            readOnlyHint=True,
+            destructiveHint=False,
+            openWorldHint=False,
+        )
+    )
+    def connect_get_word_press_auth_url(
+        profile_id: str, redirect_url: str | None = None
+    ) -> str:
+        """Get WordPress.com OAuth connect URL
+
+        Args:
+            profile_id: Your Zernio profile ID (get from /v1/profiles). (required)
+            redirect_url: Custom redirect after connection. Must be an absolute http(s) URL or custom app scheme such as `myapp://callback`; relative and unsafe URLs return 400."""
+        client = _get_client()
+        try:
+            response = client.connect.get_word_press_auth_url(
+                profile_id=profile_id, redirect_url=redirect_url
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Connect self-hosted WordPress with an application password",
+            readOnlyHint=False,
+            destructiveHint=True,
+            openWorldHint=True,
+        )
+    )
+    def connect_word_press_with_application_password(
+        profile_id: str, site_url: str, username: str, application_password: str
+    ) -> str:
+        """Connect self-hosted WordPress with an application password
+
+        Args:
+            profile_id: Your Zernio profile ID (get from /v1/profiles). (required)
+            site_url: HTTPS base URL of the WordPress installation, including a subdirectory path when applicable. (required)
+            username: WordPress login name. A colon is not allowed. (required)
+            application_password: Application password created for the WordPress user. Spaces in WordPress display formatting are accepted. (required)"""
+        client = _get_client()
+        try:
+            response = client.connect.connect_word_press_with_application_password(
+                profile_id=profile_id,
+                site_url=site_url,
+                username=username,
+                application_password=application_password,
             )
             return _format_response(response)
         except Exception as e:

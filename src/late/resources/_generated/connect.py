@@ -175,6 +175,28 @@ class ConnectResource:
         )
         return self._client._post("/v1/connect/shopify/token", data=payload)
 
+    def get_word_press_auth_url(
+        self, profile_id: str, *, redirect_url: str | None = None
+    ) -> dict[str, Any]:
+        """Get WordPress.com OAuth connect URL"""
+        params = self._build_params(
+            profile_id=profile_id,
+            redirect_url=redirect_url,
+        )
+        return self._client._get("/v1/connect/wordpress", params=params)
+
+    def connect_word_press_with_application_password(
+        self, profile_id: str, site_url: str, username: str, application_password: str
+    ) -> dict[str, Any]:
+        """Connect self-hosted WordPress with an application password"""
+        payload = self._build_payload(
+            profile_id=profile_id,
+            site_url=site_url,
+            username=username,
+            application_password=application_password,
+        )
+        return self._client._post("/v1/connect/wordpress/token", data=payload)
+
     def configure_tik_tok_ads_brand_identity(
         self, account_id: str, display_name: str, image_url: str
     ) -> dict[str, Any]:
@@ -955,6 +977,28 @@ class ConnectResource:
             access_token=access_token,
         )
         return await self._client._apost("/v1/connect/shopify/token", data=payload)
+
+    async def aget_word_press_auth_url(
+        self, profile_id: str, *, redirect_url: str | None = None
+    ) -> dict[str, Any]:
+        """Get WordPress.com OAuth connect URL (async)"""
+        params = self._build_params(
+            profile_id=profile_id,
+            redirect_url=redirect_url,
+        )
+        return await self._client._aget("/v1/connect/wordpress", params=params)
+
+    async def aconnect_word_press_with_application_password(
+        self, profile_id: str, site_url: str, username: str, application_password: str
+    ) -> dict[str, Any]:
+        """Connect self-hosted WordPress with an application password (async)"""
+        payload = self._build_payload(
+            profile_id=profile_id,
+            site_url=site_url,
+            username=username,
+            application_password=application_password,
+        )
+        return await self._client._apost("/v1/connect/wordpress/token", data=payload)
 
     async def aconfigure_tik_tok_ads_brand_identity(
         self, account_id: str, display_name: str, image_url: str
