@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.9.0"
+  version: "1.9.1"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -5473,7 +5473,7 @@ components:
         url:
           type: string
           format: uri
-          description: 'A media item with a null, missing or empty url is dropped from non-draft posts (drafts keep it as a pending-upload placeholder).'
+          description: 'A media item with a null, missing or empty url is dropped.'
         title:
           type: string
           description: Optional title for the media item. Used as the document title for LinkedIn PDF/carousel posts. If omitted, falls back to the post title, then the filename.
