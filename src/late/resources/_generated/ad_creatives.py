@@ -274,25 +274,6 @@ class AdCreativesResource:
         )
         return self._client._delete(f"/v1/ads/videos/{video_id}", params=params)
 
-    def list_ad_catalogs(self, account_id: str, ad_account_id: str) -> dict[str, Any]:
-        """List Meta product catalogs"""
-        params = self._build_params(
-            account_id=account_id,
-            ad_account_id=ad_account_id,
-        )
-        return self._client._get("/v1/ads/catalogs", params=params)
-
-    def list_ad_catalog_product_sets(
-        self, catalog_id: str, account_id: str
-    ) -> dict[str, Any]:
-        """List a catalog's product sets"""
-        params = self._build_params(
-            account_id=account_id,
-        )
-        return self._client._get(
-            f"/v1/ads/catalogs/{catalog_id}/product-sets", params=params
-        )
-
     def list_partnership_ad_content(
         self,
         account_id: str,
@@ -539,27 +520,6 @@ class AdCreativesResource:
             ad_account_id=ad_account_id,
         )
         return await self._client._adelete(f"/v1/ads/videos/{video_id}", params=params)
-
-    async def alist_ad_catalogs(
-        self, account_id: str, ad_account_id: str
-    ) -> dict[str, Any]:
-        """List Meta product catalogs (async)"""
-        params = self._build_params(
-            account_id=account_id,
-            ad_account_id=ad_account_id,
-        )
-        return await self._client._aget("/v1/ads/catalogs", params=params)
-
-    async def alist_ad_catalog_product_sets(
-        self, catalog_id: str, account_id: str
-    ) -> dict[str, Any]:
-        """List a catalog's product sets (async)"""
-        params = self._build_params(
-            account_id=account_id,
-        )
-        return await self._client._aget(
-            f"/v1/ads/catalogs/{catalog_id}/product-sets", params=params
-        )
 
     async def alist_partnership_ad_content(
         self,

@@ -6122,54 +6122,6 @@ def register_generated_tools(mcp, _get_client):
 
     @mcp.tool(
         annotations=ToolAnnotations(
-            title="List Meta product catalogs",
-            readOnlyHint=True,
-            destructiveHint=False,
-            openWorldHint=False,
-        )
-    )
-    def ad_creatives_list_ad_catalogs(account_id: str, ad_account_id: str) -> str:
-        """List Meta product catalogs
-
-        Args:
-            account_id: A facebook, instagram, or metaads account ID (required)
-            ad_account_id: Meta ad account ID (act_...) (required)"""
-        client = _get_client()
-        try:
-            response = client.ad_creatives.list_ad_catalogs(
-                account_id=account_id, ad_account_id=ad_account_id
-            )
-            return _format_response(response)
-        except Exception as e:
-            return f"Error: {e}"
-
-    @mcp.tool(
-        annotations=ToolAnnotations(
-            title="List a catalog's product sets",
-            readOnlyHint=True,
-            destructiveHint=False,
-            openWorldHint=False,
-        )
-    )
-    def ad_creatives_list_ad_catalog_product_sets(
-        catalog_id: str, account_id: str
-    ) -> str:
-        """List a catalog's product sets
-
-        Args:
-            catalog_id: Meta product catalog ID (from GET /v1/ads/catalogs) (required)
-            account_id: A facebook, instagram, or metaads account ID (required)"""
-        client = _get_client()
-        try:
-            response = client.ad_creatives.list_ad_catalog_product_sets(
-                catalog_id=catalog_id, account_id=account_id
-            )
-            return _format_response(response)
-        except Exception as e:
-            return f"Error: {e}"
-
-    @mcp.tool(
-        annotations=ToolAnnotations(
             title="List partnership ad content",
             readOnlyHint=True,
             destructiveHint=False,
@@ -18017,6 +17969,494 @@ def register_generated_tools(mcp, _get_client):
         except Exception as e:
             return f"Error: {e}"
 
+    # PRODUCT_CATALOGS
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="List Meta product catalogs",
+            readOnlyHint=True,
+            destructiveHint=False,
+            openWorldHint=False,
+        )
+    )
+    def product_catalogs_list_ad_catalogs(
+        account_id: str,
+        catalog_account_id: str | None = None,
+        ad_account_id: str | None = None,
+        business_id: str | None = None,
+    ) -> str:
+        """List Meta product catalogs
+
+        Args:
+            account_id: A facebook, instagram, metaads or whatsapp account ID (required)
+            catalog_account_id: A facebook, instagram or metaads account whose Meta login carries catalog_management; its token is used instead of the account's own (needed for WhatsApp connections, whose token cannot manage catalogs).
+            ad_account_id: Meta ad account ID (act_...) whose owner business to list
+            business_id: Meta business portfolio ID to list"""
+        client = _get_client()
+        try:
+            response = client.product_catalogs.list_ad_catalogs(
+                account_id=account_id,
+                catalog_account_id=catalog_account_id,
+                ad_account_id=ad_account_id,
+                business_id=business_id,
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Create a Meta product catalog",
+            readOnlyHint=False,
+            destructiveHint=True,
+            openWorldHint=True,
+        )
+    )
+    def product_catalogs_create_ad_catalog(
+        account_id: str,
+        name: str,
+        catalog_account_id: str | None = None,
+        ad_account_id: str | None = None,
+        business_id: str | None = None,
+        vertical: str = "commerce",
+    ) -> str:
+        """Create a Meta product catalog
+
+        Args:
+            account_id: A facebook, instagram, metaads or whatsapp account ID (required)
+            catalog_account_id: Account whose Meta login token performs the call (see GET)
+            ad_account_id: Ad account whose owner business creates the catalog
+            business_id: Business portfolio that owns the catalog
+            name: (required)
+            vertical"""
+        client = _get_client()
+        try:
+            response = client.product_catalogs.create_ad_catalog(
+                account_id=account_id,
+                catalog_account_id=catalog_account_id,
+                ad_account_id=ad_account_id,
+                business_id=business_id,
+                name=name,
+                vertical=vertical,
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Get a product catalog",
+            readOnlyHint=True,
+            destructiveHint=False,
+            openWorldHint=False,
+        )
+    )
+    def product_catalogs_get_ad_catalog() -> str:
+        """Get a product catalog"""
+        client = _get_client()
+        try:
+            response = client.product_catalogs.get_ad_catalog()
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Delete a product catalog",
+            readOnlyHint=False,
+            destructiveHint=True,
+            openWorldHint=True,
+        )
+    )
+    def product_catalogs_delete_ad_catalog() -> str:
+        """Delete a product catalog"""
+        client = _get_client()
+        try:
+            response = client.product_catalogs.delete_ad_catalog()
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="List a catalog's products",
+            readOnlyHint=True,
+            destructiveHint=False,
+            openWorldHint=False,
+        )
+    )
+    def product_catalogs_list_ad_catalog_products(
+        limit: int = 25, after: str | None = None, retailer_id: str | None = None
+    ) -> str:
+        """List a catalog's products
+
+        Args:
+            limit
+            after: Cursor from the previous page's `nextCursor`
+            retailer_id: Only the product with this retailer id (your SKU)"""
+        client = _get_client()
+        try:
+            response = client.product_catalogs.list_ad_catalog_products(
+                limit=limit, after=after, retailer_id=retailer_id
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Add a product to a catalog",
+            readOnlyHint=False,
+            destructiveHint=True,
+            openWorldHint=True,
+        )
+    )
+    def product_catalogs_create_ad_catalog_product(
+        account_id: str,
+        product: dict[str, Any] | None,
+        catalog_account_id: str | None = None,
+    ) -> str:
+        """Add a product to a catalog
+
+        Args:
+            account_id: (required)
+            catalog_account_id
+            product: (required)"""
+        client = _get_client()
+        try:
+            response = client.product_catalogs.create_ad_catalog_product(
+                account_id=account_id,
+                catalog_account_id=catalog_account_id,
+                product=product,
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Create, update or delete products in bulk",
+            readOnlyHint=False,
+            destructiveHint=True,
+            openWorldHint=True,
+        )
+    )
+    def product_catalogs_batch_ad_catalog_products(
+        account_id: str,
+        requests: list[dict[str, Any]] | None,
+        catalog_account_id: str | None = None,
+    ) -> str:
+        """Create, update or delete products in bulk
+
+        Args:
+            account_id: (required)
+            catalog_account_id
+            requests: (required)"""
+        client = _get_client()
+        try:
+            response = client.product_catalogs.batch_ad_catalog_products(
+                account_id=account_id,
+                catalog_account_id=catalog_account_id,
+                requests=requests,
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Get a bulk request's status",
+            readOnlyHint=True,
+            destructiveHint=False,
+            openWorldHint=False,
+        )
+    )
+    def product_catalogs_get_ad_catalog_batch(handle: str) -> str:
+        """Get a bulk request's status
+
+        Args:
+            handle: Handle returned by the batch call (required)"""
+        client = _get_client()
+        try:
+            response = client.product_catalogs.get_ad_catalog_batch(handle=handle)
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Get a product",
+            readOnlyHint=True,
+            destructiveHint=False,
+            openWorldHint=False,
+        )
+    )
+    def product_catalogs_get_ad_catalog_product() -> str:
+        """Get a product"""
+        client = _get_client()
+        try:
+            response = client.product_catalogs.get_ad_catalog_product()
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Update a product",
+            readOnlyHint=False,
+            destructiveHint=True,
+            openWorldHint=True,
+        )
+    )
+    def product_catalogs_update_ad_catalog_product(
+        account_id: str,
+        product: dict[str, Any] | None,
+        catalog_account_id: str | None = None,
+    ) -> str:
+        """Update a product
+
+        Args:
+            account_id: (required)
+            catalog_account_id
+            product: (required)"""
+        client = _get_client()
+        try:
+            response = client.product_catalogs.update_ad_catalog_product(
+                account_id=account_id,
+                catalog_account_id=catalog_account_id,
+                product=product,
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Delete a product",
+            readOnlyHint=False,
+            destructiveHint=True,
+            openWorldHint=True,
+        )
+    )
+    def product_catalogs_delete_ad_catalog_product() -> str:
+        """Delete a product"""
+        client = _get_client()
+        try:
+            response = client.product_catalogs.delete_ad_catalog_product()
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="List a catalog's product feeds",
+            readOnlyHint=True,
+            destructiveHint=False,
+            openWorldHint=False,
+        )
+    )
+    def product_catalogs_list_ad_catalog_feeds() -> str:
+        """List a catalog's product feeds"""
+        client = _get_client()
+        try:
+            response = client.product_catalogs.list_ad_catalog_feeds()
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Create a product feed",
+            readOnlyHint=False,
+            destructiveHint=True,
+            openWorldHint=True,
+        )
+    )
+    def product_catalogs_create_ad_catalog_feed(
+        account_id: str,
+        name: str,
+        catalog_account_id: str | None = None,
+        schedule: dict[str, Any] | None = None,
+    ) -> str:
+        """Create a product feed
+
+        Args:
+            account_id: (required)
+            catalog_account_id
+            name: (required)
+            schedule"""
+        client = _get_client()
+        try:
+            response = client.product_catalogs.create_ad_catalog_feed(
+                account_id=account_id,
+                catalog_account_id=catalog_account_id,
+                name=name,
+                schedule=schedule,
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="List a feed's uploads",
+            readOnlyHint=True,
+            destructiveHint=False,
+            openWorldHint=False,
+        )
+    )
+    def product_catalogs_list_ad_catalog_feed_uploads(feed_id: str) -> str:
+        """List a feed's uploads
+
+        Args:
+            feed_id: (required)"""
+        client = _get_client()
+        try:
+            response = client.product_catalogs.list_ad_catalog_feed_uploads(
+                feed_id=feed_id
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Fetch a feed file now",
+            readOnlyHint=False,
+            destructiveHint=True,
+            openWorldHint=True,
+        )
+    )
+    def product_catalogs_create_ad_catalog_feed_upload(
+        feed_id: str, account_id: str, url: str, catalog_account_id: str | None = None
+    ) -> str:
+        """Fetch a feed file now
+
+        Args:
+            feed_id: (required)
+            account_id: (required)
+            catalog_account_id
+            url: (required)"""
+        client = _get_client()
+        try:
+            response = client.product_catalogs.create_ad_catalog_feed_upload(
+                feed_id=feed_id,
+                account_id=account_id,
+                catalog_account_id=catalog_account_id,
+                url=url,
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="List a catalog's product sets",
+            readOnlyHint=True,
+            destructiveHint=False,
+            openWorldHint=False,
+        )
+    )
+    def product_catalogs_list_ad_catalog_product_sets() -> str:
+        """List a catalog's product sets"""
+        client = _get_client()
+        try:
+            response = client.product_catalogs.list_ad_catalog_product_sets()
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Create a product set",
+            readOnlyHint=False,
+            destructiveHint=True,
+            openWorldHint=True,
+        )
+    )
+    def product_catalogs_create_ad_catalog_product_set(
+        account_id: str,
+        name: str,
+        filter: dict[str, Any] | None,
+        catalog_account_id: str | None = None,
+    ) -> str:
+        """Create a product set
+
+        Args:
+            account_id: (required)
+            catalog_account_id
+            name: (required)
+            filter: Meta product set filter (required)"""
+        client = _get_client()
+        try:
+            response = client.product_catalogs.create_ad_catalog_product_set(
+                account_id=account_id,
+                catalog_account_id=catalog_account_id,
+                name=name,
+                filter=filter,
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Update a product set",
+            readOnlyHint=False,
+            destructiveHint=True,
+            openWorldHint=True,
+        )
+    )
+    def product_catalogs_update_ad_catalog_product_set(
+        product_set_id: str,
+        account_id: str,
+        catalog_account_id: str | None = None,
+        name: str | None = None,
+        filter: dict[str, Any] | None = None,
+    ) -> str:
+        """Update a product set
+
+        Args:
+            product_set_id: (required)
+            account_id: (required)
+            catalog_account_id
+            name
+            filter"""
+        client = _get_client()
+        try:
+            response = client.product_catalogs.update_ad_catalog_product_set(
+                product_set_id=product_set_id,
+                account_id=account_id,
+                catalog_account_id=catalog_account_id,
+                name=name,
+                filter=filter,
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Delete a product set",
+            readOnlyHint=False,
+            destructiveHint=True,
+            openWorldHint=True,
+        )
+    )
+    def product_catalogs_delete_ad_catalog_product_set(product_set_id: str) -> str:
+        """Delete a product set
+
+        Args:
+            product_set_id: (required)"""
+        client = _get_client()
+        try:
+            response = client.product_catalogs.delete_ad_catalog_product_set(
+                product_set_id=product_set_id
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
     # PRODUCTS
 
     @mcp.tool(
@@ -21570,6 +22010,132 @@ def register_generated_tools(mcp, _get_client):
         try:
             response = client.whatsapp.delete_whats_app_template_by_id(
                 template_id=template_id, account_id=account_id
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="List the catalogs linked to a WhatsApp number",
+            readOnlyHint=True,
+            destructiveHint=False,
+            openWorldHint=False,
+        )
+    )
+    def whatsapp_list_whats_app_catalogs(account_id: str) -> str:
+        """List the catalogs linked to a WhatsApp number
+
+        Args:
+            account_id: WhatsApp account ID (required)"""
+        client = _get_client()
+        try:
+            response = client.whatsapp.list_whats_app_catalogs(account_id=account_id)
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Link a catalog to a WhatsApp number",
+            readOnlyHint=False,
+            destructiveHint=True,
+            openWorldHint=True,
+        )
+    )
+    def whatsapp_link_whats_app_catalog(
+        account_id: str, catalog_id: str, catalog_account_id: str | None = None
+    ) -> str:
+        """Link a catalog to a WhatsApp number
+
+        Args:
+            account_id: WhatsApp account ID (required)
+            catalog_account_id: Account whose Meta login token performs the call
+            catalog_id: Meta catalog ID (required)"""
+        client = _get_client()
+        try:
+            response = client.whatsapp.link_whats_app_catalog(
+                account_id=account_id,
+                catalog_account_id=catalog_account_id,
+                catalog_id=catalog_id,
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Unlink a catalog from a WhatsApp number",
+            readOnlyHint=False,
+            destructiveHint=True,
+            openWorldHint=True,
+        )
+    )
+    def whatsapp_unlink_whats_app_catalog(account_id: str, catalog_id: str) -> str:
+        """Unlink a catalog from a WhatsApp number
+
+        Args:
+            account_id: WhatsApp account ID (required)
+            catalog_id: Meta catalog ID (required)"""
+        client = _get_client()
+        try:
+            response = client.whatsapp.unlink_whats_app_catalog(
+                account_id=account_id, catalog_id=catalog_id
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Get a number's commerce settings",
+            readOnlyHint=True,
+            destructiveHint=False,
+            openWorldHint=False,
+        )
+    )
+    def whatsapp_get_whats_app_commerce_settings(account_id: str) -> str:
+        """Get a number's commerce settings
+
+        Args:
+            account_id: WhatsApp account ID (required)"""
+        client = _get_client()
+        try:
+            response = client.whatsapp.get_whats_app_commerce_settings(
+                account_id=account_id
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Update a number's commerce settings",
+            readOnlyHint=False,
+            destructiveHint=True,
+            openWorldHint=True,
+        )
+    )
+    def whatsapp_update_whats_app_commerce_settings(
+        account_id: str,
+        catalog_account_id: str | None = None,
+        is_cart_enabled: bool | None = None,
+        is_catalog_visible: bool | None = None,
+    ) -> str:
+        """Update a number's commerce settings
+
+        Args:
+            account_id: WhatsApp account ID (required)
+            catalog_account_id
+            is_cart_enabled
+            is_catalog_visible"""
+        client = _get_client()
+        try:
+            response = client.whatsapp.update_whats_app_commerce_settings(
+                account_id=account_id,
+                catalog_account_id=catalog_account_id,
+                is_cart_enabled=is_cart_enabled,
+                is_catalog_visible=is_catalog_visible,
             )
             return _format_response(response)
         except Exception as e:

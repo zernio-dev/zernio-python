@@ -528,8 +528,6 @@ Both `from zernio import ...` and `from late import ...` work identically. The `
 ### Ad Creatives
 | Method | Description |
 |--------|-------------|
-| `ad_creatives.list_ad_catalog_product_sets()` | List a catalog's product sets |
-| `ad_creatives.list_ad_catalogs()` | List Meta product catalogs |
 | `ad_creatives.list_ad_creatives()` | Creative library |
 | `ad_creatives.list_ad_images()` | Ad image library |
 | `ad_creatives.list_ad_videos()` | Ad video library |
@@ -915,6 +913,29 @@ Both `from zernio import ...` and `from late import ...` work identically. The `
 | `phone_numbers.validate_phone_number_kyc_address()` | Pre-validate KYC address |
 | `phone_numbers.view_phone_number_kyc_document()` | View a KYC document on file |
 
+### Product Catalogs
+| Method | Description |
+|--------|-------------|
+| `product_catalogs.list_ad_catalog_feed_uploads()` | List a feed's uploads |
+| `product_catalogs.list_ad_catalog_feeds()` | List a catalog's product feeds |
+| `product_catalogs.list_ad_catalog_product_sets()` | List a catalog's product sets |
+| `product_catalogs.list_ad_catalog_products()` | List a catalog's products |
+| `product_catalogs.list_ad_catalogs()` | List Meta product catalogs |
+| `product_catalogs.create_ad_catalog()` | Create a Meta product catalog |
+| `product_catalogs.create_ad_catalog_feed()` | Create a product feed |
+| `product_catalogs.create_ad_catalog_feed_upload()` | Fetch a feed file now |
+| `product_catalogs.create_ad_catalog_product()` | Add a product to a catalog |
+| `product_catalogs.create_ad_catalog_product_set()` | Create a product set |
+| `product_catalogs.get_ad_catalog()` | Get a product catalog |
+| `product_catalogs.get_ad_catalog_batch()` | Get a bulk request's status |
+| `product_catalogs.get_ad_catalog_product()` | Get a product |
+| `product_catalogs.update_ad_catalog_product()` | Update a product |
+| `product_catalogs.update_ad_catalog_product_set()` | Update a product set |
+| `product_catalogs.delete_ad_catalog()` | Delete a product catalog |
+| `product_catalogs.delete_ad_catalog_product()` | Delete a product |
+| `product_catalogs.delete_ad_catalog_product_set()` | Delete a product set |
+| `product_catalogs.batch_ad_catalog_products()` | Create, update or delete products in bulk |
+
 ### Products
 | Method | Description |
 |--------|-------------|
@@ -1049,6 +1070,7 @@ Both `from zernio import ...` and `from late import ...` work identically. The `
 | Method | Description |
 |--------|-------------|
 | `whatsapp.list_whats_app_account_events()` | List account notifications |
+| `whatsapp.list_whats_app_catalogs()` | List the catalogs linked to a WhatsApp number |
 | `whatsapp.list_whats_app_conversions()` | List conversion events |
 | `whatsapp.list_whats_app_group_chats()` | List active groups |
 | `whatsapp.list_whats_app_group_join_requests()` | List join requests |
@@ -1059,6 +1081,7 @@ Both `from zernio import ...` and `from late import ...` work identically. The `
 | `whatsapp.get_whats_app_block_status()` | Check if a user is blocked |
 | `whatsapp.get_whats_app_blocked_users()` | List blocked users |
 | `whatsapp.get_whats_app_business_profile()` | Get business profile |
+| `whatsapp.get_whats_app_commerce_settings()` | Get a number's commerce settings |
 | `whatsapp.get_whats_app_dataset()` | Get CTWA conversions dataset |
 | `whatsapp.get_whats_app_display_name()` | Get display name status |
 | `whatsapp.get_whats_app_group_chat()` | Get group info |
@@ -1069,6 +1092,7 @@ Both `from zernio import ...` and `from late import ...` work identically. The `
 | `whatsapp.get_whatsapp_business_username()` | Get business username |
 | `whatsapp.get_whatsapp_business_username_suggestions()` | Get username suggestions |
 | `whatsapp.update_whats_app_business_profile()` | Update business profile |
+| `whatsapp.update_whats_app_commerce_settings()` | Update a number's commerce settings |
 | `whatsapp.update_whats_app_display_name()` | Request display name change |
 | `whatsapp.update_whats_app_group_chat()` | Update group settings |
 | `whatsapp.update_whats_app_template()` | Update template |
@@ -1080,6 +1104,7 @@ Both `from zernio import ...` and `from late import ...` work identically. The `
 | `whatsapp.add_whats_app_group_participants()` | Add participants |
 | `whatsapp.approve_whats_app_group_join_requests()` | Approve join requests |
 | `whatsapp.block_whats_app_users()` | Block users |
+| `whatsapp.link_whats_app_catalog()` | Link a catalog to a WhatsApp number |
 | `whatsapp.register_whats_app_number()` | Register a connected WhatsApp number on the Cloud API |
 | `whatsapp.reject_whats_app_group_join_requests()` | Reject join requests |
 | `whatsapp.remove_whats_app_group_participants()` | Remove participants |
@@ -1087,6 +1112,7 @@ Both `from zernio import ...` and `from late import ...` work identically. The `
 | `whatsapp.send_whats_app_conversion()` | Send WhatsApp conversion event |
 | `whatsapp.set_whatsapp_business_username()` | Set business username |
 | `whatsapp.unblock_whats_app_users()` | Unblock users |
+| `whatsapp.unlink_whats_app_catalog()` | Unlink a catalog from a WhatsApp number |
 | `whatsapp.upload_whats_app_profile_photo()` | Upload profile picture |
 | `whatsapp.verify_whats_app_number()` | Verify the Meta re-verification code for a BYO WhatsApp number |
 

@@ -246,6 +246,65 @@ class WhatsappResource:
             f"/v1/whatsapp/templates/id/{template_id}", params=params
         )
 
+    def list_whats_app_catalogs(
+        self, account_id: str, *, catalog_account_id: str | None = None
+    ) -> dict[str, Any]:
+        """List the catalogs linked to a WhatsApp number"""
+        params = self._build_params(
+            account_id=account_id,
+            catalog_account_id=catalog_account_id,
+        )
+        return self._client._get("/v1/whatsapp/catalogs", params=params)
+
+    def link_whats_app_catalog(
+        self, account_id: str, catalog_id: str, *, catalog_account_id: str | None = None
+    ) -> dict[str, Any]:
+        """Link a catalog to a WhatsApp number"""
+        payload = self._build_payload(
+            account_id=account_id,
+            catalog_account_id=catalog_account_id,
+            catalog_id=catalog_id,
+        )
+        return self._client._post("/v1/whatsapp/catalogs", data=payload)
+
+    def unlink_whats_app_catalog(
+        self, account_id: str, catalog_id: str, *, catalog_account_id: str | None = None
+    ) -> dict[str, Any]:
+        """Unlink a catalog from a WhatsApp number"""
+        params = self._build_params(
+            account_id=account_id,
+            catalog_account_id=catalog_account_id,
+            catalog_id=catalog_id,
+        )
+        return self._client._delete("/v1/whatsapp/catalogs", params=params)
+
+    def get_whats_app_commerce_settings(
+        self, account_id: str, *, catalog_account_id: str | None = None
+    ) -> dict[str, Any]:
+        """Get a number's commerce settings"""
+        params = self._build_params(
+            account_id=account_id,
+            catalog_account_id=catalog_account_id,
+        )
+        return self._client._get("/v1/whatsapp/commerce-settings", params=params)
+
+    def update_whats_app_commerce_settings(
+        self,
+        account_id: str,
+        *,
+        catalog_account_id: str | None = None,
+        is_cart_enabled: bool | None = None,
+        is_catalog_visible: bool | None = None,
+    ) -> dict[str, Any]:
+        """Update a number's commerce settings"""
+        payload = self._build_payload(
+            account_id=account_id,
+            catalog_account_id=catalog_account_id,
+            is_cart_enabled=is_cart_enabled,
+            is_catalog_visible=is_catalog_visible,
+        )
+        return self._client._put("/v1/whatsapp/commerce-settings", data=payload)
+
     def get_whats_app_business_profile(self, account_id: str) -> dict[str, Any]:
         """Get business profile"""
         params = self._build_params(
@@ -768,6 +827,65 @@ class WhatsappResource:
         return await self._client._adelete(
             f"/v1/whatsapp/templates/id/{template_id}", params=params
         )
+
+    async def alist_whats_app_catalogs(
+        self, account_id: str, *, catalog_account_id: str | None = None
+    ) -> dict[str, Any]:
+        """List the catalogs linked to a WhatsApp number (async)"""
+        params = self._build_params(
+            account_id=account_id,
+            catalog_account_id=catalog_account_id,
+        )
+        return await self._client._aget("/v1/whatsapp/catalogs", params=params)
+
+    async def alink_whats_app_catalog(
+        self, account_id: str, catalog_id: str, *, catalog_account_id: str | None = None
+    ) -> dict[str, Any]:
+        """Link a catalog to a WhatsApp number (async)"""
+        payload = self._build_payload(
+            account_id=account_id,
+            catalog_account_id=catalog_account_id,
+            catalog_id=catalog_id,
+        )
+        return await self._client._apost("/v1/whatsapp/catalogs", data=payload)
+
+    async def aunlink_whats_app_catalog(
+        self, account_id: str, catalog_id: str, *, catalog_account_id: str | None = None
+    ) -> dict[str, Any]:
+        """Unlink a catalog from a WhatsApp number (async)"""
+        params = self._build_params(
+            account_id=account_id,
+            catalog_account_id=catalog_account_id,
+            catalog_id=catalog_id,
+        )
+        return await self._client._adelete("/v1/whatsapp/catalogs", params=params)
+
+    async def aget_whats_app_commerce_settings(
+        self, account_id: str, *, catalog_account_id: str | None = None
+    ) -> dict[str, Any]:
+        """Get a number's commerce settings (async)"""
+        params = self._build_params(
+            account_id=account_id,
+            catalog_account_id=catalog_account_id,
+        )
+        return await self._client._aget("/v1/whatsapp/commerce-settings", params=params)
+
+    async def aupdate_whats_app_commerce_settings(
+        self,
+        account_id: str,
+        *,
+        catalog_account_id: str | None = None,
+        is_cart_enabled: bool | None = None,
+        is_catalog_visible: bool | None = None,
+    ) -> dict[str, Any]:
+        """Update a number's commerce settings (async)"""
+        payload = self._build_payload(
+            account_id=account_id,
+            catalog_account_id=catalog_account_id,
+            is_cart_enabled=is_cart_enabled,
+            is_catalog_visible=is_catalog_visible,
+        )
+        return await self._client._aput("/v1/whatsapp/commerce-settings", data=payload)
 
     async def aget_whats_app_business_profile(self, account_id: str) -> dict[str, Any]:
         """Get business profile (async)"""

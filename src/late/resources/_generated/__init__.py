@@ -39,6 +39,7 @@ from .messages import MessagesResource
 from .messaging_ads import MessagingAdsResource
 from .phone_numbers import PhoneNumbersResource
 from .posts import PostsResource
+from .product_catalogs import ProductCatalogsResource
 from .products import ProductsResource
 from .profiles import ProfilesResource
 from .queue import QueueResource
@@ -103,6 +104,7 @@ __all__ = [
     "MessagingAdsResource",
     "PhoneNumbersResource",
     "PostsResource",
+    "ProductCatalogsResource",
     "ProductsResource",
     "ProfilesResource",
     "QueueResource",

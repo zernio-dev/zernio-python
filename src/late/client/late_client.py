@@ -47,6 +47,7 @@ from ..resources import (
     MessagingAdsResource,
     PhoneNumbersResource,
     PostsResource,
+    ProductCatalogsResource,
     ProductsResource,
     ProfilesResource,
     QueueResource,
@@ -190,6 +191,7 @@ class Zernio(BaseClient):
         self.messaging_ads = MessagingAdsResource(self)
         self.phone_numbers = PhoneNumbersResource(self)
         self.posts = PostsResource(self)
+        self.product_catalogs = ProductCatalogsResource(self)
         self.products = ProductsResource(self)
         self.profiles = ProfilesResource(self)
         self.queue = QueueResource(self)
