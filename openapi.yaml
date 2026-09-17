@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.19.0"
+  version: "1.20.0"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -46156,14 +46156,20 @@ paths:
       x-resource-group: "ads"
       operationId: duplicateAdSet
       tags: ["Ad Campaigns"]
-      x-platforms: ["meta"]
+      x-platforms: ["meta", "tiktok"]
       summary: Duplicate an ad set
       description: |-
-        Duplicates an ad set, including its ads and creatives by default (`deepCopy: true`),
-        via Meta's native `POST /{adset-id}/copies`. The copy is created paused so callers can
-        review before launching. `campaignId` retargets the copy into another campaign; omitted
-        = the source's own campaign. The new hierarchy materializes asynchronously, and sync
-        discovery is triggered automatically (`syncAfter: false` to skip).
+        Duplicates an ad set. The copy is created paused so callers can review before launching.
+        `campaignId` retargets the copy into another campaign; omitted = the source's own campaign.
+
+        Meta: ads and creatives are included by default (`deepCopy: true`) via Meta's native
+        `POST /{adset-id}/copies`; the new hierarchy materializes asynchronously and sync discovery
+        is triggered automatically (`syncAfter: false` to skip).
+
+        TikTok: the ad group is read and recreated under the campaign with its targeting, bidding,
+        budget and schedule (start reset to now); `deepCopy: true` recreates its ads too (default
+        false). `startTime`, `endTime` and `renameStrategy` are ignored and `statusOption` must be
+        PAUSED or absent. The copy appears on the next discovery sync.
       security:
         - bearerAuth: []
       parameters:
