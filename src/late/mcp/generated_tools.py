@@ -4797,6 +4797,7 @@ def register_generated_tools(mcp, _get_client):
         spark_auth_code: str | None = None,
         smart_plus: bool | None = None,
         spark_posts: list[dict[str, Any]] | None = None,
+        promo_codes: list[dict[str, Any]] | None = None,
         promoted_object: dict[str, Any] | None = None,
         dsa_beneficiary: str | None = None,
         dsa_payor: str | None = None,
@@ -4908,6 +4909,7 @@ def register_generated_tools(mcp, _get_client):
         advertiser. Maps to `auth_code` on the creative entry of /v2/ad/create/.
                 smart_plus: TikTok only. Run the Spark post in a Smart+ campaign (goal `conversions` = Smart+ Web Conversions, `lead_generation` = Smart+ Lead Generation) instead of a regular campaign. Requires `sparkAuthCode` (the Smart+ ad runs the post under the identity that redeeming its Spark code creates; a Business Center-owned post is not accepted there) and `promotedObject.pixelId` + `customEventType`. `app_promotion` is not available on a Spark post. Rejected with a 400 on other platforms. A Smart+ Spark ad uses a dynamic CTA portfolio, sent as ad_configuration.call_to_action_id (TikTok does not accept a named call to action there): Zernio creates one per ad account and reuses it, and `callToAction` is rejected with a 400 on this path.
                 spark_posts: TikTok Smart+ only (requires `smartPlus: true`). Several Spark posts as creatives of ONE Smart+ ad, each with its own post code (TikTok allows 1-50 per ad; posts from different creators mix). Replaces `platformPostId` + `sparkAuthCode`. Without `adSetId` it creates campaign + ad group + one ad carrying all of them; with `adSetId` it creates one new ad with all of them in that ad group. Rejected with a 400 on other platforms.
+                promo_codes: TikTok Smart+ Web Conversions only (requires `smartPlus: true`, goal `conversions`). Promo codes or offers TikTok highlights on the ad (Ads Manager's "Add promo code or offer"). A promo code needs shoppers to enter it at checkout; an entry without `promoCode` is an offer applied automatically. Rejected with a 400 on other platforms and on Lead Generation campaigns.
                 promoted_object: TikTok-only on this endpoint. The pixel a Website Conversion ad group
         optimizes toward, so a Spark Ad built from an existing organic post can
         optimize for a conversion instead of only engagement or traffic.
@@ -4974,6 +4976,7 @@ def register_generated_tools(mcp, _get_client):
                 spark_auth_code=spark_auth_code,
                 smart_plus=smart_plus,
                 spark_posts=spark_posts,
+                promo_codes=promo_codes,
                 promoted_object=promoted_object,
                 dsa_beneficiary=dsa_beneficiary,
                 dsa_payor=dsa_payor,

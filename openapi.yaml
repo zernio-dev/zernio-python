@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.14.0"
+  version: "1.15.0"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -52107,6 +52107,22 @@ paths:
                     properties:
                       platformPostId: { type: string, description: "TikTok post (item) id." }
                       sparkAuthCode: { type: string, description: "That post's Spark code." }
+                promoCodes:
+                  type: array
+                  minItems: 1
+                  maxItems: 10
+                  description: "TikTok Smart+ Web Conversions only (requires `smartPlus: true`, goal `conversions`). Promo codes or offers TikTok highlights on the ad (Ads Manager's \"Add promo code or offer\"). A promo code needs shoppers to enter it at checkout; an entry without `promoCode` is an offer applied automatically. Rejected with a 400 on other platforms and on Lead Generation campaigns."
+                  items:
+                    type: object
+                    required: [discountType, discountValue]
+                    properties:
+                      discountType: { type: string, enum: [PERCENTAGE, CASH] }
+                      discountValue: { type: number, description: "PERCENTAGE: integer 1-100. CASH: amount greater than 0 in discountCurrency." }
+                      discountCurrency: { type: string, description: "ISO 4217; required for CASH." }
+                      promoCode: { type: string, maxLength: 30, description: "Code entered at checkout; omit for an automatic offer." }
+                      minimumPurchaseType: { type: string, enum: [QUANTITY, SUBTOTAL] }
+                      minimumPurchaseValue: { type: number, description: "Required with minimumPurchaseType; QUANTITY is an integer >= 0, SUBTOTAL an amount > 0." }
+                      minimumPurchaseCurrency: { type: string, description: "ISO 4217; required for SUBTOTAL." }
                 promotedObject:
                   type: object
                   description: |
