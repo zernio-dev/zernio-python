@@ -41,6 +41,9 @@ _DAY_NAMES = [
     "Sunday",
 ]
 _VIDEO_EXT = (".mp4", ".mov", ".avi", ".webm", ".m4v")
+# Everything this surface can do fits these four; ChatGPT asks the user to
+# grant every scope the discovery document advertises.
+CHATGPT_SCOPES = ["posts:read", "posts:write", "accounts:read", "analytics:read"]
 
 PostStatus = Literal["draft", "scheduled", "published", "failed"]
 
@@ -456,7 +459,7 @@ chatgpt_mcp = FastMCP(
     instructions=INSTRUCTIONS,
     version="1.0.0",
     website_url="https://zernio.com",
-    auth=build_auth_provider(),
+    auth=build_auth_provider(scopes=CHATGPT_SCOPES),
 )
 
 

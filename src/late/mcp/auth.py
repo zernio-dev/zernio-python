@@ -240,7 +240,7 @@ class ZernioTokenVerifier(TokenVerifier):
         return AccessToken(token=token, client_id="zernio", scopes=list(OAUTH_SCOPES))
 
 
-def build_auth_provider() -> RemoteAuthProvider:
+def build_auth_provider(scopes: list[str] | None = None) -> RemoteAuthProvider:
     """Build the FastMCP resource-server auth provider.
 
     RemoteAuthProvider makes this server an OAuth 2.0 resource server: it
@@ -248,12 +248,16 @@ def build_auth_provider() -> RemoteAuthProvider:
     WWW-Authenticate challenge pointing clients back at that document, and
     delegates token validation to ZernioTokenVerifier. The authorization server
     itself (token / authorize / register) lives at zernio.com.
+
+    `scopes` narrows the advertised scopes_supported: clients such as ChatGPT
+    request every advertised scope, so a surface that only publishes posts
+    must not advertise ads or messaging scopes on its consent screen.
     """
     return RemoteAuthProvider(
         token_verifier=ZernioTokenVerifier(),
         authorization_servers=[OAUTH_AUTHORIZATION_SERVER],
         base_url=MCP_PUBLIC_URL,
-        scopes_supported=list(OAUTH_SCOPES),
+        scopes_supported=list(scopes or OAUTH_SCOPES),
         resource_name=SERVICE_NAME,
         resource_documentation=DOCS_URL,
     )

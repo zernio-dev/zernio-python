@@ -35,7 +35,7 @@ ENDPOINT_CHATGPT = "/chatgpt"
 # OpenAI plugin domain verification: the portal issues one token per plugin
 # and expects it as the bare body of this path on the MCP host.
 ENDPOINT_OPENAI_APPS_CHALLENGE = "/.well-known/openai-apps-challenge"
-OPENAI_APPS_CHALLENGE_TOKEN = os.getenv("OPENAI_APPS_CHALLENGE_TOKEN", "")
+OPENAI_APPS_CHALLENGE_TOKEN = os.getenv("OPENAI_APPS_CHALLENGE_TOKEN", "j_VHjxLGc6YGRVi1l8-L48C1espKIwoA9jCbPopWUH4")
 
 # --- OAuth 2.0 protected-resource discovery (RFC 9728 / MCP authorization spec) ---
 # This MCP server is a *resource server*: it does not mint tokens, it accepts
