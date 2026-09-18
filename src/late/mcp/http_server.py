@@ -16,26 +16,31 @@ the Streamable HTTP endpoint.
 
 import argparse
 import sys
+from contextlib import asynccontextmanager
 
 import uvicorn
 from starlette.applications import Starlette
 from starlette.requests import Request
-from starlette.responses import JSONResponse, RedirectResponse
+from starlette.responses import JSONResponse, PlainTextResponse, RedirectResponse
 from starlette.types import ASGIApp, Receive, Scope, Send
 
 from late.mcp.auth import is_allowed_origin
+from late.mcp.chatgpt_server import chatgpt_mcp
 from late.mcp.config import ServerConfig, validate_environment
 from late.mcp.constants import (
     DOCS_URL,
+    ENDPOINT_CHATGPT,
     ENDPOINT_HEALTH,
     ENDPOINT_MCP,
     ENDPOINT_MESSAGES,
     ENDPOINT_OAUTH_PROTECTED_RESOURCE,
+    ENDPOINT_OPENAI_APPS_CHALLENGE,
     ENDPOINT_ROOT,
     ENDPOINT_SSE,
     MCP_PUBLIC_URL,
     OAUTH_AUTHORIZATION_SERVER,
     OAUTH_SCOPES,
+    OPENAI_APPS_CHALLENGE_TOKEN,
     SERVICE_NAME,
     SERVICE_VERSION,
     TRANSPORT_TYPE,
@@ -164,6 +169,18 @@ async def handle_oauth_protected_resource_legacy(_request: Request) -> RedirectR
     )
 
 
+@mcp.custom_route(ENDPOINT_OPENAI_APPS_CHALLENGE, methods=["GET"])
+async def handle_openai_apps_challenge(_request: Request) -> PlainTextResponse:
+    """OpenAI plugin domain-verification token (public, no auth).
+
+    The portal fetches this path and compares the body byte-for-byte with the
+    token it issued, so the response is the bare token: no JSON, no newline.
+    """
+    if not OPENAI_APPS_CHALLENGE_TOKEN:
+        return PlainTextResponse("", status_code=404)
+    return PlainTextResponse(OPENAI_APPS_CHALLENGE_TOKEN)
+
+
 class RootAliasMiddleware:
     """Serve the MCP transport on the bare origin as well as /mcp.
 
@@ -196,6 +213,7 @@ _ORIGIN_GUARDED_PATHS = (
     ENDPOINT_MCP.rstrip("/"),
     ENDPOINT_SSE.rstrip("/"),
     ENDPOINT_MESSAGES.rstrip("/"),
+    ENDPOINT_CHATGPT.rstrip("/"),
 )
 
 
@@ -226,6 +244,41 @@ class OriginGuardMiddleware:
                 await response(scope, receive, send)
                 return
         await self.app(scope, receive, send)
+
+
+def _graft_chatgpt_endpoint(app: Starlette) -> None:
+    """Serve the ChatGPT plugin server at /chatgpt inside the main app.
+
+    A second FastMCP instance gets its own Streamable HTTP route and its own
+    path-inserted discovery document (/.well-known/oauth-protected-resource/
+    chatgpt, whose `resource` is the /chatgpt URL ChatGPT connects to). Unlike
+    the SSE graft, a Streamable HTTP session manager only works inside its
+    lifespan, so the main app's lifespan is wrapped to run both.
+    """
+    chatgpt_app = chatgpt_mcp.http_app(
+        path=ENDPOINT_CHATGPT,
+        transport="http",
+        stateless_http=True,
+        allowed_hosts=["*"],
+        allowed_origins=["*"],
+    )
+    chatgpt_paths = (
+        ENDPOINT_CHATGPT.rstrip("/"),
+        f"{ENDPOINT_OAUTH_PROTECTED_RESOURCE}{ENDPOINT_CHATGPT}",
+    )
+    app.router.routes.extend(
+        r for r in chatgpt_app.routes if getattr(r, "path", "") in chatgpt_paths
+    )
+
+    main_lifespan = app.router.lifespan_context
+    chatgpt_lifespan = chatgpt_app.router.lifespan_context
+
+    @asynccontextmanager
+    async def combined_lifespan(starlette_app: Starlette):
+        async with main_lifespan(starlette_app), chatgpt_lifespan(chatgpt_app):
+            yield
+
+    app.router.lifespan_context = combined_lifespan
 
 
 def build_app() -> Starlette:
@@ -265,6 +318,8 @@ def build_app() -> Starlette:
     app.router.routes.extend(
         r for r in sse_app.routes if getattr(r, "path", "") in sse_paths
     )
+
+    _graft_chatgpt_endpoint(app)
 
     # add_middleware order: last added runs first. RootAlias must rewrite the
     # path before OriginGuard matches on it. FastMCP authenticates all MCP

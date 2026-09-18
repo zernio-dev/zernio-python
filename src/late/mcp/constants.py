@@ -28,6 +28,14 @@ ENDPOINT_MCP = "/mcp"
 # deprecated but kept for backwards compatibility with older client configs.
 ENDPOINT_SSE = "/sse"
 ENDPOINT_MESSAGES = "/messages/"
+# ChatGPT plugin surface (late.mcp.chatgpt_server): a curated tool set on its
+# own Streamable HTTP endpoint. OpenAI freezes the origin of a published
+# plugin, so this path is the permanent address of the listing.
+ENDPOINT_CHATGPT = "/chatgpt"
+# OpenAI plugin domain verification: the portal issues one token per plugin
+# and expects it as the bare body of this path on the MCP host.
+ENDPOINT_OPENAI_APPS_CHALLENGE = "/.well-known/openai-apps-challenge"
+OPENAI_APPS_CHALLENGE_TOKEN = os.getenv("OPENAI_APPS_CHALLENGE_TOKEN", "")
 
 # --- OAuth 2.0 protected-resource discovery (RFC 9728 / MCP authorization spec) ---
 # This MCP server is a *resource server*: it does not mint tokens, it accepts
