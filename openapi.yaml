@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.21.2"
+  version: "1.21.3"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -54647,8 +54647,8 @@ paths:
         last impression. EU-delivered ads carry impression ranges and the disclosed targeting facets.
         Pages are capped at 25 ads (`limit` > 25 is a 400); `after` is the next offset.
 
-        Which params apply: `q`, `countries`, `since`, `until`, `limit`, `after` on both; `pageIds`,
-        `adType`, `status`, `platforms`, `mediaType`, `languages`, `searchType`, `fields` are Meta-only;
+        Which params apply: `q`, `countries`, `limit`, `after` on both; `pageIds`, `adType`, `status`,
+        `platforms`, `mediaType`, `languages`, `searchType`, `fields`, `since`, `until` are Meta-only;
         `advertiser` is LinkedIn-only. Passing a param the account's platform does not support is a 400
         naming the param.
       security:
@@ -54665,8 +54665,8 @@ paths:
         - { name: platforms, in: query, schema: { type: string }, description: "Meta only. Comma-separated publisher platforms: FACEBOOK, INSTAGRAM, AUDIENCE_NETWORK, MESSENGER, WHATSAPP, OCULUS, THREADS, STREAMING_SERVICES." }
         - { name: mediaType, in: query, schema: { type: string, enum: [ALL, IMAGE, MEME, VIDEO, NONE] }, description: "Meta only." }
         - { name: languages, in: query, schema: { type: string }, description: "Meta only. Comma-separated ISO 639-1 codes of the ad text." }
-        - { name: since, in: query, schema: { type: string, format: date }, description: "Earliest delivery date (YYYY-MM-DD)." }
-        - { name: until, in: query, schema: { type: string, format: date }, description: "Latest delivery date (YYYY-MM-DD)." }
+        - { name: since, in: query, schema: { type: string, format: date }, description: "Meta only. Earliest delivery date (YYYY-MM-DD). LinkedIn's archive does not filter by date, so it is a 400 there: filter on details.adStatistics.firstImpressionAt / latestImpressionAt instead (EU-delivered ads only)." }
+        - { name: until, in: query, schema: { type: string, format: date }, description: "Meta only. Latest delivery date (YYYY-MM-DD); a 400 on LinkedIn, see since." }
         - { name: searchType, in: query, schema: { type: string, enum: [KEYWORD_UNORDERED, KEYWORD_EXACT_PHRASE], default: KEYWORD_UNORDERED }, description: "Meta only. Whether q matches words in any order or as an exact phrase (comma-separate phrases to match all of them)." }
         - { name: fields, in: query, schema: { type: string, example: 'id,page_name,ad_delivery_start_time,ad_creative_bodies' }, description: 'Meta only. Comma-separated Graph field override. Supports nested {} projections and Graph field modifiers, so a nested edge can be paged explicitly: without a .limit() modifier the expansion runs at the Meta default page size and the tail is dropped silently.' }
         - { name: limit, in: query, schema: { type: integer, minimum: 1, maximum: 100, default: 25 }, description: "Rows per page. LinkedIn accepts at most 25." }

@@ -6763,8 +6763,8 @@ def register_generated_tools(mcp, _get_client):
             platforms: Meta only. Comma-separated publisher platforms: FACEBOOK, INSTAGRAM, AUDIENCE_NETWORK, MESSENGER, WHATSAPP, OCULUS, THREADS, STREAMING_SERVICES.
             media_type: Meta only.
             languages: Meta only. Comma-separated ISO 639-1 codes of the ad text.
-            since: Earliest delivery date (YYYY-MM-DD).
-            until: Latest delivery date (YYYY-MM-DD).
+            since: Meta only. Earliest delivery date (YYYY-MM-DD). LinkedIn's archive does not filter by date, so it is a 400 there: filter on details.adStatistics.firstImpressionAt / latestImpressionAt instead (EU-delivered ads only).
+            until: Meta only. Latest delivery date (YYYY-MM-DD); a 400 on LinkedIn, see since.
             search_type: Meta only. Whether q matches words in any order or as an exact phrase (comma-separate phrases to match all of them).
             fields: Meta only. Comma-separated Graph field override. Supports nested {} projections and Graph field modifiers, so a nested edge can be paged explicitly: without a .limit() modifier the expansion runs at the Meta default page size and the tail is dropped silently.
             limit: Rows per page. LinkedIn accepts at most 25.
