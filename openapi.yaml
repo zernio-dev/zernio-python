@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.23.0"
+  version: "1.24.0"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -19821,6 +19821,12 @@ paths:
                 properties:
                   valid: { type: boolean }
                   userId: { type: string }
+                  name:
+                    type: [string, 'null']
+                    description: "Display name of the credential's owner."
+                  email:
+                    type: [string, 'null']
+                    description: "Email of the credential's owner."
                   authType:
                     type: string
                     enum: [api_key, oauth, session]
@@ -19830,6 +19836,8 @@ paths:
               example:
                 valid: true
                 userId: "6507a1b2c3d4e5f6a7b8c9d0"
+                name: "Ada Lovelace"
+                email: "ada@example.com"
                 authType: "oauth"
                 scope: "posts:read posts:write accounts:read"
         '401': { $ref: '#/components/responses/Unauthorized' }
