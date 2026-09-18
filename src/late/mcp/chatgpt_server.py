@@ -449,9 +449,10 @@ INSTRUCTIONS = (
     "workspace. Before creating a post, call list_social_accounts and pass the exact account_ids "
     "the user chose; if it is unclear which account they mean, ask. publish_post_now makes content "
     "public right away, so confirm the final text with the user before calling it. Times are ISO "
-    "8601; when a time has no UTC offset, pass the user's IANA timezone. Some platforms need media "
-    "(Instagram, TikTok, YouTube, Pinterest) or a title (YouTube, Pinterest); validate_post reports "
-    "platform limits before you schedule."
+    "8601; when a time has no UTC offset, pass the user's IANA timezone. When the user asks whether "
+    "a text or media can go out on a platform, or whether it fits, call validate_post and report "
+    "its result rather than answering from general knowledge: platform rules (required media, "
+    "titles, character limits) are enforced by Zernio, not guessed."
 )
 
 chatgpt_mcp = FastMCP(
@@ -597,10 +598,11 @@ async def get_post(post_id: str = Field(description="Zernio post id")) -> ToolRe
     name="validate_post",
     title="Check a post against platform rules",
     description=(
-        "Use this before scheduling or publishing when the user wants to know whether text and "
-        "media fit the chosen platforms, for example character limits or required media. Nothing "
-        "is created. Returns valid true/false plus each error or warning with the platform it "
-        "applies to."
+        "Use this whenever the user asks whether a text or media can go out, fits, or is allowed on "
+        "a chosen platform, for example character limits or required media, and before scheduling "
+        "when in doubt. Use it instead of answering from general knowledge: the rules are enforced "
+        "by Zernio. Nothing is created. Returns valid true/false plus each error or warning with "
+        "the platform it applies to."
     ),
     annotations=_annotations(
         read_only=True, destructive=False, open_world=False, idempotent=True
