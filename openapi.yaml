@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.24.0"
+  version: "1.25.0"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -20206,7 +20206,7 @@ paths:
 
             WhatsApp:
               whatsapp_error, one_whatsapp_per_profile, whatsapp_number_already_connected,
-              whatsapp_number_pinned_to_profile, connection_cancelled
+              whatsapp_number_pinned_to_profile, whatsapp_coexistence_not_registered, connection_cancelled
 
             Google Ads (platform=googleads):
               google_ads_auth_failed, google_ads_invalid_state, google_ads_config_error,
@@ -20278,8 +20278,8 @@ paths:
             side and no domain setup: send the user to `authUrl`, and they come back to `redirect_url` with the
             same params as the redirect flow. Success: `connected=whatsapp`, `profileId`, `accountId`, `username`
             (plus `connect_token` for API-key callers). Failure: `error` and `platform=whatsapp`, with the same
-            values and extras as the redirect flow (`one_whatsapp_per_profile`, `whatsapp_number_already_connected`
-            and `whatsapp_number_pinned_to_profile` with `is_user_fixable=true`; `payment_required` with `reason`
+            values and extras as the redirect flow (`one_whatsapp_per_profile`, `whatsapp_number_already_connected`,
+            `whatsapp_number_pinned_to_profile` and `whatsapp_coexistence_not_registered` with `is_user_fixable=true`; `payment_required` with `reason`
             and `dashboard_url`; `whatsapp_error` with `error_message` when Meta reported one), plus two of its own:
             `connection_cancelled` when the popup was closed before finishing (`error_message` carries Meta's last
             reported step or error when there is one) and `session_expired` when the user took longer than the
@@ -24458,7 +24458,7 @@ paths:
         '403':
           description: Profile limit exceeded for this plan
         '409':
-          description: 'Conflict with an existing connection. Either the phone number is a Zernio-provisioned number pinned to a different profile (code WHATSAPP_NUMBER_PINNED_TO_PROFILE, connect it from that profile or move it first with PATCH /v1/whatsapp/phone-numbers/{id}/profile), or the number is already actively connected on another profile or team (code WHATSAPP_NUMBER_ALREADY_CONNECTED, disconnect it there first). A number can only be live on one profile.'
+          description: 'Conflict with an existing connection. Either the phone number is a Zernio-provisioned number pinned to a different profile (code WHATSAPP_NUMBER_PINNED_TO_PROFILE, connect it from that profile or move it first with PATCH /v1/whatsapp/phone-numbers/{id}/profile), or the number is already actively connected on another profile or team (code WHATSAPP_NUMBER_ALREADY_CONNECTED, disconnect it there first). A number can only be live on one profile. Or, for a number connected from the WhatsApp Business app (coexistence), the phone never registered the number on the Cloud API, so Meta reported it as platform_type ON_PREMISE and refused the contacts/history sync with error 133010 (code WHATSAPP_COEXISTENCE_NOT_REGISTERED). No account is created in that case: the customer opens WhatsApp Business on the phone, keeps it open and updated, and runs the same Embedded Signup again, which succeeds on the second attempt in practice.'
 
   /v1/connect/whatsapp/select-phone-number:
     get:
@@ -24615,7 +24615,7 @@ paths:
             application/json:
               schema: { $ref: '#/components/schemas/ErrorResponse' }
         '409':
-          description: 'Conflict with an existing connection. One of: the target profile already has a WhatsApp number connected (code ONE_WHATSAPP_PER_PROFILE, each profile holds exactly one WhatsApp number, so connect this number to a different or new profile); the phone number is a Zernio-provisioned number pinned to a different profile (code WHATSAPP_NUMBER_PINNED_TO_PROFILE, connect it from that profile or move it first with PATCH /v1/whatsapp/phone-numbers/{id}/profile); or the number is already actively connected on another profile or team (code WHATSAPP_NUMBER_ALREADY_CONNECTED, disconnect it there first). A number can only be live on one profile.'
+          description: 'Conflict with an existing connection. One of: the target profile already has a WhatsApp number connected (code ONE_WHATSAPP_PER_PROFILE, each profile holds exactly one WhatsApp number, so connect this number to a different or new profile); the phone number is a Zernio-provisioned number pinned to a different profile (code WHATSAPP_NUMBER_PINNED_TO_PROFILE, connect it from that profile or move it first with PATCH /v1/whatsapp/phone-numbers/{id}/profile); or the number is already actively connected on another profile or team (code WHATSAPP_NUMBER_ALREADY_CONNECTED, disconnect it there first). A number can only be live on one profile. Or, for a number connected from the WhatsApp Business app (coexistence), the phone never registered the number on the Cloud API, so Meta reported it as platform_type ON_PREMISE and refused the contacts/history sync with error 133010 (code WHATSAPP_COEXISTENCE_NOT_REGISTERED). No account is created in that case: the customer opens WhatsApp Business on the phone, keeps it open and updated, and runs the same Embedded Signup again, which succeeds on the second attempt in practice.'
         '500':
           description: Failed to bind phone number
           content:
