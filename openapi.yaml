@@ -1305,10 +1305,27 @@ components:
             on the single-creative shape if neither `imageUrl` nor an existing post reference is supplied.
         welcomeMessage:
           type: object
-          required: [text, prefillText]
+          required: [text]
           properties:
             text: { type: string, minLength: 1, description: "Greeting shown when the chat opens. Replaces Meta's default (\"Hi! Can we help you?\")." }
-            prefillText: { type: string, minLength: 1, description: "Message put into the user's text input, ready to send. Replaces Meta's default (\"Hi! I want more info.\"). Lets one ad steer the opening message toward what it promotes (e.g. a specific product)." }
+            prefillText: { type: string, minLength: 1, description: "Message put into the user's text input, ready to send. Replaces Meta's default (\"Hi! I want more info.\"). Lets one ad steer the opening message toward what it promotes (e.g. a specific product). Exactly one of prefillText or quickReplies." }
+            quickReplies:
+              type: array
+              minItems: 1
+              maxItems: 13
+              items:
+                type: object
+                required: [title, payload]
+                properties:
+                  title: { type: string, minLength: 1, maxLength: 20, description: 'Chip label the person taps.' }
+                  payload: { type: string, minLength: 1, maxLength: 1000, description: 'Opaque string you choose; delivered on the message.received webhook as interactiveMetadata.quickReplyPayload when the chip is tapped.' }
+              description: |
+                Tappable chips under the greeting instead of a prefilled
+                message. Exactly one of prefillText or quickReplies. Put
+                your own campaign or ad key in each payload: the tap arrives
+                on the messages webhook with that payload even where Meta
+                delivers no ad referral (Pages owned by an EU business under
+                the Europe/Japan Messenger restrictions).
           description: |
             Custom chat welcome message (Meta's `page_welcome_message`,
             "Mensaje de bienvenida" / "Mensaje predefinido" in Ads Manager).
