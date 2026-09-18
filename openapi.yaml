@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.21.3"
+  version: "1.22.0"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -19281,6 +19281,10 @@ paths:
                 properties:
                   accountId: { type: string }
                   platform: { type: string }
+                  integrationLane:
+                    type: string
+                    enum: [business, developer]
+                    description: 'TikTok only. The TikTok integration the account is connected through: business (TikTok for Business, Accounts API) or developer (the original integration). Absent on other platforms.'
                   username: { type: string }
                   displayName: { type: string }
                   status:
