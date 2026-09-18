@@ -105,6 +105,16 @@ class AdCreativesResource:
         """Direct video and image URLs for an ad"""
         return self._client._get(f"/v1/ads/{ad_id}/media")
 
+    def list_ads_tik_tok_identities(
+        self, account_id: str, ad_account_id: str
+    ) -> dict[str, Any]:
+        """List TikTok ad identities"""
+        params = self._build_params(
+            account_id=account_id,
+            ad_account_id=ad_account_id,
+        )
+        return self._client._get("/v1/ads/tiktok-identities", params=params)
+
     def list_ad_creatives(
         self,
         account_id: str,
@@ -343,6 +353,16 @@ class AdCreativesResource:
     async def aget_ad_media(self, ad_id: str) -> dict[str, Any]:
         """Direct video and image URLs for an ad (async)"""
         return await self._client._aget(f"/v1/ads/{ad_id}/media")
+
+    async def alist_ads_tik_tok_identities(
+        self, account_id: str, ad_account_id: str
+    ) -> dict[str, Any]:
+        """List TikTok ad identities (async)"""
+        params = self._build_params(
+            account_id=account_id,
+            ad_account_id=ad_account_id,
+        )
+        return await self._client._aget("/v1/ads/tiktok-identities", params=params)
 
     async def alist_ad_creatives(
         self,

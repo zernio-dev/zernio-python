@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.20.3"
+  version: "1.21.0"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -49205,6 +49205,43 @@ paths:
         '401': { $ref: '#/components/responses/Unauthorized' }
         '501': { description: Only supported on Meta (facebook/instagram) }
 
+  /v1/ads/tiktok-identities:
+    get:
+      x-resource-group: "ads"
+      operationId: listAdsTikTokIdentities
+      tags: ["Ad Creatives"]
+      x-platforms: ["tiktok"]
+      summary: List TikTok ad identities
+      description: "The identities an ad on this TikTok advertiser may run as (the profile shown on the ad): the advertiser's own TikTok accounts (TT_USER), Business Center authorized accounts (BC_AUTH_TT) and custom brand identities (CUSTOMIZED_USER). Pass the chosen `identityId` on POST /v1/ads/create or POST /v1/ads/boost. Spark-post identities (AUTH_CODE) are not listed; a Spark code creates its own."
+      security:
+        - bearerAuth: []
+      parameters:
+        - { name: accountId, in: query, required: true, schema: { type: string }, description: "A tiktok or tiktokads account ID" }
+        - { name: adAccountId, in: query, required: true, schema: { type: string }, description: "TikTok advertiser ID" }
+      responses:
+        '200':
+          description: Identities
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  adAccountId: { type: string }
+                  identities:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        identityId: { type: string }
+                        identityType: { type: string, enum: [TT_USER, BC_AUTH_TT, CUSTOMIZED_USER] }
+                        displayName: { type: [string, "null"] }
+                        username: { type: [string, "null"] }
+                        profileImage: { type: [string, "null"] }
+                        identityAuthorizedBcId: { type: [string, "null"], description: "Business Center that authorized a BC_AUTH_TT identity" }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404': { $ref: '#/components/responses/AccountUnavailable' }
+        '409': { $ref: '#/components/responses/AccountConnectionRequired' }
   /v1/ads/instagram-accounts:
     get:
       operationId: listAdsInstagramAccounts
@@ -52178,6 +52215,8 @@ paths:
                 goal: { type: string, enum: [engagement, traffic, awareness, video_views, lead_generation, conversions, app_promotion], description: "Available goals vary by platform. Meta (Facebook/Instagram) and TikTok support all 7. LinkedIn supports all except app_promotion. X supports engagement, traffic, awareness, video_views, app_promotion. Pinterest and Google Ads support only engagement, traffic, awareness, video_views." }
                 adSetId: { type: string, description: "Meta, or TikTok with `smartPlus: true`. Attach the boosted post to this existing ad set instead of creating a campaign. On TikTok the id is an existing Smart+ ad group: the post is added as one more Spark ad in it (up to 30 per ad group), under the identity its `sparkAuthCode` creates; goal and budget are inherited from the Smart+ campaign; a regular ad group is rejected with a 400. Meta: The ad set then owns budget, schedule and targeting; sending those too is a 400." }
                 existingCampaignId: { type: string, description: "TikTok only. Create the ad group and the Spark ad under this existing TikTok campaign instead of creating a new campaign. The campaign keeps its own status and objective (the objective must fit `goal`). Cannot be combined with adSetId or smartPlus. On Meta use POST /v1/ads/create with existingCampaignId." }
+                identityId: { type: string, description: "TikTok only. The identity the ad runs as (the profile shown on the ad), from GET /v1/ads/tiktok-identities. Default: the connected TikTok account's own identity. Must be authorized on the advertiser or the call fails naming the available ones." }
+                identityType: { type: string, enum: [TT_USER, CUSTOMIZED_USER, BC_AUTH_TT], description: "TikTok only. Type of identityId; resolved from the advertiser's identity list when omitted." }
                 budget:
                   type: object
                   description: "Required unless adSetId is set."
@@ -53590,9 +53629,12 @@ paths:
                       type: string
                       format: uri
                       description: Public URL of a square brand image (≥98×98 px, JPG/PNG). Used as the brand avatar on the ad.
+                identityId:
+                  type: string
+                  description: "TikTok: the identity the ad runs as, from GET /v1/ads/tiktok-identities. Overrides the connected account's own identity; must be authorized on the advertiser."
                 identityType:
                   type: string
-                  enum: [TT_USER, CUSTOMIZED_USER]
+                  enum: [TT_USER, CUSTOMIZED_USER, BC_AUTH_TT]
                   description: |
                     TikTok only. Forces the identity attribution on the ad:
 

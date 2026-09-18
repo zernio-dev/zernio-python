@@ -531,6 +531,7 @@ Both `from zernio import ...` and `from late import ...` work identically. The `
 | `ad_creatives.list_ad_creatives()` | Creative library |
 | `ad_creatives.list_ad_images()` | Ad image library |
 | `ad_creatives.list_ad_videos()` | Ad video library |
+| `ad_creatives.list_ads_tik_tok_identities()` | List TikTok ad identities |
 | `ad_creatives.list_partnership_ad_content()` | List partnership ad content |
 | `ad_creatives.list_partnership_ad_permissions()` | List partnership permissions |
 | `ad_creatives.create_ad_creative()` | Create a standalone creative |
