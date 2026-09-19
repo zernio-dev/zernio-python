@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.25.0"
+  version: "1.25.1"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -3933,7 +3933,7 @@ components:
             properties:
               type:
                 type: string
-                description: Attachment type (image, video, file, sticker, audio)
+                description: Attachment type (image, video, file, sticker, audio, share)
               url:
                 type: string
                 description: |
@@ -4683,7 +4683,7 @@ components:
                 "not flagged", never "checked and renderable".
             tiktokMessageType:
               type: string
-              description: 'TikTok only. The message type as TikTok reports it, forwarded verbatim (for example image, video, sticker, share_post, emoji, reaction, template). Present on every TikTok DM that is not plain text; those arrive with text empty and, for image and video, an attachment.'
+              description: 'TikTok only. The message type as TikTok reports it, forwarded verbatim (for example image, video, sticker, share_post, emoji, reaction, template). Present on every TikTok DM that is not plain text; those arrive with text empty and, for image, video, share_post, sticker and emoji, an attachment (share_post as type share with the embed url and payload.videoId; sticker/emoji as type sticker, url signed and expiring).'
         timestamp:
           type: string
           format: date-time
@@ -4870,7 +4870,7 @@ components:
                 `replyTo` on the inbox send API to keep replying inside the thread.
             tiktokMessageType:
               type: string
-              description: 'TikTok only. The message type as TikTok reports it, forwarded verbatim (for example image, video, sticker, share_post, emoji, reaction, template). Present on every TikTok DM that is not plain text; those arrive with text empty and, for image and video, an attachment. Absent on image sends made through the Zernio API, which carry the image in attachments.'
+              description: 'TikTok only. The message type as TikTok reports it, forwarded verbatim (for example image, video, sticker, share_post, emoji, reaction, template). Present on every TikTok DM that is not plain text; those arrive with text empty and, for image, video, share_post, sticker and emoji, an attachment (share_post as type share with the embed url and payload.videoId; sticker/emoji as type sticker, url signed and expiring). Absent on image sends made through the Zernio API, which carry the image in attachments.'
         timestamp:
           type: string
           format: date-time
