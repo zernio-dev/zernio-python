@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.27.0"
+  version: "1.28.0"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -35794,7 +35794,10 @@ paths:
         account.connected webhook. Billing starts at activation (monthly per
         sender, no proration). Requires usage-based billing and a valid
         payment method. Pass purchaseIntentId to make retries idempotent —
-        the provider-side order is never retried automatically.
+        the provider-side order is never retried automatically. Ordered phone
+        senders include SMS/RCS fallback with call forwarding and the ability
+        to message contacts who have not written first (sending intervals
+        still apply).
       tags: [iMessage]
       security: [{ bearerAuth: [] }]
       requestBody:
@@ -36090,10 +36093,12 @@ paths:
                         id: { type: string, description: Pass as availableNumberId when ordering }
                         phone: { type: string, description: E.164 }
                         region: { type: string }
+                        location: { type: string, description: 'Area the provider reports for the number (e.g. a US state), when known' }
                   region: { type: [string, "null"] }
         '400': { $ref: '#/components/responses/BadRequest' }
         '401': { $ref: '#/components/responses/Unauthorized' }
         '403': { description: 'iMessage is in private beta and not enabled for this account (code: PLATFORM_BETA_RESTRICTED)' }
+        '502': { description: 'The provider could not list numbers; ordering without availableNumberId still works' }
 
   /v1/imessage/senders/available-numbers/{numberId}/reserve:
     post:
