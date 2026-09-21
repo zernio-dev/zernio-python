@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.32.0"
+  version: "1.32.1"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -8141,8 +8141,9 @@ components:
               type: [integer, "null"]
               description: |
                 Monthly X spend cap set by the account owner, or null if no cap.
-                When current X spend hits this cap, analytics and inbox sync are
-                auto-paused for X accounts. Publishing is never blocked by this cap.
+                When current X spend hits this cap, all billable X API activity is
+                paused until the billing period resets or the cap is raised, including
+                publishing, analytics and inbox sync, and likes, reposts and follows.
     XApiPricing:
       type: object
       description: |
