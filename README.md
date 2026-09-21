@@ -422,6 +422,7 @@ Both `from zernio import ...` and `from late import ...` work identically. The `
 | `ad_accounts.list_ad_studies()` | A/B tests and lift studies |
 | `ad_accounts.list_ads_business_centers()` | List TikTok Business Centers |
 | `ad_accounts.list_ads_instagram_accounts()` | List Instagram ad identities |
+| `ad_accounts.list_ads_instagram_posts()` | List Instagram posts to boost |
 | `ad_accounts.list_advertisable_applications()` | List advertisable apps |
 | `ad_accounts.list_custom_conversions()` | List custom conversions |
 | `ad_accounts.list_high_demand_periods()` | List high-demand periods |

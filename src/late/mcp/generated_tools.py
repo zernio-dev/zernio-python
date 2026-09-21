@@ -1716,6 +1716,42 @@ def register_generated_tools(mcp, _get_client):
 
     @mcp.tool(
         annotations=ToolAnnotations(
+            title="List Instagram posts to boost",
+            readOnlyHint=True,
+            destructiveHint=False,
+            openWorldHint=False,
+        )
+    )
+    def ad_accounts_list_ads_instagram_posts(
+        account_id: str,
+        ad_account_id: str | None = None,
+        ig_user_id: str | None = None,
+        limit: int = 25,
+        after: str | None = None,
+    ) -> str:
+        """List Instagram posts to boost
+
+        Args:
+            account_id: Zernio Meta Ads, Facebook or Instagram SocialAccount ID. (required)
+            ad_account_id: Meta ad account ID including the act_ prefix. Narrows identity resolution to the Instagram accounts reachable from this ad account.
+            ig_user_id: Instagram identity to list. Must be one this connection can reach, otherwise the request is rejected with a 400.
+            limit: Number of posts to return per page.
+            after: Opaque Meta cursor from a previous response's paging.after."""
+        client = _get_client()
+        try:
+            response = client.ad_accounts.list_ads_instagram_posts(
+                account_id=account_id,
+                ad_account_id=ad_account_id,
+                ig_user_id=ig_user_id,
+                limit=limit,
+                after=after,
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
             title="List advertisable apps",
             readOnlyHint=True,
             destructiveHint=False,

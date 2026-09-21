@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.29.0"
+  version: "1.30.0"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -50134,6 +50134,70 @@ paths:
         '404': { $ref: '#/components/responses/AccountUnavailable' }
 
         '501': { description: "Only supported on Meta Ads and Facebook accounts." }
+
+  /v1/ads/instagram-posts:
+    get:
+      operationId: listAdsInstagramPosts
+      summary: List Instagram posts to boost
+      description: "Lists the media of the Instagram account this Meta connection can reach, so an existing Instagram post can be boosted without connecting the Instagram account separately. Each `posts[].id` is the existing-post id to send as `platformPostId` when creating the ad; Meta turns it into `source_instagram_media_id` on the creative. Identity resolution reuses the same resolver as `/v1/ads/instagram-accounts`. `igUserId` is always checked against the identities the connection can reach and is never trusted as sent. When no identity is reachable the endpoint fails instead of returning an empty list, and the two causes stay apart: `403 reconnect_required` means the connection predates Instagram access (Meta then omits `instagram_business_account` from the Page read rather than erroring, so it looks identical to having no data) and the account must be reconnected granting Instagram access, while `422 instagram_business_account_unresolved` means the Page genuinely has no Instagram professional account linked."
+      tags: ["Ad Accounts"]
+      x-resource-group: "ads"
+      x-platforms: ["meta"]
+      security:
+        - bearerAuth: []
+      parameters:
+        - { name: accountId, in: query, required: true, schema: { type: string }, description: "Zernio Meta Ads, Facebook or Instagram SocialAccount ID." }
+        - { name: adAccountId, in: query, required: false, schema: { type: string, pattern: '^act_[0-9]+$' }, description: "Meta ad account ID including the act_ prefix. Narrows identity resolution to the Instagram accounts reachable from this ad account." }
+        - { name: igUserId, in: query, required: false, schema: { type: string }, description: "Instagram identity to list. Must be one this connection can reach, otherwise the request is rejected with a 400." }
+        - { name: limit, in: query, required: false, schema: { type: integer, minimum: 1, maximum: 100, default: 25 }, description: "Number of posts to return per page." }
+        - { name: after, in: query, required: false, schema: { type: string }, description: "Opaque Meta cursor from a previous response's paging.after." }
+      responses:
+        '409': { $ref: '#/components/responses/AccountConnectionRequired' }
+        '200':
+          description: "Instagram posts available to boost."
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [igUserId, username, posts, paging]
+                properties:
+                  igUserId: { type: string, description: "Instagram identity the posts belong to." }
+                  username: { type: string, description: "Instagram username; empty when Meta does not expose it." }
+                  posts:
+                    type: array
+                    items:
+                      type: object
+                      required: [id, mediaType, timestamp]
+                      properties:
+                        id: { type: string, description: "Instagram media ID. Pass this as the existing-post id when creating an ad." }
+                        caption: { type: string, description: "Caption, when the media has one." }
+                        mediaType: { type: string, description: "Meta media_type, e.g. IMAGE, VIDEO or CAROUSEL_ALBUM." }
+                        mediaUrl: { type: string, description: "Media URL. Meta omits it for some media types." }
+                        thumbnailUrl: { type: string, description: "Thumbnail URL. Present for VIDEO, where mediaUrl may be absent." }
+                        permalink: { type: string, description: "Public Instagram permalink." }
+                        timestamp: { type: string, description: "Publish time as Meta reports it." }
+                  paging:
+                    type: object
+                    required: [after]
+                    properties:
+                      after: { type: [string, "null"], description: "Cursor for the next page, or null when this is the last one." }
+              example:
+                igUserId: "17841400000000000"
+                username: "example"
+                posts:
+                  - id: "18050809559368305"
+                    caption: "Launch day"
+                    mediaType: VIDEO
+                    thumbnailUrl: "https://scontent.cdninstagram.com/thumb.jpg"
+                    permalink: "https://www.instagram.com/reel/ABCdef/"
+                    timestamp: "2026-09-18T09:00:00+0000"
+                paging: { after: "QVFIUl..." }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { description: "The connection predates Instagram access (code reconnect_required) and must be reconnected, or the Meta asset is not accessible." }
+        '404': { $ref: '#/components/responses/AccountUnavailable' }
+        '422': { description: "The Facebook Page has no linked Instagram professional account (code instagram_business_account_unresolved), or the connection has no Page selected and no adAccountId was passed (code linked_account_required)." }
+        '501': { description: "Only supported on Meta Ads, Facebook and Instagram accounts." }
 
   /v1/ads/advertisable-applications:
     get:

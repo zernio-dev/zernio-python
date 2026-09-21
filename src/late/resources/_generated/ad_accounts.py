@@ -211,6 +211,25 @@ class AdAccountsResource:
         )
         return self._client._get("/v1/ads/instagram-accounts", params=params)
 
+    def list_ads_instagram_posts(
+        self,
+        account_id: str,
+        *,
+        ad_account_id: str | None = None,
+        ig_user_id: str | None = None,
+        limit: int | None = 25,
+        after: str | None = None,
+    ) -> dict[str, Any]:
+        """List Instagram posts to boost"""
+        params = self._build_params(
+            account_id=account_id,
+            ad_account_id=ad_account_id,
+            ig_user_id=ig_user_id,
+            limit=limit,
+            after=after,
+        )
+        return self._client._get("/v1/ads/instagram-posts", params=params)
+
     def list_advertisable_applications(
         self, account_id: str, ad_account_id: str
     ) -> dict[str, Any]:
@@ -897,6 +916,25 @@ class AdAccountsResource:
             ad_account_id=ad_account_id,
         )
         return await self._client._aget("/v1/ads/instagram-accounts", params=params)
+
+    async def alist_ads_instagram_posts(
+        self,
+        account_id: str,
+        *,
+        ad_account_id: str | None = None,
+        ig_user_id: str | None = None,
+        limit: int | None = 25,
+        after: str | None = None,
+    ) -> dict[str, Any]:
+        """List Instagram posts to boost (async)"""
+        params = self._build_params(
+            account_id=account_id,
+            ad_account_id=ad_account_id,
+            ig_user_id=ig_user_id,
+            limit=limit,
+            after=after,
+        )
+        return await self._client._aget("/v1/ads/instagram-posts", params=params)
 
     async def alist_advertisable_applications(
         self, account_id: str, ad_account_id: str
