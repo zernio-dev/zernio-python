@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.31.0"
+  version: "1.31.1"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -35771,9 +35771,9 @@ paths:
         '400': { $ref: '#/components/responses/BadRequest' }
         '401': { $ref: '#/components/responses/Unauthorized' }
         '403': { description: 'iMessage is in private beta and not enabled for this account (code: PLATFORM_BETA_RESTRICTED)' }
-        '402': { description: 'Payment method or plan upgrade required to connect another account' }
+        '402': { description: 'A valid payment method is required (code: payment_method_required)' }
         '404': { description: Profile not found or access denied }
-        '409': { description: 'Sender already registered to another profile (code: imessage_sender_conflict)' }
+        '409': { description: 'Sender already registered to another profile (code: imessage_sender_conflict), or billing setup is incomplete and support must finish it (code: billing_setup_incomplete)' }
 
   /v1/imessage/senders/order:
     get:
@@ -35856,7 +35856,7 @@ paths:
         '402': { description: 'A valid payment method is required (code: payment_method_required)' }
         '403': { description: 'Sender limit reached (code: imessage_sender_limit), or iMessage is in private beta and not enabled for this account (code: PLATFORM_BETA_RESTRICTED)' }
         '404': { description: Profile not found or access denied }
-        '409': { description: 'This profile already has a live iMessage sender (code: imessage_sender_conflict)' }
+        '409': { description: 'This profile already has a live iMessage sender (code: imessage_sender_conflict), or billing setup is incomplete and support must finish it (code: billing_setup_incomplete)' }
         '422': { description: 'Workspace is not on usage-based billing (code: usage_billing_required)' }
         '502': { description: 'The provider rejected the order; nothing was charged' }
 
