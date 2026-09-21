@@ -5136,6 +5136,7 @@ def register_generated_tools(mcp, _get_client):
         regional_regulation_identities: dict[str, Any] | None = None,
         end_date: str | None = None,
         start_date: str | None = None,
+        page_id: str | None = None,
         instagram_account_id: str | None = None,
         dynamic_creative: dict[str, Any] | None = None,
         carousel_cards: list[dict[str, Any]] | None = None,
@@ -5407,6 +5408,12 @@ def register_generated_tools(mcp, _get_client):
         ad set's `start_time`. When omitted the ad starts delivering immediately. For lifetime
         budgets Meta also requires `endDate`. (Same `schedule.startDate` semantics already
         available on `POST /v1/ads/boost`.)
+                page_id: Meta only. The Facebook Page the ad runs as (`object_story_spec.page_id`). Defaults to
+        the Page bound to the connection. Pass another Page ID to run the ad as that Page: any
+        Page granted to the connection is accepted (for a business-login connection, every Page
+        granted in Meta's dialog; list them with GET /v1/ads/instagram-accounts). The Instagram
+        identity is re-resolved for that Page unless `instagramAccountId` is set. A Page the
+        connection cannot see is a 400 on `pageId` naming the granted Pages.
                 instagram_account_id: Meta only. Override the Instagram account the ad is delivered as. Pass an Instagram
         Business Account ID (e.g. 17841...), mapped to the creative's `instagram_user_id`.
         When omitted we use the Instagram actor Meta already runs the Page's other ads as,
@@ -5709,6 +5716,7 @@ def register_generated_tools(mcp, _get_client):
                 regional_regulation_identities=regional_regulation_identities,
                 end_date=end_date,
                 start_date=start_date,
+                page_id=page_id,
                 instagram_account_id=instagram_account_id,
                 dynamic_creative=dynamic_creative,
                 carousel_cards=carousel_cards,

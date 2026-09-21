@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.32.1"
+  version: "1.33.0"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -54035,6 +54035,15 @@ paths:
                     ad set's `start_time`. When omitted the ad starts delivering immediately. For lifetime
                     budgets Meta also requires `endDate`. (Same `schedule.startDate` semantics already
                     available on `POST /v1/ads/boost`.)
+                pageId:
+                  type: string
+                  description: |
+                    Meta only. The Facebook Page the ad runs as (`object_story_spec.page_id`). Defaults to
+                    the Page bound to the connection. Pass another Page ID to run the ad as that Page: any
+                    Page granted to the connection is accepted (for a business-login connection, every Page
+                    granted in Meta's dialog; list them with GET /v1/ads/instagram-accounts). The Instagram
+                    identity is re-resolved for that Page unless `instagramAccountId` is set. A Page the
+                    connection cannot see is a 400 on `pageId` naming the granted Pages.
                 instagramAccountId:
                   type: string
                   description: |
