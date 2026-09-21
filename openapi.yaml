@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.28.0"
+  version: "1.29.0"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -8259,6 +8259,11 @@ components:
           additionalProperties: { type: number }
           example: { follower: 0.1, nonFollower: 0.9, newViewer: 0.99, returnViewer: 0.01 }
           description: 'TikTok accounts connected through the TikTok for Business app only: two viewer splits as fractions 0 to 1 (T+24-48h). Each pair sums to 1 when present, `follower` + `nonFollower` and `newViewer` + `returnViewer`; TikTok can report one pair without the other. Empty object when TikTok reports nothing, and for other platforms. Views-weighted across accounts like impressionSources.'
+        audienceCountries:
+          type: object
+          additionalProperties: { type: number }
+          example: { US: 0.62, GB: 0.11, CA: 0.07, DE: 0.05, other: 0.15 }
+          description: 'TikTok accounts connected through the TikTok for Business app only: share of views by viewer country as fractions 0 to 1, keyed by upper-case ISO-3166 alpha-2 code (T+24-48h, only for posts active in the last 7 days). At most 20 country keys plus `other`: the catch-all bucket TikTok sends, any country below 0.001 and anything past the twentieth all sum into `other`, so the values still add up to 1. Empty object when TikTok reports nothing, and for other platforms. Views-weighted across accounts like impressionSources.'
         reposts: { type: integer, example: 0, description: 'Instagram accounts connected with Facebook Login only: reposts of the media by other users, minus deleted reposts, on feed posts, reels and stories. Meta does not expose this metric for accounts connected with Instagram Login, so those always report 0. 0 for other platforms, including Threads, where reposts are counted in shares instead.' }
         videoDurationSeconds: { type: [integer, "null"], example: 30, description: 'Video length in seconds. Currently Instagram Reels only; combine with igReelsAvgWatchTime (ms) to estimate retention. Null when unknown (other platforms, non-video media, or when Instagram does not expose the media URL, e.g. reels with copyrighted audio).' }
         engagementRate: { type: number, example: 6.59, description: 'Percentage, rounded to 2 decimals: (likes + comments + shares + saves) / (impressions or reach or views) * 100. Clicks and follows are never counted. The denominator is the FIRST of impressions, reach, views that is non-zero, so it is not the same basis on every post: a post with impressions divides by impressions, one without falls back to reach, then to views. If you need a single consistent basis (e.g. interactions / reach), compute it from the raw fields above. The engagementRate on the LinkedIn account endpoints is a different formula.' }
@@ -8462,7 +8467,7 @@ components:
         metrics:
           type: object
           description: 'Metrics a platform does not report are 0, not absent.'
-          required: [impressions, reach, likes, comments, shares, saves, sends, clicks, views, follows, igReelsAvgWatchTime, igReelsVideoViewTotalTime, reposts, reelsSkipRate, completionRate, profileViews, websiteClicks, impressionSources, audienceTypes]
+          required: [impressions, reach, likes, comments, shares, saves, sends, clicks, views, follows, igReelsAvgWatchTime, igReelsVideoViewTotalTime, reposts, reelsSkipRate, completionRate, profileViews, websiteClicks, impressionSources, audienceTypes, audienceCountries]
           properties:
             impressions: { type: integer }
             reach: { type: integer }
@@ -8483,6 +8488,7 @@ components:
             websiteClicks: { type: integer, description: 'TikTok business lane: website-link clicks attributed to the post (also inside clicks)' }
             impressionSources: { type: object, additionalProperties: { type: number }, description: 'TikTok business lane: share of views by surface (forYou, follow, search, personalProfile, sound, directMessage, other), fractions 0 to 1. Empty object elsewhere.' }
             audienceTypes: { type: object, additionalProperties: { type: number }, description: 'TikTok business lane: follower / nonFollower and newViewer / returnViewer shares, fractions 0 to 1. Empty object elsewhere.' }
+            audienceCountries: { type: object, additionalProperties: { type: number }, description: 'TikTok business lane: viewer-country shares keyed by ISO-3166 alpha-2, fractions 0 to 1, top 20 with the tail in `other`. Empty object elsewhere.' }
     AnalyticsDeltaResponse:
       type: object
       required: [data, nextCursor, hasMore]
@@ -13231,6 +13237,7 @@ paths:
                           websiteClicks: 0
                           impressionSources: {}
                           audienceTypes: {}
+                          audienceCountries: {}
                     nextCursor: "v1.WyIyMDI2LTA5LTAxIDE3OjEyOjA0IiwiNjVmMWMwYTllMmI1YWYwMDEyYWIzNGNkIl0"
                     hasMore: true
         '400': { $ref: '#/components/responses/BadRequest' }
@@ -13479,19 +13486,23 @@ paths:
         defaults to last 30 days. Requires the Analytics add-on and the user.info.stats
         scope on the account (412 if missing).
 
-        Scope intentionally narrow. TikTok's public API exposes only the four counter
-        metrics below. The deep metrics that live in TikTok Studio are NOT available on any
-        public TikTok API, even for Business accounts:
-          - profile_views
+        Scope intentionally narrow: this ACCOUNT-level endpoint exposes only the four
+        counter metrics below. These account-level figures are not on any public TikTok
+        API, for any account type:
           - account-level impressions / reach
           - follower inflow / outflow breakdown
-          - video watch time, average watch time, full-watched rate
-          - impression_sources (FYP / Following / Hashtag / Search / Personal profile)
+          - account-level watch time and audience demographics
 
-        TikTok's Research API doesn't expose those fields either, and is restricted to
-        non-commercial academic use per TikTok's eligibility policy. There is no public
-        API workaround. Post-level metrics (views, likes, comments, shares per video) are
-        available via /v1/analytics?postId=... from TikTok's /v2/video/query/.
+        TikTok's Research API doesn't expose them either, and is restricted to
+        non-commercial academic use per TikTok's eligibility policy.
+
+        PER-VIDEO is a different story on the Business lane. An account connected through
+        the TikTok for Business app reports profile views, website clicks, follows,
+        full-watched rate, watch time, impression sources, viewer types and viewer
+        countries per video on GET /v1/analytics?postId=..., roughly 24-48h after
+        publishing and only for posts active in the last 7 days. Accounts on the original
+        TikTok integration get the basic counters there (views, likes, comments, shares)
+        and zeros for the rest; they must reconnect through the Business app.
       parameters:
         - name: accountId
           in: query
@@ -15027,6 +15038,7 @@ paths:
                         websiteClicks: { type: integer, description: "TikTok business lane: website-link clicks attributed to the post on this date (also inside clicks); 0 elsewhere" }
                         impressionSources: { type: object, additionalProperties: { type: number }, description: "TikTok business lane: share of views by surface on this date (forYou, follow, search, personalProfile, sound, directMessage, other), fractions 0 to 1; empty object elsewhere" }
                         audienceTypes: { type: object, additionalProperties: { type: number }, description: "TikTok business lane: follower / nonFollower and newViewer / returnViewer shares on this date, fractions 0 to 1; empty object elsewhere" }
+                        audienceCountries: { type: object, additionalProperties: { type: number }, description: "TikTok business lane: viewer-country shares on this date keyed by ISO-3166 alpha-2, fractions 0 to 1, top 20 with the tail in `other`; empty object elsewhere" }
               examples:
                 single_platform:
                   summary: Single-platform post timeline
@@ -15050,6 +15062,7 @@ paths:
                         websiteClicks: 0
                         impressionSources: {}
                         audienceTypes: {}
+                        audienceCountries: {}
                       - date: "2025-01-16"
                         platform: "instagram"
                         platformPostId: "17902345678901234"
@@ -15067,6 +15080,7 @@ paths:
                         websiteClicks: 0
                         impressionSources: {}
                         audienceTypes: {}
+                        audienceCountries: {}
                 multi_platform:
                   summary: One row per platform and day; the TikTok row comes from an account connected through the TikTok for Business app
                   value:
@@ -15089,6 +15103,7 @@ paths:
                         websiteClicks: 0
                         impressionSources: {}
                         audienceTypes: {}
+                        audienceCountries: {}
                       - date: "2025-01-16"
                         platform: "tiktok"
                         platformPostId: "7685731010461371662"
@@ -15106,6 +15121,7 @@ paths:
                         websiteClicks: 6
                         impressionSources: { forYou: 0.84, follow: 0.05, search: 0.06, personalProfile: 0.03, sound: 0.01, directMessage: 0, other: 0.01 }
                         audienceTypes: { follower: 0.1, nonFollower: 0.9, newViewer: 0.99, returnViewer: 0.01 }
+                        audienceCountries: { US: 0.62, GB: 0.11, CA: 0.07, DE: 0.05, other: 0.15 }
         '400':
           description: Missing required postId parameter
           content:
