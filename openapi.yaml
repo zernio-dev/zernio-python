@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.31.1"
+  version: "1.32.0"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -557,11 +557,9 @@ tags:
       Private beta: returns 404 unless your account is enrolled.
   - name: iMessage
     description: |
-      Two-way iMessage on provider-provisioned senders. Register a sender on a
-      profile, then send and receive through the inbox conversation endpoints
-      ('platform: imessage'). Replies only; broadcasts are not supported on this
-      channel.
-      Private beta: returns 403 unless your account is enrolled.
+      Two-way iMessage on provider-provisioned senders. Order or register a sender
+      on a profile, then send and receive through the inbox conversation endpoints
+      ('platform: imessage').
 components:
   securitySchemes:
     bearerAuth:
@@ -35730,7 +35728,6 @@ paths:
                     type: array
                     items: { $ref: '#/components/schemas/ImessageSender' }
         '401': { $ref: '#/components/responses/Unauthorized' }
-        '403': { description: 'iMessage is in private beta and not enabled for this account (code: PLATFORM_BETA_RESTRICTED)' }
     post:
       operationId: registerImessageSender
       summary: Register an iMessage sender
@@ -35770,7 +35767,6 @@ paths:
                   account: { $ref: '#/components/schemas/ImessageSender' }
         '400': { $ref: '#/components/responses/BadRequest' }
         '401': { $ref: '#/components/responses/Unauthorized' }
-        '403': { description: 'iMessage is in private beta and not enabled for this account (code: PLATFORM_BETA_RESTRICTED)' }
         '402': { description: 'A valid payment method is required (code: payment_method_required)' }
         '404': { description: Profile not found or access denied }
         '409': { description: 'Sender already registered to another profile (code: imessage_sender_conflict), or billing setup is incomplete and support must finish it (code: billing_setup_incomplete)' }
@@ -35797,7 +35793,6 @@ paths:
                     items: { $ref: '#/components/schemas/ImessageSenderLifecycle' }
         '400': { $ref: '#/components/responses/BadRequest' }
         '401': { $ref: '#/components/responses/Unauthorized' }
-        '403': { description: 'iMessage is in private beta and not enabled for this account (code: PLATFORM_BETA_RESTRICTED)' }
     post:
       operationId: orderImessageSender
       summary: Order a new iMessage sender
@@ -35854,7 +35849,7 @@ paths:
         '400': { $ref: '#/components/responses/BadRequest' }
         '401': { $ref: '#/components/responses/Unauthorized' }
         '402': { description: 'A valid payment method is required (code: payment_method_required)' }
-        '403': { description: 'Sender limit reached (code: imessage_sender_limit), or iMessage is in private beta and not enabled for this account (code: PLATFORM_BETA_RESTRICTED)' }
+        '403': { description: 'Sender limit reached (code: imessage_sender_limit)' }
         '404': { description: Profile not found or access denied }
         '409': { description: 'This profile already has a live iMessage sender (code: imessage_sender_conflict), or billing setup is incomplete and support must finish it (code: billing_setup_incomplete)' }
         '422': { description: 'Workspace is not on usage-based billing (code: usage_billing_required)' }
@@ -35888,7 +35883,6 @@ paths:
                   imessageLink: { type: [string, "null"], description: 'Provider-hosted opt-in page for this sender (opens Messages on any Apple device); null until the sender is active or when the provider cannot report it.' }
         '400': { $ref: '#/components/responses/BadRequest' }
         '401': { $ref: '#/components/responses/Unauthorized' }
-        '403': { description: 'iMessage is in private beta and not enabled for this account (code: PLATFORM_BETA_RESTRICTED)' }
         '404': { description: Sender not found }
     patch:
       operationId: updateImessageSender
@@ -35925,7 +35919,6 @@ paths:
                   sender: { $ref: '#/components/schemas/ImessageSenderLifecycle' }
         '400': { $ref: '#/components/responses/BadRequest' }
         '401': { $ref: '#/components/responses/Unauthorized' }
-        '403': { description: 'iMessage is in private beta and not enabled for this account (code: PLATFORM_BETA_RESTRICTED)' }
         '404': { description: Sender not found }
     delete:
       operationId: cancelImessageSender
@@ -35950,7 +35943,6 @@ paths:
                   sender: { $ref: '#/components/schemas/ImessageSenderLifecycle' }
         '400': { $ref: '#/components/responses/BadRequest' }
         '401': { $ref: '#/components/responses/Unauthorized' }
-        '403': { description: 'iMessage is in private beta and not enabled for this account (code: PLATFORM_BETA_RESTRICTED)' }
         '404': { description: Sender not found }
 
   /v1/imessage/audience:
@@ -35982,7 +35974,6 @@ paths:
                   skip: { type: integer }
         '400': { $ref: '#/components/responses/BadRequest' }
         '401': { $ref: '#/components/responses/Unauthorized' }
-        '403': { description: 'iMessage is in private beta and not enabled for this account (code: PLATFORM_BETA_RESTRICTED)' }
 
   /v1/imessage/audience/subscription:
     post:
@@ -36015,7 +36006,6 @@ paths:
                   subscribed: { type: boolean }
         '400': { $ref: '#/components/responses/BadRequest' }
         '401': { $ref: '#/components/responses/Unauthorized' }
-        '403': { description: 'iMessage is in private beta and not enabled for this account (code: PLATFORM_BETA_RESTRICTED)' }
         '404': { description: Account or conversation not found }
 
   /v1/imessage/senders/{senderId}/opt-in-links:
@@ -36073,7 +36063,6 @@ paths:
                       url: { type: string, description: Hosted landing URL that picks the right scheme for the device }
         '400': { $ref: '#/components/responses/BadRequest' }
         '401': { $ref: '#/components/responses/Unauthorized' }
-        '403': { description: 'iMessage is in private beta and not enabled for this account (code: PLATFORM_BETA_RESTRICTED)' }
         '404': { description: Sender not found }
         '409': { description: The sender is not active yet }
 
@@ -36113,7 +36102,6 @@ paths:
                   region: { type: [string, "null"] }
         '400': { $ref: '#/components/responses/BadRequest' }
         '401': { $ref: '#/components/responses/Unauthorized' }
-        '403': { description: 'iMessage is in private beta and not enabled for this account (code: PLATFORM_BETA_RESTRICTED)' }
         '502': { description: 'The provider could not list numbers; ordering without availableNumberId still works' }
 
   /v1/imessage/senders/available-numbers/{numberId}/reserve:
@@ -36138,7 +36126,6 @@ paths:
                   expiresInSeconds: { type: integer, example: 180 }
         '400': { $ref: '#/components/responses/BadRequest' }
         '401': { $ref: '#/components/responses/Unauthorized' }
-        '403': { description: 'iMessage is in private beta and not enabled for this account (code: PLATFORM_BETA_RESTRICTED)' }
         '409': { description: 'The number could not be reserved (already taken)' }
 
   /v1/imessage/groups:
@@ -36181,7 +36168,6 @@ paths:
                   requestId: { type: string, description: 'The provider''s request id (not the group id)' }
         '400': { $ref: '#/components/responses/BadRequest' }
         '401': { $ref: '#/components/responses/Unauthorized' }
-        '403': { description: 'iMessage is in private beta and not enabled for this account (code: PLATFORM_BETA_RESTRICTED)' }
         '404': { description: Account not found }
         '409': { description: 'The sender cannot start conversations (code: recipient_must_message_first)' }
 
@@ -36215,7 +36201,6 @@ paths:
                       createdAt: { type: [string, "null"], format: date-time }
         '400': { description: 'Bad request, or the conversation is not a group thread' }
         '401': { $ref: '#/components/responses/Unauthorized' }
-        '403': { description: 'iMessage is in private beta and not enabled for this account (code: PLATFORM_BETA_RESTRICTED)' }
         '404': { description: Account or conversation not found }
     patch:
       operationId: updateImessageGroup
@@ -36248,7 +36233,6 @@ paths:
                   conversationId: { type: string }
         '400': { description: 'Bad request, or the conversation is not a group thread' }
         '401': { $ref: '#/components/responses/Unauthorized' }
-        '403': { description: 'iMessage is in private beta and not enabled for this account (code: PLATFORM_BETA_RESTRICTED)' }
         '404': { description: Account or conversation not found }
 
   /v1/imessage/groups/{conversationId}/participants:
@@ -36283,7 +36267,6 @@ paths:
                   contact: { type: string }
         '400': { description: 'Bad request, or the conversation is not a group thread' }
         '401': { $ref: '#/components/responses/Unauthorized' }
-        '403': { description: 'iMessage is in private beta and not enabled for this account (code: PLATFORM_BETA_RESTRICTED)' }
         '404': { description: Account or conversation not found }
     delete:
       operationId: removeImessageGroupParticipant
@@ -36308,7 +36291,6 @@ paths:
                   contact: { type: string }
         '400': { description: 'Bad request, or the conversation is not a group thread' }
         '401': { $ref: '#/components/responses/Unauthorized' }
-        '403': { description: 'iMessage is in private beta and not enabled for this account (code: PLATFORM_BETA_RESTRICTED)' }
         '404': { description: Account or conversation not found }
 
   /v1/sms/messages:
