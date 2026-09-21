@@ -818,6 +818,27 @@ Both `from zernio import ...` and `from late import ...` work identically. The `
 | `gmb_verifications.fetch_google_business_verification_options()` | Fetch verification options |
 | `gmb_verifications.start_google_business_verification()` | Start a verification |
 
+### iMessage
+| Method | Description |
+|--------|-------------|
+| `imessage.list_imessage_audience()` | List iMessage audience |
+| `imessage.list_imessage_available_numbers()` | List instantly available iMessage numbers |
+| `imessage.list_imessage_sender_orders()` | List iMessage sender orders |
+| `imessage.list_imessage_senders()` | List iMessage senders |
+| `imessage.create_imessage_group()` | Start an iMessage group chat |
+| `imessage.create_imessage_opt_in_link()` | Create a tracked iMessage opt-in link |
+| `imessage.get_imessage_group()` | Get an iMessage group |
+| `imessage.get_imessage_sender()` | Get iMessage sender status |
+| `imessage.update_imessage_group()` | Rename an iMessage group or change its photo |
+| `imessage.update_imessage_sender()` | Update an iMessage sender |
+| `imessage.add_imessage_group_participant()` | Add a participant to an iMessage group |
+| `imessage.cancel_imessage_sender()` | Cancel an iMessage sender |
+| `imessage.order_imessage_sender()` | Order a new iMessage sender |
+| `imessage.register_imessage_sender()` | Register an iMessage sender |
+| `imessage.remove_imessage_group_participant()` | Remove a participant from an iMessage group |
+| `imessage.reserve_imessage_available_number()` | Reserve an available iMessage number |
+| `imessage.set_imessage_subscription()` | Subscribe or opt out an iMessage contact |
+
 ### Inbox Analytics
 | Method | Description |
 |--------|-------------|

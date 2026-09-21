@@ -14564,6 +14564,482 @@ def register_generated_tools(mcp, _get_client):
         except Exception as e:
             return f"Error: {e}"
 
+    # IMESSAGE
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="List iMessage senders",
+            readOnlyHint=True,
+            destructiveHint=False,
+            openWorldHint=False,
+        )
+    )
+    def imessage_list_imessage_senders() -> str:
+        """List iMessage senders"""
+        client = _get_client()
+        try:
+            response = client.imessage.list_imessage_senders()
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Register an iMessage sender",
+            readOnlyHint=False,
+            destructiveHint=True,
+            openWorldHint=True,
+        )
+    )
+    def imessage_register_imessage_sender(
+        profile_id: str,
+        sender: str,
+        display_name: str | None = None,
+        provider: str | None = None,
+    ) -> str:
+        """Register an iMessage sender
+
+        Args:
+            profile_id: Profile to attach the sender to (required)
+            sender: The provider-provisioned sender handle: a phone number in international format (e.g. +18305551234) or an email address (required)
+            display_name
+            provider: Delivery provider. Defaults to the platform default."""
+        client = _get_client()
+        try:
+            response = client.imessage.register_imessage_sender(
+                profile_id=profile_id,
+                sender=sender,
+                display_name=display_name,
+                provider=provider,
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="List iMessage sender orders",
+            readOnlyHint=True,
+            destructiveHint=False,
+            openWorldHint=False,
+        )
+    )
+    def imessage_list_imessage_sender_orders(include_canceled: bool = False) -> str:
+        """List iMessage sender orders
+
+        Args:
+            include_canceled"""
+        client = _get_client()
+        try:
+            response = client.imessage.list_imessage_sender_orders(
+                include_canceled=include_canceled
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Order a new iMessage sender",
+            readOnlyHint=False,
+            destructiveHint=True,
+            openWorldHint=True,
+        )
+    )
+    def imessage_order_imessage_sender(
+        profile_id: str,
+        kind: str,
+        region: str | None = None,
+        available_number_id: str | None = None,
+        zip_code: str | None = None,
+        email_name: str | None = None,
+        email_domain: str | None = None,
+        display_name: str | None = None,
+        purchase_intent_id: str | None = None,
+        contact: dict[str, Any] | None = None,
+    ) -> str:
+        """Order a new iMessage sender
+
+        Args:
+            profile_id: (required)
+            kind: (required)
+            region: Required for phone senders. Without availableNumberId the number is carrier-assigned in this region and revealed once the sender activates.
+            available_number_id: A number from GET /v1/imessage/senders/available-numbers. It is assigned and activated on order instead of waiting for provisioning. Phone senders only.
+            zip_code: US phone senders only. Preferred area for a carrier-assigned number (ignored with availableNumberId).
+            email_name: Local part for email senders (required for kind: email)
+            email_domain: Domain for email senders (required for kind: email)
+            display_name
+            purchase_intent_id: Idempotency key for safe retries
+            contact: Contact card (vCard) attached to the sender, shown when recipients save it. Required before sending with contactCard."""
+        client = _get_client()
+        try:
+            response = client.imessage.order_imessage_sender(
+                profile_id=profile_id,
+                kind=kind,
+                region=region,
+                available_number_id=available_number_id,
+                zip_code=zip_code,
+                email_name=email_name,
+                email_domain=email_domain,
+                display_name=display_name,
+                purchase_intent_id=purchase_intent_id,
+                contact=contact,
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Get iMessage sender status",
+            readOnlyHint=True,
+            destructiveHint=False,
+            openWorldHint=False,
+        )
+    )
+    def imessage_get_imessage_sender(sender_id: str) -> str:
+        """Get iMessage sender status
+
+        Args:
+            sender_id: (required)"""
+        client = _get_client()
+        try:
+            response = client.imessage.get_imessage_sender(sender_id=sender_id)
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Update an iMessage sender",
+            readOnlyHint=False,
+            destructiveHint=True,
+            openWorldHint=True,
+        )
+    )
+    def imessage_update_imessage_sender(
+        sender_id: str,
+        display_name: str | None = None,
+        contact: dict[str, Any] | None = None,
+    ) -> str:
+        """Update an iMessage sender
+
+        Args:
+            sender_id: (required)
+            display_name
+            contact"""
+        client = _get_client()
+        try:
+            response = client.imessage.update_imessage_sender(
+                sender_id=sender_id, display_name=display_name, contact=contact
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Cancel an iMessage sender",
+            readOnlyHint=False,
+            destructiveHint=True,
+            openWorldHint=True,
+        )
+    )
+    def imessage_cancel_imessage_sender(sender_id: str) -> str:
+        """Cancel an iMessage sender
+
+        Args:
+            sender_id: (required)"""
+        client = _get_client()
+        try:
+            response = client.imessage.cancel_imessage_sender(sender_id=sender_id)
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="List iMessage audience",
+            readOnlyHint=True,
+            destructiveHint=False,
+            openWorldHint=False,
+        )
+    )
+    def imessage_list_imessage_audience(
+        account_id: str | None = None,
+        status: str | None = None,
+        search: str | None = None,
+        limit: int = 50,
+        skip: int = 0,
+    ) -> str:
+        """List iMessage audience
+
+        Args:
+            account_id: Limit to one sender account
+            status
+            search: Matches the contact handle or name
+            limit
+            skip"""
+        client = _get_client()
+        try:
+            response = client.imessage.list_imessage_audience(
+                account_id=account_id,
+                status=status,
+                search=search,
+                limit=limit,
+                skip=skip,
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Subscribe or opt out an iMessage contact",
+            readOnlyHint=False,
+            destructiveHint=True,
+            openWorldHint=True,
+        )
+    )
+    def imessage_set_imessage_subscription(
+        account_id: str, conversation_id: str, subscribed: bool
+    ) -> str:
+        """Subscribe or opt out an iMessage contact
+
+        Args:
+            account_id: (required)
+            conversation_id: (required)
+            subscribed: (required)"""
+        client = _get_client()
+        try:
+            response = client.imessage.set_imessage_subscription(
+                account_id=account_id,
+                conversation_id=conversation_id,
+                subscribed=subscribed,
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Create a tracked iMessage opt-in link",
+            readOnlyHint=False,
+            destructiveHint=True,
+            openWorldHint=True,
+        )
+    )
+    def imessage_create_imessage_opt_in_link(
+        sender_id: str,
+        body: str,
+        parameters: dict[str, Any] | None = None,
+        opt_in_code: str | None = None,
+    ) -> str:
+        """Create a tracked iMessage opt-in link
+
+        Args:
+            sender_id: (required)
+            body: Prefilled message text. Must contain the literal `[opt-in-code]` placeholder, e.g. "Hi! My code is [opt-in-code]". (required)
+            parameters: Custom key/values (e.g. leadId, campaign) echoed back on the opt-in message.
+            opt_in_code: Your own code in place of the generated one (3-8 characters, no spaces or `#`, `!`, `-`). An unredeemed link lives 24 hours; re-issuing with the same code replaces it, and the earlier URL stops matching."""
+        client = _get_client()
+        try:
+            response = client.imessage.create_imessage_opt_in_link(
+                sender_id=sender_id,
+                body=body,
+                parameters=parameters,
+                opt_in_code=opt_in_code,
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="List instantly available iMessage numbers",
+            readOnlyHint=True,
+            destructiveHint=False,
+            openWorldHint=False,
+        )
+    )
+    def imessage_list_imessage_available_numbers(region: str | None = None) -> str:
+        """List instantly available iMessage numbers
+
+        Args:
+            region"""
+        client = _get_client()
+        try:
+            response = client.imessage.list_imessage_available_numbers(region=region)
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Reserve an available iMessage number",
+            readOnlyHint=False,
+            destructiveHint=True,
+            openWorldHint=True,
+        )
+    )
+    def imessage_reserve_imessage_available_number(number_id: str) -> str:
+        """Reserve an available iMessage number
+
+        Args:
+            number_id: (required)"""
+        client = _get_client()
+        try:
+            response = client.imessage.reserve_imessage_available_number(
+                number_id=number_id
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Start an iMessage group chat",
+            readOnlyHint=False,
+            destructiveHint=True,
+            openWorldHint=True,
+        )
+    )
+    def imessage_create_imessage_group(
+        account_id: str,
+        contacts: list[str] | None,
+        text: str,
+        name: str | None = None,
+        channel: str = "imessage",
+    ) -> str:
+        """Start an iMessage group chat
+
+        Args:
+            account_id: The iMessage account (sender) that opens the group (required)
+            contacts: Participant handles (E.164 phones or iMessage emails) (required)
+            text: The first message (required)
+            name: Group name (required for WhatsApp groups)
+            channel"""
+        client = _get_client()
+        try:
+            response = client.imessage.create_imessage_group(
+                account_id=account_id,
+                contacts=contacts,
+                text=text,
+                name=name,
+                channel=channel,
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Get an iMessage group",
+            readOnlyHint=True,
+            destructiveHint=False,
+            openWorldHint=False,
+        )
+    )
+    def imessage_get_imessage_group(conversation_id: str, account_id: str) -> str:
+        """Get an iMessage group
+
+        Args:
+            conversation_id: The inbox conversation id (or the provider group id) (required)
+            account_id: (required)"""
+        client = _get_client()
+        try:
+            response = client.imessage.get_imessage_group(
+                conversation_id=conversation_id, account_id=account_id
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Rename an iMessage group or change its photo",
+            readOnlyHint=False,
+            destructiveHint=True,
+            openWorldHint=True,
+        )
+    )
+    def imessage_update_imessage_group(
+        conversation_id: str,
+        account_id: str,
+        name: str | None = None,
+        photo_url: str | None = None,
+    ) -> str:
+        """Rename an iMessage group or change its photo
+
+        Args:
+            conversation_id: (required)
+            account_id: (required)
+            name
+            photo_url: Public HTTPS image URL; empty string removes the photo"""
+        client = _get_client()
+        try:
+            response = client.imessage.update_imessage_group(
+                conversation_id=conversation_id,
+                account_id=account_id,
+                name=name,
+                photo_url=photo_url,
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Add a participant to an iMessage group",
+            readOnlyHint=False,
+            destructiveHint=True,
+            openWorldHint=True,
+        )
+    )
+    def imessage_add_imessage_group_participant(
+        conversation_id: str, account_id: str, contact: str
+    ) -> str:
+        """Add a participant to an iMessage group
+
+        Args:
+            conversation_id: (required)
+            account_id: (required)
+            contact: E.164 phone or iMessage email (required)"""
+        client = _get_client()
+        try:
+            response = client.imessage.add_imessage_group_participant(
+                conversation_id=conversation_id, account_id=account_id, contact=contact
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Remove a participant from an iMessage group",
+            readOnlyHint=False,
+            destructiveHint=True,
+            openWorldHint=True,
+        )
+    )
+    def imessage_remove_imessage_group_participant(
+        conversation_id: str, account_id: str, contact: str
+    ) -> str:
+        """Remove a participant from an iMessage group
+
+        Args:
+            conversation_id: (required)
+            account_id: (required)
+            contact: E.164 phone or iMessage email (required)"""
+        client = _get_client()
+        try:
+            response = client.imessage.remove_imessage_group_participant(
+                conversation_id=conversation_id, account_id=account_id, contact=contact
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
     # INBOX_ANALYTICS
 
     @mcp.tool(
@@ -15655,6 +16131,10 @@ def register_generated_tools(mcp, _get_client):
         attachment_type: str | None = None,
         attachment_name: str | None = None,
         voice_note: bool | None = None,
+        subject: str | None = None,
+        effect: str | None = None,
+        contact_card: bool | None = None,
+        channel: str | None = None,
         quick_replies: list[dict[str, Any]] | None = None,
         buttons: list[dict[str, Any]] | None = None,
         template: dict[str, Any] | None = None,
@@ -15674,7 +16154,7 @@ def register_generated_tools(mcp, _get_client):
                 message: Message text
                 attachment_url: URL of the attachment to send (image, video, audio, or file). The URL must be publicly accessible. For binary file uploads, use multipart/form-data instead. On WhatsApp, combining an image, video, or file with `buttons` renders the media as the header of one interactive reply-button message; audio cannot be combined with buttons.
                 category: WhatsApp only (Meta Direct Send). Sends this message as a business-initiated UTILITY message without an approved template, for example outside the 24-hour customer service window; Meta matches or auto-creates a template asynchronously. The WhatsApp Business Account must be eligible for Direct Send, otherwise the send fails with an error telling you to use an approved message template instead. Supported only for text messages (link preview ok) and interactive messages (reply buttons, CTA URL buttons, voice-call button, header of text/image/video/document). Cannot be combined with template, attachments, location, or contacts. Utility messages only; marketing content is not allowed under this category. Accepted on the JSON body only, not on multipart requests.
-                link_preview: WhatsApp only. Set false to send the message without a link-preview thumbnail for the first URL in the text. Defaults to true, which is how every WhatsApp text has been sent to date. Ignored on other platforms. Accepted on the JSON body only, not on multipart requests.
+                link_preview: WhatsApp and iMessage. Set false to send the message without a link-preview thumbnail (WhatsApp: the first URL; iMessage: every link renders as plain text). Defaults to true, which is how every WhatsApp text has been sent to date. Ignored on other platforms. Accepted on the JSON body only, not on multipart requests.
                 attachment_type: Type of attachment. Defaults to file if not specified.
                 attachment_name: WhatsApp only. Display name for a document sent via attachmentUrl with attachmentType: file (e.g. "Report.pdf"). Maps to the recipient's file name; without it WhatsApp derives the name from the URL and shows "Untitled". Ignored for image/video/audio and for binary uploads (which use the uploaded file's name).
                 voice_note: WhatsApp only. When `true` on an audio attachment, the message is sent
@@ -15682,6 +16162,10 @@ def register_generated_tools(mcp, _get_client):
         UI instead of a basic audio attachment. The audio file MUST be `.ogg`
         encoded with the OPUS codec (mono) per Meta's voice-message contract;
         other formats are rejected by WhatsApp. Ignored for non-audio attachments.
+                subject: iMessage only (JSON body only). Bold title line rendered above the message text. Rejected with 400 on other platforms; ignored on voice-message sends.
+                effect: iMessage only (JSON body only). Apple screen/bubble animation played when the message arrives. Rejected with 400 on other platforms.
+                contact_card: iMessage only (JSON body only). When `true`, attaches the sender's contact card (vCard) so the recipient can save the sender. Counts as message content on its own, so `message` becomes optional.
+                channel: iMessage only (JSON body only). Overrides the delivery channel for this one send; the provider otherwise picks it automatically. The sender must carry the matching add-on (SMS, RCS or WhatsApp), or the send fails. Not a default to set on every request. Rejected with 400 on other platforms.
                 quick_replies: Quick reply buttons. Mutually exclusive with buttons. Max 13 items.
                 buttons: Action buttons. Mutually exclusive with quickReplies. Max 3 items.
 
@@ -15798,7 +16282,7 @@ def register_generated_tools(mcp, _get_client):
                 messaging_type: Facebook messaging type. Required when using messageTag.
                 message_tag: Facebook message tag for messaging outside 24h window. Requires messagingType MESSAGE_TAG. Instagram only supports HUMAN_AGENT.
                 reply_to: Platform message ID to quote-reply to. For WhatsApp, pass the wamid; for Telegram, the Telegram message ID (delivered as message.platformMessageId on webhooks, and as `id` on each entry of the list-messages endpoint). On Slack it threads the reply (thread_ts) instead of quoting. Instagram and Facebook Messenger do not support send-side quote replies: the message is sent without a quote and the successful response includes a warnings entry with code ignored_field and param replyTo. Other platforms without send-side reply support ignore this field.
-                location: WhatsApp-only. Send a location pin.
+                location: WhatsApp and iMessage. Send a location pin (on iMessage it renders as a native map bubble).
                 contacts: WhatsApp-only. Send one or more contact cards."""
         client = _get_client()
         try:
@@ -15812,6 +16296,10 @@ def register_generated_tools(mcp, _get_client):
                 attachment_type=attachment_type,
                 attachment_name=attachment_name,
                 voice_note=voice_note,
+                subject=subject,
+                effect=effect,
+                contact_card=contact_card,
+                channel=channel,
                 quick_replies=quick_replies,
                 buttons=buttons,
                 template=template,
@@ -15846,7 +16334,7 @@ def register_generated_tools(mcp, _get_client):
 
         Args:
             conversation_id: The conversation ID (required)
-            message_id: The Telegram message ID to edit (required)
+            message_id: The platform message ID to edit (iMessage also accepts the Zernio message id) (required)
             account_id: Account ID (required)
             text: New message text
             reply_markup: New inline keyboard markup"""

@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.26.0"
+  version: "1.27.0"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -555,6 +555,13 @@ tags:
       numbers, export STOP opt-outs, and complete the US carrier registration (10DLC or
       toll-free) required before US traffic delivers.
       Private beta: returns 404 unless your account is enrolled.
+  - name: iMessage
+    description: |
+      Two-way iMessage on provider-provisioned senders. Register a sender on a
+      profile, then send and receive through the inbox conversation endpoints
+      ('platform: imessage'). Replies only; broadcasts are not supported on this
+      channel.
+      Private beta: returns 403 unless your account is enrolled.
 components:
   securitySchemes:
     bearerAuth:
@@ -1196,6 +1203,53 @@ components:
         lastSentAt: { type: [string, "null"], format: date-time }
         createdAt: { type: string, format: date-time }
         resend: { type: boolean, description: 'Present on create responses: true when an active verification was resent instead of created.' }
+    ImessageSenderLifecycle:
+      type: object
+      description: 'A provisioned iMessage sender order and its lifecycle. Activation is asynchronous: poll GET /v1/imessage/senders/{senderId} or subscribe to account.connected.'
+      properties:
+        id: { type: string }
+        kind: { type: string, enum: [phone, email] }
+        region: { type: [string, "null"], enum: [US, GB, null] }
+        handle: { type: [string, "null"], description: The sender handle once activation assigns it }
+        optInLink: { type: [string, "null"], description: 'imessage:// deep link that opens Messages on this sender with a prefilled text. Share it so contacts message you first (Apple only lets a sender reach contacts who wrote to it first); null until the handle is assigned.' }
+        status: { type: string, enum: [ordering, activating, active, suspended, canceled, failed] }
+        priceCents: { type: integer, description: Monthly price billed while the sender is active }
+        provider: { type: string }
+        profileId: { type: string }
+        displayName: { type: [string, "null"] }
+        failureReason: { type: [string, "null"] }
+        accountId: { type: [string, "null"], description: The messaging account created at activation }
+        createdAt: { type: string, format: date-time }
+    ImessageAudienceContact:
+      type: object
+      properties:
+        conversationId: { type: string }
+        accountId: { type: string }
+        contact: { type: string, description: 'The contact handle (E.164 phone or email)' }
+        name: { type: [string, "null"] }
+        subscribed: { type: boolean }
+        lastMessage: { type: [string, "null"] }
+        lastMessageAt: { type: [string, "null"], format: date-time }
+        firstSeenAt: { type: [string, "null"], format: date-time }
+        optIn:
+          type: [object, "null"]
+          description: Present when the thread was opened through a tracked opt-in link
+          properties:
+            at: { type: string, format: date-time }
+            parameters: { type: object, additionalProperties: true }
+    ImessageSender:
+      type: object
+      description: An iMessage sender registered as an account on a profile.
+      properties:
+        id: { type: string, description: "Account id (use it with the inbox endpoints' accountId)" }
+        platform: { type: string, enum: [imessage] }
+        sender: { type: string, description: 'The sender handle (E.164 phone or email)' }
+        optInLink: { type: [string, "null"], description: 'imessage:// deep link that opens Messages on this sender with a prefilled text. Share it so contacts message you first (Apple only lets a sender reach contacts who wrote to it first).' }
+        displayName: { type: string }
+        profileId: { type: [string, "null"] }
+        provider: { type: string, description: 'Delivery provider backing this sender (e.g. loopmessage)' }
+        senderVerified: { type: boolean, description: Whether the provider confirmed the sender as active at registration time }
+        isActive: { type: boolean }
     RfPrediction:
       type: object
       description: A Meta Reach & Frequency prediction. Money values in whole units of the ad account currency.
@@ -4044,7 +4098,7 @@ components:
         id: { type: string, description: "The platform's conversation id, equal to `conversation.platformConversationId` on inbox webhooks (whose `conversation.id` is Zernio's internal id). Both are accepted by the conversation endpoints." }
         platform:
           type: string
-          enum: [instagram, facebook, telegram, whatsapp, twitter, reddit, bluesky, sms, slack, tiktok]
+          enum: [instagram, facebook, telegram, whatsapp, twitter, reddit, bluesky, sms, slack, tiktok, imessage]
         platformConversationId: { type: string, description: 'Same value as `id`.' }
         participantId: { type: string, description: "Contact's platform identifier (IGSID, PSID, wa_id, etc.)" }
         participantName: { type: string }
@@ -4233,7 +4287,7 @@ components:
               description: Internal conversation ID
             platform:
               type: string
-              enum: [instagram, facebook, telegram, whatsapp, sms, twitter, bluesky, reddit, slack, tiktok]
+              enum: [instagram, facebook, telegram, whatsapp, sms, twitter, bluesky, reddit, slack, tiktok, imessage]
             platformMessageId:
               type: string
               description: Platform's message ID
@@ -4711,7 +4765,7 @@ components:
               description: Internal conversation ID
             platform:
               type: string
-              enum: [instagram, facebook, telegram, whatsapp, twitter, reddit, bluesky, slack, tiktok]
+              enum: [instagram, facebook, telegram, whatsapp, twitter, reddit, bluesky, slack, tiktok, imessage]
               description: 'Every platform whose outgoing messages Zernio observes. sms is absent on purpose: its carrier receipts update delivery status and never raise message.sent.'
             platformMessageId:
               type: string
@@ -29508,7 +29562,7 @@ paths:
           description: Filter by profile ID
         - name: platform
           in: query
-          schema: { type: string, enum: [facebook, instagram, twitter, bluesky, reddit, telegram, whatsapp] }
+          schema: { type: string, enum: [facebook, instagram, twitter, bluesky, reddit, telegram, whatsapp, imessage] }
           description: Filter by platform
         - name: status
           in: query
@@ -29564,6 +29618,9 @@ paths:
                           type: string
                           enum: [app, ai_agent, other]
                           description: 'WhatsApp only, present once Meta Business Agent has touched the thread. ai_agent: the agent answers and new inbound arrive flagged metadata.standby; app: you hold control; other: another partner app does. Change it with POST /v1/inbox/conversations/{conversationId}/thread-control.'
+                        isGroup:
+                          type: boolean
+                          description: 'iMessage only, true for a group thread. Manage it through the /v1/imessage/groups/{conversationId} endpoints.'
                         url:
                           type: [string, "null"]
                           description: Direct link to open the conversation on the platform (if available)
@@ -30094,7 +30151,7 @@ paths:
           description: Filter by profile ID
         - name: platform
           in: query
-          schema: { type: string, enum: [facebook, instagram, telegram, whatsapp, sms, slack] }
+          schema: { type: string, enum: [facebook, instagram, telegram, whatsapp, sms, slack, imessage] }
           description: Filter by platform (searchable platforms only)
         - name: accountId
           in: query
@@ -30708,10 +30765,11 @@ paths:
                   type: boolean
                   default: true
                   description: >-
-                    WhatsApp only. Set false to send the message without a link-preview
-                    thumbnail for the first URL in the text. Defaults to true, which is how
-                    every WhatsApp text has been sent to date. Ignored on other platforms.
-                    Accepted on the JSON body only, not on multipart requests.
+                    WhatsApp and iMessage. Set false to send the message without a link-preview
+                    thumbnail (WhatsApp: the first URL; iMessage: every link renders as plain
+                    text). Defaults to true, which is how every WhatsApp text has been sent
+                    to date. Ignored on other platforms. Accepted on the JSON body only, not
+                    on multipart requests.
                 attachmentType:
                   type: string
                   enum: [image, video, audio, file]
@@ -30727,6 +30785,21 @@ paths:
                     UI instead of a basic audio attachment. The audio file MUST be `.ogg`
                     encoded with the OPUS codec (mono) per Meta's voice-message contract;
                     other formats are rejected by WhatsApp. Ignored for non-audio attachments.
+                subject:
+                  type: string
+                  maxLength: 1000
+                  description: 'iMessage only (JSON body only). Bold title line rendered above the message text. Rejected with 400 on other platforms; ignored on voice-message sends.'
+                effect:
+                  type: string
+                  enum: [slam, loud, gentle, invisibleInk, echo, spotlight, balloons, confetti, love, lasers, fireworks, shootingStar, celebration]
+                  description: 'iMessage only (JSON body only). Apple screen/bubble animation played when the message arrives. Rejected with 400 on other platforms.'
+                contactCard:
+                  type: boolean
+                  description: 'iMessage only (JSON body only). When `true`, attaches the sender''s contact card (vCard) so the recipient can save the sender. Counts as message content on its own, so `message` becomes optional.'
+                channel:
+                  type: string
+                  enum: [imessage, sms, rcs, whatsapp]
+                  description: 'iMessage only (JSON body only). Overrides the delivery channel for this one send; the provider otherwise picks it automatically. The sender must carry the matching add-on (SMS, RCS or WhatsApp), or the send fails. Not a default to set on every request. Rejected with 400 on other platforms.'
                 quickReplies:
                   type: array
                   maxItems: 13
@@ -31135,7 +31208,7 @@ paths:
                   description: 'Platform message ID to quote-reply to. For WhatsApp, pass the wamid; for Telegram, the Telegram message ID (delivered as message.platformMessageId on webhooks, and as `id` on each entry of the list-messages endpoint). On Slack it threads the reply (thread_ts) instead of quoting. Instagram and Facebook Messenger do not support send-side quote replies: the message is sent without a quote and the successful response includes a warnings entry with code ignored_field and param replyTo. Other platforms without send-side reply support ignore this field.'
                 location:
                   type: object
-                  description: WhatsApp-only. Send a location pin.
+                  description: 'WhatsApp and iMessage. Send a location pin (on iMessage it renders as a native map bubble).'
                   required: [latitude, longitude]
                   properties:
                     latitude: { type: number, description: Latitude in decimal degrees. }
@@ -31395,8 +31468,10 @@ paths:
       operationId: editInboxMessage
       summary: Edit message
       description: |
-        Edit the text and/or reply markup of a previously sent Telegram message.
-        Only supported for Telegram. Returns 400 for other platforms.
+        Edit a previously sent message. Platform support:
+        - Telegram: text and/or reply markup, any time
+        - 'iMessage: text only, within 15 minutes of sending (Apple''s limit; 409 `edit_window_expired` after that). Group messages included. The stored message keeps its edit history.'
+        - All others: returns 400
       tags: [Messages]
       security: [{ bearerAuth: [] }]
       parameters:
@@ -31409,7 +31484,7 @@ paths:
           in: path
           required: true
           schema: { type: string }
-          description: The Telegram message ID to edit
+          description: 'The platform message ID to edit (iMessage also accepts the Zernio message id)'
       requestBody:
         required: true
         content:
@@ -31463,6 +31538,7 @@ paths:
         - X: Full delete (own DM events only)
         - Bluesky: Delete for self only (recipient still sees it)
         - Reddit: Delete from sender's view only
+        - 'iMessage: Unsend (the bubble disappears for the recipient) within 2 minutes of sending (Apple''s limit; 409 `unsend_window_expired` after that). Own outbound messages only.'
         - Facebook, Instagram, WhatsApp: Not supported (returns 400)
       tags: [Messages]
       security: [{ bearerAuth: [] }]
@@ -31510,6 +31586,7 @@ paths:
         - Instagram: Shows "typing..." to the recipient (works for both Instagram Login and Facebook Login accounts). The recipient must be signed in to Instagram to see it.
         - Telegram: Shows "Bot is typing..." for 5 seconds
         - WhatsApp: Shows "typing..." for up to 25 seconds. Requires a recent inbound message in the conversation (Meta references the inbound message id) and also marks that message as read as a side-effect.
+        - iMessage: Shows a typing bubble for ~15 seconds (1:1 conversations only; requires a recent two-way exchange)
         - All others: Returns 200 but no-op (platform doesn't support it)
 
         Typing indicators are best-effort. The endpoint always returns 200 even if the platform call fails; `success` reports whether a typing indicator was actually sent to the platform (`false` on unsupported platforms or when the platform call failed).
@@ -31620,6 +31697,9 @@ paths:
         EXCEPT on coexistence accounts (where the WhatsApp Business app on the
         customer's phone owns read state and we never override it).
 
+        For iMessage, this also marks the conversation read with the contact
+        (1:1 conversations only). Best-effort.
+
         This is the explicit, human-driven counterpart to `GET .../messages`,
         which is side-effect-free and does NOT mark anything read. Call this when
         a user actually views the conversation.
@@ -31669,6 +31749,7 @@ paths:
         - WhatsApp: Supports any standard emoji (one reaction per message per sender)
         - Instagram and Facebook Messenger: Any standard emoji, subject to Meta's 24h messaging window
         - Slack: The emoji must have a Slack name (e.g. `:thumbsup:`); unnamed characters return 400
+        - 'iMessage: The six Apple tapbacks (❤️ 👍 👎 😂 ‼️ ❓) render natively; any other emoji is sent as a custom emoji tapback (iOS 18+ recipients)'
         - All others: Returns 400 (not supported)
       tags: [Messages]
       security: [{ bearerAuth: [] }]
@@ -31721,6 +31802,7 @@ paths:
         - WhatsApp: Send empty emoji to remove
         - Instagram and Facebook Messenger: Sends Meta's `unreact` action; the emoji does not need to be repeated
         - Slack: Removes the reaction we previously sent on that message
+        - 'iMessage: Retracts your existing tapback or emoji reaction on the message (400 when you have none)'
         - All others: Returns 400 (not supported)
       tags: [Messages]
       security: [{ bearerAuth: [] }]
@@ -35613,6 +35695,601 @@ paths:
         '429': { description: Outbound call limit reached (per rolling hour). }
         '502': { description: Carrier-side originate failed }
 
+  /v1/imessage/senders:
+    get:
+      operationId: listImessageSenders
+      summary: List iMessage senders
+      description: Lists the iMessage senders registered across your accessible profiles.
+      tags: [iMessage]
+      security: [{ bearerAuth: [] }]
+      responses:
+        '200':
+          description: Registered iMessage senders
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  senders:
+                    type: array
+                    items: { $ref: '#/components/schemas/ImessageSender' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { description: 'iMessage is in private beta and not enabled for this account (code: PLATFORM_BETA_RESTRICTED)' }
+    post:
+      operationId: registerImessageSender
+      summary: Register an iMessage sender
+      description: |
+        Registers a provider-provisioned iMessage sender (a phone number or an
+        email handle) that YOU already own on a profile, creating an
+        `imessage` account that sends and receives through the inbox
+        conversation endpoints. To have Zernio order a new sender for you, use
+        POST /v1/imessage/senders/order instead. Registration attaches the
+        monthly sender fee (billed while active) and requires a payment method
+        (402 without one). One sender per profile: re-registering the SAME
+        handle refreshes it; a different handle returns 409 until the existing
+        sender is canceled.
+      tags: [iMessage]
+      security: [{ bearerAuth: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [profileId, sender]
+              properties:
+                profileId: { type: string, description: Profile to attach the sender to }
+                sender: { type: string, description: 'The provider-provisioned sender handle: a phone number in international format (e.g. +18305551234) or an email address' }
+                displayName: { type: string, maxLength: 100 }
+                provider: { type: string, enum: [loopmessage], description: Delivery provider. Defaults to the platform default. }
+      responses:
+        '200':
+          description: Sender registered
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success: { type: boolean }
+                  account: { $ref: '#/components/schemas/ImessageSender' }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { description: 'iMessage is in private beta and not enabled for this account (code: PLATFORM_BETA_RESTRICTED)' }
+        '402': { description: 'Payment method or plan upgrade required to connect another account' }
+        '404': { description: Profile not found or access denied }
+        '409': { description: 'Sender already registered to another profile (code: imessage_sender_conflict)' }
+
+  /v1/imessage/senders/order:
+    get:
+      operationId: listImessageSenderOrders
+      summary: List iMessage sender orders
+      description: 'Every sender lifecycle doc your team owns (ordered or registered), across statuses. Canceled senders are omitted unless `includeCanceled=true`.'
+      tags: [iMessage]
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - { name: includeCanceled, in: query, required: false, schema: { type: boolean, default: false } }
+      responses:
+        '200':
+          description: Sender lifecycle docs, newest first
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  senders:
+                    type: array
+                    items: { $ref: '#/components/schemas/ImessageSenderLifecycle' }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { description: 'iMessage is in private beta and not enabled for this account (code: PLATFORM_BETA_RESTRICTED)' }
+    post:
+      operationId: orderImessageSender
+      summary: Order a new iMessage sender
+      description: |
+        Orders a NEW dedicated iMessage sender from the delivery provider
+        (compare with POST /v1/imessage/senders, which registers a sender you
+        already own). Activation is asynchronous (minutes to a few hours):
+        the response is 202 with the lifecycle object; poll
+        GET /v1/imessage/senders/{senderId} or subscribe to the
+        account.connected webhook. Billing starts at activation (monthly per
+        sender, no proration). Requires usage-based billing and a valid
+        payment method. Pass purchaseIntentId to make retries idempotent —
+        the provider-side order is never retried automatically.
+      tags: [iMessage]
+      security: [{ bearerAuth: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [profileId, kind]
+              properties:
+                profileId: { type: string }
+                kind: { type: string, enum: [phone, email] }
+                region: { type: string, enum: [US, GB], description: 'Required for phone senders. Without availableNumberId the number is carrier-assigned in this region and revealed once the sender activates.' }
+                availableNumberId: { type: string, description: 'A number from GET /v1/imessage/senders/available-numbers. It is assigned and activated on order instead of waiting for provisioning. Phone senders only.' }
+                zipCode: { type: string, pattern: '^[0-9]{5}$', description: 'US phone senders only. Preferred area for a carrier-assigned number (ignored with availableNumberId).' }
+                emailName: { type: string, description: 'Local part for email senders (required for kind: email)' }
+                emailDomain: { type: string, description: 'Domain for email senders (required for kind: email)' }
+                displayName: { type: string, maxLength: 100 }
+                purchaseIntentId: { type: string, maxLength: 100, description: Idempotency key for safe retries }
+                contact:
+                  type: object
+                  description: 'Contact card (vCard) attached to the sender, shown when recipients save it. Required before sending with contactCard.'
+                  required: [firstName]
+                  properties:
+                    firstName: { type: string, maxLength: 64 }
+                    lastName: { type: string, maxLength: 64 }
+                    photoUrl: { type: string, format: uri }
+      responses:
+        '202':
+          description: Order accepted; activation continues asynchronously
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success: { type: boolean }
+                  sender: { $ref: '#/components/schemas/ImessageSenderLifecycle' }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '402': { description: 'A valid payment method is required (code: payment_method_required)' }
+        '403': { description: 'Sender limit reached (code: imessage_sender_limit), or iMessage is in private beta and not enabled for this account (code: PLATFORM_BETA_RESTRICTED)' }
+        '404': { description: Profile not found or access denied }
+        '409': { description: 'This profile already has a live iMessage sender (code: imessage_sender_conflict)' }
+        '422': { description: 'Workspace is not on usage-based billing (code: usage_billing_required)' }
+        '502': { description: 'The provider rejected the order; nothing was charged' }
+
+  /v1/imessage/senders/{senderId}:
+    get:
+      operationId: getImessageSender
+      summary: Get iMessage sender status
+      description: 'Lifecycle status of an ordered or registered sender (poll while an order activates), plus the provider''s live platform health for it.'
+      tags: [iMessage]
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - { name: senderId, in: path, required: true, schema: { type: string } }
+      responses:
+        '200':
+          description: Sender lifecycle
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success: { type: boolean }
+                  sender: { $ref: '#/components/schemas/ImessageSenderLifecycle' }
+                  health:
+                    type: [object, "null"]
+                    description: 'Provider platform health for this sender; null when the provider cannot report it.'
+                    properties:
+                      imessage: { type: string, enum: [active, degradation, outage] }
+                      whatsapp: { type: string, enum: [active, degradation, outage] }
+                  imessageLink: { type: [string, "null"], description: 'Provider-hosted opt-in page for this sender (opens Messages on any Apple device); null until the sender is active or when the provider cannot report it.' }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { description: 'iMessage is in private beta and not enabled for this account (code: PLATFORM_BETA_RESTRICTED)' }
+        '404': { description: Sender not found }
+    patch:
+      operationId: updateImessageSender
+      summary: Update an iMessage sender
+      description: 'Display name (inbox and API responses) and the contact card (vCard) recipients see when they save the sender. The contact card is what a contactCard send shares.'
+      tags: [iMessage]
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - { name: senderId, in: path, required: true, schema: { type: string } }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                displayName: { type: string, maxLength: 100 }
+                contact:
+                  type: object
+                  required: [firstName]
+                  properties:
+                    firstName: { type: string, maxLength: 64 }
+                    lastName: { type: string, maxLength: 64 }
+                    photoUrl: { type: string, format: uri, description: Square image }
+      responses:
+        '200':
+          description: Sender updated
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success: { type: boolean }
+                  sender: { $ref: '#/components/schemas/ImessageSenderLifecycle' }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { description: 'iMessage is in private beta and not enabled for this account (code: PLATFORM_BETA_RESTRICTED)' }
+        '404': { description: Sender not found }
+    delete:
+      operationId: cancelImessageSender
+      summary: Cancel an iMessage sender
+      description: |
+        Cancels the sender at the provider and deactivates its messaging
+        account. Billing stops with the current month (no proration or
+        refunds, matching phone numbers).
+      tags: [iMessage]
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - { name: senderId, in: path, required: true, schema: { type: string } }
+      responses:
+        '200':
+          description: Sender canceled
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success: { type: boolean }
+                  sender: { $ref: '#/components/schemas/ImessageSenderLifecycle' }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { description: 'iMessage is in private beta and not enabled for this account (code: PLATFORM_BETA_RESTRICTED)' }
+        '404': { description: Sender not found }
+
+  /v1/imessage/audience:
+    get:
+      operationId: listImessageAudience
+      summary: List iMessage audience
+      description: 'Contacts who have messaged your iMessage senders (1:1 threads), with subscription state and, for threads opened through a tracked opt-in link, the parameters that brought them in. Newest activity first.'
+      tags: [iMessage]
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - { name: accountId, in: query, required: false, schema: { type: string }, description: Limit to one sender account }
+        - { name: status, in: query, required: false, schema: { type: string, enum: [subscribed, unsubscribed] } }
+        - { name: search, in: query, required: false, schema: { type: string, maxLength: 120 }, description: 'Matches the contact handle or name' }
+        - { name: limit, in: query, required: false, schema: { type: integer, minimum: 1, maximum: 200, default: 50 } }
+        - { name: skip, in: query, required: false, schema: { type: integer, minimum: 0, default: 0 } }
+      responses:
+        '200':
+          description: Audience page
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  contacts:
+                    type: array
+                    items: { $ref: '#/components/schemas/ImessageAudienceContact' }
+                  total: { type: integer }
+                  limit: { type: integer }
+                  skip: { type: integer }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { description: 'iMessage is in private beta and not enabled for this account (code: PLATFORM_BETA_RESTRICTED)' }
+
+  /v1/imessage/audience/subscription:
+    post:
+      operationId: setImessageSubscription
+      summary: Subscribe or opt out an iMessage contact
+      description: 'Opted-out contacts are refused at send time (409 recipient_opted_out) until re-subscribed. Their inbound messages still arrive. Scoped to your account: it does not change the contact''s state with other businesses.'
+      tags: [iMessage]
+      security: [{ bearerAuth: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [accountId, conversationId, subscribed]
+              properties:
+                accountId: { type: string }
+                conversationId: { type: string }
+                subscribed: { type: boolean }
+      responses:
+        '200':
+          description: Updated
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success: { type: boolean }
+                  conversationId: { type: string }
+                  subscribed: { type: boolean }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { description: 'iMessage is in private beta and not enabled for this account (code: PLATFORM_BETA_RESTRICTED)' }
+        '404': { description: Account or conversation not found }
+
+  /v1/imessage/senders/{senderId}/opt-in-links:
+    post:
+      operationId: createImessageOptInLink
+      summary: Create a tracked iMessage opt-in link
+      description: |
+        Generates a per-campaign link that opens Messages on this sender with
+        `body` prefilled. iMessage is send-first: a sender can only message a
+        contact who has written to it (a send to anyone else fails with
+        `recipient_must_message_first`), and the contact's tap-and-send is
+        what opens that door.
+
+        Each link carries a unique code in place of the `[opt-in-code]`
+        placeholder; when the contact sends it, the resulting `message.received`
+        webhook (and the stored inbox message's `metadata`) has
+        `optIn: true` and your `parameters` under `optInParameters`, so you can
+        attribute the conversation to the campaign or lead that produced it.
+
+        For an untracked link, use the sender's `optInLink` instead.
+      tags: [iMessage]
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - { name: senderId, in: path, required: true, schema: { type: string } }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [body]
+              properties:
+                body: { type: string, maxLength: 500, description: 'Prefilled message text. Must contain the literal `[opt-in-code]` placeholder, e.g. "Hi! My code is [opt-in-code]".' }
+                parameters:
+                  type: object
+                  additionalProperties: { type: string }
+                  description: 'Custom key/values (e.g. leadId, campaign) echoed back on the opt-in message.'
+                optInCode: { type: string, minLength: 3, maxLength: 8, description: 'Your own code in place of the generated one (3-8 characters, no spaces or `#`, `!`, `-`). An unredeemed link lives 24 hours; re-issuing with the same code replaces it, and the earlier URL stops matching.' }
+      responses:
+        '200':
+          description: Opt-in link created
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success: { type: boolean }
+                  link:
+                    type: object
+                    properties:
+                      id: { type: string }
+                      imessage: { type: string, description: 'imessage:// deep link' }
+                      sms: { type: [string, "null"], description: 'sms: deep link for non-Apple devices' }
+                      whatsapp: { type: [string, "null"] }
+                      url: { type: string, description: Hosted landing URL that picks the right scheme for the device }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { description: 'iMessage is in private beta and not enabled for this account (code: PLATFORM_BETA_RESTRICTED)' }
+        '404': { description: Sender not found }
+        '409': { description: The sender is not active yet }
+
+  /v1/imessage/senders/available-numbers:
+    get:
+      operationId: listImessageAvailableNumbers
+      summary: List instantly available iMessage numbers
+      description: |
+        Phone numbers the provider has already registered and can assign on the
+        spot. Order one by passing its `id` as `availableNumberId` to
+        POST /v1/imessage/senders/order: the sender activates immediately
+        instead of after the usual provisioning wait. Reserve it first with
+        POST /v1/imessage/senders/available-numbers/{numberId}/reserve while the
+        buyer decides. The list is a snapshot; a number can be taken between
+        listing and ordering.
+      tags: [iMessage]
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - { name: region, in: query, required: false, schema: { type: string, enum: [US, GB] } }
+      responses:
+        '200':
+          description: Available numbers
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  numbers:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id: { type: string, description: Pass as availableNumberId when ordering }
+                        phone: { type: string, description: E.164 }
+                        region: { type: string }
+                  region: { type: [string, "null"] }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { description: 'iMessage is in private beta and not enabled for this account (code: PLATFORM_BETA_RESTRICTED)' }
+
+  /v1/imessage/senders/available-numbers/{numberId}/reserve:
+    post:
+      operationId: reserveImessageAvailableNumber
+      summary: Reserve an available iMessage number
+      description: 'Holds the number for 3 minutes so nobody else can order it while the buyer decides. Place the order (POST /v1/imessage/senders/order with availableNumberId) before the hold expires. No request body.'
+      tags: [iMessage]
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - { name: numberId, in: path, required: true, schema: { type: string } }
+      responses:
+        '200':
+          description: Number reserved
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success: { type: boolean }
+                  numberId: { type: string }
+                  expiresInSeconds: { type: integer, example: 180 }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { description: 'iMessage is in private beta and not enabled for this account (code: PLATFORM_BETA_RESTRICTED)' }
+        '409': { description: 'The number could not be reserved (already taken)' }
+
+  /v1/imessage/groups:
+    post:
+      operationId: createImessageGroup
+      summary: Start an iMessage group chat
+      description: |
+        Creates a group chat from one of your senders and sends its first
+        message. The provider processes it asynchronously: the response carries
+        the request id, and the thread appears in the inbox (with its group
+        conversation id) on the first webhook. Starting a group counts as
+        messaging new contacts, so the sender needs the provider's
+        init-conversations add-on and the same sending intervals apply; without
+        it the request fails with 409 `recipient_must_message_first`. WhatsApp
+        groups need a `name`.
+      tags: [iMessage]
+      security: [{ bearerAuth: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [accountId, contacts, text]
+              properties:
+                accountId: { type: string, description: The iMessage account (sender) that opens the group }
+                contacts: { type: array, minItems: 2, maxItems: 32, items: { type: string }, description: 'Participant handles (E.164 phones or iMessage emails)' }
+                text: { type: string, maxLength: 10000, description: The first message }
+                name: { type: string, maxLength: 32, description: 'Group name (required for WhatsApp groups)' }
+                channel: { type: string, enum: [imessage, sms, rcs, whatsapp], default: imessage }
+      responses:
+        '202':
+          description: Group creation accepted
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success: { type: boolean }
+                  requestId: { type: string, description: 'The provider''s request id (not the group id)' }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { description: 'iMessage is in private beta and not enabled for this account (code: PLATFORM_BETA_RESTRICTED)' }
+        '404': { description: Account not found }
+        '409': { description: 'The sender cannot start conversations (code: recipient_must_message_first)' }
+
+  /v1/imessage/groups/{conversationId}:
+    get:
+      operationId: getImessageGroup
+      summary: Get an iMessage group
+      description: 'The group''s name, participants and channel as the provider currently sees them. The conversation must be a group thread of the given account.'
+      tags: [iMessage]
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - { name: conversationId, in: path, required: true, schema: { type: string }, description: 'The inbox conversation id (or the provider group id)' }
+        - { name: accountId, in: query, required: true, schema: { type: string } }
+      responses:
+        '200':
+          description: Group details
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success: { type: boolean }
+                  conversationId: { type: string }
+                  group:
+                    type: object
+                    properties:
+                      id: { type: string, description: Provider group id }
+                      name: { type: [string, "null"] }
+                      participants: { type: array, items: { type: string } }
+                      channel: { type: [string, "null"] }
+                      createdAt: { type: [string, "null"], format: date-time }
+        '400': { description: 'Bad request, or the conversation is not a group thread' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { description: 'iMessage is in private beta and not enabled for this account (code: PLATFORM_BETA_RESTRICTED)' }
+        '404': { description: Account or conversation not found }
+    patch:
+      operationId: updateImessageGroup
+      summary: Rename an iMessage group or change its photo
+      description: 'One change per call: either `name` or `photoUrl` (an empty `photoUrl` removes the photo). Applied asynchronously by the provider; a rename is mirrored on the inbox conversation right away.'
+      tags: [iMessage]
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - { name: conversationId, in: path, required: true, schema: { type: string } }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [accountId]
+              properties:
+                accountId: { type: string }
+                name: { type: string, maxLength: 32 }
+                photoUrl: { type: string, description: 'Public HTTPS image URL; empty string removes the photo' }
+      responses:
+        '200':
+          description: Change accepted
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success: { type: boolean }
+                  conversationId: { type: string }
+        '400': { description: 'Bad request, or the conversation is not a group thread' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { description: 'iMessage is in private beta and not enabled for this account (code: PLATFORM_BETA_RESTRICTED)' }
+        '404': { description: Account or conversation not found }
+
+  /v1/imessage/groups/{conversationId}/participants:
+    post:
+      operationId: addImessageGroupParticipant
+      summary: Add a participant to an iMessage group
+      description: Applied asynchronously by the provider; the participant list on the next group webhook reflects it.
+      tags: [iMessage]
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - { name: conversationId, in: path, required: true, schema: { type: string } }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [accountId, contact]
+              properties:
+                accountId: { type: string }
+                contact: { type: string, description: 'E.164 phone or iMessage email' }
+      responses:
+        '200':
+          description: Change accepted
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success: { type: boolean }
+                  conversationId: { type: string }
+                  contact: { type: string }
+        '400': { description: 'Bad request, or the conversation is not a group thread' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { description: 'iMessage is in private beta and not enabled for this account (code: PLATFORM_BETA_RESTRICTED)' }
+        '404': { description: Account or conversation not found }
+    delete:
+      operationId: removeImessageGroupParticipant
+      summary: Remove a participant from an iMessage group
+      description: Applied asynchronously by the provider.
+      tags: [iMessage]
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - { name: conversationId, in: path, required: true, schema: { type: string } }
+        - { name: accountId, in: query, required: true, schema: { type: string } }
+        - { name: contact, in: query, required: true, schema: { type: string }, description: 'E.164 phone or iMessage email' }
+      responses:
+        '200':
+          description: Change accepted
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success: { type: boolean }
+                  conversationId: { type: string }
+                  contact: { type: string }
+        '400': { description: 'Bad request, or the conversation is not a group thread' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { description: 'iMessage is in private beta and not enabled for this account (code: PLATFORM_BETA_RESTRICTED)' }
+        '404': { description: Account or conversation not found }
+
   /v1/sms/messages:
     post:
       x-resource-group: "messages"
@@ -37567,6 +38244,17 @@ paths:
                         profileId: { type: [string, "null"] }
                         connectedAt: { type: [string, "null"], format: date-time }
                         callingEnabled: { type: boolean, description: 'Whether WhatsApp Business Calling is enabled on this number.' }
+                  imessage:
+                    type: array
+                    description: |
+                      iMessage phone senders (see /v1/imessage/senders/order). Hosted
+                      by the iMessage provider, not on your Telnyx numbers: SMS and
+                      Calls can never be enabled on them, and they bill as iMessage
+                      senders. `handle` is null until the carrier assigns the number
+                      at activation. Included only on the default and `status=active`
+                      views.
+                    items:
+                      $ref: '#/components/schemas/ImessageSenderLifecycle'
                   sandbox:
                     type: [object, "null"]
                     description: |
@@ -38158,6 +38846,17 @@ paths:
                         profileId: { type: [string, "null"] }
                         connectedAt: { type: [string, "null"], format: date-time }
                         callingEnabled: { type: boolean, description: 'Whether WhatsApp Business Calling is enabled on this number.' }
+                  imessage:
+                    type: array
+                    description: |
+                      iMessage phone senders (see /v1/imessage/senders/order). Hosted
+                      by the iMessage provider, not on your Telnyx numbers: SMS and
+                      Calls can never be enabled on them, and they bill as iMessage
+                      senders. `handle` is null until the carrier assigns the number
+                      at activation. Included only on the default and `status=active`
+                      views.
+                    items:
+                      $ref: '#/components/schemas/ImessageSenderLifecycle'
                   sandbox:
                     type: [object, "null"]
                     description: |
@@ -42679,7 +43378,7 @@ paths:
               properties:
                 profileId: { type: string }
                 accountId: { type: string }
-                platform: { type: string, enum: [instagram, facebook, telegram, twitter, bluesky, reddit, whatsapp, sms, slack] }
+                platform: { type: string, enum: [instagram, facebook, telegram, twitter, bluesky, reddit, whatsapp, sms, slack, imessage] }
                 name: { type: string }
                 description: { type: string }
                 message:

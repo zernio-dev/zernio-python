@@ -36,6 +36,7 @@ from ..resources import (
     DiscordResource,
     GmbServicesResource,
     GmbVerificationsResource,
+    ImessageResource,
     InboxAnalyticsResource,
     InstagramResource,
     InvitesResource,
@@ -180,6 +181,7 @@ class Zernio(BaseClient):
         self.discord = DiscordResource(self)
         self.gmb_services = GmbServicesResource(self)
         self.gmb_verifications = GmbVerificationsResource(self)
+        self.imessage = ImessageResource(self)
         self.inbox_analytics = InboxAnalyticsResource(self)
         self.instagram = InstagramResource(self)
         self.invites = InvitesResource(self)
