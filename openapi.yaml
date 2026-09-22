@@ -20442,7 +20442,7 @@ paths:
           description: 'Hosted signup page only (`signup=hosted`, WhatsApp): hex colour (`#RRGGBB`) for the primary button and step accents. Validated server-side; anything else is a 400 `INVALID_FIELD_VALUE`. Rejected without `signup=hosted`.'
         - name: language
           in: query
-          schema: { type: string, enum: [en, es] }
+          schema: { type: string, enum: [en, es, pt-BR] }
           description: 'Hosted signup page only (`signup=hosted`, WhatsApp): language of the page and its follow-along guide. Explainer videos stay in English. Default `en`. Rejected without `signup=hosted`.'
       security:
         - bearerAuth: []
@@ -24864,7 +24864,7 @@ paths:
                     properties:
                       brandName: { type: [string, "null"] }
                       primaryColor: { type: [string, "null"], description: 'Hex colour, #RRGGBB' }
-                      language: { type: [string, "null"], enum: [en, es, null] }
+                      language: { type: [string, "null"], enum: [en, es, pt-BR, null] }
         '401': { $ref: '#/components/responses/Unauthorized' }
 
   /v1/connect/discord:
@@ -39570,6 +39570,10 @@ paths:
                 profileId: { type: string }
                 country: { type: string, minLength: 2, maxLength: 2, description: ISO 3166-1 alpha-2 country code (must be a regulated/KYC country). }
                 areaCode: { type: string, pattern: '^\d{1,4}$', description: 'Area code (NDC) the eventual number must be in. Hard constraint carried by the link; the end customer filling the form makes no area choice. Options come from GET /v1/phone-numbers/availability (areaOptions).' }
+                language:
+                  type: string
+                  enum: [en, es, pt-BR]
+                  description: 'Language of the hosted page: its copy, the carrier requirement texts (translated once per country and cached), the pre-submit review notes and the status emails to the end customer. Omitted: the browser language of the end customer, falling back to English. The end customer can also switch with `?lang=` on the page.'
                 branding:
                   type: object
                   description: Optional white-label of the hosted page the end customer sees.
@@ -40550,6 +40554,10 @@ paths:
                 profileId: { type: string }
                 country: { type: string, minLength: 2, maxLength: 2, description: ISO 3166-1 alpha-2 country code (must be a regulated/KYC country). }
                 areaCode: { type: string, pattern: '^\d{1,4}$', description: 'Area code (NDC) the eventual number must be in. Hard constraint carried by the link; the end customer filling the form makes no area choice. Options come from GET /v1/phone-numbers/availability (areaOptions).' }
+                language:
+                  type: string
+                  enum: [en, es, pt-BR]
+                  description: 'Language of the hosted page: its copy, the carrier requirement texts (translated once per country and cached), the pre-submit review notes and the status emails to the end customer. Omitted: the browser language of the end customer, falling back to English. The end customer can also switch with `?lang=` on the page.'
                 branding:
                   type: object
                   description: Optional white-label of the hosted page the end customer sees.

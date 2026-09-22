@@ -247,6 +247,7 @@ class PhoneNumbersResource:
         country: str,
         *,
         area_code: str | None = None,
+        language: str | None = None,
         branding: dict[str, Any] | None = None,
         redirect_url: str | None = None,
     ) -> dict[str, Any]:
@@ -255,6 +256,7 @@ class PhoneNumbersResource:
             profile_id=profile_id,
             country=country,
             area_code=area_code,
+            language=language,
             branding=branding,
             redirect_url=redirect_url,
         )
@@ -596,6 +598,7 @@ class PhoneNumbersResource:
         country: str,
         *,
         area_code: str | None = None,
+        language: str | None = None,
         branding: dict[str, Any] | None = None,
         redirect_url: str | None = None,
     ) -> dict[str, Any]:
@@ -604,6 +607,7 @@ class PhoneNumbersResource:
             profile_id=profile_id,
             country=country,
             area_code=area_code,
+            language=language,
             branding=branding,
             redirect_url=redirect_url,
         )
