@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.43.0"
+  version: "1.44.0"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -29034,7 +29034,7 @@ paths:
       tags: [Webhooks]
       summary: Update webhook
       description: |
-        Update an existing webhook configuration. All fields except `_id` are optional; only provided fields will be updated.
+        Update an existing webhook configuration. All fields except `webhookId` are optional; only provided fields will be updated. `webhookId` is the same name the other /v1/webhooks operations use (logs, redeliver, test); the deprecated `_id` is still accepted in its place.
 
         When provided, `name` must be 1-50 characters, `url` must be a valid URL, and `events` must contain at least one event. Whitespace is trimmed from `url` before validation.
 
@@ -29065,12 +29065,14 @@ paths:
           application/json:
             schema:
               type: object
-              required:
-                - _id
               properties:
+                webhookId:
+                  type: string
+                  description: 'Webhook ID to update. Required unless the deprecated `_id` is sent instead.'
                 _id:
                   type: string
-                  description: Webhook ID to update (required)
+                  deprecated: true
+                  description: 'Alias of webhookId, kept for existing callers'
                 name:
                   type: string
                   description: Webhook name (1-50 characters). Must be non-empty if provided.
@@ -29149,10 +29151,18 @@ paths:
       security:
         - bearerAuth: []
       parameters:
+        - name: webhookId
+          in: query
+          required: false
+          description: 'Webhook ID to delete, the same name the other /v1/webhooks operations use (logs, redeliver, test). Required unless the deprecated `id` is sent instead.'
+          schema:
+            type: string
+            pattern: '^[a-fA-F0-9]{24}$'
         - name: id
           in: query
-          required: true
-          description: Webhook ID to delete
+          required: false
+          deprecated: true
+          description: 'Alias of webhookId, kept for existing callers'
           schema:
             type: string
             pattern: '^[a-fA-F0-9]{24}$'
@@ -29165,7 +29175,7 @@ paths:
                 type: object
                 properties:
                   success: { type: boolean }
-        '400': { description: 'Webhook ID missing or not a valid ID' }
+        '400': { description: 'webhookId missing or not a valid ID, or a query parameter this endpoint does not know (the message lists the accepted ones; nothing is silently ignored)' }
         '401': { $ref: '#/components/responses/Unauthorized' }
         '403': { $ref: '#/components/responses/ResourceGroupForbidden' }
 

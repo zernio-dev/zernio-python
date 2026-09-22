@@ -102,8 +102,9 @@ class WebhooksResource:
 
     def update_webhook_settings(
         self,
-        _id: str,
         *,
+        webhook_id: str | None = None,
+        _id: str | None = None,
         name: str | None = None,
         url: str | None = None,
         secret: str | None = None,
@@ -114,6 +115,7 @@ class WebhooksResource:
     ) -> dict[str, Any]:
         """Update webhook"""
         payload = self._build_payload(
+            webhook_id=webhook_id,
             _id=_id,
             name=name,
             url=url,
@@ -125,9 +127,12 @@ class WebhooksResource:
         )
         return self._client._put("/v1/webhooks/settings", data=payload)
 
-    def delete_webhook_settings(self, id: str) -> dict[str, Any]:
+    def delete_webhook_settings(
+        self, *, webhook_id: str | None = None, id: str | None = None
+    ) -> dict[str, Any]:
         """Delete webhook"""
         params = self._build_params(
+            webhook_id=webhook_id,
             id=id,
         )
         return self._client._delete("/v1/webhooks/settings", params=params)
@@ -197,8 +202,9 @@ class WebhooksResource:
 
     async def aupdate_webhook_settings(
         self,
-        _id: str,
         *,
+        webhook_id: str | None = None,
+        _id: str | None = None,
         name: str | None = None,
         url: str | None = None,
         secret: str | None = None,
@@ -209,6 +215,7 @@ class WebhooksResource:
     ) -> dict[str, Any]:
         """Update webhook (async)"""
         payload = self._build_payload(
+            webhook_id=webhook_id,
             _id=_id,
             name=name,
             url=url,
@@ -220,9 +227,12 @@ class WebhooksResource:
         )
         return await self._client._aput("/v1/webhooks/settings", data=payload)
 
-    async def adelete_webhook_settings(self, id: str) -> dict[str, Any]:
+    async def adelete_webhook_settings(
+        self, *, webhook_id: str | None = None, id: str | None = None
+    ) -> dict[str, Any]:
         """Delete webhook (async)"""
         params = self._build_params(
+            webhook_id=webhook_id,
             id=id,
         )
         return await self._client._adelete("/v1/webhooks/settings", params=params)

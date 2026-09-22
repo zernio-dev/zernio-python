@@ -22157,7 +22157,8 @@ def register_generated_tools(mcp, _get_client):
         )
     )
     def webhooks_update_webhook_settings(
-        id: str,
+        webhook_id: str | None = None,
+        id: str | None = None,
         name: str | None = None,
         url: str | None = None,
         secret: str | None = None,
@@ -22169,7 +22170,8 @@ def register_generated_tools(mcp, _get_client):
         """Update webhook
 
         Args:
-            id: Webhook ID to update (required) (required)
+            webhook_id: Webhook ID to update. Required unless the deprecated `_id` is sent instead.
+            id: Alias of webhookId, kept for existing callers
             name: Webhook name (1-50 characters). Must be non-empty if provided.
             url: Webhook endpoint URL (must be a valid URL, whitespace trimmed). Must be a valid URL if provided.
             secret: Secret key for HMAC-SHA256 signature verification
@@ -22180,6 +22182,7 @@ def register_generated_tools(mcp, _get_client):
         client = _get_client()
         try:
             response = client.webhooks.update_webhook_settings(
+                webhook_id=webhook_id,
                 id=id,
                 name=name,
                 url=url,
@@ -22201,14 +22204,19 @@ def register_generated_tools(mcp, _get_client):
             openWorldHint=True,
         )
     )
-    def webhooks_delete_webhook_settings(id: str) -> str:
+    def webhooks_delete_webhook_settings(
+        webhook_id: str | None = None, id: str | None = None
+    ) -> str:
         """Delete webhook
 
         Args:
-            id: Webhook ID to delete (required)"""
+            webhook_id: Webhook ID to delete, the same name the other /v1/webhooks operations use (logs, redeliver, test). Required unless the deprecated `id` is sent instead.
+            id: Alias of webhookId, kept for existing callers"""
         client = _get_client()
         try:
-            response = client.webhooks.delete_webhook_settings(id=id)
+            response = client.webhooks.delete_webhook_settings(
+                webhook_id=webhook_id, id=id
+            )
             return _format_response(response)
         except Exception as e:
             return f"Error: {e}"
