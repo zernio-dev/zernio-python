@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.35.0"
+  version: "1.36.0"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -47097,6 +47097,10 @@ paths:
                 renamePrefix: { type: string }
                 renameSuffix: { type: string }
                 syncAfter: { type: boolean, default: true }
+                reuseSourceCreative:
+                  type: boolean
+                  default: false
+                  description: 'Point the copy at the source ad''s creative object instead of copying it, so the copy keeps the same Facebook post, the same Instagram media, their existing likes, comments and shares, and the full creative setup (text variations included). This is what Ads Manager''s "show existing reactions, comments and shares" does. Meta''s native copy always publishes new posts. A creative belongs to one ad account, so `adSetId` must be in the source ad''s account. 400 when the source ad has no creative yet.'
       responses:
         '200':
           description: Ad duplicated

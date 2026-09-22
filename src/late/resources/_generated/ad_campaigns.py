@@ -605,6 +605,7 @@ class AdCampaignsResource:
         rename_prefix: str | None = None,
         rename_suffix: str | None = None,
         sync_after: bool | None = True,
+        reuse_source_creative: bool | None = False,
     ) -> dict[str, Any]:
         """Duplicate an ad"""
         payload = self._build_payload(
@@ -614,6 +615,7 @@ class AdCampaignsResource:
             rename_prefix=rename_prefix,
             rename_suffix=rename_suffix,
             sync_after=sync_after,
+            reuse_source_creative=reuse_source_creative,
         )
         headers: dict[str, str] = {}
         if idempotency_key is not None:
@@ -1796,6 +1798,7 @@ class AdCampaignsResource:
         rename_prefix: str | None = None,
         rename_suffix: str | None = None,
         sync_after: bool | None = True,
+        reuse_source_creative: bool | None = False,
     ) -> dict[str, Any]:
         """Duplicate an ad (async)"""
         payload = self._build_payload(
@@ -1805,6 +1808,7 @@ class AdCampaignsResource:
             rename_prefix=rename_prefix,
             rename_suffix=rename_suffix,
             sync_after=sync_after,
+            reuse_source_creative=reuse_source_creative,
         )
         headers: dict[str, str] = {}
         if idempotency_key is not None:
