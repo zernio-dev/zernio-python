@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.52.2"
+  version: "1.52.3"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -772,6 +772,14 @@ components:
         that account. Retry after the window resets rather than retrying
         immediately; repeated calls while exhausted do not succeed and keep the
         budget spent.
+
+        Google Ads: writes and reports run on one developer token shared by
+        every Google Ads account on Zernio, and Google refills its daily
+        operations quota once a day (around 14:03 UTC). When it is exhausted
+        the envelope has `code: rate_limited`, `platform: google`,
+        `details.quotaScope: DEVELOPER` (`ACCOUNT` when it is your own ad
+        account's quota), `details.resetsAt` (ISO instant of the refill) and
+        `Retry-After` counting down to it. Retrying earlier cannot succeed.
       headers:
         Retry-After:
           description: 'Seconds remaining until the upstream quota resets.'
