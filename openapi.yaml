@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.33.2"
+  version: "1.34.0"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -7808,6 +7808,15 @@ components:
             OAuth connector tokens (AI assistants and MCP clients) resolve
             against the same registry, but their groups are not settable yet:
             treat an authorized connector as full access.
+        createdBy:
+          type: [object, "null"]
+          description: >-
+            The team member who created this key. For the team owner's
+            listing this can be any team member; for a non-owner it is always
+            themselves, since a non-owner only ever sees their own keys.
+          properties:
+            id: { type: string }
+            email: { type: string }
     ConnectedApp:
       type: object
       description: |
@@ -19968,7 +19977,10 @@ paths:
       operationId: listApiKeys
       tags: [API Keys]
       summary: List keys
-      description: Returns all API keys for the authenticated user. Keys are returned with a preview only, not the full key value.
+      description: >-
+        Returns API keys with a preview only, not the full key value. For a
+        regular team member this is their own keys; for the team owner this is
+        every team member's keys, each carrying a `createdBy` field.
       responses:
         '200':
           description: API keys
@@ -19990,6 +20002,7 @@ paths:
                     scope: "full"
                     profileIds: []
                     permission: "read-write"
+                    createdBy: { id: "6507a1b2c3d4e5f6a7b8c9d0", email: "owner@example.com" }
                   - id: "6507a1b2c3d4e5f6a7b8c9d1"
                     name: "Analytics Read-Only"
                     keyPreview: "sk_87654321...12345678"
@@ -20001,6 +20014,7 @@ paths:
                         name: "Main Brand"
                         color: "#ffeda0"
                     permission: "read"
+                    createdBy: { id: "6507a1b2c3d4e5f6a7b8c9d2", email: "member@example.com" }
         '401': { $ref: '#/components/responses/Unauthorized' }
         '403': { $ref: '#/components/responses/ResourceGroupForbidden' }
     post:
@@ -20090,7 +20104,9 @@ paths:
       operationId: deleteApiKey
       tags: [API Keys]
       summary: Delete key
-      description: Permanently revokes and deletes an API key.
+      description: >-
+        Permanently revokes and deletes an API key. The team owner can revoke
+        any team member's key; a non-owner member can only revoke their own.
       parameters:
         - name: keyId
           in: path
