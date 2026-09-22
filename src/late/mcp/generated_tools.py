@@ -16643,6 +16643,7 @@ def register_generated_tools(mcp, _get_client):
         tracking: dict[str, Any] | None = None,
         existing_post_id: str | None = None,
         object_story_id: str | None = None,
+        page_id: str | None = None,
         whatsapp_phone_number: str | None = None,
         headline: str | None = None,
         body: str | None = None,
@@ -16693,6 +16694,7 @@ def register_generated_tools(mcp, _get_client):
          (required)
                 existing_post_id: Messaging and CTWA only. Platform post or reel ID, resolved like boost platformPostId. Facebook IDs become object_story_id; Instagram IDs become source_instagram_media_id using the connected Instagram identity. Mutually exclusive with objectStoryId and fresh creative fields.
                 object_story_id: Messaging and CTWA only. Raw Facebook pageId_postId reference, used as object_story_id even with an Instagram account. Mutually exclusive with existingPostId and fresh creative fields.
+                page_id: Facebook Page the ad runs as, when the connection was granted several Pages. Defaults to the Page bound to the connection. Any Page granted to the connection is accepted; other ids answer 400 listing the granted Pages. Same semantics as `pageId` on POST /v1/ads/create.
                 whatsapp_phone_number: WhatsApp only. Optional E.164 number already paired with the Facebook Page. Omit to let Meta select the paired number. Sent to the creative CTA and, when creating a new ad set, its promoted_object. Attach requests do not change the existing ad set. Stored as creative.whatsappPhoneNumber on every created ad.
                 headline: Single-creative shape only. Mutually exclusive with
         `creatives[]`.
@@ -16827,6 +16829,7 @@ def register_generated_tools(mcp, _get_client):
                 name=name,
                 existing_post_id=existing_post_id,
                 object_story_id=object_story_id,
+                page_id=page_id,
                 whatsapp_phone_number=whatsapp_phone_number,
                 headline=headline,
                 body=body,
@@ -16886,6 +16889,7 @@ def register_generated_tools(mcp, _get_client):
         tracking: dict[str, Any] | None = None,
         existing_post_id: str | None = None,
         object_story_id: str | None = None,
+        page_id: str | None = None,
         whatsapp_phone_number: str | None = None,
         headline: str | None = None,
         body: str | None = None,
@@ -16936,6 +16940,7 @@ def register_generated_tools(mcp, _get_client):
          (required)
                 existing_post_id: Messaging and CTWA only. Platform post or reel ID, resolved like boost platformPostId. Facebook IDs become object_story_id; Instagram IDs become source_instagram_media_id using the connected Instagram identity. Mutually exclusive with objectStoryId and fresh creative fields.
                 object_story_id: Messaging and CTWA only. Raw Facebook pageId_postId reference, used as object_story_id even with an Instagram account. Mutually exclusive with existingPostId and fresh creative fields.
+                page_id: Facebook Page the ad runs as, when the connection was granted several Pages. Defaults to the Page bound to the connection. Any Page granted to the connection is accepted; other ids answer 400 listing the granted Pages. Same semantics as `pageId` on POST /v1/ads/create.
                 whatsapp_phone_number: WhatsApp only. Optional E.164 number already paired with the Facebook Page. Omit to let Meta select the paired number. Sent to the creative CTA and, when creating a new ad set, its promoted_object. Attach requests do not change the existing ad set. Stored as creative.whatsappPhoneNumber on every created ad.
                 headline: Single-creative shape only. Mutually exclusive with
         `creatives[]`.
@@ -17071,6 +17076,7 @@ def register_generated_tools(mcp, _get_client):
                 name=name,
                 existing_post_id=existing_post_id,
                 object_story_id=object_story_id,
+                page_id=page_id,
                 whatsapp_phone_number=whatsapp_phone_number,
                 headline=headline,
                 body=body,
@@ -17129,6 +17135,7 @@ def register_generated_tools(mcp, _get_client):
         tracking: dict[str, Any] | None = None,
         existing_post_id: str | None = None,
         object_story_id: str | None = None,
+        page_id: str | None = None,
         whatsapp_phone_number: str | None = None,
         headline: str | None = None,
         body: str | None = None,
@@ -17179,6 +17186,7 @@ def register_generated_tools(mcp, _get_client):
          (required)
                 existing_post_id: Messaging and CTWA only. Platform post or reel ID, resolved like boost platformPostId. Facebook IDs become object_story_id; Instagram IDs become source_instagram_media_id using the connected Instagram identity. Mutually exclusive with objectStoryId and fresh creative fields.
                 object_story_id: Messaging and CTWA only. Raw Facebook pageId_postId reference, used as object_story_id even with an Instagram account. Mutually exclusive with existingPostId and fresh creative fields.
+                page_id: Facebook Page the ad runs as, when the connection was granted several Pages. Defaults to the Page bound to the connection. Any Page granted to the connection is accepted; other ids answer 400 listing the granted Pages. Same semantics as `pageId` on POST /v1/ads/create.
                 whatsapp_phone_number: WhatsApp only. Optional E.164 number already paired with the Facebook Page. Omit to let Meta select the paired number. Sent to the creative CTA and, when creating a new ad set, its promoted_object. Attach requests do not change the existing ad set. Stored as creative.whatsappPhoneNumber on every created ad.
                 headline: Single-creative shape only. Mutually exclusive with
         `creatives[]`.
@@ -17312,6 +17320,7 @@ def register_generated_tools(mcp, _get_client):
                 name=name,
                 existing_post_id=existing_post_id,
                 object_story_id=object_story_id,
+                page_id=page_id,
                 whatsapp_phone_number=whatsapp_phone_number,
                 headline=headline,
                 body=body,

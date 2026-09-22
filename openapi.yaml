@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.37.0"
+  version: "1.38.0"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -1313,6 +1313,9 @@ components:
           type: string
           pattern: '^\d+_\d+$'
           description: 'Messaging and CTWA only. Raw Facebook pageId_postId reference, used as object_story_id even with an Instagram account. Mutually exclusive with existingPostId and fresh creative fields.'
+        pageId:
+          type: string
+          description: 'Facebook Page the ad runs as, when the connection was granted several Pages. Defaults to the Page bound to the connection. Any Page granted to the connection is accepted; other ids answer 400 listing the granted Pages. Same semantics as `pageId` on POST /v1/ads/create.'
         whatsappPhoneNumber:
           type: string
           pattern: '^\+[1-9]\d{6,14}$'
@@ -58306,6 +58309,8 @@ paths:
         `objectStoryId`, either per creative or at the top level. Omit fresh
         media and copy for that creative. Optional `whatsappPhoneNumber` selects
         a number already paired with the Page (WhatsApp destination only).
+        `accountId` is a Facebook, Instagram or Meta ads (business login) connection;
+        `pageId` picks the Page when that connection was granted several.
       security:
         - bearerAuth: []
       requestBody:
