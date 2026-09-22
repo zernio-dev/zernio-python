@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.45.1"
+  version: "1.46.0"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -45321,7 +45321,8 @@ paths:
         - { name: fromDate, in: query, schema: { type: string, format: date }, description: "Defaults to 30 days ago." }
         - { name: toDate, in: query, schema: { type: string, format: date }, description: "Defaults to today." }
         - { name: campaignId, in: query, schema: { type: string }, description: "Numeric Google campaign id filter." }
-        - { name: adGroupId, in: query, schema: { type: string }, description: "Numeric Google ad group id filter." }
+        - { name: adSetId, in: query, schema: { type: string }, description: "Platform ad set ID (Google ad group). Same value as adSetId on listAdKeywords and /ad-sets/{adSetId}/assets." }
+        - { name: adGroupId, in: query, deprecated: true, schema: { type: string }, description: "Alias of adSetId, kept for existing callers." }
         - { name: pageToken, in: query, schema: { type: string }, description: "Cursor from paging.nextPageToken of the previous page." }
       responses:
         '409': { $ref: '#/components/responses/AccountConnectionRequired' }

@@ -6311,6 +6311,7 @@ def register_generated_tools(mcp, _get_client):
         from_date: str | None = None,
         to_date: str | None = None,
         campaign_id: str | None = None,
+        ad_set_id: str | None = None,
         ad_group_id: str | None = None,
         page_token: str | None = None,
     ) -> str:
@@ -6322,7 +6323,8 @@ def register_generated_tools(mcp, _get_client):
             from_date: Defaults to 30 days ago.
             to_date: Defaults to today.
             campaign_id: Numeric Google campaign id filter.
-            ad_group_id: Numeric Google ad group id filter.
+            ad_set_id: Platform ad set ID (Google ad group). Same value as adSetId on listAdKeywords and /ad-sets/{adSetId}/assets.
+            ad_group_id: Alias of adSetId, kept for existing callers.
             page_token: Cursor from paging.nextPageToken of the previous page."""
         client = _get_client()
         try:
@@ -6332,6 +6334,7 @@ def register_generated_tools(mcp, _get_client):
                 from_date=from_date,
                 to_date=to_date,
                 campaign_id=campaign_id,
+                ad_set_id=ad_set_id,
                 ad_group_id=ad_group_id,
                 page_token=page_token,
             )

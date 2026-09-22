@@ -81,6 +81,7 @@ class AdInsightsResource:
         from_date: str | None = None,
         to_date: str | None = None,
         campaign_id: str | None = None,
+        ad_set_id: str | None = None,
         ad_group_id: str | None = None,
         page_token: str | None = None,
     ) -> dict[str, Any]:
@@ -91,6 +92,7 @@ class AdInsightsResource:
             from_date=from_date,
             to_date=to_date,
             campaign_id=campaign_id,
+            ad_set_id=ad_set_id,
             ad_group_id=ad_group_id,
             page_token=page_token,
         )
@@ -339,6 +341,7 @@ class AdInsightsResource:
         from_date: str | None = None,
         to_date: str | None = None,
         campaign_id: str | None = None,
+        ad_set_id: str | None = None,
         ad_group_id: str | None = None,
         page_token: str | None = None,
     ) -> dict[str, Any]:
@@ -349,6 +352,7 @@ class AdInsightsResource:
             from_date=from_date,
             to_date=to_date,
             campaign_id=campaign_id,
+            ad_set_id=ad_set_id,
             ad_group_id=ad_group_id,
             page_token=page_token,
         )
