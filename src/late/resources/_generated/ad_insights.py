@@ -77,6 +77,7 @@ class AdInsightsResource:
         self,
         account_id: str,
         *,
+        ad_account_id: str | None = None,
         customer_id: str | None = None,
         from_date: str | None = None,
         to_date: str | None = None,
@@ -88,6 +89,7 @@ class AdInsightsResource:
         """Google Ads search terms report"""
         params = self._build_params(
             account_id=account_id,
+            ad_account_id=ad_account_id,
             customer_id=customer_id,
             from_date=from_date,
             to_date=to_date,
@@ -102,6 +104,7 @@ class AdInsightsResource:
         self,
         account_id: str,
         *,
+        ad_account_id: str | None = None,
         customer_id: str | None = None,
         from_date: str | None = None,
         to_date: str | None = None,
@@ -113,6 +116,7 @@ class AdInsightsResource:
         """Google Local Services Ads leads"""
         params = self._build_params(
             account_id=account_id,
+            ad_account_id=ad_account_id,
             customer_id=customer_id,
             from_date=from_date,
             to_date=to_date,
@@ -128,12 +132,14 @@ class AdInsightsResource:
         lead_id: str,
         account_id: str,
         *,
+        ad_account_id: str | None = None,
         customer_id: str | None = None,
         page_token: str | None = None,
     ) -> dict[str, Any]:
         """List lead conversations"""
         params = self._build_params(
             account_id=account_id,
+            ad_account_id=ad_account_id,
             customer_id=customer_id,
             page_token=page_token,
         )
@@ -165,6 +171,7 @@ class AdInsightsResource:
         self,
         account_id: str,
         *,
+        ad_account_id: str | None = None,
         customer_id: str | None = None,
         seed_keywords: list[str] | None = None,
         seed_url: str | None = None,
@@ -178,6 +185,7 @@ class AdInsightsResource:
         """Generate keyword ideas"""
         payload = self._build_payload(
             account_id=account_id,
+            ad_account_id=ad_account_id,
             customer_id=customer_id,
             seed_keywords=seed_keywords,
             seed_url=seed_url,
@@ -195,6 +203,7 @@ class AdInsightsResource:
         account_id: str,
         keywords: list[str],
         *,
+        ad_account_id: str | None = None,
         customer_id: str | None = None,
         countries: list[str] | None = None,
         language_constant_id: str | None = "1000",
@@ -205,6 +214,7 @@ class AdInsightsResource:
         """Get historical keyword metrics"""
         payload = self._build_payload(
             account_id=account_id,
+            ad_account_id=ad_account_id,
             customer_id=customer_id,
             keywords=keywords,
             countries=countries,
@@ -221,6 +231,7 @@ class AdInsightsResource:
         *,
         object_id: str | None = None,
         query: str | None = None,
+        ad_account_id: str | None = None,
         customer_id: str | None = None,
         page_token: str | None = None,
         level: str | None = None,
@@ -243,6 +254,7 @@ class AdInsightsResource:
             account_id=account_id,
             object_id=object_id,
             query=query,
+            ad_account_id=ad_account_id,
             customer_id=customer_id,
             page_token=page_token,
             level=level,
@@ -337,6 +349,7 @@ class AdInsightsResource:
         self,
         account_id: str,
         *,
+        ad_account_id: str | None = None,
         customer_id: str | None = None,
         from_date: str | None = None,
         to_date: str | None = None,
@@ -348,6 +361,7 @@ class AdInsightsResource:
         """Google Ads search terms report (async)"""
         params = self._build_params(
             account_id=account_id,
+            ad_account_id=ad_account_id,
             customer_id=customer_id,
             from_date=from_date,
             to_date=to_date,
@@ -362,6 +376,7 @@ class AdInsightsResource:
         self,
         account_id: str,
         *,
+        ad_account_id: str | None = None,
         customer_id: str | None = None,
         from_date: str | None = None,
         to_date: str | None = None,
@@ -373,6 +388,7 @@ class AdInsightsResource:
         """Google Local Services Ads leads (async)"""
         params = self._build_params(
             account_id=account_id,
+            ad_account_id=ad_account_id,
             customer_id=customer_id,
             from_date=from_date,
             to_date=to_date,
@@ -388,12 +404,14 @@ class AdInsightsResource:
         lead_id: str,
         account_id: str,
         *,
+        ad_account_id: str | None = None,
         customer_id: str | None = None,
         page_token: str | None = None,
     ) -> dict[str, Any]:
         """List lead conversations (async)"""
         params = self._build_params(
             account_id=account_id,
+            ad_account_id=ad_account_id,
             customer_id=customer_id,
             page_token=page_token,
         )
@@ -425,6 +443,7 @@ class AdInsightsResource:
         self,
         account_id: str,
         *,
+        ad_account_id: str | None = None,
         customer_id: str | None = None,
         seed_keywords: list[str] | None = None,
         seed_url: str | None = None,
@@ -438,6 +457,7 @@ class AdInsightsResource:
         """Generate keyword ideas (async)"""
         payload = self._build_payload(
             account_id=account_id,
+            ad_account_id=ad_account_id,
             customer_id=customer_id,
             seed_keywords=seed_keywords,
             seed_url=seed_url,
@@ -455,6 +475,7 @@ class AdInsightsResource:
         account_id: str,
         keywords: list[str],
         *,
+        ad_account_id: str | None = None,
         customer_id: str | None = None,
         countries: list[str] | None = None,
         language_constant_id: str | None = "1000",
@@ -465,6 +486,7 @@ class AdInsightsResource:
         """Get historical keyword metrics (async)"""
         payload = self._build_payload(
             account_id=account_id,
+            ad_account_id=ad_account_id,
             customer_id=customer_id,
             keywords=keywords,
             countries=countries,
@@ -483,6 +505,7 @@ class AdInsightsResource:
         *,
         object_id: str | None = None,
         query: str | None = None,
+        ad_account_id: str | None = None,
         customer_id: str | None = None,
         page_token: str | None = None,
         level: str | None = None,
@@ -505,6 +528,7 @@ class AdInsightsResource:
             account_id=account_id,
             object_id=object_id,
             query=query,
+            ad_account_id=ad_account_id,
             customer_id=customer_id,
             page_token=page_token,
             level=level,

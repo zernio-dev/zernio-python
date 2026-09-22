@@ -80,7 +80,6 @@ class MessagingAdsResource:
         account_id: str,
         ad_account_id: str,
         name: str,
-        destination: str,
         *,
         creative_features: Any | None = None,
         tracking: Any | None = None,
@@ -125,6 +124,8 @@ class MessagingAdsResource:
         dsa_payor: str | None = None,
         regional_regulated_categories: list[str] | None = None,
         regional_regulation_identities: dict[str, Any] | None = None,
+        destination: str | None = None,
+        destinations: list[str] | None = None,
     ) -> dict[str, Any]:
         """Create messaging ad"""
         payload = self._build_payload(
@@ -175,6 +176,7 @@ class MessagingAdsResource:
             regional_regulated_categories=regional_regulated_categories,
             regional_regulation_identities=regional_regulation_identities,
             destination=destination,
+            destinations=destinations,
         )
         return self._client._post("/v1/ads/messaging", data=payload)
 
@@ -389,7 +391,6 @@ class MessagingAdsResource:
         account_id: str,
         ad_account_id: str,
         name: str,
-        destination: str,
         *,
         creative_features: Any | None = None,
         tracking: Any | None = None,
@@ -434,6 +435,8 @@ class MessagingAdsResource:
         dsa_payor: str | None = None,
         regional_regulated_categories: list[str] | None = None,
         regional_regulation_identities: dict[str, Any] | None = None,
+        destination: str | None = None,
+        destinations: list[str] | None = None,
     ) -> dict[str, Any]:
         """Create messaging ad (async)"""
         payload = self._build_payload(
@@ -484,6 +487,7 @@ class MessagingAdsResource:
             regional_regulated_categories=regional_regulated_categories,
             regional_regulation_identities=regional_regulation_identities,
             destination=destination,
+            destinations=destinations,
         )
         return await self._client._apost("/v1/ads/messaging", data=payload)
 

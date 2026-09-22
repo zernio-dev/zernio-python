@@ -418,6 +418,7 @@ class ConnectResource:
         app_password: str,
         state: str,
         *,
+        redirect_url: str | None = None,
         redirect_uri: str | None = None,
     ) -> dict[str, Any]:
         """Connect Bluesky account"""
@@ -425,6 +426,7 @@ class ConnectResource:
             identifier=identifier,
             app_password=app_password,
             state=state,
+            redirect_url=redirect_url,
             redirect_uri=redirect_uri,
         )
         return self._client._post("/v1/connect/bluesky/credentials", data=payload)
@@ -435,6 +437,7 @@ class ConnectResource:
         profile_id: str,
         *,
         state: str | None = None,
+        redirect_url: str | None = None,
         redirect_uri: str | None = None,
     ) -> dict[str, Any]:
         """Connect an OpenAI Ads account"""
@@ -442,6 +445,7 @@ class ConnectResource:
             api_key=api_key,
             profile_id=profile_id,
             state=state,
+            redirect_url=redirect_url,
             redirect_uri=redirect_uri,
         )
         return self._client._post("/v1/connect/openai-ads/credentials", data=payload)
@@ -1235,6 +1239,7 @@ class ConnectResource:
         app_password: str,
         state: str,
         *,
+        redirect_url: str | None = None,
         redirect_uri: str | None = None,
     ) -> dict[str, Any]:
         """Connect Bluesky account (async)"""
@@ -1242,6 +1247,7 @@ class ConnectResource:
             identifier=identifier,
             app_password=app_password,
             state=state,
+            redirect_url=redirect_url,
             redirect_uri=redirect_uri,
         )
         return await self._client._apost(
@@ -1254,6 +1260,7 @@ class ConnectResource:
         profile_id: str,
         *,
         state: str | None = None,
+        redirect_url: str | None = None,
         redirect_uri: str | None = None,
     ) -> dict[str, Any]:
         """Connect an OpenAI Ads account (async)"""
@@ -1261,6 +1268,7 @@ class ConnectResource:
             api_key=api_key,
             profile_id=profile_id,
             state=state,
+            redirect_url=redirect_url,
             redirect_uri=redirect_uri,
         )
         return await self._client._apost(

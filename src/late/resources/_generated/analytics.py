@@ -128,6 +128,8 @@ class AnalyticsResource:
         account_id: str,
         *,
         metrics: str | None = None,
+        from_date: str | None = None,
+        to_date: str | None = None,
         since: str | None = None,
         until: str | None = None,
         metric_type: str | None = "total_value",
@@ -136,6 +138,8 @@ class AnalyticsResource:
         params = self._build_params(
             account_id=account_id,
             metrics=metrics,
+            from_date=from_date,
+            to_date=to_date,
             since=since,
             until=until,
             metric_type=metric_type,
@@ -149,6 +153,8 @@ class AnalyticsResource:
         account_id: str,
         *,
         metrics: str | None = None,
+        from_date: str | None = None,
+        to_date: str | None = None,
         since: str | None = None,
         until: str | None = None,
         metric_type: str | None = "total_value",
@@ -157,6 +163,8 @@ class AnalyticsResource:
         params = self._build_params(
             account_id=account_id,
             metrics=metrics,
+            from_date=from_date,
+            to_date=to_date,
             since=since,
             until=until,
             metric_type=metric_type,
@@ -170,6 +178,8 @@ class AnalyticsResource:
         account_id: str,
         *,
         metrics: str | None = None,
+        from_date: str | None = None,
+        to_date: str | None = None,
         since: str | None = None,
         until: str | None = None,
         metric_type: str | None = "total_value",
@@ -178,6 +188,8 @@ class AnalyticsResource:
         params = self._build_params(
             account_id=account_id,
             metrics=metrics,
+            from_date=from_date,
+            to_date=to_date,
             since=since,
             until=until,
             metric_type=metric_type,
@@ -189,6 +201,8 @@ class AnalyticsResource:
         video_id: str,
         account_id: str,
         *,
+        from_date: str | None = None,
+        to_date: str | None = None,
         start_date: str | None = None,
         end_date: str | None = None,
     ) -> dict[str, Any]:
@@ -196,6 +210,8 @@ class AnalyticsResource:
         params = self._build_params(
             video_id=video_id,
             account_id=account_id,
+            from_date=from_date,
+            to_date=to_date,
             start_date=start_date,
             end_date=end_date,
         )
@@ -206,6 +222,8 @@ class AnalyticsResource:
         video_id: str,
         account_id: str,
         *,
+        from_date: str | None = None,
+        to_date: str | None = None,
         start_date: str | None = None,
         end_date: str | None = None,
     ) -> dict[str, Any]:
@@ -213,6 +231,8 @@ class AnalyticsResource:
         params = self._build_params(
             video_id=video_id,
             account_id=account_id,
+            from_date=from_date,
+            to_date=to_date,
             start_date=start_date,
             end_date=end_date,
         )
@@ -223,6 +243,8 @@ class AnalyticsResource:
         account_id: str,
         *,
         metrics: str | None = None,
+        from_date: str | None = None,
+        to_date: str | None = None,
         since: str | None = None,
         until: str | None = None,
         metric_type: str | None = "total_value",
@@ -231,6 +253,8 @@ class AnalyticsResource:
         params = self._build_params(
             account_id=account_id,
             metrics=metrics,
+            from_date=from_date,
+            to_date=to_date,
             since=since,
             until=until,
             metric_type=metric_type,
@@ -253,6 +277,8 @@ class AnalyticsResource:
         account_id: str,
         *,
         metrics: str | None = None,
+        from_date: str | None = None,
+        to_date: str | None = None,
         since: str | None = None,
         until: str | None = None,
         metric_type: str | None = "total_value",
@@ -262,6 +288,8 @@ class AnalyticsResource:
         params = self._build_params(
             account_id=account_id,
             metrics=metrics,
+            from_date=from_date,
+            to_date=to_date,
             since=since,
             until=until,
             metric_type=metric_type,
@@ -276,6 +304,8 @@ class AnalyticsResource:
         account_id: str,
         *,
         metrics: str | None = None,
+        from_date: str | None = None,
+        to_date: str | None = None,
         since: str | None = None,
         until: str | None = None,
         metric_type: str | None = "total_value",
@@ -284,6 +314,8 @@ class AnalyticsResource:
         params = self._build_params(
             account_id=account_id,
             metrics=metrics,
+            from_date=from_date,
+            to_date=to_date,
             since=since,
             until=until,
             metric_type=metric_type,
@@ -315,6 +347,8 @@ class AnalyticsResource:
         *,
         video_id: str | None = None,
         breakdown: str | None = None,
+        from_date: str | None = None,
+        to_date: str | None = None,
         start_date: str | None = None,
         end_date: str | None = None,
     ) -> dict[str, Any]:
@@ -323,6 +357,8 @@ class AnalyticsResource:
             account_id=account_id,
             video_id=video_id,
             breakdown=breakdown,
+            from_date=from_date,
+            to_date=to_date,
             start_date=start_date,
             end_date=end_date,
         )
@@ -422,6 +458,8 @@ class AnalyticsResource:
         account_id: str,
         *,
         metrics: str | None = None,
+        from_date: str | None = None,
+        to_date: str | None = None,
         start_date: str | None = None,
         end_date: str | None = None,
     ) -> dict[str, Any]:
@@ -429,6 +467,8 @@ class AnalyticsResource:
         params = self._build_params(
             account_id=account_id,
             metrics=metrics,
+            from_date=from_date,
+            to_date=to_date,
             start_date=start_date,
             end_date=end_date,
         )
@@ -469,6 +509,8 @@ class AnalyticsResource:
         account_id: str,
         *,
         aggregation: str | None = "TOTAL",
+        from_date: str | None = None,
+        to_date: str | None = None,
         start_date: str | None = None,
         end_date: str | None = None,
         metrics: str | None = None,
@@ -476,6 +518,8 @@ class AnalyticsResource:
         """Get LinkedIn aggregate stats"""
         params = self._build_params(
             aggregation=aggregation,
+            from_date=from_date,
+            to_date=to_date,
             start_date=start_date,
             end_date=end_date,
             metrics=metrics,
@@ -575,6 +619,8 @@ class AnalyticsResource:
         account_id: str,
         *,
         metrics: str | None = None,
+        from_date: str | None = None,
+        to_date: str | None = None,
         since: str | None = None,
         until: str | None = None,
         metric_type: str | None = "total_value",
@@ -583,6 +629,8 @@ class AnalyticsResource:
         params = self._build_params(
             account_id=account_id,
             metrics=metrics,
+            from_date=from_date,
+            to_date=to_date,
             since=since,
             until=until,
             metric_type=metric_type,
@@ -596,6 +644,8 @@ class AnalyticsResource:
         account_id: str,
         *,
         metrics: str | None = None,
+        from_date: str | None = None,
+        to_date: str | None = None,
         since: str | None = None,
         until: str | None = None,
         metric_type: str | None = "total_value",
@@ -604,6 +654,8 @@ class AnalyticsResource:
         params = self._build_params(
             account_id=account_id,
             metrics=metrics,
+            from_date=from_date,
+            to_date=to_date,
             since=since,
             until=until,
             metric_type=metric_type,
@@ -617,6 +669,8 @@ class AnalyticsResource:
         account_id: str,
         *,
         metrics: str | None = None,
+        from_date: str | None = None,
+        to_date: str | None = None,
         since: str | None = None,
         until: str | None = None,
         metric_type: str | None = "total_value",
@@ -625,6 +679,8 @@ class AnalyticsResource:
         params = self._build_params(
             account_id=account_id,
             metrics=metrics,
+            from_date=from_date,
+            to_date=to_date,
             since=since,
             until=until,
             metric_type=metric_type,
@@ -638,6 +694,8 @@ class AnalyticsResource:
         video_id: str,
         account_id: str,
         *,
+        from_date: str | None = None,
+        to_date: str | None = None,
         start_date: str | None = None,
         end_date: str | None = None,
     ) -> dict[str, Any]:
@@ -645,6 +703,8 @@ class AnalyticsResource:
         params = self._build_params(
             video_id=video_id,
             account_id=account_id,
+            from_date=from_date,
+            to_date=to_date,
             start_date=start_date,
             end_date=end_date,
         )
@@ -657,6 +717,8 @@ class AnalyticsResource:
         video_id: str,
         account_id: str,
         *,
+        from_date: str | None = None,
+        to_date: str | None = None,
         start_date: str | None = None,
         end_date: str | None = None,
     ) -> dict[str, Any]:
@@ -664,6 +726,8 @@ class AnalyticsResource:
         params = self._build_params(
             video_id=video_id,
             account_id=account_id,
+            from_date=from_date,
+            to_date=to_date,
             start_date=start_date,
             end_date=end_date,
         )
@@ -676,6 +740,8 @@ class AnalyticsResource:
         account_id: str,
         *,
         metrics: str | None = None,
+        from_date: str | None = None,
+        to_date: str | None = None,
         since: str | None = None,
         until: str | None = None,
         metric_type: str | None = "total_value",
@@ -684,6 +750,8 @@ class AnalyticsResource:
         params = self._build_params(
             account_id=account_id,
             metrics=metrics,
+            from_date=from_date,
+            to_date=to_date,
             since=since,
             until=until,
             metric_type=metric_type,
@@ -710,6 +778,8 @@ class AnalyticsResource:
         account_id: str,
         *,
         metrics: str | None = None,
+        from_date: str | None = None,
+        to_date: str | None = None,
         since: str | None = None,
         until: str | None = None,
         metric_type: str | None = "total_value",
@@ -719,6 +789,8 @@ class AnalyticsResource:
         params = self._build_params(
             account_id=account_id,
             metrics=metrics,
+            from_date=from_date,
+            to_date=to_date,
             since=since,
             until=until,
             metric_type=metric_type,
@@ -733,6 +805,8 @@ class AnalyticsResource:
         account_id: str,
         *,
         metrics: str | None = None,
+        from_date: str | None = None,
+        to_date: str | None = None,
         since: str | None = None,
         until: str | None = None,
         metric_type: str | None = "total_value",
@@ -741,6 +815,8 @@ class AnalyticsResource:
         params = self._build_params(
             account_id=account_id,
             metrics=metrics,
+            from_date=from_date,
+            to_date=to_date,
             since=since,
             until=until,
             metric_type=metric_type,
@@ -774,6 +850,8 @@ class AnalyticsResource:
         *,
         video_id: str | None = None,
         breakdown: str | None = None,
+        from_date: str | None = None,
+        to_date: str | None = None,
         start_date: str | None = None,
         end_date: str | None = None,
     ) -> dict[str, Any]:
@@ -782,6 +860,8 @@ class AnalyticsResource:
             account_id=account_id,
             video_id=video_id,
             breakdown=breakdown,
+            from_date=from_date,
+            to_date=to_date,
             start_date=start_date,
             end_date=end_date,
         )
@@ -885,6 +965,8 @@ class AnalyticsResource:
         account_id: str,
         *,
         metrics: str | None = None,
+        from_date: str | None = None,
+        to_date: str | None = None,
         start_date: str | None = None,
         end_date: str | None = None,
     ) -> dict[str, Any]:
@@ -892,6 +974,8 @@ class AnalyticsResource:
         params = self._build_params(
             account_id=account_id,
             metrics=metrics,
+            from_date=from_date,
+            to_date=to_date,
             start_date=start_date,
             end_date=end_date,
         )
@@ -932,6 +1016,8 @@ class AnalyticsResource:
         account_id: str,
         *,
         aggregation: str | None = "TOTAL",
+        from_date: str | None = None,
+        to_date: str | None = None,
         start_date: str | None = None,
         end_date: str | None = None,
         metrics: str | None = None,
@@ -939,6 +1025,8 @@ class AnalyticsResource:
         """Get LinkedIn aggregate stats (async)"""
         params = self._build_params(
             aggregation=aggregation,
+            from_date=from_date,
+            to_date=to_date,
             start_date=start_date,
             end_date=end_date,
             metrics=metrics,

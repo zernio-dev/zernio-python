@@ -117,12 +117,14 @@ class ConversionsResource:
         self,
         account_id: str,
         *,
+        ad_account_id: str | None = None,
         customer_id: str | None = None,
         type: str | None = None,
     ) -> dict[str, Any]:
         """List conversion actions"""
         params = self._build_params(
             account_id=account_id,
+            ad_account_id=ad_account_id,
             customer_id=customer_id,
             type=type,
         )
@@ -134,6 +136,7 @@ class ConversionsResource:
         name: str,
         type: str,
         *,
+        ad_account_id: str | None = None,
         customer_id: str | None = None,
         default_value: float | None = None,
         always_use_default_value: bool | None = None,
@@ -141,6 +144,7 @@ class ConversionsResource:
         """Create website conversion action"""
         payload = self._build_payload(
             account_id=account_id,
+            ad_account_id=ad_account_id,
             customer_id=customer_id,
             name=name,
             type=type,
@@ -355,12 +359,14 @@ class ConversionsResource:
         self,
         account_id: str,
         *,
+        ad_account_id: str | None = None,
         customer_id: str | None = None,
         type: str | None = None,
     ) -> dict[str, Any]:
         """List conversion actions (async)"""
         params = self._build_params(
             account_id=account_id,
+            ad_account_id=ad_account_id,
             customer_id=customer_id,
             type=type,
         )
@@ -372,6 +378,7 @@ class ConversionsResource:
         name: str,
         type: str,
         *,
+        ad_account_id: str | None = None,
         customer_id: str | None = None,
         default_value: float | None = None,
         always_use_default_value: bool | None = None,
@@ -379,6 +386,7 @@ class ConversionsResource:
         """Create website conversion action (async)"""
         payload = self._build_payload(
             account_id=account_id,
+            ad_account_id=ad_account_id,
             customer_id=customer_id,
             name=name,
             type=type,
