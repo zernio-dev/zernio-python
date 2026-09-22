@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.36.0"
+  version: "1.37.0"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -34044,6 +34044,10 @@ paths:
                             name: { type: string }
                             profileImage: { type: [string, "null"] }
                         rating: { type: integer }
+                        recommendationType:
+                          type: [string, "null"]
+                          enum: [positive, negative, null]
+                          description: 'Facebook recommendation: positive means recommends, negative means does not recommend. Null or absent when unavailable; absent for other platforms. Independent of the numeric rating.'
                         text: { type: string }
                         created: { type: string, format: date-time }
                         hasReply: { type: boolean }
