@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.44.0"
+  version: "1.45.0"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -16866,13 +16866,17 @@ paths:
       operationId: listPosts
       tags: [Posts]
       summary: List posts
-      description: Returns a paginated list of posts. Published posts include platformPostUrl with the public URL on each platform.
+      description: 'Returns a paginated list of posts. Published posts include platformPostUrl with the public URL on each platform. A query parameter that is not listed here returns 400 naming it and the accepted parameters, so a misspelled filter never silently returns the unfiltered list.'
       parameters:
         - $ref: '#/components/parameters/PageParam'
         - name: limit
           in: query
           schema: { type: integer, minimum: 1, maximum: 500, default: 10 }
           description: 'Page size. Values above the maximum return 400 rather than being clamped.'
+        - name: offset
+          in: query
+          schema: { type: integer, minimum: 0 }
+          description: 'Row offset. Takes precedence over page when both are sent; the response pagination.page is derived from it.'
         - name: source
           in: query
           schema: { type: string, enum: [zernio, external], default: zernio }
@@ -16896,14 +16900,24 @@ paths:
           in: query
           schema: { type: string }
           description: 'Filter posts to those created by a specific team user (24-char hex ObjectId).'
+        - name: fromDate
+          in: query
+          schema: { type: string, format: date }
+          description: 'Zero-padded YYYY-MM-DD, or a full ISO 8601 datetime. An empty value means no date filter; any other malformed value returns 400. The same name the other date-window filters use (ads, analytics).'
+        - name: toDate
+          in: query
+          schema: { type: string, format: date }
+          description: 'Zero-padded YYYY-MM-DD, or a full ISO 8601 datetime. An empty value means no date filter; any other malformed value returns 400. The same name the other date-window filters use (ads, analytics).'
         - name: dateFrom
           in: query
+          deprecated: true
           schema: { type: string, format: date }
-          description: 'Zero-padded YYYY-MM-DD, or a full ISO 8601 datetime. An empty value means no date filter; any other malformed value returns 400.'
+          description: 'Alias of fromDate, kept for existing callers'
         - name: dateTo
           in: query
+          deprecated: true
           schema: { type: string, format: date }
-          description: 'Zero-padded YYYY-MM-DD, or a full ISO 8601 datetime. An empty value means no date filter; any other malformed value returns 400.'
+          description: 'Alias of toDate, kept for existing callers'
         - name: includeHidden
           in: query
           schema: { type: boolean, default: false }

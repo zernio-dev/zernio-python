@@ -18217,11 +18217,14 @@ def register_generated_tools(mcp, _get_client):
     def posts_list_posts(
         page: int = 1,
         limit: int = 10,
+        offset: int | None = None,
         source: str = "zernio",
         status: str | None = None,
         platform: str | None = None,
         profile_id: str | None = None,
         created_by: str | None = None,
+        from_date: str | None = None,
+        to_date: str | None = None,
         date_from: str | None = None,
         date_to: str | None = None,
         include_hidden: bool = False,
@@ -18234,13 +18237,16 @@ def register_generated_tools(mcp, _get_client):
         Args:
             page: Page number
             limit: Page size. Values above the maximum return 400 rather than being clamped.
+            offset: Row offset. Takes precedence over page when both are sent; the response pagination.page is derived from it.
             source: Which collection to read. `zernio` (default) returns posts authored through Zernio. `external` returns posts synced from the platform (existing/historical posts that were published outside Zernio). Combine with `accountId` and paginate via `page`/`limit` to walk the full synced history (we keep up to the last ~12 months per account).
             status
             platform
             profile_id: Filter posts to a specific profile (24-char hex ObjectId). Omit it, or send `all` or an empty value, to list posts across every profile.
             created_by: Filter posts to those created by a specific team user (24-char hex ObjectId).
-            date_from: Zero-padded YYYY-MM-DD, or a full ISO 8601 datetime. An empty value means no date filter; any other malformed value returns 400.
-            date_to: Zero-padded YYYY-MM-DD, or a full ISO 8601 datetime. An empty value means no date filter; any other malformed value returns 400.
+            from_date: Zero-padded YYYY-MM-DD, or a full ISO 8601 datetime. An empty value means no date filter; any other malformed value returns 400. The same name the other date-window filters use (ads, analytics).
+            to_date: Zero-padded YYYY-MM-DD, or a full ISO 8601 datetime. An empty value means no date filter; any other malformed value returns 400. The same name the other date-window filters use (ads, analytics).
+            date_from: Alias of fromDate, kept for existing callers
+            date_to: Alias of toDate, kept for existing callers
             include_hidden
             search: Search posts by text content.
             sort_by: Sort order for results.
@@ -18250,11 +18256,14 @@ def register_generated_tools(mcp, _get_client):
             response = client.posts.list_posts(
                 page=page,
                 limit=limit,
+                offset=offset,
                 source=source,
                 status=status,
                 platform=platform,
                 profile_id=profile_id,
                 created_by=created_by,
+                from_date=from_date,
+                to_date=to_date,
                 date_from=date_from,
                 date_to=date_to,
                 include_hidden=include_hidden,
