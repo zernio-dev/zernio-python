@@ -17533,6 +17533,8 @@ def register_generated_tools(mcp, _get_client):
     )
     def phone_numbers_search_available_phone_numbers(
         country: str = "US",
+        number_type: str | None = None,
+        area_code: str | None = None,
         type: str | None = None,
         prefix: str | None = None,
         locality: str | None = None,
@@ -17544,8 +17546,10 @@ def register_generated_tools(mcp, _get_client):
 
         Args:
             country
-            type: Number type; defaults to the country's WhatsApp-safe type
-            prefix: Area code
+            number_type: Number type; defaults to the country's WhatsApp-safe type (the same name as on purchase, availability and kyc)
+            area_code: Area code or national dialing code the number must start with, e.g. 415 or 91
+            type: Alias of numberType, kept for existing callers
+            prefix: Alias of areaCode, kept for existing callers
             locality: City
             contains: Pattern to match within the number
             sms: true narrows the pool to SMS-capable numbers. Each result still carries its full `features` list for per-number capability badging.
@@ -17554,6 +17558,8 @@ def register_generated_tools(mcp, _get_client):
         try:
             response = client.phone_numbers.search_available_phone_numbers(
                 country=country,
+                number_type=number_type,
+                area_code=area_code,
                 type=type,
                 prefix=prefix,
                 locality=locality,
@@ -24606,6 +24612,8 @@ def register_generated_tools(mcp, _get_client):
     )
     def whatsapp_phone_numbers_search_available_whats_app_numbers(
         country: str = "US",
+        number_type: str | None = None,
+        area_code: str | None = None,
         type: str | None = None,
         prefix: str | None = None,
         locality: str | None = None,
@@ -24616,8 +24624,10 @@ def register_generated_tools(mcp, _get_client):
 
         Args:
             country
-            type: Number type; defaults to the country's WhatsApp-safe type
-            prefix: Area code
+            number_type: Number type; defaults to the country's WhatsApp-safe type (the same name as on purchase, availability and kyc)
+            area_code: Area code or national dialing code the number must start with, e.g. 415 or 91
+            type: Alias of numberType, kept for existing callers
+            prefix: Alias of areaCode, kept for existing callers
             locality: City
             contains: Pattern to match within the number
             limit"""
@@ -24625,6 +24635,8 @@ def register_generated_tools(mcp, _get_client):
         try:
             response = client.whatsapp_phone_numbers.search_available_whats_app_numbers(
                 country=country,
+                number_type=number_type,
+                area_code=area_code,
                 type=type,
                 prefix=prefix,
                 locality=locality,
