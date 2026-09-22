@@ -21184,15 +21184,20 @@ def register_generated_tools(mcp, _get_client):
             openWorldHint=False,
         )
     )
-    def twitter_engagement_get_tweet(account_id: str, id: str) -> str:
+    def twitter_engagement_get_tweet(
+        account_id: str, tweet_id: str, id: str | None = None
+    ) -> str:
         """Look up a tweet
 
         Args:
             account_id: The account ID whose X token is used for the lookup (required)
-            id: Numeric tweet ID or a tweet URL (e.g. https://x.com/user/status/123...) (required)"""
+            tweet_id: Numeric tweet ID or a tweet URL (e.g. https://x.com/user/status/123...). The same name the other /v1/twitter operations use (retweet, bookmark). (required)
+            id: Alias of tweetId, kept for existing callers"""
         client = _get_client()
         try:
-            response = client.twitter_engagement.get_tweet(account_id=account_id, id=id)
+            response = client.twitter_engagement.get_tweet(
+                account_id=account_id, tweet_id=tweet_id, id=id
+            )
             return _format_response(response)
         except Exception as e:
             return f"Error: {e}"

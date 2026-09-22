@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.41.0"
+  version: "1.42.0"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -33779,11 +33779,17 @@ paths:
           required: true
           schema: { type: string }
           description: The account ID whose X token is used for the lookup
-        - name: id
+        - name: tweetId
           in: query
           required: true
           schema: { type: string }
-          description: 'Numeric tweet ID or a tweet URL (e.g. https://x.com/user/status/123...)'
+          description: 'Numeric tweet ID or a tweet URL (e.g. https://x.com/user/status/123...). The same name the other /v1/twitter operations use (retweet, bookmark).'
+        - name: id
+          in: query
+          required: false
+          deprecated: true
+          schema: { type: string }
+          description: 'Alias of tweetId, kept for existing callers'
       responses:
         '200':
           description: The resolved tweet
@@ -33815,7 +33821,7 @@ paths:
                       retweetCount: { type: integer }
                       quoteCount: { type: integer }
                       platform: { type: string, example: twitter }
-        '400': { $ref: '#/components/responses/BadRequest' }
+        '400': { description: 'Missing or malformed tweetId or accountId, or a query parameter this endpoint does not know (the message lists the accepted ones; nothing is silently ignored)' }
         '401': { $ref: '#/components/responses/Unauthorized' }
         '402': { description: 'X API spend cap reached for this billing period' }
         '403': { description: 'X analytics capability not enabled for this account (code X_ANALYTICS_NOT_ENABLED), or the tweet author is protected or suspended' }

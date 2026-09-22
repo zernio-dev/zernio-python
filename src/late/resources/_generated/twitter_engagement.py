@@ -150,10 +150,13 @@ class TwitterEngagementResource:
         )
         return self._client._get("/v1/twitter/search", params=params)
 
-    def get_tweet(self, account_id: str, id: str) -> dict[str, Any]:
+    def get_tweet(
+        self, account_id: str, tweet_id: str, *, id: str | None = None
+    ) -> dict[str, Any]:
         """Look up a tweet"""
         params = self._build_params(
             account_id=account_id,
+            tweet_id=tweet_id,
             id=id,
         )
         return self._client._get("/v1/twitter/tweet", params=params)
@@ -237,10 +240,13 @@ class TwitterEngagementResource:
         )
         return await self._client._aget("/v1/twitter/search", params=params)
 
-    async def aget_tweet(self, account_id: str, id: str) -> dict[str, Any]:
+    async def aget_tweet(
+        self, account_id: str, tweet_id: str, *, id: str | None = None
+    ) -> dict[str, Any]:
         """Look up a tweet (async)"""
         params = self._build_params(
             account_id=account_id,
+            tweet_id=tweet_id,
             id=id,
         )
         return await self._client._aget("/v1/twitter/tweet", params=params)
