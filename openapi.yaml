@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.39.0"
+  version: "1.40.0"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -1305,6 +1305,14 @@ components:
             On the multi-creative shape, each ad's Meta name gets a
             " #N" suffix (1-indexed) so Ads Manager shows them as a
             numbered batch.
+        campaignName:
+          type: string
+          maxLength: 255
+          description: 'Exact name for the campaign this request provisions. Omitted keeps `<name> - Campaign`. Ignored with `adSetId` (the ad set already has a campaign).'
+        adSetName:
+          type: string
+          maxLength: 255
+          description: 'Exact name for the ad set this request provisions. Omitted keeps `<name> - Ad Set`. Ignored with `adSetId`.'
         existingPostId:
           type: string
           minLength: 1
