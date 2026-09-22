@@ -16643,6 +16643,7 @@ def register_generated_tools(mcp, _get_client):
         tracking: dict[str, Any] | None = None,
         campaign_name: str | None = None,
         ad_set_name: str | None = None,
+        platform_post_id: str | None = None,
         existing_post_id: str | None = None,
         object_story_id: str | None = None,
         page_id: str | None = None,
@@ -16696,8 +16697,9 @@ def register_generated_tools(mcp, _get_client):
          (required)
                 campaign_name: Exact name for the campaign this request provisions. Omitted keeps `<name> - Campaign`. Ignored with `adSetId` (the ad set already has a campaign).
                 ad_set_name: Exact name for the ad set this request provisions. Omitted keeps `<name> - Ad Set`. Ignored with `adSetId`.
-                existing_post_id: Messaging and CTWA only. Platform post or reel ID, resolved like boost platformPostId. Facebook IDs become object_story_id; Instagram IDs become source_instagram_media_id using the connected Instagram identity. Mutually exclusive with objectStoryId and fresh creative fields.
-                object_story_id: Messaging and CTWA only. Raw Facebook pageId_postId reference, used as object_story_id even with an Instagram account. Mutually exclusive with existingPostId and fresh creative fields.
+                platform_post_id: Messaging and CTWA only. Platform post or reel ID, the same input boostPost takes as platformPostId. Facebook IDs become object_story_id; Instagram IDs become source_instagram_media_id using the connected Instagram identity. Mutually exclusive with objectStoryId and fresh creative fields.
+                existing_post_id: Alias of platformPostId, kept for existing callers. Sending both with different values is a 400.
+                object_story_id: Messaging and CTWA only. Raw Facebook pageId_postId reference, used as object_story_id even with an Instagram account. Mutually exclusive with platformPostId and fresh creative fields.
                 page_id: Facebook Page the ad runs as, when the connection was granted several Pages. Defaults to the Page bound to the connection. Any Page granted to the connection is accepted; other ids answer 400 listing the granted Pages. Same semantics as `pageId` on POST /v1/ads/create.
                 whatsapp_phone_number: WhatsApp only. Optional E.164 number already paired with the Facebook Page. Omit to let Meta select the paired number. Sent to the creative CTA and, when creating a new ad set, its promoted_object. Attach requests do not change the existing ad set. Stored as creative.whatsappPhoneNumber on every created ad.
                 headline: Single-creative shape only. Mutually exclusive with
@@ -16719,7 +16721,7 @@ def register_generated_tools(mcp, _get_client):
         `body` / `imageUrl` / `video`): setting both is a 400,
         unlike `POST /v1/ads/create` where the top-level fields
         are silently ignored in multi-creative mode. Each entry
-        supplies headline, body, and image/video, or an existingPostId or
+        supplies headline, body, and image/video, or a platformPostId or
         objectStoryId reference. Fresh and existing creatives can be mixed.
                 ad_set_id: Attach the creatives to this EXISTING messaging ad set instead of
         building a campaign, so the ad set keeps its learning phase. It then
@@ -16833,6 +16835,7 @@ def register_generated_tools(mcp, _get_client):
                 name=name,
                 campaign_name=campaign_name,
                 ad_set_name=ad_set_name,
+                platform_post_id=platform_post_id,
                 existing_post_id=existing_post_id,
                 object_story_id=object_story_id,
                 page_id=page_id,
@@ -16895,6 +16898,7 @@ def register_generated_tools(mcp, _get_client):
         tracking: dict[str, Any] | None = None,
         campaign_name: str | None = None,
         ad_set_name: str | None = None,
+        platform_post_id: str | None = None,
         existing_post_id: str | None = None,
         object_story_id: str | None = None,
         page_id: str | None = None,
@@ -16948,8 +16952,9 @@ def register_generated_tools(mcp, _get_client):
          (required)
                 campaign_name: Exact name for the campaign this request provisions. Omitted keeps `<name> - Campaign`. Ignored with `adSetId` (the ad set already has a campaign).
                 ad_set_name: Exact name for the ad set this request provisions. Omitted keeps `<name> - Ad Set`. Ignored with `adSetId`.
-                existing_post_id: Messaging and CTWA only. Platform post or reel ID, resolved like boost platformPostId. Facebook IDs become object_story_id; Instagram IDs become source_instagram_media_id using the connected Instagram identity. Mutually exclusive with objectStoryId and fresh creative fields.
-                object_story_id: Messaging and CTWA only. Raw Facebook pageId_postId reference, used as object_story_id even with an Instagram account. Mutually exclusive with existingPostId and fresh creative fields.
+                platform_post_id: Messaging and CTWA only. Platform post or reel ID, the same input boostPost takes as platformPostId. Facebook IDs become object_story_id; Instagram IDs become source_instagram_media_id using the connected Instagram identity. Mutually exclusive with objectStoryId and fresh creative fields.
+                existing_post_id: Alias of platformPostId, kept for existing callers. Sending both with different values is a 400.
+                object_story_id: Messaging and CTWA only. Raw Facebook pageId_postId reference, used as object_story_id even with an Instagram account. Mutually exclusive with platformPostId and fresh creative fields.
                 page_id: Facebook Page the ad runs as, when the connection was granted several Pages. Defaults to the Page bound to the connection. Any Page granted to the connection is accepted; other ids answer 400 listing the granted Pages. Same semantics as `pageId` on POST /v1/ads/create.
                 whatsapp_phone_number: WhatsApp only. Optional E.164 number already paired with the Facebook Page. Omit to let Meta select the paired number. Sent to the creative CTA and, when creating a new ad set, its promoted_object. Attach requests do not change the existing ad set. Stored as creative.whatsappPhoneNumber on every created ad.
                 headline: Single-creative shape only. Mutually exclusive with
@@ -16971,7 +16976,7 @@ def register_generated_tools(mcp, _get_client):
         `body` / `imageUrl` / `video`): setting both is a 400,
         unlike `POST /v1/ads/create` where the top-level fields
         are silently ignored in multi-creative mode. Each entry
-        supplies headline, body, and image/video, or an existingPostId or
+        supplies headline, body, and image/video, or a platformPostId or
         objectStoryId reference. Fresh and existing creatives can be mixed.
                 ad_set_id: Attach the creatives to this EXISTING messaging ad set instead of
         building a campaign, so the ad set keeps its learning phase. It then
@@ -17086,6 +17091,7 @@ def register_generated_tools(mcp, _get_client):
                 name=name,
                 campaign_name=campaign_name,
                 ad_set_name=ad_set_name,
+                platform_post_id=platform_post_id,
                 existing_post_id=existing_post_id,
                 object_story_id=object_story_id,
                 page_id=page_id,
@@ -17147,6 +17153,7 @@ def register_generated_tools(mcp, _get_client):
         tracking: dict[str, Any] | None = None,
         campaign_name: str | None = None,
         ad_set_name: str | None = None,
+        platform_post_id: str | None = None,
         existing_post_id: str | None = None,
         object_story_id: str | None = None,
         page_id: str | None = None,
@@ -17200,8 +17207,9 @@ def register_generated_tools(mcp, _get_client):
          (required)
                 campaign_name: Exact name for the campaign this request provisions. Omitted keeps `<name> - Campaign`. Ignored with `adSetId` (the ad set already has a campaign).
                 ad_set_name: Exact name for the ad set this request provisions. Omitted keeps `<name> - Ad Set`. Ignored with `adSetId`.
-                existing_post_id: Messaging and CTWA only. Platform post or reel ID, resolved like boost platformPostId. Facebook IDs become object_story_id; Instagram IDs become source_instagram_media_id using the connected Instagram identity. Mutually exclusive with objectStoryId and fresh creative fields.
-                object_story_id: Messaging and CTWA only. Raw Facebook pageId_postId reference, used as object_story_id even with an Instagram account. Mutually exclusive with existingPostId and fresh creative fields.
+                platform_post_id: Messaging and CTWA only. Platform post or reel ID, the same input boostPost takes as platformPostId. Facebook IDs become object_story_id; Instagram IDs become source_instagram_media_id using the connected Instagram identity. Mutually exclusive with objectStoryId and fresh creative fields.
+                existing_post_id: Alias of platformPostId, kept for existing callers. Sending both with different values is a 400.
+                object_story_id: Messaging and CTWA only. Raw Facebook pageId_postId reference, used as object_story_id even with an Instagram account. Mutually exclusive with platformPostId and fresh creative fields.
                 page_id: Facebook Page the ad runs as, when the connection was granted several Pages. Defaults to the Page bound to the connection. Any Page granted to the connection is accepted; other ids answer 400 listing the granted Pages. Same semantics as `pageId` on POST /v1/ads/create.
                 whatsapp_phone_number: WhatsApp only. Optional E.164 number already paired with the Facebook Page. Omit to let Meta select the paired number. Sent to the creative CTA and, when creating a new ad set, its promoted_object. Attach requests do not change the existing ad set. Stored as creative.whatsappPhoneNumber on every created ad.
                 headline: Single-creative shape only. Mutually exclusive with
@@ -17223,7 +17231,7 @@ def register_generated_tools(mcp, _get_client):
         `body` / `imageUrl` / `video`): setting both is a 400,
         unlike `POST /v1/ads/create` where the top-level fields
         are silently ignored in multi-creative mode. Each entry
-        supplies headline, body, and image/video, or an existingPostId or
+        supplies headline, body, and image/video, or a platformPostId or
         objectStoryId reference. Fresh and existing creatives can be mixed.
                 ad_set_id: Attach the creatives to this EXISTING messaging ad set instead of
         building a campaign, so the ad set keeps its learning phase. It then
@@ -17336,6 +17344,7 @@ def register_generated_tools(mcp, _get_client):
                 name=name,
                 campaign_name=campaign_name,
                 ad_set_name=ad_set_name,
+                platform_post_id=platform_post_id,
                 existing_post_id=existing_post_id,
                 object_story_id=object_story_id,
                 page_id=page_id,
