@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.58.0"
+  version: "1.59.0"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -38749,14 +38749,14 @@ paths:
             another number was purchased within the last 10 minutes; retry
             with allowMultiple: true to confirm), or the requested areaCode
             has no deliverable inventory right now (code
-            AREA_CODE_UNAVAILABLE: pick another area or omit areaCode; PHONE_NUMBER_UNAVAILABLE: search again and pick another number; COUNTRY_OUT_OF_STOCK: this country and type have no orderable numbers right now, pick another).
+            AREA_CODE_UNAVAILABLE: pick another area or omit areaCode; PHONE_NUMBER_UNAVAILABLE: search again and pick another number; COUNTRY_OUT_OF_STOCK: this country and type have no orderable numbers right now, pick another; NO_WHATSAPP_ELIGIBLE_NUMBER: every number the carrier offered is one WhatsApp refuses, pass an areaCode or try again for a fresh batch).
           content:
             application/json:
               schema:
                 type: object
                 properties:
                   error: { type: string }
-                  code: { type: string, enum: [PURCHASE_VELOCITY, AREA_CODE_UNAVAILABLE, PHONE_NUMBER_UNAVAILABLE, COUNTRY_OUT_OF_STOCK] }
+                  code: { type: string, enum: [PURCHASE_VELOCITY, AREA_CODE_UNAVAILABLE, PHONE_NUMBER_UNAVAILABLE, COUNTRY_OUT_OF_STOCK, NO_WHATSAPP_ELIGIBLE_NUMBER] }
         '503':
           description: 'The carrier could not take the order just now (code CARRIER_UNAVAILABLE); the number is not taken, retry the same request in a minute.'
           content:
@@ -39202,14 +39202,14 @@ paths:
             another number was purchased within the last 10 minutes; retry
             with allowMultiple: true to confirm), or the requested areaCode
             has no deliverable inventory right now (code
-            AREA_CODE_UNAVAILABLE: pick another area or omit areaCode; PHONE_NUMBER_UNAVAILABLE: search again and pick another number; COUNTRY_OUT_OF_STOCK: this country and type have no orderable numbers right now, pick another).
+            AREA_CODE_UNAVAILABLE: pick another area or omit areaCode; PHONE_NUMBER_UNAVAILABLE: search again and pick another number; COUNTRY_OUT_OF_STOCK: this country and type have no orderable numbers right now, pick another; NO_WHATSAPP_ELIGIBLE_NUMBER: every number the carrier offered is one WhatsApp refuses, pass an areaCode or try again for a fresh batch).
           content:
             application/json:
               schema:
                 type: object
                 properties:
                   error: { type: string }
-                  code: { type: string, enum: [PURCHASE_VELOCITY, AREA_CODE_UNAVAILABLE, PHONE_NUMBER_UNAVAILABLE, COUNTRY_OUT_OF_STOCK] }
+                  code: { type: string, enum: [PURCHASE_VELOCITY, AREA_CODE_UNAVAILABLE, PHONE_NUMBER_UNAVAILABLE, COUNTRY_OUT_OF_STOCK, NO_WHATSAPP_ELIGIBLE_NUMBER] }
         '503':
           description: 'The carrier could not take the order just now (code CARRIER_UNAVAILABLE); the number is not taken, retry the same request in a minute.'
           content:
