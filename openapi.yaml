@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.56.0"
+  version: "1.57.0"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -56326,7 +56326,7 @@ paths:
         - { name: accountId, in: query, required: true, schema: { type: string }, description: "A facebook, instagram, metaads or whatsapp account ID" }
         - { name: catalogAccountId, in: query, required: false, schema: { type: string }, description: "A facebook, instagram or metaads account whose Meta login carries catalog_management; its token is used instead of the account's own (needed for WhatsApp connections, whose token cannot manage catalogs)." }
         - { name: adAccountId, in: query, required: false, schema: { type: string }, description: "Meta ad account ID (act_...) whose owner business to list" }
-        - { name: businessId, in: query, required: false, schema: { type: string }, description: "Meta business portfolio ID to list" }
+        - { name: businessId, in: query, required: false, schema: { type: string }, description: "Meta business portfolio ID to list. When it is omitted and the Meta login can see several portfolios, the 400 carries `details.businesses` (id + name) so a client can offer the choice." }
       responses:
         '409': { $ref: '#/components/responses/AccountConnectionRequired' }
         '404': { $ref: '#/components/responses/AccountUnavailable' }
