@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.54.0"
+  version: "1.55.0"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -55545,6 +55545,31 @@ paths:
               schema: { type: object, properties: { status: { type: string }, testLead: { type: object, properties: { id: { type: string } } } } }
         '400': { $ref: '#/components/responses/BadRequest' }
         '401': { $ref: '#/components/responses/Unauthorized' }
+    delete:
+      x-resource-group: "contacts"
+      operationId: deleteTestLead
+      tags: ["Lead Gen"]
+      x-platforms: ["meta"]
+      summary: Delete a test lead
+      description: >
+        Removes a test lead created for the form (DELETE /{leadgen_id}), so a new
+        one can be submitted: Meta keeps one test lead per form and refuses a
+        second until the first is gone. The same test lead appears in Meta's
+        Lead Ads Testing Tool. Meta only deletes test leads; a real lead is
+        refused.
+      parameters:
+        - { name: formId, in: path, required: true, schema: { type: string } }
+        - { name: accountId, in: query, required: true, schema: { type: string }, description: 'The facebook or metaads account whose Page owns the form.' }
+        - { name: leadId, in: query, required: false, schema: { type: string }, description: 'The test lead id returned by createTestLead (or shown in the Testing Tool). Omitted = the test lead currently on the form.' }
+      responses:
+        '200':
+          description: Test lead deleted.
+          content:
+            application/json:
+              schema: { type: object, properties: { status: { type: string }, deleted: { type: array, items: { type: string }, description: 'Ids of the test leads removed.' } } }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404': { description: 'The form has no test lead.' }
 
   /v1/ads/images:
     post:

@@ -195,6 +195,18 @@ class LeadGenResource:
             f"/v1/ads/lead-forms/{form_id}/test-leads", data=payload
         )
 
+    def delete_test_lead(
+        self, form_id: str, account_id: str, *, lead_id: str | None = None
+    ) -> dict[str, Any]:
+        """Delete a test lead"""
+        params = self._build_params(
+            account_id=account_id,
+            lead_id=lead_id,
+        )
+        return self._client._delete(
+            f"/v1/ads/lead-forms/{form_id}/test-leads", params=params
+        )
+
     async def alist_leads(
         self,
         *,
@@ -319,4 +331,16 @@ class LeadGenResource:
         )
         return await self._client._apost(
             f"/v1/ads/lead-forms/{form_id}/test-leads", data=payload
+        )
+
+    async def adelete_test_lead(
+        self, form_id: str, account_id: str, *, lead_id: str | None = None
+    ) -> dict[str, Any]:
+        """Delete a test lead (async)"""
+        params = self._build_params(
+            account_id=account_id,
+            lead_id=lead_id,
+        )
+        return await self._client._adelete(
+            f"/v1/ads/lead-forms/{form_id}/test-leads", params=params
         )

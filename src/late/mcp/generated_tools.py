@@ -16036,6 +16036,32 @@ def register_generated_tools(mcp, _get_client):
         except Exception as e:
             return f"Error: {e}"
 
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Delete a test lead",
+            readOnlyHint=False,
+            destructiveHint=True,
+            openWorldHint=True,
+        )
+    )
+    def lead_gen_delete_test_lead(
+        form_id: str, account_id: str, lead_id: str | None = None
+    ) -> str:
+        """Delete a test lead
+
+        Args:
+            form_id: (required)
+            account_id: The facebook or metaads account whose Page owns the form. (required)
+            lead_id: The test lead id returned by createTestLead (or shown in the Testing Tool). Omitted = the test lead currently on the form."""
+        client = _get_client()
+        try:
+            response = client.lead_gen.delete_test_lead(
+                form_id=form_id, account_id=account_id, lead_id=lead_id
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
     # LOGS
 
     @mcp.tool(
