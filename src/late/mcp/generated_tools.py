@@ -4994,6 +4994,9 @@ def register_generated_tools(mcp, _get_client):
         dsa_payor: str | None = None,
         lead_gen_form_id: str | None = None,
         status: str | None = None,
+        budget_level: str | None = None,
+        attribution_spec: list[dict[str, Any]] | None = None,
+        bodies: list[str] | None = None,
         optimization_goal: str | None = None,
     ) -> str:
         """Boost post as ad
@@ -5136,6 +5139,9 @@ def register_generated_tools(mcp, _get_client):
         a default payor.
                 lead_gen_form_id: Lead Gen form ID to attach to the boosted ad's creative. REQUIRED when `goal` is `lead_generation`. On Meta this is the leadgen_forms ID (create one via POST /v1/ads/lead-forms). On LinkedIn this is the adForm ID (create one via POST /v1/ads/lead-forms with a LinkedIn account); the creative's `leadgenCallToAction.destination` is set to `urn:li:adForm:{id}`. Ignored for other goals.
                 status: Meta, TikTok, and LinkedIn. Publish state of the created entities. Omitted or ACTIVE publishes live (default); PAUSED creates them paused so you can review before they spend. On Meta a new campaign stays paused until explicitly activated; an attached ad is itself paused. On LinkedIn the whole campaign group, campaign, and creative hierarchy stays PAUSED (intendedStatus PAUSED on each).
+                budget_level: Meta only, same semantics as POST /v1/ads/create: campaign = Advantage campaign budget (CBO), the budget and bid strategy sit on the campaign and the ad set inherits them. Default adset. Not allowed with adSetId.
+                attribution_spec: Meta only. Ad-set attribution windows, same shape as POST /v1/ads/create. Applied on OUTCOME_SALES, OUTCOME_LEADS and OUTCOME_APP_PROMOTION campaigns (conversions, lead_conversion, lead_generation, app_promotion); other objectives keep Meta's default. Not allowed with adSetId.
+                bodies: Meta only. Extra primary-text options Meta rotates on the boosted post (asset_feed_spec.bodies with DEGREES_OF_FREEDOM); the post keeps its own text as one of the options. Works for Facebook posts and Instagram media. Under a conversions or traffic goal Meta also wants a website URL on the options, taken from `linkUrl` (send it with a `callToAction`); engagement boosts need none.
                 optimization_goal: Meta, or TikTok with `goal: video_views`. TikTok: ENGAGED_VIEW (6-second
         Focused View, the default) or ENGAGED_VIEW_FIFTEEN (15-second views), both
         billed per view (CPV); any other value is a 400. Meta: explicit ad-set
@@ -5196,6 +5202,9 @@ def register_generated_tools(mcp, _get_client):
                 dsa_payor=dsa_payor,
                 lead_gen_form_id=lead_gen_form_id,
                 status=status,
+                budget_level=budget_level,
+                attribution_spec=attribution_spec,
+                bodies=bodies,
                 optimization_goal=optimization_goal,
             )
             return _format_response(response)

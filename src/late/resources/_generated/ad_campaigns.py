@@ -1009,6 +1009,9 @@ class AdCampaignsResource:
         dsa_payor: str | None = None,
         lead_gen_form_id: str | None = None,
         status: str | None = None,
+        budget_level: str | None = None,
+        attribution_spec: list[dict[str, Any]] | None = None,
+        bodies: list[str] | None = None,
         optimization_goal: str | None = None,
     ) -> dict[str, Any]:
         """Boost post as ad"""
@@ -1058,6 +1061,9 @@ class AdCampaignsResource:
             dsa_payor=dsa_payor,
             lead_gen_form_id=lead_gen_form_id,
             status=status,
+            budget_level=budget_level,
+            attribution_spec=attribution_spec,
+            bodies=bodies,
             optimization_goal=optimization_goal,
         )
         headers: dict[str, str] = {}
@@ -2250,6 +2256,9 @@ class AdCampaignsResource:
         dsa_payor: str | None = None,
         lead_gen_form_id: str | None = None,
         status: str | None = None,
+        budget_level: str | None = None,
+        attribution_spec: list[dict[str, Any]] | None = None,
+        bodies: list[str] | None = None,
         optimization_goal: str | None = None,
     ) -> dict[str, Any]:
         """Boost post as ad (async)"""
@@ -2299,6 +2308,9 @@ class AdCampaignsResource:
             dsa_payor=dsa_payor,
             lead_gen_form_id=lead_gen_form_id,
             status=status,
+            budget_level=budget_level,
+            attribution_spec=attribution_spec,
+            bodies=bodies,
             optimization_goal=optimization_goal,
         )
         headers: dict[str, str] = {}

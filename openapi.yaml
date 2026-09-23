@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.53.1"
+  version: "1.54.0"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -53813,6 +53813,27 @@ paths:
                   type: string
                   enum: [ACTIVE, PAUSED]
                   description: 'Meta, TikTok, and LinkedIn. Publish state of the created entities. Omitted or ACTIVE publishes live (default); PAUSED creates them paused so you can review before they spend. On Meta a new campaign stays paused until explicitly activated; an attached ad is itself paused. On LinkedIn the whole campaign group, campaign, and creative hierarchy stays PAUSED (intendedStatus PAUSED on each).'
+                budgetLevel:
+                  type: string
+                  enum: [adset, campaign]
+                  description: 'Meta only, same semantics as POST /v1/ads/create: campaign = Advantage campaign budget (CBO), the budget and bid strategy sit on the campaign and the ad set inherits them. Default adset. Not allowed with adSetId.'
+                attributionSpec:
+                  type: array
+                  minItems: 1
+                  maxItems: 3
+                  description: 'Meta only. Ad-set attribution windows, same shape as POST /v1/ads/create. Applied on OUTCOME_SALES, OUTCOME_LEADS and OUTCOME_APP_PROMOTION campaigns (conversions, lead_conversion, lead_generation, app_promotion); other objectives keep Meta''s default. Not allowed with adSetId.'
+                  items:
+                    type: object
+                    required: [eventType, windowDays]
+                    properties:
+                      eventType: { type: string, enum: [CLICK_THROUGH, VIEW_THROUGH, ENGAGED_VIDEO_VIEW] }
+                      windowDays: { type: integer, enum: [1, 7, 28] }
+                bodies:
+                  type: array
+                  minItems: 1
+                  maxItems: 5
+                  items: { type: string }
+                  description: 'Meta only. Extra primary-text options Meta rotates on the boosted post (asset_feed_spec.bodies with DEGREES_OF_FREEDOM); the post keeps its own text as one of the options. Works for Facebook posts and Instagram media. Under a conversions or traffic goal Meta also wants a website URL on the options, taken from `linkUrl` (send it with a `callToAction`); engagement boosts need none.'
                 optimizationGoal:
                   type: string
                   description: |
