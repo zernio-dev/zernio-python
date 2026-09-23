@@ -813,13 +813,22 @@ components:
             card on file; this gate is about contract terms, not card
             collection.
 
+          - `card_verification_required`: the card on file was flagged
+            at add time (prepaid, or issued in a different country than
+            the billing address) and a one-time verification charge of
+            `details.verification_amount_cents` (USD) is pending. The
+            charge is credited to the team's usage balance, not a fee.
+            `dashboard_url` opens the billing page on the verification
+            step; the request succeeds once it is paid.
+
         SDK consumers should switch on `reason` to render the right
-        prompt. For `free_tier_exceeded` and `twitter_passthrough`,
-        redirect the end-user to `dashboard_url`: it opens the
-        add-payment-method drawer on the Zernio billing page, and the
-        request succeeds once the card is on file. For
-        `enterprise_required`, redirect to `dashboard_url` (the
-        enterprise contact form) to adjust the contract's limit.
+        prompt. For `free_tier_exceeded`, `twitter_passthrough` and
+        `card_verification_required`, redirect the end-user to
+        `dashboard_url`: it opens the add-payment-method drawer on the
+        Zernio billing page, and the request succeeds once the card is
+        on file (or verified). For `enterprise_required`, redirect to
+        `dashboard_url` (the enterprise contact form) to adjust the
+        contract's limit.
       content:
         application/json:
           schema:
@@ -836,7 +845,7 @@ components:
                 description: Machine-readable error code. Stable across versions.
               reason:
                 type: string
-                enum: [free_tier_exceeded, twitter_passthrough, enterprise_required]
+                enum: [free_tier_exceeded, twitter_passthrough, enterprise_required, card_verification_required]
                 description: Discriminator for which gate fired.
               documentation_url:
                 type: string
@@ -868,6 +877,10 @@ components:
                   has_payment_method:
                     type: boolean
                     description: Whether the team currently has a card on file in Stripe. Set when reason=free_tier_exceeded or reason=twitter_passthrough.
+                  verification_amount_cents:
+                    type: integer
+                    description: 'One-time card verification charge in USD cents, credited to usage. Only set when reason=card_verification_required.'
+                    example: 1000
                   effective_account_limit:
                     type: integer
                     description: |
