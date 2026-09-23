@@ -16307,7 +16307,7 @@ def register_generated_tools(mcp, _get_client):
 
         Args:
             account_id: The account ID to send from (required)
-            participant_id: Recipient identifier. For X this is the numeric user ID; for WhatsApp and SMS, the recipient phone number in international format (digits, country code included); for Slack, the workspace member id (e.g. U01ABCDEF). Provide either this or participantUsername.
+            participant_id: Recipient identifier. For X this is the numeric user ID; for WhatsApp and SMS, the recipient phone number in international format (digits, country code included); for Slack, the workspace member id (e.g. U01ABCDEF); for iMessage, a phone number in international format with the leading + or an iMessage email. Provide either this or participantUsername.
             participant_username: Recipient handle/username, an X or Bluesky handle (with or without @) or a Reddit username (with or without u/). Resolved via lookup. Provide either this or participantId.
             message: Text content of the message. At least one of message, attachment, or (for WhatsApp) templateName is required. Required when category is set (a Direct Send utility message is a text message).
             skip_dm_check: X only. Skip the receives_your_dm eligibility check before sending. Use if you have already verified the recipient accepts DMs.

@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.62.0"
+  version: "1.63.0"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -30001,7 +30001,9 @@ paths:
       description: |
         Start a direct message conversation with a user. If a conversation with that recipient already exists, the message is added to the existing thread.
 
-        Supported platforms: X, Bluesky, Reddit, WhatsApp, SMS, and Slack. Other platforms return PLATFORM_NOT_SUPPORTED.
+        Supported platforms: X, Bluesky, Reddit, WhatsApp, SMS, Slack, and iMessage. Other platforms return PLATFORM_NOT_SUPPORTED.
+
+        **iMessage.** Pass the recipient as participantId: a phone number in international format (+15551234567) or an iMessage email. Senders ordered through Zernio can message contacts who never wrote to them. The first message to such a contact must be a personal, plain-text note: no links, email addresses, phone numbers, prices, attachments or marketing. It is checked against those rules and reviewed for spam before sending; one that fails returns 400 with code `invalid_content` and nothing is sent. Each sender may open at most one new conversation every 15 minutes, and a new sender warms up: 2 new conversations per 24 hours on days 1-2 after activation, 5 on days 3-4, 10 on days 5-7, 20 on days 8-14, 30 on days 15-21 and 50 after that. Beyond that the request returns 429 with code `new_contact_limit` and a time to retry. The warm-up counts from when a sender ordered through Zernio went live; senders registered from your own provider account are not warmed up by Zernio. Until the contact replies, the opening is the only message the thread accepts: further sends return 409 `recipient_must_message_first`. Once the contact has written, the thread behaves like any other and is not limited. Recipients can report a first message as junk, and reports can get a sender blocked permanently, so keep the reply rate high (above roughly 30%). A sender registered with your own provider account may lack the add-on for new contacts; its sends to them return 409 `recipient_must_message_first`, and an opt-in link is the way in. A contact who opted out returns 409 `recipient_opted_out`.
 
         **Slack.** Pass a workspace member id as participantId (list them with GET /v1/accounts/{accountId}/slack-members). Zernio opens the DM channel with that member and sends the message; the thread then behaves like any other Slack conversation in the inbox. The member must belong to the connected workspace.
 
@@ -30039,7 +30041,7 @@ paths:
                   description: The account ID to send from
                 participantId:
                   type: string
-                  description: 'Recipient identifier. For X this is the numeric user ID; for WhatsApp and SMS, the recipient phone number in international format (digits, country code included); for Slack, the workspace member id (e.g. U01ABCDEF). Provide either this or participantUsername.'
+                  description: 'Recipient identifier. For X this is the numeric user ID; for WhatsApp and SMS, the recipient phone number in international format (digits, country code included); for Slack, the workspace member id (e.g. U01ABCDEF); for iMessage, a phone number in international format with the leading + or an iMessage email. Provide either this or participantUsername.'
                 participantUsername:
                   type: string
                   description: "Recipient handle/username, an X or Bluesky handle (with or without @) or a Reddit username (with or without u/). Resolved via lookup. Provide either this or participantId."
@@ -30290,7 +30292,7 @@ paths:
                         type: [string, "null"]
                         description: X username of the recipient
         '400':
-          description: 'Validation error, platform not supported, an attachment the platform does not accept (PLATFORM_LIMITATION), template required to start a WhatsApp conversation (TEMPLATE_REQUIRED), template variables that do not match the approved definition (INVALID_TEMPLATE_PARAMS, INVALID_TEMPLATE_BUTTON_PARAM), a missing or incompatible required template header (INVALID_TEMPLATE_HEADER), templateCards that do not match the approved carousel definition (INVALID_TEMPLATE_CARD_PARAM), category combined with templateName or used on a non-WhatsApp account, or the WhatsApp Business Account is not eligible for Direct Send: DIRECT_SEND_NOT_ELIGIBLE and DIRECT_SEND_BLOCKED require Meta to grant or restore Direct Send access, while DIRECT_SEND_LIMITED is temporary and lifts on its own'
+          description: 'Validation error, platform not supported, an attachment the platform does not accept (PLATFORM_LIMITATION), template required to start a WhatsApp conversation (TEMPLATE_REQUIRED), template variables that do not match the approved definition (INVALID_TEMPLATE_PARAMS, INVALID_TEMPLATE_BUTTON_PARAM), a missing or incompatible required template header (INVALID_TEMPLATE_HEADER), templateCards that do not match the approved carousel definition (INVALID_TEMPLATE_CARD_PARAM), category combined with templateName or used on a non-WhatsApp account, the WhatsApp Business Account is not eligible for Direct Send: DIRECT_SEND_NOT_ELIGIBLE and DIRECT_SEND_BLOCKED require Meta to grant or restore Direct Send access, while DIRECT_SEND_LIMITED is temporary and lifts on its own, or an iMessage first message to a new contact that breaks the content rule (invalid_content)'
           content:
             application/json:
               schema:
@@ -30298,7 +30300,7 @@ paths:
                   - type: object
                     properties:
                       error: { type: string }
-                      code: { type: string, enum: [PLATFORM_NOT_SUPPORTED, PLATFORM_LIMITATION, TEMPLATE_REQUIRED, INVALID_TEMPLATE_PARAMS, INVALID_TEMPLATE_BUTTON_PARAM, INVALID_TEMPLATE_HEADER, INVALID_TEMPLATE_CARD_PARAM, DIRECT_SEND_NOT_ELIGIBLE, DIRECT_SEND_LIMITED, DIRECT_SEND_BLOCKED] }
+                      code: { type: string, enum: [PLATFORM_NOT_SUPPORTED, PLATFORM_LIMITATION, TEMPLATE_REQUIRED, INVALID_TEMPLATE_PARAMS, INVALID_TEMPLATE_BUTTON_PARAM, INVALID_TEMPLATE_HEADER, INVALID_TEMPLATE_CARD_PARAM, DIRECT_SEND_NOT_ELIGIBLE, DIRECT_SEND_LIMITED, DIRECT_SEND_BLOCKED, invalid_content] }
                   - { $ref: '#/components/schemas/WhatsAppTemplateLookupError' }
         '401': { $ref: '#/components/responses/Unauthorized' }
         '403':
@@ -30314,6 +30316,15 @@ paths:
                       error: { type: string }
                       code: { type: string, enum: [account_not_found, PARTICIPANT_NOT_FOUND] }
                   - { $ref: '#/components/schemas/WhatsAppTemplateLookupError' }
+        '409':
+          description: 'iMessage only. The contact opted out of this sender (recipient_opted_out); or this contact has never written to the sender and either the sender lacks the add-on for new contacts or the opening message already went out and the contact has not replied yet (recipient_must_message_first).'
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error: { type: string }
+                  code: { type: string, enum: [recipient_opted_out, recipient_must_message_first] }
         '422':
           description: 'Recipient does not accept DMs from this account (X), or does not accept direct messages from you (Reddit)'
           content:
@@ -30326,7 +30337,7 @@ paths:
                       code: { type: string, enum: [DM_NOT_ALLOWED] }
                   - { $ref: '#/components/schemas/WhatsAppTemplateLookupError' }
         '429':
-          description: 'X API rate limit exceeded, Reddit rate limit reached, or Meta rejected the WhatsApp template-definition lookup. A lookup failure sends no message.'
+          description: 'X API rate limit exceeded, Reddit rate limit reached, Meta rejected the WhatsApp template-definition lookup (a lookup failure sends no message), or an iMessage sender reached its new-contact pacing or warm-up limit (new_contact_limit; the error says when to retry).'
           content:
             application/json:
               schema:
@@ -30334,7 +30345,7 @@ paths:
                   - type: object
                     properties:
                       error: { type: string }
-                      code: { type: string, enum: [rate_limited] }
+                      code: { type: string, enum: [rate_limited, new_contact_limit] }
                   - { $ref: '#/components/schemas/WhatsAppTemplateLookupError' }
         '502':
           description: The exact approved WhatsApp template definition is unavailable. No message was sent.
@@ -30914,6 +30925,15 @@ paths:
         sends to a single recipient at roughly 10 per minute; bursts above that
         return a `400` with code `131056`. Sends to other recipients are
         unaffected, so parallelise across recipients rather than flooding one.
+
+        iMessage pacing: messages to contacts who have not written to the
+        sender in the last 24 hours must be at least 2 minutes apart per
+        sender; a send inside that window returns `429` with code
+        `new_contact_limit` and the time to retry. Replies to contacts who
+        wrote within the last day are not paced. A thread opened with
+        `POST /v1/inbox/conversations` accepts no message after the opening
+        until the contact replies (`409 recipient_must_message_first`). Text
+        must be shorter than 10,000 characters.
 
         WhatsApp template messages: to send an approved template into this
         conversation (required when the 24-hour customer-service window is
@@ -36245,10 +36265,11 @@ paths:
       summary: Create a tracked iMessage opt-in link
       description: |
         Generates a per-campaign link that opens Messages on this sender with
-        `body` prefilled. iMessage is send-first: a sender can only message a
-        contact who has written to it (a send to anyone else fails with
-        `recipient_must_message_first`), and the contact's tap-and-send is
-        what opens that door.
+        `body` prefilled. A thread the contact opens skips the pacing and the
+        first-message content rule that apply when the sender writes first,
+        and it is the only way in for senders without the add-on for new
+        contacts (their sends to anyone else fail with
+        `recipient_must_message_first`).
 
         Each link carries a unique code in place of the `[opt-in-code]`
         placeholder; when the contact sends it, the resulting `message.received`
