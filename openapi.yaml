@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.60.1"
+  version: "1.61.0"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -33016,7 +33016,7 @@ paths:
                   hidden: { type: boolean }
                   platform: { type: string }
         '400':
-          description: Platform does not support hiding comments
+          description: 'Platform does not support hiding comments (code PLATFORM_LIMITATION), or the platform rejected the call (code PLATFORM_API_ERROR with the upstream status, for example a comment that no longer exists; the platform''s own error code and subcode are in platformError).'
         '401': { $ref: '#/components/responses/Unauthorized' }
         '403':
           description: Inbox addon required
@@ -33055,7 +33055,7 @@ paths:
                   hidden: { type: boolean }
                   platform: { type: string }
         '400':
-          description: Platform does not support unhiding comments
+          description: 'Platform does not support unhiding comments (code PLATFORM_LIMITATION), or the platform rejected the call (code PLATFORM_API_ERROR with the upstream status, for example a comment that no longer exists; the platform''s own error code and subcode are in platformError).'
         '401': { $ref: '#/components/responses/Unauthorized' }
         '403':
           description: Inbox addon required
