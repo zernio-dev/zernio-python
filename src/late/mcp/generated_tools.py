@@ -5001,7 +5001,7 @@ def register_generated_tools(mcp, _get_client):
             Args:
                 creative_features
                 post_id: Zernio post ID (provide this or platformPostId)
-                platform_post_id: Platform post ID (alternative to postId)
+                platform_post_id: Platform post ID (alternative to postId). Meta: a Page post id (`<pageId>_<postId>` or the bare post id) or an Instagram media id. On a Meta Ads business-login connection (platform metaads) the id is resolved live: an Instagram media id is boosted as that media, running as the Instagram account that owns it.
                 account_id: Zernio account id. Normally the connected posting account (facebook, instagram, tiktok, linkedin, pinterest, twitter) or a googleads account. TikTok: the TikTok Ads connection (platform tiktokads) is accepted too when the post brings its own authorization (sparkAuthCode or sparkPosts), so Spark ads need no organic TikTok account connected; such a call must use platformPostId, not postId. (required)
                 ad_account_id: Platform ad account ID (required)
                 name: (required)

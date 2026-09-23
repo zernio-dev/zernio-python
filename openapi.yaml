@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.53.0"
+  version: "1.53.1"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -53482,7 +53482,7 @@ paths:
               properties:
                 creativeFeatures: { $ref: '#/components/schemas/MetaCreativeFeatures' }
                 postId: { type: string, description: Zernio post ID (provide this or platformPostId) }
-                platformPostId: { type: string, description: Platform post ID (alternative to postId) }
+                platformPostId: { type: string, description: 'Platform post ID (alternative to postId). Meta: a Page post id (`<pageId>_<postId>` or the bare post id) or an Instagram media id. On a Meta Ads business-login connection (platform metaads) the id is resolved live: an Instagram media id is boosted as that media, running as the Instagram account that owns it.' }
                 accountId: { type: string, description: "Zernio account id. Normally the connected posting account (facebook, instagram, tiktok, linkedin, pinterest, twitter) or a googleads account. TikTok: the TikTok Ads connection (platform tiktokads) is accepted too when the post brings its own authorization (sparkAuthCode or sparkPosts), so Spark ads need no organic TikTok account connected; such a call must use platformPostId, not postId." }
                 adAccountId: { type: string, description: Platform ad account ID }
                 name: { type: string, maxLength: 255 }
