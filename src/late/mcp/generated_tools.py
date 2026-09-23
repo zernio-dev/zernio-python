@@ -5108,18 +5108,24 @@ def register_generated_tools(mcp, _get_client):
                 smart_plus: TikTok only. Run the Spark post in a Smart+ campaign (goal `conversions` = Smart+ Web Conversions, `lead_generation` = Smart+ Lead Generation) instead of a regular campaign. Requires `sparkAuthCode` (the Smart+ ad runs the post under the identity that redeeming its Spark code creates; a Business Center-owned post is not accepted there) and `promotedObject.pixelId` + `customEventType`. `app_promotion` is not available on a Spark post. Rejected with a 400 on other platforms. A Smart+ Spark ad uses a dynamic CTA portfolio, sent as ad_configuration.call_to_action_id (TikTok does not accept a named call to action there): Zernio creates one per ad account and reuses it, and `callToAction` is rejected with a 400 on this path.
                 spark_posts: TikTok Smart+ only (requires `smartPlus: true`). Several Spark posts as creatives of ONE Smart+ ad, each with its own post code (TikTok allows 1-50 per ad; posts from different creators mix). Replaces `platformPostId` + `sparkAuthCode`. Without `adSetId` it creates campaign + ad group + one ad carrying all of them; with `adSetId` it creates one new ad with all of them in that ad group. Rejected with a 400 on other platforms.
                 promo_codes: TikTok Smart+ Web Conversions only (requires `smartPlus: true`, goal `conversions`). Promo codes or offers TikTok highlights on the ad (Ads Manager's "Add promo code or offer"). A promo code needs shoppers to enter it at checkout; an entry without `promoCode` is an offer applied automatically. Rejected with a 400 on other platforms and on Lead Generation campaigns.
-                promoted_object: TikTok-only on this endpoint. The pixel a Website Conversion ad group
-        optimizes toward, so a Spark Ad built from an existing organic post can
-        optimize for a conversion instead of only engagement or traffic.
+                promoted_object: Meta and TikTok. What the conversion ad set optimizes toward, so a boost
+        of an existing organic post can run for a conversion instead of only
+        engagement or traffic. Required when `goal` is `conversions` (Meta also
+        `lead_conversion`); ignored on goals that do not optimize for a conversion.
 
-        Required when `goal` is `conversions`, and BOTH fields are required:
-        TikTok refuses a conversion ad group with no pixel ("Please select a
-        pixel") and equally one that has a pixel but no event ("Select a pixel
-        event."), because the event is what the ad group optimizes toward. Ignored
-        on every other goal, since only a WEB_CONVERSIONS ad group accepts them.
+        Meta: `pixelId` + `customEventType` (a commerce event such as PURCHASE
+        under `conversions`, a leads-class event such as LEAD under
+        `lead_conversion`), or `customConversionId` to optimize against a Custom
+        Conversion, or `customEventType: OTHER` + `customEventStr` for a pixel
+        custom event. Becomes the ad set `promoted_object`; without it Meta
+        rejects the ad set ("Please select a promoted object", subcode 1815430).
+        With `adSetId` the existing ad set already carries it.
 
-        Combine freely with `platformPostId` + `sparkAuthCode`: the pixel lives on
-        the ad group and the Spark item on the creative, so they never conflict.
+        TikTok: BOTH `pixelId` and `customEventType` are required. TikTok refuses
+        a conversion ad group with no pixel ("Please select a pixel") and one
+        with a pixel but no event ("Select a pixel event."). Combine freely with
+        `platformPostId` + `sparkAuthCode`: the pixel lives on the ad group and
+        the Spark item on the creative.
                 dsa_beneficiary: Legal entity that benefits from the ad. Required when targeting EU users
         (EU DSA, Article 26). Optional if the ad account has a default beneficiary:
         set it once via `PATCH /v1/ads/accounts` or in Meta Ads Manager, and Meta
