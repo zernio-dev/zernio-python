@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.61.1"
+  version: "1.62.0"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -45202,7 +45202,7 @@ paths:
                           type: object
                           description: "Platform error codes of the failed DM (Meta `code` and `error_subcode`), when the platform sent them. Absent on successful rows and on rows written before this field existed."
                           properties: { code: { type: integer }, subcode: { type: integer } }
-                        privateReplyConsumed: { type: boolean, description: "True when the failed send spent the comment's single Instagram private reply (subcode 1545133 or 2534023), the same rule as `details.privateReplyConsumed` on the private-reply endpoint. Absent on direct DMs, on Facebook, and on rows written before this field existed." }
+                        privateReplyConsumed: { type: boolean, description: "True when the failed send spent the comment's single private reply (Instagram subcode 1545133 or 2534023, or Meta code 10900 on Instagram and Facebook), the same rule as `details.privateReplyConsumed` on the private-reply endpoint. Absent on direct DMs and on rows written before this field existed." }
                         commentReplyStatus: { type: string, enum: [sent, failed, skipped], description: "Outcome of the optional public reply on the triggering comment. 'skipped' if no commentReply was configured or if the DM failed (the public reply is not attempted in that case)." }
                         commentReplyError: { type: string, description: Public-reply error message if commentReplyStatus is failed }
                         nextDueAt: { type: string, format: date-time, description: "When the next queued send fires. Present only while something is still pending." }
@@ -45357,7 +45357,7 @@ paths:
                           type: object
                           description: "Platform error codes of the failed DM (Meta `code` and `error_subcode`), when the platform sent them. Absent on successful rows and on rows written before this field existed."
                           properties: { code: { type: integer }, subcode: { type: integer } }
-                        privateReplyConsumed: { type: boolean, description: "True when the failed send spent the comment's single Instagram private reply (subcode 1545133 or 2534023), the same rule as `details.privateReplyConsumed` on the private-reply endpoint. Absent on direct DMs, on Facebook, and on rows written before this field existed." }
+                        privateReplyConsumed: { type: boolean, description: "True when the failed send spent the comment's single private reply (Instagram subcode 1545133 or 2534023, or Meta code 10900 on Instagram and Facebook), the same rule as `details.privateReplyConsumed` on the private-reply endpoint. Absent on direct DMs and on rows written before this field existed." }
                         commentReplyStatus: { type: string, enum: [sent, failed, skipped], description: "Outcome of the optional public reply on the triggering comment. 'skipped' if no commentReply was configured or if the DM failed (the public reply is not attempted in that case)." }
                         commentReplyError: { type: string, description: Public-reply error message if commentReplyStatus is failed }
                         nextDueAt: { type: string, format: date-time, description: "When the next queued send fires. Present only while something is still pending." }
