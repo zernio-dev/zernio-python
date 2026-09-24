@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.71.0"
+  version: "1.72.0"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -19646,7 +19646,9 @@ paths:
         token can be perfectly valid while Meta refuses to serve the phone-number object (for
         example after a phone-side coexistence disconnect), so `tokenStatus` alone is not a
         liveness signal for WhatsApp. When the Meta link is dead, `platformConnection.status` is
-        `disconnected` and the overall `status` is `error`.
+        `disconnected` and the overall `status` is `error`. When Meta reports that the number's
+        inbound message webhook does not reach Zernio, `platformConnection.inboundWebhookSubscribed`
+        is `false`, an entry is added to `issues`, and the overall `status` is at least `warning`.
       parameters:
         - name: accountId
           in: path
@@ -19748,6 +19750,9 @@ paths:
                           code: { type: integer, description: 'Meta Graph error code (100)' }
                           subcode: { type: integer, description: 'Meta Graph error subcode (33)' }
                           message: { type: string }
+                      inboundWebhookSubscribed:
+                        type: [boolean, "null"]
+                        description: 'From the phone number''s Meta health_status. `false` = Meta says Zernio is not subscribed to the message webhook for this number, so inbound messages are not delivered even though the number is CONNECTED and can still send. Fix by re-subscribing (reconnect the number); if it stays `false`, the number is routed to a different WhatsApp Business Account (typically after linking it to a Facebook Page). `true` = Meta reports no such problem. `null` = Meta did not report it (read failed or no health_status), not evidence either way.'
               example:
                 accountId: "abc123"
                 platform: "instagram"
