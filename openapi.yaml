@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.65.0"
+  version: "1.66.0"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -783,6 +783,25 @@ components:
       headers:
         Retry-After:
           description: 'Seconds remaining until the upstream quota resets.'
+          schema: { type: integer }
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/ErrorResponse' }
+    MetaAdAccountWriteLimited:
+      description: |
+        Meta only (code `rate_limited`). Meta places a security hold lasting
+        days (code 31, subcode 3858385, "Please authenticate your account") on
+        ad accounts that receive bursts of ad writes, and it counts
+        `validateOnly` checks as writes. To keep integrations out of that hold,
+        Zernio runs creates for one Meta ad account one at a time (a parallel
+        request waits up to 60 seconds for its turn) and allows at most 30
+        creates per ad account in any rolling 5 minutes, `validateOnly`
+        included. A 429 here means one of the two was hit: wait `Retry-After`
+        seconds and send creates for that ad account sequentially. Other ad
+        accounts are not affected.
+      headers:
+        Retry-After:
+          description: 'Seconds to wait before retrying a create on this ad account.'
           schema: { type: integer }
       content:
         application/json:
@@ -53993,6 +54012,7 @@ paths:
         '400':
           description: Missing required fields or invalid values
         '401': { $ref: '#/components/responses/Unauthorized' }
+        '429': { $ref: '#/components/responses/MetaAdAccountWriteLimited' }
         '403':
           description: 'Ads access required. Legacy plans need the Ads add-on; included by default on usage-based plans. Also returned with code `ads_allowance_exceeded` when the team has no payment method on file and has reached the 500 free live ads: add a card to resume.'
         '409':
@@ -55253,6 +55273,7 @@ paths:
         '400':
           description: 'Missing required fields, invalid values, non-Meta platform used with creatives[] / adSetId, or a Meta validateOnly validation failure (verbatim)'
         '401': { $ref: '#/components/responses/Unauthorized' }
+        '429': { $ref: '#/components/responses/MetaAdAccountWriteLimited' }
         '403':
           description: 'Ads access required. Legacy plans need the Ads add-on; included by default on usage-based plans. Also returned with code `ads_allowance_exceeded` when the team has no payment method on file and has reached the 500 free live ads: add a card to resume.'
         '422':
