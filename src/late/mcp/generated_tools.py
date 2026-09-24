@@ -11305,7 +11305,7 @@ def register_generated_tools(mcp, _get_client):
           oauth_denied, invalid_callback, invalid_state, unsupported_platform, connection_failed,
           internal_error, token_exchange_failed, byok_config_error, personal_account_not_supported,
           missing_google_permissions, missing_tiktok_permissions, platform_requires_destination,
-          reconnect_account_mismatch, invalid_request
+          reconnect_account_mismatch, instagram_login_method_mismatch, invalid_request
 
         Access and limits:
           profile_not_found, invalid_profile_id, access_denied, account_limit_exceeded,
@@ -11349,6 +11349,11 @@ def register_generated_tools(mcp, _get_client):
         3. `missing_tiktok_permissions` means the TikTok authorization left out a permission the
         already-connected account needs, so nothing was changed and it keeps working as before.
         It is user-fixable: connect again and accept every permission on TikTok's screen.
+
+        4. `instagram_login_method_mismatch` means an Instagram Login authorization landed on a
+        profile whose Instagram account is connected through Facebook Login, so nothing was
+        changed and it keeps working as before. To refresh it, connect again with
+        `loginMethod=facebook_login`. To move it to Instagram Login, disconnect it first.
                 headless: When true, the user is redirected to your redirect_url with raw OAuth data (code, state) instead of Zernio's default account selection UI. Use this to build a custom connect experience.
                 login_method: Instagram only. Which of the two Instagram connection methods to use. Ignored for every other platform.
 
