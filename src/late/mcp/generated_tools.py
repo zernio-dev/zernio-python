@@ -11515,14 +11515,21 @@ def register_generated_tools(mcp, _get_client):
         gives one, `details.disableReason`. Unsettled and in-grace accounts
         are accepted, matching the `selectable` flag of `GET /v1/ads/accounts`.
         Setting a scope also removes already synced ads from de-scoped ad
-        accounts. For multiple accounts use `adAccountIds` instead.
+        accounts. On Meta the scope also decides which ad accounts Zernio
+        subscribes to ad-account webhooks: only the scoped ones, instead of
+        every ad account the login can reach. The scope is kept when this
+        call returns an `authUrl`, so the Meta Ads account created after
+        OAuth is scoped (and only its scoped ad accounts synced and
+        subscribed) from the start. For multiple accounts use `adAccountIds` instead.
                 ad_account_ids: Scope ad sync to multiple platform ad accounts (same platform
         support and id shapes as `adAccountId`). Repeat the param
         (`?adAccountIds=act_1&adAccountIds=act_2`) or comma-separate
         (`?adAccountIds=act_1,act_2`). Persisted server-side; latest call
         wins, and de-scoped ad accounts have their synced ads removed.
+        On Meta only the scoped ad accounts get webhook subscriptions,
+        including when the call starts a fresh OAuth.
         Omitting both `adAccountId` and `adAccountIds` keeps any previously
-        persisted scope unchanged."""
+        persisted scope unchanged (no scope means every reachable ad account)."""
         client = _get_client()
         try:
             response = client.connect.connect_ads(
