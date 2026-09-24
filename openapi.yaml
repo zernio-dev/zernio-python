@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.72.0"
+  version: "1.72.1"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -776,12 +776,13 @@ components:
         budget spent.
 
         Google Ads: writes and reports run on one developer token shared by
-        every Google Ads account on Zernio, and Google refills its daily
-        operations quota once a day (around 14:03 UTC). When it is exhausted
-        the envelope has `code: rate_limited`, `platform: google`,
-        `details.quotaScope: DEVELOPER` (`ACCOUNT` when it is your own ad
-        account's quota), `details.resetsAt` (ISO instant of the refill) and
-        `Retry-After` counting down to it. Retrying earlier cannot succeed.
+        every Google Ads account on Zernio. The token holds Standard access
+        (no daily operations cap), so this only happens when Google throttles
+        the token or your ad account. The envelope has `code: rate_limited`,
+        `platform: google`, `details.quotaScope: DEVELOPER` (`ACCOUNT` when it
+        is your own ad account's quota), `details.resetsAt` (ISO instant when
+        Google accepts requests again) and `Retry-After` counting down to it.
+        Retrying earlier cannot succeed.
       headers:
         Retry-After:
           description: 'Seconds remaining until the upstream quota resets.'
@@ -49816,7 +49817,6 @@ paths:
         Unified read of the platform's native click-URL tracking params.
         - Meta (facebook/instagram): the creative's `url_tags` (and template_url_spec).
         - Google (googleads): the campaign's `trackingUrlTemplate` + `finalUrlSuffix`.
-          Subject to the Google Ads API access-tier daily quota; bulk audits need Standard access.
         - LinkedIn (linkedinads): the campaign's Dynamic UTM `dynamicValueParameters` + `customValueParameters`.
         Returns 405 for platforms without a click-URL tracking surface (TikTok, X, Pinterest).
 
