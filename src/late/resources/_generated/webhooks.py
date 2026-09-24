@@ -87,6 +87,7 @@ class WebhooksResource:
         is_active: bool | None = True,
         custom_headers: dict[str, Any] | None = None,
         disabled_resource_groups: list[str] | None = None,
+        profile_ids: list[str] | None = None,
     ) -> dict[str, Any]:
         """Create webhook"""
         payload = self._build_payload(
@@ -97,6 +98,7 @@ class WebhooksResource:
             is_active=is_active,
             custom_headers=custom_headers,
             disabled_resource_groups=disabled_resource_groups,
+            profile_ids=profile_ids,
         )
         return self._client._post("/v1/webhooks/settings", data=payload)
 
@@ -112,6 +114,7 @@ class WebhooksResource:
         is_active: bool | None = None,
         custom_headers: dict[str, Any] | None = None,
         disabled_resource_groups: list[str] | None = None,
+        profile_ids: list[str] | None = None,
     ) -> dict[str, Any]:
         """Update webhook"""
         payload = self._build_payload(
@@ -124,6 +127,7 @@ class WebhooksResource:
             is_active=is_active,
             custom_headers=custom_headers,
             disabled_resource_groups=disabled_resource_groups,
+            profile_ids=profile_ids,
         )
         return self._client._put("/v1/webhooks/settings", data=payload)
 
@@ -187,6 +191,7 @@ class WebhooksResource:
         is_active: bool | None = True,
         custom_headers: dict[str, Any] | None = None,
         disabled_resource_groups: list[str] | None = None,
+        profile_ids: list[str] | None = None,
     ) -> dict[str, Any]:
         """Create webhook (async)"""
         payload = self._build_payload(
@@ -197,6 +202,7 @@ class WebhooksResource:
             is_active=is_active,
             custom_headers=custom_headers,
             disabled_resource_groups=disabled_resource_groups,
+            profile_ids=profile_ids,
         )
         return await self._client._apost("/v1/webhooks/settings", data=payload)
 
@@ -212,6 +218,7 @@ class WebhooksResource:
         is_active: bool | None = None,
         custom_headers: dict[str, Any] | None = None,
         disabled_resource_groups: list[str] | None = None,
+        profile_ids: list[str] | None = None,
     ) -> dict[str, Any]:
         """Update webhook (async)"""
         payload = self._build_payload(
@@ -224,6 +231,7 @@ class WebhooksResource:
             is_active=is_active,
             custom_headers=custom_headers,
             disabled_resource_groups=disabled_resource_groups,
+            profile_ids=profile_ids,
         )
         return await self._client._aput("/v1/webhooks/settings", data=payload)
 
