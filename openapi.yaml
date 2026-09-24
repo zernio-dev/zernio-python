@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.66.0"
+  version: "1.67.0"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -483,7 +483,7 @@ tags:
 
       Resource groups. Every event belongs to one group: post.* to publishing, message.*, reaction.*, conversation.*, call.* and whatsapp.automatic_event to messages, comment.* and review.* to engagement, lead.* to contacts, ad.* to ads, account.*, whatsapp.template.* and whatsapp.account.* to accounts, analytics.* to analytics, whatsapp.number.* and verification.* to telephony, webhook.test to webhooks. Two independent controls use that mapping. (1) A restricted (zrk_) API key can only subscribe to, test-fire, redeliver, or read delivery logs for events in the groups it holds, so it can never create a subscription broader than itself. (2) Each subscription carries its own `disabledResourceGroups` denylist: events in a disabled group are dropped before delivery to that endpoint, on live delivery and on every replay path, no matter which key or session created the subscription. Changing that denylist applies to every event emitted after the change; events already queued when it landed can still be delivered for up to five minutes after they were enqueued, because the delivery worker trusts a five-minute enqueue-time snapshot before re-checking. Absent or empty on a subscription means it receives everything it subscribes to, which is the behavior of every subscription created before the field existed.
 
-      Profile filter. A subscription can also carry `profileIds`, an allowlist of profiles. A scoped subscription is only sent events it can attribute to one of those profiles (the profile of the connected account behind the event), so an integrator can route the profile holding test accounts to a staging endpoint while a second subscription, scoped to the production profiles, keeps production traffic. Events that belong to no profile (`verification.*`, `phone_number.*`) reach only unscoped subscriptions. The filter runs when an event is emitted; redelivery replays a delivery already made to that endpoint and test fires ignore it. Absent or empty means every profile.
+      Profile and account filters. A subscription can also carry `profileIds`, an allowlist of profiles, and `accountIds`, an allowlist of connected accounts with the same semantics keyed on the account; each non-empty list narrows delivery and a subscription with both must be satisfied on both. A scoped subscription is only sent events it can attribute to one of those profiles: the profile of the connected account behind the event, or for an aggregate `post.*` event the profile of every account the post targets (a post spanning two scoped endpoints' profiles reaches both). So an integrator can route the profile holding test accounts to a staging endpoint while a second subscription, scoped to the production profiles, keeps production traffic. Events that belong to no profile (`verification.*`, `phone_number.*`, and a legacy post whose accounts were deleted) reach only unscoped subscriptions. The filter runs when an event is emitted; redelivery replays a delivery already made to that endpoint and test fires ignore it. Absent or empty means every profile (or every account).
   - name: Webhook Events
     description: |
       Incoming webhook deliveries sent by Zernio to your configured endpoint URL.
@@ -3112,11 +3112,26 @@ components:
             Profiles this subscription receives events for (allowlist).
             Absent or empty means every profile, which is how every
             subscription created before this field existed behaves. A scoped
-            subscription is only sent events attributable to a listed profile;
-            events with no profile behind them (`verification.*`,
-            `phone_number.*`) are not delivered to it. Applied when the event
+            subscription is only sent events attributable to a listed profile.
+            An aggregate `post.*` event is attributed to the profile of every
+            account the post targets, so a post spanning two scoped endpoints'
+            profiles reaches both. Events with no profile behind them
+            (`verification.*`, `phone_number.*`, a legacy post whose accounts
+            were deleted) are not delivered to it. Applied when the event
             is emitted: a redelivery replays a delivery already made to this
             endpoint, and a test fire ignores the list.
+        accountIds:
+          type: array
+          items:
+            type: string
+          description: >-
+            Connected accounts this subscription receives events for
+            (allowlist). Absent or empty means every account. Same semantics
+            as `profileIds`, keyed on the account: an aggregate `post.*` event
+            is attributed to every account the post targets. A subscription
+            with both lists must be satisfied on both. Applied when the event
+            is emitted; a redelivery replays a delivery already made to this
+            endpoint and a test fire ignores the list.
     WebhookLog:
       type: object
       description: A single webhook delivery attempt recorded by Zernio (30-day retention).
@@ -29104,6 +29119,8 @@ paths:
                     url: "https://example.com/webhook"
                     events: ["post.published", "post.failed"]
                     isActive: true
+                    profileIds: []
+                    accountIds: []
                     lastFiredAt: "2024-01-15T10:30:00Z"
                     failureCount: 0
                   - _id: "507f1f77bcf86cd799439012"
@@ -29138,10 +29155,12 @@ paths:
         subscriptions behave. A restricted key's own disabled groups are always
         unioned in.
 
-        `profileIds` pins the subscription to a set of profiles: only events
-        attributable to one of them are delivered. Use it to send the profile
-        holding your test accounts to a staging endpoint. Ids outside your team
-        are rejected with 404 `profile_not_found`.
+        `profileIds` pins the subscription to a set of profiles and `accountIds`
+        to a set of connected accounts: only events attributable to one of the
+        listed ids are delivered, and a subscription with both lists must match
+        on both. Use them to send test accounts to a staging endpoint. Ids
+        outside your team are rejected with 404 (`profile_not_found`,
+        `account_not_found`).
       security:
         - bearerAuth: []
       requestBody:
@@ -29212,6 +29231,17 @@ paths:
                     fails with 404 `profile_not_found` and nothing is created.
                     Typical use is routing the profile that holds test
                     accounts to a staging endpoint.
+                accountIds:
+                  type: array
+                  maxItems: 50
+                  items:
+                    type: string
+                  description: >-
+                    Connected accounts this subscription receives events for.
+                    Omit or send an empty array to receive every account. Every
+                    id must be an account in your team, otherwise the request
+                    fails with 404 `account_not_found` and nothing is created.
+                    Combine with `profileIds` to narrow further; both must match.
             examples:
               createWebhook:
                 summary: Create webhook with all events
@@ -29251,7 +29281,7 @@ paths:
         '400': { description: Validation error or maximum webhooks reached }
         '401': { $ref: '#/components/responses/Unauthorized' }
         '403': { $ref: '#/components/responses/ResourceGroupForbidden' }
-        '404': { description: 'A profile in `profileIds` is not in your team (`profile_not_found`)' }
+        '404': { description: 'A profile in `profileIds` (`profile_not_found`) or an account in `accountIds` (`account_not_found`) is not in your team' }
     put:
       x-resource-group: "webhooks"
       operationId: updateWebhookSettings
@@ -29282,8 +29312,9 @@ paths:
         subscription. Retries beyond that window, dead-letter replays, test fires,
         and redeliveries are all checked against the current denylist.
 
-        `profileIds` replaces the subscription's profile allowlist; an empty array
-        clears it. Ids outside your team are rejected with 404 `profile_not_found`.
+        `profileIds` and `accountIds` replace the subscription's allowlists; an
+        empty array clears one. Ids outside your team are rejected with 404
+        (`profile_not_found`, `account_not_found`).
       security:
         - bearerAuth: []
       requestBody:
@@ -29353,7 +29384,22 @@ paths:
                     field leaves the current list untouched. Every id must be
                     a profile in your team, otherwise the request fails with
                     404 `profile_not_found` and nothing changes. Applies to
-                    events emitted after the update.
+                    events emitted after the update. Sending the stored list
+                    back unchanged is accepted without re-validation, so an
+                    endpoint stays editable after a listed profile is deleted.
+                accountIds:
+                  type: array
+                  maxItems: 50
+                  items:
+                    type: string
+                  description: >-
+                    Replaces the subscription's account allowlist. Send an
+                    empty array to receive every account again. Omitting the
+                    field leaves the current list untouched. Every id must be
+                    an account in your team, otherwise the request fails with
+                    404 `account_not_found` and nothing changes. Sending the
+                    stored list back unchanged is accepted without
+                    re-validation.
             examples:
               updateWebhook:
                 summary: Update webhook URL and events
@@ -29380,7 +29426,7 @@ paths:
         '400': { description: Validation error or missing webhook ID }
         '401': { $ref: '#/components/responses/Unauthorized' }
         '403': { $ref: '#/components/responses/ResourceGroupForbidden' }
-        '404': { description: 'Webhook not found, or a profile in `profileIds` is not in your team (`profile_not_found`)' }
+        '404': { description: 'Webhook not found, or a profile in `profileIds` (`profile_not_found`) / an account in `accountIds` (`account_not_found`) is not in your team' }
     delete:
       x-resource-group: "webhooks"
       operationId: deleteWebhookSettings
@@ -29635,7 +29681,7 @@ paths:
         '400': { description: Webhook ID required }
         '401': { $ref: '#/components/responses/Unauthorized' }
         '403': { $ref: '#/components/responses/ResourceGroupForbidden' }
-        '404': { description: 'Webhook not found, or a profile in `profileIds` is not in your team (`profile_not_found`)' }
+        '404': { description: Webhook not found }
         '500':
           description: Test webhook failed to deliver
           content:

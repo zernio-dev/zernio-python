@@ -22498,6 +22498,7 @@ def register_generated_tools(mcp, _get_client):
         custom_headers: dict[str, Any] | None = None,
         disabled_resource_groups: list[str] | None = None,
         profile_ids: list[str] | None = None,
+        account_ids: list[str] | None = None,
     ) -> str:
         """Create webhook
 
@@ -22509,7 +22510,8 @@ def register_generated_tools(mcp, _get_client):
             is_active: Enable or disable webhook delivery. Defaults to `true` when omitted.
             custom_headers: Custom headers to include in webhook requests
             disabled_resource_groups: Resource groups this subscription does not receive (opt-out denylist). Omit or send an empty array to receive every event in `events`. Listing a group here drops its events before delivery and on every replay path. Set at creation it applies to everything this subscription ever receives; changed later via PUT it applies to events emitted after the change, with a five-minute tail for events already queued (see that operation). When the caller is a restricted (zrk_) key, that key's own disabled groups are unioned into whatever you send here, so a restricted key can never create a subscription wider than itself.
-            profile_ids: Profiles this subscription receives events for. Omit or send an empty array to receive every profile. Every id must be a profile in your team, otherwise the request fails with 404 `profile_not_found` and nothing is created. Typical use is routing the profile that holds test accounts to a staging endpoint."""
+            profile_ids: Profiles this subscription receives events for. Omit or send an empty array to receive every profile. Every id must be a profile in your team, otherwise the request fails with 404 `profile_not_found` and nothing is created. Typical use is routing the profile that holds test accounts to a staging endpoint.
+            account_ids: Connected accounts this subscription receives events for. Omit or send an empty array to receive every account. Every id must be an account in your team, otherwise the request fails with 404 `account_not_found` and nothing is created. Combine with `profileIds` to narrow further; both must match."""
         client = _get_client()
         try:
             response = client.webhooks.create_webhook_settings(
@@ -22521,6 +22523,7 @@ def register_generated_tools(mcp, _get_client):
                 custom_headers=custom_headers,
                 disabled_resource_groups=disabled_resource_groups,
                 profile_ids=profile_ids,
+                account_ids=account_ids,
             )
             return _format_response(response)
         except Exception as e:
@@ -22545,6 +22548,7 @@ def register_generated_tools(mcp, _get_client):
         custom_headers: dict[str, Any] | None = None,
         disabled_resource_groups: list[str] | None = None,
         profile_ids: list[str] | None = None,
+        account_ids: list[str] | None = None,
     ) -> str:
         """Update webhook
 
@@ -22558,7 +22562,8 @@ def register_generated_tools(mcp, _get_client):
             is_active: Enable or disable webhook delivery
             custom_headers: Custom headers to include in webhook requests
             disabled_resource_groups: Replaces the subscription's denylist. Send an empty array to clear it and receive every event in `events` again. Omitting the field leaves the current denylist untouched. Applies to events emitted after the update; already-queued events can still deliver for up to five minutes after they were enqueued. When the caller is a restricted (zrk_) key, that key's own disabled groups are unioned back in either way, so a restricted key can neither clear nor widen a subscription past its own groups.
-            profile_ids: Replaces the subscription's profile allowlist. Send an empty array to receive every profile again. Omitting the field leaves the current list untouched. Every id must be a profile in your team, otherwise the request fails with 404 `profile_not_found` and nothing changes. Applies to events emitted after the update."""
+            profile_ids: Replaces the subscription's profile allowlist. Send an empty array to receive every profile again. Omitting the field leaves the current list untouched. Every id must be a profile in your team, otherwise the request fails with 404 `profile_not_found` and nothing changes. Applies to events emitted after the update. Sending the stored list back unchanged is accepted without re-validation, so an endpoint stays editable after a listed profile is deleted.
+            account_ids: Replaces the subscription's account allowlist. Send an empty array to receive every account again. Omitting the field leaves the current list untouched. Every id must be an account in your team, otherwise the request fails with 404 `account_not_found` and nothing changes. Sending the stored list back unchanged is accepted without re-validation."""
         client = _get_client()
         try:
             response = client.webhooks.update_webhook_settings(
@@ -22572,6 +22577,7 @@ def register_generated_tools(mcp, _get_client):
                 custom_headers=custom_headers,
                 disabled_resource_groups=disabled_resource_groups,
                 profile_ids=profile_ids,
+                account_ids=account_ids,
             )
             return _format_response(response)
         except Exception as e:
