@@ -557,6 +557,7 @@ Both `from zernio import ...` and `from late import ...` work identically. The `
 | `ad_insights.get_ad_insights_report()` | Poll an async insights report run |
 | `ad_insights.get_ads_search_terms()` | Google Ads search terms report |
 | `ad_insights.get_campaign_analytics()` | Get campaign analytics |
+| `ad_insights.get_tik_tok_smart_plus_material_report()` | Per-creative performance inside TikTok Smart+ ads |
 | `ad_insights.generate_keyword_historical_metrics()` | Get historical keyword metrics |
 | `ad_insights.generate_keyword_ideas()` | Generate keyword ideas |
 | `ad_insights.query_ad_insights()` | Flexible live insights query |

@@ -6964,6 +6964,54 @@ def register_generated_tools(mcp, _get_client):
         except Exception as e:
             return f"Error: {e}"
 
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Per-creative performance inside TikTok Smart+ ads",
+            readOnlyHint=True,
+            destructiveHint=False,
+            openWorldHint=False,
+        )
+    )
+    def ad_insights_get_tik_tok_smart_plus_material_report(
+        account_id: str,
+        ad_account_id: str,
+        start_date: str,
+        end_date: str,
+        level: str = "ad",
+        smart_plus_ad_ids: str | None = None,
+        ad_group_ids: str | None = None,
+        page: int = 1,
+        page_size: int = 100,
+    ) -> str:
+        """Per-creative performance inside TikTok Smart+ ads
+
+        Args:
+            account_id: A tiktok or tiktokads account ID (required)
+            ad_account_id: TikTok advertiser ID (required)
+            start_date: YYYY-MM-DD, in the advertiser's time zone (required)
+            end_date: YYYY-MM-DD, on or after startDate (required)
+            level: Key each row by Smart+ ad or by ad group
+            smart_plus_ad_ids: Comma-separated Smart+ ad ids to filter by (up to 100)
+            ad_group_ids: Comma-separated ad group ids to filter by (up to 100)
+            page
+            page_size"""
+        client = _get_client()
+        try:
+            response = client.ad_insights.get_tik_tok_smart_plus_material_report(
+                account_id=account_id,
+                ad_account_id=ad_account_id,
+                start_date=start_date,
+                end_date=end_date,
+                level=level,
+                smart_plus_ad_ids=smart_plus_ad_ids,
+                ad_group_ids=ad_group_ids,
+                page=page,
+                page_size=page_size,
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
     # AD_LIBRARY
 
     @mcp.tool(

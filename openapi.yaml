@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.63.0"
+  version: "1.64.0"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -50376,6 +50376,70 @@ paths:
                         username: { type: [string, "null"] }
                         profileImage: { type: [string, "null"] }
                         identityAuthorizedBcId: { type: [string, "null"], description: "Business Center that authorized a BC_AUTH_TT identity" }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404': { $ref: '#/components/responses/AccountUnavailable' }
+        '409': { $ref: '#/components/responses/AccountConnectionRequired' }
+  /v1/ads/tiktok-smart-plus-materials:
+    get:
+      x-resource-group: "ads"
+      operationId: getTikTokSmartPlusMaterialReport
+      tags: ["Ad Insights"]
+      x-platforms: ["tiktok"]
+      summary: Per-creative performance inside TikTok Smart+ ads
+      description: "Breaks a Smart+ ad (or ad group) down by creative material, one row per Spark post, video or image, from TikTok's Smart+ material report. For a Spark post `tiktokItemId` is the TikTok post id. Conversion metrics are TikTok web (pixel) events. TikTok allows two dimensions per report, so rows are keyed by the Smart+ ad (`level=ad`) or by the ad group (`level=adGroup`), not both. Metrics TikTok returns empty come back as null."
+      security:
+        - bearerAuth: []
+      parameters:
+        - { name: accountId, in: query, required: true, schema: { type: string }, description: "A tiktok or tiktokads account ID" }
+        - { name: adAccountId, in: query, required: true, schema: { type: string }, description: "TikTok advertiser ID" }
+        - { name: startDate, in: query, required: true, schema: { type: string, format: date }, description: "YYYY-MM-DD, in the advertiser's time zone" }
+        - { name: endDate, in: query, required: true, schema: { type: string, format: date }, description: "YYYY-MM-DD, on or after startDate" }
+        - { name: level, in: query, required: false, schema: { type: string, enum: [ad, adGroup], default: ad }, description: "Key each row by Smart+ ad or by ad group" }
+        - { name: smartPlusAdIds, in: query, required: false, schema: { type: string }, description: "Comma-separated Smart+ ad ids to filter by (up to 100)" }
+        - { name: adGroupIds, in: query, required: false, schema: { type: string }, description: "Comma-separated ad group ids to filter by (up to 100)" }
+        - { name: page, in: query, required: false, schema: { type: integer, minimum: 1, default: 1 } }
+        - { name: pageSize, in: query, required: false, schema: { type: integer, minimum: 1, maximum: 1000, default: 100 } }
+      responses:
+        '200':
+          description: Material rows
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  adAccountId: { type: string }
+                  level: { type: string, enum: [ad, adGroup] }
+                  startDate: { type: string }
+                  endDate: { type: string }
+                  page: { type: integer }
+                  pageSize: { type: integer }
+                  totalRows: { type: integer }
+                  totalPages: { type: integer }
+                  rows:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        materialId: { type: string, description: "TikTok main material id" }
+                        materialType: { type: [string, "null"], description: "e.g. VIDEO_SPARK_ADS, VIDEO, IMAGE" }
+                        tiktokItemId: { type: [string, "null"], description: "The TikTok post id when the material is a Spark post" }
+                        name: { type: [string, "null"], description: "Material name or post caption" }
+                        smartPlusAdId: { type: [string, "null"], description: "Set when level=ad" }
+                        adGroupId: { type: [string, "null"], description: "Set when level=adGroup" }
+                        metrics:
+                          type: object
+                          properties:
+                            spend: { type: [number, "null"] }
+                            impressions: { type: [number, "null"] }
+                            clicks: { type: [number, "null"] }
+                            cpc: { type: [number, "null"] }
+                            addToCart: { type: [number, "null"] }
+                            initiateCheckout: { type: [number, "null"] }
+                            addPaymentInfo: { type: [number, "null"] }
+                            purchases: { type: [number, "null"] }
+                            purchaseValue: { type: [number, "null"] }
+                            roas: { type: [number, "null"] }
         '400': { $ref: '#/components/responses/BadRequest' }
         '401': { $ref: '#/components/responses/Unauthorized' }
         '404': { $ref: '#/components/responses/AccountUnavailable' }

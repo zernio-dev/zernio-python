@@ -345,6 +345,33 @@ class AdInsightsResource:
         )
         return self._client._get(f"/v1/ads/{ad_id}/analytics", params=params)
 
+    def get_tik_tok_smart_plus_material_report(
+        self,
+        account_id: str,
+        ad_account_id: str,
+        start_date: str,
+        end_date: str,
+        *,
+        level: str | None = "ad",
+        smart_plus_ad_ids: str | None = None,
+        ad_group_ids: str | None = None,
+        page: int | None = 1,
+        page_size: int | None = 100,
+    ) -> dict[str, Any]:
+        """Per-creative performance inside TikTok Smart+ ads"""
+        params = self._build_params(
+            account_id=account_id,
+            ad_account_id=ad_account_id,
+            start_date=start_date,
+            end_date=end_date,
+            level=level,
+            smart_plus_ad_ids=smart_plus_ad_ids,
+            ad_group_ids=ad_group_ids,
+            page=page,
+            page_size=page_size,
+        )
+        return self._client._get("/v1/ads/tiktok-smart-plus-materials", params=params)
+
     async def aget_ads_search_terms(
         self,
         account_id: str,
@@ -618,3 +645,32 @@ class AdInsightsResource:
             breakdowns=breakdowns,
         )
         return await self._client._aget(f"/v1/ads/{ad_id}/analytics", params=params)
+
+    async def aget_tik_tok_smart_plus_material_report(
+        self,
+        account_id: str,
+        ad_account_id: str,
+        start_date: str,
+        end_date: str,
+        *,
+        level: str | None = "ad",
+        smart_plus_ad_ids: str | None = None,
+        ad_group_ids: str | None = None,
+        page: int | None = 1,
+        page_size: int | None = 100,
+    ) -> dict[str, Any]:
+        """Per-creative performance inside TikTok Smart+ ads (async)"""
+        params = self._build_params(
+            account_id=account_id,
+            ad_account_id=ad_account_id,
+            start_date=start_date,
+            end_date=end_date,
+            level=level,
+            smart_plus_ad_ids=smart_plus_ad_ids,
+            ad_group_ids=ad_group_ids,
+            page=page,
+            page_size=page_size,
+        )
+        return await self._client._aget(
+            "/v1/ads/tiktok-smart-plus-materials", params=params
+        )
