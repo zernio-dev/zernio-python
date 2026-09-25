@@ -119,6 +119,7 @@ class PostsResource:
     def create_post(
         self,
         *,
+        idempotency_key: str | None = None,
         x_request_id: str | None = None,
         title: str | None = None,
         content: str | None = None,
@@ -163,6 +164,8 @@ class PostsResource:
             queue_id=queue_id,
         )
         headers: dict[str, str] = {}
+        if idempotency_key is not None:
+            headers["Idempotency-Key"] = idempotency_key
         if x_request_id is not None:
             headers["x-request-id"] = x_request_id
         return self._client._post("/v1/posts", data=payload, headers=headers)
@@ -335,6 +338,7 @@ class PostsResource:
     async def acreate_post(
         self,
         *,
+        idempotency_key: str | None = None,
         x_request_id: str | None = None,
         title: str | None = None,
         content: str | None = None,
@@ -379,6 +383,8 @@ class PostsResource:
             queue_id=queue_id,
         )
         headers: dict[str, str] = {}
+        if idempotency_key is not None:
+            headers["Idempotency-Key"] = idempotency_key
         if x_request_id is not None:
             headers["x-request-id"] = x_request_id
         return await self._client._apost("/v1/posts", data=payload, headers=headers)
