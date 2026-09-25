@@ -233,12 +233,20 @@ class SmsResource:
         return self._client._post(f"/v1/sms/registrations/{id}/appeal", data=payload)
 
     def respond_to_sms_registration_review(
-        self, id: str, *, note: str | None = None, files: list[str] | None = None
+        self,
+        id: str,
+        *,
+        note: str | None = None,
+        files: list[str] | None = None,
+        request_id: str | None = None,
+        answers: list[dict[str, Any]] | None = None,
     ) -> dict[str, Any]:
         """Reply to a change request"""
         payload = self._build_payload(
             note=note,
             files=files,
+            request_id=request_id,
+            answers=answers,
         )
         return self._client._post(f"/v1/sms/registrations/{id}/respond", data=payload)
 
@@ -437,12 +445,20 @@ class SmsResource:
         )
 
     async def arespond_to_sms_registration_review(
-        self, id: str, *, note: str | None = None, files: list[str] | None = None
+        self,
+        id: str,
+        *,
+        note: str | None = None,
+        files: list[str] | None = None,
+        request_id: str | None = None,
+        answers: list[dict[str, Any]] | None = None,
     ) -> dict[str, Any]:
         """Reply to a change request (async)"""
         payload = self._build_payload(
             note=note,
             files=files,
+            request_id=request_id,
+            answers=answers,
         )
         return await self._client._apost(
             f"/v1/sms/registrations/{id}/respond", data=payload

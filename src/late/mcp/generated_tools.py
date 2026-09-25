@@ -21003,18 +21003,24 @@ def register_generated_tools(mcp, _get_client):
         )
     )
     def sms_respond_to_sms_registration_review(
-        id: str, note: str | None = None, files: list[str] | None = None
+        id: str,
+        note: str | None = None,
+        files: list[str] | None = None,
+        request_id: str | None = None,
+        answers: list[dict[str, Any]] | None = None,
     ) -> str:
         """Reply to a change request
 
         Args:
             id: (required)
             note: Answer for the reviewer. Required when no files are sent.
-            files: Hosted document URLs returned by POST /v1/sms/opt-in-proof."""
+            files: Hosted document URLs returned by POST /v1/sms/opt-in-proof.
+            request_id: The `reviewRequest.id` you are answering. When it no longer matches the open request the reply is refused with 409.
+            answers: One answer per point of the open `reviewRequest`, each point at most once. Required (every point) when the request has points; a missing, repeated or unknown point is a 400 naming the point ids. At most 10 files per reply."""
         client = _get_client()
         try:
             response = client.sms.respond_to_sms_registration_review(
-                id=id, note=note, files=files
+                id=id, note=note, files=files, request_id=request_id, answers=answers
             )
             return _format_response(response)
         except Exception as e:

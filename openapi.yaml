@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.90.0"
+  version: "1.91.0"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -211,6 +211,7 @@ x-documentation:
     - `whatsapp.number.released` - A number was released and is no longer usable (terminal); carries a `reason`
     - `verification.approved` - A managed-OTP verification was approved (the user submitted the correct code)
     - `verification.failed` - A managed-OTP verification was exhausted after too many wrong code attempts
+    - `sms.registration.action_required` - An SMS registration (10DLC or toll-free) is waiting on you: our review asked for changes, a sole-prop brand needs the code texted to its mobile, the toll-free carrier asked for more information, or the carriers rejected it. Branch on `reason`; `message` says what to do
     - `webhook.test` - Test event sent when verifying a webhook endpoint
 
     Every delivery carries `X-Zernio-Event` (the event name) and `X-Zernio-Event-Id` (the payload's `id`, a UUID generated once when the event is emitted). That id is identical on every subscription that receives the event, on every automatic retry and on a redelivery via `POST /v1/webhooks/logs/redeliver`, so it is the key to dedupe on. Payloads are signed with HMAC-SHA256 via the `X-Zernio-Signature` header when the subscription has a secret. Legacy `X-Late-*` copies of these three headers are still sent and will be removed in a future major version.
@@ -482,10 +483,10 @@ tags:
   - name: Webhooks
     description: |
       Configure webhooks for real-time notifications. Webhooks can be created from the dashboard (Settings → Webhooks) or via this API.
-      Events: post.scheduled, post.published, post.failed, post.partial, post.cancelled, post.recycled, post.platform.published, post.platform.failed, post.platform.deleted, post.tiktok.url_resolved, post.external.created, post.external.updated, post.external.deleted, account.connected, account.disconnected, account.ads.initial_sync_completed, analytics.synced, message.received, conversation.started, conversation.control_changed, call.received, call.ended, call.failed, call.permission_request, message.sent, message.edited, message.deleted, message.delivered, message.read, message.failed, reaction.received, referral.received, comment.received, review.new, review.updated, lead.received, ad.status_changed, whatsapp.template.status_updated, whatsapp.template.category_updated, whatsapp.account.name_status_updated, whatsapp.automatic_event, whatsapp.number.activated, whatsapp.number.declined, whatsapp.number.action_required, whatsapp.number.verification_required, whatsapp.number.suspended, whatsapp.number.reactivated, whatsapp.number.released, whatsapp.number.kyc_submitted, phone_number.stock_available, verification.approved, verification.failed, webhook.test.
+      Events: post.scheduled, post.published, post.failed, post.partial, post.cancelled, post.recycled, post.platform.published, post.platform.failed, post.platform.deleted, post.tiktok.url_resolved, post.external.created, post.external.updated, post.external.deleted, account.connected, account.disconnected, account.ads.initial_sync_completed, analytics.synced, message.received, conversation.started, conversation.control_changed, call.received, call.ended, call.failed, call.permission_request, message.sent, message.edited, message.deleted, message.delivered, message.read, message.failed, reaction.received, referral.received, comment.received, review.new, review.updated, lead.received, ad.status_changed, whatsapp.template.status_updated, whatsapp.template.category_updated, whatsapp.account.name_status_updated, whatsapp.automatic_event, whatsapp.number.activated, whatsapp.number.declined, whatsapp.number.action_required, whatsapp.number.verification_required, whatsapp.number.suspended, whatsapp.number.reactivated, whatsapp.number.released, whatsapp.number.kyc_submitted, phone_number.stock_available, verification.approved, verification.failed, sms.registration.action_required, webhook.test.
       Headers: every delivery carries X-Zernio-Event (event name) and X-Zernio-Event-Id (the payload `id`, a UUID minted once per event and identical across every subscribed endpoint, every automatic retry and every redelivery, so dedupe on it). Security: optional HMAC-SHA256 signature in X-Zernio-Signature header. Configure a secret key to enable verification. Custom headers supported. Legacy X-Late-Event, X-Late-Event-Id and X-Late-Signature duplicates are still sent and will be removed in a future major version.
 
-      Resource groups. Every event belongs to one group: post.* to publishing, message.*, reaction.*, conversation.*, call.* and whatsapp.automatic_event to messages, comment.* and review.* to engagement, lead.* to contacts, ad.* to ads, account.*, whatsapp.template.* and whatsapp.account.* to accounts, analytics.* to analytics, whatsapp.number.* and verification.* to telephony, webhook.test to webhooks. Two independent controls use that mapping. (1) A restricted (zrk_) API key can only subscribe to, test-fire, redeliver, or read delivery logs for events in the groups it holds, so it can never create a subscription broader than itself. (2) Each subscription carries its own `disabledResourceGroups` denylist: events in a disabled group are dropped before delivery to that endpoint, on live delivery and on every replay path, no matter which key or session created the subscription. Changing that denylist applies to every event emitted after the change; events already queued when it landed can still be delivered for up to five minutes after they were enqueued, because the delivery worker trusts a five-minute enqueue-time snapshot before re-checking. Absent or empty on a subscription means it receives everything it subscribes to, which is the behavior of every subscription created before the field existed.
+      Resource groups. Every event belongs to one group: post.* to publishing, message.*, reaction.*, conversation.*, call.* and whatsapp.automatic_event to messages, comment.* and review.* to engagement, lead.* to contacts, ad.* to ads, account.*, whatsapp.template.* and whatsapp.account.* to accounts, analytics.* to analytics, whatsapp.number.*, verification.* and sms.registration.* to telephony, webhook.test to webhooks. Two independent controls use that mapping. (1) A restricted (zrk_) API key can only subscribe to, test-fire, redeliver, or read delivery logs for events in the groups it holds, so it can never create a subscription broader than itself. (2) Each subscription carries its own `disabledResourceGroups` denylist: events in a disabled group are dropped before delivery to that endpoint, on live delivery and on every replay path, no matter which key or session created the subscription. Changing that denylist applies to every event emitted after the change; events already queued when it landed can still be delivered for up to five minutes after they were enqueued, because the delivery worker trusts a five-minute enqueue-time snapshot before re-checking. Absent or empty on a subscription means it receives everything it subscribes to, which is the behavior of every subscription created before the field existed.
 
       Profile and account filters. A subscription can also carry `profileIds`, an allowlist of profiles, and `accountIds`, an allowlist of connected accounts with the same semantics keyed on the account; each non-empty list narrows delivery and a subscription with both must be satisfied on both. A scoped subscription is only sent events it can attribute to one of those profiles: the profile of the connected account behind the event, or for an aggregate `post.*` event the profile of every account the post targets (a post spanning two scoped endpoints' profiles reaches both). So an integrator can route the profile holding test accounts to a staging endpoint while a second subscription, scoped to the production profiles, keeps production traffic. Events that belong to no profile (`verification.*`, `phone_number.*`, and a legacy post whose accounts were deleted) reach only unscoped subscriptions. The filter runs when an event is emitted; redelivery replays a delivery already made to that endpoint and test fires ignore it. Absent or empty means every profile (or every account).
   - name: Webhook Events
@@ -950,6 +951,22 @@ components:
                   effective_account_limit: 2000
                   current_account_count: 2000
   schemas:
+    SmsRegistrationReviewRequest:
+      type: object
+      description: 'An open change request written as points. Answer each point with POST /v1/sms/registrations/{id}/respond: `answer` says what each point needs (text, a link, a hosted document, or a link or a document).'
+      properties:
+        id: { type: string, description: 'Changes with every request. Send it back as `requestId` when answering, so a reply to a replaced request is refused (409) instead of filed under the new points.' }
+        intro: { type: string, description: 'Context from the reviewer, e.g. what was already fixed on our side.' }
+        points:
+          type: array
+          items:
+            type: object
+            required: [id, title, detail, answer]
+            properties:
+              id: { type: string, description: 'Point id to send back in `answers[].pointId`.' }
+              title: { type: string }
+              detail: { type: string, description: 'What exactly is needed.' }
+              answer: { type: string, enum: [text, link, file, link_or_file] }
     MetaProductCatalog:
       type: object
       properties:
@@ -3103,7 +3120,7 @@ components:
           type: array
           items:
             type: string
-            enum: [post.scheduled, post.published, post.failed, post.partial, post.cancelled, post.recycled, post.platform.published, post.platform.failed, post.platform.deleted, post.tiktok.url_resolved, post.external.created, post.external.updated, post.external.deleted, account.connected, account.disconnected, account.ads.initial_sync_completed, analytics.synced, message.received, conversation.started, conversation.control_changed, call.received, call.ended, call.failed, call.permission_request, message.sent, message.edited, message.deleted, message.delivered, message.read, message.failed, reaction.received, referral.received, comment.received, review.new, review.updated, lead.received, ad.status_changed, whatsapp.template.status_updated, whatsapp.template.category_updated, whatsapp.account.name_status_updated, whatsapp.automatic_event, whatsapp.number.activated, whatsapp.number.declined, whatsapp.number.action_required, whatsapp.number.verification_required, whatsapp.number.suspended, whatsapp.number.reactivated, whatsapp.number.released, whatsapp.number.kyc_submitted, phone_number.stock_available, verification.approved, verification.failed]
+            enum: [post.scheduled, post.published, post.failed, post.partial, post.cancelled, post.recycled, post.platform.published, post.platform.failed, post.platform.deleted, post.tiktok.url_resolved, post.external.created, post.external.updated, post.external.deleted, account.connected, account.disconnected, account.ads.initial_sync_completed, analytics.synced, message.received, conversation.started, conversation.control_changed, call.received, call.ended, call.failed, call.permission_request, message.sent, message.edited, message.deleted, message.delivered, message.read, message.failed, reaction.received, referral.received, comment.received, review.new, review.updated, lead.received, ad.status_changed, whatsapp.template.status_updated, whatsapp.template.category_updated, whatsapp.account.name_status_updated, whatsapp.automatic_event, whatsapp.number.activated, whatsapp.number.declined, whatsapp.number.action_required, whatsapp.number.verification_required, whatsapp.number.suspended, whatsapp.number.reactivated, whatsapp.number.released, whatsapp.number.kyc_submitted, phone_number.stock_available, verification.approved, verification.failed, sms.registration.action_required]
           description: Events subscribed to
         isActive:
           type: boolean
@@ -12798,6 +12815,45 @@ webhooks:
                     channel: { type: string, enum: [sms] }
                     to: { type: string }
                 reason: { type: string, enum: [max_attempts_reached] }
+      responses:
+        '200':
+          description: Webhook received successfully
+  sms.registration.action_required:
+    post:
+      operationId: onSmsRegistrationActionRequired
+      summary: SMS registration action required event
+      description: |
+        Fired when an SMS registration starts waiting on its owner. `reason` says why:
+        `changes_requested` (our review asked for changes; `message` is the reviewer's note,
+        answer with POST /v1/sms/registrations/{id}/respond), `otp_required` (a sole-proprietor
+        brand needs the code texted to its mobile, submit it with
+        POST /v1/sms/registrations/{id}/verify-otp), `carrier_info_required` (the toll-free
+        carrier asked for more information; the request expires after 7 days) or `rejected`
+        (the carriers rejected it; `message` is the reason). Fires once per new request (not on follow-up messages) and once per OTP or carrier request.
+      tags: [Webhook Events]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                id: { type: string }
+                event: { type: string, enum: [sms.registration.action_required] }
+                timestamp:
+                  type: string
+                  format: date-time
+                  description: 'UTC time at which Zernio generated this event (set once when the event payload is built, before delivery is queued). Retries and redeliveries keep the original value, so it reflects the event, not the delivery attempt.'
+                registration:
+                  type: object
+                  properties:
+                    id: { type: string }
+                    type: { type: string, enum: [standard_10dlc, sole_prop_10dlc, toll_free] }
+                    displayName: { type: [string, "null"] }
+                    status: { type: string, description: 'Registration status when the event fired (changes_requested, pending or rejected).' }
+                    profileId: { type: string }
+                reason: { type: string, enum: [changes_requested, otp_required, carrier_info_required, rejected] }
+                message: { type: string, description: "What to do, in words: the reviewer's note or the carrier's decline reason. Absent for otp_required." }
       responses:
         '200':
           description: Webhook received successfully
@@ -29424,7 +29480,7 @@ paths:
                   minItems: 1
                   items:
                     type: string
-                    enum: [post.scheduled, post.published, post.failed, post.partial, post.cancelled, post.recycled, post.platform.published, post.platform.failed, post.platform.deleted, post.tiktok.url_resolved, post.external.created, post.external.updated, post.external.deleted, account.connected, account.disconnected, account.ads.initial_sync_completed, analytics.synced, message.received, conversation.started, conversation.control_changed, call.received, call.ended, call.failed, call.permission_request, message.sent, message.edited, message.deleted, message.delivered, message.read, message.failed, reaction.received, referral.received, comment.received, review.new, review.updated, lead.received, ad.status_changed, whatsapp.template.status_updated, whatsapp.template.category_updated, whatsapp.account.name_status_updated, whatsapp.automatic_event, whatsapp.number.activated, whatsapp.number.declined, whatsapp.number.action_required, whatsapp.number.verification_required, whatsapp.number.suspended, whatsapp.number.reactivated, whatsapp.number.released, whatsapp.number.kyc_submitted, phone_number.stock_available, verification.approved, verification.failed]
+                    enum: [post.scheduled, post.published, post.failed, post.partial, post.cancelled, post.recycled, post.platform.published, post.platform.failed, post.platform.deleted, post.tiktok.url_resolved, post.external.created, post.external.updated, post.external.deleted, account.connected, account.disconnected, account.ads.initial_sync_completed, analytics.synced, message.received, conversation.started, conversation.control_changed, call.received, call.ended, call.failed, call.permission_request, message.sent, message.edited, message.deleted, message.delivered, message.read, message.failed, reaction.received, referral.received, comment.received, review.new, review.updated, lead.received, ad.status_changed, whatsapp.template.status_updated, whatsapp.template.category_updated, whatsapp.account.name_status_updated, whatsapp.automatic_event, whatsapp.number.activated, whatsapp.number.declined, whatsapp.number.action_required, whatsapp.number.verification_required, whatsapp.number.suspended, whatsapp.number.reactivated, whatsapp.number.released, whatsapp.number.kyc_submitted, phone_number.stock_available, verification.approved, verification.failed, sms.registration.action_required]
                   description: Events to subscribe to (at least one required)
                 isActive:
                   type: boolean
@@ -29581,7 +29637,7 @@ paths:
                   minItems: 1
                   items:
                     type: string
-                    enum: [post.scheduled, post.published, post.failed, post.partial, post.cancelled, post.recycled, post.platform.published, post.platform.failed, post.platform.deleted, post.tiktok.url_resolved, post.external.created, post.external.updated, post.external.deleted, account.connected, account.disconnected, account.ads.initial_sync_completed, analytics.synced, message.received, conversation.started, conversation.control_changed, call.received, call.ended, call.failed, call.permission_request, message.sent, message.edited, message.deleted, message.delivered, message.read, message.failed, reaction.received, referral.received, comment.received, review.new, review.updated, lead.received, ad.status_changed, whatsapp.template.status_updated, whatsapp.template.category_updated, whatsapp.account.name_status_updated, whatsapp.automatic_event, whatsapp.number.activated, whatsapp.number.declined, whatsapp.number.action_required, whatsapp.number.verification_required, whatsapp.number.suspended, whatsapp.number.reactivated, whatsapp.number.released, whatsapp.number.kyc_submitted, phone_number.stock_available, verification.approved, verification.failed]
+                    enum: [post.scheduled, post.published, post.failed, post.partial, post.cancelled, post.recycled, post.platform.published, post.platform.failed, post.platform.deleted, post.tiktok.url_resolved, post.external.created, post.external.updated, post.external.deleted, account.connected, account.disconnected, account.ads.initial_sync_completed, analytics.synced, message.received, conversation.started, conversation.control_changed, call.received, call.ended, call.failed, call.permission_request, message.sent, message.edited, message.deleted, message.delivered, message.read, message.failed, reaction.received, referral.received, comment.received, review.new, review.updated, lead.received, ad.status_changed, whatsapp.template.status_updated, whatsapp.template.category_updated, whatsapp.account.name_status_updated, whatsapp.automatic_event, whatsapp.number.activated, whatsapp.number.declined, whatsapp.number.action_required, whatsapp.number.verification_required, whatsapp.number.suspended, whatsapp.number.reactivated, whatsapp.number.released, whatsapp.number.kyc_submitted, phone_number.stock_available, verification.approved, verification.failed, sms.registration.action_required]
                   description: Events to subscribe to. Must contain at least one event if provided.
                 isActive:
                   type: boolean
@@ -37435,6 +37491,12 @@ paths:
                         tfActionRequiredAt: { type: [string, "null"], format: date-time, description: 'Toll-free only: when the carrier requested changes ("Waiting For Customer"). The request must be resubmitted within 7 days of this timestamp or it expires.' }
                         phoneNumbers: { type: array, items: { type: string } }
                         awaitingOtp: { type: boolean, description: Sole-prop 10DLC only; the OTP step is still pending. }
+                        adminReviewNote: { type: [string, "null"], description: 'The open change request as text (status changes_requested).' }
+                        reviewRequest:
+                          description: 'The same change request as points, when the reviewer wrote it that way; null otherwise.'
+                          oneOf:
+                            - $ref: '#/components/schemas/SmsRegistrationReviewRequest'
+                            - type: "null"
                         trustScore: { type: [number, "null"], description: Carrier-assigned brand trust score; drives throughput. }
                         throughput:
                           type: object
@@ -37557,6 +37619,12 @@ paths:
                   declineReason: { type: [string, "null"] }
                   phoneNumbers: { type: array, items: { type: string } }
                   awaitingOtp: { type: boolean }
+                  adminReviewNote: { type: [string, "null"], description: 'The open change request as text (status changes_requested).' }
+                  reviewRequest:
+                    description: 'The same change request as points, when the reviewer wrote it that way; null otherwise.'
+                    oneOf:
+                      - $ref: '#/components/schemas/SmsRegistrationReviewRequest'
+                      - type: "null"
                   campaignContent:
                     type: object
                     description: |
@@ -37692,7 +37760,9 @@ paths:
       description: |
         Replies to a reviewer change request on a registration in
         `changes_requested` state: a note, hosted document URLs (from
-        `POST /v1/sms/opt-in-proof`), or both, sent together. The registration
+        `POST /v1/sms/opt-in-proof`), or both, sent together. When the request
+        was written as points (`reviewRequest` on the registration), send one
+        entry in `answers` per point. The registration
         returns to `requested` (back in review), and you do not need to resubmit the
         whole registration. To change the submitted brand/campaign fields
         themselves, resubmit via `POST /v1/sms/registrations` with
@@ -37714,6 +37784,23 @@ paths:
                   maxItems: 5
                   items: { type: string }
                   description: 'Hosted document URLs returned by POST /v1/sms/opt-in-proof.'
+                requestId: { type: string, description: 'The `reviewRequest.id` you are answering. When it no longer matches the open request the reply is refused with 409.' }
+                answers:
+                  type: array
+                  maxItems: 20
+                  description: 'One answer per point of the open `reviewRequest`, each point at most once. Required (every point) when the request has points; a missing, repeated or unknown point is a 400 naming the point ids. At most 10 files per reply.'
+                  items:
+                    type: object
+                    required: [pointId]
+                    properties:
+                      pointId: { type: string }
+                      text: { type: string, maxLength: 2000, description: 'For `text` points (at least 3 characters).' }
+                      url: { type: string, format: uri, description: 'For `link` and `link_or_file` points.' }
+                      files:
+                        type: array
+                        maxItems: 5
+                        items: { type: string }
+                        description: 'Hosted document URLs from POST /v1/sms/opt-in-proof, for `file` and `link_or_file` points.'
       responses:
         '200':
           description: Reply recorded; the registration is back in review.
@@ -37726,7 +37813,7 @@ paths:
         '400': { $ref: '#/components/responses/BadRequest' }
         '401': { $ref: '#/components/responses/Unauthorized' }
         '404': { description: Registration not found }
-        '409': { description: Registration is not waiting on changes }
+        '409': { description: 'The registration is not waiting on changes, or `requestId` is no longer the open request (reload it).' }
 
   /v1/sms/opt-in-proof:
     post:
