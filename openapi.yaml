@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.87.0"
+  version: "1.88.0"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -32964,10 +32964,17 @@ paths:
       description: |
         Fetch comments for a specific post. Requires accountId query parameter.
 
-        On Facebook, passing a COMMENT id as `postId` is also supported and returns that
-        comment's replies instead of the post's top-level comments. Instagram does not support
-        this and returns 400: its replies come nested in each comment's `replies` array, with no
-        separate paging. YouTube does not support it either, `postId` must be a video id.
+        Pass `commentId` (Facebook, Instagram, Reddit, TikTok) to fetch replies to a specific
+        comment instead of the post's top-level comments. Facebook, Instagram and TikTok return
+        the comment's replies, paged by `limit`/`cursor`; Reddit returns the focused comment
+        thread instead. On Facebook and Instagram the requested comment itself comes back in the
+        top-level `comment` field.
+
+        On Facebook, passing a COMMENT id as `postId` (instead of using `commentId`) is also
+        supported for backwards compatibility and returns that comment's replies the same way.
+        Prefer `commentId` for new integrations; it also works on Instagram, which rejects a
+        comment id passed as `postId`. YouTube does not support either form, `postId` must be a
+        video id.
 
         Responses are cached for up to 10 minutes, so a page may lag new comments by that
         window. Do not poll this endpoint for real-time updates: subscribe to the
@@ -32989,7 +32996,7 @@ paths:
         - name: postId
           in: path
           required: true
-          description: Zernio post ID or platform-specific post ID. Zernio IDs are auto-resolved. LinkedIn third-party posts accept full activity URN or numeric ID. On Facebook, a comment ID is also accepted here and returns that comment's replies (not supported on Instagram).
+          description: Zernio post ID or platform-specific post ID. Zernio IDs are auto-resolved. LinkedIn third-party posts accept full activity URN or numeric ID. On Facebook, a comment ID is also accepted here and returns that comment's replies, kept for backwards compatibility; prefer the `commentId` query parameter, which also works on Instagram.
           schema: { type: string }
         - name: accountId
           in: query
@@ -33010,7 +33017,7 @@ paths:
         - name: commentId
           in: query
           schema: { type: string }
-          description: (Reddit and TikTok only) Get replies to a specific comment
+          description: '(Facebook, Instagram, Reddit and TikTok) Get replies to a specific comment. On Facebook and Instagram, the requested comment is returned in the top-level `comment` field and comments[] holds its replies.'
       responses:
         '200':
           description: Comments for the post
@@ -33051,7 +33058,7 @@ paths:
                           items: { type: object }
                         repliesHasMore:
                           type: boolean
-                          description: "Facebook only. True when replies[] (capped at 10) does not hold the comment's full reply thread; fetch the rest by passing the comment id as postId to GET /v1/inbox/comments/{postId}. Absent (not false) on every other platform, including Instagram, which has no equivalent signal."
+                          description: "Facebook only. True when replies[] (capped at 10) does not hold the comment's full reply thread; fetch the rest by passing the comment id as the `commentId` query parameter to GET /v1/inbox/comments/{postId} (or, for backwards compatibility, as `postId`). Absent (not false) on every other platform, including Instagram, which has no equivalent signal."
                         canReply: { type: boolean }
                         canDelete: { type: boolean }
                         canHide: { type: boolean, description: "Whether this comment can be hidden (Facebook, Instagram, Threads)" }
@@ -33086,6 +33093,12 @@ paths:
                       stickied: { type: boolean }
                       flairText: { type: [string, "null"], description: Link flair text if any }
                       isGallery: { type: boolean, description: True if the post is a Reddit gallery (multiple images) }
+                  comment:
+                    type: object
+                    description: |
+                      (Facebook and Instagram only) Present when `commentId` was passed: the requested
+                      comment itself, in the same shape as an entry in comments[]. comments[] then holds
+                      that comment's replies instead of the post's top-level comments.
                   pagination:
                     type: object
                     properties:
