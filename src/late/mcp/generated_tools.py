@@ -17897,6 +17897,7 @@ def register_generated_tools(mcp, _get_client):
         country: str = "US",
         number_type: str | None = None,
         area_code: str | None = None,
+        claim_id: str | None = None,
         phone_number: str | None = None,
         connect_whatsapp: bool = True,
         wants_sms: bool = False,
@@ -17912,6 +17913,7 @@ def register_generated_tools(mcp, _get_client):
                country: ISO 3166-1 alpha-2 country for the number (default US). International numbers require usage-based billing. Tier 3/4 countries return 202 { status: "kyc_required", kycUrl }. The customer must complete KYC at that URL before the number is ordered. See GET /v1/phone-numbers/countries.
                number_type: Which of the country's offered number types to order (see `types[]` on GET /v1/phone-numbers/countries). Omitted = the country's default type, which is always the WhatsApp-safe choice. Capabilities, price, and KYC requirements are per (country, type): toll_free can never connect WhatsApp (400 when combined with connectWhatsapp:true), and wantsSms:true requires an SMS-capable type.
                area_code: Area code (national destination code, e.g. 11 for Sao Paulo) the number must be in. Hard constraint: when the area has no deliverable inventory the purchase fails with 409 code AREA_CODE_UNAVAILABLE instead of assigning a number from another area, and later replacements stay in this area too. Omit for any area. Get live options from GET /v1/phone-numbers/availability (areaOptions).
+               claim_id: Keyless calls only: a `claimId` from a keyless GET /v1/phone-numbers/available. The 401 then carries a `claimUrl` for that exact number. Ignored when an API key is sent.
                phone_number: One exact number to buy, in E.164, taken from GET /v1/phone-numbers/available. Hard constraint: when it is no longer available (bought by someone else, or WhatsApp's buy-time check rejects it) the purchase fails with 409 code PHONE_NUMBER_UNAVAILABLE instead of assigning another number; search again and pick another. Only for countries and types that activate instantly: a regulated one (202 kyc_required) returns 400 when phoneNumber is set.
                connect_whatsapp: A phone number is the unit; WhatsApp is one optional feature. Pass false to buy a STANDALONE number (Calls/SMS only): provisioning skips the Meta pre-verify/OTP steps and the number activates immediately. Omitted defaults to the WhatsApp provisioning path. WhatsApp can be connected to a standalone number later from the connect flow.
                wants_sms: SMS capability is per-number, not per-country. Pass true to provision from the SMS-capable inventory pool so the number can actually text (see also GET /v1/phone-numbers/available with sms=true, and smsAvailable on GET /v1/phone-numbers/countries).
@@ -17925,6 +17927,7 @@ def register_generated_tools(mcp, _get_client):
                 country=country,
                 number_type=number_type,
                 area_code=area_code,
+                claim_id=claim_id,
                 phone_number=phone_number,
                 connect_whatsapp=connect_whatsapp,
                 wants_sms=wants_sms,
@@ -17932,6 +17935,26 @@ def register_generated_tools(mcp, _get_client):
                 purchase_intent_id=purchase_intent_id,
                 allow_multiple=allow_multiple,
             )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Resolve a number claim",
+            readOnlyHint=True,
+            destructiveHint=False,
+            openWorldHint=False,
+        )
+    )
+    def phone_numbers_get_phone_number_claim(claim_id: str) -> str:
+        """Resolve a number claim
+
+        Args:
+            claim_id: (required)"""
+        client = _get_client()
+        try:
+            response = client.phone_numbers.get_phone_number_claim(claim_id=claim_id)
             return _format_response(response)
         except Exception as e:
             return f"Error: {e}"
@@ -17971,11 +17994,12 @@ def register_generated_tools(mcp, _get_client):
         contains: str | None = None,
         sms: bool | None = None,
         limit: int = 20,
+        masked: bool | None = None,
     ) -> str:
         """Search available numbers
 
         Args:
-            country
+            country: ISO code, or `auto` on the keyless shape to search the caller's own country (from their IP) near their city, falling back to US.
             number_type: Number type; defaults to the country's WhatsApp-safe type (the same name as on purchase, availability and kyc)
             area_code: Area code or national dialing code the number must start with, e.g. 415 or 91
             type: Alias of numberType, kept for existing callers
@@ -17983,7 +18007,8 @@ def register_generated_tools(mcp, _get_client):
             locality: City
             contains: Pattern to match within the number
             sms: true narrows the pool to SMS-capable numbers. Each result still carries its full `features` list for per-number capability badging.
-            limit"""
+            limit
+            masked: true returns the keyless shape (masked numbers with claimId and claimUrl) even when you send an API key, e.g. to hand a user a signup link for a number."""
         client = _get_client()
         try:
             response = client.phone_numbers.search_available_phone_numbers(
@@ -17996,6 +18021,7 @@ def register_generated_tools(mcp, _get_client):
                 contains=contains,
                 sms=sms,
                 limit=limit,
+                masked=masked,
             )
             return _format_response(response)
         except Exception as e:

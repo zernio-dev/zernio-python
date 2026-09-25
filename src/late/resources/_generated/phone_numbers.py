@@ -100,6 +100,7 @@ class PhoneNumbersResource:
         country: str | None = "US",
         number_type: str | None = None,
         area_code: str | None = None,
+        claim_id: str | None = None,
         phone_number: str | None = None,
         connect_whatsapp: bool | None = True,
         wants_sms: bool | None = False,
@@ -113,6 +114,7 @@ class PhoneNumbersResource:
             country=country,
             number_type=number_type,
             area_code=area_code,
+            claim_id=claim_id,
             phone_number=phone_number,
             connect_whatsapp=connect_whatsapp,
             wants_sms=wants_sms,
@@ -121,6 +123,10 @@ class PhoneNumbersResource:
             allow_multiple=allow_multiple,
         )
         return self._client._post("/v1/phone-numbers/purchase", data=payload)
+
+    def get_phone_number_claim(self, claim_id: str) -> dict[str, Any]:
+        """Resolve a number claim"""
+        return self._client._get(f"/v1/phone-numbers/claims/{claim_id}")
 
     def list_phone_number_countries(self) -> dict[str, Any]:
         """List offerable number countries"""
@@ -138,6 +144,7 @@ class PhoneNumbersResource:
         contains: str | None = None,
         sms: bool | None = None,
         limit: int | None = 20,
+        masked: bool | None = None,
     ) -> dict[str, Any]:
         """Search available numbers"""
         params = self._build_params(
@@ -150,6 +157,7 @@ class PhoneNumbersResource:
             contains=contains,
             sms=sms,
             limit=limit,
+            masked=masked,
         )
         return self._client._get("/v1/phone-numbers/available", params=params)
 
@@ -453,6 +461,7 @@ class PhoneNumbersResource:
         country: str | None = "US",
         number_type: str | None = None,
         area_code: str | None = None,
+        claim_id: str | None = None,
         phone_number: str | None = None,
         connect_whatsapp: bool | None = True,
         wants_sms: bool | None = False,
@@ -466,6 +475,7 @@ class PhoneNumbersResource:
             country=country,
             number_type=number_type,
             area_code=area_code,
+            claim_id=claim_id,
             phone_number=phone_number,
             connect_whatsapp=connect_whatsapp,
             wants_sms=wants_sms,
@@ -474,6 +484,10 @@ class PhoneNumbersResource:
             allow_multiple=allow_multiple,
         )
         return await self._client._apost("/v1/phone-numbers/purchase", data=payload)
+
+    async def aget_phone_number_claim(self, claim_id: str) -> dict[str, Any]:
+        """Resolve a number claim (async)"""
+        return await self._client._aget(f"/v1/phone-numbers/claims/{claim_id}")
 
     async def alist_phone_number_countries(self) -> dict[str, Any]:
         """List offerable number countries (async)"""
@@ -491,6 +505,7 @@ class PhoneNumbersResource:
         contains: str | None = None,
         sms: bool | None = None,
         limit: int | None = 20,
+        masked: bool | None = None,
     ) -> dict[str, Any]:
         """Search available numbers (async)"""
         params = self._build_params(
@@ -503,6 +518,7 @@ class PhoneNumbersResource:
             contains=contains,
             sms=sms,
             limit=limit,
+            masked=masked,
         )
         return await self._client._aget("/v1/phone-numbers/available", params=params)
 
