@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.75.0"
+  version: "1.76.0"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -3232,6 +3232,8 @@ components:
                     type: string
                   error:
                     type: string
+                  platformError:
+                    $ref: '#/components/schemas/PostPlatformError'
             metadata:
               type: object
               additionalProperties: true
@@ -3294,6 +3296,7 @@ components:
                   platformPostId: { type: string }
                   publishedUrl: { type: string }
                   error: { type: string }
+                  platformError: { $ref: '#/components/schemas/PostPlatformError' }
             metadata:
               type: object
               additionalProperties: true
@@ -5986,6 +5989,30 @@ components:
           type: string
           enum: [user, platform, system]
           description: "Who caused the error: user (fix content/reconnect), platform (outage/API change), system (Zernio issue, rare)"
+        platformError:
+          $ref: '#/components/schemas/PostPlatformError'
+    PostPlatformError:
+      type: object
+      required: [message]
+      description: >-
+        The platform's own error for this target, so you can see what the
+        platform said (access tokens are redacted). Set when the last attempt
+        failed with an error the platform described (currently Instagram and
+        Facebook), and kept while an automatic retry of that failure is pending
+        or running; cleared when the target publishes or is retried manually.
+        errorMessage stays the human-readable summary; this block is for
+        diagnostics and support tickets. Instagram media processing failures
+        carry no code or subcode, only Meta's status text in message.
+      properties:
+        code:
+          type: integer
+          description: Meta error code, when Meta sent one.
+        subcode:
+          type: integer
+          description: Meta error_subcode, when Meta sent one.
+        message:
+          type: string
+          description: The platform's raw error message or media processing status text.
     Post:
       type: object
       properties:
