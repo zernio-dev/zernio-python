@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.81.0"
+  version: "1.82.0"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -2147,7 +2147,41 @@ components:
             yours to reschedule; `platform` is the fleet-wide daily budget shared with
             every other customer, so only waiting for the reset clears it. The two
             scopes are separate axes from `quotaScope`, not the same pool named twice.
+
+            A failed Meta ad create (`POST /v1/ads/create`, `POST /v1/ads/boost`,
+            `POST /v1/ads/ctwa`) carries `stage`, `adAccountId` and `createdObjects`: where
+            it failed, on which ad account, and every object this request had already
+            created with what cleanup did to it. `left_behind` objects still exist on the
+            ad account (Meta refused the delete, typically on a held account), so delete
+            them yourself or reuse them. `unconfirmedWrite` is set when Meta answered a
+            create with a 5xx or dropped the connection and Zernio could not confirm
+            whether the object exists: check that parent before creating it again.
           properties:
+            stage:
+              type: string
+              enum: [media, campaign, adset, creative, ad, activation, other]
+              description: "Meta ad create failures only. The step that failed: `media` (image/video download or upload), `campaign`, `adset`, `creative`, `ad` (the ad POST itself, where Meta's code 31 / 3858385 hold and 100 / 1359188 payment rejections land), `activation` (switching the created objects on), or `other` (a read or check before any write)."
+            adAccountId:
+              type: string
+              description: 'Meta ad create failures only. The ad account the request wrote to (`act_...`).'
+            createdObjects:
+              type: array
+              description: 'Meta ad create failures only. Every object this request created before failing, in creation order. Objects you referenced (an existing campaign, ad set, creative or video) are never listed and never deleted.'
+              items:
+                type: object
+                properties:
+                  type: { type: string, enum: [campaign, adset, creative, ad, video, image] }
+                  id: { type: string, description: 'Meta object id; for `image` the image hash.' }
+                  cleanup:
+                    type: string
+                    enum: [deleted, left_behind, kept]
+                    description: "`deleted`: Zernio deleted it. `left_behind`: Meta refused the delete, so it still exists. `kept`: deliberately not deleted (image hashes are shared by every upload of the same file)."
+            unconfirmedWrite:
+              type: object
+              description: 'Meta ad create failures only, when Meta answered a create with a 5xx or dropped the connection and the object could not be looked up. Zernio did not retry it.'
+              properties:
+                type: { type: string, enum: [campaign, adset, creative, ad] }
+                parentId: { type: string, description: 'Where to look for it: the ad set for an ad, the campaign for an ad set, the ad account otherwise.' }
             quotaExhausted:
               type: boolean
               description: 'Google Ads 429 only. True when the upstream Google Ads quota is spent rather than a Zernio limit.'
@@ -53706,19 +53740,33 @@ paths:
                         timezoneName: { type: string, description: "IANA timezone of the ad account (Meta only). Drives daily-budget reset and Insights day boundaries." }
                         timezoneOffsetHoursUtc: { type: number, description: "Signed UTC offset in hours, reflecting current DST (Meta only)." }
                         minimumDailyBudget: { type: number, description: "Meta only. Minimum daily budget for the account, in the account currency's major units. This is the impressions-billed minimum; other billing events have higher minimums. Absent when the connected token cannot read it." }
-                        fundingSource: { type: string, description: "Meta only. Meta's `funding_source` ID for the ad account, forwarded unchanged. ABSENT when this connection's token cannot see billing on the account, which is not the same as the account having no payment method: never read the missing key as `no payment method configured`." }
+                        fundingSource: { type: string, description: "Meta only. Meta's `funding_source` ID for the ad account, forwarded unchanged. ABSENT both when this connection's token cannot see billing and when the account has no payment method; read `billingStatus` to tell the two apart." }
                         fundingSourceDetails:
                           type: object
                           description: |
                             Meta only. Meta's `funding_source_details` object, forwarded unchanged.
-                            ABSENT under exactly the same condition as `fundingSource`: this
-                            connection's token cannot see billing on the ad account. It is never
-                            sent as null or as an empty object, so treat the missing key as
-                            'unknown', never as 'no payment method configured'.
+                            ABSENT under exactly the same conditions as `fundingSource`, never sent
+                            as null or as an empty object. Read `billingStatus` for what the
+                            absence means.
                           properties:
                             id: { type: string, description: "Meta's ID for the funding instrument. Matches `fundingSource`." }
                             displayString: { type: string, description: "Meta's own human-readable label for the funding instrument, e.g. 'Available Balance (EUR)' or a masked card. Meta composes this string; do not parse it." }
                             type: { type: integer, description: "Meta's raw numeric funding-source type, forwarded unchanged. Meta publishes no mapping from these numbers to payment-method kinds, so none is documented here and none should be inferred." }
+                        billingStatus:
+                          type: string
+                          enum: [ok, missing, unknown]
+                          description: |
+                            Meta only. Whether the ad account has a payment method, derived as follows:
+                            - `missing` when `accountStatus` is `3` (UNSETTLED) or `9` (IN_GRACE_PERIOD),
+                              when `disableReason` is `3` (RISK_PAYMENT), or when the connected person
+                              has the MANAGE task on the account (admin, who always sees billing) and
+                              Meta returns no funding source. Ad creation on such an account fails at
+                              the ad step with Meta code 100 / subcode 1359188: add a payment method in
+                              Meta's Billing & payments center.
+                            - `ok` when Meta returns a funding source. This is presence, not validity:
+                              Meta can still refuse the card or balance at ad creation.
+                            - `unknown` when the connected person is not an admin of the account, or
+                              the token cannot read the billing fields.
                         selectable: { type: boolean, description: "Meta and X only. Whether the account can create/run ads now. Absent (treat as true) on other platforms." }
                         unusableReason: { type: [string, "null"], description: "Meta and X only. Human-readable reason when selectable is false; null when selectable." }
                   cachedAt: { type: [string, "null"], format: date-time, description: "Google only. When this list was fetched from Google. Null when it was never served from cache, or on other platforms." }
@@ -55589,7 +55637,10 @@ paths:
             forwarded verbatim from Meta may not. On the `creatives[]` shape a
             missing poster also carries `creativeIndex` and `videoUrl` to
             identify the entry. An upstream 4xx status is forwarded instead
-            of 502.
+            of 502. On Meta, `details` names the failing `stage`, the
+            `adAccountId` and every created object with its cleanup result
+            (see `ErrorResponse.details`); an `unconfirmedWrite` there means
+            Meta did not confirm a create and Zernio did not retry it.
         '503': { $ref: '#/components/responses/TemporarilyUnavailable' }
 
   /v1/ads/leads:
