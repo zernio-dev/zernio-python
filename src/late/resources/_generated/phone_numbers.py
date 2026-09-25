@@ -304,13 +304,18 @@ class PhoneNumbersResource:
         return self._client._get("/v1/phone-numbers/port-in")
 
     def check_phone_number_portability(
-        self, phone_numbers: list[str]
+        self, phone_numbers: list[str], *, claim_links: bool | None = None
     ) -> dict[str, Any]:
         """Check portability"""
         payload = self._build_payload(
             phone_numbers=phone_numbers,
+            claim_links=claim_links,
         )
         return self._client._post("/v1/phone-numbers/port-in/check", data=payload)
+
+    def get_phone_number_port_claim(self, claim_id: str) -> dict[str, Any]:
+        """Resolve a port claim"""
+        return self._client._get(f"/v1/phone-numbers/port-in/claims/{claim_id}")
 
     def upload_phone_number_port_in_document(self) -> dict[str, Any]:
         """Upload a porting document"""
@@ -667,15 +672,20 @@ class PhoneNumbersResource:
         return await self._client._aget("/v1/phone-numbers/port-in")
 
     async def acheck_phone_number_portability(
-        self, phone_numbers: list[str]
+        self, phone_numbers: list[str], *, claim_links: bool | None = None
     ) -> dict[str, Any]:
         """Check portability (async)"""
         payload = self._build_payload(
             phone_numbers=phone_numbers,
+            claim_links=claim_links,
         )
         return await self._client._apost(
             "/v1/phone-numbers/port-in/check", data=payload
         )
+
+    async def aget_phone_number_port_claim(self, claim_id: str) -> dict[str, Any]:
+        """Resolve a port claim (async)"""
+        return await self._client._aget(f"/v1/phone-numbers/port-in/claims/{claim_id}")
 
     async def aupload_phone_number_port_in_document(self) -> dict[str, Any]:
         """Upload a porting document (async)"""

@@ -40623,11 +40623,23 @@ paths:
       tags: [Phone Numbers]
       summary: Check portability
       description: |
-        Pre-flight portability check: whether each number can be ported in and
-        whether it qualifies for FastPort, BEFORE the user commits to a port
-        order (LOA, invoice, service address). Read-only; creates no order and
-        bills nothing.
+        Pre-flight portability check: whether each number can be ported in,
+        whether it qualifies for FastPort, and its current carrier and line
+        type where the carrier lookup knows them, BEFORE the user commits to a
+        port order (LOA, invoice, service address). Read-only; creates no
+        order and bills nothing.
+
+        Works without an API key for one number per request. Keyless calls
+        are what the checker at https://zernio.com/port-your-number makes:
+        they must come from that page (a browser bot check rejects scripted
+        callers with 401), are limited per IP (3 a minute, 10 a day) and by a
+        shared daily budget (429 once spent), because each check runs a paid
+        carrier lookup. Each portable keyless result carries a `claimId` and
+        a `claimUrl`: a signup link that opens the dashboard's port form with
+        the number filled in. Send an API key to check up to 50 numbers
+        without those limits.
       security:
+        - {}
         - bearerAuth: []
       requestBody:
         required: true
@@ -40642,7 +40654,10 @@ paths:
                   minItems: 1
                   maxItems: 50
                   items: { type: string }
-                  description: "E.164 numbers to check, e.g. +13035550000."
+                  description: "E.164 numbers to check, e.g. +13035550000. At most one without an API key."
+                claimLinks:
+                  type: boolean
+                  description: "true adds `claimId` and `claimUrl` to portable results even when you send an API key, e.g. to hand a user a signup link that opens the port form with their number."
       responses:
         '200':
           description: Per-number portability.
@@ -40659,11 +40674,47 @@ paths:
                         phoneNumber: { type: string }
                         portable: { type: boolean }
                         fastPortable: { type: boolean, description: Qualifies for the carrier's accelerated FastPort lane. }
-                        lineType: { type: [string, "null"], description: "Line type when known (mobile, landline, voip…). A US/CA mobile number requires the transfer PIN at submit." }
+                        messagingCapable: { type: [boolean, "null"], description: "Whether texting can be enabled on the number once ported; null when the carrier does not say." }
+                        lineType: { type: [string, "null"], description: "Line type when known (mobile, landline, voip, toll-free, unknown). US/CA portable numbers only. A US/CA mobile number requires the transfer PIN at submit." }
+                        carrierName: { type: [string, "null"], description: "The number's current carrier, when the lookup knows it. US/CA portable numbers only." }
                         countryCode: { type: [string, "null"], description: "ISO country of the number. Pass it to GET /v1/phone-numbers/port-in/requirements for international numbers." }
-                        phoneNumberType: { type: [string, "null"], description: "Carrier number-type classification (local, mobile, national, toll_free…), the numberType for the requirements endpoint." }
+                        phoneNumberType: { type: [string, "null"], description: "Carrier number-type classification (local, mobile, national, toll_free...), the numberType for the requirements endpoint." }
                         notPortableReason: { type: [string, "null"], description: Carrier reason when not portable; null when portable. }
+                        claimId: { type: string, description: "Keyless calls and claimLinks=true only, on portable results. Resolve it with GET /v1/phone-numbers/port-in/claims/{claimId}. Expires after 7 days." }
+                        claimUrl: { type: string, description: "Keyless calls and claimLinks=true only, on portable results. A signup link that lands on the dashboard's port form with this number filled in." }
+        '400': { $ref: '#/components/responses/BadRequest' }
         '401': { $ref: '#/components/responses/Unauthorized' }
+        '429':
+          description: "Keyless calls only. The per-IP limit or the shared daily budget is spent; `Retry-After` says when to try again. Send an API key to skip both."
+
+  /v1/phone-numbers/port-in/claims/{claimId}:
+    get:
+      x-resource-group: "telephony"
+      operationId: getPhoneNumberPortClaim
+      tags: [Phone Numbers]
+      summary: Resolve a port claim
+      description: |
+        Resolves a `claimId` from a keyless portability check into the number
+        it carries. The dashboard calls it when a person lands from a port
+        `claimUrl`, to open the port form with that number filled in. It does
+        not start a port.
+      security:
+        - bearerAuth: []
+      parameters:
+        - { name: claimId, in: path, required: true, schema: { type: string } }
+      responses:
+        '200':
+          description: The claimed number.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  phoneNumber: { type: string, description: E.164. }
+                  countryCode: { type: [string, "null"], description: ISO country of the number. }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404': { description: "The claim expired (after 7 days) or is invalid." }
 
   /v1/phone-numbers/port-in/documents:
     post:

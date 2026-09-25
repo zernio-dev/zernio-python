@@ -18356,16 +18356,39 @@ def register_generated_tools(mcp, _get_client):
         )
     )
     def phone_numbers_check_phone_number_portability(
-        phone_numbers: list[str] | None,
+        phone_numbers: list[str] | None, claim_links: bool | None = None
     ) -> str:
         """Check portability
 
         Args:
-            phone_numbers: E.164 numbers to check, e.g. +13035550000. (required)"""
+            phone_numbers: E.164 numbers to check, e.g. +13035550000. At most one without an API key. (required)
+            claim_links: true adds `claimId` and `claimUrl` to portable results even when you send an API key, e.g. to hand a user a signup link that opens the port form with their number."""
         client = _get_client()
         try:
             response = client.phone_numbers.check_phone_number_portability(
-                phone_numbers=phone_numbers
+                phone_numbers=phone_numbers, claim_links=claim_links
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Resolve a port claim",
+            readOnlyHint=True,
+            destructiveHint=False,
+            openWorldHint=False,
+        )
+    )
+    def phone_numbers_get_phone_number_port_claim(claim_id: str) -> str:
+        """Resolve a port claim
+
+        Args:
+            claim_id: (required)"""
+        client = _get_client()
+        try:
+            response = client.phone_numbers.get_phone_number_port_claim(
+                claim_id=claim_id
             )
             return _format_response(response)
         except Exception as e:
