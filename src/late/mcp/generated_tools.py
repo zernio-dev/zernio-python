@@ -11336,7 +11336,7 @@ def register_generated_tools(mcp, _get_client):
         After your framework decodes the query string once, run one more decodeURIComponent (or
         equivalent) and then JSON.parse it. `tempToken` and `connect_token` are plain values.
 
-        `missing_google_permissions` (YouTube and Google Business) means the user unchecked one or more
+        `missing_google_permissions` (YouTube, Google Business and Google Ads) means the user unchecked one or more
         permissions on Google's consent screen. It always comes with `is_user_fixable=true`. When Google
         reported the granted scopes, `missing_scopes` is also present: a comma-separated list of the
         requested Google scopes that were not granted. Ask the user to connect again and keep every
