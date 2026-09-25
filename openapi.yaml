@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.77.1"
+  version: "1.78.0"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -48281,16 +48281,18 @@ paths:
                   type: object
                   description: |
                     Meta + TikTok (demographics/interests), Google (keyword and device
-                    bid adjustment edits only), and LinkedIn (countries or regions required).
+                    bid adjustment edits only), and LinkedIn (locations, B2B facets, audiences).
                     Pinterest / X return 501.
 
-                    On Meta this is a partial update merged over the ad set's live targeting:
-                    every targeting setting you do not send is preserved (Advantage+ audience,
-                    placements, custom audiences, exclusions, interests, languages, and so on).
-                    A field you send replaces its Meta counterpart, and an empty or null value
-                    (for example `audienceInclude: []` or `gender: "all"`) clears only that field.
-                    Any location field (countries, regions, cities, zips, ...) replaces the whole
-                    included location set, since Meta ORs locations together.
+                    On Meta, TikTok and LinkedIn this is a partial update: every targeting setting
+                    you do not send is preserved (on Meta: Advantage+ audience, placements, custom
+                    audiences, exclusions, interests, languages; on TikTok: languages, interest
+                    keywords, devices, behaviours; on LinkedIn: skills, member traits, interface
+                    locales, and any facet set in Campaign Manager). A field you send replaces its
+                    platform counterpart, and an empty or null value (for example `audienceInclude: []`,
+                    `industries: []` or `gender: "all"`) clears only that field. Any location field
+                    (countries, regions, cities, zips, ...) replaces the whole included location set;
+                    an update with no location keeps the current locations.
                   properties:
                     keywords:
                       type: array
@@ -48430,7 +48432,7 @@ paths:
         '429': { description: "Meta admits one write per 30 seconds to a metered object, ad creatives above all. Zernio waits out two of those windows and replays the call before surfacing this, so it only appears when the object is being edited faster than that. Retry in 30 seconds." }
         '422': { description: "The ad has no campaign or ad group on the platform yet, the Google targeting edit asks for something that is create-only (`locations.customLocations`), or a creative field the ad's channel cannot carry: assetGroup on a non-Performance-Max ad, a Google Display field on a Search ad, a pinnedField on a Display headline, or any Google-only field on another platform. A Google creative edit that cannot reach Google at all (the ad has no `platformAdId`, or its ad account cannot be loaded) also returns 422 rather than a 200 that changed nothing." }
         '501': { description: "targeting or creative not supported on the platform (supported on Meta, TikTok, and LinkedIn)" }
-        '502': { description: "Meta accepted the request then failed to produce the media (upload session, chunk transfer, processing timeout, or a response with no image hash). Inspect `platformError.reason`. Also returned with code `platform_api_error` when a Meta targeting update cannot read the ad set's current targeting: nothing is written, so retry the request." }
+        '502': { description: "Meta accepted the request then failed to produce the media (upload session, chunk transfer, processing timeout, or a response with no image hash). Inspect `platformError.reason`. Also returned with code `platform_api_error` when a Meta or LinkedIn targeting update cannot read the current targeting: nothing is written, so retry the request." }
     delete:
       x-resource-group: "ads"
       operationId: deleteAd
