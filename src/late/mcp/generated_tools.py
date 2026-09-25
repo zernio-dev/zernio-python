@@ -11305,7 +11305,34 @@ def register_generated_tools(mcp, _get_client):
 
         On failure, the browser is sent to the same redirect_url with `error` and `platform` appended.
         `error` and `platform` are always present. `error_message`, `is_user_fixable`, `reason`,
-        `dashboard_url` and `missing_scopes` are conditional and must be treated as optional.
+        `dashboard_url`, `missing_scopes`, `error_reason` and the `platform_error*` params are
+        conditional and must be treated as optional. Your own query params are kept on every
+        redirect, but ours overwrite a param of yours with the same name. On an error redirect the
+        internal `headless`, `adsConnect` and `adsScope` markers we add during the flow are removed.
+
+        Correlation (every redirect from an OAuth callback, success and failure):
+          - `request_id`: the id we log the callback request under. Quote it when reporting a problem.
+          - `stage`: where the flow ended. `authorize` = the platform's consent dialog returned an
+            error or denial instead of a code. `callback` = we processed the returned code (success,
+            a selection step, or a failure). `select_page` is reserved for the destination-selection step.
+
+        `oauth_denied` carries `error_message` and, when the platform sent them, its own values as
+        `platform_error` (e.g. `access_denied`), `platform_error_reason` (e.g. `user_denied`) and
+        `platform_error_description` (truncated to 500 characters). `is_user_fixable=true` is set when
+        the platform reported that the user cancelled or declined.
+
+        `no_facebook_pages` comes with `is_user_fixable=true`, an `error_message` telling the user to
+        click "Edit previous settings" in Meta's dialog and tick the Page (or create one), and, when
+        Meta's token debug answered, `error_reason`:
+          - `pages_permission_declined`: the user declined the pages_show_list permission.
+          - `no_pages_granted`: the permission was granted with no Page ticked. Meta reports a user who
+            manages no Page the same way, so this covers both.
+          - `granted_pages_not_listed`: Pages were ticked but Meta listed none the user can manage.
+
+        Headless Facebook success (`step=select_page`): `userProfile` is JSON that was
+        percent-encoded once before being set as a query param, so it is encoded twice on the wire.
+        After your framework decodes the query string once, run one more decodeURIComponent (or
+        equivalent) and then JSON.parse it. `tempToken` and `connect_token` are plain values.
 
         `missing_google_permissions` (YouTube and Google Business) means the user unchecked one or more
         permissions on Google's consent screen. It always comes with `is_user_fixable=true`. When Google
@@ -11353,8 +11380,8 @@ def register_generated_tools(mcp, _get_client):
           shopify_auth_failed, shopify_config_error, shopify_invalid_state, shopify_invalid_hmac,
           shopify_invalid_shop, shopify_missing_scopes, shopify_callback_error
 
-        1. On this endpoint every upstream OAuth error is collapsed into `oauth_denied`. The
-        provider's own value (for example Meta's `access_denied`) is not forwarded. The dedicated
+        1. On this endpoint every upstream OAuth error is collapsed into `oauth_denied`, with the
+        provider's own values in the `platform_error*` params described above. The dedicated
         ads flows below are different: they use their own denial slugs and `google_ads_auth_failed`
         and `tiktok_ads_auth_failed` may carry the provider's raw error string in `error_message`.
 
@@ -11520,6 +11547,11 @@ def register_generated_tools(mcp, _get_client):
         Set `force=true` to bypass that and always receivean `authUrl`.
         Completing the returned OAuth refreshes the stored token
         on the existing posting and ads accounts in place.
+        An `alreadyConnected` response re-runs ad discovery and webhook
+        subscriptions in the background at most once every 15 minutes per ads
+        account (always when the call changes the ad-account scope), so it is not
+        a sync trigger. To check the connection's health, read
+        GET /v1/ads/accounts?accountId=<ads account ID>.
                 ad_account_id: Scope ad sync to a single platform ad account. Without this param,
         sync covers every ad account the connected token can see. Business-login reconnects
         preserve the existing scope; supplied IDs are checked against the new grant. To change
