@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.74.0"
+  version: "1.75.0"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -5948,7 +5948,7 @@ components:
         publishedAt:
           type: string
           format: date-time
-          description: Timestamp when the post was published to this platform
+          description: "Timestamp when the post was published to this platform. YouTube uploads a scheduled public video up to 15 minutes early as private with YouTube's own release time, so its entry is published with this set to scheduledFor, the moment the video goes public."
         removedFromPlatformAt:
           type: [string, "null"]
           format: date-time
@@ -8430,7 +8430,7 @@ components:
       properties:
         postId: { type: string }
         latePostId: { type: [string, "null"], description: 'Original Zernio post ID if scheduled via Zernio' }
-        status: { type: string, enum: [published, failed, partial], description: 'Overall post status. "partial" when some platforms published and others failed.' }
+        status: { type: string, enum: [published, failed, partial, scheduled, publishing, draft, cancelled], description: 'Overall post status. "partial" when some platforms published and others failed. While any platform is still pending or processing, the post''s own status is returned instead (usually scheduled or publishing), even if another platform already published.' }
         content: { type: string }
         scheduledFor: { type: string, format: date-time }
         publishedAt: { type: [string, "null"], format: date-time }
@@ -13197,7 +13197,7 @@ paths:
                         isActive: true
                     hasAnalyticsAccess: true
         '202':
-          description: 'Analytics are being synced from the platform (single post lookup only). The response body matches AnalyticsSinglePostResponse with syncStatus "pending" and a message. Pending platforms whose account failed its last analytics sync carry that error in platformAnalytics[].errorMessage, and the message says so.'
+          description: 'Analytics are being synced from the platform, or the post has not finished publishing on every platform yet (single post lookup only). The response body matches AnalyticsSinglePostResponse with syncStatus "pending" and a message; while a platform has not published, status is the post''s own status (for example scheduled or publishing) and a post with one failed platform returns 202 rather than 424 until the others finish. Pending platforms whose account failed its last analytics sync carry that error in platformAnalytics[].errorMessage, and the message says so.'
           content:
             application/json:
               schema:
