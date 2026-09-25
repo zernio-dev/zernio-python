@@ -3568,6 +3568,7 @@ def register_generated_tools(mcp, _get_client):
         budget_amount: float | None = None,
         budget_type: str | None = None,
         status: str = "PAUSED",
+        location_targeting_type: str | None = None,
         bid_strategy: str | None = None,
         bid_amount: float | None = None,
         roas_average_floor: float | None = None,
@@ -3588,6 +3589,7 @@ def register_generated_tools(mcp, _get_client):
             budget_amount: Campaign-level (CBO) budget in WHOLE currency units (USD: 50 = $50.00), NOT cents. Meta's own Marketing API takes this same number in minor units, so it is an easy and expensive mix-up. Requires budgetType.
             budget_type
             status
+            location_targeting_type: Google only (400 elsewhere). Written on the new campaign.
             bid_strategy: Campaign bid strategy. Meta stores `bid_strategy` alongside the budget, so this REQUIRES `budgetAmount` + `budgetType` on the same request; sending it without a campaign budget is a 400. A campaign carrying a strategy without its `bid_amount` makes every ad set created under it fail with an error that names the ad set (code 100, subcode 1815857), so the bad state is rejected up front rather than accepted. To bid at ad-set level on Meta, set the strategy there instead. On Google: LOWEST_COST_WITHOUT_CAP = Maximize Conversions, COST_CAP + bidAmount = Target CPA, LOWEST_COST_WITH_MIN_ROAS + roasAverageFloor = Target ROAS, LOWEST_COST_WITH_BID_CAP + bidAmount = Maximize Clicks with a CPC ceiling; portfolioBidStrategyId attaches a portfolio strategy instead.
             bid_amount: Whole currency units (USD: 5 = $5.00). Required for LOWEST_COST_WITH_BID_CAP and COST_CAP; ignored otherwise. On Meta, validated here but NOT stored: the campaign object has no bid_amount field, only bid_strategy lives on it, and the amount takes effect once an ad set joins this campaign (existingCampaignId on POST /v1/ads/create) and supplies its own bidAmount there. On Google, stored directly on the campaign's bidding strategy.
             roas_average_floor: Decimal ROAS multiplier (2.0 = 2.0x). Required for LOWEST_COST_WITH_MIN_ROAS.
@@ -3607,6 +3609,7 @@ def register_generated_tools(mcp, _get_client):
                 budget_amount=budget_amount,
                 budget_type=budget_type,
                 status=status,
+                location_targeting_type=location_targeting_type,
                 bid_strategy=bid_strategy,
                 bid_amount=bid_amount,
                 roas_average_floor=roas_average_floor,
@@ -4983,6 +4986,7 @@ def register_generated_tools(mcp, _get_client):
         end_date: str | None = None,
         schedule: dict[str, Any] | None = None,
         targeting: dict[str, Any] | None = None,
+        location_targeting_type: str | None = None,
         raw_targeting: dict[str, Any] | None = None,
         bid_strategy: str | None = None,
         bid_amount: float | None = None,
@@ -5040,6 +5044,7 @@ def register_generated_tools(mcp, _get_client):
         GET /v1/ads/targeting/search?dimension=geo. City radius and lat/lng
         `customLocations` are Meta-only and preserve the boosted post's
         social proof (the ad references the existing post).
+                location_targeting_type: Google only (400 elsewhere). Written on the campaign the boost creates.
                 raw_targeting: Meta only. A Meta-native targeting spec (e.g.
         `{ "geo_locations": { "cities": [{ "key": "...", "radius": 15, "distance_unit": "kilometer" }] } }`).
         Sent alone it is forwarded unchanged. Use for advanced fields the structured
@@ -5191,6 +5196,7 @@ def register_generated_tools(mcp, _get_client):
                 end_date=end_date,
                 schedule=schedule,
                 targeting=targeting,
+                location_targeting_type=location_targeting_type,
                 raw_targeting=raw_targeting,
                 bid_strategy=bid_strategy,
                 bid_amount=bid_amount,
@@ -5298,13 +5304,13 @@ def register_generated_tools(mcp, _get_client):
         targeting: dict[str, Any] | None = None,
         countries: list[str] | None = None,
         country_groups: list[str] | None = None,
-        cities: list[dict[str, Any]] | None = None,
-        regions: list[dict[str, Any]] | None = None,
+        cities: list[Any] | None = None,
+        regions: list[Any] | None = None,
         age_min: int | None = None,
         age_max: int | None = None,
         interests: list[dict[str, Any]] | None = None,
-        zips: list[dict[str, Any]] | None = None,
-        metros: list[dict[str, Any]] | None = None,
+        zips: list[Any] | None = None,
+        metros: list[Any] | None = None,
         custom_locations: list[dict[str, Any]] | None = None,
         behaviors: list[dict[str, Any]] | None = None,
         work_positions: list[dict[str, Any]] | None = None,
@@ -5330,6 +5336,7 @@ def register_generated_tools(mcp, _get_client):
         placement_assets: dict[str, Any] | None = None,
         audience_id: str | None = None,
         campaign_type: str = "display",
+        location_targeting_type: str | None = None,
         asset_group: dict[str, Any] | None = None,
         keywords: list[Any] | None = None,
         negative_keywords: list[Any] | None = None,
@@ -5531,10 +5538,10 @@ def register_generated_tools(mcp, _get_client):
         for targeting a whole region without listing its countries. Combines with
         `countries` rather than replacing it. Discoverable via
         `GET /v1/ads/targeting/search?dimension=geo&geoType=country_group`.
-                cities: City-level geo targeting (Meta and TikTok). Each city is targeted by the platform's opaque `key` (the city ID) which can be looked up via `GET /v1/ads/targeting/search?dimension=geo&q=<name>&countryCode=<ISO>`. Optional `radius` + `distance_unit` (Meta only) extend the targeting beyond the city limits (e.g. radius 25 km around the city center). Both must be set together, or both omitted (Meta defaults to ~16 km when omitted).
+                cities: City-level geo targeting (Meta, Google and TikTok). An entry is either `{ key }` or the key alone as a plain string (`["1006410"]`). Each city is targeted by the platform's opaque `key` (the city ID) which can be looked up via `GET /v1/ads/targeting/search?dimension=geo&q=<name>&countryCode=<ISO>`. Optional `radius` + `distance_unit` (Meta only) extend the targeting beyond the city limits (e.g. radius 25 km around the city center). Both must be set together, or both omitted (Meta defaults to ~16 km when omitted).
 
         On Meta, cannot overlap with the same country in `countries` (Meta returns a "locations overlap" error). Either drop the country or scope it to a different country. On TikTok, keys are numeric location ids and can be sent without `countries`.
-                regions: Region-level (state/province) geo targeting (Meta and TikTok). Each region is targeted by the platform's opaque `key` (the region ID) which can be looked up via `GET /v1/ads/targeting/search?dimension=geo&q=<name>&countryCode=<ISO>`.
+                regions: Region-level (state/province) geo targeting (Meta, Google and TikTok). Each region is targeted by the platform's opaque `key` (the region ID) which can be looked up via `GET /v1/ads/targeting/search?dimension=geo&q=<name>&countryCode=<ISO>`. An entry may also be the key alone as a plain string.
                 age_min
                 age_max
                 interests: Interest objects from /v1/ads/interests. Each must include id and name.
@@ -5691,6 +5698,7 @@ def register_generated_tools(mcp, _get_client):
         posters; Meta auto-generates when omitted). Exactly one catch-all default is required.
                 audience_id: Custom audience ID for targeting
                 campaign_type: Google only. Performance Max requires assetGroup and is always created PAUSED.
+                location_targeting_type: Google only (400 elsewhere). Set on the new campaign; a request that joins an existing campaign (`existingCampaignId` or `adSetId`) returns 400, change that campaign with PUT /v1/ads/campaigns/{campaignId}/targeting instead. `presence` reaches only people in or regularly in the targeted locations.
                 asset_group
                 keywords: Google Search only. Keywords on the new ad group; entries are strings (BROAD) or { text, matchType }. Editable later via PUT /v1/ads/{adId} targeting.keywords.
                 negative_keywords: Google Search only; other platforms return 400. Ad-group-level negative keywords on the new ad group. Editable later via PUT /v1/ads/{adId} targeting.negativeKeywords.
@@ -5914,6 +5922,7 @@ def register_generated_tools(mcp, _get_client):
                 placement_assets=placement_assets,
                 audience_id=audience_id,
                 campaign_type=campaign_type,
+                location_targeting_type=location_targeting_type,
                 asset_group=asset_group,
                 keywords=keywords,
                 negative_keywords=negative_keywords,

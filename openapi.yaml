@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.88.0"
+  version: "1.89.0"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -9791,24 +9791,28 @@ components:
         countries: { type: array, items: { type: string }, description: "ISO 3166-1 alpha-2 country codes (e.g. ['US'])." }
         regions:
           type: array
-          description: "Region/state targeting. `key` is the platform location ID from /v1/ads/targeting/search?dimension=geo&geoType=region."
+          description: "Region/state targeting. `key` is the platform location ID from /v1/ads/targeting/search?dimension=geo&geoType=region. An entry may also be that id as a plain string (`\"20321\"` is `{ key: \"20321\" }`)."
           items:
-            type: object
-            required: [key]
-            properties:
-              key: { type: string }
-              name: { type: string }
+            oneOf:
+              - type: string
+              - type: object
+                required: [key]
+                properties:
+                  key: { type: string }
+                  name: { type: string }
         cities:
           type: array
-          description: "City targeting. Optional `radius` + `distanceUnit` extend beyond the city limits; both must be set together or both omitted. `radius` is only honoured on platforms whose capability map allows city radius (Meta)."
+          description: "City targeting. Optional `radius` + `distanceUnit` extend beyond the city limits; both must be set together or both omitted. `radius` is only honoured on platforms whose capability map allows city radius (Meta). An entry may also be the city id as a plain string (`\"1006410\"` is `{ key: \"1006410\" }`)."
           items:
-            type: object
-            required: [key]
-            properties:
-              key: { type: string }
-              name: { type: string }
-              radius: { type: number, description: "Radius around the city. Requires distanceUnit. Meta enforces a minimum city radius (~17 km / 10 mi); smaller values resolve to a 0-size audience and the ad fails at launch. For a tighter catchment use customLocations (lat/lng), which allows a smaller radius." }
-              distanceUnit: { type: string, enum: [mile, kilometer], description: "Required if radius is set." }
+            oneOf:
+              - type: string
+              - type: object
+                required: [key]
+                properties:
+                  key: { type: string }
+                  name: { type: string }
+                  radius: { type: number, description: "Radius around the city. Requires distanceUnit. Meta enforces a minimum city radius (~17 km / 10 mi); smaller values resolve to a 0-size audience and the ad fails at launch. For a tighter catchment use customLocations (lat/lng), which allows a smaller radius." }
+                  distanceUnit: { type: string, enum: [mile, kilometer], description: "Required if radius is set." }
         zips:
           type: array
           description: "Postal/ZIP targeting. `key` is the platform's postal location ID (e.g. Meta `US:94304`). Supported on Meta, Google, TikTok, Pinterest, X."
@@ -10088,6 +10092,18 @@ components:
           $ref: '#/components/schemas/GoogleStructuredSnippet'
       description: "Supply fields for exactly one asset type per update. finalUrls may accompany sitelinkAsset. Shared asset edits affect every attachment using the asset."
 
+    GoogleLocationTargetingType:
+      type: string
+      enum: [presence, presence_or_interest]
+      description: |
+        Google only. Who a campaign's location targeting reaches (Google's
+        `campaign.geo_target_type_setting.positive_geo_target_type`).
+        `presence`: people in, or regularly in, the targeted locations.
+        `presence_or_interest`: also people searching for or showing interest in them.
+        Omitted leaves Google's default, `presence_or_interest`. Accepted on Search,
+        Display and Performance Max campaigns. Excluded locations always use presence
+        (Google refuses presence_or_interest for exclusions on these campaign types).
+      example: presence
     GooglePmaxAssetGroupInput:
       type: object
       additionalProperties: false
@@ -46610,6 +46626,9 @@ paths:
                 budgetAmount: { type: number, description: "Campaign-level (CBO) budget in WHOLE currency units (USD: 50 = $50.00), NOT cents. Meta's own Marketing API takes this same number in minor units, so it is an easy and expensive mix-up. Requires budgetType." }
                 budgetType: { type: string, enum: [daily, lifetime] }
                 status: { type: string, enum: [ACTIVE, PAUSED], default: PAUSED }
+                locationTargetingType:
+                  allOf: [{ $ref: '#/components/schemas/GoogleLocationTargetingType' }]
+                  description: "Google only (400 elsewhere). Written on the new campaign."
                 bidStrategy:
                   type: string
                   enum: [LOWEST_COST_WITHOUT_CAP, LOWEST_COST_WITH_BID_CAP, COST_CAP, LOWEST_COST_WITH_MIN_ROAS]
@@ -47440,6 +47459,10 @@ paths:
                         code: { type: string, description: "Google's language code (ISO 639-1, plus variants such as `zh_CN`). Empty when the campaign's language_constant id is not in Zernio's checked-in table." }
                         id: { type: string, description: "Google's languageConstants/{id} numeric id." }
                         name: { type: string }
+                  locationTargetingType:
+                    type: [string, "null"]
+                    enum: [presence, presence_or_interest, null]
+                    description: "Who the location targeting reaches, see GoogleLocationTargetingType. Null when Google reports a legacy value (SEARCH_INTEREST) this API does not set."
                   cachedAt: { type: [string, "null"], format: date-time, description: "When this targeting was fetched from Google. Null when it was never served from cache." }
                   stale: { type: boolean, description: "True when Google's daily API quota was exhausted and this is the last successful fetch, not a live read." }
         '400': { $ref: '#/components/responses/BadRequest' }
@@ -47457,7 +47480,7 @@ paths:
       description: |
         Google Ads compliance row M.10: geo and language targeting set at
         creation must stay editable afterwards. Send at least one of `devices`,
-        `locations`, `languages`; each provided field REPLACES that field's
+        `locations`, `languages`, `locationTargetingType`; each provided field REPLACES that field's
         existing criteria on the campaign (a full set, not a delta). Fields left
         out of the body are untouched. Google only; every other platform returns
         501.
@@ -47479,6 +47502,11 @@ paths:
 
         `languages` is an array of Google's language codes (ISO 639-1, plus variants
         such as `zh_CN`); an unknown code returns 400.
+
+        `locationTargetingType` switches who the location targeting reaches:
+        `presence` (people in or regularly in the locations) or `presence_or_interest`
+        (also people searching for or interested in them). Example:
+        `{ "platform": "google", "targeting": { "locationTargetingType": "presence" } }`.
 
         The response includes the refreshed `devices`/`locations`/`languages` state
         read back from Google after the edit, and invalidates the cached copy
@@ -47522,17 +47550,18 @@ paths:
                             countries: { type: array, items: { type: string } }
                             regions:
                               type: array
-                              items: { type: object, required: [key], properties: { key: { type: string }, name: { type: string } } }
+                              items: { oneOf: [{ type: string, description: 'The geo target constant id alone.' }, { type: object, required: [key], properties: { key: { type: string }, name: { type: string } } }] }
                             cities:
                               type: array
-                              items: { type: object, required: [key], properties: { key: { type: string }, name: { type: string } } }
+                              items: { oneOf: [{ type: string, description: 'The geo target constant id alone.' }, { type: object, required: [key], properties: { key: { type: string }, name: { type: string } } }] }
                             zips:
                               type: array
-                              items: { type: object, required: [key], properties: { key: { type: string }, name: { type: string } } }
+                              items: { oneOf: [{ type: string, description: 'The geo target constant id alone.' }, { type: object, required: [key], properties: { key: { type: string }, name: { type: string } } }] }
                             metros:
                               type: array
-                              items: { type: object, required: [key], properties: { key: { type: string }, name: { type: string } } }
+                              items: { oneOf: [{ type: string, description: 'The geo target constant id alone.' }, { type: object, required: [key], properties: { key: { type: string }, name: { type: string } } }] }
                     languages: { type: array, items: { type: string }, description: "Google's language codes (ISO 639-1, plus variants such as `zh_CN`), e.g. [\"en\", \"de\"]." }
+                    locationTargetingType: { $ref: '#/components/schemas/GoogleLocationTargetingType' }
       responses:
         '200':
           description: Targeting updated
@@ -47542,7 +47571,11 @@ paths:
                 type: object
                 properties:
                   campaignId: { type: string }
-                  updated: { type: array, items: { type: string, enum: [devices, locations, languages] }, description: "Which targeting fields were applied." }
+                  updated: { type: array, items: { type: string, enum: [devices, locations, languages, locationTargetingType] }, description: "Which targeting fields were applied." }
+                  locationTargetingType:
+                    type: [string, "null"]
+                    enum: [presence, presence_or_interest, null]
+                    description: "The value read back from Google after the edit."
                   devices:
                     type: array
                     items:
@@ -54219,6 +54252,9 @@ paths:
                           id: { type: string }
                           name: { type: string }
                     advantage_audience: { type: integer, enum: [0, 1], description: "Meta only. 0 = disabled (default), 1 = enabled." }
+                locationTargetingType:
+                  allOf: [{ $ref: '#/components/schemas/GoogleLocationTargetingType' }]
+                  description: "Google only (400 elsewhere). Written on the campaign the boost creates."
                 rawTargeting:
                   type: object
                   additionalProperties: true
@@ -54885,25 +54921,30 @@ paths:
                 cities:
                   type: array
                   description: |
-                    City-level geo targeting (Meta and TikTok). Each city is targeted by the platform's opaque `key` (the city ID) which can be looked up via `GET /v1/ads/targeting/search?dimension=geo&q=<name>&countryCode=<ISO>`. Optional `radius` + `distance_unit` (Meta only) extend the targeting beyond the city limits (e.g. radius 25 km around the city center). Both must be set together, or both omitted (Meta defaults to ~16 km when omitted).
+                    City-level geo targeting (Meta, Google and TikTok). An entry is either `{ key }` or the key alone as a plain string (`["1006410"]`). Each city is targeted by the platform's opaque `key` (the city ID) which can be looked up via `GET /v1/ads/targeting/search?dimension=geo&q=<name>&countryCode=<ISO>`. Optional `radius` + `distance_unit` (Meta only) extend the targeting beyond the city limits (e.g. radius 25 km around the city center). Both must be set together, or both omitted (Meta defaults to ~16 km when omitted).
 
                     On Meta, cannot overlap with the same country in `countries` (Meta returns a "locations overlap" error). Either drop the country or scope it to a different country. On TikTok, keys are numeric location ids and can be sent without `countries`.
                   items:
-                    type: object
-                    required: [key]
-                    properties:
-                      key: { type: string, description: "Meta city ID, from /v1/ads/targeting/search results." }
-                      radius: { type: number, description: "Optional radius around the city. Must be set together with distance_unit. Meta enforces a minimum city radius (~17 km / 10 mi); smaller values resolve to a 0-size audience and the ad fails at launch. For a tighter catchment use customLocations (lat/lng)." }
-                      distance_unit: { type: string, enum: [mile, kilometer], description: "Unit for radius. Required if radius is set." }
+                    oneOf:
+                      - type: string
+                        description: "The city id alone, e.g. \"1006410\" (same as { key: \"1006410\" })."
+                      - type: object
+                        required: [key]
+                        properties:
+                          key: { type: string, description: "City id from /v1/ads/targeting/search results (Meta city key, Google geo target constant id, TikTok location id)." }
+                          radius: { type: number, description: "Optional radius around the city. Must be set together with distance_unit. Meta enforces a minimum city radius (~17 km / 10 mi); smaller values resolve to a 0-size audience and the ad fails at launch. For a tighter catchment use customLocations (lat/lng)." }
+                          distance_unit: { type: string, enum: [mile, kilometer], description: "Unit for radius. Required if radius is set." }
                 regions:
                   type: array
                   description: |
-                    Region-level (state/province) geo targeting (Meta and TikTok). Each region is targeted by the platform's opaque `key` (the region ID) which can be looked up via `GET /v1/ads/targeting/search?dimension=geo&q=<name>&countryCode=<ISO>`.
+                    Region-level (state/province) geo targeting (Meta, Google and TikTok). Each region is targeted by the platform's opaque `key` (the region ID) which can be looked up via `GET /v1/ads/targeting/search?dimension=geo&q=<name>&countryCode=<ISO>`. An entry may also be the key alone as a plain string.
                   items:
-                    type: object
-                    required: [key]
-                    properties:
-                      key: { type: string, description: "Platform region ID, from /v1/ads/targeting/search results." }
+                    oneOf:
+                      - type: string
+                      - type: object
+                        required: [key]
+                        properties:
+                          key: { type: string, description: "Platform region ID, from /v1/ads/targeting/search results." }
                 ageMin: { type: integer, minimum: 13, maximum: 65 }
                 ageMax: { type: integer, minimum: 13, maximum: 65 }
                 interests:
@@ -54919,20 +54960,24 @@ paths:
                   type: array
                   description: "Postal/ZIP geo targeting. `key` is the platform's postal location ID from /v1/ads/targeting/search?dimension=geo&geoType=zip. Supported on Meta, Google, TikTok, Pinterest, X."
                   items:
-                    type: object
-                    required: [key]
-                    properties:
-                      key: { type: string }
-                      name: { type: string }
+                    oneOf:
+                      - type: string
+                      - type: object
+                        required: [key]
+                        properties:
+                          key: { type: string }
+                          name: { type: string }
                 metros:
                   type: array
                   description: "DMA / metro-area geo targeting (Meta and TikTok). `key` is the platform's metro ID from /v1/ads/targeting/search?dimension=geo&geoType=metro (TikTok metros appear as type `metro`, e.g. the New York DMA)."
                   items:
-                    type: object
-                    required: [key]
-                    properties:
-                      key: { type: string }
-                      name: { type: string }
+                    oneOf:
+                      - type: string
+                      - type: object
+                        required: [key]
+                        properties:
+                          key: { type: string }
+                          name: { type: string }
                 customLocations:
                   type: array
                   description: "Point-radius (lat/lng) geo targeting. Meta only (custom_locations). Rejected on platforms without radius support."
@@ -55363,6 +55408,9 @@ paths:
                                 items: { type: string, enum: [mobile, desktop] }
                 audienceId: { type: string, description: Custom audience ID for targeting }
                 campaignType: { type: string, enum: [display, search, pmax], default: display, description: "Google only. Performance Max requires assetGroup and is always created PAUSED." }
+                locationTargetingType:
+                  allOf: [{ $ref: '#/components/schemas/GoogleLocationTargetingType' }]
+                  description: "Google only (400 elsewhere). Set on the new campaign; a request that joins an existing campaign (`existingCampaignId` or `adSetId`) returns 400, change that campaign with PUT /v1/ads/campaigns/{campaignId}/targeting instead. `presence` reaches only people in or regularly in the targeted locations."
                 assetGroup:
                   $ref: '#/components/schemas/GooglePmaxAssetGroupInput'
                 keywords: { type: array, maxItems: 1000, items: { $ref: '#/components/schemas/KeywordEntry' }, description: "Google Search only. Keywords on the new ad group; entries are strings (BROAD) or { text, matchType }. Editable later via PUT /v1/ads/{adId} targeting.keywords." }
@@ -55647,6 +55695,23 @@ paths:
                 promotedObject:
                   $ref: '#/components/schemas/AdPromotedObject'
             examples:
+              googleSearchPresenceOnly:
+                summary: "Google Search campaign that reaches only people located in Lyon."
+                value:
+                  accountId: '69ce75d483e990e1c01ccfe4'
+                  adAccountId: '9122445560'
+                  name: 'Lyon plumbing'
+                  goal: traffic
+                  campaignType: search
+                  budgetAmount: 5
+                  budgetType: daily
+                  status: PAUSED
+                  headline: 'Plumber in Lyon'
+                  body: 'Same-day repairs across Lyon.'
+                  linkUrl: 'https://example.com'
+                  keywords: ['plombier lyon']
+                  cities: ['1006410']
+                  locationTargetingType: presence
               performanceMax:
                 summary: "Paused Performance Max campaign."
                 value:
