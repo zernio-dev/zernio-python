@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.95.0"
+  version: "1.96.0"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -3426,6 +3426,102 @@ components:
           type: string
           format: date-time
           description: 'UTC time at which Zernio generated this event (set once when the event payload is built, before delivery is queued). Retries and redeliveries keep the original value, so it reflects the event, not the delivery attempt.'
+    OwnedPhoneNumber:
+      type: object
+      description: 'A number you bought or ported. Null fields are omitted, except `socialAccountId` and `ownerAccountId`. Credentials stored for the number (such as the SIP digest password) are never returned; `sipAuthUsername` is the only SIP credential field exposed.'
+      properties:
+        _id: { type: string }
+        phoneNumber: { type: string }
+        country: { type: string }
+        numberType: { type: string, description: 'For example local, mobile, national or toll_free.' }
+        status: { type: string, enum: [pending_payment, pending_regulatory, regulatory_declined, provisioning, verifying, active, suspended, releasing, released] }
+        profileId:
+          description: 'The profile the number belongs to: `{ _id, name }` when the profile exists, otherwise its id.'
+          oneOf:
+            - type: object
+              properties:
+                _id: { type: string }
+                name: { type: [string, "null"] }
+            - type: string
+        createdAt: { type: string, format: date-time }
+        updatedAt: { type: string, format: date-time }
+        telnyxOrderId: { type: [string, "null"], description: Present once the number order has been placed (i.e. the requirement group was approved). Absent while still in identity review. }
+        telnyxAdvancedOrderId: { type: string, description: 'Present on a pre-order: the carrier request placed for a number with no stock yet.' }
+        registrantName: { type: [string, "null"], description: "For regulated numbers, who it's registered for (company or person), set from the submitted KYC." }
+        endUserFirstName: { type: [string, "null"] }
+        endUserLastName: { type: [string, "null"] }
+        regulatoryDeclineReason: { type: [string, "null"], description: Reviewer rejection reason when status is regulatory_declined. }
+        regulatoryReviewComment: { type: string, description: 'The latest reviewer comment on a regulated number still in review.' }
+        regulatoryInfoStatus: { type: string, description: '`action_required` when the reviewer is waiting on you.' }
+        onfidoVerificationUrl: { type: [string, "null"], description: "For regulated (Tier 3/4) numbers with an Onfido ID-verification step: the link to forward to the end user. Set once the order is placed; null otherwise. Poll this field after submitting KYC." }
+        verifyUrl: { type: [string, "null"], description: 'Stable redirect to the live Onfido session. Prefer it over `onfidoVerificationUrl`, since it always resolves to a fresh session.' }
+        onfidoOpened: { type: boolean, description: 'True once the verify link has been opened at least once.' }
+        metaPreverifiedId: { type: string }
+        metaVerificationStatus: { type: string, enum: [pending, code_requested, verified, expired] }
+        metaVerifiedAt: { type: string, format: date-time }
+        metaVerificationExpiresAt: { type: string, format: date-time }
+        socialAccountId: { type: [string, "null"], description: 'The WhatsApp account the number is linked to; null when WhatsApp is not connected.' }
+        ownerAccountId: { type: [string, "null"], description: 'The telephony account that owns Calls and SMS on the number.' }
+        sipTrunkId: { type: [string, "null"], description: 'SIP trunk the number is attached to; null when not trunked. While attached, enabling Calls or WhatsApp calling, requesting WhatsApp verification, and releasing the number all return 409.' }
+        whatsAppRequested: { type: boolean, description: 'False for a standalone phone bought for Calls or SMS only.' }
+        smsRequested: { type: boolean }
+        provisionedAt: { type: string, format: date-time }
+        activatedAt: { type: string, format: date-time }
+        connectedAt: { type: string, format: date-time }
+        suspendedAt: { type: string, format: date-time }
+        releasedAt: { type: string, format: date-time }
+        signupError: { type: string, description: "Meta's Embedded Signup error from the last failed connect attempt (raw text, often localized)." }
+        signupErrorAt: { type: string, format: date-time }
+        signupErrorStep: { type: string }
+        monthlyCents: { type: integer, description: "What this number bills each month, in cents. Stamped when the number was bought, so an existing number keeps its price when the rate card changes." }
+        hostedByZernio: { type: boolean, description: "False for numbers you brought yourself (connected via Meta embedded signup). They live on your own carrier, so SMS/Calls can't be enabled on them." }
+        smsCapable: { type: boolean, description: 'Whether the number can send SMS. Absent while unknown.' }
+        mmsCapable: { type: boolean, description: 'Whether the number can send MMS. Absent while unknown.' }
+        domesticOnly: { type: boolean, description: 'True when the number can only text numbers in its own country. Absent while unknown.' }
+        smsRegistrationPending: { type: boolean, description: 'True while a 10DLC registration covering this number is in review.' }
+        smsSendApproved: { type: boolean, description: 'True when outbound SMS is unlocked: an approved 10DLC covers the number, or the number is outside the US.' }
+        smsBrandName: { type: [string, "null"], description: 'Brand of the 10DLC registration covering the number.' }
+        features:
+          type: object
+          properties:
+            calls: { type: boolean }
+            whatsapp: { type: boolean }
+            smsPending: { type: boolean }
+        callingEnabled: { type: boolean, description: 'Whether WhatsApp Business Calling is enabled on this number (manage via /v1/whatsapp/phone-numbers/{id}/calling).' }
+        forwardTo: { type: string, description: 'WhatsApp calling forward destination.' }
+        sipAuthUsername: { type: string, description: 'SIP digest username for a sip: forward destination. The password is never returned.' }
+        callerIdVerifiedAt: { type: string, format: date-time }
+        maxCallDurationSeconds: { type: integer }
+        recordingEnabled: { type: boolean }
+        transcriptionEnabled: { type: boolean }
+        transcriptionLanguage: { type: string, enum: [auto, en, es] }
+        callIconCountries: { type: array, items: { type: string } }
+        forwardCallerId: { type: string, enum: [business, caller] }
+        pstnVoiceEnabled: { type: boolean, description: 'Whether Calls (PSTN voice) is on.' }
+        pstnForwardTo: { type: string }
+        voicemailEnabled: { type: boolean }
+        voicemailGreeting: { type: string }
+        businessHoursEnabled: { type: boolean }
+        businessHoursTimezone: { type: string }
+        businessHours:
+          type: array
+          items:
+            type: object
+            properties:
+              day: { type: integer }
+              open: { type: string }
+              close: { type: string }
+        blockedCallers: { type: array, items: { type: string } }
+        ivrEnabled: { type: boolean }
+        ivrPrompt: { type: string }
+        ivrOptions:
+          type: array
+          items:
+            type: object
+            properties:
+              digit: { type: string }
+              forwardTo: { type: string }
+              label: { type: string }
     PhoneNumberStockWatch:
       type: object
       required: [id, country, countryName, numberType, createdAt]
@@ -39006,27 +39102,7 @@ paths:
                   numbers:
                     type: array
                     items:
-                      type: object
-                      properties:
-                        _id: { type: string }
-                        phoneNumber: { type: string }
-                        country: { type: string }
-                        status: { type: string, enum: [pending_payment, pending_regulatory, regulatory_declined, provisioning, verifying, active, suspended, releasing, released] }
-                        registrantName: { type: [string, "null"], description: "For regulated numbers, who it's registered for (company or person), set from the submitted KYC." }
-                        telnyxOrderId: { type: [string, "null"], description: Present once the number order has been placed (i.e. the requirement group was approved). Absent while still in identity review. }
-                        monthlyCents: { type: integer, description: "What this number bills each month, in cents. Stamped when the number was bought, so an existing number keeps its price when the rate card changes." }
-                        hostedByZernio: { type: boolean, description: "False for numbers you brought yourself (connected via Meta embedded signup). They live on your own carrier, so SMS/Calls can't be enabled on them." }
-                        sipTrunkId: { type: [string, "null"], description: 'SIP trunk the number is attached to; null when not trunked. While attached, enabling Calls or WhatsApp calling, requesting WhatsApp verification, and releasing the number all return 409.' }
-                        profileId: { type: object }
-                        provisionedAt: { type: string, format: date-time }
-                        metaPreverifiedId: { type: string }
-                        metaVerificationStatus: { type: string }
-                        onfidoVerificationUrl: { type: [string, "null"], description: "For regulated (Tier 3/4) numbers with an Onfido ID-verification step: the link to forward to the end user. Set once the order is placed; null otherwise. Poll this field after submitting KYC." }
-                        endUserFirstName: { type: [string, "null"] }
-                        endUserLastName: { type: [string, "null"] }
-                        regulatoryDeclineReason: { type: [string, "null"], description: Reviewer rejection reason when status is regulatory_declined. }
-                        callingEnabled: { type: boolean, description: 'Whether WhatsApp Business Calling is enabled on this number (manage via /v1/whatsapp/phone-numbers/{id}/calling).' }
-                        createdAt: { type: string, format: date-time }
+                      $ref: '#/components/schemas/OwnedPhoneNumber'
                   connected:
                     type: array
                     description: |
@@ -39702,27 +39778,7 @@ paths:
                   numbers:
                     type: array
                     items:
-                      type: object
-                      properties:
-                        _id: { type: string }
-                        phoneNumber: { type: string }
-                        country: { type: string }
-                        status: { type: string, enum: [pending_payment, pending_regulatory, regulatory_declined, provisioning, verifying, active, suspended, releasing, released] }
-                        registrantName: { type: [string, "null"], description: "For regulated numbers, who it's registered for (company or person), set from the submitted KYC." }
-                        telnyxOrderId: { type: [string, "null"], description: Present once the number order has been placed (i.e. the requirement group was approved). Absent while still in identity review. }
-                        monthlyCents: { type: integer, description: "What this number bills each month, in cents. Stamped when the number was bought, so an existing number keeps its price when the rate card changes." }
-                        hostedByZernio: { type: boolean, description: "False for numbers you brought yourself (connected via Meta embedded signup). They live on your own carrier, so SMS/Calls can't be enabled on them." }
-                        sipTrunkId: { type: [string, "null"], description: 'SIP trunk the number is attached to; null when not trunked. While attached, enabling Calls or WhatsApp calling, requesting WhatsApp verification, and releasing the number all return 409.' }
-                        profileId: { type: object }
-                        provisionedAt: { type: string, format: date-time }
-                        metaPreverifiedId: { type: string }
-                        metaVerificationStatus: { type: string }
-                        onfidoVerificationUrl: { type: [string, "null"], description: "For regulated (Tier 3/4) numbers with an Onfido ID-verification step: the link to forward to the end user. Set once the order is placed; null otherwise. Poll this field after submitting KYC." }
-                        endUserFirstName: { type: [string, "null"] }
-                        endUserLastName: { type: [string, "null"] }
-                        regulatoryDeclineReason: { type: [string, "null"], description: Reviewer rejection reason when status is regulatory_declined. }
-                        callingEnabled: { type: boolean, description: 'Whether WhatsApp Business Calling is enabled on this number (manage via /v1/whatsapp/phone-numbers/{id}/calling).' }
-                        createdAt: { type: string, format: date-time }
+                      $ref: '#/components/schemas/OwnedPhoneNumber'
                   connected:
                     type: array
                     description: |
