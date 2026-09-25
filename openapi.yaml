@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.85.0"
+  version: "1.86.0"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -8435,7 +8435,7 @@ components:
         comments: { type: integer, example: 0 }
         shares: { type: integer, example: 0 }
         saves: { type: integer, example: 0, description: 'Number of saves/bookmarks (Instagram, Pinterest, X)' }
-        clicks: { type: integer, example: 0 }
+        clicks: { type: integer, example: 0, description: 'Link clicks where the platform reports them. Always 0 on Facebook Page stories: Meta exposes no link-click metric for stories.' }
         views: { type: integer, example: 0 }
         follows: { type: [integer, "null"], example: 0, description: 'Instagram feed posts and stories only: organic accounts that started following from this post. Null on Instagram Reels and non-Reels video, where Meta does not expose this metric for the media. 0 for other platforms.' }
         igReelsAvgWatchTime: { type: integer, example: 0, description: 'Instagram Reels only: average watch time per play, in milliseconds. 0 for non-Reels media and other platforms.' }
@@ -13077,6 +13077,8 @@ paths:
         Single post lookups may return 202 (sync pending) or 424 (all platforms failed). For follower stats, use /v1/accounts/follower-stats.
 
         LinkedIn personal accounts: Analytics are only available for posts published through Zernio. LinkedIn's API only returns metrics for posts authored by the authenticated user. Organization/company page analytics work for all posts.
+
+        Facebook Page stories: stories on a connected Page, published through Zernio or natively, are collected while they are live and returned like any other post (platformPostUrl points to the story). Their lifetime metrics refresh about hourly, with a final reading shortly before the story expires at 24 hours; after that the values stay at that last reading. Mapping: impressions = story impressions, reach = story reach, views = story media views, likes = story reactions, comments = story replies, shares = story shares. Meta exposes no link-click metric for stories, so clicks is always 0. Metrics for a story published through Zernio are available on its Zernio post ID.
       parameters:
         - name: postId
           in: query
