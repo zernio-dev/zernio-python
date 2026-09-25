@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.80.0"
+  version: "1.81.0"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -16880,6 +16880,15 @@ paths:
         '400': { description: Invalid query parameter }
         '401': { $ref: '#/components/responses/Unauthorized' }
         '404': { $ref: '#/components/responses/NotFound' }
+        '429':
+          description: 'The billing backend is rate limiting reads (code `rate_limited`). Wait `Retry-After` seconds and retry. Before 1.81.0 this surfaced as a 500.'
+          headers:
+            Retry-After:
+              description: Seconds to wait before retrying.
+              schema: { type: integer }
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ErrorResponse' }
   /v1/usage-stats:
     get:
       x-resource-group: "billing"
@@ -16979,6 +16988,15 @@ paths:
         '400': { description: Invalid query parameter }
         '401': { $ref: '#/components/responses/Unauthorized' }
         '404': { $ref: '#/components/responses/NotFound' }
+        '429':
+          description: 'The billing backend is rate limiting reads (code `rate_limited`). Wait `Retry-After` seconds and retry. Before 1.81.0 this surfaced as a 500.'
+          headers:
+            Retry-After:
+              description: Seconds to wait before retrying.
+              schema: { type: integer }
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ErrorResponse' }
   /v1/usage/calls:
     get:
       x-resource-group: "billing"
@@ -21718,7 +21736,10 @@ paths:
                   message: { type: string }
                   redirect_url:
                     type: string
-                    description: Redirect URL if a custom redirect_url was provided
+                    description: 'Redirect URL if a custom redirect_url was provided. On an ads connect it also carries `adsAccountId`.'
+                  adsAccountId:
+                    type: string
+                    description: 'Ads connect only (the redirect_url carries adsConnect=true, as it does after GET /v1/connect/{platform}/ads). The metaads SocialAccount ID to use with the /v1/ads endpoints. `account.accountId` is the Instagram posting account. Absent when the ads account could not be created.'
                   account:
                     type: object
                     properties:
