@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.103.0"
+  version: "1.104.0"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -9791,7 +9791,7 @@ components:
         For `goal: app_promotion`, it is also sent on the campaign only when
         `isSkadnetworkAttribution: true`. Plain Android app installs keep the
         existing campaign payload, with the promoted object only on the ad set.
-        POST /v1/ads/campaigns forwards this object only for that explicit SKAN flag.
+        POST /v1/ads/campaigns forwards this object on Meta only for that explicit SKAN flag.
         Required for goals whose ad-set optimization_goal points at a specific
         event/page/app (without it Meta rejects the ad-set create with
         `error_subcode: 1815430` "Please select a promoted object for your ad set"):
@@ -9811,8 +9811,13 @@ components:
             the App ID of an app registered on the TikTok Ads account (Assets → Events →
             App Events). Install optimization needs the app's MMP tracking configured.
 
+        **OpenAI (ChatGPT) Ads**: `goal: conversions` only, on POST /v1/ads/create and
+        POST /v1/ads/campaigns. `customEventType` picks the conversion event the campaign
+        optimizes for (sent as the campaign's `conversion_event_setting_ids`); every other
+        `promotedObject` field is rejected with a 400. See `customEventType` below.
+
         The remaining `promotedObject.*` fields are Meta-only. Platforms other than
-        Meta and TikTok ignore `promotedObject` entirely.
+        Meta, TikTok and OpenAI ignore `promotedObject` entirely.
       properties:
         pixelId:
           type: string
@@ -9846,6 +9851,17 @@ components:
             Registration), `ON_WEB_DETAIL` (View Content). `ON_WEB_ORDER` is
             deprecated. On rejection the error lists the event types your pixel
             actually tracks. Optional for `goal: conversions`.
+
+            **OpenAI (ChatGPT) Ads:** a conversion event from
+            `GET /v1/accounts/{accountId}/conversion-destinations` (`conversionEvents[]`),
+            given as its `id` (exact), its `eventType` (e.g. `order_created`) or its `name`
+            (e.g. `Purchase`), both case-insensitive. It must be `optimizable` (active and
+            not custom). An unknown, archived or custom event returns a 400 listing the
+            account's optimizable events; a type or name shared by several optimizable
+            events returns a 400 asking for the id. `validateOnly: true` runs the same
+            check and names the resolved event in its `message`. Optional: when omitted,
+            the campaign optimizes for the first optimizable event in OpenAI's own list
+            order, which is the most recently created one.
         customEventStr:
           type: string
           description: |
@@ -54971,7 +54987,7 @@ paths:
                     - For `conversions` on LinkedIn, or to promote an existing post, use POST /v1/ads/boost.
 
                     **OpenAI Ads**
-                    - Only `traffic`, `awareness`, and `conversions` are supported (other goals return 400). Maps to OpenAI's `bidding_type` (clicks, impressions, conversions respectively). `conversions` requires an active conversion event setting on the account; create a tracking tag with `defaultEventType` via the tracking-tags API (`POST /v1/accounts/{accountId}/tracking-tags`), or configure a conversion event in OpenAI Ads Manager, or the request returns 422.
+                    - Only `traffic`, `awareness`, and `conversions` are supported (other goals return 400). Maps to OpenAI's `bidding_type` (clicks, impressions, conversions respectively). `conversions` requires an active conversion event setting on the account; create a tracking tag with `defaultEventType` via the tracking-tags API (`POST /v1/accounts/{accountId}/tracking-tags`), or configure a conversion event in OpenAI Ads Manager, or the request returns 400. Pick the event with `promotedObject.customEventType` (see AdPromotedObject); without it the most recently created optimizable event is used.
                 optimizationGoal: { type: string, description: "Meta, or TikTok with goal video_views (ENGAGED_VIEW, the 6-second default, or ENGAGED_VIEW_FIFTEEN; both bill per view). Meta: Explicit ad-set `optimization_goal` (e.g. `LANDING_PAGE_VIEWS`, `LINK_CLICKS`, `REACH`, `IMPRESSIONS`, `OFFSITE_CONVERSIONS`, `THRUPLAY`, `LEAD_GENERATION`). Overrides the default derived from `goal` (e.g. `traffic` defaults to `LINK_CLICKS`). Forwarded verbatim to Meta, which validates compatibility with the campaign objective and rejects incompatible combinations." }
                 billingEvent: { type: string, description: "Meta only. Explicit ad-set `billing_event`. Defaults to `IMPRESSIONS`. Forwarded verbatim to Meta, which validates compatibility with the optimization goal." }
                 buyingType: { type: string, enum: [AUCTION, RESERVED], default: AUCTION, description: "Meta only. Defaults to AUCTION and is explicitly sent on new campaigns, including validateOnly. Reusing existingCampaignId does not change the campaign. RESERVED = Reach & Frequency: requires `rfPredictionId` (a RESERVED prediction from /v1/ads/rf-predictions + /reserve). Budget, schedule and pricing come from the reservation, so budgetAmount/budgetType are not required and bid fields are ignored. Only the plain single-ad shape (no creatives[], adSetId, existingCampaignId or dynamicCreative)." }
@@ -58899,9 +58915,12 @@ paths:
                           type: array
                           description: |
                             OpenAI Ads only: the conversion event settings wired
-                            to this pixel. A `goal: conversions` create on
-                            POST /v1/ads/create optimizes for the first
-                            `optimizable` one; when none is, it returns 400.
+                            to this pixel. Pass one's `id`, `eventType` or `name`
+                            as `promotedObject.customEventType` on a
+                            `goal: conversions` create (POST /v1/ads/create or
+                            POST /v1/ads/campaigns) to optimize for it. Without
+                            it, the account's most recently created `optimizable`
+                            event is used; when none is, the create returns 400.
                           items:
                             type: object
                             properties:
