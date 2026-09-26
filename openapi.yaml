@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.102.2"
+  version: "1.103.0"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -1116,12 +1116,12 @@ components:
               additionalProperties: false
     AdTracking:
       type: object
-      description: "Meta only. Attaches pixel measurement to the ad regardless of the optimization goal (the \"Website events\" tracking row in Ads Manager). `pixelId` becomes the ad's `tracking_specs` (offsite_conversion + fb_pixel); `urlTags` is stored on the new creative as `url_tags` and retained on the ad for compatibility. Applied on the legacy single-creative shape, every ad of the multi-creative shape, and the attach shape. NOTE: tracking lives on the AD object and is not inherited from the ad set, so pass it on EVERY attach call that should carry the pixel."
+      description: "Meta, plus `urlTags` on ChatGPT (OpenAI). Meta: attaches pixel measurement to the ad regardless of the optimization goal (the \"Website events\" tracking row in Ads Manager). `pixelId` becomes the ad's `tracking_specs` (offsite_conversion + fb_pixel); `urlTags` is stored on the new creative as `url_tags` and retained on the ad for compatibility. Applied on the legacy single-creative shape, every ad of the multi-creative shape, and the attach shape. NOTE: tracking lives on the AD object and is not inherited from the ad set, so pass it on EVERY attach call that should carry the pixel. ChatGPT (OpenAI): `urlTags` becomes the ad's `landing_page_configuration.query_string_template`, which OpenAI appends to `linkUrl` on click."
       properties:
         pixelId: { type: string, description: "Meta Pixel ID to attach for offsite-conversion measurement." }
         urlTags:
           type: array
-          description: "Click-URL params stored on the creative as `url_tags` and returned by GET /v1/ads/{adId}/tracking-tags. App-promotion linkUrl stays byte-identical to promotedObject.objectStoreUrl. Meta dynamic macros ({{ad.id}}, {{campaign.id}}, {{placement}}, ...) are sent through unescaped so Meta expands them; every other character is percent-encoded."
+          description: "Click-URL params. Meta: stored on the creative as `url_tags` and returned by GET /v1/ads/{adId}/tracking-tags. App-promotion linkUrl stays byte-identical to promotedObject.objectStoreUrl. Meta dynamic macros ({{ad.id}}, {{campaign.id}}, {{placement}}, ...) are sent through unescaped so Meta expands them; every other character is percent-encoded. ChatGPT (OpenAI): the same encoding, with OpenAI's macros `{campaign_id}`, `{ad_group_id}`, `{ad_id}` and `{oppref}` (click id) passed through raw. OpenAI expands macros here, not inside `linkUrl`."
           items:
             type: object
             required: [key, value]
@@ -10420,7 +10420,7 @@ components:
         status: { allOf: [{ $ref: '#/components/schemas/AdStatus' }], description: "Delivery status. Derived from the platform `effective_status`, so it inherits ancestor pauses (an ACTIVE ad under a PAUSED campaign reads `paused`). For the ad's own on/off toggle use `configuredStatus`; for the review state use `reviewStatus`." }
         configuredStatus:
           type: [string, "null"]
-          description: "The ad's own on/off toggle as configured on the platform (Meta `configured_status`: ACTIVE / PAUSED), unaffected by ancestor (ad set / campaign) pauses. Distinct from `status`, which is the ancestor-cascaded delivery status. Only present for Meta ads synced after this field was added."
+          description: "The ad's own on/off toggle as configured on the platform (Meta `configured_status`, ChatGPT (OpenAI) ad `status`: ACTIVE / PAUSED, plus ARCHIVED on OpenAI), unaffected by ancestor (ad set / campaign) pauses. Distinct from `status`, which is the ancestor-cascaded delivery status. Only present for Meta and OpenAI ads synced after this field was added."
           example: ACTIVE
         reviewStatus:
           allOf: [{ $ref: '#/components/schemas/AdReviewStatus' }]
@@ -10748,7 +10748,7 @@ components:
             the Campaign, plus ad-level PENDING_REVIEW rollup.
         platformCampaignStatus:
           type: [string, "null"]
-          description: "Raw platform-level campaign status (Meta `effective_status`: ACTIVE, PAUSED, DELETED, ARCHIVED, IN_PROCESS, WITH_ISSUES). Distinct from per-ad `platformStatus`."
+          description: "Raw platform-level campaign status (Meta `effective_status`: ACTIVE, PAUSED, DELETED, ARCHIVED, IN_PROCESS, WITH_ISSUES; ChatGPT (OpenAI): the campaign's own switch, active / paused / archived, independent of the delivery `status`). Distinct from per-ad `platformStatus`."
         campaignIssuesInfo:
           type: [array, "null"]
           description: "Platform-reported campaign issues (Meta `issues_info[]`). Populated only when the platform has delivery issues to report; contains the specific error codes and messages."
@@ -10831,7 +10831,7 @@ components:
           description: "Platform-side review state of the campaign. See AdTreeCampaign.reviewStatus for the full description."
         platformCampaignStatus:
           type: [string, "null"]
-          description: "Raw platform-level campaign status (Meta `effective_status`)."
+          description: "Raw platform-level campaign status (Meta `effective_status`; ChatGPT (OpenAI): the campaign's own switch, active / paused / archived)."
         campaignIssuesInfo:
           type: [array, "null"]
           description: "Platform-reported campaign issues (Meta `issues_info[]`)."
@@ -46847,8 +46847,9 @@ paths:
         for ABO (each ad set carries its own budget), and `specialAdCategories` is Meta-only
         (400 elsewhere); `bidStrategy` is Meta and Google (400 elsewhere), and Google also
         accepts `portfolioBidStrategyId` instead. Google, X and OpenAI require a budget
-        (422 without one; OpenAI accepts only `budgetType: lifetime`, Google only
-        `budgetType: daily`). LinkedIn creates the
+        (422 without one; OpenAI accepts daily or lifetime, Google only
+        `budgetType: daily`). On OpenAI `goal` sets the campaign objective, and
+        `conversions` needs an active standard conversion event on the account. LinkedIn creates the
         campaign GROUP (our campaign level) and rejects a budget, which lives on the
         campaign (ad set) level there; it comes back `status: DRAFT`. TikTok campaigns are
         created without a status and report `ENABLE`. Created `PAUSED` unless
@@ -46894,7 +46895,7 @@ paths:
                   description: 'Every platform buys at auction by default, so this only needs sending on Meta, and only to choose RESERVED. `AUCTION` is accepted on every platform and changes nothing. `RESERVED` (Reach & Frequency) is Meta-only and is rejected with a 400 elsewhere. SKAdNetwork app promotion requires AUCTION.'
                 validateOnly:
                   type: boolean
-                  description: 'Meta only. Runs campaign validation without creating or persisting a campaign; Idempotency-Key storage is bypassed. Returns HTTP 200 with validateOnly true and status VALIDATED. `true` on any other platform returns 501 `feature_not_available` (same as POST /v1/ads/create); `false` is ignored.'
+                  description: 'Meta and ChatGPT (OpenAI). Runs campaign validation without creating or persisting a campaign; Idempotency-Key storage is bypassed. Returns HTTP 200 with validateOnly true and status VALIDATED. OpenAI has no dry-run, so there Zernio checks the budget, goal and conversion event itself. `true` on any other platform returns 501 `feature_not_available` (same as POST /v1/ads/create); `false` is ignored.'
                 specialAdCategories:
                   type: array
                   items: { type: string, enum: [HOUSING, EMPLOYMENT, CREDIT, ISSUES_ELECTIONS_POLITICS, FINANCIAL_PRODUCTS_SERVICES, ONLINE_GAMBLING_AND_GAMING] }
@@ -47303,7 +47304,8 @@ paths:
 
         OpenAI Ads campaigns carry exactly one spend cap: `budget.type` daily or lifetime
         replaces whichever cap the campaign had, with a minimum of 1 in the ad account's
-        currency (422 below it).
+        currency (422 below it). Lifetime can switch to daily, but OpenAI never switches a
+        daily cap back to lifetime (422).
 
         `accountId` forwards the update straight to Meta for a campaign with zero ads,
         which would otherwise 404; the response then carries `updated: 0`.
@@ -48831,7 +48833,7 @@ paths:
                   type: object
                   properties:
                     amount: { type: number, description: "Minimum varies by platform: TikTok=$20, Pinterest=$5, others=$1" }
-                    type: { type: string, enum: [daily, lifetime], description: "OpenAI Ads accepts both and sets the campaign's single spend cap, replacing the previous daily or lifetime cap." }
+                    type: { type: string, enum: [daily, lifetime], description: "OpenAI Ads accepts both and sets the campaign's single spend cap, replacing the previous daily or lifetime cap. A daily cap cannot go back to lifetime (422)." }
                 targeting:
                   type: object
                   description: |
@@ -54990,9 +54992,9 @@ paths:
                   description: "Meta only. Meta's \"Ad includes media created or edited with AI\" disclosure, the checkbox in Ads Manager, stored on the creative as `generative_asset_spec.transparency_metadata.self_disclosure`. OPT_IN checks it, OPT_OUT explicitly declares no AI media, omitted leaves Meta's default. Applied to each new creative, including standalone, creatives[] and attach shapes, and preserved when a creative is rebuilt. This sets the disclosure on the ad; whether and when the viewer-facing label renders is Meta's decision."
                 validateOnly:
                   type: boolean
-                  description: 'Google Performance Max validates the complete atomic campaign and asset group with no resource creation or local persistence. Google validation still downloads image URLs and consumes quota. On Meta, validates the complete inline campaign, ad set, creative and ad with execution_options validate_only. Nothing is uploaded or created, and validation bypasses Idempotency-Key storage. Supports a single image, all-image placementAssets with per-rule copy, existing video.id or existingCreativeId; other media pools, new video uploads, creatives[], adSetId and RESERVED buying return 400. Placement validation uses existing Instagram identities only. Existing campaign or creative nodes are marked skipped. Success returns 200 with per-node results; Meta rejection returns an error. Any other platform, or a Google campaignType other than pmax, returns 501 `feature_not_available`.'
-                budgetAmount: { type: number, description: "Budget in WHOLE currency units (USD: 50 = $50.00), NOT cents. Meta's own Marketing API takes this same number in minor units, so it is an easy and expensive mix-up. Required on legacy, multi-creative and Performance Max shapes. Inherited on attach. OpenAI Ads requires a $1 minimum (its budget is lifetime-only, see budgetType)." }
-                budgetType: { type: string, enum: [daily, lifetime], description: "Required on legacy, multi-creative and Performance Max shapes. Inherited on attach. OpenAI Ads creation accepts lifetime only; sending daily returns 422 (daily caps can be set afterwards with PUT /v1/ads/campaigns/{campaignId}). OpenAI Ads lifetime budgets require `endDate` to give the lifetime cap a spend window." }
+                  description: 'Google Performance Max validates the complete atomic campaign and asset group with no resource creation or local persistence. Google validation still downloads image URLs and consumes quota. On Meta, validates the complete inline campaign, ad set, creative and ad with execution_options validate_only. Nothing is uploaded or created, and validation bypasses Idempotency-Key storage. Supports a single image, all-image placementAssets with per-rule copy, existing video.id or existingCreativeId; other media pools, new video uploads, creatives[], adSetId and RESERVED buying return 400. Placement validation uses existing Instagram identities only. Existing campaign or creative nodes are marked skipped. Success returns 200 with per-node results; Meta rejection returns an error. ChatGPT (OpenAI) has no platform dry-run: Zernio runs every check it knows (creative lengths, budget, bid strategy, targeting) plus live lookups of the conversion event and target countries, and uploads or creates nothing. OpenAI''s own write-time checks (image fetch, currency-specific minimums, ad review) still run only on a real create. Any other platform, or a Google campaignType other than pmax, returns 501 `feature_not_available`.'
+                budgetAmount: { type: number, description: "Budget in WHOLE currency units (USD: 50 = $50.00), NOT cents. Meta's own Marketing API takes this same number in minor units, so it is an easy and expensive mix-up. Required on legacy, multi-creative and Performance Max shapes. Inherited on attach. OpenAI Ads: in the ad account currency, minimum 1; OpenAI can require a higher daily minimum for some currencies and names it in the error." }
+                budgetType: { type: string, enum: [daily, lifetime], description: "Required on legacy, multi-creative and Performance Max shapes. Inherited on attach. OpenAI Ads accepts both as the campaign's single spend cap. A lifetime cap can later switch to daily with PUT /v1/ads/campaigns/{campaignId}, but OpenAI never switches a daily cap back to lifetime (422). Automatic bidding (Maximize Results) needs a daily budget." }
                 status:
                   type: string
                   enum: [ACTIVE, PAUSED]
@@ -55808,7 +55810,7 @@ paths:
 
                     Meta bid strategy applied to the ad set.
 
-                    OpenAI Ads: required on every ad group via this flat field, the only channel it supports (`platformSpecificData` is Meta/LinkedIn-only and returns 400 for OpenAI). No auto-bid option exists; send `LOWEST_COST_WITH_BID_CAP` or `COST_CAP` together with `bidAmount`, omitting it returns 400.
+                    OpenAI Ads: sent via this flat field, the only channel it supports (`platformSpecificData` is Meta/LinkedIn-only and returns 400 for OpenAI). `LOWEST_COST_WITH_BID_CAP` or `COST_CAP` with `bidAmount` sets a fixed bid (`fixed_bid`, the CPA bid on `conversions`). Omitted or `LOWEST_COST_WITHOUT_CAP` bids automatically with OpenAI's Maximize Results (`maximize_clicks` for `traffic`, `maximize_conversions` for `conversions`), which needs `budgetType: daily`; on a lifetime budget or the `awareness` goal it returns 400.
 
                     Google (not deprecated there, this shared flat field is Google's only shape): applied to the campaign this call creates. On Google: LOWEST_COST_WITHOUT_CAP = Maximize Conversions, COST_CAP + bidAmount = Target CPA, LOWEST_COST_WITH_MIN_ROAS + roasAverageFloor = Target ROAS, LOWEST_COST_WITH_BID_CAP + bidAmount = Maximize Clicks with a CPC ceiling; portfolioBidStrategyId attaches a portfolio strategy instead. Omitted, the campaign falls back to a goal-based default.
                 bidAmount:
@@ -58893,6 +58895,22 @@ paths:
                             Set by adapters whose destinations are scoped to a
                             specific ad account (LinkedIn). Pass back on
                             subsequent CRUD calls.
+                        conversionEvents:
+                          type: array
+                          description: |
+                            OpenAI Ads only: the conversion event settings wired
+                            to this pixel. A `goal: conversions` create on
+                            POST /v1/ads/create optimizes for the first
+                            `optimizable` one; when none is, it returns 400.
+                          items:
+                            type: object
+                            properties:
+                              id: { type: string }
+                              name: { type: string }
+                              eventType: { type: [string, "null"], description: "OpenAI event type, e.g. order_created, lead_created, or custom." }
+                              customEventName: { type: [string, "null"] }
+                              archived: { type: boolean }
+                              optimizable: { type: boolean, description: "Active and standard (not custom). Only these can be a conversions campaign's optimization event." }
         '400':
           description: Account's platform is not supported by the Conversions API.
         '401': { $ref: '#/components/responses/Unauthorized' }
