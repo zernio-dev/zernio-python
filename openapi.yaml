@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.96.0"
+  version: "1.96.1"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -8624,11 +8624,11 @@ components:
         isExternal: { type: boolean }
         syncStatus: { type: string, enum: [synced, pending, partial, unavailable], description: 'Overall sync state across all platforms' }
         message: { type: [string, "null"], description: 'Human-readable status message for pending, partial, or failed states' }
-        thumbnailUrl: { type: [string, "null"], format: uri }
+        thumbnailUrl: { type: [string, "null"], format: uri, description: "Cover image URL. Facebook and Instagram covers whose Meta CDN link expired are re-read from Meta and served from Zernio storage, so that URL does not expire and can be cached." }
         mediaType: { type: [string, "null"], enum: [image, video, carousel, text] }
         mediaItems:
           type: array
-          description: All media items for this post. Carousel posts contain one entry per slide.
+          description: "All media items for this post. Carousel posts contain one entry per slide. Facebook and Instagram images and video covers whose Meta CDN links expired are re-read and served from Zernio storage (non-expiring). Facebook and Instagram video file URLs, and LinkedIn media URLs, stay the platform's signed links and are refreshed on read once they lapse."
           items:
             type: object
             properties:
@@ -8699,11 +8699,11 @@ components:
                   video created by an uploaded-asset (non-Spark) TikTok ad is posted to the profile
                   with a fresh organic id and cannot be detected: those still report as false.
               profileId: { type: [string, "null"] }
-              thumbnailUrl: { type: string, format: uri }
+              thumbnailUrl: { type: string, format: uri, description: "Cover image URL. Facebook and Instagram covers whose Meta CDN link expired are re-read from Meta and served from Zernio storage, so that URL does not expire and can be cached." }
               mediaType: { type: string, enum: [image, video, gif, document, carousel, text] }
               mediaItems:
                 type: array
-                description: All media items for this post. Carousel posts contain one entry per slide.
+                description: "All media items for this post. Carousel posts contain one entry per slide. Facebook and Instagram images and video covers whose Meta CDN links expired are re-read and served from Zernio storage (non-expiring). Facebook and Instagram video file URLs, and LinkedIn media URLs, stay the platform's signed links and are refreshed on read once they lapse."
                 items:
                   type: object
                   properties:
