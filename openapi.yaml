@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.98.0"
+  version: "1.98.1"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -46873,7 +46873,7 @@ paths:
                   description: 'Every platform buys at auction by default, so this only needs sending on Meta, and only to choose RESERVED. `AUCTION` is accepted on every platform and changes nothing. `RESERVED` (Reach & Frequency) is Meta-only and is rejected with a 400 elsewhere. SKAdNetwork app promotion requires AUCTION.'
                 validateOnly:
                   type: boolean
-                  description: 'Meta only. Runs campaign validation without creating or persisting a campaign; Idempotency-Key storage is bypassed. Returns HTTP 200 with validateOnly true and status VALIDATED.'
+                  description: 'Meta only. Runs campaign validation without creating or persisting a campaign; Idempotency-Key storage is bypassed. Returns HTTP 200 with validateOnly true and status VALIDATED. `true` on any other platform returns 501 `feature_not_available` (same as POST /v1/ads/create); `false` is ignored.'
                 specialAdCategories:
                   type: array
                   items: { type: string, enum: [HOUSING, EMPLOYMENT, CREDIT, ISSUES_ELECTIONS_POLITICS, FINANCIAL_PRODUCTS_SERVICES, ONLINE_GAMBLING_AND_GAMING] }
@@ -46929,7 +46929,7 @@ paths:
                   status: { type: string, enum: [ACTIVE, PAUSED] }
         '400': { description: "Invalid input, or Meta rejected the create" }
         '401': { $ref: '#/components/responses/Unauthorized' }
-        '501': { description: Only supported on Meta (facebook/instagram) }
+        '501': { description: '`validateOnly: true` outside Meta, or campaign-only creation on a platform that does not support it. Carries code `feature_not_available`.' }
 
   /v1/ads/campaigns/{campaignId}/status:
     put:
@@ -54961,7 +54961,7 @@ paths:
                   description: "Meta only. Meta's \"Ad includes media created or edited with AI\" disclosure, the checkbox in Ads Manager, stored on the creative as `generative_asset_spec.transparency_metadata.self_disclosure`. OPT_IN checks it, OPT_OUT explicitly declares no AI media, omitted leaves Meta's default. Applied to each new creative, including standalone, creatives[] and attach shapes, and preserved when a creative is rebuilt. This sets the disclosure on the ad; whether and when the viewer-facing label renders is Meta's decision."
                 validateOnly:
                   type: boolean
-                  description: 'Google Performance Max validates the complete atomic campaign and asset group with no resource creation or local persistence. Google validation still downloads image URLs and consumes quota. On Meta, validates the complete inline campaign, ad set, creative and ad with execution_options validate_only. Nothing is uploaded or created, and validation bypasses Idempotency-Key storage. Supports a single image, all-image placementAssets with per-rule copy, existing video.id or existingCreativeId; other media pools, new video uploads, creatives[], adSetId and RESERVED buying return 400. Placement validation uses existing Instagram identities only. Existing campaign or creative nodes are marked skipped. Success returns 200 with per-node results; Meta rejection returns an error.'
+                  description: 'Google Performance Max validates the complete atomic campaign and asset group with no resource creation or local persistence. Google validation still downloads image URLs and consumes quota. On Meta, validates the complete inline campaign, ad set, creative and ad with execution_options validate_only. Nothing is uploaded or created, and validation bypasses Idempotency-Key storage. Supports a single image, all-image placementAssets with per-rule copy, existing video.id or existingCreativeId; other media pools, new video uploads, creatives[], adSetId and RESERVED buying return 400. Placement validation uses existing Instagram identities only. Existing campaign or creative nodes are marked skipped. Success returns 200 with per-node results; Meta rejection returns an error. Any other platform, or a Google campaignType other than pmax, returns 501 `feature_not_available`.'
                 budgetAmount: { type: number, description: "Budget in WHOLE currency units (USD: 50 = $50.00), NOT cents. Meta's own Marketing API takes this same number in minor units, so it is an easy and expensive mix-up. Required on legacy, multi-creative and Performance Max shapes. Inherited on attach. OpenAI Ads requires a $1 minimum (its budget is lifetime-only, see budgetType)." }
                 budgetType: { type: string, enum: [daily, lifetime], description: "Required on legacy, multi-creative and Performance Max shapes. Inherited on attach. OpenAI Ads creation accepts lifetime only; sending daily returns 422 (daily caps can be set afterwards with PUT /v1/ads/campaigns/{campaignId}). OpenAI Ads lifetime budgets require `endDate` to give the lifetime cap a spend window." }
                 status:
@@ -56086,8 +56086,9 @@ paths:
           description: Platform ads connection required (TikTok Ads, X Ads) or missing linked account
         '501':
           description: |
-            The requested option is not supported on this platform: `validateOnly` outside Meta,
-            or a shape the adapter does not implement. Carries code `feature_not_available`.
+            The requested option is not supported on this platform: `validateOnly` outside Meta
+            and Google Performance Max, or a shape the adapter does not implement. Carries code
+            `feature_not_available`.
         '502':
           description: |
             The platform rejected the request, or failed to produce media the ad
