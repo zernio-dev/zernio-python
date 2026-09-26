@@ -9,7 +9,7 @@ class RecordingClient:
     def __init__(self) -> None:
         self.calls: list[tuple[str, Any]] = []
 
-    def _post(self, path: str, data: Any = None) -> dict[str, Any]:
+    def _post(self, path: str, data: Any = None, headers: dict[str, str] | None = None) -> dict[str, Any]:
         self.calls.append((path, data))
         return {}
 
