@@ -81,6 +81,7 @@ class MessagingAdsResource:
         ad_account_id: str,
         name: str,
         *,
+        idempotency_key: str | None = None,
         creative_features: Any | None = None,
         tracking: Any | None = None,
         campaign_name: str | None = None,
@@ -178,7 +179,10 @@ class MessagingAdsResource:
             destination=destination,
             destinations=destinations,
         )
-        return self._client._post("/v1/ads/messaging", data=payload)
+        headers: dict[str, str] = {}
+        if idempotency_key is not None:
+            headers["Idempotency-Key"] = idempotency_key
+        return self._client._post("/v1/ads/messaging", data=payload, headers=headers)
 
     def create_call_ad(
         self,
@@ -188,6 +192,7 @@ class MessagingAdsResource:
         phone_number: str,
         link_url: str,
         *,
+        idempotency_key: str | None = None,
         creative_features: Any | None = None,
         tracking: Any | None = None,
         campaign_name: str | None = None,
@@ -283,7 +288,10 @@ class MessagingAdsResource:
             phone_number=phone_number,
             link_url=link_url,
         )
-        return self._client._post("/v1/ads/call", data=payload)
+        headers: dict[str, str] = {}
+        if idempotency_key is not None:
+            headers["Idempotency-Key"] = idempotency_key
+        return self._client._post("/v1/ads/call", data=payload, headers=headers)
 
     def create_ctwa_ad(
         self,
@@ -291,6 +299,7 @@ class MessagingAdsResource:
         ad_account_id: str,
         name: str,
         *,
+        idempotency_key: str | None = None,
         creative_features: Any | None = None,
         tracking: Any | None = None,
         campaign_name: str | None = None,
@@ -384,7 +393,10 @@ class MessagingAdsResource:
             regional_regulated_categories=regional_regulated_categories,
             regional_regulation_identities=regional_regulation_identities,
         )
-        return self._client._post("/v1/ads/ctwa", data=payload)
+        headers: dict[str, str] = {}
+        if idempotency_key is not None:
+            headers["Idempotency-Key"] = idempotency_key
+        return self._client._post("/v1/ads/ctwa", data=payload, headers=headers)
 
     async def acreate_messaging_ad(
         self,
@@ -392,6 +404,7 @@ class MessagingAdsResource:
         ad_account_id: str,
         name: str,
         *,
+        idempotency_key: str | None = None,
         creative_features: Any | None = None,
         tracking: Any | None = None,
         campaign_name: str | None = None,
@@ -489,7 +502,12 @@ class MessagingAdsResource:
             destination=destination,
             destinations=destinations,
         )
-        return await self._client._apost("/v1/ads/messaging", data=payload)
+        headers: dict[str, str] = {}
+        if idempotency_key is not None:
+            headers["Idempotency-Key"] = idempotency_key
+        return await self._client._apost(
+            "/v1/ads/messaging", data=payload, headers=headers
+        )
 
     async def acreate_call_ad(
         self,
@@ -499,6 +517,7 @@ class MessagingAdsResource:
         phone_number: str,
         link_url: str,
         *,
+        idempotency_key: str | None = None,
         creative_features: Any | None = None,
         tracking: Any | None = None,
         campaign_name: str | None = None,
@@ -594,7 +613,10 @@ class MessagingAdsResource:
             phone_number=phone_number,
             link_url=link_url,
         )
-        return await self._client._apost("/v1/ads/call", data=payload)
+        headers: dict[str, str] = {}
+        if idempotency_key is not None:
+            headers["Idempotency-Key"] = idempotency_key
+        return await self._client._apost("/v1/ads/call", data=payload, headers=headers)
 
     async def acreate_ctwa_ad(
         self,
@@ -602,6 +624,7 @@ class MessagingAdsResource:
         ad_account_id: str,
         name: str,
         *,
+        idempotency_key: str | None = None,
         creative_features: Any | None = None,
         tracking: Any | None = None,
         campaign_name: str | None = None,
@@ -695,4 +718,7 @@ class MessagingAdsResource:
             regional_regulated_categories=regional_regulated_categories,
             regional_regulation_identities=regional_regulation_identities,
         )
-        return await self._client._apost("/v1/ads/ctwa", data=payload)
+        headers: dict[str, str] = {}
+        if idempotency_key is not None:
+            headers["Idempotency-Key"] = idempotency_key
+        return await self._client._apost("/v1/ads/ctwa", data=payload, headers=headers)

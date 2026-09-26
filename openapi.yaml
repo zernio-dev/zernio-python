@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.98.2"
+  version: "1.102.0"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -185,7 +185,7 @@ x-documentation:
     - `message.delivered` - An outgoing message was delivered (WhatsApp, Messenger, SMS)
     - `message.read` - An outgoing message was read by the recipient (WhatsApp, Messenger, Instagram)
     - `message.failed` - An outgoing message failed delivery (WhatsApp, SMS; on SMS the carrier's error code rides in `error`)
-    - `reaction.received` - A participant added or removed an emoji reaction on a message (WhatsApp, Telegram, Slack, Instagram, Facebook Messenger)
+    - `reaction.received` - A participant added or removed an emoji reaction on a message (WhatsApp, Telegram, Slack, Instagram, Facebook Messenger, TikTok)
     - `referral.received` - Someone opened an existing Instagram/Messenger thread through an ig.me/m.me `ref` link or a returning Messenger ad click; carries Meta's referral object (a referral that rides an inbound message arrives on `message.received` under `metadata.referral` instead)
     - `comment.received` - New comment received on a post (Instagram, Facebook, Threads, YouTube, LinkedIn, Bluesky, Reddit, TikTok). X/Twitter does NOT fire this event
     - `review.new` - New review posted on a connected account (Google Business Profile)
@@ -259,8 +259,8 @@ tags:
       Usage and metering. `GET /v1/usage` is dual-mode: bare calls return the
       plan / quota snapshot (back-compat, same as `/v1/usage-stats`); calls
       with `range` / `granularity` params return usage METERING: billed spend
-      (USD) by product family (accounts, numbers, calls, sms, dlc, xApi,
-      credits) over any window, from the usage-based invoice breakdown (also served
+      (USD) by product family (accounts, numbers, imessage, calls, sms,
+      messages, verify, dlc, xApi, ads, credits, other) over any window, from the usage-based invoice breakdown (also served
       at `GET /v1/usage/daily`). The `/v1/usage/<domain>` spokes (calls, sms)
       meter per-domain consumption volumes over a window. `GET /v1/billing` is
       the billing statement (balance, credits, caps, payment status).
@@ -3983,7 +3983,7 @@ components:
               description: Meta's lead creation time (ISO 8601)
         account:
           type: object
-          required: [id, platform]
+          required: [id, platform, profileId]
           properties:
             id:
               type: string
@@ -3994,6 +3994,9 @@ components:
             platform:
               type: string
               enum: [facebook]
+            profileId:
+              type: [string, "null"]
+              description: Profile ID of the account that received the lead. Null when the lead has no profile on record.
         timestamp:
           type: string
           format: date-time
@@ -4384,7 +4387,7 @@ components:
     # ────────────────────────────────────────────────────────────────────────
     WebhookPayloadReaction:
       type: object
-      description: 'Webhook payload for reaction received events (WhatsApp, Telegram, Slack, Instagram, Facebook Messenger)'
+      description: 'Webhook payload for reaction received events (WhatsApp, Telegram, Slack, Instagram, Facebook Messenger, TikTok)'
       required: [id, event, reaction, conversation, account, timestamp]
       properties:
         id:
@@ -4401,7 +4404,8 @@ components:
               type: string
               description: |
                 The emoji reacted with. May be an empty string when `action` is
-                `removed` on WhatsApp (Meta does not report which emoji was removed).
+                `removed` on WhatsApp (Meta does not report which emoji was removed),
+                and on TikTok for an AI emoji reaction (TikTok sends no unicode for it).
             action:
               type: string
               enum: [added, removed]
@@ -4414,7 +4418,7 @@ components:
             sender:
               type: object
               required: [id]
-              description: 'Whoever added or removed the reaction. Usually the participant, but on WhatsApp, Slack, Instagram and Facebook Messenger it is the business own platform id when the business reacted from the native app or via the reactions API: compare it with conversation.participantId.'
+              description: 'Whoever added or removed the reaction. Usually the participant, but on WhatsApp, Slack, Instagram, Facebook Messenger and TikTok it is the business own platform id when the business reacted from the native app or via the reactions API: compare it with conversation.participantId.'
               properties:
                 id:
                   type: string
@@ -8221,10 +8225,14 @@ components:
               date: { type: string, format: date }
               accounts: { type: number }
               numbers: { type: number }
+              imessage: { type: number, description: iMessage sender fees. }
               calls: { type: number }
               sms: { type: number }
+              messages: { type: number, description: Managed outbound message fees. }
+              verify: { type: number, description: Verify (per verification) fees. }
               dlc: { type: number, description: 10DLC registration (brand + campaign) fees. }
               xApi: { type: number }
+              ads: { type: number, description: Managed ads fees. }
               credits: { type: number, description: Applied credits/discounts (negative). }
               other: { type: number }
         totals:
@@ -8233,10 +8241,14 @@ components:
           properties:
             accounts: { type: number }
             numbers: { type: number }
+            imessage: { type: number }
             calls: { type: number }
             sms: { type: number }
+            messages: { type: number }
+            verify: { type: number }
             dlc: { type: number }
             xApi: { type: number }
+            ads: { type: number }
             credits: { type: number }
             other: { type: number }
             total: { type: number }
@@ -8249,7 +8261,7 @@ components:
               name: { type: string }
               product:
                 type: string
-                enum: [accounts, numbers, calls, sms, dlc, xApi, credits, other]
+                enum: [accounts, numbers, imessage, calls, sms, messages, verify, dlc, xApi, ads, credits, other]
               totalUsd: { type: number }
               quantity: { type: number }
         peaks:
@@ -8341,11 +8353,14 @@ components:
           properties:
             accounts: { type: number }
             numbers: { type: number }
+            imessage: { type: number }
             calls: { type: number }
             sms: { type: number }
+            messages: { type: number }
             verify: { type: number }
             dlc: { type: number }
             xApi: { type: number }
+            ads: { type: number }
             credits: { type: number }
             other: { type: number }
         totalUsd: { type: number }
@@ -12150,9 +12165,11 @@ webhooks:
       summary: Reaction received event
       description: |
         Fired when a participant adds or removes an emoji reaction on a message.
-        Supported on WhatsApp, Telegram, Slack, Instagram and Facebook Messenger.
-        Distinct from message.received so a reaction (e.g. a thumbs-up) is not
-        mistaken for an inbound message.
+        Supported on WhatsApp, Telegram, Slack, Instagram, Facebook Messenger and
+        TikTok. Distinct from message.received so a reaction (e.g. a thumbs-up) is
+        not mistaken for an inbound message. On TikTok a like or emoji reaction on
+        a DM arrives only as this event (never as an empty message.received), with
+        `reaction.platformMessageId` set to the TikTok id of the liked message.
         The `reaction.action` field is `added` or `removed`. On WhatsApp and Meta
         removals the platform does not report which emoji was removed, so
         `reaction.emoji` may be an empty string.
@@ -17026,8 +17043,9 @@ paths:
         working unchanged.
 
         **With `range`, `granularity`, `from`, or `to`:** usage METERING:
-        billed spend (USD) by product family (`accounts`, `numbers`, `calls`,
-        `sms`, `dlc`, `xApi`, `credits`, `other`) over the window, at
+        billed spend (USD) by product family (`accounts`, `numbers`,
+        `imessage`, `calls`, `sms`, `messages`, `verify`, `dlc`, `xApi`, `ads`,
+        `credits`, `other`) over the window, at
         `day` / `month` / `total` granularity, from the usage-based invoice
         breakdown (the CHARGE view, which always reconciles with what gets billed).
         Also served at `GET /v1/usage/daily`. Usage-based accounts only:
@@ -19696,7 +19714,7 @@ paths:
           description: Filter by platform
           schema:
             type: string
-            enum: [facebook, instagram, linkedin, twitter, tiktok, youtube, threads, pinterest, reddit, bluesky, googlebusiness, telegram, snapchat, discord, slack, whatsapp]
+            enum: [facebook, instagram, linkedin, twitter, tiktok, youtube, threads, pinterest, reddit, bluesky, googlebusiness, telegram, snapchat, discord, slack, whatsapp, shopify, wordpress, linkedinads, metaads, pinterestads, tiktokads, xads, googleads, openaiads]
         - name: status
           in: query
           description: Filter by health status
@@ -19734,7 +19752,7 @@ paths:
                         canFetchAnalytics: { type: boolean }
                         tokenValid: { type: boolean }
                         tokenExpiresAt: { type: string, format: date-time }
-                        needsReconnect: { type: boolean }
+                        needsReconnect: { type: boolean, description: 'True when the token is expired or revoked, permissions are missing, the account is inactive, or the platform rejected its stored credentials (the same flag the account listing reports as needsReconnection).' }
                         issues: { type: array, items: { type: string } }
                         messagingRestriction:
                           type: [object, "null"]
@@ -33207,6 +33225,9 @@ paths:
         is the TikTok video id, each top-level comment carries up to three inline replies, and
         `commentId` pages the full reply list of one comment. Developer-app TikTok accounts
         return 400 with code `PLATFORM_LIMITATION`.
+
+        On X (Twitter), when `postId` is itself a reply rather than the thread's root post,
+        only replies to that specific post are returned, not the whole conversation thread.
 
         Hidden comments: Facebook Pages and Instagram accounts connected through Instagram Login
         return them with `isHidden: true`. Instagram accounts connected through Facebook Login do
@@ -59694,8 +59715,12 @@ paths:
         a number already paired with the Page (WhatsApp destination only).
         `accountId` is a Facebook, Instagram or Meta ads (business login) connection;
         `pageId` picks the Page when that connection was granted several.
+
+        **Idempotency:** this endpoint is not idempotent at the platform level (a blind retry creates a second campaign/ad set/ad). Send an `Idempotency-Key` header to make retries safe: the first request with a given key creates the ad and we store the response; a retry with the same key replays that exact response (with `Idempotent-Replayed: true`) instead of creating duplicates. Reusing a key with a different body returns 422; a key whose first request is still in flight returns 409 (retry after a short backoff). Keys are scoped to your credential and expire after 24h.
       security:
         - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/IdempotencyKeyHeader'
       requestBody:
         required: true
         content:
@@ -59768,8 +59793,12 @@ paths:
         via a tel: link. The ad set is destination_type PHONE_CALL optimizing QUALITY_CALL
         and the campaign objective defaults to OUTCOME_LEADS.
         Supports the same single-creative and multi-creative shapes as CTWA.
+
+        **Idempotency:** this endpoint is not idempotent at the platform level (a blind retry creates a second campaign/ad set/ad). Send an `Idempotency-Key` header to make retries safe: the first request with a given key creates the ad and we store the response; a retry with the same key replays that exact response (with `Idempotent-Replayed: true`) instead of creating duplicates. Reusing a key with a different body returns 422; a key whose first request is still in flight returns 409 (retry after a short backoff). Keys are scoped to your credential and expire after 24h.
       security:
         - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/IdempotencyKeyHeader'
       requestBody:
         required: true
         content:
@@ -59841,8 +59870,12 @@ paths:
         `existingPostId`) or `objectStoryId`, either per creative or at the top level. Omit fresh
         media and copy for that creative. Optional `whatsappPhoneNumber` selects
         a number already paired with the Page (WhatsApp destination only).
+
+        **Idempotency:** this endpoint is not idempotent at the platform level (a blind retry creates a second campaign/ad set/ad). Send an `Idempotency-Key` header to make retries safe: the first request with a given key creates the ad and we store the response; a retry with the same key replays that exact response (with `Idempotent-Replayed: true`) instead of creating duplicates. Reusing a key with a different body returns 422; a key whose first request is still in flight returns 409 (retry after a short backoff). Keys are scoped to your credential and expire after 24h.
       security:
         - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/IdempotencyKeyHeader'
       requestBody:
         required: true
         content:
