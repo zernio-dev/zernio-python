@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.102.0"
+  version: "1.102.1"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -46515,7 +46515,7 @@ paths:
                           description: "Null for WIPED_OUT leads (contact erased by Google)."
                           properties:
                             consumerName: { type: [string, "null"] }
-                            email: { type: [string, "null"] }
+                            email: { type: [string, "null"], description: "Always null: Google Ads API v25 stopped returning the consumer email on Local Services leads." }
                             phoneNumber: { type: [string, "null"] }
                         status: { type: [string, "null"] }
                         createdTime: { type: [string, "null"], description: "Google datetime in the customer's timezone (YYYY-MM-DD HH:MM:SS)." }
