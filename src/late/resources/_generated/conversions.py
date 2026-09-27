@@ -153,6 +153,132 @@ class ConversionsResource:
         )
         return self._client._post("/v1/ads/conversions/actions", data=payload)
 
+    def list_ad_conversion_goals(
+        self,
+        account_id: str,
+        *,
+        ad_account_id: str | None = None,
+        customer_id: str | None = None,
+    ) -> dict[str, Any]:
+        """List account conversion goals"""
+        params = self._build_params(
+            account_id=account_id,
+            ad_account_id=ad_account_id,
+            customer_id=customer_id,
+        )
+        return self._client._get("/v1/ads/conversions/goals", params=params)
+
+    def update_ad_conversion_goals(
+        self,
+        account_id: str,
+        goals: list[Any],
+        *,
+        ad_account_id: str | None = None,
+        customer_id: str | None = None,
+    ) -> dict[str, Any]:
+        """Update account conversion goals"""
+        payload = self._build_payload(
+            account_id=account_id,
+            ad_account_id=ad_account_id,
+            customer_id=customer_id,
+            goals=goals,
+        )
+        return self._client._patch("/v1/ads/conversions/goals", data=payload)
+
+    def update_conversion_action(
+        self,
+        action_id: str,
+        account_id: str,
+        primary_for_goal: bool,
+        *,
+        ad_account_id: str | None = None,
+        customer_id: str | None = None,
+    ) -> dict[str, Any]:
+        """Set a conversion action primary or secondary"""
+        payload = self._build_payload(
+            account_id=account_id,
+            ad_account_id=ad_account_id,
+            customer_id=customer_id,
+            primary_for_goal=primary_for_goal,
+        )
+        return self._client._patch(
+            f"/v1/ads/conversions/actions/{action_id}", data=payload
+        )
+
+    def list_custom_conversion_goals(
+        self,
+        account_id: str,
+        *,
+        ad_account_id: str | None = None,
+        customer_id: str | None = None,
+    ) -> dict[str, Any]:
+        """List custom conversion goals"""
+        params = self._build_params(
+            account_id=account_id,
+            ad_account_id=ad_account_id,
+            customer_id=customer_id,
+        )
+        return self._client._get("/v1/ads/conversions/custom-goals", params=params)
+
+    def create_custom_conversion_goal(
+        self,
+        account_id: str,
+        name: str,
+        conversion_action_ids: list[str],
+        *,
+        ad_account_id: str | None = None,
+        customer_id: str | None = None,
+    ) -> dict[str, Any]:
+        """Create a custom conversion goal"""
+        payload = self._build_payload(
+            account_id=account_id,
+            ad_account_id=ad_account_id,
+            customer_id=customer_id,
+            name=name,
+            conversion_action_ids=conversion_action_ids,
+        )
+        return self._client._post("/v1/ads/conversions/custom-goals", data=payload)
+
+    def update_custom_conversion_goal(
+        self,
+        goal_id: str,
+        account_id: str,
+        *,
+        ad_account_id: str | None = None,
+        customer_id: str | None = None,
+        name: str | None = None,
+        conversion_action_ids: list[str] | None = None,
+    ) -> dict[str, Any]:
+        """Update a custom conversion goal"""
+        payload = self._build_payload(
+            account_id=account_id,
+            ad_account_id=ad_account_id,
+            customer_id=customer_id,
+            name=name,
+            conversion_action_ids=conversion_action_ids,
+        )
+        return self._client._patch(
+            f"/v1/ads/conversions/custom-goals/{goal_id}", data=payload
+        )
+
+    def remove_custom_conversion_goal(
+        self,
+        goal_id: str,
+        account_id: str,
+        *,
+        ad_account_id: str | None = None,
+        customer_id: str | None = None,
+    ) -> dict[str, Any]:
+        """Remove a custom conversion goal"""
+        params = self._build_params(
+            account_id=account_id,
+            ad_account_id=ad_account_id,
+            customer_id=customer_id,
+        )
+        return self._client._delete(
+            f"/v1/ads/conversions/custom-goals/{goal_id}", params=params
+        )
+
     def list_conversion_destinations(self, account_id: str) -> dict[str, Any]:
         """List conversion destinations"""
         return self._client._get(f"/v1/accounts/{account_id}/conversion-destinations")
@@ -394,6 +520,136 @@ class ConversionsResource:
             always_use_default_value=always_use_default_value,
         )
         return await self._client._apost("/v1/ads/conversions/actions", data=payload)
+
+    async def alist_ad_conversion_goals(
+        self,
+        account_id: str,
+        *,
+        ad_account_id: str | None = None,
+        customer_id: str | None = None,
+    ) -> dict[str, Any]:
+        """List account conversion goals (async)"""
+        params = self._build_params(
+            account_id=account_id,
+            ad_account_id=ad_account_id,
+            customer_id=customer_id,
+        )
+        return await self._client._aget("/v1/ads/conversions/goals", params=params)
+
+    async def aupdate_ad_conversion_goals(
+        self,
+        account_id: str,
+        goals: list[Any],
+        *,
+        ad_account_id: str | None = None,
+        customer_id: str | None = None,
+    ) -> dict[str, Any]:
+        """Update account conversion goals (async)"""
+        payload = self._build_payload(
+            account_id=account_id,
+            ad_account_id=ad_account_id,
+            customer_id=customer_id,
+            goals=goals,
+        )
+        return await self._client._apatch("/v1/ads/conversions/goals", data=payload)
+
+    async def aupdate_conversion_action(
+        self,
+        action_id: str,
+        account_id: str,
+        primary_for_goal: bool,
+        *,
+        ad_account_id: str | None = None,
+        customer_id: str | None = None,
+    ) -> dict[str, Any]:
+        """Set a conversion action primary or secondary (async)"""
+        payload = self._build_payload(
+            account_id=account_id,
+            ad_account_id=ad_account_id,
+            customer_id=customer_id,
+            primary_for_goal=primary_for_goal,
+        )
+        return await self._client._apatch(
+            f"/v1/ads/conversions/actions/{action_id}", data=payload
+        )
+
+    async def alist_custom_conversion_goals(
+        self,
+        account_id: str,
+        *,
+        ad_account_id: str | None = None,
+        customer_id: str | None = None,
+    ) -> dict[str, Any]:
+        """List custom conversion goals (async)"""
+        params = self._build_params(
+            account_id=account_id,
+            ad_account_id=ad_account_id,
+            customer_id=customer_id,
+        )
+        return await self._client._aget(
+            "/v1/ads/conversions/custom-goals", params=params
+        )
+
+    async def acreate_custom_conversion_goal(
+        self,
+        account_id: str,
+        name: str,
+        conversion_action_ids: list[str],
+        *,
+        ad_account_id: str | None = None,
+        customer_id: str | None = None,
+    ) -> dict[str, Any]:
+        """Create a custom conversion goal (async)"""
+        payload = self._build_payload(
+            account_id=account_id,
+            ad_account_id=ad_account_id,
+            customer_id=customer_id,
+            name=name,
+            conversion_action_ids=conversion_action_ids,
+        )
+        return await self._client._apost(
+            "/v1/ads/conversions/custom-goals", data=payload
+        )
+
+    async def aupdate_custom_conversion_goal(
+        self,
+        goal_id: str,
+        account_id: str,
+        *,
+        ad_account_id: str | None = None,
+        customer_id: str | None = None,
+        name: str | None = None,
+        conversion_action_ids: list[str] | None = None,
+    ) -> dict[str, Any]:
+        """Update a custom conversion goal (async)"""
+        payload = self._build_payload(
+            account_id=account_id,
+            ad_account_id=ad_account_id,
+            customer_id=customer_id,
+            name=name,
+            conversion_action_ids=conversion_action_ids,
+        )
+        return await self._client._apatch(
+            f"/v1/ads/conversions/custom-goals/{goal_id}", data=payload
+        )
+
+    async def aremove_custom_conversion_goal(
+        self,
+        goal_id: str,
+        account_id: str,
+        *,
+        ad_account_id: str | None = None,
+        customer_id: str | None = None,
+    ) -> dict[str, Any]:
+        """Remove a custom conversion goal (async)"""
+        params = self._build_params(
+            account_id=account_id,
+            ad_account_id=ad_account_id,
+            customer_id=customer_id,
+        )
+        return await self._client._adelete(
+            f"/v1/ads/conversions/custom-goals/{goal_id}", params=params
+        )
 
     async def alist_conversion_destinations(self, account_id: str) -> dict[str, Any]:
         """List conversion destinations (async)"""

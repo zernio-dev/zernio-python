@@ -3545,102 +3545,6 @@ def register_generated_tools(mcp, _get_client):
 
     @mcp.tool(
         annotations=ToolAnnotations(
-            title="List Google Ads recommendations",
-            readOnlyHint=True,
-            destructiveHint=False,
-            openWorldHint=False,
-        )
-    )
-    def ad_campaigns_list_google_recommendations(
-        account_id: str,
-        ad_account_id: str | None = None,
-        customer_id: str | None = None,
-        campaign_id: str | None = None,
-        types: str | None = None,
-    ) -> str:
-        """List Google Ads recommendations
-
-        Args:
-            account_id: Google ads SocialAccount id. (required)
-            ad_account_id: Google customer id, digits only. Defaults to the connection's only customer.
-            customer_id: Alias of adAccountId, kept for consistency with other Google endpoints.
-            campaign_id: Only recommendations targeting this campaign.
-            types: Comma-separated Google RecommendationType values, for example CAMPAIGN_BUDGET,KEYWORD,SET_TARGET_CPA."""
-        client = _get_client()
-        try:
-            response = client.ad_campaigns.list_google_recommendations(
-                account_id=account_id,
-                ad_account_id=ad_account_id,
-                customer_id=customer_id,
-                campaign_id=campaign_id,
-                types=types,
-            )
-            return _format_response(response)
-        except Exception as e:
-            return f"Error: {e}"
-
-    @mcp.tool(
-        annotations=ToolAnnotations(
-            title="Apply Google Ads recommendations",
-            readOnlyHint=False,
-            destructiveHint=True,
-            openWorldHint=True,
-        )
-    )
-    def ad_campaigns_apply_google_recommendations(
-        account_id: str,
-        recommendations: list[dict[str, Any]] | None,
-        ad_account_id: str | None = None,
-    ) -> str:
-        """Apply Google Ads recommendations
-
-        Args:
-            account_id: Google ads SocialAccount id. (required)
-            ad_account_id: Google customer id, digits only. Required when the connection has several customers.
-            recommendations: (required)"""
-        client = _get_client()
-        try:
-            response = client.ad_campaigns.apply_google_recommendations(
-                account_id=account_id,
-                ad_account_id=ad_account_id,
-                recommendations=recommendations,
-            )
-            return _format_response(response)
-        except Exception as e:
-            return f"Error: {e}"
-
-    @mcp.tool(
-        annotations=ToolAnnotations(
-            title="Dismiss Google Ads recommendations",
-            readOnlyHint=False,
-            destructiveHint=True,
-            openWorldHint=True,
-        )
-    )
-    def ad_campaigns_dismiss_google_recommendations(
-        account_id: str,
-        resource_names: list[str] | None,
-        ad_account_id: str | None = None,
-    ) -> str:
-        """Dismiss Google Ads recommendations
-
-        Args:
-            account_id: Google ads SocialAccount id. (required)
-            ad_account_id: Google customer id, digits only. Required when the connection has several customers.
-            resource_names: Recommendation resource names from the list, or their ids. (required)"""
-        client = _get_client()
-        try:
-            response = client.ad_campaigns.dismiss_google_recommendations(
-                account_id=account_id,
-                ad_account_id=ad_account_id,
-                resource_names=resource_names,
-            )
-            return _format_response(response)
-        except Exception as e:
-            return f"Error: {e}"
-
-    @mcp.tool(
-        annotations=ToolAnnotations(
             title="List portfolio bid strategies",
             readOnlyHint=True,
             destructiveHint=False,
@@ -6582,6 +6486,61 @@ def register_generated_tools(mcp, _get_client):
                 is_skadnetwork_attribution=is_skadnetwork_attribution,
                 campaign_attribution=campaign_attribution,
                 promoted_object=promoted_object,
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Get campaign conversion goals",
+            readOnlyHint=True,
+            destructiveHint=False,
+            openWorldHint=False,
+        )
+    )
+    def ad_campaigns_get_campaign_conversion_goals(campaign_id: str) -> str:
+        """Get campaign conversion goals
+
+        Args:
+            campaign_id: Google campaign id (required)"""
+        client = _get_client()
+        try:
+            response = client.ad_campaigns.get_campaign_conversion_goals(
+                campaign_id=campaign_id
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Update campaign conversion goals",
+            readOnlyHint=False,
+            destructiveHint=True,
+            openWorldHint=True,
+        )
+    )
+    def ad_campaigns_update_campaign_conversion_goals(
+        campaign_id: str,
+        goals: list[dict[str, Any]] | None = None,
+        goal_config_level: str | None = None,
+        custom_conversion_goal_id: str | None = None,
+    ) -> str:
+        """Update campaign conversion goals
+
+        Args:
+            campaign_id: Google campaign id (required)
+            goals
+            goal_config_level
+            custom_conversion_goal_id: Custom goal to bid on, or null to clear"""
+        client = _get_client()
+        try:
+            response = client.ad_campaigns.update_campaign_conversion_goals(
+                campaign_id=campaign_id,
+                goals=goals,
+                goal_config_level=goal_config_level,
+                custom_conversion_goal_id=custom_conversion_goal_id,
             )
             return _format_response(response)
         except Exception as e:
@@ -14230,6 +14189,243 @@ def register_generated_tools(mcp, _get_client):
                 type=type,
                 default_value=default_value,
                 always_use_default_value=always_use_default_value,
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="List account conversion goals",
+            readOnlyHint=True,
+            destructiveHint=False,
+            openWorldHint=False,
+        )
+    )
+    def conversions_list_ad_conversion_goals(
+        account_id: str,
+        ad_account_id: str | None = None,
+        customer_id: str | None = None,
+    ) -> str:
+        """List account conversion goals
+
+        Args:
+            account_id: Zernio SocialAccount id (Google Ads) (required)
+            ad_account_id: Google customer id. Required when the connection has multiple customers.
+            customer_id: Alias of adAccountId"""
+        client = _get_client()
+        try:
+            response = client.conversions.list_ad_conversion_goals(
+                account_id=account_id,
+                ad_account_id=ad_account_id,
+                customer_id=customer_id,
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Update account conversion goals",
+            readOnlyHint=False,
+            destructiveHint=True,
+            openWorldHint=True,
+        )
+    )
+    def conversions_update_ad_conversion_goals(
+        account_id: str,
+        goals: list[dict[str, Any]] | None,
+        ad_account_id: str | None = None,
+        customer_id: str | None = None,
+    ) -> str:
+        """Update account conversion goals
+
+        Args:
+            account_id: Zernio SocialAccount id (Google Ads) (required)
+            ad_account_id: Google customer id. Required when the connection has multiple customers.
+            customer_id: Alias of adAccountId
+            goals: (required)"""
+        client = _get_client()
+        try:
+            response = client.conversions.update_ad_conversion_goals(
+                account_id=account_id,
+                ad_account_id=ad_account_id,
+                customer_id=customer_id,
+                goals=goals,
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Set a conversion action primary or secondary",
+            readOnlyHint=False,
+            destructiveHint=True,
+            openWorldHint=True,
+        )
+    )
+    def conversions_update_conversion_action(
+        action_id: str,
+        account_id: str,
+        primary_for_goal: bool,
+        ad_account_id: str | None = None,
+        customer_id: str | None = None,
+    ) -> str:
+        """Set a conversion action primary or secondary
+
+        Args:
+            action_id: Google conversion action id (required)
+            account_id: Zernio SocialAccount id (Google Ads) (required)
+            ad_account_id: Google customer id. Required when the connection has multiple customers.
+            customer_id: Alias of adAccountId
+            primary_for_goal: true = primary, false = secondary (required)"""
+        client = _get_client()
+        try:
+            response = client.conversions.update_conversion_action(
+                action_id=action_id,
+                account_id=account_id,
+                ad_account_id=ad_account_id,
+                customer_id=customer_id,
+                primary_for_goal=primary_for_goal,
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="List custom conversion goals",
+            readOnlyHint=True,
+            destructiveHint=False,
+            openWorldHint=False,
+        )
+    )
+    def conversions_list_custom_conversion_goals(
+        account_id: str,
+        ad_account_id: str | None = None,
+        customer_id: str | None = None,
+    ) -> str:
+        """List custom conversion goals
+
+        Args:
+            account_id: Zernio SocialAccount id (Google Ads) (required)
+            ad_account_id: Google customer id. Required when the connection has multiple customers.
+            customer_id: Alias of adAccountId"""
+        client = _get_client()
+        try:
+            response = client.conversions.list_custom_conversion_goals(
+                account_id=account_id,
+                ad_account_id=ad_account_id,
+                customer_id=customer_id,
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Create a custom conversion goal",
+            readOnlyHint=False,
+            destructiveHint=True,
+            openWorldHint=True,
+        )
+    )
+    def conversions_create_custom_conversion_goal(
+        account_id: str,
+        name: str,
+        conversion_action_ids: list[str] | None,
+        ad_account_id: str | None = None,
+        customer_id: str | None = None,
+    ) -> str:
+        """Create a custom conversion goal
+
+        Args:
+            account_id: Zernio SocialAccount id (Google Ads) (required)
+            ad_account_id: Google customer id. Required when the connection has multiple customers.
+            customer_id: Alias of adAccountId
+            name: (required)
+            conversion_action_ids: (required)"""
+        client = _get_client()
+        try:
+            response = client.conversions.create_custom_conversion_goal(
+                account_id=account_id,
+                ad_account_id=ad_account_id,
+                customer_id=customer_id,
+                name=name,
+                conversion_action_ids=conversion_action_ids,
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Update a custom conversion goal",
+            readOnlyHint=False,
+            destructiveHint=True,
+            openWorldHint=True,
+        )
+    )
+    def conversions_update_custom_conversion_goal(
+        goal_id: str,
+        account_id: str,
+        ad_account_id: str | None = None,
+        customer_id: str | None = None,
+        name: str | None = None,
+        conversion_action_ids: list[str] | None = None,
+    ) -> str:
+        """Update a custom conversion goal
+
+        Args:
+            goal_id: Google custom conversion goal id (required)
+            account_id: Zernio SocialAccount id (Google Ads) (required)
+            ad_account_id: Google customer id. Required when the connection has multiple customers.
+            customer_id: Alias of adAccountId
+            name
+            conversion_action_ids: Replaces the whole set."""
+        client = _get_client()
+        try:
+            response = client.conversions.update_custom_conversion_goal(
+                goal_id=goal_id,
+                account_id=account_id,
+                ad_account_id=ad_account_id,
+                customer_id=customer_id,
+                name=name,
+                conversion_action_ids=conversion_action_ids,
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Remove a custom conversion goal",
+            readOnlyHint=False,
+            destructiveHint=True,
+            openWorldHint=True,
+        )
+    )
+    def conversions_remove_custom_conversion_goal(
+        goal_id: str,
+        account_id: str,
+        ad_account_id: str | None = None,
+        customer_id: str | None = None,
+    ) -> str:
+        """Remove a custom conversion goal
+
+        Args:
+            goal_id: Google custom conversion goal id (required)
+            account_id: Zernio SocialAccount id (Google Ads) (required)
+            ad_account_id: Google customer id. Required when the connection has multiple customers.
+            customer_id: Alias of adAccountId"""
+        client = _get_client()
+        try:
+            response = client.conversions.remove_custom_conversion_goal(
+                goal_id=goal_id,
+                account_id=account_id,
+                ad_account_id=ad_account_id,
+                customer_id=customer_id,
             )
             return _format_response(response)
         except Exception as e:

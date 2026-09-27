@@ -493,7 +493,6 @@ Both `from zernio import ...` and `from late import ...` work identically. The `
 | `ad_campaigns.list_campaign_negative_keyword_lists()` | List campaign negative lists |
 | `ad_campaigns.list_campaign_negative_keywords()` | List campaign-level negative keywords |
 | `ad_campaigns.list_google_asset_groups()` | List Performance Max asset groups |
-| `ad_campaigns.list_google_recommendations()` | List Google Ads recommendations |
 | `ad_campaigns.bulk_update_ad_campaign_status()` | Pause or resume many campaigns |
 | `ad_campaigns.create_ad_campaign()` | Create a standalone campaign |
 | `ad_campaigns.create_ad_set()` | Create a standalone ad group |
@@ -507,6 +506,7 @@ Both `from zernio import ...` and `from late import ...` work identically. The `
 | `ad_campaigns.get_ads_timeline()` | Get daily account metrics |
 | `ad_campaigns.get_campaign_ad_schedule()` | Read a campaign's ad schedule (dayparting) |
 | `ad_campaigns.get_campaign_bidding()` | Read a campaign's current bidding |
+| `ad_campaigns.get_campaign_conversion_goals()` | Get campaign conversion goals |
 | `ad_campaigns.get_campaign_targeting()` | Read a Google campaign's device, location, and language targeting |
 | `ad_campaigns.get_google_asset_group()` | Get a Performance Max asset group |
 | `ad_campaigns.update_ad()` | Update ad |
@@ -520,17 +520,16 @@ Both `from zernio import ...` and `from late import ...` work identically. The `
 | `ad_campaigns.update_bid_strategy()` | Update portfolio bid strategy |
 | `ad_campaigns.update_campaign_ad_schedule()` | Replace a campaign's ad schedule (dayparting) |
 | `ad_campaigns.update_campaign_assets()` | Update campaign assets |
+| `ad_campaigns.update_campaign_conversion_goals()` | Update campaign conversion goals |
 | `ad_campaigns.update_campaign_targeting()` | Edit a Google campaign's device, location, or language targeting |
 | `ad_campaigns.update_google_asset_group()` | Update a Performance Max asset group |
 | `ad_campaigns.delete_ad()` | Cancel an ad |
 | `ad_campaigns.delete_ad_campaign()` | Delete a campaign |
 | `ad_campaigns.delete_ad_set()` | Delete an ad set |
 | `ad_campaigns.add_ad_keywords()` | Add Search ad-group keywords |
-| `ad_campaigns.apply_google_recommendations()` | Apply Google Ads recommendations |
 | `ad_campaigns.attach_ad_group_assets()` | Attach ad-group assets |
 | `ad_campaigns.attach_campaign_assets()` | Attach campaign assets |
 | `ad_campaigns.boost_post()` | Boost post as ad |
-| `ad_campaigns.dismiss_google_recommendations()` | Dismiss Google Ads recommendations |
 | `ad_campaigns.duplicate_ad()` | Duplicate an ad |
 | `ad_campaigns.duplicate_ad_campaign()` | Duplicate a campaign |
 | `ad_campaigns.duplicate_ad_set()` | Duplicate an ad set |
@@ -736,19 +735,26 @@ Both `from zernio import ...` and `from late import ...` work identically. The `
 ### Conversions
 | Method | Description |
 |--------|-------------|
+| `conversions.list_ad_conversion_goals()` | List account conversion goals |
 | `conversions.list_conversion_actions()` | List conversion actions |
 | `conversions.list_conversion_associations()` | List associated campaigns |
 | `conversions.list_conversion_destinations()` | List conversion destinations |
+| `conversions.list_custom_conversion_goals()` | List custom conversion goals |
 | `conversions.create_conversion_action()` | Create website conversion action |
 | `conversions.create_conversion_destination()` | Create a conversion destination |
+| `conversions.create_custom_conversion_goal()` | Create a custom conversion goal |
 | `conversions.get_conversion_destination()` | Get a conversion destination |
 | `conversions.get_conversion_metrics()` | Get attribution metrics |
 | `conversions.get_conversions_quality()` | Get Event Match Quality |
+| `conversions.update_ad_conversion_goals()` | Update account conversion goals |
+| `conversions.update_conversion_action()` | Set a conversion action primary or secondary |
 | `conversions.update_conversion_destination()` | Update a conversion destination |
+| `conversions.update_custom_conversion_goal()` | Update a custom conversion goal |
 | `conversions.delete_conversion_destination()` | Delete a conversion destination |
 | `conversions.add_conversion_associations()` | Associate campaigns |
 | `conversions.adjust_conversions()` | Adjust uploaded conversions |
 | `conversions.remove_conversion_associations()` | Remove associated campaigns |
+| `conversions.remove_custom_conversion_goal()` | Remove a custom conversion goal |
 | `conversions.send_conversions()` | Send conversion events |
 
 ### Custom Fields
