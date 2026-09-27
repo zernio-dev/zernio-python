@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.111.0"
+  version: "1.111.1"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -54473,6 +54473,9 @@ paths:
         a root lists the managers linked to that account, including invitations it can
         still accept with PATCH /v1/ads/accounts/manager-links. A directly accessible
         account that is also nested in another tree appears only once, inside that tree.
+        `directCustomers` lists every account the Google user accesses directly (the ones
+        this connection can accept or decline invitations for) with their pending
+        invitations, including accounts that are also nested in a tree.
         Customers Google refuses to read (for example a cancelled account) are listed in
         `unavailable` with Google's reason instead of failing the call. Up to 50 roots
         and 50 managers per root are read; `truncated` is true when more exist. Cached
@@ -54519,6 +54522,21 @@ paths:
                           type: array
                           description: "Every account under this root at any depth, in Google's order, followed by pending invitations."
                           items: { $ref: '#/components/schemas/GoogleAdsHierarchyClient' }
+                  directCustomers:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        customerId: { type: string }
+                        manager: { type: boolean }
+                        pendingInvitations:
+                          type: array
+                          description: "Manager invitations this account has not answered yet."
+                          items:
+                            type: object
+                            properties:
+                              managerCustomerId: { type: string }
+                              managerLinkId: { type: string }
                   unavailable:
                     type: array
                     items:
