@@ -489,6 +489,7 @@ Both `from zernio import ...` and `from late import ...` work identically. The `
 | `ad_campaigns.create_ad_campaign()` | Create a standalone campaign |
 | `ad_campaigns.create_ad_set()` | Create a standalone ad group |
 | `ad_campaigns.create_bid_strategy()` | Create portfolio bid strategy |
+| `ad_campaigns.create_google_asset_group()` | Create a Performance Max asset group |
 | `ad_campaigns.create_standalone_ad()` | Create standalone ad |
 | `ad_campaigns.get_ad()` | Get ad details |
 | `ad_campaigns.get_ad_campaign_details()` | Get live campaign details |
@@ -498,6 +499,7 @@ Both `from zernio import ...` and `from late import ...` work identically. The `
 | `ad_campaigns.get_campaign_ad_schedule()` | Read a campaign's ad schedule (dayparting) |
 | `ad_campaigns.get_campaign_bidding()` | Read a campaign's current bidding |
 | `ad_campaigns.get_campaign_targeting()` | Read a Google campaign's device, location, and language targeting |
+| `ad_campaigns.get_google_asset_group()` | Get a Performance Max asset group |
 | `ad_campaigns.update_ad()` | Update ad |
 | `ad_campaigns.update_ad_campaign()` | Update a campaign |
 | `ad_campaigns.update_ad_campaign_status()` | Pause or resume a campaign |
@@ -510,6 +512,7 @@ Both `from zernio import ...` and `from late import ...` work identically. The `
 | `ad_campaigns.update_campaign_ad_schedule()` | Replace a campaign's ad schedule (dayparting) |
 | `ad_campaigns.update_campaign_assets()` | Update campaign assets |
 | `ad_campaigns.update_campaign_targeting()` | Edit a Google campaign's device, location, or language targeting |
+| `ad_campaigns.update_google_asset_group()` | Update a Performance Max asset group |
 | `ad_campaigns.delete_ad()` | Cancel an ad |
 | `ad_campaigns.delete_ad_campaign()` | Delete a campaign |
 | `ad_campaigns.delete_ad_set()` | Delete an ad set |
@@ -520,11 +523,14 @@ Both `from zernio import ...` and `from late import ...` work identically. The `
 | `ad_campaigns.duplicate_ad()` | Duplicate an ad |
 | `ad_campaigns.duplicate_ad_campaign()` | Duplicate a campaign |
 | `ad_campaigns.duplicate_ad_set()` | Duplicate an ad set |
+| `ad_campaigns.edit_google_asset_group_assets()` | Link or unlink asset group assets |
 | `ad_campaigns.remove_ad_group_assets()` | Remove ad-group assets |
 | `ad_campaigns.remove_ad_keyword()` | Remove a Search keyword |
 | `ad_campaigns.remove_campaign_assets()` | Remove campaign assets |
+| `ad_campaigns.remove_google_asset_group()` | Remove a Performance Max asset group |
 | `ad_campaigns.replace_campaign_negative_keyword_lists()` | Replace campaign negative lists |
 | `ad_campaigns.replace_campaign_negative_keywords()` | Replace campaign-level negative keywords |
+| `ad_campaigns.replace_google_listing_group_filters()` | Replace an asset group's listing-group tree |
 
 ### Ad Creatives
 | Method | Description |

@@ -1079,6 +1079,126 @@ class AdCampaignsResource:
         """List Performance Max asset groups"""
         return self._client._get(f"/v1/ads/campaigns/{campaign_id}/asset-groups")
 
+    def create_google_asset_group(
+        self,
+        campaign_id: str,
+        name: str,
+        final_urls: list[str],
+        *,
+        final_mobile_urls: list[str] | None = None,
+        path1: str | None = None,
+        path2: str | None = None,
+        status: str | None = "PAUSED",
+        assets: list[Any] | None = None,
+        listing_group_filter: Any | None = None,
+        validate_only: bool | None = False,
+    ) -> dict[str, Any]:
+        """Create a Performance Max asset group"""
+        payload = self._build_payload(
+            name=name,
+            final_urls=final_urls,
+            final_mobile_urls=final_mobile_urls,
+            path1=path1,
+            path2=path2,
+            status=status,
+            assets=assets,
+            listing_group_filter=listing_group_filter,
+            validate_only=validate_only,
+        )
+        return self._client._post(
+            f"/v1/ads/campaigns/{campaign_id}/asset-groups", data=payload
+        )
+
+    def get_google_asset_group(
+        self, campaign_id: str, asset_group_id: str
+    ) -> dict[str, Any]:
+        """Get a Performance Max asset group"""
+        return self._client._get(
+            f"/v1/ads/campaigns/{campaign_id}/asset-groups/{asset_group_id}"
+        )
+
+    def update_google_asset_group(
+        self,
+        campaign_id: str,
+        asset_group_id: str,
+        *,
+        name: str | None = None,
+        status: str | None = None,
+        final_urls: list[str] | None = None,
+        final_mobile_urls: list[str] | None = None,
+        path1: Any | None = None,
+        path2: Any | None = None,
+        validate_only: bool | None = False,
+    ) -> dict[str, Any]:
+        """Update a Performance Max asset group"""
+        payload = self._build_payload(
+            name=name,
+            status=status,
+            final_urls=final_urls,
+            final_mobile_urls=final_mobile_urls,
+            path1=path1,
+            path2=path2,
+            validate_only=validate_only,
+        )
+        return self._client._patch(
+            f"/v1/ads/campaigns/{campaign_id}/asset-groups/{asset_group_id}",
+            data=payload,
+        )
+
+    def remove_google_asset_group(
+        self,
+        campaign_id: str,
+        asset_group_id: str,
+        *,
+        validate_only: bool | None = False,
+    ) -> dict[str, Any]:
+        """Remove a Performance Max asset group"""
+        params = self._build_params(
+            validate_only=validate_only,
+        )
+        return self._client._delete(
+            f"/v1/ads/campaigns/{campaign_id}/asset-groups/{asset_group_id}",
+            params=params,
+        )
+
+    def edit_google_asset_group_assets(
+        self,
+        campaign_id: str,
+        asset_group_id: str,
+        *,
+        link: list[Any] | None = None,
+        unlink: list[Any] | None = None,
+        validate_only: bool | None = False,
+    ) -> dict[str, Any]:
+        """Link or unlink asset group assets"""
+        payload = self._build_payload(
+            link=link,
+            unlink=unlink,
+            validate_only=validate_only,
+        )
+        return self._client._post(
+            f"/v1/ads/campaigns/{campaign_id}/asset-groups/{asset_group_id}/assets",
+            data=payload,
+        )
+
+    def replace_google_listing_group_filters(
+        self,
+        campaign_id: str,
+        asset_group_id: str,
+        tree: Any,
+        *,
+        validate_only: bool | None = False,
+    ) -> dict[str, Any]:
+        """Replace an asset group's listing-group tree"""
+        payload = self._build_payload(
+            tree=tree,
+            validate_only=validate_only,
+        )
+        return self._client._put(
+            f"/v1/ads/campaigns/{campaign_id}/asset-groups/{asset_group_id}/listing-group-filters",
+            data=payload,
+        )
+
     def create_standalone_ad(
         self,
         account_id: str,
@@ -2331,6 +2451,126 @@ class AdCampaignsResource:
     async def alist_google_asset_groups(self, campaign_id: str) -> dict[str, Any]:
         """List Performance Max asset groups (async)"""
         return await self._client._aget(f"/v1/ads/campaigns/{campaign_id}/asset-groups")
+
+    async def acreate_google_asset_group(
+        self,
+        campaign_id: str,
+        name: str,
+        final_urls: list[str],
+        *,
+        final_mobile_urls: list[str] | None = None,
+        path1: str | None = None,
+        path2: str | None = None,
+        status: str | None = "PAUSED",
+        assets: list[Any] | None = None,
+        listing_group_filter: Any | None = None,
+        validate_only: bool | None = False,
+    ) -> dict[str, Any]:
+        """Create a Performance Max asset group (async)"""
+        payload = self._build_payload(
+            name=name,
+            final_urls=final_urls,
+            final_mobile_urls=final_mobile_urls,
+            path1=path1,
+            path2=path2,
+            status=status,
+            assets=assets,
+            listing_group_filter=listing_group_filter,
+            validate_only=validate_only,
+        )
+        return await self._client._apost(
+            f"/v1/ads/campaigns/{campaign_id}/asset-groups", data=payload
+        )
+
+    async def aget_google_asset_group(
+        self, campaign_id: str, asset_group_id: str
+    ) -> dict[str, Any]:
+        """Get a Performance Max asset group (async)"""
+        return await self._client._aget(
+            f"/v1/ads/campaigns/{campaign_id}/asset-groups/{asset_group_id}"
+        )
+
+    async def aupdate_google_asset_group(
+        self,
+        campaign_id: str,
+        asset_group_id: str,
+        *,
+        name: str | None = None,
+        status: str | None = None,
+        final_urls: list[str] | None = None,
+        final_mobile_urls: list[str] | None = None,
+        path1: Any | None = None,
+        path2: Any | None = None,
+        validate_only: bool | None = False,
+    ) -> dict[str, Any]:
+        """Update a Performance Max asset group (async)"""
+        payload = self._build_payload(
+            name=name,
+            status=status,
+            final_urls=final_urls,
+            final_mobile_urls=final_mobile_urls,
+            path1=path1,
+            path2=path2,
+            validate_only=validate_only,
+        )
+        return await self._client._apatch(
+            f"/v1/ads/campaigns/{campaign_id}/asset-groups/{asset_group_id}",
+            data=payload,
+        )
+
+    async def aremove_google_asset_group(
+        self,
+        campaign_id: str,
+        asset_group_id: str,
+        *,
+        validate_only: bool | None = False,
+    ) -> dict[str, Any]:
+        """Remove a Performance Max asset group (async)"""
+        params = self._build_params(
+            validate_only=validate_only,
+        )
+        return await self._client._adelete(
+            f"/v1/ads/campaigns/{campaign_id}/asset-groups/{asset_group_id}",
+            params=params,
+        )
+
+    async def aedit_google_asset_group_assets(
+        self,
+        campaign_id: str,
+        asset_group_id: str,
+        *,
+        link: list[Any] | None = None,
+        unlink: list[Any] | None = None,
+        validate_only: bool | None = False,
+    ) -> dict[str, Any]:
+        """Link or unlink asset group assets (async)"""
+        payload = self._build_payload(
+            link=link,
+            unlink=unlink,
+            validate_only=validate_only,
+        )
+        return await self._client._apost(
+            f"/v1/ads/campaigns/{campaign_id}/asset-groups/{asset_group_id}/assets",
+            data=payload,
+        )
+
+    async def areplace_google_listing_group_filters(
+        self,
+        campaign_id: str,
+        asset_group_id: str,
+        tree: Any,
+        *,
+        validate_only: bool | None = False,
+    ) -> dict[str, Any]:
+        """Replace an asset group's listing-group tree (async)"""
+        payload = self._build_payload(
+            tree=tree,
+            validate_only=validate_only,
+        )
+        return await self._client._aput(
+            f"/v1/ads/campaigns/{campaign_id}/asset-groups/{asset_group_id}/listing-group-filters",
+            data=payload,
+        )
 
     async def acreate_standalone_ad(
         self,

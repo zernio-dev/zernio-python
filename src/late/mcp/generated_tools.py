@@ -5251,6 +5251,227 @@ def register_generated_tools(mcp, _get_client):
 
     @mcp.tool(
         annotations=ToolAnnotations(
+            title="Create a Performance Max asset group",
+            readOnlyHint=False,
+            destructiveHint=True,
+            openWorldHint=True,
+        )
+    )
+    def ad_campaigns_create_google_asset_group(
+        campaign_id: str,
+        name: str,
+        final_urls: list[str] | None,
+        final_mobile_urls: list[str] | None = None,
+        path1: str | None = None,
+        path2: str | None = None,
+        status: str = "PAUSED",
+        assets: list[dict[str, Any]] | None = None,
+        listing_group_filter: dict[str, Any] | None = None,
+        validate_only: bool = False,
+    ) -> str:
+        """Create a Performance Max asset group
+
+        Args:
+            campaign_id: Google Ads campaign id. (required)
+            name: Unique within the campaign. (required)
+            final_urls: (required)
+            final_mobile_urls
+            path1
+            path2: Requires path1.
+            status
+            assets
+            listing_group_filter
+            validate_only"""
+        client = _get_client()
+        try:
+            response = client.ad_campaigns.create_google_asset_group(
+                campaign_id=campaign_id,
+                name=name,
+                final_urls=final_urls,
+                final_mobile_urls=final_mobile_urls,
+                path1=path1,
+                path2=path2,
+                status=status,
+                assets=assets,
+                listing_group_filter=listing_group_filter,
+                validate_only=validate_only,
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Get a Performance Max asset group",
+            readOnlyHint=True,
+            destructiveHint=False,
+            openWorldHint=False,
+        )
+    )
+    def ad_campaigns_get_google_asset_group(
+        campaign_id: str, asset_group_id: str
+    ) -> str:
+        """Get a Performance Max asset group
+
+        Args:
+            campaign_id: Google Ads campaign id. (required)
+            asset_group_id: Google asset group id. (required)"""
+        client = _get_client()
+        try:
+            response = client.ad_campaigns.get_google_asset_group(
+                campaign_id=campaign_id, asset_group_id=asset_group_id
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Update a Performance Max asset group",
+            readOnlyHint=False,
+            destructiveHint=True,
+            openWorldHint=True,
+        )
+    )
+    def ad_campaigns_update_google_asset_group(
+        campaign_id: str,
+        asset_group_id: str,
+        name: str | None = None,
+        status: str | None = None,
+        final_urls: list[str] | None = None,
+        final_mobile_urls: list[str] | None = None,
+        path1: str | None = None,
+        path2: str | None = None,
+        validate_only: bool = False,
+    ) -> str:
+        """Update a Performance Max asset group
+
+        Args:
+            campaign_id: Google Ads campaign id. (required)
+            asset_group_id: Google asset group id. (required)
+            name
+            status
+            final_urls
+            final_mobile_urls
+            path1
+            path2
+            validate_only"""
+        client = _get_client()
+        try:
+            response = client.ad_campaigns.update_google_asset_group(
+                campaign_id=campaign_id,
+                asset_group_id=asset_group_id,
+                name=name,
+                status=status,
+                final_urls=final_urls,
+                final_mobile_urls=final_mobile_urls,
+                path1=path1,
+                path2=path2,
+                validate_only=validate_only,
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Remove a Performance Max asset group",
+            readOnlyHint=False,
+            destructiveHint=True,
+            openWorldHint=True,
+        )
+    )
+    def ad_campaigns_remove_google_asset_group(
+        campaign_id: str, asset_group_id: str, validate_only: bool = False
+    ) -> str:
+        """Remove a Performance Max asset group
+
+        Args:
+            campaign_id: (required)
+            asset_group_id: (required)
+            validate_only"""
+        client = _get_client()
+        try:
+            response = client.ad_campaigns.remove_google_asset_group(
+                campaign_id=campaign_id,
+                asset_group_id=asset_group_id,
+                validate_only=validate_only,
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Link or unlink asset group assets",
+            readOnlyHint=False,
+            destructiveHint=True,
+            openWorldHint=True,
+        )
+    )
+    def ad_campaigns_edit_google_asset_group_assets(
+        campaign_id: str,
+        asset_group_id: str,
+        link: list[dict[str, Any]] | None = None,
+        unlink: list[dict[str, Any]] | None = None,
+        validate_only: bool = False,
+    ) -> str:
+        """Link or unlink asset group assets
+
+        Args:
+            campaign_id: Google Ads campaign id. (required)
+            asset_group_id: Google asset group id. (required)
+            link
+            unlink
+            validate_only"""
+        client = _get_client()
+        try:
+            response = client.ad_campaigns.edit_google_asset_group_assets(
+                campaign_id=campaign_id,
+                asset_group_id=asset_group_id,
+                link=link,
+                unlink=unlink,
+                validate_only=validate_only,
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Replace an asset group's listing-group tree",
+            readOnlyHint=False,
+            destructiveHint=True,
+            openWorldHint=True,
+        )
+    )
+    def ad_campaigns_replace_google_listing_group_filters(
+        campaign_id: str,
+        asset_group_id: str,
+        tree: dict[str, Any] | None,
+        validate_only: bool = False,
+    ) -> str:
+        """Replace an asset group's listing-group tree
+
+        Args:
+            campaign_id: Google Ads campaign id. (required)
+            asset_group_id: Google asset group id. (required)
+            tree: (required)
+            validate_only"""
+        client = _get_client()
+        try:
+            response = client.ad_campaigns.replace_google_listing_group_filters(
+                campaign_id=campaign_id,
+                asset_group_id=asset_group_id,
+                tree=tree,
+                validate_only=validate_only,
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
             title="Create standalone ad",
             readOnlyHint=False,
             destructiveHint=True,
