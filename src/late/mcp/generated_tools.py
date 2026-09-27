@@ -6061,7 +6061,10 @@ def register_generated_tools(mcp, _get_client):
         group (with its geo, languages, channels and audience from the
         request) and its ad are created in one atomic request, the ad
         group PAUSED; schedule and `locationTargetingType` belong to the
-        campaign and return 400. On failure only the entities we
+        campaign and return 400. A campaign migrated from Discovery that
+        still targets locations and languages on the campaign refuses them on
+        a new ad group, so geo and language fields return 400 there; the new
+        ad group follows the campaign's targeting. On failure only the entities we
         authored are cleaned up; the pre-existing parent is left
         untouched and is never (re)activated. Mutually exclusive
         with `adSetId` and `creatives[]`.
