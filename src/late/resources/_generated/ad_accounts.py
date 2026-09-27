@@ -265,19 +265,121 @@ class AdAccountsResource:
     def list_ad_labels(
         self,
         account_id: str,
-        ad_account_id: str,
         *,
+        ad_account_id: str | None = None,
+        customer_id: str | None = None,
         limit: int | None = 25,
         after: str | None = None,
     ) -> dict[str, Any]:
-        """Ad labels"""
+        """List ad labels"""
         params = self._build_params(
             account_id=account_id,
             ad_account_id=ad_account_id,
+            customer_id=customer_id,
             limit=limit,
             after=after,
         )
         return self._client._get("/v1/ads/labels", params=params)
+
+    def create_ad_label(
+        self,
+        account_id: str,
+        name: str,
+        *,
+        ad_account_id: str | None = None,
+        customer_id: str | None = None,
+        background_color: str | None = None,
+        description: str | None = None,
+    ) -> dict[str, Any]:
+        """Create a Google Ads label"""
+        payload = self._build_payload(
+            account_id=account_id,
+            ad_account_id=ad_account_id,
+            customer_id=customer_id,
+            name=name,
+            background_color=background_color,
+            description=description,
+        )
+        return self._client._post("/v1/ads/labels", data=payload)
+
+    def update_ad_label(
+        self,
+        label_id: str,
+        account_id: str,
+        *,
+        ad_account_id: str | None = None,
+        customer_id: str | None = None,
+        name: str | None = None,
+        background_color: str | None = None,
+        description: str | None = None,
+    ) -> dict[str, Any]:
+        """Update a Google Ads label"""
+        payload = self._build_payload(
+            account_id=account_id,
+            ad_account_id=ad_account_id,
+            customer_id=customer_id,
+            name=name,
+            background_color=background_color,
+            description=description,
+        )
+        return self._client._patch(f"/v1/ads/labels/{label_id}", data=payload)
+
+    def remove_ad_label(
+        self,
+        label_id: str,
+        account_id: str,
+        *,
+        ad_account_id: str | None = None,
+        customer_id: str | None = None,
+    ) -> dict[str, Any]:
+        """Remove a Google Ads label"""
+        params = self._build_params(
+            account_id=account_id,
+            ad_account_id=ad_account_id,
+            customer_id=customer_id,
+        )
+        return self._client._delete(f"/v1/ads/labels/{label_id}", params=params)
+
+    def attach_ad_label(
+        self,
+        label_id: str,
+        account_id: str,
+        *,
+        ad_account_id: str | None = None,
+        customer_id: str | None = None,
+        campaign_ids: list[str] | None = None,
+        ad_set_ids: list[str] | None = None,
+        ad_ids: list[str] | None = None,
+        keyword_ids: list[str] | None = None,
+    ) -> dict[str, Any]:
+        """Attach a Google Ads label"""
+        payload = self._build_payload(
+            account_id=account_id,
+            ad_account_id=ad_account_id,
+            customer_id=customer_id,
+            campaign_ids=campaign_ids,
+            ad_set_ids=ad_set_ids,
+            ad_ids=ad_ids,
+            keyword_ids=keyword_ids,
+        )
+        return self._client._post(
+            f"/v1/ads/labels/{label_id}/assignments", data=payload
+        )
+
+    def detach_ad_label(
+        self,
+        label_id: str,
+        account_id: str,
+        *,
+        ad_account_id: str | None = None,
+        customer_id: str | None = None,
+        campaign_ids: list[str] | None = None,
+        ad_set_ids: list[str] | None = None,
+        ad_ids: list[str] | None = None,
+        keyword_ids: list[str] | None = None,
+    ) -> dict[str, Any]:
+        """Detach a Google Ads label"""
+        return self._client._delete(f"/v1/ads/labels/{label_id}/assignments")
 
     def list_high_demand_periods(
         self,
@@ -1039,19 +1141,121 @@ class AdAccountsResource:
     async def alist_ad_labels(
         self,
         account_id: str,
-        ad_account_id: str,
         *,
+        ad_account_id: str | None = None,
+        customer_id: str | None = None,
         limit: int | None = 25,
         after: str | None = None,
     ) -> dict[str, Any]:
-        """Ad labels (async)"""
+        """List ad labels (async)"""
         params = self._build_params(
             account_id=account_id,
             ad_account_id=ad_account_id,
+            customer_id=customer_id,
             limit=limit,
             after=after,
         )
         return await self._client._aget("/v1/ads/labels", params=params)
+
+    async def acreate_ad_label(
+        self,
+        account_id: str,
+        name: str,
+        *,
+        ad_account_id: str | None = None,
+        customer_id: str | None = None,
+        background_color: str | None = None,
+        description: str | None = None,
+    ) -> dict[str, Any]:
+        """Create a Google Ads label (async)"""
+        payload = self._build_payload(
+            account_id=account_id,
+            ad_account_id=ad_account_id,
+            customer_id=customer_id,
+            name=name,
+            background_color=background_color,
+            description=description,
+        )
+        return await self._client._apost("/v1/ads/labels", data=payload)
+
+    async def aupdate_ad_label(
+        self,
+        label_id: str,
+        account_id: str,
+        *,
+        ad_account_id: str | None = None,
+        customer_id: str | None = None,
+        name: str | None = None,
+        background_color: str | None = None,
+        description: str | None = None,
+    ) -> dict[str, Any]:
+        """Update a Google Ads label (async)"""
+        payload = self._build_payload(
+            account_id=account_id,
+            ad_account_id=ad_account_id,
+            customer_id=customer_id,
+            name=name,
+            background_color=background_color,
+            description=description,
+        )
+        return await self._client._apatch(f"/v1/ads/labels/{label_id}", data=payload)
+
+    async def aremove_ad_label(
+        self,
+        label_id: str,
+        account_id: str,
+        *,
+        ad_account_id: str | None = None,
+        customer_id: str | None = None,
+    ) -> dict[str, Any]:
+        """Remove a Google Ads label (async)"""
+        params = self._build_params(
+            account_id=account_id,
+            ad_account_id=ad_account_id,
+            customer_id=customer_id,
+        )
+        return await self._client._adelete(f"/v1/ads/labels/{label_id}", params=params)
+
+    async def aattach_ad_label(
+        self,
+        label_id: str,
+        account_id: str,
+        *,
+        ad_account_id: str | None = None,
+        customer_id: str | None = None,
+        campaign_ids: list[str] | None = None,
+        ad_set_ids: list[str] | None = None,
+        ad_ids: list[str] | None = None,
+        keyword_ids: list[str] | None = None,
+    ) -> dict[str, Any]:
+        """Attach a Google Ads label (async)"""
+        payload = self._build_payload(
+            account_id=account_id,
+            ad_account_id=ad_account_id,
+            customer_id=customer_id,
+            campaign_ids=campaign_ids,
+            ad_set_ids=ad_set_ids,
+            ad_ids=ad_ids,
+            keyword_ids=keyword_ids,
+        )
+        return await self._client._apost(
+            f"/v1/ads/labels/{label_id}/assignments", data=payload
+        )
+
+    async def adetach_ad_label(
+        self,
+        label_id: str,
+        account_id: str,
+        *,
+        ad_account_id: str | None = None,
+        customer_id: str | None = None,
+        campaign_ids: list[str] | None = None,
+        ad_set_ids: list[str] | None = None,
+        ad_ids: list[str] | None = None,
+        keyword_ids: list[str] | None = None,
+    ) -> dict[str, Any]:
+        """Detach a Google Ads label (async)"""
+        return await self._client._adelete(f"/v1/ads/labels/{label_id}/assignments")
 
     async def alist_high_demand_periods(
         self,

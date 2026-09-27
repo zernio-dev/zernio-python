@@ -1831,29 +1831,239 @@ def register_generated_tools(mcp, _get_client):
 
     @mcp.tool(
         annotations=ToolAnnotations(
-            title="Ad labels",
+            title="List ad labels",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
         )
     )
     def ad_accounts_list_ad_labels(
-        account_id: str, ad_account_id: str, limit: int = 25, after: str | None = None
+        account_id: str,
+        ad_account_id: str | None = None,
+        customer_id: str | None = None,
+        limit: int = 25,
+        after: str | None = None,
     ) -> str:
-        """Ad labels
+        """List ad labels
 
         Args:
-            account_id: Zernio SocialAccount id (posting or ads variant) used to resolve the Meta token. (required)
-            ad_account_id: Meta ad account id (act_<n>). (required)
-            limit: Rows per page
-            after: Cursor from paging.after of the previous page."""
+            account_id: Zernio SocialAccount id. For Meta, the posting or ads variant used to resolve the token. (required)
+            ad_account_id: Meta ad account id (act_<n>), or the Google Ads customer id (digits only).
+            customer_id: Google only. Alias of adAccountId, kept for existing callers.
+            limit: Meta only. Rows per page.
+            after: Meta only. Cursor from paging.after of the previous page."""
         client = _get_client()
         try:
             response = client.ad_accounts.list_ad_labels(
                 account_id=account_id,
                 ad_account_id=ad_account_id,
+                customer_id=customer_id,
                 limit=limit,
                 after=after,
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Create a Google Ads label",
+            readOnlyHint=False,
+            destructiveHint=True,
+            openWorldHint=True,
+        )
+    )
+    def ad_accounts_create_ad_label(
+        account_id: str,
+        name: str,
+        ad_account_id: str | None = None,
+        customer_id: str | None = None,
+        background_color: str | None = None,
+        description: str | None = None,
+    ) -> str:
+        """Create a Google Ads label
+
+        Args:
+            account_id: Zernio SocialAccount id (Google Ads) (required)
+            ad_account_id: Google customer id. Required when the connection has multiple customers.
+            customer_id: Alias of adAccountId
+            name: Trimmed before sending. (required)
+            background_color: #RRGGBB. Google picks a color when omitted.
+            description"""
+        client = _get_client()
+        try:
+            response = client.ad_accounts.create_ad_label(
+                account_id=account_id,
+                ad_account_id=ad_account_id,
+                customer_id=customer_id,
+                name=name,
+                background_color=background_color,
+                description=description,
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Update a Google Ads label",
+            readOnlyHint=False,
+            destructiveHint=True,
+            openWorldHint=True,
+        )
+    )
+    def ad_accounts_update_ad_label(
+        label_id: str,
+        account_id: str,
+        ad_account_id: str | None = None,
+        customer_id: str | None = None,
+        name: str | None = None,
+        background_color: str | None = None,
+        description: str | None = None,
+    ) -> str:
+        """Update a Google Ads label
+
+        Args:
+            label_id: Google label id (required)
+            account_id: Zernio SocialAccount id (Google Ads) (required)
+            ad_account_id: Google customer id. Required when the connection has multiple customers.
+            customer_id: Alias of adAccountId
+            name
+            background_color
+            description: Send "" to clear it."""
+        client = _get_client()
+        try:
+            response = client.ad_accounts.update_ad_label(
+                label_id=label_id,
+                account_id=account_id,
+                ad_account_id=ad_account_id,
+                customer_id=customer_id,
+                name=name,
+                background_color=background_color,
+                description=description,
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Remove a Google Ads label",
+            readOnlyHint=False,
+            destructiveHint=True,
+            openWorldHint=True,
+        )
+    )
+    def ad_accounts_remove_ad_label(
+        label_id: str,
+        account_id: str,
+        ad_account_id: str | None = None,
+        customer_id: str | None = None,
+    ) -> str:
+        """Remove a Google Ads label
+
+        Args:
+            label_id: Google label id (required)
+            account_id: Zernio SocialAccount id (Google Ads) (required)
+            ad_account_id: Google customer id. Required when the connection has multiple customers.
+            customer_id: Alias of adAccountId"""
+        client = _get_client()
+        try:
+            response = client.ad_accounts.remove_ad_label(
+                label_id=label_id,
+                account_id=account_id,
+                ad_account_id=ad_account_id,
+                customer_id=customer_id,
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Attach a Google Ads label",
+            readOnlyHint=False,
+            destructiveHint=True,
+            openWorldHint=True,
+        )
+    )
+    def ad_accounts_attach_ad_label(
+        label_id: str,
+        account_id: str,
+        ad_account_id: str | None = None,
+        customer_id: str | None = None,
+        campaign_ids: list[str] | None = None,
+        ad_set_ids: list[str] | None = None,
+        ad_ids: list[str] | None = None,
+        keyword_ids: list[str] | None = None,
+    ) -> str:
+        """Attach a Google Ads label
+
+        Args:
+            label_id: Google label id (required)
+            account_id: Zernio SocialAccount id (Google Ads) (required)
+            ad_account_id: Google customer id. Required when the connection has multiple customers.
+            customer_id: Alias of adAccountId
+            campaign_ids: Google campaign ids
+            ad_set_ids: Google ad group ids
+            ad_ids: Google ad group ad ids, {adGroupId}~{adId}
+            keyword_ids: Google keyword criterion ids, {adGroupId}~{criterionId}"""
+        client = _get_client()
+        try:
+            response = client.ad_accounts.attach_ad_label(
+                label_id=label_id,
+                account_id=account_id,
+                ad_account_id=ad_account_id,
+                customer_id=customer_id,
+                campaign_ids=campaign_ids,
+                ad_set_ids=ad_set_ids,
+                ad_ids=ad_ids,
+                keyword_ids=keyword_ids,
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Detach a Google Ads label",
+            readOnlyHint=False,
+            destructiveHint=True,
+            openWorldHint=True,
+        )
+    )
+    def ad_accounts_detach_ad_label(
+        label_id: str,
+        account_id: str,
+        ad_account_id: str | None = None,
+        customer_id: str | None = None,
+        campaign_ids: list[str] | None = None,
+        ad_set_ids: list[str] | None = None,
+        ad_ids: list[str] | None = None,
+        keyword_ids: list[str] | None = None,
+    ) -> str:
+        """Detach a Google Ads label
+
+        Args:
+            label_id: Google label id (required)
+            account_id: Zernio SocialAccount id (Google Ads) (required)
+            ad_account_id: Google customer id. Required when the connection has multiple customers.
+            customer_id: Alias of adAccountId
+            campaign_ids: Google campaign ids
+            ad_set_ids: Google ad group ids
+            ad_ids: Google ad group ad ids, {adGroupId}~{adId}
+            keyword_ids: Google keyword criterion ids, {adGroupId}~{criterionId}"""
+        client = _get_client()
+        try:
+            response = client.ad_accounts.detach_ad_label(
+                label_id=label_id,
+                account_id=account_id,
+                ad_account_id=ad_account_id,
+                customer_id=customer_id,
+                campaign_ids=campaign_ids,
+                ad_set_ids=ad_set_ids,
+                ad_ids=ad_ids,
+                keyword_ids=keyword_ids,
             )
             return _format_response(response)
         except Exception as e:

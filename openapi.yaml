@@ -11035,6 +11035,28 @@ components:
             page_id: { type: string }
         earliestAd: { type: string, format: date-time }
         latestAd: { type: string, format: date-time }
+    GoogleAdLabel:
+      type: object
+      properties:
+        id: { type: string, description: Google label id }
+        resourceName: { type: string }
+        name: { type: string }
+        status: { type: string, enum: [ENABLED, REMOVED, UNKNOWN] }
+        backgroundColor: { type: [string, "null"], description: '#RRGGBB' }
+        description: { type: [string, "null"], description: 'Null when empty.' }
+    GoogleAdLabelAssignments:
+      type: object
+      additionalProperties: false
+      required: [accountId]
+      description: At least one id across the four target lists. Up to 1000 ids per list.
+      properties:
+        accountId: { type: string, description: Zernio SocialAccount id (Google Ads) }
+        adAccountId: { type: string, pattern: '^\d+$', description: 'Google customer id. Required when the connection has multiple customers.' }
+        customerId: { type: string, pattern: '^\d+$', deprecated: true, description: Alias of adAccountId }
+        campaignIds: { type: array, maxItems: 1000, items: { type: string, pattern: '^\d+$' }, description: Google campaign ids }
+        adSetIds: { type: array, maxItems: 1000, items: { type: string, pattern: '^\d+$' }, description: Google ad group ids }
+        adIds: { type: array, maxItems: 1000, items: { type: string, pattern: '^\d+~\d+$' }, description: 'Google ad group ad ids, {adGroupId}~{adId}' }
+        keywordIds: { type: array, maxItems: 1000, items: { type: string, pattern: '^\d+~\d+$' }, description: 'Google keyword criterion ids, {adGroupId}~{criterionId}' }
     AdKeyword:
       type: object
       properties:
@@ -51677,39 +51699,242 @@ paths:
       x-resource-group: "ads"
       operationId: listAdLabels
       tags: ["Ad Accounts"]
-      x-platforms: ["meta"]
-      summary: Ad labels
+      x-platforms: ["meta", "google"]
+      summary: List ad labels
       description: |-
-        Lists the ad account's organizational labels (Meta's `/act_X/adlabels`), rows returned
-        verbatim (id, name, created/updated time).
+        Lists the organizational labels on an ad account.
+
+        - **Meta**: pass `adAccountId=act_<n>`. Rows are Meta's `/act_X/adlabels` returned verbatim
+          (id, name, created/updated time), paginated with `limit` / `after`.
+        - **Google Ads**: pass the numeric customer id as `adAccountId` (optional when the
+          connection has a single customer). Returns every non-removed label as a `GoogleAdLabel`
+          in one page (`paging.after` is always null). Reads are cached for 10 minutes; when the
+          shared Google quota is exhausted the last successful result is served with `stale: true`.
       security:
         - bearerAuth: []
       parameters:
-        - { name: accountId, in: query, required: true, schema: { type: string }, description: "Zernio SocialAccount id (posting or ads variant) used to resolve the Meta token." }
-        - { name: adAccountId, in: query, required: true, schema: { type: string }, description: "Meta ad account id (act_<n>)." }
-        - { name: limit, in: query, schema: { type: integer, minimum: 1, maximum: 100, default: 25 }, description: Rows per page }
-        - { name: after, in: query, schema: { type: string }, description: "Cursor from paging.after of the previous page." }
+        - { name: accountId, in: query, required: true, schema: { type: string }, description: "Zernio SocialAccount id. For Meta, the posting or ads variant used to resolve the token." }
+        - { name: adAccountId, in: query, schema: { type: string, pattern: '^(act_)?\d+$' }, description: "Meta ad account id (act_<n>), or the Google Ads customer id (digits only)." }
+        - { name: customerId, in: query, deprecated: true, schema: { type: string, pattern: '^\d+$' }, description: "Google only. Alias of adAccountId, kept for existing callers." }
+        - { name: limit, in: query, schema: { type: integer, minimum: 1, maximum: 100, default: 25 }, description: "Meta only. Rows per page." }
+        - { name: after, in: query, schema: { type: string }, description: "Meta only. Cursor from paging.after of the previous page." }
       responses:
         '409': { $ref: '#/components/responses/AccountConnectionRequired' }
         '404': { $ref: '#/components/responses/AccountUnavailable' }
         '200':
-          description: Ad labels (raw Meta shape)
+          description: Ad labels
           content:
             application/json:
               schema:
                 type: object
                 properties:
-                  adAccountId: { type: string }
+                  adAccountId: { type: string, description: 'Meta act_<n>, or the resolved Google customer id' }
                   data:
                     type: array
-                    items: { type: object, description: "Raw Meta ad label row (id, name, created_time, updated_time)." }
+                    items:
+                      oneOf:
+                        - { $ref: '#/components/schemas/GoogleAdLabel' }
+                        - { type: object, description: "Raw Meta ad label row (id, name, created_time, updated_time)." }
                   paging:
                     type: object
                     properties:
-                      after: { type: [string, "null"], description: "Cursor for the next page; null when exhausted." }
-        '400': { description: "Invalid input, or Meta rejected the query" }
+                      after: { type: [string, "null"], description: "Cursor for the next page; null when exhausted (always null on Google)." }
+                  cachedAt: { type: [string, "null"], format: date-time, description: 'Google only. When the served list was fetched from Google.' }
+                  stale: { type: boolean, description: 'Google only. True when Google quota was exhausted and the last cached list was served.' }
+        '400': { $ref: '#/components/responses/BadRequest' }
         '401': { $ref: '#/components/responses/Unauthorized' }
-        '501': { description: Only supported on Meta (facebook/instagram) }
+        '501': { description: Only supported on Meta and Google Ads accounts }
+    post:
+      x-resource-group: "ads"
+      operationId: createAdLabel
+      tags: ["Ad Accounts"]
+      x-platforms: ["google"]
+      summary: Create a Google Ads label
+      description: |-
+        Creates a label on a Google Ads customer. Attach it to campaigns, ad groups, ads and
+        keywords with `POST /v1/ads/labels/{labelId}/assignments`. Label names are unique per
+        customer; a duplicate is a 400.
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required: [accountId, name]
+              properties:
+                accountId: { type: string, description: Zernio SocialAccount id (Google Ads) }
+                adAccountId: { type: string, pattern: '^\d+$', description: 'Google customer id. Required when the connection has multiple customers.' }
+                customerId: { type: string, pattern: '^\d+$', deprecated: true, description: Alias of adAccountId }
+                name: { type: string, minLength: 1, maxLength: 80, description: 'Trimmed before sending.' }
+                backgroundColor: { type: string, pattern: '^#[0-9a-fA-F]{6}$', description: '#RRGGBB. Google picks a color when omitted.' }
+                description: { type: string, maxLength: 200 }
+      responses:
+        '201':
+          description: Label created
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  customerId: { type: string }
+                  id: { type: string, description: Google label id }
+                  resourceName: { type: string, description: 'customers/{customerId}/labels/{id}' }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404': { $ref: '#/components/responses/AccountUnavailable' }
+        '409': { $ref: '#/components/responses/AccountConnectionRequired' }
+        '501': { description: Only available on Google Ads accounts }
+
+  /v1/ads/labels/{labelId}:
+    patch:
+      x-resource-group: "ads"
+      operationId: updateAdLabel
+      tags: ["Ad Accounts"]
+      x-platforms: ["google"]
+      summary: Update a Google Ads label
+      description: Changes the name, color or description of a label. Only the fields sent are written.
+      security:
+        - bearerAuth: []
+      parameters:
+        - { name: labelId, in: path, required: true, schema: { type: string, pattern: '^\d+$' }, description: Google label id }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required: [accountId]
+              minProperties: 2
+              properties:
+                accountId: { type: string, description: Zernio SocialAccount id (Google Ads) }
+                adAccountId: { type: string, pattern: '^\d+$', description: 'Google customer id. Required when the connection has multiple customers.' }
+                customerId: { type: string, pattern: '^\d+$', deprecated: true, description: Alias of adAccountId }
+                name: { type: string, minLength: 1, maxLength: 80 }
+                backgroundColor: { type: string, pattern: '^#[0-9a-fA-F]{6}$' }
+                description: { type: string, maxLength: 200, description: 'Send "" to clear it.' }
+      responses:
+        '200':
+          description: Label updated
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  customerId: { type: string }
+                  label: { $ref: '#/components/schemas/GoogleAdLabel' }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404': { description: 'Label not found on this customer, or account unavailable' }
+        '409': { $ref: '#/components/responses/AccountConnectionRequired' }
+        '501': { description: Only available on Google Ads accounts }
+    delete:
+      x-resource-group: "ads"
+      operationId: removeAdLabel
+      tags: ["Ad Accounts"]
+      x-platforms: ["google"]
+      summary: Remove a Google Ads label
+      description: Removes the label. Google drops it from every campaign, ad group, ad and keyword it was attached to.
+      security:
+        - bearerAuth: []
+      parameters:
+        - { name: labelId, in: path, required: true, schema: { type: string, pattern: '^\d+$' }, description: Google label id }
+        - { name: accountId, in: query, required: true, schema: { type: string }, description: Zernio SocialAccount id (Google Ads) }
+        - { name: adAccountId, in: query, schema: { type: string, pattern: '^\d+$' }, description: 'Google customer id. Required when the connection has multiple customers.' }
+        - { name: customerId, in: query, deprecated: true, schema: { type: string, pattern: '^\d+$' }, description: Alias of adAccountId }
+      responses:
+        '200':
+          description: Label removed
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  customerId: { type: string }
+                  labelId: { type: string }
+                  removed: { type: boolean, description: Always true on success }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404': { description: 'Label not found on this customer, or account unavailable' }
+        '409': { $ref: '#/components/responses/AccountConnectionRequired' }
+        '501': { description: Only available on Google Ads accounts }
+
+  /v1/ads/labels/{labelId}/assignments:
+    post:
+      x-resource-group: "ads"
+      operationId: attachAdLabel
+      tags: ["Ad Accounts"]
+      x-platforms: ["google"]
+      summary: Attach a Google Ads label
+      description: |-
+        Attaches the label to campaigns, ad groups, ads and keywords (Google CampaignLabel,
+        AdGroupLabel, AdGroupAdLabel and AdGroupCriterionLabel) in one mutate. Idempotent: a
+        target that already carries the label is counted in `unchanged` instead of failing the
+        call. All ids are Google's own: ads and keywords use the composite id Google puts in
+        their resource names, `{adGroupId}~{adId}` and `{adGroupId}~{criterionId}` (the keyword
+        form is the tail of `resourceName` on `GET /v1/ads/keywords`).
+      security:
+        - bearerAuth: []
+      parameters:
+        - { name: labelId, in: path, required: true, schema: { type: string, pattern: '^\d+$' }, description: Google label id }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/GoogleAdLabelAssignments' }
+      responses:
+        '200':
+          description: Label attached
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  customerId: { type: string }
+                  labelId: { type: string }
+                  attached: { type: integer, description: Links created by this call }
+                  unchanged: { type: integer, description: Targets that already carried the label }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404': { description: 'Label not found on this customer, or account unavailable' }
+        '409': { $ref: '#/components/responses/AccountConnectionRequired' }
+        '501': { description: Only available on Google Ads accounts }
+    delete:
+      x-resource-group: "ads"
+      operationId: detachAdLabel
+      tags: ["Ad Accounts"]
+      x-platforms: ["google"]
+      summary: Detach a Google Ads label
+      description: Removes the label from the given targets. Idempotent; a target without the label is counted in `unchanged`.
+      security:
+        - bearerAuth: []
+      parameters:
+        - { name: labelId, in: path, required: true, schema: { type: string, pattern: '^\d+$' }, description: Google label id }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/GoogleAdLabelAssignments' }
+      responses:
+        '200':
+          description: Label detached
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  customerId: { type: string }
+                  labelId: { type: string }
+                  detached: { type: integer, description: Links removed by this call }
+                  unchanged: { type: integer, description: Targets that did not carry the label }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404': { description: 'Label not found on this customer, or account unavailable' }
+        '409': { $ref: '#/components/responses/AccountConnectionRequired' }
+        '501': { description: Only available on Google Ads accounts }
 
   /v1/ads/high-demand-periods:
     get:

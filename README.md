@@ -417,7 +417,7 @@ Both `from zernio import ...` and `from late import ...` work identically. The `
 | `ad_accounts.list_account_sitelinks()` | List account sitelinks |
 | `ad_accounts.list_account_structured_snippets()` | List account snippets |
 | `ad_accounts.list_ad_accounts()` | List ad accounts |
-| `ad_accounts.list_ad_labels()` | Ad labels |
+| `ad_accounts.list_ad_labels()` | List ad labels |
 | `ad_accounts.list_ad_negative_keyword_lists()` | List negative keyword lists |
 | `ad_accounts.list_ad_studies()` | A/B tests and lift studies |
 | `ad_accounts.list_ads_business_centers()` | List TikTok Business Centers |
@@ -430,6 +430,7 @@ Both `from zernio import ...` and `from late import ...` work identically. The `
 | `ad_accounts.list_tik_tok_ad_pixels()` | List TikTok ad pixels |
 | `ad_accounts.list_value_rule_sets()` | List value rule sets |
 | `ad_accounts.create_ad_account()` | Create Meta ad account |
+| `ad_accounts.create_ad_label()` | Create a Google Ads label |
 | `ad_accounts.create_ad_negative_keyword_list()` | Create a negative keyword list |
 | `ad_accounts.create_custom_conversion()` | Create custom conversion |
 | `ad_accounts.create_high_demand_period()` | Schedule a budget increase |
@@ -446,6 +447,7 @@ Both `from zernio import ...` and `from late import ...` work identically. The `
 | `ad_accounts.update_account_sitelinks()` | Update account sitelinks |
 | `ad_accounts.update_account_structured_snippets()` | Update account snippets |
 | `ad_accounts.update_ad_account()` | Update ad account settings |
+| `ad_accounts.update_ad_label()` | Update a Google Ads label |
 | `ad_accounts.update_ad_negative_keyword_list()` | Rename a negative keyword list |
 | `ad_accounts.update_value_rule_set()` | Replace a value rule set |
 | `ad_accounts.delete_ad_comment()` | Delete an ad comment |
@@ -454,10 +456,13 @@ Both `from zernio import ...` and `from late import ...` work identically. The `
 | `ad_accounts.add_account_callouts()` | Add account callouts |
 | `ad_accounts.add_account_sitelinks()` | Add account sitelinks |
 | `ad_accounts.add_account_structured_snippets()` | Add account snippets |
+| `ad_accounts.attach_ad_label()` | Attach a Google Ads label |
+| `ad_accounts.detach_ad_label()` | Detach a Google Ads label |
 | `ad_accounts.hide_ad_comment()` | Hide or unhide an ad comment |
 | `ad_accounts.remove_account_callout()` | Remove account callout |
 | `ad_accounts.remove_account_sitelink()` | Remove account sitelink |
 | `ad_accounts.remove_account_structured_snippet()` | Remove account snippet |
+| `ad_accounts.remove_ad_label()` | Remove a Google Ads label |
 | `ad_accounts.replace_ad_negative_keyword_list_keywords()` | Replace negative list keywords |
 | `ad_accounts.reply_to_ad_comment()` | Reply to an ad comment |
 
