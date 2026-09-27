@@ -3453,7 +3453,7 @@ def register_generated_tools(mcp, _get_client):
         """Pause or enable a Search keyword
 
         Args:
-            keyword_id: Zernio keyword ID (not the Google criterion ID) (required)
+            keyword_id: Zernio keyword ID (`id`), or Google's native `{adSetId}~{platformCriterionId}` (the tail of `resourceName`, e.g. 1234567890~987654321). A bare criterion id is rejected because it is only unique within its ad group. (required)
             status: (required)"""
         client = _get_client()
         try:
@@ -3476,7 +3476,7 @@ def register_generated_tools(mcp, _get_client):
         """Remove a Search keyword
 
         Args:
-            keyword_id: Zernio keyword ID (not the Google criterion ID) (required)"""
+            keyword_id: Zernio keyword ID (`id`), or Google's native `{adSetId}~{platformCriterionId}` (the tail of `resourceName`, e.g. 1234567890~987654321). A bare criterion id is rejected because it is only unique within its ad group. (required)"""
         client = _get_client()
         try:
             response = client.ad_campaigns.remove_ad_keyword(keyword_id=keyword_id)

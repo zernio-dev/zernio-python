@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.105.1"
+  version: "1.106.0"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -10945,7 +10945,9 @@ components:
     AdKeyword:
       type: object
       properties:
-        id: { type: string }
+        id: { type: string, description: 'Zernio keyword ID. Accepted as `keywordId` by PATCH/DELETE /v1/ads/keywords/{keywordId}.' }
+        platformCriterionId: { type: string, description: 'Google ad_group_criterion.criterion_id. Unique only within its ad group (`adSetId`), not across the account.' }
+        resourceName: { type: string, description: 'Google resource name, customers/{adAccountId}/adGroupCriteria/{adSetId}~{platformCriterionId}.' }
         accountId: { type: string, description: Account ID owning the sync }
         profileId: { type: string }
         platform: { type: string, enum: [google] }
@@ -46761,7 +46763,7 @@ paths:
       security:
         - bearerAuth: []
       parameters:
-        - { name: keywordId, in: path, required: true, schema: { type: string }, description: Zernio keyword ID (not the Google criterion ID) }
+        - { name: keywordId, in: path, required: true, schema: { type: string }, description: 'Zernio keyword ID (`id`), or Google''s native `{adSetId}~{platformCriterionId}` (the tail of `resourceName`, e.g. 1234567890~987654321). A bare criterion id is rejected because it is only unique within its ad group.' }
       requestBody:
         required: true
         content:
@@ -46796,7 +46798,7 @@ paths:
       security:
         - bearerAuth: []
       parameters:
-        - { name: keywordId, in: path, required: true, schema: { type: string }, description: Zernio keyword ID (not the Google criterion ID) }
+        - { name: keywordId, in: path, required: true, schema: { type: string }, description: 'Zernio keyword ID (`id`), or Google''s native `{adSetId}~{platformCriterionId}` (the tail of `resourceName`, e.g. 1234567890~987654321). A bare criterion id is rejected because it is only unique within its ad group.' }
       responses:
         '409': { $ref: '#/components/responses/AccountConnectionRequired' }
         '200':
@@ -46807,7 +46809,11 @@ paths:
                 type: object
                 properties:
                   removed: { type: boolean, description: Always true on success }
-                  keywordId: { type: string }
+                  keywordId: { type: string, description: Zernio keyword ID }
+                  platformCriterionId: { type: string, description: Google ad_group_criterion.criterion_id }
+                  resourceName: { type: string, description: 'Google resource name of the removed criterion' }
+                  campaignId: { type: string, description: Google campaign ID }
+                  adSetId: { type: string, description: Google ad group ID }
         '400': { $ref: '#/components/responses/BadRequest' }
         '401': { $ref: '#/components/responses/Unauthorized' }
         '404': { $ref: '#/components/responses/AccountUnavailable' }
