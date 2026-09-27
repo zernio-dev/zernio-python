@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.114.0"
+  version: "1.115.0"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -55968,6 +55968,10 @@ paths:
         group) and `platformAdId`. Activate with PUT /v1/ads/campaigns/{campaignId}/status;
         budget, bidding and name are edited with the regular campaign endpoints; creative,
         channels, audience and ad group targeting with PUT /v1/ads/{adId} (`demandGen`, `targeting`).
+        To grow an existing Demand Gen campaign, send `existingCampaignId` (adds a PAUSED ad group,
+        with its own geo, languages, channels and audience, plus its ad) or `adSetId` (adds a
+        PAUSED ad to that ad group); neither takes budget, bidding or schedule fields, and both
+        support `validateOnly`.
 
         Other mutually-exclusive request shapes are selected by the body:
 
@@ -56209,6 +56213,11 @@ paths:
                     `budgetAmount`/`budgetType` and bidding fields
                     (`bidStrategy`, `bidAmount`, `portfolioBidStrategyId`)
                     return 400 on this shape; the ad group already owns them.
+                    With `campaignType: "demand_gen"` the ad group must belong to a
+                    Demand Gen campaign (otherwise 400); `demandGen` carries only the
+                    ad's creative, the new ad is created PAUSED, and ad group settings
+                    (geo, languages, `demandGen.channels`/`audience`/`audienceId`/
+                    `adGroupName`) return 400. `validateOnly` is supported.
                 existingCampaignId:
                   type: string
                   description: |
@@ -56228,7 +56237,12 @@ paths:
                     Ads: create a new ad group under this EXISTING campaign;
                     the new ad group inherits the campaign's budget, so omit
                     `budgetAmount`/`budgetType` (and any bidding field), or
-                    the request returns 400. On failure only the entities we
+                    the request returns 400. With `campaignType: "demand_gen"` the
+                    campaign must be a Demand Gen campaign (otherwise 400): the new ad
+                    group (with its geo, languages, channels and audience from the
+                    request) and its ad are created in one atomic request, the ad
+                    group PAUSED; schedule and `locationTargetingType` belong to the
+                    campaign and return 400. On failure only the entities we
                     authored are cleaned up; the pre-existing parent is left
                     untouched and is never (re)activated. Mutually exclusive
                     with `adSetId` and `creatives[]`.
@@ -57110,6 +57124,43 @@ paths:
                     audience:
                       userInterests: ['92948']
                       ageRanges: [{ min: 25, max: 54 }]
+              demandGenNewAdGroup:
+                summary: "Add a paused ad group with its own audience and ad to an existing Demand Gen campaign."
+                value:
+                  accountId: '69ce75d483e990e1c01ccfe4'
+                  adAccountId: '9122445560'
+                  name: 'Demand Gen, second audience'
+                  campaignType: demand_gen
+                  existingCampaignId: '23508518100'
+                  countries: [US]
+                  demandGen:
+                    adGroupName: 'Returning visitors'
+                    finalUrl: 'https://zernio.com'
+                    businessName: Zernio
+                    headlines: ['Schedule posts']
+                    descriptions: ['Publish everywhere from one API.']
+                    images:
+                      square: ['https://example.com/square.png']
+                      logo: ['https://example.com/logo.png']
+                    audience:
+                      userLists: ['123456']
+              demandGenNewAd:
+                summary: "Add a paused video ad to an existing Demand Gen ad group."
+                value:
+                  accountId: '69ce75d483e990e1c01ccfe4'
+                  adAccountId: '9122445560'
+                  name: 'Demand Gen video variant'
+                  campaignType: demand_gen
+                  adSetId: '191940825986'
+                  demandGen:
+                    finalUrl: 'https://zernio.com'
+                    businessName: Zernio
+                    headlines: ['Schedule posts']
+                    longHeadlines: ['Schedule social posts from your app']
+                    descriptions: ['Publish everywhere from one API.']
+                    images:
+                      logo: ['https://example.com/logo.png']
+                    youtubeVideoIds: ['dQw4w9WgXcQ']
               demandGenCarousel:
                 summary: "Paused Demand Gen campaign with a carousel ad."
                 value:
