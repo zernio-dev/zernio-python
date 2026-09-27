@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.110.0"
+  version: "1.111.0"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -10307,6 +10307,55 @@ components:
         Display and Performance Max campaigns. Excluded locations always use presence
         (Google refuses presence_or_interest for exclusions on these campaign types).
       example: presence
+    GoogleDemandGenInput:
+      type: object
+      additionalProperties: false
+      description: "Creative, channel and audience settings for a Google Demand Gen campaign (campaignType demand_gen). Creates one ad group with one ad: a multi-asset image ad, or a video responsive ad when youtubeVideoIds is sent."
+      required: [finalUrl, businessName, headlines, descriptions, images]
+      properties:
+        adGroupName: { type: string, maxLength: 255, description: "Defaults to the ad name." }
+        finalUrl: { type: string, format: uri }
+        businessName: { type: string, maxLength: 25 }
+        headlines: { type: array, minItems: 1, maxItems: 5, items: { type: string, maxLength: 40 }, description: "Distinct texts." }
+        longHeadlines: { type: array, minItems: 1, maxItems: 5, items: { type: string, maxLength: 90 }, description: "Video ads only, and required there." }
+        descriptions: { type: array, minItems: 1, maxItems: 5, items: { type: string, maxLength: 90 } }
+        callToAction: { type: string, maxLength: 25, description: "Image ads only. Call to action text such as 'Learn more'; Google picks one when omitted." }
+        images:
+          type: object
+          additionalProperties: false
+          required: [logo]
+          description: "Public image URLs. An image ad needs landscape or square; a video ad takes only one logo."
+          properties:
+            landscape: { type: array, minItems: 1, maxItems: 20, items: { type: string, format: uri }, description: "1.91:1, at least 600x314." }
+            square: { type: array, minItems: 1, maxItems: 20, items: { type: string, format: uri }, description: "1:1, at least 300x300." }
+            portrait: { type: array, minItems: 1, maxItems: 20, items: { type: string, format: uri }, description: "4:5, at least 480x600." }
+            logo: { type: array, minItems: 1, maxItems: 5, items: { type: string, format: uri }, description: "1:1, at least 128x128." }
+        youtubeVideoIds: { type: array, minItems: 1, maxItems: 5, items: { type: string, pattern: '^[A-Za-z0-9_-]{11}$' }, description: "Makes the ad a video responsive ad." }
+        channels:
+          type: array
+          minItems: 1
+          items: { type: string, enum: [youtube_in_stream, youtube_in_feed, youtube_shorts, discover, gmail, display] }
+          description: "Channel controls on the ad group. Only the listed channels serve; omit to serve on all of them."
+        audience:
+          type: object
+          additionalProperties: false
+          description: "Created as a Google Audience and attached to the ad group. Send at least one dimension. Ids are numeric Google ids (user lists, interest categories, custom audiences) from the same customer."
+          properties:
+            userLists: { type: array, minItems: 1, maxItems: 20, items: { type: string } }
+            userInterests: { type: array, minItems: 1, maxItems: 20, items: { type: string } }
+            customAudiences: { type: array, minItems: 1, maxItems: 20, items: { type: string } }
+            ageRanges:
+              type: array
+              minItems: 1
+              maxItems: 6
+              items:
+                type: object
+                required: [min]
+                properties:
+                  min: { type: integer, enum: [18, 25, 35, 45, 55, 65] }
+                  max: { type: integer, enum: [24, 34, 44, 54, 64], description: "Omit for no upper bound." }
+            genders: { type: array, minItems: 1, maxItems: 3, items: { type: string, enum: [male, female, undetermined] } }
+        audienceId: { type: string, description: "Attach an existing Google Audience by numeric id instead of audience." }
     GooglePmaxAssetGroupInput:
       type: object
       additionalProperties: false
@@ -55788,6 +55837,22 @@ paths:
         COST_CAP plus bidAmount for target CPA, LOWEST_COST_WITH_MIN_ROAS plus
         roasAverageFloor for Maximize Conversion Value with target ROAS.
 
+        Google Demand Gen: set `campaignType: "demand_gen"` and supply `demandGen`. Creates a
+        daily budget, PAUSED campaign, one ad group and one ad in a single atomic request: a
+        multi-asset image ad, or a video responsive ad when `demandGen.youtubeVideoIds` is sent.
+        Geo (countries, regions, cities, zips, metros) and languages go on the ad group, as
+        Demand Gen requires. `demandGen.channels` sets the ad group's channel controls and
+        `demandGen.audience` builds a Google Audience (user lists, interests, custom audiences,
+        age ranges, genders) attached to the ad group, or `demandGen.audienceId` attaches an
+        existing one. `validateOnly: true` validates everything with Google without creating
+        resources. Supported bidding: omitted or LOWEST_COST_WITHOUT_CAP for Maximize
+        Conversions, COST_CAP plus bidAmount for target CPA, LOWEST_COST_WITH_MIN_ROAS plus
+        roasAverageFloor for target ROAS, LOWEST_COST_WITH_BID_CAP plus bidAmount for target
+        CPC. The created ad carries the native `platformCampaignId`, `platformAdSetId` (ad
+        group) and `platformAdId`. Activate with PUT /v1/ads/campaigns/{campaignId}/status;
+        budget, bidding and name are edited with the regular campaign endpoints. Creative and
+        targeting edits on an existing Demand Gen ad return 501 for now.
+
         Other mutually-exclusive request shapes are selected by the body:
 
         - Legacy single-creative shape (all platforms, the default).
@@ -55869,7 +55934,7 @@ paths:
                   description: "Meta only. Meta's \"Ad includes media created or edited with AI\" disclosure, the checkbox in Ads Manager, stored on the creative as `generative_asset_spec.transparency_metadata.self_disclosure`. OPT_IN checks it, OPT_OUT explicitly declares no AI media, omitted leaves Meta's default. Applied to each new creative, including standalone, creatives[] and attach shapes, and preserved when a creative is rebuilt. This sets the disclosure on the ad; whether and when the viewer-facing label renders is Meta's decision."
                 validateOnly:
                   type: boolean
-                  description: 'Google Performance Max validates the complete atomic campaign and asset group with no resource creation or local persistence. Google validation still downloads image URLs and consumes quota. On Meta, validates the complete inline campaign, ad set, creative and ad with execution_options validate_only. Nothing is uploaded or created, and validation bypasses Idempotency-Key storage. Supports a single image, all-image placementAssets with per-rule copy, existing video.id or existingCreativeId; other media pools, new video uploads, creatives[], adSetId and RESERVED buying return 400. Placement validation uses existing Instagram identities only. Existing campaign or creative nodes are marked skipped. Success returns 200 with per-node results; Meta rejection returns an error. ChatGPT (OpenAI) has no platform dry-run: Zernio runs every check it knows (creative lengths, budget, bid strategy, targeting) plus live lookups of the conversion event and target countries, and uploads or creates nothing. OpenAI''s own write-time checks (image fetch, currency-specific minimums, ad review) still run only on a real create. Any other platform, or a Google campaignType other than pmax, returns 501 `feature_not_available`.'
+                  description: 'Google Performance Max validates the complete atomic campaign and asset group with no resource creation or local persistence. Google validation still downloads image URLs and consumes quota. On Meta, validates the complete inline campaign, ad set, creative and ad with execution_options validate_only. Nothing is uploaded or created, and validation bypasses Idempotency-Key storage. Supports a single image, all-image placementAssets with per-rule copy, existing video.id or existingCreativeId; other media pools, new video uploads, creatives[], adSetId and RESERVED buying return 400. Placement validation uses existing Instagram identities only. Existing campaign or creative nodes are marked skipped. Success returns 200 with per-node results; Meta rejection returns an error. ChatGPT (OpenAI) has no platform dry-run: Zernio runs every check it knows (creative lengths, budget, bid strategy, targeting) plus live lookups of the conversion event and target countries, and uploads or creates nothing. OpenAI''s own write-time checks (image fetch, currency-specific minimums, ad review) still run only on a real create. Any other platform, or a Google campaignType other than pmax or demand_gen, returns 501 `feature_not_available`.'
                 budgetAmount: { type: number, description: "Budget in WHOLE currency units (USD: 50 = $50.00), NOT cents. Meta's own Marketing API takes this same number in minor units, so it is an easy and expensive mix-up. Required on legacy, multi-creative and Performance Max shapes. Inherited on attach. OpenAI Ads: in the ad account currency, minimum 1; OpenAI can require a higher daily minimum for some currencies and names it in the error." }
                 budgetType: { type: string, enum: [daily, lifetime], description: "Required on legacy, multi-creative and Performance Max shapes. Inherited on attach. OpenAI Ads accepts both as the campaign's single spend cap. A lifetime cap can later switch to daily with PUT /v1/ads/campaigns/{campaignId}, but OpenAI never switches a daily cap back to lifetime (422). Automatic bidding (Maximize Results) needs a daily budget." }
                 status:
@@ -56573,12 +56638,14 @@ paths:
                                 type: array
                                 items: { type: string, enum: [mobile, desktop] }
                 audienceId: { type: string, description: Custom audience ID for targeting }
-                campaignType: { type: string, enum: [display, search, pmax], default: display, description: "Google only. Performance Max requires assetGroup and is always created PAUSED." }
+                campaignType: { type: string, enum: [display, search, pmax, demand_gen], default: display, description: "Google only. Performance Max requires assetGroup and Demand Gen requires demandGen; both are always created PAUSED." }
                 locationTargetingType:
                   allOf: [{ $ref: '#/components/schemas/GoogleLocationTargetingType' }]
                   description: "Google only (400 elsewhere). Set on the new campaign; a request that joins an existing campaign (`existingCampaignId` or `adSetId`) returns 400, change that campaign with PUT /v1/ads/campaigns/{campaignId}/targeting instead. `presence` reaches only people in or regularly in the targeted locations."
                 assetGroup:
                   $ref: '#/components/schemas/GooglePmaxAssetGroupInput'
+                demandGen:
+                  $ref: '#/components/schemas/GoogleDemandGenInput'
                 keywords: { type: array, maxItems: 1000, items: { $ref: '#/components/schemas/KeywordEntry' }, description: "Google Search only. Keywords on the new ad group; entries are strings (BROAD) or { text, matchType }. Editable later via PUT /v1/ads/{adId} targeting.keywords." }
                 negativeKeywords: { type: array, maxItems: 1000, items: { $ref: '#/components/schemas/KeywordEntry' }, description: "Google Search only; other platforms return 400. Ad-group-level negative keywords on the new ad group. Editable later via PUT /v1/ads/{adId} targeting.negativeKeywords." }
                 campaignNegativeKeywords: { type: array, maxItems: 1000, items: { $ref: '#/components/schemas/KeywordEntry' }, description: "Google Search only; other platforms return 400. Campaign-level negative keywords (campaign_criterion.negative), created alongside the ad group. Editable later via PUT /v1/ads/campaigns/{campaignId}/negative-keywords." }
@@ -56901,6 +56968,32 @@ paths:
                       landscape: ['https://example.com/landscape.png']
                       square: ['https://example.com/square.png']
                       logo: ['https://example.com/logo.png']
+              demandGen:
+                summary: "Paused Demand Gen campaign with a multi-asset image ad."
+                value:
+                  accountId: '69ce75d483e990e1c01ccfe4'
+                  adAccountId: '9122445560'
+                  name: 'Demand Gen launch'
+                  campaignType: demand_gen
+                  budgetAmount: 10
+                  budgetType: daily
+                  validateOnly: true
+                  countries: [ES]
+                  languages: [es]
+                  demandGen:
+                    finalUrl: 'https://zernio.com'
+                    businessName: Zernio
+                    headlines: ['Schedule posts', 'One social API']
+                    descriptions: ['Publish and manage social content through one API.']
+                    callToAction: 'Learn more'
+                    images:
+                      landscape: ['https://example.com/landscape.png']
+                      square: ['https://example.com/square.png']
+                      logo: ['https://example.com/logo.png']
+                    channels: [youtube_in_feed, youtube_shorts, discover, gmail]
+                    audience:
+                      userInterests: ['92948']
+                      ageRanges: [{ min: 25, max: 54 }]
               appPromotion:
                 value:
                   accountId: '69fc524892b3d8e85f893e73'
