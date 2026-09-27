@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.104.0"
+  version: "1.105.0"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -3288,6 +3288,14 @@ components:
                     type: string
                   error:
                     type: string
+                  errorCategory:
+                    type: string
+                    enum: [auth_expired, user_content, user_abuse, account_issue, platform_rejected, platform_error, platform_rate_limit, quota_exhausted, system_error, unknown]
+                    description: 'Present when this target failed. Same taxonomy as `platforms[].errorCategory` on GET /v1/posts.'
+                  errorSource:
+                    type: string
+                    enum: [user, platform, system]
+                    description: 'Present when this target failed. Who must act: user, platform or system (Zernio).'
                   platformError:
                     $ref: '#/components/schemas/PostPlatformError'
             metadata:
@@ -3352,6 +3360,8 @@ components:
                   platformPostId: { type: string }
                   publishedUrl: { type: string }
                   error: { type: string }
+                  errorCategory: { type: string, enum: [auth_expired, user_content, user_abuse, account_issue, platform_rejected, platform_error, platform_rate_limit, quota_exhausted, system_error, unknown], description: 'Present when this target failed. Same taxonomy as `platforms[].errorCategory` on GET /v1/posts.' }
+                  errorSource: { type: string, enum: [user, platform, system], description: 'Present when this target failed. Who must act: user, platform or system (Zernio).' }
                   platformError: { $ref: '#/components/schemas/PostPlatformError' }
             metadata:
               type: object
@@ -3378,6 +3388,14 @@ components:
             error:
               type: string
               description: Error message from the platform. Present on `failed` only.
+            errorCategory:
+              type: string
+              enum: [auth_expired, user_content, user_abuse, account_issue, platform_rejected, platform_error, platform_rate_limit, quota_exhausted, system_error, unknown]
+              description: 'Error category for programmatic handling. Present on `failed` only. Same taxonomy as `platforms[].errorCategory` on GET /v1/posts.'
+            errorSource:
+              type: string
+              enum: [user, platform, system]
+              description: 'Who must act on the failure: user (fix content or reconnect), platform (outage or policy), system (Zernio). Present on `failed` only.'
             deletedAt:
               type: string
               format: date-time
