@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.112.0"
+  version: "1.113.0"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -10358,24 +10358,72 @@ components:
           items: { type: string, enum: [youtube_in_stream, youtube_in_feed, youtube_shorts, discover, gmail, display] }
           description: "Channel controls on the ad group. Only the listed channels serve; omit to serve on all of them."
         audience:
+          $ref: '#/components/schemas/GoogleDemandGenAudience'
+        audienceId: { type: string, description: "Attach an existing Google Audience by numeric id instead of audience." }
+    GoogleDemandGenAudience:
+      type: object
+      additionalProperties: false
+      minProperties: 1
+      description: "Created as a Google Audience and attached to the ad group. Send at least one dimension. Ids are numeric Google ids (user lists, interest categories, custom audiences) from the same customer."
+      properties:
+        userLists: { type: array, minItems: 1, maxItems: 20, items: { type: string } }
+        userInterests: { type: array, minItems: 1, maxItems: 20, items: { type: string } }
+        customAudiences: { type: array, minItems: 1, maxItems: 20, items: { type: string } }
+        ageRanges:
+          type: array
+          minItems: 1
+          maxItems: 6
+          items:
+            type: object
+            required: [min]
+            properties:
+              min: { type: integer, enum: [18, 25, 35, 45, 55, 65] }
+              max: { type: integer, enum: [24, 34, 44, 54, 64], description: "Omit for no upper bound." }
+        genders: { type: array, minItems: 1, maxItems: 3, items: { type: string, enum: [male, female, undetermined] } }
+    GoogleDemandGenUpdate:
+      type: object
+      additionalProperties: false
+      minProperties: 1
+      description: |
+        Partial edit of a Google Demand Gen ad, sent in one atomic Google request. Every field
+        you send replaces that whole field; fields you omit are kept. Which creative fields
+        apply depends on the ad (read from Google): image ads take headlines, descriptions,
+        businessName, callToAction and images (landscape, square, portrait, logo); video ads
+        take headlines, longHeadlines, descriptions, businessName, youtubeVideoIds and exactly
+        one images.logo; carousel ads take exactly one headline, one description, one logo,
+        businessName and callToAction (their cards cannot be edited: create a new carousel ad).
+        A field the ad does not take returns 422. New images are uploaded as new Google assets;
+        the previous ones stay in the account's asset library.
+
+        `channels`, `audience` and `audienceId` change the ad's ad group, so they apply to every
+        ad in it. `audience` builds a new Google Audience and attaches it in place of the current
+        one (the previous audience is detached, not deleted); `audienceId` attaches an existing
+        one. Ad groups of campaigns migrated from Discovery use ungrouped audience segments,
+        and Google refuses an Audience on them.
+      properties:
+        finalUrl: { type: string, format: uri }
+        businessName: { type: string, maxLength: 25 }
+        headlines: { type: array, minItems: 1, maxItems: 5, items: { type: string, maxLength: 40 } }
+        longHeadlines: { type: array, minItems: 1, maxItems: 5, items: { type: string, maxLength: 90 }, description: "Video ads only." }
+        descriptions: { type: array, minItems: 1, maxItems: 5, items: { type: string, maxLength: 90 } }
+        callToAction: { type: string, maxLength: 25, description: "Image and carousel ads only." }
+        images:
           type: object
           additionalProperties: false
-          description: "Created as a Google Audience and attached to the ad group. Send at least one dimension. Ids are numeric Google ids (user lists, interest categories, custom audiences) from the same customer."
+          minProperties: 1
           properties:
-            userLists: { type: array, minItems: 1, maxItems: 20, items: { type: string } }
-            userInterests: { type: array, minItems: 1, maxItems: 20, items: { type: string } }
-            customAudiences: { type: array, minItems: 1, maxItems: 20, items: { type: string } }
-            ageRanges:
-              type: array
-              minItems: 1
-              maxItems: 6
-              items:
-                type: object
-                required: [min]
-                properties:
-                  min: { type: integer, enum: [18, 25, 35, 45, 55, 65] }
-                  max: { type: integer, enum: [24, 34, 44, 54, 64], description: "Omit for no upper bound." }
-            genders: { type: array, minItems: 1, maxItems: 3, items: { type: string, enum: [male, female, undetermined] } }
+            landscape: { type: array, minItems: 1, maxItems: 20, items: { type: string, format: uri } }
+            square: { type: array, minItems: 1, maxItems: 20, items: { type: string, format: uri } }
+            portrait: { type: array, minItems: 1, maxItems: 20, items: { type: string, format: uri } }
+            logo: { type: array, minItems: 1, maxItems: 5, items: { type: string, format: uri } }
+        youtubeVideoIds: { type: array, minItems: 1, maxItems: 5, items: { type: string, pattern: '^[A-Za-z0-9_-]{11}$' }, description: "Video ads only." }
+        channels:
+          type: array
+          minItems: 1
+          items: { type: string, enum: [youtube_in_stream, youtube_in_feed, youtube_shorts, discover, gmail, display] }
+          description: "Replaces the ad group's channel controls; only the listed channels serve."
+        audience:
+          $ref: '#/components/schemas/GoogleDemandGenAudience'
         audienceId: { type: string, description: "Attach an existing Google Audience by numeric id instead of audience." }
     GooglePmaxAssetGroupInput:
       type: object
@@ -49016,6 +49064,12 @@ paths:
           - **Performance Max**: top-level `assetGroup`, which swaps asset roles on the ad's asset
             group. The other creative fields return 422 for this channel, and `assetGroup` returns
             422 on any other channel.
+          - **Demand Gen**: top-level `demandGen` (see GoogleDemandGenUpdate): creative, channel
+            and audience changes in one atomic Google request. The other creative fields return
+            422 for this channel. `targeting` takes locations, languages, `locationTargetingType`
+            and `devices`; locations and languages are written to the ad's ad group, which
+            Demand Gen requires (campaigns migrated from Discovery that still target on the
+            campaign keep being written there), so they apply to every ad in that ad group.
         - **LinkedIn**: status, budget, targeting (countries or regions, excludedLocations (countries),
           the B2B facets, and audience segments; applied to the LinkedIn Campaign via
           PARTIAL_UPDATE, and REPLACES the campaign's entire targetingCriteria, not a merge),
@@ -49111,6 +49165,16 @@ paths:
                     longHeadline: Schedule social content from your app with Zernio
                     imageUrl: 'https://example.com/new-landscape.png'
                     squareImageUrl: 'https://example.com/new-square.png'
+              googleDemandGen:
+                summary: "Change a Google Demand Gen ad's headlines and square image, and swap its ad group audience."
+                value:
+                  demandGen:
+                    headlines: ['Schedule posts', 'One social API']
+                    images:
+                      square: ['https://example.com/new-square.png']
+                    audience:
+                      userInterests: ['92948']
+                      genders: [female]
               metaCreativeFeatures:
                 summary: "Opt a Meta creative out of an Advantage+ enhancement."
                 value:
@@ -49143,6 +49207,9 @@ paths:
                 assetGroup:
                   allOf: [{ $ref: '#/components/schemas/GooglePmaxAssetGroupUpdate' }]
                   description: "Google Performance Max only. Replaces whole asset roles on the ad's asset group. Returns 422 on any other platform or channel."
+                demandGen:
+                  allOf: [{ $ref: '#/components/schemas/GoogleDemandGenUpdate' }]
+                  description: "Google Demand Gen only. Returns 422 on any other platform or channel."
                 status: { type: string, enum: [active, paused] }
                 budget:
                   type: object
@@ -55890,8 +55957,8 @@ paths:
         roasAverageFloor for target ROAS, LOWEST_COST_WITH_BID_CAP plus bidAmount for target
         CPC. The created ad carries the native `platformCampaignId`, `platformAdSetId` (ad
         group) and `platformAdId`. Activate with PUT /v1/ads/campaigns/{campaignId}/status;
-        budget, bidding and name are edited with the regular campaign endpoints. Creative and
-        targeting edits on an existing Demand Gen ad return 501 for now.
+        budget, bidding and name are edited with the regular campaign endpoints; creative,
+        channels, audience and ad group targeting with PUT /v1/ads/{adId} (`demandGen`, `targeting`).
 
         Other mutually-exclusive request shapes are selected by the body:
 

@@ -4800,6 +4800,7 @@ def register_generated_tools(mcp, _get_client):
         descriptions: list[dict[str, Any]] | None = None,
         final_urls: list[str] | None = None,
         asset_group: dict[str, Any] | None = None,
+        demand_gen: dict[str, Any] | None = None,
         status: str | None = None,
         budget: dict[str, Any] | None = None,
         targeting: dict[str, Any] | None = None,
@@ -4814,6 +4815,7 @@ def register_generated_tools(mcp, _get_client):
                 descriptions: Google Search and Display only. Replaces the complete description list. Search takes 2-4, Display 1-5 and rejects pinnedField. No padding or truncation on update.
                 final_urls: Google Search and Display only. Replaces final URLs. Omitted lists stay unchanged. For Performance Max use assetGroup.finalUrl.
                 asset_group: Google Performance Max only. Replaces whole asset roles on the ad's asset group. Returns 422 on any other platform or channel.
+                demand_gen: Google Demand Gen only. Returns 422 on any other platform or channel.
                 status
                 budget
                 targeting: Meta + TikTok (demographics/interests), Google (keyword and device
@@ -4863,6 +4865,7 @@ def register_generated_tools(mcp, _get_client):
                 descriptions=descriptions,
                 final_urls=final_urls,
                 asset_group=asset_group,
+                demand_gen=demand_gen,
                 status=status,
                 budget=budget,
                 targeting=targeting,
