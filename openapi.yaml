@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.111.1"
+  version: "1.112.0"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -10310,27 +10310,48 @@ components:
     GoogleDemandGenInput:
       type: object
       additionalProperties: false
-      description: "Creative, channel and audience settings for a Google Demand Gen campaign (campaignType demand_gen). Creates one ad group with one ad: a multi-asset image ad, or a video responsive ad when youtubeVideoIds is sent."
+      description: "Creative, channel and audience settings for a Google Demand Gen campaign (campaignType demand_gen). Creates one ad group with one ad: a multi-asset image ad, a video responsive ad when youtubeVideoIds is sent, or a carousel ad when carouselCards is sent."
       required: [finalUrl, businessName, headlines, descriptions, images]
       properties:
         adGroupName: { type: string, maxLength: 255, description: "Defaults to the ad name." }
         finalUrl: { type: string, format: uri }
         businessName: { type: string, maxLength: 25 }
-        headlines: { type: array, minItems: 1, maxItems: 5, items: { type: string, maxLength: 40 }, description: "Distinct texts." }
+        headlines: { type: array, minItems: 1, maxItems: 5, items: { type: string, maxLength: 40 }, description: "Distinct texts. A carousel ad takes exactly one." }
         longHeadlines: { type: array, minItems: 1, maxItems: 5, items: { type: string, maxLength: 90 }, description: "Video ads only, and required there." }
-        descriptions: { type: array, minItems: 1, maxItems: 5, items: { type: string, maxLength: 90 } }
-        callToAction: { type: string, maxLength: 25, description: "Image ads only. Call to action text such as 'Learn more'; Google picks one when omitted." }
+        descriptions: { type: array, minItems: 1, maxItems: 5, items: { type: string, maxLength: 90 }, description: "A carousel ad takes exactly one." }
+        callToAction: { type: string, maxLength: 25, description: "Image and carousel ads only. Call to action text such as 'Learn more'; Google picks one when omitted." }
         images:
           type: object
           additionalProperties: false
           required: [logo]
-          description: "Public image URLs. An image ad needs landscape or square; a video ad takes only one logo."
+          description: "Public image URLs. An image ad needs landscape or square; video and carousel ads take only one logo (carousel images go on each card)."
           properties:
             landscape: { type: array, minItems: 1, maxItems: 20, items: { type: string, format: uri }, description: "1.91:1, at least 600x314." }
             square: { type: array, minItems: 1, maxItems: 20, items: { type: string, format: uri }, description: "1:1, at least 300x300." }
             portrait: { type: array, minItems: 1, maxItems: 20, items: { type: string, format: uri }, description: "4:5, at least 480x600." }
             logo: { type: array, minItems: 1, maxItems: 5, items: { type: string, format: uri }, description: "1:1, at least 128x128." }
         youtubeVideoIds: { type: array, minItems: 1, maxItems: 5, items: { type: string, pattern: '^[A-Za-z0-9_-]{11}$' }, description: "Makes the ad a video responsive ad." }
+        carouselCards:
+          type: array
+          minItems: 2
+          maxItems: 10
+          description: "Makes the ad a carousel ad. Each card needs its own image (no two cards may share one); use the same image shape on every card. Card images are uploaded to the account's asset library before the campaign is created, validateOnly included (Google checks cards against existing images; identical images are reused, not duplicated)."
+          items:
+            type: object
+            additionalProperties: false
+            required: [headline, images]
+            properties:
+              headline: { type: string, maxLength: 40 }
+              finalUrl: { type: string, format: uri, description: "Defaults to demandGen.finalUrl." }
+              callToAction: { type: string, maxLength: 25 }
+              images:
+                type: object
+                additionalProperties: false
+                minProperties: 1
+                properties:
+                  landscape: { type: string, format: uri, description: "1.91:1." }
+                  square: { type: string, format: uri, description: "1:1." }
+                  portrait: { type: string, format: uri, description: "4:5." }
         channels:
           type: array
           minItems: 1
@@ -55857,7 +55878,8 @@ paths:
 
         Google Demand Gen: set `campaignType: "demand_gen"` and supply `demandGen`. Creates a
         daily budget, PAUSED campaign, one ad group and one ad in a single atomic request: a
-        multi-asset image ad, or a video responsive ad when `demandGen.youtubeVideoIds` is sent.
+        multi-asset image ad, a video responsive ad when `demandGen.youtubeVideoIds` is sent, or
+        a carousel ad (2 to 10 cards) when `demandGen.carouselCards` is sent.
         Geo (countries, regions, cities, zips, metros) and languages go on the ad group, as
         Demand Gen requires. `demandGen.channels` sets the ad group's channel controls and
         `demandGen.audience` builds a Google Audience (user lists, interests, custom audiences,
@@ -57012,6 +57034,29 @@ paths:
                     audience:
                       userInterests: ['92948']
                       ageRanges: [{ min: 25, max: 54 }]
+              demandGenCarousel:
+                summary: "Paused Demand Gen campaign with a carousel ad."
+                value:
+                  accountId: '69ce75d483e990e1c01ccfe4'
+                  adAccountId: '9122445560'
+                  name: 'Demand Gen carousel'
+                  campaignType: demand_gen
+                  budgetAmount: 10
+                  budgetType: daily
+                  countries: [ES]
+                  demandGen:
+                    finalUrl: 'https://zernio.com'
+                    businessName: Zernio
+                    headlines: ['One social API']
+                    descriptions: ['Publish everywhere from one API.']
+                    images:
+                      logo: ['https://example.com/logo.png']
+                    carouselCards:
+                      - headline: 'Schedule posts'
+                        images: { square: 'https://example.com/card-1.png' }
+                      - headline: 'Read analytics'
+                        finalUrl: 'https://zernio.com/pricing'
+                        images: { square: 'https://example.com/card-2.png' }
               appPromotion:
                 value:
                   accountId: '69fc524892b3d8e85f893e73'
