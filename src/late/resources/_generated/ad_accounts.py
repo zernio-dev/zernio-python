@@ -797,6 +797,59 @@ class AdAccountsResource:
         """Remove account snippet"""
         return self._client._delete("/v1/ads/accounts/structured-snippets")
 
+    def get_ad_account_hierarchy(
+        self,
+        account_id: str,
+        *,
+        ad_account_id: str | None = None,
+        customer_id: str | None = None,
+    ) -> dict[str, Any]:
+        """Get manager account hierarchy"""
+        params = self._build_params(
+            account_id=account_id,
+            ad_account_id=ad_account_id,
+            customer_id=customer_id,
+        )
+        return self._client._get("/v1/ads/accounts/hierarchy", params=params)
+
+    def invite_ad_account_to_manager(
+        self,
+        account_id: str,
+        manager_customer_id: str,
+        client_customer_id: str,
+        *,
+        validate_only: bool | None = False,
+    ) -> dict[str, Any]:
+        """Invite a client account to a manager"""
+        payload = self._build_payload(
+            account_id=account_id,
+            manager_customer_id=manager_customer_id,
+            client_customer_id=client_customer_id,
+            validate_only=validate_only,
+        )
+        return self._client._post("/v1/ads/accounts/manager-links", data=payload)
+
+    def update_ad_account_manager_link(
+        self,
+        account_id: str,
+        manager_customer_id: str,
+        client_customer_id: str,
+        manager_link_id: str,
+        action: str,
+        *,
+        validate_only: bool | None = False,
+    ) -> dict[str, Any]:
+        """Accept, decline, cancel or end a manager link"""
+        payload = self._build_payload(
+            account_id=account_id,
+            manager_customer_id=manager_customer_id,
+            client_customer_id=client_customer_id,
+            manager_link_id=manager_link_id,
+            action=action,
+            validate_only=validate_only,
+        )
+        return self._client._patch("/v1/ads/accounts/manager-links", data=payload)
+
     def get_ad_account_finance(
         self, account_id: str, ad_account_id: str
     ) -> dict[str, Any]:
@@ -1678,6 +1731,61 @@ class AdAccountsResource:
     ) -> dict[str, Any]:
         """Remove account snippet (async)"""
         return await self._client._adelete("/v1/ads/accounts/structured-snippets")
+
+    async def aget_ad_account_hierarchy(
+        self,
+        account_id: str,
+        *,
+        ad_account_id: str | None = None,
+        customer_id: str | None = None,
+    ) -> dict[str, Any]:
+        """Get manager account hierarchy (async)"""
+        params = self._build_params(
+            account_id=account_id,
+            ad_account_id=ad_account_id,
+            customer_id=customer_id,
+        )
+        return await self._client._aget("/v1/ads/accounts/hierarchy", params=params)
+
+    async def ainvite_ad_account_to_manager(
+        self,
+        account_id: str,
+        manager_customer_id: str,
+        client_customer_id: str,
+        *,
+        validate_only: bool | None = False,
+    ) -> dict[str, Any]:
+        """Invite a client account to a manager (async)"""
+        payload = self._build_payload(
+            account_id=account_id,
+            manager_customer_id=manager_customer_id,
+            client_customer_id=client_customer_id,
+            validate_only=validate_only,
+        )
+        return await self._client._apost("/v1/ads/accounts/manager-links", data=payload)
+
+    async def aupdate_ad_account_manager_link(
+        self,
+        account_id: str,
+        manager_customer_id: str,
+        client_customer_id: str,
+        manager_link_id: str,
+        action: str,
+        *,
+        validate_only: bool | None = False,
+    ) -> dict[str, Any]:
+        """Accept, decline, cancel or end a manager link (async)"""
+        payload = self._build_payload(
+            account_id=account_id,
+            manager_customer_id=manager_customer_id,
+            client_customer_id=client_customer_id,
+            manager_link_id=manager_link_id,
+            action=action,
+            validate_only=validate_only,
+        )
+        return await self._client._apatch(
+            "/v1/ads/accounts/manager-links", data=payload
+        )
 
     async def aget_ad_account_finance(
         self, account_id: str, ad_account_id: str

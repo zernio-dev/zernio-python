@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.108.0"
+  version: "1.109.0"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -9761,6 +9761,30 @@ components:
           - `LOWEST_COST_WITH_MIN_ROAS`: requires `roasAverageFloor` (decimal multiplier, 2.0 = 2.0x).
         Source: facebook-business-sdk-codegen api_specs/specs/enum_types.json (`AdSet_bid_strategy`,
         `Campaign_bid_strategy`).
+    GoogleAdsHierarchyClient:
+      type: object
+      description: "A Google Ads account inside a manager tree."
+      properties:
+        customerId: { type: string, description: "Native Google Ads customer id, digits only." }
+        name: { type: [string, "null"], description: "Null for a pending invitation." }
+        currency: { type: [string, "null"] }
+        timeZone: { type: [string, "null"] }
+        manager: { type: boolean, description: "True for a sub-manager account." }
+        testAccount: { type: boolean }
+        hidden: { type: boolean, description: "Hidden in the manager's Google Ads UI." }
+        level: { type: integer, description: "Distance from the root (1 = direct client of the root)." }
+        status: { type: [string, "null"], description: "Google customer status: ENABLED, CANCELED, SUSPENDED or CLOSED. Null for a pending invitation." }
+        parentCustomerId: { type: [string, "null"], description: "Direct manager of this account. Null only when more than 50 managers under the root were skipped." }
+        managerLinkId: { type: [string, "null"], description: "Id of the link to the parent, used by PATCH /v1/ads/accounts/manager-links." }
+        linkStatus: { type: [string, "null"], enum: [ACTIVE, PENDING, null] }
+    GoogleAdsManagerLink:
+      type: object
+      properties:
+        managerCustomerId: { type: string }
+        clientCustomerId: { type: string }
+        managerLinkId: { type: [string, "null"], description: "Null on a validateOnly invitation, where Google creates nothing." }
+        status: { type: string, enum: [PENDING, ACTIVE, REFUSED, CANCELED, INACTIVE], description: "Status the link has after this call." }
+        validateOnly: { type: boolean }
     PortfolioBidStrategy:
       type: object
       description: "A Google Ads portfolio bid strategy: a named bidding strategy shared across campaigns, with its R.130 report metrics over the queried date range."
@@ -54511,6 +54535,180 @@ paths:
           description: "Google Ads operations budget or platform quota exhausted."
         '501':
           description: "Only supported on Google Ads."
+
+  /v1/ads/accounts/hierarchy:
+    get:
+      x-resource-group: "ads"
+      operationId: getAdAccountHierarchy
+      tags: ["Ad Accounts"]
+      x-platforms: ["google"]
+      summary: 'Get manager account hierarchy'
+      description: >-
+        Live manager (MCC) and client tree for a Google Ads connection. Starts from every
+        customer the Google user behind the connection can access directly and walks each
+        tree to any depth with `customer_client`, then reads each manager's own client
+        links so every client carries its direct parent, the `managerLinkId` and the link
+        status. Invitations a manager sent that the client has not accepted yet appear as
+        clients with `linkStatus: PENDING` (Google returns no name or currency for them).
+        Refused, canceled and ended links are history and are omitted. `managerLinks` on
+        a root lists the managers linked to that account, including invitations it can
+        still accept with PATCH /v1/ads/accounts/manager-links. A directly accessible
+        account that is also nested in another tree appears only once, inside that tree.
+        Customers Google refuses to read (for example a cancelled account) are listed in
+        `unavailable` with Google's reason instead of failing the call. Up to 50 roots
+        and 50 managers per root are read; `truncated` is true when more exist. Cached
+        for 10 minutes per connection; the response carries `cachedAt` and `stale`.
+        When the connection is scoped to specific ad accounts, client accounts outside
+        that scope are hidden (managers stay visible).
+      security:
+        - bearerAuth: []
+      parameters:
+        - { name: accountId, in: query, required: true, schema: { type: string }, description: "Google ads SocialAccount id." }
+        - { name: adAccountId, in: query, schema: { type: string }, description: "Only return the tree rooted at this customer id (digits only). It must be an account the Google user accesses directly. Omit to list every tree." }
+        - { name: customerId, in: query, deprecated: true, schema: { type: string }, description: "Alias of adAccountId, kept for consistency with the other Google Ads account endpoints." }
+      responses:
+        '200':
+          description: Manager and client hierarchy
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  accountId: { type: string }
+                  roots:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        customerId: { type: string, description: "Native Google Ads customer id, digits only." }
+                        name: { type: [string, "null"] }
+                        currency: { type: [string, "null"], description: "ISO 4217 code." }
+                        timeZone: { type: [string, "null"], description: "IANA time zone, e.g. Europe/Madrid." }
+                        manager: { type: boolean, description: "True for a manager (MCC) account." }
+                        testAccount: { type: boolean }
+                        status: { type: [string, "null"], description: "Google customer status: ENABLED, CANCELED, SUSPENDED or CLOSED." }
+                        managerLinks:
+                          type: array
+                          description: "Managers linked to this account, ACTIVE or PENDING."
+                          items:
+                            type: object
+                            properties:
+                              managerCustomerId: { type: string }
+                              managerLinkId: { type: string }
+                              status: { type: string, enum: [ACTIVE, PENDING] }
+                        clients:
+                          type: array
+                          description: "Every account under this root at any depth, in Google's order, followed by pending invitations."
+                          items: { $ref: '#/components/schemas/GoogleAdsHierarchyClient' }
+                  unavailable:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        customerId: { type: string }
+                        reason: { type: string, description: "Google's error message and code." }
+                  truncated: { type: boolean }
+                  cachedAt: { type: [string, "null"], format: date-time, description: "When this data was fetched from Google. Null on a live read." }
+                  stale: { type: boolean, description: "True when Google's quota was exhausted and this is the last successful fetch." }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404': { $ref: '#/components/responses/AccountUnavailable' }
+        '409': { $ref: '#/components/responses/AccountConnectionRequired' }
+        '429': { description: "Google Ads operations budget or quota exhausted; retry later." }
+        '501': { description: Only available on Google Ads accounts }
+
+  /v1/ads/accounts/manager-links:
+    post:
+      x-resource-group: "ads"
+      operationId: inviteAdAccountToManager
+      tags: ["Ad Accounts"]
+      x-platforms: ["google"]
+      summary: 'Invite a client account to a manager'
+      description: >-
+        Sends a manager-to-client link invitation from `managerCustomerId` to
+        `clientCustomerId` (Google's CustomerClientLinkService). The manager must be one
+        the connection's Google user reaches, directly or under another manager (see GET
+        /v1/ads/accounts/hierarchy); the client can be any Google Ads account. The link
+        stays `PENDING` until someone with access to the client accepts it in Google Ads
+        or through PATCH on this path. Not idempotent: Google refuses a second invitation
+        while one is pending. Send `validateOnly: true` to have Google check the request
+        without sending anything.
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required: [accountId, managerCustomerId, clientCustomerId]
+              properties:
+                accountId: { type: string, description: "Google ads SocialAccount id." }
+                managerCustomerId: { type: string, description: "Manager customer id, digits only." }
+                clientCustomerId: { type: string, description: "Client customer id to invite, digits only." }
+                validateOnly: { type: boolean, default: false }
+      responses:
+        '201':
+          description: Invitation sent
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/GoogleAdsManagerLink' }
+        '200':
+          description: Validated only (validateOnly true), nothing sent
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/GoogleAdsManagerLink' }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404': { $ref: '#/components/responses/AccountUnavailable' }
+        '409': { $ref: '#/components/responses/AccountConnectionRequired' }
+        '429': { description: "Google Ads operations budget or quota exhausted; retry later." }
+        '501': { description: Only available on Google Ads accounts }
+    patch:
+      x-resource-group: "ads"
+      operationId: updateAdAccountManagerLink
+      tags: ["Ad Accounts"]
+      x-platforms: ["google"]
+      summary: 'Accept, decline, cancel or end a manager link'
+      description: >-
+        Changes one manager-client link, identified by `managerCustomerId`,
+        `clientCustomerId` and `managerLinkId` (all from GET /v1/ads/accounts/hierarchy).
+        `accept` and `decline` answer a pending invitation as the client
+        (CustomerManagerLinkService), so the connection's Google user needs direct access
+        to the client account; access through a manager is not enough, because the link
+        does not exist yet. `cancel` withdraws a pending invitation and `unlink` ends an
+        active link, both as the manager (CustomerClientLinkService). Send
+        `validateOnly: true` to have Google check the change without applying it.
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required: [accountId, managerCustomerId, clientCustomerId, managerLinkId, action]
+              properties:
+                accountId: { type: string, description: "Google ads SocialAccount id." }
+                managerCustomerId: { type: string, description: "Manager customer id, digits only." }
+                clientCustomerId: { type: string, description: "Client customer id, digits only." }
+                managerLinkId: { type: string, description: "Numeric link id from GET /v1/ads/accounts/hierarchy." }
+                action: { type: string, enum: [accept, decline, cancel, unlink] }
+                validateOnly: { type: boolean, default: false }
+      responses:
+        '200':
+          description: Link updated, or validated only when validateOnly is true
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/GoogleAdsManagerLink' }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404': { $ref: '#/components/responses/AccountUnavailable' }
+        '409': { $ref: '#/components/responses/AccountConnectionRequired' }
+        '429': { description: "Google Ads operations budget or quota exhausted; retry later." }
+        '501': { description: Only available on Google Ads accounts }
 
   /v1/ads/accounts/finance:
     get:

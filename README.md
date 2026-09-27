@@ -436,6 +436,7 @@ Both `from zernio import ...` and `from late import ...` work identically. The `
 | `ad_accounts.create_high_demand_period()` | Schedule a budget increase |
 | `ad_accounts.create_value_rule_set()` | Create a value rule set |
 | `ad_accounts.get_ad_account_finance()` | Ad account finances |
+| `ad_accounts.get_ad_account_hierarchy()` | Get manager account hierarchy |
 | `ad_accounts.get_ad_comments()` | List comments on an ad |
 | `ad_accounts.get_ad_negative_keyword_list()` | Get a negative keyword list |
 | `ad_accounts.get_ads_activity_log()` | Ad account change / audit log |
@@ -447,6 +448,7 @@ Both `from zernio import ...` and `from late import ...` work identically. The `
 | `ad_accounts.update_account_sitelinks()` | Update account sitelinks |
 | `ad_accounts.update_account_structured_snippets()` | Update account snippets |
 | `ad_accounts.update_ad_account()` | Update ad account settings |
+| `ad_accounts.update_ad_account_manager_link()` | Accept, decline, cancel or end a manager link |
 | `ad_accounts.update_ad_label()` | Update a Google Ads label |
 | `ad_accounts.update_ad_negative_keyword_list()` | Rename a negative keyword list |
 | `ad_accounts.update_value_rule_set()` | Replace a value rule set |
@@ -459,6 +461,7 @@ Both `from zernio import ...` and `from late import ...` work identically. The `
 | `ad_accounts.attach_ad_label()` | Attach a Google Ads label |
 | `ad_accounts.detach_ad_label()` | Detach a Google Ads label |
 | `ad_accounts.hide_ad_comment()` | Hide or unhide an ad comment |
+| `ad_accounts.invite_ad_account_to_manager()` | Invite a client account to a manager |
 | `ad_accounts.remove_account_callout()` | Remove account callout |
 | `ad_accounts.remove_account_sitelink()` | Remove account sitelink |
 | `ad_accounts.remove_account_structured_snippet()` | Remove account snippet |

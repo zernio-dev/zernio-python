@@ -2908,6 +2908,108 @@ def register_generated_tools(mcp, _get_client):
 
     @mcp.tool(
         annotations=ToolAnnotations(
+            title="Get manager account hierarchy",
+            readOnlyHint=True,
+            destructiveHint=False,
+            openWorldHint=False,
+        )
+    )
+    def ad_accounts_get_ad_account_hierarchy(
+        account_id: str,
+        ad_account_id: str | None = None,
+        customer_id: str | None = None,
+    ) -> str:
+        """Get manager account hierarchy
+
+        Args:
+            account_id: Google ads SocialAccount id. (required)
+            ad_account_id: Only return the tree rooted at this customer id (digits only). It must be an account the Google user accesses directly. Omit to list every tree.
+            customer_id: Alias of adAccountId, kept for consistency with the other Google Ads account endpoints."""
+        client = _get_client()
+        try:
+            response = client.ad_accounts.get_ad_account_hierarchy(
+                account_id=account_id,
+                ad_account_id=ad_account_id,
+                customer_id=customer_id,
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Invite a client account to a manager",
+            readOnlyHint=False,
+            destructiveHint=True,
+            openWorldHint=True,
+        )
+    )
+    def ad_accounts_invite_ad_account_to_manager(
+        account_id: str,
+        manager_customer_id: str,
+        client_customer_id: str,
+        validate_only: bool = False,
+    ) -> str:
+        """Invite a client account to a manager
+
+        Args:
+            account_id: Google ads SocialAccount id. (required)
+            manager_customer_id: Manager customer id, digits only. (required)
+            client_customer_id: Client customer id to invite, digits only. (required)
+            validate_only"""
+        client = _get_client()
+        try:
+            response = client.ad_accounts.invite_ad_account_to_manager(
+                account_id=account_id,
+                manager_customer_id=manager_customer_id,
+                client_customer_id=client_customer_id,
+                validate_only=validate_only,
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Accept, decline, cancel or end a manager link",
+            readOnlyHint=False,
+            destructiveHint=True,
+            openWorldHint=True,
+        )
+    )
+    def ad_accounts_update_ad_account_manager_link(
+        account_id: str,
+        manager_customer_id: str,
+        client_customer_id: str,
+        manager_link_id: str,
+        action: str,
+        validate_only: bool = False,
+    ) -> str:
+        """Accept, decline, cancel or end a manager link
+
+        Args:
+            account_id: Google ads SocialAccount id. (required)
+            manager_customer_id: Manager customer id, digits only. (required)
+            client_customer_id: Client customer id, digits only. (required)
+            manager_link_id: Numeric link id from GET /v1/ads/accounts/hierarchy. (required)
+            action: (required)
+            validate_only"""
+        client = _get_client()
+        try:
+            response = client.ad_accounts.update_ad_account_manager_link(
+                account_id=account_id,
+                manager_customer_id=manager_customer_id,
+                client_customer_id=client_customer_id,
+                manager_link_id=manager_link_id,
+                action=action,
+                validate_only=validate_only,
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
             title="Ad account finances",
             readOnlyHint=True,
             destructiveHint=False,
