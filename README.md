@@ -628,6 +628,7 @@ Both `from zernio import ...` and `from late import ...` work identically. The `
 | `branded_calling.detach_branded_calling_numbers()` | Detach numbers from an identity |
 | `branded_calling.preflight_branded_calling_identity()` | Dry-run a caller identity before creating it |
 | `branded_calling.resend_branded_calling_authorizer_code()` | Resend the authorizer's code |
+| `branded_calling.share_branded_calling_identity_form()` | Create a caller identity share link |
 
 ### Broadcasts
 | Method | Description |

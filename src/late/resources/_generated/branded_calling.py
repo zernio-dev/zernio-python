@@ -128,6 +128,16 @@ class BrandedCallingResource:
         """Delete a registered business"""
         return self._client._delete(f"/v1/branded-calling/enterprises/{id}")
 
+    def share_branded_calling_identity_form(
+        self, *, enterprise_id: str | None = None, identity_id: str | None = None
+    ) -> dict[str, Any]:
+        """Create a caller identity share link"""
+        payload = self._build_payload(
+            enterprise_id=enterprise_id,
+            identity_id=identity_id,
+        )
+        return self._client._post("/v1/branded-calling/share", data=payload)
+
     def list_branded_calling_call_reasons(self) -> dict[str, Any]:
         """List pre-approved call reasons"""
         return self._client._get("/v1/branded-calling/call-reasons")
@@ -309,6 +319,16 @@ class BrandedCallingResource:
     async def adelete_branded_calling_enterprise(self, id: str) -> dict[str, Any]:
         """Delete a registered business (async)"""
         return await self._client._adelete(f"/v1/branded-calling/enterprises/{id}")
+
+    async def ashare_branded_calling_identity_form(
+        self, *, enterprise_id: str | None = None, identity_id: str | None = None
+    ) -> dict[str, Any]:
+        """Create a caller identity share link (async)"""
+        payload = self._build_payload(
+            enterprise_id=enterprise_id,
+            identity_id=identity_id,
+        )
+        return await self._client._apost("/v1/branded-calling/share", data=payload)
 
     async def alist_branded_calling_call_reasons(self) -> dict[str, Any]:
         """List pre-approved call reasons (async)"""

@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.126.0"
+  version: "1.127.0"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -38643,6 +38643,47 @@ paths:
         '401': { $ref: '#/components/responses/Unauthorized' }
         '404': { description: Business not found }
         '409': { description: 'The business still has caller identities (code invalid_resource_state).' }
+  /v1/branded-calling/share:
+    post:
+      x-resource-group: "telephony"
+      operationId: shareBrandedCallingIdentityForm
+      tags: [Branded Calling]
+      summary: Create a caller identity share link
+      description: |
+        Creates a single-use link (valid 7 days) where the end business fills in
+        the caller identity itself, with no Zernio login: display name, logo, call
+        reasons, the authorizer and the three references. What it submits lands
+        under your team as `requested`, the same review as an API submission, and
+        `branded_calling.identity.status_updated` fires. Scope the link with
+        `identityId` (complete an identity that is `requested` or
+        `changes_requested`), with `enterpriseId` (a new identity for a registered
+        business), or with neither (the business registers itself and its first
+        identity). The person opening the link can forward a fresh one to someone
+        else, which retires theirs.
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                enterpriseId: { type: string, description: 'A registered business the identity belongs to.' }
+                identityId: { type: string, description: 'An identity in review to complete. Not with enterpriseId.' }
+      responses:
+        '200':
+          description: Share link created.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  url: { type: string }
+                  expiresAt: { type: string, format: date-time }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404': { description: 'Business or identity not found, or the identity is not in review' }
   /v1/branded-calling/call-reasons:
     get:
       x-resource-group: "telephony"

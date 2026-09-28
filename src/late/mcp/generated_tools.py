@@ -9613,6 +9613,31 @@ def register_generated_tools(mcp, _get_client):
 
     @mcp.tool(
         annotations=ToolAnnotations(
+            title="Create a caller identity share link",
+            readOnlyHint=False,
+            destructiveHint=True,
+            openWorldHint=True,
+        )
+    )
+    def branded_calling_share_branded_calling_identity_form(
+        enterprise_id: str | None = None, identity_id: str | None = None
+    ) -> str:
+        """Create a caller identity share link
+
+        Args:
+            enterprise_id: A registered business the identity belongs to.
+            identity_id: An identity in review to complete. Not with enterpriseId."""
+        client = _get_client()
+        try:
+            response = client.branded_calling.share_branded_calling_identity_form(
+                enterprise_id=enterprise_id, identity_id=identity_id
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
             title="List pre-approved call reasons",
             readOnlyHint=True,
             destructiveHint=False,
