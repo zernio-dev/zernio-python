@@ -22956,25 +22956,35 @@ def register_generated_tools(mcp, _get_client):
 
     @mcp.tool(
         annotations=ToolAnnotations(
-            title="Install on a Shopify store",
+            title="Install on a Shopify store or WordPress site",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
         )
     )
     def tracking_tags_install_tracking_tag_on_store(
-        account_id: str, tag_id: str, store_account_id: str
+        account_id: str,
+        tag_id: str,
+        store_account_id: str,
+        sidebar_id: str | None = None,
+        verify_homepage: bool = True,
     ) -> str:
-        """Install on a Shopify store
+        """Install on a Shopify store or WordPress site
 
         Args:
             account_id: (required)
             tag_id: Meta pixel id. (required)
-            store_account_id: The connected Shopify account id (platform `shopify`). (required)"""
+            store_account_id: The connected Shopify (`shopify`) or WordPress (`wordpress`) account id. (required)
+            sidebar_id: WordPress only: widget area to use (see `install.preflight.sidebars` from GET). Defaults to a footer area.
+            verify_homepage: WordPress only: fetch the homepage afterwards and report `homepageCheck`."""
         client = _get_client()
         try:
             response = client.tracking_tags.install_tracking_tag_on_store(
-                account_id=account_id, tag_id=tag_id, store_account_id=store_account_id
+                account_id=account_id,
+                tag_id=tag_id,
+                store_account_id=store_account_id,
+                sidebar_id=sidebar_id,
+                verify_homepage=verify_homepage,
             )
             return _format_response(response)
         except Exception as e:
@@ -22996,7 +23006,7 @@ def register_generated_tools(mcp, _get_client):
         Args:
             account_id: (required)
             tag_id: Meta pixel id. (required)
-            store_account_id: The connected Shopify account id. (required)"""
+            store_account_id: The connected Shopify or WordPress account id. (required)"""
         client = _get_client()
         try:
             response = client.tracking_tags.get_tracking_tag_store_install(
@@ -23008,7 +23018,7 @@ def register_generated_tools(mcp, _get_client):
 
     @mcp.tool(
         annotations=ToolAnnotations(
-            title="Remove from a Shopify store",
+            title="Remove from a Shopify store or WordPress site",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
@@ -23017,12 +23027,12 @@ def register_generated_tools(mcp, _get_client):
     def tracking_tags_remove_tracking_tag_from_store(
         account_id: str, tag_id: str, store_account_id: str
     ) -> str:
-        """Remove from a Shopify store
+        """Remove from a Shopify store or WordPress site
 
         Args:
             account_id: (required)
             tag_id: Meta pixel id. (required)
-            store_account_id: The connected Shopify account id. (required)"""
+            store_account_id: The connected Shopify or WordPress account id. (required)"""
         client = _get_client()
         try:
             response = client.tracking_tags.remove_tracking_tag_from_store(

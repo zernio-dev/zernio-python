@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.127.0"
+  version: "1.128.0"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -12395,14 +12395,22 @@ components:
         updated_at: { type: string, format: date-time }
     StorePixelInstall:
       type: object
-      description: A tracking tag's install on a connected store (Shopify web pixel).
+      description: 'A tracking tag''s install on a connected store: a Shopify web pixel, or a Custom HTML widget on a WordPress site. Fields marked Shopify or WordPress are present only for that platform.'
       properties:
         storeAccountId: { type: string }
-        platform: { type: string, enum: [shopify] }
-        shopDomain: { type: string, example: 'acme.myshopify.com' }
-        installed: { type: boolean, description: 'True when this tag is the pixel the store fires.' }
-        installedTagId: { type: [string, "null"], description: 'The Meta pixel the store fires now (may be a different tag), or null.' }
-        webPixelId: { type: [string, "null"], description: 'Shopify web pixel id, or null when nothing is installed.' }
+        platform: { type: string, enum: [shopify, wordpress] }
+        installed: { type: boolean, description: 'Shopify: this tag is the pixel the store fires. WordPress: the Zernio widget for this tag is in an active widget area with its script intact.' }
+        shopDomain: { type: string, example: 'acme.myshopify.com', description: Shopify only. }
+        installedTagId: { type: [string, "null"], description: 'Shopify only: the Meta pixel the store fires now (may be a different tag), or null.' }
+        webPixelId: { type: [string, "null"], description: 'Shopify only: web pixel id, or null when nothing is installed.' }
+        siteUrl: { type: string, description: WordPress only. }
+        method: { type: string, enum: [wordpress_widget], description: WordPress only. }
+        widgetId: { type: [string, "null"], description: 'WordPress only: widget id, e.g. `custom_html-3`.' }
+        sidebarId: { type: [string, "null"], description: 'WordPress only: widget area holding the widget.' }
+    TrackingTagInstallBlockedReason:
+      type: string
+      enum: [insufficient_permissions, scripts_stripped, wordpress_com_plan, no_widget_areas, widgets_api_unavailable]
+      description: Why a pixel cannot be installed on a WordPress site.
     TrackingTag:
       type: object
       description: |
@@ -64665,8 +64673,8 @@ paths:
       x-resource-group: "ads"
       operationId: installTrackingTagOnStore
       tags: ["Tracking Tags"]
-      x-platforms: ["meta", "shopify"]
-      summary: Install on a Shopify store
+      x-platforms: ["meta", "shopify", "wordpress"]
+      summary: Install on a Shopify store or WordPress site
       description: |
         Puts the Meta pixel on a connected Shopify store's storefront and checkout through
         Zernio's Shopify web pixel (a Shopify app pixel, no theme edits). The store then sends
@@ -64684,6 +64692,25 @@ paths:
         the call then answers 409 `reconnect_required` with `details.authUrl` to send the
         merchant to (the Shopify account id stays the same). Meta only (platform `metaads`);
         other platforms return 405.
+
+        **WordPress** (`storeAccountId` is a connected WordPress.com or self-hosted site): Zernio
+        adds a Custom HTML widget with the Meta pixel base code (fbevents.js, `init`, `PageView`)
+        to a widget area of the active theme (a footer area when there is one, else the first
+        active area; pass `sidebarId` to choose), then reads the widget back to confirm WordPress
+        kept the `<script>` tag. The widget carries a Zernio marker, so the call is idempotent
+        per pixel: repeating it updates or moves the same widget, and pixel code the site owner
+        pasted by hand is never touched. Several pixels can run side by side (one widget each).
+        When the site cannot run the pixel, nothing is left behind and the call answers 422
+        `tracking_tag_install_blocked` with `details.reason`:
+        - `insufficient_permissions`: the connected user lacks `edit_theme_options` (needs Administrator).
+        - `scripts_stripped`: WordPress removed the script (the user lacks `unfiltered_html`, e.g. a multisite admin who is not a Super Admin, or `DISALLOW_UNFILTERED_HTML` is set).
+        - `wordpress_com_plan`: a WordPress.com plan that strips scripts (plans without plugins).
+        - `no_widget_areas`: the theme has no widget areas (block themes such as Twenty Twenty-Five).
+        - `widgets_api_unavailable`: no widgets REST API (WordPress older than 5.8, or disabled).
+        The `error` message names the manual alternative (Meta's official WordPress plugin).
+        With `verifyHomepage` (default true) the homepage is fetched afterwards and
+        `homepageCheck` says whether the pixel is visible; `not_found` can be a stale page cache,
+        the widget read-back is authoritative.
       security:
         - bearerAuth: []
       parameters:
@@ -64697,7 +64724,9 @@ paths:
               type: object
               required: [storeAccountId]
               properties:
-                storeAccountId: { type: string, description: 'The connected Shopify account id (platform `shopify`).' }
+                storeAccountId: { type: string, description: 'The connected Shopify (`shopify`) or WordPress (`wordpress`) account id.' }
+                sidebarId: { type: string, description: 'WordPress only: widget area to use (see `install.preflight.sidebars` from GET). Defaults to a footer area.' }
+                verifyHomepage: { type: boolean, default: true, description: 'WordPress only: fetch the homepage afterwards and report `homepageCheck`.' }
       responses:
         '200':
           description: Pixel installed on the store
@@ -64712,29 +64741,54 @@ paths:
                       - $ref: '#/components/schemas/StorePixelInstall'
                       - type: object
                         properties:
-                          replacedTagId: { type: [string, "null"], description: 'The pixel this install replaced on the store, if any.' }
+                          replacedTagId: { type: [string, "null"], description: 'Shopify only: the pixel this install replaced on the store, if any.' }
+                          sidebarName: { type: string, description: 'WordPress only: name of the widget area used.' }
+                          created: { type: boolean, description: 'WordPress only: false when an existing Zernio widget was updated.' }
+                          homepageCheck:
+                            type: string
+                            enum: [found, not_found, unreachable, skipped]
+                            description: 'WordPress only: whether the pixel appeared in the homepage HTML. `not_found` can be a stale page cache.'
         '400': { $ref: '#/components/responses/BadRequest' }
         '401': { $ref: '#/components/responses/Unauthorized' }
         '403': { description: 'Ads access required (Ads add-on on legacy plans, included on usage-based plans), or the Meta token lacks ads permissions (reconnect required).' }
         '404': { $ref: '#/components/responses/AccountUnavailable' }
         '405': { description: Platform does not support store installs. }
         '409': { $ref: '#/components/responses/StoreReconnectRequired' }
-        '502': { description: 'Meta or Shopify was unreachable or returned an unclassified error. Retryable.' }
+        '422':
+          description: 'WordPress only: the site cannot run the pixel and nothing was left on it. Code `tracking_tag_install_blocked`; the reason is in `details.reason`.'
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error: { type: string, description: 'What blocked the install and the manual alternative.' }
+                  code: { type: string, enum: [tracking_tag_install_blocked] }
+                  details:
+                    type: object
+                    properties:
+                      reason: { $ref: '#/components/schemas/TrackingTagInstallBlockedReason' }
+        '502': { description: 'Meta, Shopify or the WordPress site was unreachable or returned an unclassified error. On WordPress a write may have completed; call GET before retrying.' }
     get:
       x-resource-group: "ads"
       operationId: getTrackingTagStoreInstall
       tags: ["Tracking Tags"]
-      x-platforms: ["meta", "shopify"]
+      x-platforms: ["meta", "shopify", "wordpress"]
       summary: Get store install status
       description: |
         Whether this pixel is the one the Shopify store fires. `installedTagId` names the pixel
         the store currently fires, which can be a different tag. Meta only (platform `metaads`).
+
+        WordPress: whether the Zernio widget for this pixel is live (in an active widget area,
+        script intact), plus a read-only `preflight` with the theme's widget areas and, when an
+        install would be blocked, the `reason` POST would return. The preflight reads
+        capabilities only, so `ready: true` is not a guarantee: `DISALLOW_UNFILTERED_HTML` or a
+        multisite admin who is not a Super Admin still strips the script, which POST detects.
       security:
         - bearerAuth: []
       parameters:
         - { name: accountId, in: path, required: true, schema: { type: string } }
         - { name: tagId, in: path, required: true, schema: { type: string }, description: 'Meta pixel id.' }
-        - { name: storeAccountId, in: query, required: true, schema: { type: string }, description: 'The connected Shopify account id.' }
+        - { name: storeAccountId, in: query, required: true, schema: { type: string }, description: 'The connected Shopify or WordPress account id.' }
       responses:
         '200':
           description: Install status
@@ -64744,7 +64798,25 @@ paths:
                 type: object
                 properties:
                   platform: { type: string, enum: [metaads] }
-                  install: { $ref: '#/components/schemas/StorePixelInstall' }
+                  install:
+                    allOf:
+                      - $ref: '#/components/schemas/StorePixelInstall'
+                      - type: object
+                        properties:
+                          preflight:
+                            type: object
+                            description: WordPress only.
+                            properties:
+                              ready: { type: boolean, description: 'True when POST should be able to install.' }
+                              reason: { type: [string, "null"], description: 'A TrackingTagInstallBlockedReason when an install would be blocked, else null.' }
+                              sidebars:
+                                type: array
+                                description: Active widget areas of the theme.
+                                items:
+                                  type: object
+                                  properties:
+                                    id: { type: string }
+                                    name: { type: string }
         '400': { $ref: '#/components/responses/BadRequest' }
         '401': { $ref: '#/components/responses/Unauthorized' }
         '403': { description: 'Ads access required (Ads add-on on legacy plans, included on usage-based plans).' }
@@ -64755,18 +64827,21 @@ paths:
       x-resource-group: "ads"
       operationId: removeTrackingTagFromStore
       tags: ["Tracking Tags"]
-      x-platforms: ["meta", "shopify"]
-      summary: Remove from a Shopify store
+      x-platforms: ["meta", "shopify", "wordpress"]
+      summary: Remove from a Shopify store or WordPress site
       description: |
         Removes the pixel from the store. Idempotent: nothing installed returns 200 with
         `installed: false`. If the store fires a different pixel, nothing is removed and the
         call answers 409 `invalid_resource_state`. Meta only (platform `metaads`).
+
+        WordPress: deletes every widget Zernio created for this pixel and reports how many in
+        `removed` (0 when nothing was installed). Pixel code added by hand is left alone.
       security:
         - bearerAuth: []
       parameters:
         - { name: accountId, in: path, required: true, schema: { type: string } }
         - { name: tagId, in: path, required: true, schema: { type: string }, description: 'Meta pixel id.' }
-        - { name: storeAccountId, in: query, required: true, schema: { type: string }, description: 'The connected Shopify account id.' }
+        - { name: storeAccountId, in: query, required: true, schema: { type: string }, description: 'The connected Shopify or WordPress account id.' }
       responses:
         '200':
           description: Pixel removed (or was not installed)
@@ -64776,7 +64851,12 @@ paths:
                 type: object
                 properties:
                   platform: { type: string, enum: [metaads] }
-                  install: { $ref: '#/components/schemas/StorePixelInstall' }
+                  install:
+                    allOf:
+                      - $ref: '#/components/schemas/StorePixelInstall'
+                      - type: object
+                        properties:
+                          removed: { type: integer, description: 'WordPress only: number of Zernio widgets deleted.' }
         '400': { $ref: '#/components/responses/BadRequest' }
         '401': { $ref: '#/components/responses/Unauthorized' }
         '403': { description: 'Ads access required (Ads add-on on legacy plans, included on usage-based plans).' }

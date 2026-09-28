@@ -1095,8 +1095,8 @@ Both `from zernio import ...` and `from late import ...` work identically. The `
 | `tracking_tags.update_ad_tracking_tags()` | Set ad tracking tags |
 | `tracking_tags.update_tracking_tag()` | Update a tracking tag |
 | `tracking_tags.add_tracking_tag_shared_account()` | Share with an ad account |
-| `tracking_tags.install_tracking_tag_on_store()` | Install on a Shopify store |
-| `tracking_tags.remove_tracking_tag_from_store()` | Remove from a Shopify store |
+| `tracking_tags.install_tracking_tag_on_store()` | Install on a Shopify store or WordPress site |
+| `tracking_tags.remove_tracking_tag_from_store()` | Remove from a Shopify store or WordPress site |
 | `tracking_tags.remove_tracking_tag_shared_account()` | Stop sharing with an account |
 
 ### Twitter Engagement

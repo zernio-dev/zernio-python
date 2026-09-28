@@ -188,11 +188,19 @@ class TrackingTagsResource:
         )
 
     def install_tracking_tag_on_store(
-        self, account_id: str, tag_id: str, store_account_id: str
+        self,
+        account_id: str,
+        tag_id: str,
+        store_account_id: str,
+        *,
+        sidebar_id: str | None = None,
+        verify_homepage: bool | None = True,
     ) -> dict[str, Any]:
-        """Install on a Shopify store"""
+        """Install on a Shopify store or WordPress site"""
         payload = self._build_payload(
             store_account_id=store_account_id,
+            sidebar_id=sidebar_id,
+            verify_homepage=verify_homepage,
         )
         return self._client._post(
             f"/v1/accounts/{account_id}/tracking-tags/{tag_id}/install", data=payload
@@ -212,7 +220,7 @@ class TrackingTagsResource:
     def remove_tracking_tag_from_store(
         self, account_id: str, tag_id: str, store_account_id: str
     ) -> dict[str, Any]:
-        """Remove from a Shopify store"""
+        """Remove from a Shopify store or WordPress site"""
         params = self._build_params(
             store_account_id=store_account_id,
         )
@@ -358,11 +366,19 @@ class TrackingTagsResource:
         )
 
     async def ainstall_tracking_tag_on_store(
-        self, account_id: str, tag_id: str, store_account_id: str
+        self,
+        account_id: str,
+        tag_id: str,
+        store_account_id: str,
+        *,
+        sidebar_id: str | None = None,
+        verify_homepage: bool | None = True,
     ) -> dict[str, Any]:
-        """Install on a Shopify store (async)"""
+        """Install on a Shopify store or WordPress site (async)"""
         payload = self._build_payload(
             store_account_id=store_account_id,
+            sidebar_id=sidebar_id,
+            verify_homepage=verify_homepage,
         )
         return await self._client._apost(
             f"/v1/accounts/{account_id}/tracking-tags/{tag_id}/install", data=payload
@@ -382,7 +398,7 @@ class TrackingTagsResource:
     async def aremove_tracking_tag_from_store(
         self, account_id: str, tag_id: str, store_account_id: str
     ) -> dict[str, Any]:
-        """Remove from a Shopify store (async)"""
+        """Remove from a Shopify store or WordPress site (async)"""
         params = self._build_params(
             store_account_id=store_account_id,
         )
