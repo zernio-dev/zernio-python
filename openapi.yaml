@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.117.0"
+  version: "1.117.1"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -331,9 +331,19 @@ tags:
   - name: GMB Place Actions
     description: |
       Manage Google Business Profile place action links (booking, ordering, reservations, etc.).
+  - name: GMB Services
+    description: |
+      Read and replace the services a Google Business Profile location offers.
+  - name: GMB Verifications
+    description: |
+      Verify a Google Business Profile location: read its verification state, fetch the available
+      methods, start a verification and complete it with the code Google sends.
   - name: Discord
     description: |
       Discord-specific endpoints for managing webhook identity (display name and avatar), switching channels, and listing guild channels.
+  - name: Slack
+    description: |
+      Slack-specific endpoints for a connected Slack workspace, such as listing its members.
   - name: LinkedIn Mentions
     description: |
       Resolve LinkedIn organization and person mentions for use in posts.
@@ -349,6 +359,10 @@ tags:
     description: |
       Post and account analytics across platforms (insights, demographics, follower history,
       best time to post, content decay, and aggregated metrics).
+  - name: Inbox Analytics
+    description: |
+      Inbox messaging analytics: message volume, a day by hour heatmap, source breakdown, response
+      times, top accounts and per-conversation stats. Requires Inbox addon.
   - name: Inbox Access
     description: |
       Check and manage inbox feature access.
@@ -478,6 +492,11 @@ tags:
       (Pinterest Tag, LinkedIn Insight Tag, etc.) can be added without changing the contract. Create a tag,
       get it (including the install code snippet), rename + adjust matching/cookie/data-use settings, share
       it with ad accounts, and read aggregated event stats. Currently Meta-only.
+      Requires the Ads add-on.
+  - name: Product Catalogs
+    description: |
+      Manage the Meta Commerce catalogs behind catalog (dynamic product) ads: catalogs, products, batch
+      product writes, feeds and feed uploads, and product sets.
       Requires the Ads add-on.
   - name: Business Agent
     description: |
