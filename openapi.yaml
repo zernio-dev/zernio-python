@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.136.0"
+  version: "1.137.0"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -12760,7 +12760,7 @@ components:
           description: 'Platforms where each conversion is its own object: the tag''s conversion events, with the id a site sends for each.'
           items: { $ref: '#/components/schemas/TrackingTagEvent' }
         name: { type: string }
-        platform: { type: string, enum: [metaads, openaiads, tiktokads, googleads, xads] }
+        platform: { type: string, enum: [metaads, openaiads, tiktokads, googleads, xads, linkedinads] }
         kind:
           type: string
           enum: [pixel, tag, insight_tag]
@@ -65616,7 +65616,7 @@ paths:
       x-resource-group: "ads"
       operationId: listTrackingTags
       tags: ["Tracking Tags"]
-      x-platforms: ["meta", "tiktok", "google", "x", "openai"]
+      x-platforms: ["meta", "tiktok", "google", "x", "openai", "linkedin"]
       summary: List tracking tags
       description: |
         Returns the tracking tags (Meta Pixels, or OpenAI Ads pixels) the
@@ -65632,6 +65632,12 @@ paths:
         connect flow, not a Facebook/Instagram posting account. Get your Meta
         `act_...` ids from `GET /v1/ads/accounts`; `adAccountId` is ignored for
         OpenAI Ads (one API key maps to exactly one ad account).
+
+        LinkedIn (`linkedinads`): lists the Insight Tag of each ad account (LinkedIn allows one
+        per ad account; a tag shared with several accounts appears once). `adAccountId` is the
+        numeric ad account id or `urn:li:sponsoredAccount:{id}`; omit it to scan every active ad
+        account the connection can see. The tag `id` IS the partner id the site embeds, so
+        `siteTagId` equals `id`. LinkedIn tags have no name; it is shown as `Insight Tag {id}`.
       security:
         - bearerAuth: []
       parameters:
@@ -65646,7 +65652,7 @@ paths:
               schema:
                 type: object
                 properties:
-                  platform: { type: string, enum: [metaads, openaiads, tiktokads, googleads, xads] }
+                  platform: { type: string, enum: [metaads, openaiads, tiktokads, googleads, xads, linkedinads] }
                   tags:
                     type: array
                     items: { $ref: '#/components/schemas/TrackingTag' }
@@ -65662,7 +65668,7 @@ paths:
       x-resource-group: "ads"
       operationId: createTrackingTag
       tags: ["Tracking Tags"]
-      x-platforms: ["meta", "tiktok", "google", "x", "openai"]
+      x-platforms: ["meta", "tiktok", "google", "x", "openai", "linkedin"]
       summary: Create a tracking tag
       description: |
         Meta: creates a Meta Pixel on the given ad account (`POST /act_{id}/adspixels`,
@@ -65693,6 +65699,11 @@ paths:
         new conversion event setting). Do not retry blindly on
         timeout. Meta (platform `metaads`) and OpenAI Ads (platform
         `openaiads`); other platforms return 501.
+
+        LinkedIn (`linkedinads`): creates the ad account's Insight Tag (`POST /rest/insightTags`).
+        Idempotent: an ad account holds at most one Insight Tag, so when it already has one that
+        tag is returned and nothing is created. `name` is ignored (LinkedIn tags have no name) and
+        there is no API to delete an Insight Tag.
       security:
         - bearerAuth: []
       parameters:
@@ -65720,7 +65731,7 @@ paths:
               schema:
                 type: object
                 properties:
-                  platform: { type: string, enum: [metaads, openaiads, tiktokads, googleads, xads] }
+                  platform: { type: string, enum: [metaads, openaiads, tiktokads, googleads, xads, linkedinads] }
                   tag: { $ref: '#/components/schemas/TrackingTag' }
         '400': { description: 'Invalid body, invalid `adAccountId`, over the per-business pixel cap, or ad account not in a Business Manager.' }
         '401': { $ref: '#/components/responses/Unauthorized' }
@@ -65736,7 +65747,7 @@ paths:
       x-resource-group: "ads"
       operationId: getTrackingTag
       tags: ["Tracking Tags"]
-      x-platforms: ["meta", "tiktok", "google", "x", "openai"]
+      x-platforms: ["meta", "tiktok", "google", "x", "openai", "linkedin"]
       summary: Get a tracking tag
       description: |
         Returns the full tag record including the base-code `code` snippet,
@@ -65750,6 +65761,13 @@ paths:
         event settings whose source is this pixel). `siteTagId` is the
         `pixel_id` the site and the Conversions API send; `id` is what event
         settings reference.
+
+        LinkedIn (`linkedinads`): `code` is LinkedIn's base code, `lastFiredTime` is the most
+        recent callback across the tag's domains (unix seconds, null when it never fired) and
+        `events` lists the ad account's conversion rules. `siteEvent` and `siteEventId` are set
+        only on rules a page can fire (event-specific Insight Tag rules: not Conversions API
+        rules, no URL match rules). `adAccountId` picks which ad account's rules to read; it
+        defaults to the account that created the tag.
       security:
         - bearerAuth: []
       parameters:
@@ -65766,7 +65784,7 @@ paths:
               schema:
                 type: object
                 properties:
-                  platform: { type: string, enum: [metaads, tiktokads, googleads, xads, openaiads] }
+                  platform: { type: string, enum: [metaads, tiktokads, googleads, xads, openaiads, linkedinads] }
                   tag: { $ref: '#/components/schemas/TrackingTag' }
         '401': { $ref: '#/components/responses/Unauthorized' }
         '403': { description: 'Ads access required (Ads add-on on legacy plans, included on usage-based plans), or the Meta token lacks ads permissions (reconnect required).' }
@@ -65779,7 +65797,7 @@ paths:
       x-resource-group: "ads"
       operationId: updateTrackingTag
       tags: ["Tracking Tags"]
-      x-platforms: ["meta", "tiktok", "google", "x", "openai"]
+      x-platforms: ["meta", "tiktok", "google", "x", "openai", "linkedin"]
       summary: Update a tracking tag
       description: |
         Partial-update a pixel. Whitelisted fields: `name` (rename),
@@ -65796,6 +65814,10 @@ paths:
         one, unshare it from your ad accounts (`DELETE
         .../tracking-tags/{tagId}/shared-accounts`) or disable it in Events
         Manager.
+
+        LinkedIn (`linkedinads`): only `firstPartyCookieStatus` (`first_party_cookie_enabled` or
+        `first_party_cookie_disabled`), which sets the tag's first-party tracking. It applies to
+        every ad account using the tag. `empty` answers 400: LinkedIn has no unset state.
       security:
         - bearerAuth: []
       parameters:
@@ -65839,7 +65861,7 @@ paths:
               schema:
                 type: object
                 properties:
-                  platform: { type: string, enum: [metaads, tiktokads, googleads, xads, openaiads] }
+                  platform: { type: string, enum: [metaads, tiktokads, googleads, xads, openaiads, linkedinads] }
                   tag: { $ref: '#/components/schemas/TrackingTag' }
         '400': { description: Invalid body (e.g. no fields supplied) or Meta validation failure. }
         '401': { $ref: '#/components/responses/Unauthorized' }
@@ -65854,9 +65876,14 @@ paths:
       x-resource-group: "ads"
       operationId: listTrackingTagSharedAccounts
       tags: ["Tracking Tags"]
-      x-platforms: ["meta"]
+      x-platforms: ["meta", "linkedin"]
       summary: List accounts it is shared with
-      description: Meta only (platform `metaads`); other platforms return 501.
+      description: |
+        Meta (`metaads`) and LinkedIn (`linkedinads`); other platforms return 501.
+
+        LinkedIn (`linkedinads`): the ad accounts this connection can see that hold access to the
+        Insight Tag; the role (`FULL` or `USE_ONLY`) is appended to `name`. LinkedIn exposes
+        permissions per ad account only, so accounts the connection cannot see are not listed.
       security:
         - bearerAuth: []
       parameters:
@@ -65872,7 +65899,7 @@ paths:
               schema:
                 type: object
                 properties:
-                  platform: { type: string, enum: [metaads] }
+                  platform: { type: string, enum: [metaads, linkedinads] }
                   sharedAccounts:
                     type: array
                     items: { $ref: '#/components/schemas/SharedAdAccount' }
@@ -65887,14 +65914,19 @@ paths:
       x-resource-group: "ads"
       operationId: addTrackingTagSharedAccount
       tags: ["Tracking Tags"]
-      x-platforms: ["meta"]
+      x-platforms: ["meta", "linkedin"]
       summary: Share with an ad account
       description: |
         Shares the pixel with another ad account so campaigns/audiences in that
         account can use it. Requires that you administer both the pixel's owning
         Business Manager and the target ad account; a pixel on a personal
         (non-BM) ad account can't be shared (Meta will reject the call). Meta
-        only (platform `metaads`); other platforms return 501.
+        and LinkedIn; other platforms return 501.
+
+        LinkedIn (`linkedinads`): grants `USE_ONLY` access from the ad account that created the
+        tag, so the target can use the tag and its conversions but cannot edit or reshare it.
+        `adAccountId` is the numeric LinkedIn ad account id. An ad account uses one Insight Tag at
+        a time, so a target that already has one answers 400.
       security:
         - bearerAuth: []
       parameters:
@@ -65918,7 +65950,7 @@ paths:
               schema:
                 type: object
                 properties:
-                  platform: { type: string, enum: [metaads] }
+                  platform: { type: string, enum: [metaads, linkedinads] }
                   ok: { type: boolean }
         '400': { description: 'Invalid body / `adAccountId`, or Meta rejected the share (e.g. personal ad account).' }
         '401': { $ref: '#/components/responses/Unauthorized' }
@@ -65932,12 +65964,16 @@ paths:
       x-resource-group: "ads"
       operationId: removeTrackingTagSharedAccount
       tags: ["Tracking Tags"]
-      x-platforms: ["meta"]
+      x-platforms: ["meta", "linkedin"]
       summary: Stop sharing with an account
       description: |
         `adAccountId` may be passed as a query parameter (recommended) or as a
-        JSON body field for clients that can send DELETE bodies. Meta only
-        (platform `metaads`); other platforms return 501.
+        JSON body field for clients that can send DELETE bodies. Meta and
+        LinkedIn; other platforms return 501.
+
+        LinkedIn (`linkedinads`): revokes the ad account's access. Zernio answers 400 instead of
+        revoking the last ad account that holds the tag: LinkedIn accepts that call and the tag
+        is orphaned (verified live).
       security:
         - bearerAuth: []
       parameters:
@@ -65960,7 +65996,7 @@ paths:
       x-resource-group: "ads"
       operationId: installTrackingTagOnStore
       tags: ["Tracking Tags"]
-      x-platforms: ["meta", "tiktok", "google", "x", "openai", "shopify", "wordpress"]
+      x-platforms: ["meta", "tiktok", "google", "x", "openai", "linkedin", "shopify", "wordpress"]
       summary: Install on a Shopify store or WordPress site
       description: |
         Puts the Meta pixel on a connected Shopify store's storefront and checkout through
@@ -66011,6 +66047,17 @@ paths:
         With `verifyHomepage` (default true) the homepage is fetched afterwards and
         `homepageCheck` says whether the pixel is visible; `not_found` can be a stale page cache,
         the widget read-back is authoritative.
+
+        **LinkedIn** (`linkedinads`): Shopify sends every page view to the Insight Tag, plus each
+        store event that has an enabled event-specific Insight Tag conversion rule of the matching
+        type (view_content = VIEW_CONTENT, add_to_cart = ADD_TO_CART, search = SEARCH,
+        initiate_checkout = START_CHECKOUT, add_payment_info = ADD_BILLING_INFO, purchase =
+        PURCHASE). Each conversion carries the event id; Purchase uses `shopify_order_{orderId}`,
+        so a Conversions API event sent to a separate CONVERSIONS_API rule with that `eventId` is
+        deduplicated by LinkedIn. Conversions API rules cannot be fired from a page, and no rule
+        is created for you. The `li_fat_id` click id is read from the landing URL and kept in a
+        first-party cookie for 30 days. WordPress gets LinkedIn's base code, which records page
+        views.
       security:
         - bearerAuth: []
       parameters:
@@ -66036,7 +66083,7 @@ paths:
               schema:
                 type: object
                 properties:
-                  platform: { type: string, enum: [metaads, tiktokads, googleads, xads, openaiads] }
+                  platform: { type: string, enum: [metaads, tiktokads, googleads, xads, openaiads, linkedinads] }
                   install:
                     allOf:
                       - $ref: '#/components/schemas/StorePixelInstall'
@@ -66073,7 +66120,7 @@ paths:
       x-resource-group: "ads"
       operationId: getTrackingTagStoreInstall
       tags: ["Tracking Tags"]
-      x-platforms: ["meta", "tiktok", "google", "x", "openai", "shopify", "wordpress"]
+      x-platforms: ["meta", "tiktok", "google", "x", "openai", "linkedin", "shopify", "wordpress"]
       summary: Get store install status
       description: |
         Whether this tag is the one the Shopify store fires for its platform. `installedTagId`
@@ -66101,7 +66148,7 @@ paths:
               schema:
                 type: object
                 properties:
-                  platform: { type: string, enum: [metaads, tiktokads, googleads, xads, openaiads] }
+                  platform: { type: string, enum: [metaads, tiktokads, googleads, xads, openaiads, linkedinads] }
                   install:
                     allOf:
                       - $ref: '#/components/schemas/StorePixelInstall'
@@ -66131,7 +66178,7 @@ paths:
       x-resource-group: "ads"
       operationId: removeTrackingTagFromStore
       tags: ["Tracking Tags"]
-      x-platforms: ["meta", "tiktok", "google", "x", "openai", "shopify", "wordpress"]
+      x-platforms: ["meta", "tiktok", "google", "x", "openai", "linkedin", "shopify", "wordpress"]
       summary: Remove from a Shopify store or WordPress site
       description: |
         Removes the tag from the store. Idempotent: nothing installed returns 200 with
@@ -66156,7 +66203,7 @@ paths:
               schema:
                 type: object
                 properties:
-                  platform: { type: string, enum: [metaads, tiktokads, googleads, xads, openaiads] }
+                  platform: { type: string, enum: [metaads, tiktokads, googleads, xads, openaiads, linkedinads] }
                   install:
                     allOf:
                       - $ref: '#/components/schemas/StorePixelInstall'
@@ -66187,6 +66234,12 @@ paths:
         `siteEventId` is the event name the site sends (a standard event such as
         `order_created`, or the lowercase custom event name); `clickWindowDays` is the
         attribution window.
+
+        LinkedIn (`linkedinads`): the conversion rules of the ad account (`adAccountId`, default
+        the account that created the tag), including Conversions API and URL-match rules.
+        `siteEventId` (the rule id a page fires) is set only on event-specific Insight Tag rules;
+        `defaultValue`/`currency` come from the rule value, `clickWindowDays`/`viewWindowDays`
+        from its post-click and view-through windows.
       security:
         - bearerAuth: []
       parameters:
@@ -66235,6 +66288,16 @@ paths:
         the names Zernio's Shopify pixel sends. The click attribution window is 30 days, the
         only value OpenAI documents. Only standard events can be a conversions campaign's
         optimization goal.
+
+        LinkedIn (`linkedinads`): creates an event-specific Insight Tag conversion rule (no URL
+        match rules), the kind a page or the Shopify pixel fires by id. `type` is a LinkedIn
+        conversion type (e.g. `PURCHASE`, `ADD_TO_CART`, `START_CHECKOUT`, `LEAD`); `siteEvent`
+        maps to `KEY_PAGE_VIEW`, `VIEW_CONTENT`, `ADD_TO_CART`, `SEARCH`, `START_CHECKOUT`,
+        `ADD_BILLING_INFO` or `PURCHASE`. `defaultValue` needs `currency` (the ad account
+        currency) and is a fallback: a value sent with the event wins. Click and view windows are
+        in days (LinkedIn validates them: the docs list 1, 7 and 30, and rules with 90 exist).
+        Stores name, type, siteEvent, enabled, defaultValue, currency, clickWindowDays,
+        viewWindowDays. Not idempotent.
       security:
         - bearerAuth: []
       parameters:
@@ -66278,6 +66341,10 @@ paths:
         OpenAI Ads answers 501: OpenAI documents only list and create for event settings, and
         `POST`/`PATCH`/`PUT /v1/conversions/event_settings/{id}` answer 404 "Invalid URL".
         Create a new event instead.
+
+        LinkedIn (`linkedinads`): partial update of the conversion rule; same fields as create.
+        Pass `adAccountId` when the rule lives in another ad account than the one that created the
+        tag.
       security:
         - bearerAuth: []
       parameters:
@@ -66318,6 +66385,10 @@ paths:
         OpenAI Ads answers 501: there is no delete or archive route for event settings
         (`DELETE /v1/conversions/event_settings/{id}` and `POST .../{id}/archive` answer 404
         "Invalid URL"). Archive the event in OpenAI Ads Manager.
+
+        LinkedIn (`linkedinads`): LinkedIn has no delete for conversion rules (not in the
+        conversion-tracking API, and `DELETE /rest/conversions/{id}` has no route), so the rule is
+        disabled (`enabled: false`) and `state` is `disabled`. Re-enable it with `enabled: true`.
       security:
         - bearerAuth: []
       parameters:
@@ -66348,7 +66419,7 @@ paths:
       x-resource-group: "ads"
       operationId: getTrackingTagStats
       tags: ["Tracking Tags"]
-      x-platforms: ["meta", "tiktok", "google", "x", "openai"]
+      x-platforms: ["meta", "tiktok", "google", "x", "openai", "linkedin"]
       summary: Get aggregated event stats
       description: |
         Returns event counts / health for the tag, where the platform exposes
@@ -66363,6 +66434,12 @@ paths:
         a fixed window: `startTime`/`endTime` answer 400. Use it to confirm an
         install fires; attributed totals come from ads analytics. Accounts not
         enabled for the stream answer 422 `feature_not_available`.
+
+        LinkedIn (`linkedinads`): health rows rather than counts, since LinkedIn exposes no per-
+        event fire counts: one row per site domain the tag has seen (`kind: domain`, `domainName`,
+        `lastFiredTime`, `creationTime`, `blocked`) and one per conversion rule (`kind:
+        conversion_rule`, `id`, `name`, `type`, `conversionMethod`, `status`, `lastFiredTime`).
+        Times are unix seconds; `startTime`/`endTime` are ignored.
       security:
         - bearerAuth: []
       parameters:
@@ -66404,7 +66481,7 @@ paths:
               schema:
                 type: object
                 properties:
-                  platform: { type: string, enum: [metaads, tiktokads, googleads, xads, openaiads] }
+                  platform: { type: string, enum: [metaads, tiktokads, googleads, xads, openaiads, linkedinads] }
                   stats:
                     type: object
                     properties:
