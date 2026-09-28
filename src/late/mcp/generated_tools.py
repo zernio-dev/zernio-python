@@ -7489,6 +7489,12 @@ def register_generated_tools(mcp, _get_client):
         object_id: str | None = None,
         query: str | None = None,
         ad_account_id: str | None = None,
+        report_type: str = "BASIC",
+        data_level: str | None = None,
+        dimensions: str | None = None,
+        metrics: str | None = None,
+        page: int = 1,
+        page_size: int = 100,
         customer_id: str | None = None,
         page_token: str | None = None,
         level: str | None = None,
@@ -7509,10 +7515,16 @@ def register_generated_tools(mcp, _get_client):
         """Flexible live insights query
 
         Args:
-            account_id: Zernio SocialAccount id (posting or ads variant); its platform selects the Meta or Google contract. (required)
+            account_id: Zernio SocialAccount id (posting or ads variant); its platform selects the Meta, Google or TikTok contract. (required)
             object_id: Meta only (required there): insights node (act_<n>, campaign id, ad set id or ad id).
             query: Google only (required there): the GAQL SELECT statement to run.
-            ad_account_id: Google only: platform ad account ID (Google customer ID, digits only) when the connection has several Google Ads accounts.
+            ad_account_id: Google: platform ad account ID (Google customer ID, digits only) when the connection has several Google Ads accounts. TikTok (required there): the advertiser id.
+            report_type: TikTok only: report_type.
+            data_level: TikTok only (required there): data_level.
+            dimensions: TikTok only (required there): 1-4 comma-separated TikTok dimensions (e.g. country_code, campaign_id, stat_time_day).
+            metrics: TikTok only (required there): comma-separated TikTok metrics (e.g. reach,impressions,frequency,spend).
+            page: TikTok only: page number.
+            page_size: TikTok only: rows per page.
             customer_id: Alias of adAccountId, kept for existing callers
             page_token: Google only: cursor from paging.nextPageToken of the previous page.
             level: Row granularity
@@ -7522,9 +7534,9 @@ def register_generated_tools(mcp, _get_client):
             action_attribution_windows: Comma-separated Meta attribution windows. Action values are returned keyed per window.
             action_report_time: When actions are counted: impression, conversion or mixed.
             use_unified_attribution_setting: Use the ad sets' own attribution settings for action counting.
-            filtering: JSON array of Meta filter objects: [{"field", "operator", "value"}]. Applied server-side by Meta.
+            filtering: JSON array of filter objects: [{"field", "operator", "value"}]. Applied server-side by Meta or TikTok (TikTok fields e.g. campaign_ids, adgroup_ids, ad_ids).
             date_preset: Meta date_preset (e.g. last_7d, last_30d, this_month). Mutually exclusive with fromDate/toDate.
-            from_date: Start of range (YYYY-MM-DD); requires toDate.
+            from_date: Start of range (YYYY-MM-DD); requires toDate. Required on TikTok.
             to_date: End of range (YYYY-MM-DD); requires fromDate.
             time_increment: Days per row (1-90), monthly, or all_days.
             limit: Rows per page
@@ -7536,6 +7548,12 @@ def register_generated_tools(mcp, _get_client):
                 object_id=object_id,
                 query=query,
                 ad_account_id=ad_account_id,
+                report_type=report_type,
+                data_level=data_level,
+                dimensions=dimensions,
+                metrics=metrics,
+                page=page,
+                page_size=page_size,
                 customer_id=customer_id,
                 page_token=page_token,
                 level=level,
