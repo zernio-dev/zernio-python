@@ -14908,8 +14908,8 @@ def register_generated_tools(mcp, _get_client):
         """Get Event Match Quality
 
         Args:
-            account_id: SocialAccount _id (must be a metaads account). (required)
-            destination_id: Meta pixel/dataset ID. (required)"""
+            account_id: SocialAccount _id (a metaads or pinterestads account). (required)
+            destination_id: Meta pixel/dataset ID, or the numeric Pinterest ad account id. (required)"""
         client = _get_client()
         try:
             response = client.conversions.get_conversions_quality(
@@ -14937,15 +14937,15 @@ def register_generated_tools(mcp, _get_client):
         """Send conversion events
 
             Args:
-                account_id: SocialAccount ID (metaads, googleads, linkedinads, tiktokads, or openaiads). (required)
+                account_id: SocialAccount ID (metaads, googleads, linkedinads, tiktokads, openaiads, or pinterestads). (required)
                 destination_id: Platform destination identifier. For Meta, the pixel/dataset
         ID. For Google, the conversion action resource name. For
         LinkedIn, the conversion rule ID or full
         `urn:lla:llaPartnerConversion:{id}` URN. For OpenAI Ads, the
-        pixel wire id.
+        pixel wire id. For Pinterest, the numeric ad account id.
          (required)
                 events: (required)
-                test_code: Meta `test_event_code` passthrough. Ignored by Google, LinkedIn, and OpenAI Ads.
+                test_code: Meta `test_event_code` passthrough. On Pinterest any value sends the batch with `test=true` (validated, not recorded). Ignored by Google, LinkedIn, and OpenAI Ads.
                 consent: Batch-level user consent. Required by Google for EEA/UK
         events under the Feb 2026 restrictions. On Meta, any
         DENIED flag enables Limited Data Use on every event in
@@ -15318,7 +15318,7 @@ def register_generated_tools(mcp, _get_client):
         """List conversion destinations
 
         Args:
-            account_id: SocialAccount ID (metaads, googleads, linkedinads, tiktokads, or openaiads). (required)"""
+            account_id: SocialAccount ID (metaads, googleads, linkedinads, tiktokads, openaiads, or pinterestads). (required)"""
         client = _get_client()
         try:
             response = client.conversions.list_conversion_destinations(
@@ -23414,6 +23414,7 @@ def register_generated_tools(mcp, _get_client):
         ad_account_id: str,
         name: str,
         default_event_type: str | None = None,
+        automatic_matching_fields: list[str] | None = None,
     ) -> str:
         """Create a tracking tag
 
@@ -23421,7 +23422,8 @@ def register_generated_tools(mcp, _get_client):
             account_id: Ads SocialAccount id (platform `metaads` or `openaiads`). (required)
             ad_account_id: Meta ad account id, e.g. `act_123456789`. Required by this endpoint but ignored for OpenAI Ads. (required)
             name: (required)
-            default_event_type: OpenAI Ads only (ignored by Meta). When set, also provisions a standard conversion event setting wired to the new pixel, so `goal: conversions` ad creates on `POST /v1/ads/create` have an event to reference immediately."""
+            default_event_type: OpenAI Ads only (ignored by Meta). When set, also provisions a standard conversion event setting wired to the new pixel, so `goal: conversions` ad creates on `POST /v1/ads/create` have an event to reference immediately.
+            automatic_matching_fields: Pinterest only (400 elsewhere). Customer data the new tag matches automatically (automatic enhanced match): `em` email, `ph` phone, `fn`/`ln` name, `ge` gender, `db` date of birth, `ct`/`st`/`zp`/`country` location, `external_id`. Pinterest has one switch for the name and one for the location, so `fn` turns on `ln` too and any location code turns on all four."""
         client = _get_client()
         try:
             response = client.tracking_tags.create_tracking_tag(
@@ -23429,6 +23431,7 @@ def register_generated_tools(mcp, _get_client):
                 ad_account_id=ad_account_id,
                 name=name,
                 default_event_type=default_event_type,
+                automatic_matching_fields=automatic_matching_fields,
             )
             return _format_response(response)
         except Exception as e:

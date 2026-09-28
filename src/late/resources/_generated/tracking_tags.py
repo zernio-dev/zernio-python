@@ -117,12 +117,14 @@ class TrackingTagsResource:
         name: str,
         *,
         default_event_type: str | None = None,
+        automatic_matching_fields: list[str] | None = None,
     ) -> dict[str, Any]:
         """Create a tracking tag"""
         payload = self._build_payload(
             ad_account_id=ad_account_id,
             name=name,
             default_event_type=default_event_type,
+            automatic_matching_fields=automatic_matching_fields,
         )
         return self._client._post(
             f"/v1/accounts/{account_id}/tracking-tags", data=payload
@@ -458,12 +460,14 @@ class TrackingTagsResource:
         name: str,
         *,
         default_event_type: str | None = None,
+        automatic_matching_fields: list[str] | None = None,
     ) -> dict[str, Any]:
         """Create a tracking tag (async)"""
         payload = self._build_payload(
             ad_account_id=ad_account_id,
             name=name,
             default_event_type=default_event_type,
+            automatic_matching_fields=automatic_matching_fields,
         )
         return await self._client._apost(
             f"/v1/accounts/{account_id}/tracking-tags", data=payload
