@@ -23678,6 +23678,7 @@ def register_generated_tools(mcp, _get_client):
     )
     def voice_get_voice_call_estimate(
         to: str,
+        from_: str | None = None,
         minutes: int = 1,
         recording: bool | None = None,
         transcription: bool | None = None,
@@ -23686,13 +23687,18 @@ def register_generated_tools(mcp, _get_client):
 
         Args:
             to: Destination number, E.164 (leading + optional). (required)
+            from_: The number the call would dial from, E.164. When it is verified on a Branded Calling identity and `to` is a US number, the estimate includes the per-call Branded Calling surcharge.
             minutes
             recording
             transcription"""
         client = _get_client()
         try:
             response = client.voice.get_voice_call_estimate(
-                to=to, minutes=minutes, recording=recording, transcription=transcription
+                to=to,
+                from_=from_,
+                minutes=minutes,
+                recording=recording,
+                transcription=transcription,
             )
             return _format_response(response)
         except Exception as e:

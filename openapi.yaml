@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.121.0"
+  version: "1.122.0"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -37408,6 +37408,7 @@ paths:
         - bearerAuth: []
       parameters:
         - { name: to, in: query, required: true, schema: { type: string }, description: "Destination number, E.164 (leading + optional)." }
+        - { name: from, in: query, schema: { type: string }, description: "The number the call would dial from, E.164. When it is verified on a Branded Calling identity and `to` is a US number, the estimate includes the per-call Branded Calling surcharge." }
         - { name: minutes, in: query, schema: { type: integer, minimum: 1, maximum: 120, default: 1 } }
         - { name: recording, in: query, schema: { type: boolean } }
         - { name: transcription, in: query, schema: { type: boolean } }
@@ -37428,6 +37429,7 @@ paths:
                       telnyxCostUSD: { type: number }
                       recordingCostUSD: { type: number }
                       transcriptionCostUSD: { type: number }
+                      brandedCallUSD: { type: number, description: 'Branded Calling surcharge, 0 unless `from` is a verified branded number calling a US destination.' }
                       billableCostUSD: { type: number, description: What Zernio bills for the call. }
                       totalCostUSD: { type: number, description: Equals billableCostUSD (no separate Meta bill on PSTN); kept for shape parity with the WhatsApp estimate. }
         '401': { $ref: '#/components/responses/Unauthorized' }
@@ -38532,7 +38534,11 @@ paths:
 
         Billing: $100 per identity per month, the first month charged when the
         identity is filed with the carrier and not refunded if the carrier rejects it,
-        then monthly while the identity exists. Branded calls add $0.10 each.
+        then monthly while the identity exists. Branded calls add $0.10 each, counted
+        on every outbound call from a verified branded number to a US destination
+        (whether or not the callee's carrier displayed the branding); the surcharge
+        shows as `brandedCallUSD` on the call's billing and in
+        `GET /v1/voice/calls/estimate` when you pass `from`.
       security:
         - bearerAuth: []
       requestBody:

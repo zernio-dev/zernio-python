@@ -153,6 +153,7 @@ class VoiceResource:
         self,
         to: str,
         *,
+        from_: str | None = None,
         minutes: int | None = 1,
         recording: bool | None = None,
         transcription: bool | None = None,
@@ -160,6 +161,7 @@ class VoiceResource:
         """Estimate call cost"""
         params = self._build_params(
             to=to,
+            from_=from_,
             minutes=minutes,
             recording=recording,
             transcription=transcription,
@@ -357,6 +359,7 @@ class VoiceResource:
         self,
         to: str,
         *,
+        from_: str | None = None,
         minutes: int | None = 1,
         recording: bool | None = None,
         transcription: bool | None = None,
@@ -364,6 +367,7 @@ class VoiceResource:
         """Estimate call cost (async)"""
         params = self._build_params(
             to=to,
+            from_=from_,
             minutes=minutes,
             recording=recording,
             transcription=transcription,
