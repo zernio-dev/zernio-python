@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.131.0"
+  version: "1.132.0"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -12491,10 +12491,11 @@ components:
               id: { type: string }
               name: { type: string }
               type: { type: string, description: Platform category of the event. }
-              siteEvent: { type: string, description: 'The value the site sends to fire this event.' }
+              siteEvent: { type: string, enum: [page_view, view_content, add_to_cart, search, initiate_checkout, add_payment_info, purchase], description: 'The neutral site event this conversion is fired for, when it maps to one.' }
+              siteEventId: { type: string, description: 'What the site sends to fire this event (Google conversion label, LinkedIn conversion rule id, X `tw-` event id).' }
               status: { type: string }
         name: { type: string }
-        platform: { type: string, enum: [metaads, openaiads, tiktokads] }
+        platform: { type: string, enum: [metaads, openaiads, tiktokads, googleads] }
         kind:
           type: string
           enum: [pixel, tag, insight_tag]
@@ -64870,7 +64871,7 @@ paths:
       x-resource-group: "ads"
       operationId: listTrackingTags
       tags: ["Tracking Tags"]
-      x-platforms: ["meta", "tiktok"]
+      x-platforms: ["meta", "tiktok", "google"]
       summary: List tracking tags
       description: |
         Returns the tracking tags (Meta Pixels, or OpenAI Ads pixels) the
@@ -64901,7 +64902,7 @@ paths:
               schema:
                 type: object
                 properties:
-                  platform: { type: string, enum: [metaads, openaiads, tiktokads] }
+                  platform: { type: string, enum: [metaads, openaiads, tiktokads, googleads] }
                   tags:
                     type: array
                     items: { $ref: '#/components/schemas/TrackingTag' }
@@ -64917,7 +64918,7 @@ paths:
       x-resource-group: "ads"
       operationId: createTrackingTag
       tags: ["Tracking Tags"]
-      x-platforms: ["meta", "tiktok"]
+      x-platforms: ["meta", "tiktok", "google"]
       summary: Create a tracking tag
       description: |
         Meta: creates a Meta Pixel on the given ad account (`POST /act_{id}/adspixels`,
@@ -64975,7 +64976,7 @@ paths:
               schema:
                 type: object
                 properties:
-                  platform: { type: string, enum: [metaads, openaiads, tiktokads] }
+                  platform: { type: string, enum: [metaads, openaiads, tiktokads, googleads] }
                   tag: { $ref: '#/components/schemas/TrackingTag' }
         '400': { description: 'Invalid body, invalid `adAccountId`, over the per-business pixel cap, or ad account not in a Business Manager.' }
         '401': { $ref: '#/components/responses/Unauthorized' }
@@ -64991,7 +64992,7 @@ paths:
       x-resource-group: "ads"
       operationId: getTrackingTag
       tags: ["Tracking Tags"]
-      x-platforms: ["meta", "tiktok"]
+      x-platforms: ["meta", "tiktok", "google"]
       summary: Get a tracking tag
       description: |
         Returns the full tag record including the base-code `code` snippet,
@@ -65015,7 +65016,7 @@ paths:
               schema:
                 type: object
                 properties:
-                  platform: { type: string, enum: [metaads, tiktokads] }
+                  platform: { type: string, enum: [metaads, tiktokads, googleads] }
                   tag: { $ref: '#/components/schemas/TrackingTag' }
         '401': { $ref: '#/components/responses/Unauthorized' }
         '403': { description: 'Ads access required (Ads add-on on legacy plans, included on usage-based plans), or the Meta token lacks ads permissions (reconnect required).' }
@@ -65028,7 +65029,7 @@ paths:
       x-resource-group: "ads"
       operationId: updateTrackingTag
       tags: ["Tracking Tags"]
-      x-platforms: ["meta", "tiktok"]
+      x-platforms: ["meta", "tiktok", "google"]
       summary: Update a tracking tag
       description: |
         Partial-update a pixel. Whitelisted fields: `name` (rename),
@@ -65084,7 +65085,7 @@ paths:
               schema:
                 type: object
                 properties:
-                  platform: { type: string, enum: [metaads, tiktokads] }
+                  platform: { type: string, enum: [metaads, tiktokads, googleads] }
                   tag: { $ref: '#/components/schemas/TrackingTag' }
         '400': { description: Invalid body (e.g. no fields supplied) or Meta validation failure. }
         '401': { $ref: '#/components/responses/Unauthorized' }
@@ -65205,7 +65206,7 @@ paths:
       x-resource-group: "ads"
       operationId: installTrackingTagOnStore
       tags: ["Tracking Tags"]
-      x-platforms: ["meta", "tiktok", "shopify", "wordpress"]
+      x-platforms: ["meta", "tiktok", "google", "shopify", "wordpress"]
       summary: Install on a Shopify store or WordPress site
       description: |
         Puts the Meta pixel on a connected Shopify store's storefront and checkout through
@@ -65269,7 +65270,7 @@ paths:
               schema:
                 type: object
                 properties:
-                  platform: { type: string, enum: [metaads, tiktokads] }
+                  platform: { type: string, enum: [metaads, tiktokads, googleads] }
                   install:
                     allOf:
                       - $ref: '#/components/schemas/StorePixelInstall'
@@ -65306,7 +65307,7 @@ paths:
       x-resource-group: "ads"
       operationId: getTrackingTagStoreInstall
       tags: ["Tracking Tags"]
-      x-platforms: ["meta", "tiktok", "shopify", "wordpress"]
+      x-platforms: ["meta", "tiktok", "google", "shopify", "wordpress"]
       summary: Get store install status
       description: |
         Whether this tag is the one the Shopify store fires for its platform. `installedTagId`
@@ -65334,7 +65335,7 @@ paths:
               schema:
                 type: object
                 properties:
-                  platform: { type: string, enum: [metaads, tiktokads] }
+                  platform: { type: string, enum: [metaads, tiktokads, googleads] }
                   install:
                     allOf:
                       - $ref: '#/components/schemas/StorePixelInstall'
@@ -65364,7 +65365,7 @@ paths:
       x-resource-group: "ads"
       operationId: removeTrackingTagFromStore
       tags: ["Tracking Tags"]
-      x-platforms: ["meta", "tiktok", "shopify", "wordpress"]
+      x-platforms: ["meta", "tiktok", "google", "shopify", "wordpress"]
       summary: Remove from a Shopify store or WordPress site
       description: |
         Removes the tag from the store. Idempotent: nothing installed returns 200 with
@@ -65389,7 +65390,7 @@ paths:
               schema:
                 type: object
                 properties:
-                  platform: { type: string, enum: [metaads, tiktokads] }
+                  platform: { type: string, enum: [metaads, tiktokads, googleads] }
                   install:
                     allOf:
                       - $ref: '#/components/schemas/StorePixelInstall'
@@ -65408,7 +65409,7 @@ paths:
       x-resource-group: "ads"
       operationId: getTrackingTagStats
       tags: ["Tracking Tags"]
-      x-platforms: ["meta", "tiktok"]
+      x-platforms: ["meta", "tiktok", "google"]
       summary: Get aggregated event stats
       description: |
         Returns event counts / health for the tag, where the platform exposes
@@ -65456,7 +65457,7 @@ paths:
               schema:
                 type: object
                 properties:
-                  platform: { type: string, enum: [metaads, tiktokads] }
+                  platform: { type: string, enum: [metaads, tiktokads, googleads] }
                   stats:
                     type: object
                     properties:
