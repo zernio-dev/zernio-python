@@ -23,6 +23,7 @@ from ..resources import (
     AnalyticsResource,
     ApiKeysResource,
     BlogsResource,
+    BrandedCallingResource,
     BroadcastsResource,
     BusinessAgentResource,
     CallsResource,
@@ -169,6 +170,7 @@ class Zernio(BaseClient):
         self.analytics = AnalyticsResource(self)
         self.api_keys = ApiKeysResource(self)
         self.blogs = BlogsResource(self)
+        self.branded_calling = BrandedCallingResource(self)
         self.broadcasts = BroadcastsResource(self)
         self.business_agent = BusinessAgentResource(self)
         self.calls = CallsResource(self)

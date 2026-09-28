@@ -609,6 +609,25 @@ Both `from zernio import ...` and `from late import ...` work identically. The `
 | `blogs.delete_blog()` | Delete a blog |
 | `blogs.delete_blog_article()` | Delete a blog article |
 
+### Branded Calling
+| Method | Description |
+|--------|-------------|
+| `branded_calling.list_branded_calling_call_reasons()` | List pre-approved call reasons |
+| `branded_calling.list_branded_calling_enterprises()` | List registered businesses |
+| `branded_calling.list_branded_calling_identities()` | List caller identities |
+| `branded_calling.list_branded_calling_identity_numbers()` | List the numbers on a caller identity |
+| `branded_calling.create_branded_calling_enterprise()` | Register a business for Branded Calling |
+| `branded_calling.create_branded_calling_identity()` | Create a caller identity |
+| `branded_calling.get_branded_calling_enterprise()` | Get a registered business |
+| `branded_calling.get_branded_calling_identity()` | Get a caller identity |
+| `branded_calling.update_branded_calling_identity()` | Edit or resubmit a caller identity |
+| `branded_calling.delete_branded_calling_enterprise()` | Delete a registered business |
+| `branded_calling.delete_branded_calling_identity()` | Delete a caller identity |
+| `branded_calling.attach_branded_calling_numbers()` | Attach numbers to a verified identity |
+| `branded_calling.confirm_branded_calling_authorizer_email()` | Confirm the authorizer's code |
+| `branded_calling.detach_branded_calling_numbers()` | Detach numbers from an identity |
+| `branded_calling.resend_branded_calling_authorizer_code()` | Resend the authorizer's code |
+
 ### Broadcasts
 | Method | Description |
 |--------|-------------|

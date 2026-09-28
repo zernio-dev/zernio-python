@@ -9471,6 +9471,406 @@ def register_generated_tools(mcp, _get_client):
         except Exception as e:
             return f"Error: {e}"
 
+    # BRANDED_CALLING
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Register a business for Branded Calling",
+            readOnlyHint=False,
+            destructiveHint=True,
+            openWorldHint=True,
+        )
+    )
+    def branded_calling_create_branded_calling_enterprise(
+        legal_name: str,
+        doing_business_as: str,
+        organization_type: str,
+        organization_legal_type: str,
+        country_code: str,
+        jurisdiction_of_incorporation: str,
+        website: str,
+        fein: str,
+        industry: str,
+        number_of_employees: str,
+        organization_contact: dict[str, Any] | None,
+        billing_contact: dict[str, Any] | None,
+        physical_address: dict[str, Any] | None,
+        billing_address: dict[str, Any] | None,
+    ) -> str:
+        """Register a business for Branded Calling
+
+        Args:
+            legal_name: Exactly as on the tax record. (required)
+            doing_business_as: (required)
+            organization_type: (required)
+            organization_legal_type: (required)
+            country_code: ISO 3166-1 alpha-2. US or CA. (required)
+            jurisdiction_of_incorporation: State, province or country of registration. (required)
+            website: (required)
+            fein: US Federal Employer Identification Number (NN-NNNNNNN) or the Canadian equivalent. Stored encrypted; only the last four digits are ever returned. (required)
+            industry: One of the carrier industry labels, e.g. technology, healthcare, retail, finance, legal, insurance, real estate, logistics, education. (required)
+            number_of_employees: (required)
+            organization_contact: (required)
+            billing_contact: (required)
+            physical_address: (required)
+            billing_address: (required)"""
+        client = _get_client()
+        try:
+            response = client.branded_calling.create_branded_calling_enterprise(
+                legal_name=legal_name,
+                doing_business_as=doing_business_as,
+                organization_type=organization_type,
+                organization_legal_type=organization_legal_type,
+                country_code=country_code,
+                jurisdiction_of_incorporation=jurisdiction_of_incorporation,
+                website=website,
+                fein=fein,
+                industry=industry,
+                number_of_employees=number_of_employees,
+                organization_contact=organization_contact,
+                billing_contact=billing_contact,
+                physical_address=physical_address,
+                billing_address=billing_address,
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="List registered businesses",
+            readOnlyHint=True,
+            destructiveHint=False,
+            openWorldHint=False,
+        )
+    )
+    def branded_calling_list_branded_calling_enterprises() -> str:
+        """List registered businesses"""
+        client = _get_client()
+        try:
+            response = client.branded_calling.list_branded_calling_enterprises()
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Get a registered business",
+            readOnlyHint=True,
+            destructiveHint=False,
+            openWorldHint=False,
+        )
+    )
+    def branded_calling_get_branded_calling_enterprise(id: str) -> str:
+        """Get a registered business
+
+        Args:
+            id: (required)"""
+        client = _get_client()
+        try:
+            response = client.branded_calling.get_branded_calling_enterprise(id=id)
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Delete a registered business",
+            readOnlyHint=False,
+            destructiveHint=True,
+            openWorldHint=True,
+        )
+    )
+    def branded_calling_delete_branded_calling_enterprise(id: str) -> str:
+        """Delete a registered business
+
+        Args:
+            id: (required)"""
+        client = _get_client()
+        try:
+            response = client.branded_calling.delete_branded_calling_enterprise(id=id)
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="List pre-approved call reasons",
+            readOnlyHint=True,
+            destructiveHint=False,
+            openWorldHint=False,
+        )
+    )
+    def branded_calling_list_branded_calling_call_reasons() -> str:
+        """List pre-approved call reasons"""
+        client = _get_client()
+        try:
+            response = client.branded_calling.list_branded_calling_call_reasons()
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Create a caller identity",
+            readOnlyHint=False,
+            destructiveHint=True,
+            openWorldHint=True,
+        )
+    )
+    def branded_calling_create_branded_calling_identity(
+        enterprise_id: str,
+        display_name: str,
+        call_reasons: list[str] | None,
+        authorizer: dict[str, Any] | None,
+        references: dict[str, Any] | None,
+        logo_url: str | None = None,
+    ) -> str:
+        """Create a caller identity
+
+        Args:
+            enterprise_id: A business from POST /v1/branded-calling/enterprises. (required)
+            display_name: Shown on the callee's screen. No emoji. (required)
+            call_reasons: 1 to 10 reasons you call, each up to 64 characters. Pick from GET /v1/branded-calling/call-reasons to skip manual vetting. (required)
+            logo_url: HTTPS URL of a PNG, JPEG, WebP or SVG logo. Zernio converts it to the 256x256 BMP the carriers require and hosts it.
+            authorizer: (required)
+            references: (required)"""
+        client = _get_client()
+        try:
+            response = client.branded_calling.create_branded_calling_identity(
+                enterprise_id=enterprise_id,
+                display_name=display_name,
+                call_reasons=call_reasons,
+                logo_url=logo_url,
+                authorizer=authorizer,
+                references=references,
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="List caller identities",
+            readOnlyHint=True,
+            destructiveHint=False,
+            openWorldHint=False,
+        )
+    )
+    def branded_calling_list_branded_calling_identities() -> str:
+        """List caller identities"""
+        client = _get_client()
+        try:
+            response = client.branded_calling.list_branded_calling_identities()
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Get a caller identity",
+            readOnlyHint=True,
+            destructiveHint=False,
+            openWorldHint=False,
+        )
+    )
+    def branded_calling_get_branded_calling_identity(id: str) -> str:
+        """Get a caller identity
+
+        Args:
+            id: (required)"""
+        client = _get_client()
+        try:
+            response = client.branded_calling.get_branded_calling_identity(id=id)
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Edit or resubmit a caller identity",
+            readOnlyHint=False,
+            destructiveHint=True,
+            openWorldHint=True,
+        )
+    )
+    def branded_calling_update_branded_calling_identity(
+        id: str,
+        display_name: str | None = None,
+        call_reasons: list[str] | None = None,
+        logo_url: str | None = None,
+        authorizer: dict[str, Any] | None = None,
+        references: dict[str, Any] | None = None,
+        review_answers: dict[str, Any] | None = None,
+        review_note: str | None = None,
+    ) -> str:
+        """Edit or resubmit a caller identity
+
+        Args:
+            id: (required)
+            display_name: Shown on the callee's screen. No emoji.
+            call_reasons: 1 to 10 reasons you call, each up to 64 characters. Pick from GET /v1/branded-calling/call-reasons to skip manual vetting.
+            logo_url: HTTPS URL of a PNG, JPEG, WebP or SVG logo. Zernio converts it to the 256x256 BMP the carriers require and hosts it.
+            authorizer
+            references
+            review_answers: One entry per point id of the open reviewRequest.
+            review_note"""
+        client = _get_client()
+        try:
+            response = client.branded_calling.update_branded_calling_identity(
+                id=id,
+                display_name=display_name,
+                call_reasons=call_reasons,
+                logo_url=logo_url,
+                authorizer=authorizer,
+                references=references,
+                review_answers=review_answers,
+                review_note=review_note,
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Delete a caller identity",
+            readOnlyHint=False,
+            destructiveHint=True,
+            openWorldHint=True,
+        )
+    )
+    def branded_calling_delete_branded_calling_identity(id: str) -> str:
+        """Delete a caller identity
+
+        Args:
+            id: (required)"""
+        client = _get_client()
+        try:
+            response = client.branded_calling.delete_branded_calling_identity(id=id)
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Resend the authorizer's code",
+            readOnlyHint=False,
+            destructiveHint=True,
+            openWorldHint=True,
+        )
+    )
+    def branded_calling_resend_branded_calling_authorizer_code(id: str) -> str:
+        """Resend the authorizer's code
+
+        Args:
+            id: (required)"""
+        client = _get_client()
+        try:
+            response = client.branded_calling.resend_branded_calling_authorizer_code(
+                id=id
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Confirm the authorizer's code",
+            readOnlyHint=False,
+            destructiveHint=True,
+            openWorldHint=True,
+        )
+    )
+    def branded_calling_confirm_branded_calling_authorizer_email(
+        id: str, code: str
+    ) -> str:
+        """Confirm the authorizer's code
+
+        Args:
+            id: (required)
+            code: (required)"""
+        client = _get_client()
+        try:
+            response = client.branded_calling.confirm_branded_calling_authorizer_email(
+                id=id, code=code
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="List the numbers on a caller identity",
+            readOnlyHint=True,
+            destructiveHint=False,
+            openWorldHint=False,
+        )
+    )
+    def branded_calling_list_branded_calling_identity_numbers(id: str) -> str:
+        """List the numbers on a caller identity
+
+        Args:
+            id: (required)"""
+        client = _get_client()
+        try:
+            response = client.branded_calling.list_branded_calling_identity_numbers(
+                id=id
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Attach numbers to a verified identity",
+            readOnlyHint=False,
+            destructiveHint=True,
+            openWorldHint=True,
+        )
+    )
+    def branded_calling_attach_branded_calling_numbers(
+        id: str, phone_number_ids: list[str] | None, signature: dict[str, Any] | None
+    ) -> str:
+        """Attach numbers to a verified identity
+
+        Args:
+            id: (required)
+            phone_number_ids: Phone number record ids (from GET /v1/phone-numbers). Active US numbers only. (required)
+            signature: (required)"""
+        client = _get_client()
+        try:
+            response = client.branded_calling.attach_branded_calling_numbers(
+                id=id, phone_number_ids=phone_number_ids, signature=signature
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Detach numbers from an identity",
+            readOnlyHint=False,
+            destructiveHint=True,
+            openWorldHint=True,
+        )
+    )
+    def branded_calling_detach_branded_calling_numbers(
+        id: str, phone_numbers: list[str] | None
+    ) -> str:
+        """Detach numbers from an identity
+
+        Args:
+            id: (required)
+            phone_numbers: E.164 numbers currently on this identity. (required)"""
+        client = _get_client()
+        try:
+            response = client.branded_calling.detach_branded_calling_numbers(
+                id=id, phone_numbers=phone_numbers
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
     # BROADCASTS
 
     @mcp.tool(

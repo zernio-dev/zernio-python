@@ -15,6 +15,7 @@ from .ad_targeting import AdTargetingResource
 from .analytics import AnalyticsResource
 from .api_keys import ApiKeysResource
 from .blogs import BlogsResource
+from .branded_calling import BrandedCallingResource
 from .broadcasts import BroadcastsResource
 from .business_agent import BusinessAgentResource
 from .calls import CallsResource
@@ -82,6 +83,7 @@ __all__ = [
     "AnalyticsResource",
     "ApiKeysResource",
     "BlogsResource",
+    "BrandedCallingResource",
     "BroadcastsResource",
     "BusinessAgentResource",
     "CallsResource",

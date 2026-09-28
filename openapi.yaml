@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.119.0"
+  version: "1.120.0"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -593,7 +593,13 @@ tags:
       with voicemail, business-hours routing, IVR, recording, and transcription. Place
       outbound calls, manage live ones (end, blind-transfer), resolve recordings, and
       drive the browser softphone.
-      Private beta: returns 403 unless your account is enrolled.
+  - name: Branded Calling
+    description: |
+      Show your business name, logo and reason for calling on the callee's phone instead
+      of a bare number. Register the business, create a caller identity (name, logo, call
+      reasons, references), pass review, then attach US numbers with a signed Letter of
+      Authorization. Displays on calls to US mobiles on T-Mobile and Verizon; eligibility
+      is verified, display is never guaranteed by the carriers.
   - name: SMS
     description: |
       SMS/MMS on your numbers: enable SMS on a number, send messages, validate recipient
@@ -994,6 +1000,135 @@ components:
                   effective_account_limit: 2000
                   current_account_count: 2000
   schemas:
+    BrandedCallingContact:
+      type: object
+      required: [firstName, lastName, email, phoneNumber]
+      properties:
+        firstName: { type: string, maxLength: 100 }
+        lastName: { type: string, maxLength: 100 }
+        email: { type: string, format: email }
+        jobTitle: { type: string, maxLength: 100, description: 'Required on organizationContact.' }
+        phoneNumber: { type: string, description: 'E.164 with a leading +.' }
+    BrandedCallingAddress:
+      type: object
+      required: [streetAddress, city, administrativeArea, postalCode, country]
+      properties:
+        streetAddress: { type: string, maxLength: 255 }
+        extendedAddress: { type: string, maxLength: 255 }
+        city: { type: string, maxLength: 100 }
+        administrativeArea: { type: string, description: 'State or province code (IL, ON).' }
+        postalCode: { type: string, maxLength: 20 }
+        country: { type: string, description: 'ISO 3166-1 alpha-2 (US or CA).' }
+    BrandedCallingReference:
+      type: object
+      required: [fullName, phoneNumber, email, timezone]
+      description: 'A person the carrier vetting team phones to confirm the business. Business references are senior contacts at a vendor, partner or client; the financial reference is a CPA or a bank contact. Calls are placed in the reference''s local 8am-9pm window.'
+      properties:
+        fullName: { type: string, maxLength: 255 }
+        jobTitle: { type: string, maxLength: 255 }
+        organization: { type: string, maxLength: 255 }
+        relationshipToRegistrant: { type: string, maxLength: 255 }
+        phoneNumber: { type: string, description: 'E.164 with a leading +.' }
+        email: { type: string, format: email }
+        timezone: { type: string, description: 'IANA timezone id, e.g. America/New_York.' }
+    BrandedCallingReferences:
+      type: object
+      required: [business, financial]
+      properties:
+        business:
+          type: array
+          minItems: 2
+          maxItems: 2
+          items: { $ref: '#/components/schemas/BrandedCallingReference' }
+        financial: { $ref: '#/components/schemas/BrandedCallingReference' }
+    BrandedCallingEnterprise:
+      type: object
+      properties:
+        id: { type: string }
+        legalName: { type: string }
+        doingBusinessAs: { type: string }
+        organizationType: { type: string, enum: [commercial, government, non_profit] }
+        organizationLegalType: { type: string, enum: [corporation, llc, partnership, nonprofit, other] }
+        countryCode: { type: string, enum: [US, CA] }
+        jurisdictionOfIncorporation: { type: string }
+        website: { type: string }
+        feinLast4: { type: string, description: 'Last four digits of the tax id; the full id is never returned.' }
+        industry: { type: string }
+        numberOfEmployees: { type: string, enum: ['1-10', '11-50', '51-200', '201-500', '501-2000', '2001-10000', '10001+'] }
+        organizationContact: { $ref: '#/components/schemas/BrandedCallingContact' }
+        billingContact: { $ref: '#/components/schemas/BrandedCallingContact' }
+        physicalAddress: { $ref: '#/components/schemas/BrandedCallingAddress' }
+        billingAddress: { $ref: '#/components/schemas/BrandedCallingAddress' }
+        registered: { type: boolean, description: 'True once the business exists at the carrier (happens when its first identity passes review).' }
+        createdAt: { type: [string, "null"], format: date-time }
+    BrandedCallingIdentityNumber:
+      type: object
+      properties:
+        phoneNumberId: { type: string }
+        phoneNumber: { type: string }
+        status: { type: string, enum: [submitted, in_review, verified, unsuccessful, suspended, expired, permanently_rejected], description: 'verified = the identity shows on calls from this number. permanently_rejected cannot be attached again anywhere.' }
+        rejectionReason:
+          type: [object, "null"]
+          properties:
+            code: { type: string }
+            title: { type: string }
+            detail: { type: string }
+            message: { type: [string, "null"] }
+        verifiedAt: { type: [string, "null"], format: date-time }
+        addedAt: { type: [string, "null"], format: date-time }
+    BrandedCallingIdentity:
+      type: object
+      properties:
+        id: { type: string }
+        enterpriseId: { type: string }
+        displayName: { type: string, maxLength: 35 }
+        callReasons: { type: array, items: { type: string, maxLength: 64 } }
+        callReasonsPreApproved: { type: boolean, description: 'Every call reason matches the carrier catalogue (GET /v1/branded-calling/call-reasons); anything else is vetted by hand and takes longer.' }
+        logoUrl: { type: [string, "null"], description: 'The image you sent. Zernio hosts the 256x256 BMP the carriers require.' }
+        authorizer:
+          type: object
+          properties:
+            name: { type: string }
+            email: { type: string, format: email }
+        references: { $ref: '#/components/schemas/BrandedCallingReferences' }
+        status:
+          type: string
+          enum: [requested, changes_requested, rejected, pending_email_verification, in_review, verified, suspended, expired, permanently_rejected]
+          description: 'requested = in Zernio review; changes_requested = answer the review (PATCH); pending_email_verification = confirm the code emailed to the authorizer; in_review = with the carrier vetting team; verified = attach numbers; rejected = fix and PATCH to resubmit; suspended = an infringement claim is open; expired = the yearly verification lapsed; permanently_rejected = terminal.'
+        rejectionReasons:
+          type: array
+          items:
+            type: object
+            properties:
+              code: { type: string }
+              title: { type: string }
+              detail: { type: string }
+              message: { type: [string, "null"], description: 'Free-text note from the vetting team, on the first entry only.' }
+        reviewNote: { type: [string, "null"], description: 'The open change request, as text.' }
+        reviewRequest:
+          type: [object, "null"]
+          description: 'The open change request as points; answer each by id in reviewAnswers on PATCH.'
+          properties:
+            id: { type: string }
+            intro: { type: string }
+            points:
+              type: array
+              items:
+                type: object
+                properties:
+                  id: { type: string }
+                  title: { type: string }
+                  detail: { type: string }
+                  answer: { type: string, enum: [text, link, file, link_or_file] }
+        emailVerifiedAt: { type: [string, "null"], format: date-time }
+        submittedAt: { type: [string, "null"], format: date-time }
+        verifiedAt: { type: [string, "null"], format: date-time }
+        expiringAt: { type: [string, "null"], format: date-time, description: 'Verification lasts one year; Zernio resubmits 30 days before this date.' }
+        numbers:
+          type: array
+          items: { $ref: '#/components/schemas/BrandedCallingIdentityNumber' }
+        createdAt: { type: [string, "null"], format: date-time }
+        updatedAt: { type: [string, "null"], format: date-time }
     FeedbackReceipt:
       type: object
       properties:
@@ -38144,6 +38279,450 @@ paths:
         '401': { $ref: '#/components/responses/Unauthorized' }
         '404': { description: Sender ID not found. }
 
+  /v1/branded-calling/enterprises:
+    post:
+      x-resource-group: "telephony"
+      operationId: createBrandedCallingEnterprise
+      tags: [Branded Calling]
+      summary: Register a business for Branded Calling
+      description: |
+        Stores the legal entity behind your caller identities. Nothing is filed with the
+        carrier until the business's first identity passes review. Only businesses
+        registered in the US or Canada qualify (a FEIN or Canadian equivalent is
+        required); any other country returns `422`.
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [legalName, doingBusinessAs, organizationType, organizationLegalType, countryCode, jurisdictionOfIncorporation, website, fein, industry, numberOfEmployees, organizationContact, billingContact, physicalAddress, billingAddress]
+              properties:
+                legalName: { type: string, minLength: 3, maxLength: 64, description: 'Exactly as on the tax record.' }
+                doingBusinessAs: { type: string, maxLength: 255 }
+                organizationType: { type: string, enum: [commercial, government, non_profit] }
+                organizationLegalType: { type: string, enum: [corporation, llc, partnership, nonprofit, other] }
+                countryCode: { type: string, description: 'ISO 3166-1 alpha-2. US or CA.' }
+                jurisdictionOfIncorporation: { type: string, maxLength: 255, description: 'State, province or country of registration.' }
+                website: { type: string, format: uri }
+                fein: { type: string, description: 'US Federal Employer Identification Number (NN-NNNNNNN) or the Canadian equivalent. Stored encrypted; only the last four digits are ever returned.' }
+                industry: { type: string, description: 'One of the carrier industry labels, e.g. technology, healthcare, retail, finance, legal, insurance, real estate, logistics, education.' }
+                numberOfEmployees: { type: string, enum: ['1-10', '11-50', '51-200', '201-500', '501-2000', '2001-10000', '10001+'] }
+                organizationContact: { $ref: '#/components/schemas/BrandedCallingContact' }
+                billingContact: { $ref: '#/components/schemas/BrandedCallingContact' }
+                physicalAddress: { $ref: '#/components/schemas/BrandedCallingAddress' }
+                billingAddress: { $ref: '#/components/schemas/BrandedCallingAddress' }
+      responses:
+        '201':
+          description: Business stored.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/BrandedCallingEnterprise' }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '422': { description: 'The business is not registered in the US or Canada (code feature_not_available).' }
+    get:
+      x-resource-group: "telephony"
+      operationId: listBrandedCallingEnterprises
+      tags: [Branded Calling]
+      summary: List registered businesses
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: The workspace's businesses.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  enterprises:
+                    type: array
+                    items: { $ref: '#/components/schemas/BrandedCallingEnterprise' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+  /v1/branded-calling/enterprises/{id}:
+    get:
+      x-resource-group: "telephony"
+      operationId: getBrandedCallingEnterprise
+      tags: [Branded Calling]
+      summary: Get a registered business
+      security:
+        - bearerAuth: []
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string } }
+      responses:
+        '200':
+          description: The business.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/BrandedCallingEnterprise' }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404': { description: Business not found }
+    delete:
+      x-resource-group: "telephony"
+      operationId: deleteBrandedCallingEnterprise
+      tags: [Branded Calling]
+      summary: Delete a registered business
+      description: Refused while the business still has caller identities (delete those first).
+      security:
+        - bearerAuth: []
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string } }
+      responses:
+        '200':
+          description: Deleted.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status: { type: string, enum: [deleted] }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404': { description: Business not found }
+        '409': { description: 'The business still has caller identities (code invalid_resource_state).' }
+  /v1/branded-calling/call-reasons:
+    get:
+      x-resource-group: "telephony"
+      operationId: listBrandedCallingCallReasons
+      tags: [Branded Calling]
+      summary: List pre-approved call reasons
+      description: The carrier catalogue of call reasons that pass vetting automatically. Any other wording is allowed on an identity but is vetted by hand.
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: The catalogue.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  callReasons: { type: array, items: { type: string } }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+  /v1/branded-calling/identities:
+    post:
+      x-resource-group: "telephony"
+      operationId: createBrandedCallingIdentity
+      tags: [Branded Calling]
+      summary: Create a caller identity
+      description: |
+        A caller identity is what the callee sees: display name, logo and call reasons,
+        backed by a registered business and three references the carrier vetting team
+        phones. It starts in Zernio review (`requested`). Once approved, the carrier emails
+        the authorizer a 6-digit code; confirm it with the verify-email endpoint and the
+        identity goes into carrier vetting on its own. Track it with `GET` or the
+        `branded_calling.identity.status_updated` webhook.
+
+        Billing: $100 per identity per month, the first month charged when the
+        identity is filed with the carrier and not refunded if the carrier rejects it,
+        then monthly while the identity exists. Branded calls add $0.10 each.
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [enterpriseId, displayName, callReasons, authorizer, references]
+              properties:
+                enterpriseId: { type: string, description: 'A business from POST /v1/branded-calling/enterprises.' }
+                displayName: { type: string, minLength: 1, maxLength: 35, description: 'Shown on the callee''s screen. No emoji.' }
+                callReasons: { type: array, minItems: 1, maxItems: 10, items: { type: string, maxLength: 64 }, description: '1 to 10 reasons you call, each up to 64 characters. Pick from GET /v1/branded-calling/call-reasons to skip manual vetting.' }
+                logoUrl: { type: string, description: 'HTTPS URL of a PNG, JPEG, WebP or SVG logo. Zernio converts it to the 256x256 BMP the carriers require and hosts it.' }
+                authorizer:
+                  type: object
+                  required: [name, email]
+                  properties:
+                    name: { type: string, maxLength: 255, description: 'A real person at the business who authorizes the registration.' }
+                    email: { type: string, format: email, description: 'The carrier emails a 6-digit code here once the identity passes review.' }
+                references: { $ref: '#/components/schemas/BrandedCallingReferences' }
+      responses:
+        '201':
+          description: Identity created, in review.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/BrandedCallingIdentity' }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { description: 'Usage-based billing is required (code usage_billing_required).' }
+        '404': { description: Business not found }
+        '422': { description: 'The logo could not be downloaded or is not an image.' }
+    get:
+      x-resource-group: "telephony"
+      operationId: listBrandedCallingIdentities
+      tags: [Branded Calling]
+      summary: List caller identities
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: The workspace's identities with their numbers.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  identities:
+                    type: array
+                    items: { $ref: '#/components/schemas/BrandedCallingIdentity' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+  /v1/branded-calling/identities/{id}:
+    get:
+      x-resource-group: "telephony"
+      operationId: getBrandedCallingIdentity
+      tags: [Branded Calling]
+      summary: Get a caller identity
+      description: Poll this for review and vetting progress, or subscribe to `branded_calling.identity.status_updated`.
+      security:
+        - bearerAuth: []
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string } }
+      responses:
+        '200':
+          description: The identity with its numbers.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/BrandedCallingIdentity' }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404': { description: Identity not found }
+    patch:
+      x-resource-group: "telephony"
+      operationId: updateBrandedCallingIdentity
+      tags: [Branded Calling]
+      summary: Edit or resubmit a caller identity
+      description: |
+        Allowed while the identity is `requested`, `changes_requested` or `rejected`.
+        Answering a change request (send `reviewAnswers` keyed by point id, and any
+        edited fields) puts it back in review. On a carrier rejection the edits are
+        applied at the carrier and the identity is resubmitted straight away.
+      security:
+        - bearerAuth: []
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string } }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                displayName: { type: string, minLength: 1, maxLength: 35, description: 'Shown on the callee''s screen. No emoji.' }
+                callReasons: { type: array, minItems: 1, maxItems: 10, items: { type: string, maxLength: 64 }, description: '1 to 10 reasons you call, each up to 64 characters. Pick from GET /v1/branded-calling/call-reasons to skip manual vetting.' }
+                logoUrl: { type: string, description: 'HTTPS URL of a PNG, JPEG, WebP or SVG logo. Zernio converts it to the 256x256 BMP the carriers require and hosts it.' }
+                authorizer:
+                  type: object
+                  required: [name, email]
+                  properties:
+                    name: { type: string, maxLength: 255, description: 'A real person at the business who authorizes the registration.' }
+                    email: { type: string, format: email, description: 'The carrier emails a 6-digit code here once the identity passes review.' }
+                references: { $ref: '#/components/schemas/BrandedCallingReferences' }
+                reviewAnswers:
+                  type: object
+                  description: 'One entry per point id of the open reviewRequest.'
+                  additionalProperties:
+                    type: object
+                    properties:
+                      text: { type: string }
+                      url: { type: string, format: uri }
+                reviewNote: { type: string, maxLength: 4000 }
+      responses:
+        '200':
+          description: The updated identity.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/BrandedCallingIdentity' }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404': { description: Identity not found }
+        '409': { description: 'The identity cannot be edited in its current status (code invalid_resource_state).' }
+    delete:
+      x-resource-group: "telephony"
+      operationId: deleteBrandedCallingIdentity
+      tags: [Branded Calling]
+      summary: Delete a caller identity
+      description: Detaches its numbers and removes the identity at the carrier, which ends the monthly fee. Refused while an infringement claim is open.
+      security:
+        - bearerAuth: []
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string } }
+      responses:
+        '200':
+          description: Deleted.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status: { type: string, enum: [deleted] }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404': { description: Identity not found }
+        '409': { description: 'An infringement claim is open on this identity (code invalid_resource_state).' }
+  /v1/branded-calling/identities/{id}/verify-email:
+    post:
+      x-resource-group: "telephony"
+      operationId: resendBrandedCallingAuthorizerCode
+      tags: [Branded Calling]
+      summary: Resend the authorizer's code
+      description: Emails the authorizer a fresh 6-digit code (the previous one stops working). Only while the identity is `pending_email_verification`.
+      security:
+        - bearerAuth: []
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string } }
+      responses:
+        '200':
+          description: Code sent.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status: { type: string, enum: [sent] }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404': { description: Identity not found }
+        '409': { description: 'The identity is not waiting for a code (code invalid_resource_state).' }
+  /v1/branded-calling/identities/{id}/verify-email/confirm:
+    post:
+      x-resource-group: "telephony"
+      operationId: confirmBrandedCallingAuthorizerEmail
+      tags: [Branded Calling]
+      summary: Confirm the authorizer's code
+      description: |
+        The last customer step. On success the stored references are filed and the
+        identity is submitted to carrier vetting in the same call (`in_review`). If a
+        later step fails the identity stays `pending_email_verification` with the email
+        already verified; calling again resumes from that step.
+      security:
+        - bearerAuth: []
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string } }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [code]
+              properties:
+                code: { type: string, pattern: '^[0-9]{6}$' }
+      responses:
+        '200':
+          description: The identity, now in carrier vetting.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/BrandedCallingIdentity' }
+        '400': { description: 'The code is wrong or expired (param code), or the body is invalid.' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404': { description: Identity not found }
+        '409': { description: 'The identity is not waiting for a code (code invalid_resource_state).' }
+  /v1/branded-calling/identities/{id}/numbers:
+    get:
+      x-resource-group: "telephony"
+      operationId: listBrandedCallingIdentityNumbers
+      tags: [Branded Calling]
+      summary: List the numbers on a caller identity
+      security:
+        - bearerAuth: []
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string } }
+      responses:
+        '200':
+          description: Attached numbers with their vetting status.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  numbers:
+                    type: array
+                    items: { $ref: '#/components/schemas/BrandedCallingIdentityNumber' }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404': { description: Identity not found }
+    post:
+      x-resource-group: "telephony"
+      operationId: attachBrandedCallingNumbers
+      tags: [Branded Calling]
+      summary: Attach numbers to a verified identity
+      description: |
+        Files a Letter of Authorization signed by you (Zernio is named as the authorized
+        agent managing the numbers) and opens a vetting batch of up to 15 US numbers you
+        own. The batch is all-or-nothing: one ineligible number refuses the whole call.
+        Each number shows the identity once its own status reaches `verified`. A number
+        belongs to one identity at a time.
+      security:
+        - bearerAuth: []
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string } }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [phoneNumberIds, signature]
+              properties:
+                phoneNumberIds: { type: array, minItems: 1, maxItems: 15, items: { type: string }, description: 'Phone number record ids (from GET /v1/phone-numbers). Active US numbers only.' }
+                signature:
+                  type: object
+                  required: [imageBase64]
+                  properties:
+                    imageBase64: { type: string, description: 'The signer''s drawn signature as a PNG, base64 (a data:image/png;base64 prefix is accepted).' }
+                    signerName: { type: string, maxLength: 255, description: 'Printed under the signature. Defaults to the business contact''s name.' }
+      responses:
+        '201':
+          description: Batch opened.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  numbers:
+                    type: array
+                    items: { $ref: '#/components/schemas/BrandedCallingIdentityNumber' }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404': { description: Identity or phone number not found }
+        '409': { description: 'The identity is not verified yet, or a number already belongs to an identity (code invalid_resource_state).' }
+        '422': { description: 'A number is not a US number or not active, or the carrier refused the batch (the message names the number).' }
+    delete:
+      x-resource-group: "telephony"
+      operationId: detachBrandedCallingNumbers
+      tags: [Branded Calling]
+      summary: Detach numbers from an identity
+      description: Deregisters the numbers at the carrier and frees them for another identity. Up to 100 per call.
+      security:
+        - bearerAuth: []
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string } }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [phoneNumbers]
+              properties:
+                phoneNumbers: { type: array, minItems: 1, maxItems: 100, items: { type: string }, description: 'E.164 numbers currently on this identity.' }
+      responses:
+        '200':
+          description: Numbers detached.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  removed: { type: array, items: { type: string } }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404': { description: 'Identity not found, or none of the numbers is attached to it' }
   /v1/sms/registrations:
     post:
       x-resource-group: "telephony"
