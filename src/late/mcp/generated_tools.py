@@ -4676,6 +4676,7 @@ def register_generated_tools(mcp, _get_client):
         account_id: str | None = None,
         profile_id: str | None = None,
         campaign_id: str | None = None,
+        search: str | None = None,
         from_date: str | None = None,
         to_date: str | None = None,
         has_delivery: bool | None = None,
@@ -4697,6 +4698,7 @@ def register_generated_tools(mcp, _get_client):
             account_id: Account ID
             profile_id: Profile ID
             campaign_id: Restrict the tree to a single campaign by its platform campaign id (the id the platform assigns, e.g. Meta's numeric campaign id). Filters the campaign set itself, so it works regardless of account size and pagination. Pass this when you already hold a campaign id instead of paging the tree to find it. Mirrors the `campaignId` filter on GET /v1/ads.
+            search: Case-insensitive substring match on campaign, ad set and ad names (`_`, `%` and spaces match literally), or an exact platform campaign, ad set or ad id. A campaign whose name matches returns with all its ad sets and ads; a match on an ad set or ad name returns only the matching branch. Filters the campaign set itself, so `pagination.total` counts only matching campaigns.
             from_date: Start of the METRICS date range (YYYY-MM-DD). On its own it affects only the spend/impression numbers overlaid on each node, not which campaigns are returned. Pass `hasDelivery` or `minSpend` to also filter the campaign set to this window. Defaults to 90 days ago.
             to_date: End of metrics date range (YYYY-MM-DD). Defaults to today. Max 730-day range.
             has_delivery: Return only campaigns that delivered between `fromDate` and `toDate`: spend above zero, or impressions served at zero spend. Unlike `status`, which reads a campaign's CURRENT state, this filters on what happened inside the window, so a campaign that spent then and is paused today is still returned. Filters the campaign set itself, so `pagination.total` counts only matching campaigns.
@@ -4717,6 +4719,7 @@ def register_generated_tools(mcp, _get_client):
                 account_id=account_id,
                 profile_id=profile_id,
                 campaign_id=campaign_id,
+                search=search,
                 from_date=from_date,
                 to_date=to_date,
                 has_delivery=has_delivery,
