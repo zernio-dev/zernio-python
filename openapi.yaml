@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.122.0"
+  version: "1.122.1"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -588,7 +588,6 @@ tags:
       regular phone (PSTN) calls in one list, newest first, without fanning out one
       request per number. Each row carries `channel` and `accountId` so you can fetch
       details and recordings from the matching channel-specific endpoint.
-      Private beta: returns 403 unless your account is enrolled.
   - name: Voice
     description: |
       Regular phone (PSTN) calling on your numbers. Enable voice on a number and route
@@ -608,7 +607,7 @@ tags:
       SMS/MMS on your numbers: enable SMS on a number, send messages, validate recipient
       numbers, export STOP opt-outs, and complete the US carrier registration (10DLC or
       toll-free) required before US traffic delivers.
-      Private beta: returns 404 unless your account is enrolled.
+      Enabling SMS on a number, carrier registration and sender IDs require usage-based billing.
   - name: iMessage
     description: |
       Two-way iMessage on provider-provisioned senders. Order or register a sender
@@ -697,7 +696,7 @@ components:
       schema: { type: integer, example: 60 }
   responses:
     CatalogPermissionDenied:
-      description: "The Meta login behind the account lacks catalog_management (code insufficient_permissions). Reconnect granting it, or pass catalogAccountId."
+      description: "The Meta login behind the account lacks catalog_management (code insufficient_permissions). The permission is pending Meta App Review and is not requested on connect yet, so reconnecting does not add it. Pass catalogAccountId naming a facebook, instagram or metaads connection whose Meta login already holds it."
       content:
         application/json:
           schema: { $ref: '#/components/schemas/ErrorResponse' }
@@ -43369,7 +43368,7 @@ paths:
                   digestPassword: { type: string, description: 'SIP digest password, shown only in this response.' }
         '400': { $ref: '#/components/responses/BadRequest' }
         '401': { $ref: '#/components/responses/Unauthorized' }
-        '403': { description: 'SIP trunking is not enabled for this team, or the team is on legacy (non-usage-based) billing, which cannot invoice trunk call costs (code feature_not_available).' }
+        '403': { description: 'The team is on legacy (non-usage-based) billing, which cannot invoice trunk call costs (code feature_not_available). Move to usage-based billing to use SIP trunking.' }
         '409': { description: 'The team trunk limit was reached (code invalid_resource_state).' }
         '422': { description: 'The host cannot be used as a trunk destination (e.g. a Zernio or carrier host).' }
     get:
@@ -43543,7 +43542,7 @@ paths:
                   trunkId: { type: string }
         '400': { $ref: '#/components/responses/BadRequest' }
         '401': { $ref: '#/components/responses/Unauthorized' }
-        '403': { description: 'SIP trunking is not enabled for this team, or the team is on legacy (non-usage-based) billing, which cannot invoice trunk call costs (code feature_not_available).' }
+        '403': { description: 'The team is on legacy (non-usage-based) billing, which cannot invoice trunk call costs (code feature_not_available). Move to usage-based billing to use SIP trunking.' }
         '404': { description: Number or trunk not found }
         '409': { description: 'The number still has Calls or WhatsApp calling enabled, is mid WhatsApp verification, is not active, or is attached to another trunk (code invalid_resource_state).' }
         '422': { description: 'This number is hosted by your own carrier (brought via WhatsApp embedded signup), so it cannot be trunked.' }
