@@ -127,6 +127,8 @@ class MessagingAdsResource:
         regional_regulation_identities: dict[str, Any] | None = None,
         destination: str | None = None,
         destinations: list[str] | None = None,
+        placement_assets: Any | None = None,
+        validate_only: bool | None = None,
     ) -> dict[str, Any]:
         """Create messaging ad"""
         payload = self._build_payload(
@@ -178,6 +180,8 @@ class MessagingAdsResource:
             regional_regulation_identities=regional_regulation_identities,
             destination=destination,
             destinations=destinations,
+            placement_assets=placement_assets,
+            validate_only=validate_only,
         )
         headers: dict[str, str] = {}
         if idempotency_key is not None:
@@ -450,6 +454,8 @@ class MessagingAdsResource:
         regional_regulation_identities: dict[str, Any] | None = None,
         destination: str | None = None,
         destinations: list[str] | None = None,
+        placement_assets: Any | None = None,
+        validate_only: bool | None = None,
     ) -> dict[str, Any]:
         """Create messaging ad (async)"""
         payload = self._build_payload(
@@ -501,6 +507,8 @@ class MessagingAdsResource:
             regional_regulation_identities=regional_regulation_identities,
             destination=destination,
             destinations=destinations,
+            placement_assets=placement_assets,
+            validate_only=validate_only,
         )
         headers: dict[str, str] = {}
         if idempotency_key is not None:

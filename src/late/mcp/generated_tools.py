@@ -18511,6 +18511,8 @@ def register_generated_tools(mcp, _get_client):
         regional_regulation_identities: dict[str, Any] | None = None,
         destination: str | None = None,
         destinations: list[str] | None = None,
+        placement_assets: dict[str, Any] | None = None,
+        validate_only: bool | None = None,
     ) -> str:
         """Create messaging ad
 
@@ -18654,7 +18656,19 @@ def register_generated_tools(mcp, _get_client):
         Both beneficiary and payer must be included. If omitted and the advertiser has
         set defaults in Meta Ads Manager advertising settings, Meta auto-fills them.
                 destination: Where the conversation opens when the ad is tapped. Set this OR `destinations`, not both.
-                destinations: Two or three messaging apps on ONE ad set, like Ads Manager's "all messaging apps": the ad set gets Meta's combined destination_type (e.g. MESSAGING_INSTAGRAM_DIRECT_MESSENGER_WHATSAPP) and the creative one CTA per app, so Meta opens the app each viewer is likeliest to answer from. WhatsApp in the list still needs the Page paired with a WhatsApp Business number. With `adSetId`, the existing ad set must already use that combined destination_type. Set this OR `destination`, not both."""
+                destinations: Two or three messaging apps on ONE ad set, like Ads Manager's "all messaging apps": the ad set gets Meta's combined destination_type (e.g. MESSAGING_INSTAGRAM_DIRECT_MESSENGER_WHATSAPP) and the creative one CTA per app, so Meta opens the app each viewer is likeliest to answer from. WhatsApp in the list still needs the Page paired with a WhatsApp Business number. With `adSetId`, the existing ad set must already use that combined destination_type. Set this OR `destination`, not both.
+                placement_assets: A different image or video per placement on one messaging ad, e.g. a 4:5 image on
+        Feed and a 9:16 image on Stories/Reels. Replaces top-level `imageUrl` / `video`
+        (sending either alongside is a 400); `headline` and `body` stay required as the
+        default copy. The CTA, `welcomeMessage` and `whatsappPhoneNumber` apply to every
+        placement. Works on the single-creative shape and on attach (`adSetId`).
+
+        Single `destination` only: Meta cannot combine per-placement media with
+        `destinations` (it drops the placement rules from a multi-destination creative, or
+        refuses more than one call to action per placement rule with error 1885878), so
+        that combination is a 400. Also a 400 with `creatives[]`, `platformPostId`,
+        `existingPostId` or `objectStoryId`, and on POST /v1/ads/call.
+                validate_only: Dry-runs the ad on Meta with execution_options validate_only as ONE inline campaign + ad set + creative + ad (or creative + ad on the existing ad set with `adSetId`). Nothing is uploaded or created and nothing is stored; media is checked by URL. Supports one creative with `imageUrl`, image `placementAssets`, an existing `video.id`, or an existing post. Several creatives, a new `video.url` and video `placementAssets` need uploads first and return 400. Success returns 200 with per-node results; a Meta rejection returns the Meta error."""
         client = _get_client()
         try:
             response = client.messaging_ads.create_messaging_ad(
@@ -18706,6 +18720,8 @@ def register_generated_tools(mcp, _get_client):
                 regional_regulation_identities=regional_regulation_identities,
                 destination=destination,
                 destinations=destinations,
+                placement_assets=placement_assets,
+                validate_only=validate_only,
             )
             return _format_response(response)
         except Exception as e:
