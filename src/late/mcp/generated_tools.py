@@ -4637,8 +4637,8 @@ def register_generated_tools(mcp, _get_client):
             platform: (required)
             deep_copy: Copy child ad sets + ads + creatives + targeting
             status_option: ACTIVE = launch the clone immediately (spends the moment LinkedIn approves it). PAUSED = clone stays DRAFT, safe default. INHERITED_FROM_SOURCE = mirror each entity's source status per-entity. Duplicating an ACTIVE campaign this way starts a second front of spend.
-            start_time: Reschedule the copied hierarchy's start time
-            end_time
+            start_time: Reschedule the copied hierarchy's start (ISO 8601). On Meta and TikTok a value without an offset (`YYYY-MM-DD`, `YYYY-MM-DD HH:MM:SS` or `YYYY-MM-DDTHH:MM:SS`) is read in the ad account timezone; LinkedIn ad accounts carry no timezone, so there it is read as UTC. TikTok defaults to a start a few minutes after the copy.
+            end_time: Reschedule the copied hierarchy's end, read like `startTime`; a date-only end runs to 23:59:59 local. Defaults to the source's end.
             rename_strategy
             rename_prefix
             rename_suffix
@@ -4811,8 +4811,8 @@ def register_generated_tools(mcp, _get_client):
             campaign_id: Destination platform campaign id (defaults to the source's campaign)
             deep_copy: Copy child ads + creatives
             status_option
-            start_time: Reschedule the copy's start time
-            end_time
+            start_time: Reschedule the copy's start (ISO 8601). A value without an offset (`YYYY-MM-DD`, `YYYY-MM-DD HH:MM:SS` or `YYYY-MM-DDTHH:MM:SS`) is read in the ad account timezone.
+            end_time: Reschedule the copy's end, read like `startTime`; a date-only end runs to 23:59:59 local.
             rename_strategy
             rename_prefix
             rename_suffix
@@ -5725,8 +5725,8 @@ def register_generated_tools(mcp, _get_client):
                 destination_type: Meta only. Ad-set destination_type: where the click LANDS, as opposed to instagramAccountId which is who the ad runs as. Independent of plain link CTAs and their goal. A messaging callToAction selects its destination automatically; an explicit destinationType must then match. Lead ads use ON_AD.
                 whatsapp_phone_number: Meta WhatsApp only. E.164 number already paired with the Page. Omit to use the default pairing. Requires WHATSAPP_MESSAGE callToAction. Stored as creative.whatsappPhoneNumber on the ad.
                 currency: ISO 4217 currency code matching the ad account's currency. Meta only. Optional: Zernio resolves it from the ad account when omitted. The value selects the minor-unit exponent Zernio converts budget/bid amounts by before calling Meta (most currencies are cents; zero-decimal currencies like JPY/KRW are sent as-is).
-                start_date: Ad-set start time (ISO 8601, e.g. "2026-06-10T09:00:00Z"), mapped to the ad set's `start_time`. When omitted the ad starts delivering immediately. On Meta and TikTok a value without an offset (`YYYY-MM-DD`, `YYYY-MM-DD HH:MM:SS` or `YYYY-MM-DDTHH:MM:SS`) is read in the ad account timezone. Same field as on POST /v1/ads/create.
-                end_date: Ad-set end time (ISO 8601), mapped to the ad set's `end_time`. Required for lifetime budgets. On Meta and TikTok a value without an offset (`YYYY-MM-DD`, `YYYY-MM-DD HH:MM:SS` or `YYYY-MM-DDTHH:MM:SS`) is read in the ad account timezone, and a date-only end runs to 23:59:59 local. Same field as on POST /v1/ads/create.
+                start_date: Ad-set start time (ISO 8601, e.g. "2026-06-10T09:00:00Z"), mapped to the ad set's `start_time`. When omitted the ad starts delivering immediately. On Meta, TikTok, X and Pinterest a value without an offset (`YYYY-MM-DD`, `YYYY-MM-DD HH:MM:SS` or `YYYY-MM-DDTHH:MM:SS`) is read in the ad account timezone. Same field as on POST /v1/ads/create.
+                end_date: Ad-set end time (ISO 8601), mapped to the ad set's `end_time`. Required for lifetime budgets. On Meta, TikTok, X and Pinterest a value without an offset (`YYYY-MM-DD`, `YYYY-MM-DD HH:MM:SS` or `YYYY-MM-DDTHH:MM:SS`) is read in the ad account timezone, and a date-only end runs to 23:59:59 local. Same field as on POST /v1/ads/create.
                 schedule: Alias of the top-level `startDate` / `endDate`, kept for existing callers. Sending both forms with differing values is a 400.
                 targeting: Same geo/demographic fields as the `TargetingSpec` used by /v1/ads/create.
         Geo keys (`regions`/`cities`/`zips`/`metros`) resolve via
@@ -6524,13 +6524,15 @@ def register_generated_tools(mcp, _get_client):
         numeric IDs from Meta verification. Keys vary by category (e.g. universal_beneficiary /
         universal_payer for BRAZIL_REGULATION and THAILAND_UNIVERSAL). If omitted, Meta uses
         Ads Manager defaults when configured.
-                end_date: Required for lifetime budgets. On Meta and TikTok a value without an offset (`YYYY-MM-DD`, `YYYY-MM-DD HH:MM:SS` or `YYYY-MM-DDTHH:MM:SS`) is read in the ad account timezone, and a date-only end runs to 23:59:59 local.
+                end_date: Required for lifetime budgets. Read like `startDate` (account timezone on Meta, TikTok, X, Pinterest and OpenAI; whole account-local days on Google; UTC on LinkedIn), and a date-only end runs to 23:59:59 local.
                 start_date: Ad-set start time (ISO 8601, e.g. "2026-06-10T09:00:00Z"), mapped to the ad set's
         start (Meta `start_time`, TikTok ad group `schedule_start_time`, LinkedIn / Pinterest / X
         / Google campaign start). When omitted the ad starts delivering immediately. For lifetime
-        budgets Meta also requires `endDate`. On Meta and TikTok a value without an offset
-        (`YYYY-MM-DD`, `YYYY-MM-DD HH:MM:SS` or `YYYY-MM-DDTHH:MM:SS`) is read in the ad account
-        timezone (Meta itself would read it as UTC). The created ad's `schedule` echoes the start
+        budgets Meta also requires `endDate`. On Meta, TikTok, X, Pinterest and OpenAI a value
+        without an offset (`YYYY-MM-DD`, `YYYY-MM-DD HH:MM:SS` or `YYYY-MM-DDTHH:MM:SS`) is read
+        in the ad account timezone (Meta itself would read it as UTC). Google runs whole days in
+        the customer account timezone and takes the value's calendar date as written. LinkedIn
+        ad accounts carry no timezone, so there a value without an offset is read as UTC. The created ad's `schedule` echoes the start
         and end the platform stored, as UTC instants; when attaching to an existing ad set
         (`adSetId`) it is that ad set's start and end. Same field as on `POST /v1/ads/boost`.
                 page_id: Meta only. The Facebook Page the ad runs as (`object_story_spec.page_id`). Defaults to
