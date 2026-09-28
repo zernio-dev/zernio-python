@@ -23736,6 +23736,7 @@ def register_generated_tools(mcp, _get_client):
         currency: str | None = None,
         click_window_days: int | None = None,
         view_window_days: int | None = None,
+        url_contains: str | None = None,
     ) -> str:
         """Create a conversion event
 
@@ -23750,7 +23751,8 @@ def register_generated_tools(mcp, _get_client):
             default_value
             currency: ISO 4217 code.
             click_window_days
-            view_window_days"""
+            view_window_days
+            url_contains: Fire only on pages whose URL contains this text (case-insensitive)."""
         client = _get_client()
         try:
             response = client.tracking_tags.create_tracking_tag_event(
@@ -23765,6 +23767,7 @@ def register_generated_tools(mcp, _get_client):
                 currency=currency,
                 click_window_days=click_window_days,
                 view_window_days=view_window_days,
+                url_contains=url_contains,
             )
             return _format_response(response)
         except Exception as e:
@@ -23791,6 +23794,7 @@ def register_generated_tools(mcp, _get_client):
         currency: str | None = None,
         click_window_days: int | None = None,
         view_window_days: int | None = None,
+        url_contains: str | None = None,
     ) -> str:
         """Update a conversion event
 
@@ -23806,7 +23810,8 @@ def register_generated_tools(mcp, _get_client):
             default_value
             currency: ISO 4217 code.
             click_window_days
-            view_window_days"""
+            view_window_days
+            url_contains: Fire only on pages whose URL contains this text (case-insensitive)."""
         client = _get_client()
         try:
             response = client.tracking_tags.update_tracking_tag_event(
@@ -23822,6 +23827,7 @@ def register_generated_tools(mcp, _get_client):
                 currency=currency,
                 click_window_days=click_window_days,
                 view_window_days=view_window_days,
+                url_contains=url_contains,
             )
             return _format_response(response)
         except Exception as e:
@@ -23852,6 +23858,29 @@ def register_generated_tools(mcp, _get_client):
                 tag_id=tag_id,
                 event_id=event_id,
                 ad_account_id=ad_account_id,
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Get tag diagnostics",
+            readOnlyHint=True,
+            destructiveHint=False,
+            openWorldHint=False,
+        )
+    )
+    def tracking_tags_get_tracking_tag_diagnostics(account_id: str, tag_id: str) -> str:
+        """Get tag diagnostics
+
+        Args:
+            account_id: (required)
+            tag_id: Tag id (`TrackingTag.id`). (required)"""
+        client = _get_client()
+        try:
+            response = client.tracking_tags.get_tracking_tag_diagnostics(
+                account_id=account_id, tag_id=tag_id
             )
             return _format_response(response)
         except Exception as e:

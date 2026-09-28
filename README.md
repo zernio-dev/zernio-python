@@ -1119,6 +1119,7 @@ Both `from zernio import ...` and `from late import ...` work identically. The `
 | `tracking_tags.create_tracking_tag_event()` | Create a conversion event |
 | `tracking_tags.get_ad_tracking_tags()` | Get ad tracking tags |
 | `tracking_tags.get_tracking_tag()` | Get a tracking tag |
+| `tracking_tags.get_tracking_tag_diagnostics()` | Get tag diagnostics |
 | `tracking_tags.get_tracking_tag_stats()` | Get aggregated event stats |
 | `tracking_tags.get_tracking_tag_store_install()` | Get store install status |
 | `tracking_tags.update_ad_tracking_tags()` | Set ad tracking tags |

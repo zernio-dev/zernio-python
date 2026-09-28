@@ -276,6 +276,7 @@ class TrackingTagsResource:
         currency: str | None = None,
         click_window_days: int | None = None,
         view_window_days: int | None = None,
+        url_contains: str | None = None,
     ) -> dict[str, Any]:
         """Create a conversion event"""
         payload = self._build_payload(
@@ -288,6 +289,7 @@ class TrackingTagsResource:
             currency=currency,
             click_window_days=click_window_days,
             view_window_days=view_window_days,
+            url_contains=url_contains,
         )
         return self._client._post(
             f"/v1/accounts/{account_id}/tracking-tags/{tag_id}/events", data=payload
@@ -308,6 +310,7 @@ class TrackingTagsResource:
         currency: str | None = None,
         click_window_days: int | None = None,
         view_window_days: int | None = None,
+        url_contains: str | None = None,
     ) -> dict[str, Any]:
         """Update a conversion event"""
         payload = self._build_payload(
@@ -320,6 +323,7 @@ class TrackingTagsResource:
             currency=currency,
             click_window_days=click_window_days,
             view_window_days=view_window_days,
+            url_contains=url_contains,
         )
         return self._client._patch(
             f"/v1/accounts/{account_id}/tracking-tags/{tag_id}/events/{event_id}",
@@ -341,6 +345,14 @@ class TrackingTagsResource:
         return self._client._delete(
             f"/v1/accounts/{account_id}/tracking-tags/{tag_id}/events/{event_id}",
             params=params,
+        )
+
+    def get_tracking_tag_diagnostics(
+        self, account_id: str, tag_id: str
+    ) -> dict[str, Any]:
+        """Get tag diagnostics"""
+        return self._client._get(
+            f"/v1/accounts/{account_id}/tracking-tags/{tag_id}/diagnostics"
         )
 
     def get_tracking_tag_stats(
@@ -569,6 +581,7 @@ class TrackingTagsResource:
         currency: str | None = None,
         click_window_days: int | None = None,
         view_window_days: int | None = None,
+        url_contains: str | None = None,
     ) -> dict[str, Any]:
         """Create a conversion event (async)"""
         payload = self._build_payload(
@@ -581,6 +594,7 @@ class TrackingTagsResource:
             currency=currency,
             click_window_days=click_window_days,
             view_window_days=view_window_days,
+            url_contains=url_contains,
         )
         return await self._client._apost(
             f"/v1/accounts/{account_id}/tracking-tags/{tag_id}/events", data=payload
@@ -601,6 +615,7 @@ class TrackingTagsResource:
         currency: str | None = None,
         click_window_days: int | None = None,
         view_window_days: int | None = None,
+        url_contains: str | None = None,
     ) -> dict[str, Any]:
         """Update a conversion event (async)"""
         payload = self._build_payload(
@@ -613,6 +628,7 @@ class TrackingTagsResource:
             currency=currency,
             click_window_days=click_window_days,
             view_window_days=view_window_days,
+            url_contains=url_contains,
         )
         return await self._client._apatch(
             f"/v1/accounts/{account_id}/tracking-tags/{tag_id}/events/{event_id}",
@@ -634,6 +650,14 @@ class TrackingTagsResource:
         return await self._client._adelete(
             f"/v1/accounts/{account_id}/tracking-tags/{tag_id}/events/{event_id}",
             params=params,
+        )
+
+    async def aget_tracking_tag_diagnostics(
+        self, account_id: str, tag_id: str
+    ) -> dict[str, Any]:
+        """Get tag diagnostics (async)"""
+        return await self._client._aget(
+            f"/v1/accounts/{account_id}/tracking-tags/{tag_id}/diagnostics"
         )
 
     async def aget_tracking_tag_stats(

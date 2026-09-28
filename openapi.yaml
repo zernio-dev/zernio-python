@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.137.0"
+  version: "1.138.0"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -12316,6 +12316,7 @@ components:
         customEventType: { type: [string, "null"] }
         pixelId: { type: [string, "null"], description: "Meta's event_source_id, the pixel the rule reads from." }
         isArchived: { type: boolean }
+        defaultConversionValue: { type: [number, "null"], description: "Value Meta assigns a conversion that carries none, in the ad account's currency." }
     CustomConversionResult:
       type: object
       properties:
@@ -12814,6 +12815,7 @@ components:
         currency: { type: string }
         clickWindowDays: { type: integer }
         viewWindowDays: { type: integer }
+        urlContains: { type: string, description: 'Fires only on pages whose URL contains this text (case-insensitive).' }
     TrackingTagEventInput:
       type: object
       description: 'Conversion event fields. Each platform stores a subset; a field it does not store answers 400 naming the supported ones.'
@@ -12827,6 +12829,17 @@ components:
         currency: { type: string, description: ISO 4217 code. }
         clickWindowDays: { type: integer, minimum: 1, maximum: 365 }
         viewWindowDays: { type: integer, minimum: 0, maximum: 365 }
+        urlContains: { type: string, minLength: 1, maxLength: 500, description: 'Fire only on pages whose URL contains this text (case-insensitive).' }
+    TrackingTagDiagnostic:
+      type: object
+      description: One health check the platform runs on a tracking tag.
+      required: [key, title, result]
+      properties:
+        key: { type: string, description: 'Platform check id (Meta: e.g. `pixel_missing_param_in_events`).' }
+        title: { type: string }
+        description: { type: string }
+        result: { type: string, description: 'The platform verdict (Meta: `passed`, `failed`, `warning`).' }
+        actionUrl: { type: string, description: 'Where to fix it in the platform UI (Meta: Events Manager).' }
     SharedAdAccount:
       type: object
       description: An ad account a tracking tag is shared with (Meta `shared_accounts` edge).
@@ -66240,6 +66253,11 @@ paths:
         `siteEventId` (the rule id a page fires) is set only on event-specific Insight Tag rules;
         `defaultValue`/`currency` come from the rule value, `clickWindowDays`/`viewWindowDays`
         from its post-click and view-through windows.
+
+        Meta: the pixel's custom conversions. Meta keeps them per AD ACCOUNT (a pixel has no
+        custom conversions edge), so the list reads `adAccountId` (default: the pixel's owner ad
+        account) and keeps the conversions whose pixel is this one. Archived conversions are
+        included with `status: archived`. `urlContains` and `siteEvent` are parsed from Meta's rule.
       security:
         - bearerAuth: []
       parameters:
@@ -66298,6 +66316,15 @@ paths:
         in days (LinkedIn validates them: the docs list 1, 7 and 30, and rules with 90 exist).
         Stores name, type, siteEvent, enabled, defaultValue, currency, clickWindowDays,
         viewWindowDays. Not idempotent.
+
+        Meta: creates a custom conversion on `adAccountId` (default: the pixel's owner ad
+        account). Accepts `name`, `type` (Meta `custom_event_type`: `PURCHASE`, `LEAD`,
+        `ADD_TO_CART`, `COMPLETE_REGISTRATION`, `OTHER`...), `siteEvent`, `urlContains` and
+        `defaultValue` (in the ad account currency). The rule matches the standard event of
+        `siteEvent` (or of `type`), plus `urlContains` when given; `urlContains` alone matches
+        page views on that URL. `type: OTHER` needs `siteEvent` or `urlContains`. Idempotent by
+        name: an active conversion with the same name on this pixel is returned instead of a
+        duplicate. Meta caps custom conversions per ad account; the cap answers 400.
       security:
         - bearerAuth: []
       parameters:
@@ -66345,6 +66372,9 @@ paths:
         LinkedIn (`linkedinads`): partial update of the conversion rule; same fields as create.
         Pass `adAccountId` when the rule lives in another ad account than the one that created the
         tag.
+
+        Meta: only `name` and `defaultValue` can change (Meta's custom conversion update takes
+        nothing else); `type`, `siteEvent` and `urlContains` answer 400, create a new event instead.
       security:
         - bearerAuth: []
       parameters:
@@ -66389,6 +66419,9 @@ paths:
         LinkedIn (`linkedinads`): LinkedIn has no delete for conversion rules (not in the
         conversion-tracking API, and `DELETE /rest/conversions/{id}` has no route), so the rule is
         disabled (`enabled: false`) and `state` is `disabled`. Re-enable it with `enabled: true`.
+
+        Meta: `archived`. Meta's delete archives the custom conversion (it stays readable with
+        `status: archived`) and there is no hard delete; deleting an archived one is a no-op.
       security:
         - bearerAuth: []
       parameters:
@@ -66413,6 +66446,43 @@ paths:
         '404': { $ref: '#/components/responses/AccountUnavailable' }
         '409': { $ref: '#/components/responses/AccountConnectionRequired' }
         '501': { description: 'The platform cannot remove conversion events through its API (code `platform_not_supported`).' }
+
+  /v1/accounts/{accountId}/tracking-tags/{tagId}/diagnostics:
+    get:
+      x-resource-group: "ads"
+      operationId: getTrackingTagDiagnostics
+      tags: ["Tracking Tags"]
+      x-platforms: ["meta"]
+      summary: Get tag diagnostics
+      description: |
+        The platform's health checks for the tag. Platforms without tag diagnostics answer 501.
+
+        Meta: the pixel's checks from Events Manager (`da_checks`), e.g. whether events miss
+        parameters or their content ids do not match the pixel's catalogs.
+      security:
+        - bearerAuth: []
+      parameters:
+        - { name: accountId, in: path, required: true, schema: { type: string } }
+        - { name: tagId, in: path, required: true, schema: { type: string }, description: 'Tag id (`TrackingTag.id`).' }
+      responses:
+        '200':
+          description: Diagnostics fetched
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  platform: { type: string }
+                  checks:
+                    type: array
+                    items: { $ref: '#/components/schemas/TrackingTagDiagnostic' }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { description: 'Ads access required, or the platform token lacks the permission (reconnect required).' }
+        '404': { $ref: '#/components/responses/AccountUnavailable' }
+        '409': { $ref: '#/components/responses/AccountConnectionRequired' }
+        '501': { description: 'The platform has no tag diagnostics (code `platform_not_supported`).' }
+        '502': { description: 'The platform was unreachable or returned an unclassified error (type: platform_error). Retryable.' }
 
   /v1/accounts/{accountId}/tracking-tags/{tagId}/stats:
     get:
