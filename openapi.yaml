@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.123.1"
+  version: "1.124.0"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -18245,6 +18245,8 @@ paths:
                       minutes: { type: number }
                       billableUSD: { type: number, description: What Zernio bills for these calls. }
                       metaUSD: { type: number, description: "WhatsApp only: Meta's per-minute charge, billed by Meta directly to your WABA. Display only." }
+                      brandedCalls: { type: integer, description: 'Outbound calls that carried a Branded Calling surcharge.' }
+                      brandedCallUSD: { type: number, description: 'The Branded Calling surcharge on those calls, already inside billableUSD.' }
                   groups:
                     type: array
                     description: Present (possibly empty) when `groupBy` is set.
@@ -18257,6 +18259,8 @@ paths:
                         minutes: { type: number }
                         billableUSD: { type: number }
                         metaUSD: { type: number }
+                        brandedCalls: { type: integer }
+                        brandedCallUSD: { type: number }
         '400': { description: since must be before until }
         '401': { $ref: '#/components/responses/Unauthorized' }
 
@@ -38516,9 +38520,12 @@ paths:
         Stores the legal entity behind your caller identities. Nothing is filed with the
         carrier until the business's first identity passes review. Only businesses
         registered in the US or Canada qualify (a FEIN or Canadian equivalent is
-        required); any other country returns `422`.
+        required); any other country returns `422`. Send an `Idempotency-Key` so a
+        retry replays the original response instead of registering the business twice.
       security:
         - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/IdempotencyKeyHeader'
       requestBody:
         required: true
         content:
@@ -38549,7 +38556,8 @@ paths:
               schema: { $ref: '#/components/schemas/BrandedCallingEnterprise' }
         '400': { $ref: '#/components/responses/BadRequest' }
         '401': { $ref: '#/components/responses/Unauthorized' }
-        '422': { description: 'The business is not registered in the US or Canada (code feature_not_available).' }
+        '409': { $ref: '#/components/responses/IdempotencyKeyInFlight' }
+        '422': { description: 'The business is not registered in the US or Canada (code feature_not_available), or the Idempotency-Key was reused with a different body (code idempotency_key_reused).' }
     get:
       x-resource-group: "telephony"
       operationId: listBrandedCallingEnterprises
@@ -38651,8 +38659,14 @@ paths:
         (whether or not the callee's carrier displayed the branding); the surcharge
         shows as `brandedCallUSD` on the call's billing and in
         `GET /v1/voice/calls/estimate` when you pass `from`.
+
+        Run `POST /v1/branded-calling/identities/preflight` with the same body first to
+        catch what the review would bounce. Send an `Idempotency-Key` so a retry replays
+        the original response instead of creating a second identity.
       security:
         - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/IdempotencyKeyHeader'
       requestBody:
         required: true
         content:
@@ -38682,7 +38696,8 @@ paths:
         '401': { $ref: '#/components/responses/Unauthorized' }
         '403': { description: 'Usage-based billing is required (code usage_billing_required).' }
         '404': { description: Business not found }
-        '422': { description: 'The logo could not be downloaded or is not an image.' }
+        '409': { $ref: '#/components/responses/IdempotencyKeyInFlight' }
+        '422': { description: 'The logo could not be downloaded or is not an image, or the Idempotency-Key was reused with a different body (code idempotency_key_reused).' }
     get:
       x-resource-group: "telephony"
       operationId: listBrandedCallingIdentities
@@ -38702,6 +38717,64 @@ paths:
                     type: array
                     items: { $ref: '#/components/schemas/BrandedCallingIdentity' }
         '401': { $ref: '#/components/responses/Unauthorized' }
+  /v1/branded-calling/identities/preflight:
+    post:
+      x-resource-group: "telephony"
+      operationId: preflightBrandedCallingIdentity
+      tags: [Branded Calling]
+      summary: Dry-run a caller identity before creating it
+      description: |
+        Validates the exact body `POST /v1/branded-calling/identities` takes and runs
+        the same deterministic lints the review runs on it without creating anything,
+        with the same codes and fields the queued identity's findings carry. A `block`
+        finding is what the review would bounce (two references sharing a phone, a
+        reference inside the business, an invalid timezone); a `warn` finding slows
+        vetting (a display name that does not read as the business, a call reason
+        outside the carrier catalogue, a public-mailbox authorizer, a logo that does
+        not answer). `ok` is true when there is no `block`.
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [enterpriseId, displayName, callReasons, authorizer, references]
+              description: 'Same body as createBrandedCallingIdentity.'
+              properties:
+                enterpriseId: { type: string }
+                displayName: { type: string, minLength: 1, maxLength: 35 }
+                callReasons: { type: array, minItems: 1, maxItems: 10, items: { type: string, maxLength: 64 } }
+                logoUrl: { type: string }
+                authorizer:
+                  type: object
+                  required: [name, email]
+                  properties:
+                    name: { type: string, maxLength: 255 }
+                    email: { type: string, format: email }
+                references: { $ref: '#/components/schemas/BrandedCallingReferences' }
+      responses:
+        '200':
+          description: The findings; nothing was created.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  ok: { type: boolean, description: 'True when no finding is a block.' }
+                  findings:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        code: { type: string, enum: [display-name-mismatch, call-reasons-manual, authorizer-free-mail, authorizer-domain-mismatch, reference-phone-duplicate, reference-internal, reference-financial-free-mail, reference-timezone-invalid, logo-unreachable] }
+                        severity: { type: string, enum: [block, warn] }
+                        field: { type: string, description: 'The body field the finding is about, e.g. references.financial.email.' }
+                        message: { type: string }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404': { description: Business not found }
   /v1/branded-calling/identities/{id}:
     get:
       x-resource-group: "telephony"
@@ -38755,12 +38828,12 @@ paths:
                 references: { $ref: '#/components/schemas/BrandedCallingReferences' }
                 reviewAnswers:
                   type: object
-                  description: 'One entry per point id of the open reviewRequest.'
+                  description: 'One entry per point id of the open reviewRequest. A text point takes text; a link point takes url; file and link_or_file points take url set to the URL of a file you uploaded first (POST /v1/media/upload). A point id that is not on the open request is a 422.'
                   additionalProperties:
                     type: object
                     properties:
                       text: { type: string }
-                      url: { type: string, format: uri }
+                      url: { type: string, format: uri, description: 'A live page, or the URL of an uploaded file for file points.' }
                 reviewNote: { type: string, maxLength: 4000 }
       responses:
         '200':
@@ -38772,6 +38845,7 @@ paths:
         '401': { $ref: '#/components/responses/Unauthorized' }
         '404': { description: Identity not found }
         '409': { description: 'The identity cannot be edited in its current status (code invalid_resource_state).' }
+        '422': { description: 'reviewAnswers names a point id that is not on the open change request, or there is no open request (code invalid_field_value, param reviewAnswers).' }
     delete:
       x-resource-group: "telephony"
       operationId: deleteBrandedCallingIdentity

@@ -626,6 +626,7 @@ Both `from zernio import ...` and `from late import ...` work identically. The `
 | `branded_calling.attach_branded_calling_numbers()` | Attach numbers to a verified identity |
 | `branded_calling.confirm_branded_calling_authorizer_email()` | Confirm the authorizer's code |
 | `branded_calling.detach_branded_calling_numbers()` | Detach numbers from an identity |
+| `branded_calling.preflight_branded_calling_identity()` | Dry-run a caller identity before creating it |
 | `branded_calling.resend_branded_calling_authorizer_code()` | Resend the authorizer's code |
 
 ### Broadcasts

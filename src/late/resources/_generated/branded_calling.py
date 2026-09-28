@@ -89,6 +89,8 @@ class BrandedCallingResource:
         billing_contact: Any,
         physical_address: Any,
         billing_address: Any,
+        *,
+        idempotency_key: str | None = None,
     ) -> dict[str, Any]:
         """Register a business for Branded Calling"""
         payload = self._build_payload(
@@ -107,7 +109,12 @@ class BrandedCallingResource:
             physical_address=physical_address,
             billing_address=billing_address,
         )
-        return self._client._post("/v1/branded-calling/enterprises", data=payload)
+        headers: dict[str, str] = {}
+        if idempotency_key is not None:
+            headers["Idempotency-Key"] = idempotency_key
+        return self._client._post(
+            "/v1/branded-calling/enterprises", data=payload, headers=headers
+        )
 
     def list_branded_calling_enterprises(self) -> dict[str, Any]:
         """List registered businesses"""
@@ -133,6 +140,7 @@ class BrandedCallingResource:
         authorizer: dict[str, Any],
         references: Any,
         *,
+        idempotency_key: str | None = None,
         logo_url: str | None = None,
     ) -> dict[str, Any]:
         """Create a caller identity"""
@@ -144,11 +152,39 @@ class BrandedCallingResource:
             authorizer=authorizer,
             references=references,
         )
-        return self._client._post("/v1/branded-calling/identities", data=payload)
+        headers: dict[str, str] = {}
+        if idempotency_key is not None:
+            headers["Idempotency-Key"] = idempotency_key
+        return self._client._post(
+            "/v1/branded-calling/identities", data=payload, headers=headers
+        )
 
     def list_branded_calling_identities(self) -> dict[str, Any]:
         """List caller identities"""
         return self._client._get("/v1/branded-calling/identities")
+
+    def preflight_branded_calling_identity(
+        self,
+        enterprise_id: str,
+        display_name: str,
+        call_reasons: list[str],
+        authorizer: dict[str, Any],
+        references: Any,
+        *,
+        logo_url: str | None = None,
+    ) -> dict[str, Any]:
+        """Dry-run a caller identity before creating it"""
+        payload = self._build_payload(
+            enterprise_id=enterprise_id,
+            display_name=display_name,
+            call_reasons=call_reasons,
+            logo_url=logo_url,
+            authorizer=authorizer,
+            references=references,
+        )
+        return self._client._post(
+            "/v1/branded-calling/identities/preflight", data=payload
+        )
 
     def get_branded_calling_identity(self, id: str) -> dict[str, Any]:
         """Get a caller identity"""
@@ -235,6 +271,8 @@ class BrandedCallingResource:
         billing_contact: Any,
         physical_address: Any,
         billing_address: Any,
+        *,
+        idempotency_key: str | None = None,
     ) -> dict[str, Any]:
         """Register a business for Branded Calling (async)"""
         payload = self._build_payload(
@@ -253,8 +291,11 @@ class BrandedCallingResource:
             physical_address=physical_address,
             billing_address=billing_address,
         )
+        headers: dict[str, str] = {}
+        if idempotency_key is not None:
+            headers["Idempotency-Key"] = idempotency_key
         return await self._client._apost(
-            "/v1/branded-calling/enterprises", data=payload
+            "/v1/branded-calling/enterprises", data=payload, headers=headers
         )
 
     async def alist_branded_calling_enterprises(self) -> dict[str, Any]:
@@ -281,6 +322,7 @@ class BrandedCallingResource:
         authorizer: dict[str, Any],
         references: Any,
         *,
+        idempotency_key: str | None = None,
         logo_url: str | None = None,
     ) -> dict[str, Any]:
         """Create a caller identity (async)"""
@@ -292,11 +334,39 @@ class BrandedCallingResource:
             authorizer=authorizer,
             references=references,
         )
-        return await self._client._apost("/v1/branded-calling/identities", data=payload)
+        headers: dict[str, str] = {}
+        if idempotency_key is not None:
+            headers["Idempotency-Key"] = idempotency_key
+        return await self._client._apost(
+            "/v1/branded-calling/identities", data=payload, headers=headers
+        )
 
     async def alist_branded_calling_identities(self) -> dict[str, Any]:
         """List caller identities (async)"""
         return await self._client._aget("/v1/branded-calling/identities")
+
+    async def apreflight_branded_calling_identity(
+        self,
+        enterprise_id: str,
+        display_name: str,
+        call_reasons: list[str],
+        authorizer: dict[str, Any],
+        references: Any,
+        *,
+        logo_url: str | None = None,
+    ) -> dict[str, Any]:
+        """Dry-run a caller identity before creating it (async)"""
+        payload = self._build_payload(
+            enterprise_id=enterprise_id,
+            display_name=display_name,
+            call_reasons=call_reasons,
+            logo_url=logo_url,
+            authorizer=authorizer,
+            references=references,
+        )
+        return await self._client._apost(
+            "/v1/branded-calling/identities/preflight", data=payload
+        )
 
     async def aget_branded_calling_identity(self, id: str) -> dict[str, Any]:
         """Get a caller identity (async)"""

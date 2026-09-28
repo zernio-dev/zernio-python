@@ -9668,6 +9668,45 @@ def register_generated_tools(mcp, _get_client):
 
     @mcp.tool(
         annotations=ToolAnnotations(
+            title="Dry-run a caller identity before creating it",
+            readOnlyHint=False,
+            destructiveHint=True,
+            openWorldHint=True,
+        )
+    )
+    def branded_calling_preflight_branded_calling_identity(
+        enterprise_id: str,
+        display_name: str,
+        call_reasons: list[str] | None,
+        authorizer: dict[str, Any] | None,
+        references: dict[str, Any] | None,
+        logo_url: str | None = None,
+    ) -> str:
+        """Dry-run a caller identity before creating it
+
+        Args:
+            enterprise_id: (required)
+            display_name: (required)
+            call_reasons: (required)
+            logo_url
+            authorizer: (required)
+            references: (required)"""
+        client = _get_client()
+        try:
+            response = client.branded_calling.preflight_branded_calling_identity(
+                enterprise_id=enterprise_id,
+                display_name=display_name,
+                call_reasons=call_reasons,
+                logo_url=logo_url,
+                authorizer=authorizer,
+                references=references,
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
             title="Get a caller identity",
             readOnlyHint=True,
             destructiveHint=False,
@@ -9713,7 +9752,7 @@ def register_generated_tools(mcp, _get_client):
             logo_url: HTTPS URL of a PNG, JPEG, WebP or SVG logo. Zernio converts it to the 256x256 BMP the carriers require and hosts it.
             authorizer
             references
-            review_answers: One entry per point id of the open reviewRequest.
+            review_answers: One entry per point id of the open reviewRequest. A text point takes text; a link point takes url; file and link_or_file points take url set to the URL of a file you uploaded first (POST /v1/media/upload). A point id that is not on the open request is a 422.
             review_note"""
         client = _get_client()
         try:
