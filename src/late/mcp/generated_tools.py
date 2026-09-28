@@ -6524,10 +6524,14 @@ def register_generated_tools(mcp, _get_client):
         numeric IDs from Meta verification. Keys vary by category (e.g. universal_beneficiary /
         universal_payer for BRAZIL_REGULATION and THAILAND_UNIVERSAL). If omitted, Meta uses
         Ads Manager defaults when configured.
-                end_date: Required for lifetime budgets
-                start_date: Meta only. Ad-set start time (ISO 8601, e.g. "2026-06-10T09:00:00Z"), mapped to the
-        ad set's `start_time`. When omitted the ad starts delivering immediately. For lifetime
-        budgets Meta also requires `endDate`. Same field as on `POST /v1/ads/boost`.
+                end_date: Required for lifetime budgets. On TikTok a value without an offset (`YYYY-MM-DD HH:MM:SS` or `YYYY-MM-DD`) is read in the ad account timezone.
+                start_date: Ad-set start time (ISO 8601, e.g. "2026-06-10T09:00:00Z"), mapped to the ad set's
+        start (Meta `start_time`, TikTok ad group `schedule_start_time`, LinkedIn / Pinterest / X
+        / Google campaign start). When omitted the ad starts delivering immediately. For lifetime
+        budgets Meta also requires `endDate`. On TikTok a value without an offset
+        (`YYYY-MM-DD HH:MM:SS` or `YYYY-MM-DD`) is read in the ad account timezone. The created
+        ad's `schedule` echoes the start and end the platform stored, as UTC instants. Same field
+        as on `POST /v1/ads/boost`.
                 page_id: Meta only. The Facebook Page the ad runs as (`object_story_spec.page_id`). Defaults to
         the Page bound to the connection. Pass another Page ID to run the ad as that Page: any
         Page granted to the connection is accepted (for a business-login connection, every Page
