@@ -1,6 +1,6 @@
 [project]
 name = "zernio-sdk"
-version = "1.4.970"
+version = "1.4.971"
 description = "The official Python library for the Zernio API"
 readme = "README.md"
 requires-python = ">=3.10"

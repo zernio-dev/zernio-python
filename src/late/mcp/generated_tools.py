@@ -1370,7 +1370,7 @@ def register_generated_tools(mcp, _get_client):
         Args:
             account_id: Zernio SocialAccount id of the Facebook or Instagram account. (required)
             business_id: Meta business portfolio id of the partner (numeric string). (required)
-            permitted_tasks: Tasks granted on the Page. Defaults to ADVERTISE and ANALYZE."""
+            permitted_tasks: Tasks granted on the Page, Meta's permitted_tasks vocabulary. Defaults to ADVERTISE and ANALYZE. The bare names are what Business Settings shows; the PROFILE_PLUS_ names are the New Pages Experience tasks and the only way to grant FACEBOOK_ACCESS or REVENUE. Granting MANAGE also yields MANAGE_LEADS."""
         client = _get_client()
         try:
             response = client.accounts.grant_business_partner(
