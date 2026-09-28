@@ -1113,7 +1113,9 @@ Both `from zernio import ...` and `from late import ...` work identically. The `
 | Method | Description |
 |--------|-------------|
 | `tracking_tags.list_tracking_tag_events()` | List conversion events |
+| `tracking_tags.list_tracking_tag_partners()` | List partner businesses of a tag |
 | `tracking_tags.list_tracking_tag_shared_accounts()` | List accounts it is shared with |
+| `tracking_tags.list_tracking_tag_users()` | List tag users |
 | `tracking_tags.list_tracking_tags()` | List tracking tags |
 | `tracking_tags.create_tracking_tag()` | Create a tracking tag |
 | `tracking_tags.create_tracking_tag_event()` | Create a conversion event |
@@ -1127,9 +1129,11 @@ Both `from zernio import ...` and `from late import ...` work identically. The `
 | `tracking_tags.update_tracking_tag_event()` | Update a conversion event |
 | `tracking_tags.delete_tracking_tag_event()` | Delete a conversion event |
 | `tracking_tags.add_tracking_tag_shared_account()` | Share with an ad account |
+| `tracking_tags.assign_tracking_tag_user()` | Assign a user to a tag |
 | `tracking_tags.install_tracking_tag_on_store()` | Install on a Shopify store or WordPress site |
 | `tracking_tags.remove_tracking_tag_from_store()` | Remove from a Shopify store or WordPress site |
 | `tracking_tags.remove_tracking_tag_shared_account()` | Stop sharing with an account |
+| `tracking_tags.remove_tracking_tag_user()` | Remove a user from a tag |
 
 ### Twitter Engagement
 | Method | Description |

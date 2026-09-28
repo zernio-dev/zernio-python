@@ -23868,6 +23868,105 @@ def register_generated_tools(mcp, _get_client):
 
     @mcp.tool(
         annotations=ToolAnnotations(
+            title="List tag users",
+            readOnlyHint=True,
+            destructiveHint=False,
+            openWorldHint=False,
+        )
+    )
+    def tracking_tags_list_tracking_tag_users(account_id: str, tag_id: str) -> str:
+        """List tag users
+
+        Args:
+            account_id: (required)
+            tag_id: Tag id (`TrackingTag.id`). (required)"""
+        client = _get_client()
+        try:
+            response = client.tracking_tags.list_tracking_tag_users(
+                account_id=account_id, tag_id=tag_id
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Assign a user to a tag",
+            readOnlyHint=False,
+            destructiveHint=True,
+            openWorldHint=True,
+        )
+    )
+    def tracking_tags_assign_tracking_tag_user(
+        account_id: str, tag_id: str, user_id: str, tasks: list[str] | None
+    ) -> str:
+        """Assign a user to a tag
+
+        Args:
+            account_id: (required)
+            tag_id: Tag id (`TrackingTag.id`). (required)
+            user_id: (required)
+            tasks: (required)"""
+        client = _get_client()
+        try:
+            response = client.tracking_tags.assign_tracking_tag_user(
+                account_id=account_id, tag_id=tag_id, user_id=user_id, tasks=tasks
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Remove a user from a tag",
+            readOnlyHint=False,
+            destructiveHint=True,
+            openWorldHint=True,
+        )
+    )
+    def tracking_tags_remove_tracking_tag_user(
+        account_id: str, tag_id: str, user_id: str
+    ) -> str:
+        """Remove a user from a tag
+
+        Args:
+            account_id: (required)
+            tag_id: (required)
+            user_id: User id (`TrackingTagUser.id`). (required)"""
+        client = _get_client()
+        try:
+            response = client.tracking_tags.remove_tracking_tag_user(
+                account_id=account_id, tag_id=tag_id, user_id=user_id
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="List partner businesses of a tag",
+            readOnlyHint=True,
+            destructiveHint=False,
+            openWorldHint=False,
+        )
+    )
+    def tracking_tags_list_tracking_tag_partners(account_id: str, tag_id: str) -> str:
+        """List partner businesses of a tag
+
+        Args:
+            account_id: (required)
+            tag_id: Tag id (`TrackingTag.id`). (required)"""
+        client = _get_client()
+        try:
+            response = client.tracking_tags.list_tracking_tag_partners(
+                account_id=account_id, tag_id=tag_id
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
             title="Get tag diagnostics",
             readOnlyHint=True,
             destructiveHint=False,

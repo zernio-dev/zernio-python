@@ -349,6 +349,40 @@ class TrackingTagsResource:
             params=params,
         )
 
+    def list_tracking_tag_users(self, account_id: str, tag_id: str) -> dict[str, Any]:
+        """List tag users"""
+        return self._client._get(
+            f"/v1/accounts/{account_id}/tracking-tags/{tag_id}/users"
+        )
+
+    def assign_tracking_tag_user(
+        self, account_id: str, tag_id: str, user_id: str, tasks: list[str]
+    ) -> dict[str, Any]:
+        """Assign a user to a tag"""
+        payload = self._build_payload(
+            user_id=user_id,
+            tasks=tasks,
+        )
+        return self._client._post(
+            f"/v1/accounts/{account_id}/tracking-tags/{tag_id}/users", data=payload
+        )
+
+    def remove_tracking_tag_user(
+        self, account_id: str, tag_id: str, user_id: str
+    ) -> dict[str, Any]:
+        """Remove a user from a tag"""
+        return self._client._delete(
+            f"/v1/accounts/{account_id}/tracking-tags/{tag_id}/users/{user_id}"
+        )
+
+    def list_tracking_tag_partners(
+        self, account_id: str, tag_id: str
+    ) -> dict[str, Any]:
+        """List partner businesses of a tag"""
+        return self._client._get(
+            f"/v1/accounts/{account_id}/tracking-tags/{tag_id}/partners"
+        )
+
     def get_tracking_tag_diagnostics(
         self, account_id: str, tag_id: str
     ) -> dict[str, Any]:
@@ -654,6 +688,42 @@ class TrackingTagsResource:
         return await self._client._adelete(
             f"/v1/accounts/{account_id}/tracking-tags/{tag_id}/events/{event_id}",
             params=params,
+        )
+
+    async def alist_tracking_tag_users(
+        self, account_id: str, tag_id: str
+    ) -> dict[str, Any]:
+        """List tag users (async)"""
+        return await self._client._aget(
+            f"/v1/accounts/{account_id}/tracking-tags/{tag_id}/users"
+        )
+
+    async def aassign_tracking_tag_user(
+        self, account_id: str, tag_id: str, user_id: str, tasks: list[str]
+    ) -> dict[str, Any]:
+        """Assign a user to a tag (async)"""
+        payload = self._build_payload(
+            user_id=user_id,
+            tasks=tasks,
+        )
+        return await self._client._apost(
+            f"/v1/accounts/{account_id}/tracking-tags/{tag_id}/users", data=payload
+        )
+
+    async def aremove_tracking_tag_user(
+        self, account_id: str, tag_id: str, user_id: str
+    ) -> dict[str, Any]:
+        """Remove a user from a tag (async)"""
+        return await self._client._adelete(
+            f"/v1/accounts/{account_id}/tracking-tags/{tag_id}/users/{user_id}"
+        )
+
+    async def alist_tracking_tag_partners(
+        self, account_id: str, tag_id: str
+    ) -> dict[str, Any]:
+        """List partner businesses of a tag (async)"""
+        return await self._client._aget(
+            f"/v1/accounts/{account_id}/tracking-tags/{tag_id}/partners"
         )
 
     async def aget_tracking_tag_diagnostics(
