@@ -12761,7 +12761,7 @@ components:
           description: 'Platforms where each conversion is its own object: the tag''s conversion events, with the id a site sends for each.'
           items: { $ref: '#/components/schemas/TrackingTagEvent' }
         name: { type: string }
-        platform: { type: string, enum: [metaads, openaiads, tiktokads, googleads, xads, linkedinads] }
+        platform: { type: string, enum: [metaads, openaiads, tiktokads, googleads, xads, linkedinads, pinterestads] }
         kind:
           type: string
           enum: [pixel, tag, insight_tag]
@@ -65629,7 +65629,7 @@ paths:
       x-resource-group: "ads"
       operationId: listTrackingTags
       tags: ["Tracking Tags"]
-      x-platforms: ["meta", "tiktok", "google", "x", "openai", "linkedin"]
+      x-platforms: ["meta", "tiktok", "google", "x", "openai", "linkedin", "pinterest"]
       summary: List tracking tags
       description: |
         Returns the tracking tags (Meta Pixels, or OpenAI Ads pixels) the
@@ -65651,6 +65651,11 @@ paths:
         numeric ad account id or `urn:li:sponsoredAccount:{id}`; omit it to scan every active ad
         account the connection can see. The tag `id` IS the partner id the site embeds, so
         `siteTagId` equals `id`. LinkedIn tags have no name; it is shown as `Insight Tag {id}`.
+
+        Pinterest (platform `pinterestads`): lists Pinterest tags (conversion tags). `adAccountId`
+        is the numeric Pinterest ad account id (no prefix); omit it to walk every ad account the
+        connection can read (an ad account the user has no Business Access role on is skipped).
+        `id` equals `siteTagId`, the id the site loads with `pintrk('load', id)`.
       security:
         - bearerAuth: []
       parameters:
@@ -65665,7 +65670,7 @@ paths:
               schema:
                 type: object
                 properties:
-                  platform: { type: string, enum: [metaads, openaiads, tiktokads, googleads, xads, linkedinads] }
+                  platform: { type: string, enum: [metaads, openaiads, tiktokads, googleads, xads, linkedinads, pinterestads] }
                   tags:
                     type: array
                     items: { $ref: '#/components/schemas/TrackingTag' }
@@ -65681,7 +65686,7 @@ paths:
       x-resource-group: "ads"
       operationId: createTrackingTag
       tags: ["Tracking Tags"]
-      x-platforms: ["meta", "tiktok", "google", "x", "openai", "linkedin"]
+      x-platforms: ["meta", "tiktok", "google", "x", "openai", "linkedin", "pinterest"]
       summary: Create a tracking tag
       description: |
         Meta: creates a Meta Pixel on the given ad account (`POST /act_{id}/adspixels`,
@@ -65717,6 +65722,11 @@ paths:
         Idempotent: an ad account holds at most one Insight Tag, so when it already has one that
         tag is returned and nothing is created. `name` is ignored (LinkedIn tags have no name) and
         there is no API to delete an Insight Tag.
+
+        Pinterest (platform `pinterestads`): creates a Pinterest tag on the numeric ad account
+        `adAccountId` (`POST /v5/ad_accounts/{id}/conversion_tags`). Returns the tag with
+        Pinterest's `code` snippet. NOT idempotent and Pinterest has no dry-run and no delete for
+        tags, so never retry blindly: list first.
       security:
         - bearerAuth: []
       parameters:
@@ -65744,7 +65754,7 @@ paths:
               schema:
                 type: object
                 properties:
-                  platform: { type: string, enum: [metaads, openaiads, tiktokads, googleads, xads, linkedinads] }
+                  platform: { type: string, enum: [metaads, openaiads, tiktokads, googleads, xads, linkedinads, pinterestads] }
                   tag: { $ref: '#/components/schemas/TrackingTag' }
         '400': { description: 'Invalid body, invalid `adAccountId`, over the per-business pixel cap, or ad account not in a Business Manager.' }
         '401': { $ref: '#/components/responses/Unauthorized' }
@@ -65760,7 +65770,7 @@ paths:
       x-resource-group: "ads"
       operationId: getTrackingTag
       tags: ["Tracking Tags"]
-      x-platforms: ["meta", "tiktok", "google", "x", "openai", "linkedin"]
+      x-platforms: ["meta", "tiktok", "google", "x", "openai", "linkedin", "pinterest"]
       summary: Get a tracking tag
       description: |
         Returns the full tag record including the base-code `code` snippet,
@@ -65781,6 +65791,10 @@ paths:
         only on rules a page can fire (event-specific Insight Tag rules: not Conversions API
         rules, no URL match rules). `adAccountId` picks which ad account's rules to read; it
         defaults to the account that created the tag.
+
+        Pinterest (platform `pinterestads`): returns the tag with Pinterest's own `code` snippet
+        and `lastFiredTime`. Without `adAccountId` Zernio finds the ad account that owns the tag
+        (404 when no readable ad account holds it).
       security:
         - bearerAuth: []
       parameters:
@@ -65797,7 +65811,7 @@ paths:
               schema:
                 type: object
                 properties:
-                  platform: { type: string, enum: [metaads, tiktokads, googleads, xads, openaiads, linkedinads] }
+                  platform: { type: string, enum: [metaads, tiktokads, googleads, xads, openaiads, linkedinads, pinterestads] }
                   tag: { $ref: '#/components/schemas/TrackingTag' }
         '401': { $ref: '#/components/responses/Unauthorized' }
         '403': { description: 'Ads access required (Ads add-on on legacy plans, included on usage-based plans), or the Meta token lacks ads permissions (reconnect required).' }
@@ -65810,7 +65824,7 @@ paths:
       x-resource-group: "ads"
       operationId: updateTrackingTag
       tags: ["Tracking Tags"]
-      x-platforms: ["meta", "tiktok", "google", "x", "openai", "linkedin"]
+      x-platforms: ["meta", "tiktok", "google", "x", "openai", "linkedin", "pinterest"]
       summary: Update a tracking tag
       description: |
         Partial-update a pixel. Whitelisted fields: `name` (rename),
@@ -65831,6 +65845,10 @@ paths:
         LinkedIn (`linkedinads`): only `firstPartyCookieStatus` (`first_party_cookie_enabled` or
         `first_party_cookie_disabled`), which sets the tag's first-party tracking. It applies to
         every ad account using the tag. `empty` answers 400: LinkedIn has no unset state.
+
+        Pinterest (platform `pinterestads`): 501. Pinterest API v5 only creates, lists and reads
+        tags (no update endpoint); rename a tag or change its enhanced match settings in Pinterest
+        Ads Manager.
       security:
         - bearerAuth: []
       parameters:
@@ -65874,7 +65892,7 @@ paths:
               schema:
                 type: object
                 properties:
-                  platform: { type: string, enum: [metaads, tiktokads, googleads, xads, openaiads, linkedinads] }
+                  platform: { type: string, enum: [metaads, tiktokads, googleads, xads, openaiads, linkedinads, pinterestads] }
                   tag: { $ref: '#/components/schemas/TrackingTag' }
         '400': { description: Invalid body (e.g. no fields supplied) or Meta validation failure. }
         '401': { $ref: '#/components/responses/Unauthorized' }
@@ -66009,7 +66027,7 @@ paths:
       x-resource-group: "ads"
       operationId: installTrackingTagOnStore
       tags: ["Tracking Tags"]
-      x-platforms: ["meta", "tiktok", "google", "x", "openai", "linkedin", "shopify", "wordpress"]
+      x-platforms: ["meta", "tiktok", "google", "x", "openai", "linkedin", "pinterest", "shopify", "wordpress"]
       summary: Install on a Shopify store or WordPress site
       description: |
         Puts the Meta pixel on a connected Shopify store's storefront and checkout through
@@ -66071,6 +66089,14 @@ paths:
         is created for you. The `li_fat_id` click id is read from the landing URL and kept in a
         first-party cookie for 30 days. WordPress gets LinkedIn's base code, which records page
         views.
+
+        **Pinterest (platform `pinterestads`)**: Shopify sends `pagevisit`, `viewcontent`,
+        `addtocart`, `search`, `initiatecheckout`, `addpaymentinfo` and `checkout` to the tag,
+        each with `event_id` (Purchase: `shopify_order_{orderId}`, for dedup with the Pinterest
+        Conversions API), value, currency, order quantity and line items, plus the `epik` click id
+        kept in the `_epik` cookie. WordPress gets Pinterest's base code (core.js, `load`, `page`)
+        with a `pagevisit` event; the manual fallback is the official Pinterest for WooCommerce
+        plugin (WooCommerce stores).
       security:
         - bearerAuth: []
       parameters:
@@ -66096,7 +66122,7 @@ paths:
               schema:
                 type: object
                 properties:
-                  platform: { type: string, enum: [metaads, tiktokads, googleads, xads, openaiads, linkedinads] }
+                  platform: { type: string, enum: [metaads, tiktokads, googleads, xads, openaiads, linkedinads, pinterestads] }
                   install:
                     allOf:
                       - $ref: '#/components/schemas/StorePixelInstall'
@@ -66133,7 +66159,7 @@ paths:
       x-resource-group: "ads"
       operationId: getTrackingTagStoreInstall
       tags: ["Tracking Tags"]
-      x-platforms: ["meta", "tiktok", "google", "x", "openai", "linkedin", "shopify", "wordpress"]
+      x-platforms: ["meta", "tiktok", "google", "x", "openai", "linkedin", "pinterest", "shopify", "wordpress"]
       summary: Get store install status
       description: |
         Whether this tag is the one the Shopify store fires for its platform. `installedTagId`
@@ -66161,7 +66187,7 @@ paths:
               schema:
                 type: object
                 properties:
-                  platform: { type: string, enum: [metaads, tiktokads, googleads, xads, openaiads, linkedinads] }
+                  platform: { type: string, enum: [metaads, tiktokads, googleads, xads, openaiads, linkedinads, pinterestads] }
                   install:
                     allOf:
                       - $ref: '#/components/schemas/StorePixelInstall'
@@ -66191,7 +66217,7 @@ paths:
       x-resource-group: "ads"
       operationId: removeTrackingTagFromStore
       tags: ["Tracking Tags"]
-      x-platforms: ["meta", "tiktok", "google", "x", "openai", "linkedin", "shopify", "wordpress"]
+      x-platforms: ["meta", "tiktok", "google", "x", "openai", "linkedin", "pinterest", "shopify", "wordpress"]
       summary: Remove from a Shopify store or WordPress site
       description: |
         Removes the tag from the store. Idempotent: nothing installed returns 200 with
@@ -66216,7 +66242,7 @@ paths:
               schema:
                 type: object
                 properties:
-                  platform: { type: string, enum: [metaads, tiktokads, googleads, xads, openaiads, linkedinads] }
+                  platform: { type: string, enum: [metaads, tiktokads, googleads, xads, openaiads, linkedinads, pinterestads] }
                   install:
                     allOf:
                       - $ref: '#/components/schemas/StorePixelInstall'
@@ -66235,7 +66261,7 @@ paths:
       x-resource-group: "ads"
       operationId: listTrackingTagEvents
       tags: ["Tracking Tags"]
-      x-platforms: ["meta", "google", "tiktok", "linkedin", "x", "openai"]
+      x-platforms: ["meta", "google", "tiktok", "linkedin", "x", "openai", "pinterest"]
       summary: List conversion events
       description: |
         The tag's conversion events, on platforms where each conversion is its own object:
@@ -66286,7 +66312,7 @@ paths:
       x-resource-group: "ads"
       operationId: createTrackingTagEvent
       tags: ["Tracking Tags"]
-      x-platforms: ["meta", "google", "tiktok", "linkedin", "x", "openai"]
+      x-platforms: ["meta", "google", "tiktok", "linkedin", "x", "openai", "pinterest"]
       summary: Create a conversion event
       description: |
         Creates a conversion event tied to the tag. Pass the platform's own event type in `type`
@@ -66360,7 +66386,7 @@ paths:
       x-resource-group: "ads"
       operationId: updateTrackingTagEvent
       tags: ["Tracking Tags"]
-      x-platforms: ["meta", "google", "tiktok", "linkedin", "x", "openai"]
+      x-platforms: ["meta", "google", "tiktok", "linkedin", "x", "openai", "pinterest"]
       summary: Update a conversion event
       description: |
         Partial update; at least one field. A field the platform does not store answers 400.
@@ -66406,7 +66432,7 @@ paths:
       x-resource-group: "ads"
       operationId: deleteTrackingTagEvent
       tags: ["Tracking Tags"]
-      x-platforms: ["meta", "google", "tiktok", "linkedin", "x", "openai"]
+      x-platforms: ["meta", "google", "tiktok", "linkedin", "x", "openai", "pinterest"]
       summary: Delete a conversion event
       description: |
         Removes the conversion event. Platforms without a hard delete archive or disable it
@@ -66489,7 +66515,7 @@ paths:
       x-resource-group: "ads"
       operationId: getTrackingTagStats
       tags: ["Tracking Tags"]
-      x-platforms: ["meta", "tiktok", "google", "x", "openai", "linkedin"]
+      x-platforms: ["meta", "tiktok", "google", "x", "openai", "linkedin", "pinterest"]
       summary: Get aggregated event stats
       description: |
         Returns event counts / health for the tag, where the platform exposes
@@ -66510,6 +66536,14 @@ paths:
         `lastFiredTime`, `creationTime`, `blocked`) and one per conversion rule (`kind:
         conversion_rule`, `id`, `name`, `type`, `conversionMethod`, `status`, `lastFiredTime`).
         Times are unix seconds; `startTime`/`endTime` are ignored.
+
+        Pinterest (platform `pinterestads`): rows typed by `type`: one `tag` row (`lastFiredTime`,
+        `status`, `enhancedMatchStatus`), `event` rows for the conversion events Pinterest has
+        seen on the tag (`source` is `page_visit` or `ocpm_eligible`, the latter meaning the event
+        can be optimized for, with the neutral `siteEvent` where one maps), and `event_quality`
+        rows with the ad account's Event Quality Score for tag events over the last `1d` and `14d`
+        (ad-account level, not per tag; an account Pinterest cannot score yet carries `error`
+        instead). Pinterest has no time-bounded counts, so `startTime`/`endTime` answer 400.
       security:
         - bearerAuth: []
       parameters:
@@ -66551,7 +66585,7 @@ paths:
               schema:
                 type: object
                 properties:
-                  platform: { type: string, enum: [metaads, tiktokads, googleads, xads, openaiads, linkedinads] }
+                  platform: { type: string, enum: [metaads, tiktokads, googleads, xads, openaiads, linkedinads, pinterestads] }
                   stats:
                     type: object
                     properties:
