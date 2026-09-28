@@ -128,15 +128,23 @@ class TrackingTagsResource:
             f"/v1/accounts/{account_id}/tracking-tags", data=payload
         )
 
-    def get_tracking_tag(self, account_id: str, tag_id: str) -> dict[str, Any]:
+    def get_tracking_tag(
+        self, account_id: str, tag_id: str, *, ad_account_id: str | None = None
+    ) -> dict[str, Any]:
         """Get a tracking tag"""
-        return self._client._get(f"/v1/accounts/{account_id}/tracking-tags/{tag_id}")
+        params = self._build_params(
+            ad_account_id=ad_account_id,
+        )
+        return self._client._get(
+            f"/v1/accounts/{account_id}/tracking-tags/{tag_id}", params=params
+        )
 
     def update_tracking_tag(
         self,
         account_id: str,
         tag_id: str,
         *,
+        ad_account_id: str | None = None,
         name: str | None = None,
         enable_automatic_matching: bool | None = None,
         automatic_matching_fields: list[str] | None = None,
@@ -145,6 +153,7 @@ class TrackingTagsResource:
     ) -> dict[str, Any]:
         """Update a tracking tag"""
         payload = self._build_payload(
+            ad_account_id=ad_account_id,
             name=name,
             enable_automatic_matching=enable_automatic_matching,
             automatic_matching_fields=automatic_matching_fields,
@@ -193,12 +202,14 @@ class TrackingTagsResource:
         tag_id: str,
         store_account_id: str,
         *,
+        ad_account_id: str | None = None,
         sidebar_id: str | None = None,
         verify_homepage: bool | None = True,
     ) -> dict[str, Any]:
         """Install on a Shopify store or WordPress site"""
         payload = self._build_payload(
             store_account_id=store_account_id,
+            ad_account_id=ad_account_id,
             sidebar_id=sidebar_id,
             verify_homepage=verify_homepage,
         )
@@ -207,22 +218,34 @@ class TrackingTagsResource:
         )
 
     def get_tracking_tag_store_install(
-        self, account_id: str, tag_id: str, store_account_id: str
+        self,
+        account_id: str,
+        tag_id: str,
+        store_account_id: str,
+        *,
+        ad_account_id: str | None = None,
     ) -> dict[str, Any]:
         """Get store install status"""
         params = self._build_params(
             store_account_id=store_account_id,
+            ad_account_id=ad_account_id,
         )
         return self._client._get(
             f"/v1/accounts/{account_id}/tracking-tags/{tag_id}/install", params=params
         )
 
     def remove_tracking_tag_from_store(
-        self, account_id: str, tag_id: str, store_account_id: str
+        self,
+        account_id: str,
+        tag_id: str,
+        store_account_id: str,
+        *,
+        ad_account_id: str | None = None,
     ) -> dict[str, Any]:
         """Remove from a Shopify store or WordPress site"""
         params = self._build_params(
             store_account_id=store_account_id,
+            ad_account_id=ad_account_id,
         )
         return self._client._delete(
             f"/v1/accounts/{account_id}/tracking-tags/{tag_id}/install", params=params
@@ -233,12 +256,14 @@ class TrackingTagsResource:
         account_id: str,
         tag_id: str,
         *,
+        ad_account_id: str | None = None,
         aggregation: str | None = "event",
         start_time: int | None = None,
         end_time: int | None = None,
     ) -> dict[str, Any]:
         """Get aggregated event stats"""
         params = self._build_params(
+            ad_account_id=ad_account_id,
             aggregation=aggregation,
             start_time=start_time,
             end_time=end_time,
@@ -304,10 +329,15 @@ class TrackingTagsResource:
             f"/v1/accounts/{account_id}/tracking-tags", data=payload
         )
 
-    async def aget_tracking_tag(self, account_id: str, tag_id: str) -> dict[str, Any]:
+    async def aget_tracking_tag(
+        self, account_id: str, tag_id: str, *, ad_account_id: str | None = None
+    ) -> dict[str, Any]:
         """Get a tracking tag (async)"""
+        params = self._build_params(
+            ad_account_id=ad_account_id,
+        )
         return await self._client._aget(
-            f"/v1/accounts/{account_id}/tracking-tags/{tag_id}"
+            f"/v1/accounts/{account_id}/tracking-tags/{tag_id}", params=params
         )
 
     async def aupdate_tracking_tag(
@@ -315,6 +345,7 @@ class TrackingTagsResource:
         account_id: str,
         tag_id: str,
         *,
+        ad_account_id: str | None = None,
         name: str | None = None,
         enable_automatic_matching: bool | None = None,
         automatic_matching_fields: list[str] | None = None,
@@ -323,6 +354,7 @@ class TrackingTagsResource:
     ) -> dict[str, Any]:
         """Update a tracking tag (async)"""
         payload = self._build_payload(
+            ad_account_id=ad_account_id,
             name=name,
             enable_automatic_matching=enable_automatic_matching,
             automatic_matching_fields=automatic_matching_fields,
@@ -371,12 +403,14 @@ class TrackingTagsResource:
         tag_id: str,
         store_account_id: str,
         *,
+        ad_account_id: str | None = None,
         sidebar_id: str | None = None,
         verify_homepage: bool | None = True,
     ) -> dict[str, Any]:
         """Install on a Shopify store or WordPress site (async)"""
         payload = self._build_payload(
             store_account_id=store_account_id,
+            ad_account_id=ad_account_id,
             sidebar_id=sidebar_id,
             verify_homepage=verify_homepage,
         )
@@ -385,22 +419,34 @@ class TrackingTagsResource:
         )
 
     async def aget_tracking_tag_store_install(
-        self, account_id: str, tag_id: str, store_account_id: str
+        self,
+        account_id: str,
+        tag_id: str,
+        store_account_id: str,
+        *,
+        ad_account_id: str | None = None,
     ) -> dict[str, Any]:
         """Get store install status (async)"""
         params = self._build_params(
             store_account_id=store_account_id,
+            ad_account_id=ad_account_id,
         )
         return await self._client._aget(
             f"/v1/accounts/{account_id}/tracking-tags/{tag_id}/install", params=params
         )
 
     async def aremove_tracking_tag_from_store(
-        self, account_id: str, tag_id: str, store_account_id: str
+        self,
+        account_id: str,
+        tag_id: str,
+        store_account_id: str,
+        *,
+        ad_account_id: str | None = None,
     ) -> dict[str, Any]:
         """Remove from a Shopify store or WordPress site (async)"""
         params = self._build_params(
             store_account_id=store_account_id,
+            ad_account_id=ad_account_id,
         )
         return await self._client._adelete(
             f"/v1/accounts/{account_id}/tracking-tags/{tag_id}/install", params=params
@@ -411,12 +457,14 @@ class TrackingTagsResource:
         account_id: str,
         tag_id: str,
         *,
+        ad_account_id: str | None = None,
         aggregation: str | None = "event",
         start_time: int | None = None,
         end_time: int | None = None,
     ) -> dict[str, Any]:
         """Get aggregated event stats (async)"""
         params = self._build_params(
+            ad_account_id=ad_account_id,
             aggregation=aggregation,
             start_time=start_time,
             end_time=end_time,

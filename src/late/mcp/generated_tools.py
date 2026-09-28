@@ -23092,16 +23092,19 @@ def register_generated_tools(mcp, _get_client):
             openWorldHint=False,
         )
     )
-    def tracking_tags_get_tracking_tag(account_id: str, tag_id: str) -> str:
+    def tracking_tags_get_tracking_tag(
+        account_id: str, tag_id: str, ad_account_id: str | None = None
+    ) -> str:
         """Get a tracking tag
 
         Args:
             account_id: (required)
-            tag_id: Pixel id. (required)"""
+            tag_id: Tag id (`TrackingTag.id`). (required)
+            ad_account_id: Scopes the lookup on platforms whose tag ids live inside an ad account. Ignored elsewhere."""
         client = _get_client()
         try:
             response = client.tracking_tags.get_tracking_tag(
-                account_id=account_id, tag_id=tag_id
+                account_id=account_id, tag_id=tag_id, ad_account_id=ad_account_id
             )
             return _format_response(response)
         except Exception as e:
@@ -23118,6 +23121,7 @@ def register_generated_tools(mcp, _get_client):
     def tracking_tags_update_tracking_tag(
         account_id: str,
         tag_id: str,
+        ad_account_id: str | None = None,
         name: str | None = None,
         enable_automatic_matching: bool | None = None,
         automatic_matching_fields: list[str] | None = None,
@@ -23129,6 +23133,7 @@ def register_generated_tools(mcp, _get_client):
             Args:
                 account_id: (required)
                 tag_id: Pixel id. (required)
+                ad_account_id: Scopes the lookup on platforms whose tag ids live inside an ad account. Ignored elsewhere.
                 name
                 enable_automatic_matching: Meta Advanced Matching toggle (`enable_automatic_matching`).
                 automatic_matching_fields: Which user fields Advanced Matching may collect. Meta's
@@ -23142,6 +23147,7 @@ def register_generated_tools(mcp, _get_client):
             response = client.tracking_tags.update_tracking_tag(
                 account_id=account_id,
                 tag_id=tag_id,
+                ad_account_id=ad_account_id,
                 name=name,
                 enable_automatic_matching=enable_automatic_matching,
                 automatic_matching_fields=automatic_matching_fields,
@@ -23241,6 +23247,7 @@ def register_generated_tools(mcp, _get_client):
         account_id: str,
         tag_id: str,
         store_account_id: str,
+        ad_account_id: str | None = None,
         sidebar_id: str | None = None,
         verify_homepage: bool = True,
     ) -> str:
@@ -23248,8 +23255,9 @@ def register_generated_tools(mcp, _get_client):
 
         Args:
             account_id: (required)
-            tag_id: Meta pixel id. (required)
+            tag_id: Tag id (`TrackingTag.id`). (required)
             store_account_id: The connected Shopify (`shopify`) or WordPress (`wordpress`) account id. (required)
+            ad_account_id: Scopes the tag lookup on platforms whose tag ids live inside an ad account. Ignored elsewhere.
             sidebar_id: WordPress only: widget area to use (see `install.preflight.sidebars` from GET). Defaults to a footer area.
             verify_homepage: WordPress only: fetch the homepage afterwards and report `homepageCheck`."""
         client = _get_client()
@@ -23258,6 +23266,7 @@ def register_generated_tools(mcp, _get_client):
                 account_id=account_id,
                 tag_id=tag_id,
                 store_account_id=store_account_id,
+                ad_account_id=ad_account_id,
                 sidebar_id=sidebar_id,
                 verify_homepage=verify_homepage,
             )
@@ -23274,18 +23283,25 @@ def register_generated_tools(mcp, _get_client):
         )
     )
     def tracking_tags_get_tracking_tag_store_install(
-        account_id: str, tag_id: str, store_account_id: str
+        account_id: str,
+        tag_id: str,
+        store_account_id: str,
+        ad_account_id: str | None = None,
     ) -> str:
         """Get store install status
 
         Args:
             account_id: (required)
-            tag_id: Meta pixel id. (required)
-            store_account_id: The connected Shopify or WordPress account id. (required)"""
+            tag_id: Tag id (`TrackingTag.id`). (required)
+            store_account_id: The connected Shopify or WordPress account id. (required)
+            ad_account_id: Scopes the tag lookup on platforms whose tag ids live inside an ad account."""
         client = _get_client()
         try:
             response = client.tracking_tags.get_tracking_tag_store_install(
-                account_id=account_id, tag_id=tag_id, store_account_id=store_account_id
+                account_id=account_id,
+                tag_id=tag_id,
+                store_account_id=store_account_id,
+                ad_account_id=ad_account_id,
             )
             return _format_response(response)
         except Exception as e:
@@ -23300,18 +23316,25 @@ def register_generated_tools(mcp, _get_client):
         )
     )
     def tracking_tags_remove_tracking_tag_from_store(
-        account_id: str, tag_id: str, store_account_id: str
+        account_id: str,
+        tag_id: str,
+        store_account_id: str,
+        ad_account_id: str | None = None,
     ) -> str:
         """Remove from a Shopify store or WordPress site
 
         Args:
             account_id: (required)
-            tag_id: Meta pixel id. (required)
-            store_account_id: The connected Shopify or WordPress account id. (required)"""
+            tag_id: Tag id (`TrackingTag.id`). (required)
+            store_account_id: The connected Shopify or WordPress account id. (required)
+            ad_account_id: Scopes the tag lookup on platforms whose tag ids live inside an ad account."""
         client = _get_client()
         try:
             response = client.tracking_tags.remove_tracking_tag_from_store(
-                account_id=account_id, tag_id=tag_id, store_account_id=store_account_id
+                account_id=account_id,
+                tag_id=tag_id,
+                store_account_id=store_account_id,
+                ad_account_id=ad_account_id,
             )
             return _format_response(response)
         except Exception as e:
@@ -23328,6 +23351,7 @@ def register_generated_tools(mcp, _get_client):
     def tracking_tags_get_tracking_tag_stats(
         account_id: str,
         tag_id: str,
+        ad_account_id: str | None = None,
         aggregation: str = "event",
         start_time: int | None = None,
         end_time: int | None = None,
@@ -23336,8 +23360,9 @@ def register_generated_tools(mcp, _get_client):
 
         Args:
             account_id: (required)
-            tag_id: Pixel id. (required)
-            aggregation: Aggregation dimension. Defaults to `event`.
+            tag_id: Tag id (`TrackingTag.id`). (required)
+            ad_account_id: Scopes the lookup on platforms whose tag ids live inside an ad account. Ignored elsewhere.
+            aggregation: Meta only (400 on other platforms): aggregation dimension. Defaults to `event`.
             start_time: Unix seconds lower bound.
             end_time: Unix seconds upper bound."""
         client = _get_client()
@@ -23345,6 +23370,7 @@ def register_generated_tools(mcp, _get_client):
             response = client.tracking_tags.get_tracking_tag_stats(
                 account_id=account_id,
                 tag_id=tag_id,
+                ad_account_id=ad_account_id,
                 aggregation=aggregation,
                 start_time=start_time,
                 end_time=end_time,
