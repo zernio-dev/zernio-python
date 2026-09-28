@@ -34,6 +34,7 @@ from ..resources import (
     ConversionsResource,
     CustomFieldsResource,
     DiscordResource,
+    FeedbackResource,
     GmbServicesResource,
     GmbVerificationsResource,
     ImessageResource,
@@ -179,6 +180,7 @@ class Zernio(BaseClient):
         self.conversions = ConversionsResource(self)
         self.custom_fields = CustomFieldsResource(self)
         self.discord = DiscordResource(self)
+        self.feedback = FeedbackResource(self)
         self.gmb_services = GmbServicesResource(self)
         self.gmb_verifications = GmbVerificationsResource(self)
         self.imessage = ImessageResource(self)

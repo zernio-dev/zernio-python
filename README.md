@@ -795,6 +795,11 @@ Both `from zernio import ...` and `from late import ...` work identically. The `
 | `discord.send_discord_direct_message()` | Send a Discord Direct Message |
 | `discord.unpin_discord_message()` | Unpin a Discord message |
 
+### Feedback
+| Method | Description |
+|--------|-------------|
+| `feedback.submit_feedback()` | Submit feedback |
+
 ### GMB Attributes
 | Method | Description |
 |--------|-------------|

@@ -15681,6 +15681,53 @@ def register_generated_tools(mcp, _get_client):
         except Exception as e:
             return f"Error: {e}"
 
+    # FEEDBACK
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Submit feedback",
+            readOnlyHint=False,
+            destructiveHint=True,
+            openWorldHint=True,
+        )
+    )
+    def feedback_submit_feedback(
+        type: str,
+        summary: str,
+        details: str | None = None,
+        endpoint: str | None = None,
+        request_id: str | None = None,
+        expected: str | None = None,
+        actual: str | None = None,
+        agent: dict[str, Any] | None = None,
+    ) -> str:
+        """Submit feedback
+
+        Args:
+            type: What kind of feedback this is. (required)
+            summary: One line describing the problem or the missing capability. Also the dedup key. (required)
+            details: Longer explanation: what you were trying to do, steps to reproduce, the use case.
+            endpoint: The endpoint involved, e.g. `POST /v1/posts`.
+            request_id: The `x-request-id` header of the failing response, if any.
+            expected: What you expected to happen.
+            actual: What actually happened, e.g. the error message.
+            agent: Optional identification of the agent submitting the feedback."""
+        client = _get_client()
+        try:
+            response = client.feedback.submit_feedback(
+                type=type,
+                summary=summary,
+                details=details,
+                endpoint=endpoint,
+                request_id=request_id,
+                expected=expected,
+                actual=actual,
+                agent=agent,
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
     # GMB_SERVICES
 
     @mcp.tool(

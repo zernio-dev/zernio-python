@@ -28,6 +28,7 @@ from ._generated.contacts import ContactsResource
 from ._generated.conversions import ConversionsResource
 from ._generated.custom_fields import CustomFieldsResource
 from ._generated.discord import DiscordResource
+from ._generated.feedback import FeedbackResource
 from ._generated.gmb_services import GmbServicesResource
 from ._generated.gmb_verifications import GmbVerificationsResource
 from ._generated.imessage import ImessageResource
@@ -98,6 +99,7 @@ __all__ = [
     "ConversionsResource",
     "CustomFieldsResource",
     "DiscordResource",
+    "FeedbackResource",
     "GmbServicesResource",
     "GmbVerificationsResource",
     "ImessageResource",

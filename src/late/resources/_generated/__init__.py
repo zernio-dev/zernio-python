@@ -26,6 +26,7 @@ from .contacts import ContactsResource
 from .conversions import ConversionsResource
 from .custom_fields import CustomFieldsResource
 from .discord import DiscordResource
+from .feedback import FeedbackResource
 from .gmb_services import GmbServicesResource
 from .gmb_verifications import GmbVerificationsResource
 from .imessage import ImessageResource
@@ -92,6 +93,7 @@ __all__ = [
     "ConversionsResource",
     "CustomFieldsResource",
     "DiscordResource",
+    "FeedbackResource",
     "GmbServicesResource",
     "GmbVerificationsResource",
     "ImessageResource",

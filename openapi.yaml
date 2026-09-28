@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.116.0"
+  version: "1.117.0"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -584,6 +584,11 @@ tags:
       Two-way iMessage on provider-provisioned senders. Order or register a sender
       on a profile, then send and receive through the inbox conversation endpoints
       ('platform: imessage').
+  - name: Feedback
+    description: |
+      Report a bug, a missing feature or a docs gap straight from your integration.
+      Built for AI agents: when an agent hits something the API cannot do, it can
+      say so here in a structured way instead of failing silently.
 components:
   securitySchemes:
     bearerAuth:
@@ -968,6 +973,18 @@ components:
                   effective_account_limit: 2000
                   current_account_count: 2000
   schemas:
+    FeedbackReceipt:
+      type: object
+      properties:
+        id:
+          type: string
+          description: 'Feedback id. Quote it if you follow up with support.'
+        status:
+          type: string
+          enum: [received]
+        duplicate:
+          type: boolean
+          description: 'True when this matched a submission with the same summary from the last 24 hours.'
     SmsRegistrationReviewRequest:
       type: object
       description: 'An open change request written as points. Answer each point with POST /v1/sms/registrations/{id}/respond: `answer` says what each point needs (text, a link, a hosted document, or a link or a document).'
@@ -20897,6 +20914,101 @@ paths:
                 authType: "oauth"
                 scope: "posts:read posts:write accounts:read"
         '401': { $ref: '#/components/responses/Unauthorized' }
+  /v1/feedback:
+    post:
+      x-resource-group: "accounts"
+      operationId: submitFeedback
+      tags: [Feedback]
+      summary: Submit feedback
+      description: |
+        Report a bug, a missing feature or a documentation gap. Every submission
+        is read by the Zernio team. Designed for AI agents: when a call fails in
+        a way that looks like our bug, or the API lacks something you need, send
+        one structured report here.
+
+        Include `endpoint` and `requestId` (the `x-request-id` response header of
+        the failing call) when you have them; they let us find the exact request.
+
+        Submitting the same `summary` again within 24 hours is idempotent: it
+        returns the original `id` with `duplicate: true` and a `200`. Each API
+        user can file at most 20 submissions per 24 hours.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [type, summary]
+              properties:
+                type:
+                  type: string
+                  enum: [bug, missing_feature, docs, other]
+                  description: 'What kind of feedback this is.'
+                summary:
+                  type: string
+                  minLength: 1
+                  maxLength: 200
+                  description: 'One line describing the problem or the missing capability. Also the dedup key.'
+                details:
+                  type: string
+                  maxLength: 5000
+                  description: 'Longer explanation: what you were trying to do, steps to reproduce, the use case.'
+                endpoint:
+                  type: string
+                  maxLength: 300
+                  description: 'The endpoint involved, e.g. `POST /v1/posts`.'
+                requestId:
+                  type: string
+                  maxLength: 200
+                  description: 'The `x-request-id` header of the failing response, if any.'
+                expected:
+                  type: string
+                  maxLength: 2000
+                  description: 'What you expected to happen.'
+                actual:
+                  type: string
+                  maxLength: 2000
+                  description: 'What actually happened, e.g. the error message.'
+                agent:
+                  type: object
+                  description: 'Optional identification of the agent submitting the feedback.'
+                  properties:
+                    name:
+                      type: string
+                      maxLength: 100
+                      description: 'Agent or tool name, e.g. `claude-code`.'
+                    model:
+                      type: string
+                      maxLength: 100
+                      description: 'Model powering the agent.'
+            example:
+              type: missing_feature
+              summary: "No way to set a TikTok post's cover frame timestamp"
+              details: "I am scheduling TikTok videos and need to pick the cover frame. Nothing in platformSpecificData controls it."
+              endpoint: "POST /v1/posts"
+              agent:
+                name: claude-code
+                model: claude-opus-5-5
+      responses:
+        '201':
+          description: Feedback received
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/FeedbackReceipt' }
+              example: { id: "66f7f0c2a1b2c3d4e5f60799", status: received, duplicate: false }
+        '200':
+          description: 'Duplicate of a submission made in the last 24 hours. Returns the original id.'
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/FeedbackReceipt' }
+              example: { id: "66f7f0c2a1b2c3d4e5f60799", status: received, duplicate: true }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '429':
+          description: 'More than 20 submissions in the last 24 hours.'
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ErrorResponse' }
   /v1/api-keys:
     get:
       x-resource-group: "admin-plane"
