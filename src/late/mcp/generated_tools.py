@@ -1336,6 +1336,77 @@ def register_generated_tools(mcp, _get_client):
 
     @mcp.tool(
         annotations=ToolAnnotations(
+            title="List partner businesses of the Page",
+            readOnlyHint=True,
+            destructiveHint=False,
+            openWorldHint=False,
+        )
+    )
+    def accounts_list_business_partners(account_id: str) -> str:
+        """List partner businesses of the Page
+
+        Args:
+            account_id: Zernio SocialAccount id of the Facebook or Instagram account. (required)"""
+        client = _get_client()
+        try:
+            response = client.accounts.list_business_partners(account_id=account_id)
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Share the Page with a partner business",
+            readOnlyHint=False,
+            destructiveHint=True,
+            openWorldHint=True,
+        )
+    )
+    def accounts_grant_business_partner(
+        account_id: str, business_id: str, permitted_tasks: list[str] | None = None
+    ) -> str:
+        """Share the Page with a partner business
+
+        Args:
+            account_id: Zernio SocialAccount id of the Facebook or Instagram account. (required)
+            business_id: Meta business portfolio id of the partner (numeric string). (required)
+            permitted_tasks: Tasks granted on the Page. Defaults to ADVERTISE and ANALYZE."""
+        client = _get_client()
+        try:
+            response = client.accounts.grant_business_partner(
+                account_id=account_id,
+                business_id=business_id,
+                permitted_tasks=permitted_tasks,
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Revoke a partner business from the Page",
+            readOnlyHint=False,
+            destructiveHint=True,
+            openWorldHint=True,
+        )
+    )
+    def accounts_revoke_business_partner(account_id: str, business_id: str) -> str:
+        """Revoke a partner business from the Page
+
+        Args:
+            account_id: Zernio SocialAccount id of the Facebook or Instagram account. (required)
+            business_id: Meta business portfolio id of the partner (numeric string). (required)"""
+        client = _get_client()
+        try:
+            response = client.accounts.revoke_business_partner(
+                account_id=account_id, business_id=business_id
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
             title="Resolve LinkedIn mention",
             readOnlyHint=True,
             destructiveHint=False,
@@ -1824,6 +1895,117 @@ def register_generated_tools(mcp, _get_client):
         try:
             response = client.ad_accounts.list_meta_businesses(
                 account_id=account_id, limit=limit, after=after
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Business users",
+            readOnlyHint=True,
+            destructiveHint=False,
+            openWorldHint=False,
+        )
+    )
+    def ad_accounts_list_meta_business_users(account_id: str, business_id: str) -> str:
+        """Business users
+
+        Args:
+            account_id: Zernio SocialAccount id (posting or ads variant) used to resolve the Meta token. (required)
+            business_id: Meta business portfolio id. (required)"""
+        client = _get_client()
+        try:
+            response = client.ad_accounts.list_meta_business_users(
+                account_id=account_id, business_id=business_id
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Page users of a business",
+            readOnlyHint=True,
+            destructiveHint=False,
+            openWorldHint=False,
+        )
+    )
+    def ad_accounts_list_page_users(
+        account_id: str, page_id: str, business_id: str
+    ) -> str:
+        """Page users of a business
+
+        Args:
+            account_id: Zernio SocialAccount id (posting or ads variant) used to resolve the Meta token. (required)
+            page_id: Facebook Page id. (required)
+            business_id: Business portfolio whose people to list. (required)"""
+        client = _get_client()
+        try:
+            response = client.ad_accounts.list_page_users(
+                account_id=account_id, page_id=page_id, business_id=business_id
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Assign a user to a Page",
+            readOnlyHint=False,
+            destructiveHint=True,
+            openWorldHint=True,
+        )
+    )
+    def ad_accounts_assign_page_user(
+        account_id: str,
+        page_id: str,
+        business_id: str,
+        user_id: str,
+        tasks: list[str] | None,
+    ) -> str:
+        """Assign a user to a Page
+
+        Args:
+            account_id: Zernio SocialAccount id used to resolve the Meta token. (required)
+            page_id: Facebook Page id. (required)
+            business_id: Business portfolio the user belongs to. (required)
+            user_id: Business-scoped user id from GET /v1/ads/businesses/users. (required)
+            tasks: (required)"""
+        client = _get_client()
+        try:
+            response = client.ad_accounts.assign_page_user(
+                account_id=account_id,
+                page_id=page_id,
+                business_id=business_id,
+                user_id=user_id,
+                tasks=tasks,
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Remove a user from a Page",
+            readOnlyHint=False,
+            destructiveHint=True,
+            openWorldHint=True,
+        )
+    )
+    def ad_accounts_remove_page_user(
+        account_id: str, page_id: str, user_id: str
+    ) -> str:
+        """Remove a user from a Page
+
+        Args:
+            account_id: Zernio SocialAccount id used to resolve the Meta token. (required)
+            page_id: Facebook Page id. (required)
+            user_id: Business-scoped user id. (required)"""
+        client = _get_client()
+        try:
+            response = client.ad_accounts.remove_page_user(
+                account_id=account_id, page_id=page_id, user_id=user_id
             )
             return _format_response(response)
         except Exception as e:
@@ -3010,6 +3192,90 @@ def register_generated_tools(mcp, _get_client):
 
     @mcp.tool(
         annotations=ToolAnnotations(
+            title="Ad account users",
+            readOnlyHint=True,
+            destructiveHint=False,
+            openWorldHint=False,
+        )
+    )
+    def ad_accounts_list_ad_account_users(
+        account_id: str, ad_account_id: str, business_id: str
+    ) -> str:
+        """Ad account users
+
+        Args:
+            account_id: Zernio SocialAccount id (posting or ads variant) used to resolve the Meta token. (required)
+            ad_account_id: Meta ad account id (act_<n>). (required)
+            business_id: Business portfolio whose people to list. (required)"""
+        client = _get_client()
+        try:
+            response = client.ad_accounts.list_ad_account_users(
+                account_id=account_id,
+                ad_account_id=ad_account_id,
+                business_id=business_id,
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Assign a user to an ad account",
+            readOnlyHint=False,
+            destructiveHint=True,
+            openWorldHint=True,
+        )
+    )
+    def ad_accounts_assign_ad_account_user(
+        account_id: str, ad_account_id: str, user_id: str, tasks: list[str] | None
+    ) -> str:
+        """Assign a user to an ad account
+
+        Args:
+            account_id: Zernio SocialAccount id used to resolve the Meta token. (required)
+            ad_account_id: Meta ad account id (act_<n>). (required)
+            user_id: Business-scoped user id from GET /v1/ads/businesses/users. (required)
+            tasks: (required)"""
+        client = _get_client()
+        try:
+            response = client.ad_accounts.assign_ad_account_user(
+                account_id=account_id,
+                ad_account_id=ad_account_id,
+                user_id=user_id,
+                tasks=tasks,
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Remove a user from an ad account",
+            readOnlyHint=False,
+            destructiveHint=True,
+            openWorldHint=True,
+        )
+    )
+    def ad_accounts_remove_ad_account_user(
+        account_id: str, ad_account_id: str, user_id: str
+    ) -> str:
+        """Remove a user from an ad account
+
+        Args:
+            account_id: Zernio SocialAccount id used to resolve the Meta token. (required)
+            ad_account_id: Meta ad account id (act_<n>). (required)
+            user_id: Business-scoped user id. (required)"""
+        client = _get_client()
+        try:
+            response = client.ad_accounts.remove_ad_account_user(
+                account_id=account_id, ad_account_id=ad_account_id, user_id=user_id
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
             title="Ad account finances",
             readOnlyHint=True,
             destructiveHint=False,
@@ -3134,7 +3400,10 @@ def register_generated_tools(mcp, _get_client):
     def ad_accounts_update_ad_account(
         account_id: str,
         ad_account_id: str,
-        default_dsa_beneficiary: str,
+        name: str | None = None,
+        spend_cap: str | None = None,
+        reset_amount_spent: bool | None = None,
+        default_dsa_beneficiary: str | None = None,
         default_dsa_payor: str | None = None,
     ) -> str:
         """Update ad account settings
@@ -3142,13 +3411,19 @@ def register_generated_tools(mcp, _get_client):
         Args:
             account_id: Account ID (metaads, or a facebook/instagram posting account) (required)
             ad_account_id: Meta ad account ID (act_...) (required)
-            default_dsa_beneficiary: Legal entity benefiting from ads on this ad account (required)
-            default_dsa_payor: Legal entity paying for ads on this ad account. Defaults to defaultDsaBeneficiary when omitted."""
+            name: New ad account name.
+            spend_cap: Account spend cap in whole currency units; null removes it.
+            reset_amount_spent: Restart the amount counted against the cap from zero. Cannot be combined with spendCap null.
+            default_dsa_beneficiary: Legal entity benefiting from ads on this ad account
+            default_dsa_payor: Legal entity paying for ads on this ad account. Defaults to defaultDsaBeneficiary when omitted. Requires defaultDsaBeneficiary."""
         client = _get_client()
         try:
             response = client.ad_accounts.update_ad_account(
                 account_id=account_id,
                 ad_account_id=ad_account_id,
+                name=name,
+                spend_cap=spend_cap,
+                reset_amount_spent=reset_amount_spent,
                 default_dsa_beneficiary=default_dsa_beneficiary,
                 default_dsa_payor=default_dsa_payor,
             )

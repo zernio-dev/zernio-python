@@ -198,6 +198,7 @@ Both `from zernio import ...` and `from late import ...` work identically. The `
 |--------|-------------|
 | `accounts.get_all_accounts_health()` | Check accounts health |
 | `accounts.list_accounts()` | List accounts |
+| `accounts.list_business_partners()` | List partner businesses of the Page |
 | `accounts.list_tik_tok_commercial_music()` | List trending commercial music |
 | `accounts.get_account_health()` | Check account health |
 | `accounts.get_account_posts()` | List posts published on the platform |
@@ -215,8 +216,10 @@ Both `from zernio import ...` and `from late import ...` work identically. The `
 | `accounts.delete_account()` | Disconnect account |
 | `accounts.delete_google_business_review_reply()` | Delete a review reply |
 | `accounts.batch_get_google_business_reviews()` | Batch get reviews |
+| `accounts.grant_business_partner()` | Share the Page with a partner business |
 | `accounts.move_account_to_profile()` | Move account to another profile |
 | `accounts.reply_to_google_business_review()` | Reply to a review |
+| `accounts.revoke_business_partner()` | Revoke a partner business from the Page |
 | `accounts.search_tik_tok_locations()` | Search TikTok location tags |
 
 ### Profiles
@@ -416,6 +419,7 @@ Both `from zernio import ...` and `from late import ...` work identically. The `
 | `ad_accounts.list_account_callouts()` | List account callouts |
 | `ad_accounts.list_account_sitelinks()` | List account sitelinks |
 | `ad_accounts.list_account_structured_snippets()` | List account snippets |
+| `ad_accounts.list_ad_account_users()` | Ad account users |
 | `ad_accounts.list_ad_accounts()` | List ad accounts |
 | `ad_accounts.list_ad_labels()` | List ad labels |
 | `ad_accounts.list_ad_negative_keyword_lists()` | List negative keyword lists |
@@ -426,7 +430,9 @@ Both `from zernio import ...` and `from late import ...` work identically. The `
 | `ad_accounts.list_advertisable_applications()` | List advertisable apps |
 | `ad_accounts.list_custom_conversions()` | List custom conversions |
 | `ad_accounts.list_high_demand_periods()` | List high-demand periods |
+| `ad_accounts.list_meta_business_users()` | Business users |
 | `ad_accounts.list_meta_businesses()` | Businesses list |
+| `ad_accounts.list_page_users()` | Page users of a business |
 | `ad_accounts.list_tik_tok_ad_pixels()` | List TikTok ad pixels |
 | `ad_accounts.list_value_rule_sets()` | List value rule sets |
 | `ad_accounts.create_ad_account()` | Create Meta ad account |
@@ -458,6 +464,8 @@ Both `from zernio import ...` and `from late import ...` work identically. The `
 | `ad_accounts.add_account_callouts()` | Add account callouts |
 | `ad_accounts.add_account_sitelinks()` | Add account sitelinks |
 | `ad_accounts.add_account_structured_snippets()` | Add account snippets |
+| `ad_accounts.assign_ad_account_user()` | Assign a user to an ad account |
+| `ad_accounts.assign_page_user()` | Assign a user to a Page |
 | `ad_accounts.attach_ad_label()` | Attach a Google Ads label |
 | `ad_accounts.detach_ad_label()` | Detach a Google Ads label |
 | `ad_accounts.hide_ad_comment()` | Hide or unhide an ad comment |
@@ -465,7 +473,9 @@ Both `from zernio import ...` and `from late import ...` work identically. The `
 | `ad_accounts.remove_account_callout()` | Remove account callout |
 | `ad_accounts.remove_account_sitelink()` | Remove account sitelink |
 | `ad_accounts.remove_account_structured_snippet()` | Remove account snippet |
+| `ad_accounts.remove_ad_account_user()` | Remove a user from an ad account |
 | `ad_accounts.remove_ad_label()` | Remove a Google Ads label |
+| `ad_accounts.remove_page_user()` | Remove a user from a Page |
 | `ad_accounts.replace_ad_negative_keyword_list_keywords()` | Replace negative list keywords |
 | `ad_accounts.reply_to_ad_comment()` | Reply to an ad comment |
 

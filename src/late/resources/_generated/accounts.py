@@ -553,6 +553,37 @@ class AccountsResource:
             f"/v1/accounts/{account_id}/gmb-reviews/{review_id}/reply"
         )
 
+    def list_business_partners(self, account_id: str) -> dict[str, Any]:
+        """List partner businesses of the Page"""
+        return self._client._get(f"/v1/accounts/{account_id}/business-partners")
+
+    def grant_business_partner(
+        self,
+        account_id: str,
+        business_id: str,
+        *,
+        permitted_tasks: list[str] | None = None,
+    ) -> dict[str, Any]:
+        """Share the Page with a partner business"""
+        payload = self._build_payload(
+            business_id=business_id,
+            permitted_tasks=permitted_tasks,
+        )
+        return self._client._post(
+            f"/v1/accounts/{account_id}/business-partners", data=payload
+        )
+
+    def revoke_business_partner(
+        self, account_id: str, business_id: str
+    ) -> dict[str, Any]:
+        """Revoke a partner business from the Page"""
+        params = self._build_params(
+            business_id=business_id,
+        )
+        return self._client._delete(
+            f"/v1/accounts/{account_id}/business-partners", params=params
+        )
+
     def get_linked_in_mentions(
         self, account_id: str, url: str, *, display_name: str | None = None
     ) -> dict[str, Any]:
@@ -1082,6 +1113,37 @@ class AccountsResource:
         """Delete a review reply (async)"""
         return await self._client._adelete(
             f"/v1/accounts/{account_id}/gmb-reviews/{review_id}/reply"
+        )
+
+    async def alist_business_partners(self, account_id: str) -> dict[str, Any]:
+        """List partner businesses of the Page (async)"""
+        return await self._client._aget(f"/v1/accounts/{account_id}/business-partners")
+
+    async def agrant_business_partner(
+        self,
+        account_id: str,
+        business_id: str,
+        *,
+        permitted_tasks: list[str] | None = None,
+    ) -> dict[str, Any]:
+        """Share the Page with a partner business (async)"""
+        payload = self._build_payload(
+            business_id=business_id,
+            permitted_tasks=permitted_tasks,
+        )
+        return await self._client._apost(
+            f"/v1/accounts/{account_id}/business-partners", data=payload
+        )
+
+    async def arevoke_business_partner(
+        self, account_id: str, business_id: str
+    ) -> dict[str, Any]:
+        """Revoke a partner business from the Page (async)"""
+        params = self._build_params(
+            business_id=business_id,
+        )
+        return await self._client._adelete(
+            f"/v1/accounts/{account_id}/business-partners", params=params
         )
 
     async def aget_linked_in_mentions(

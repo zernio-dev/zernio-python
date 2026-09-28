@@ -262,6 +262,56 @@ class AdAccountsResource:
         )
         return self._client._get("/v1/ads/businesses", params=params)
 
+    def list_meta_business_users(
+        self, account_id: str, business_id: str
+    ) -> dict[str, Any]:
+        """Business users"""
+        params = self._build_params(
+            account_id=account_id,
+            business_id=business_id,
+        )
+        return self._client._get("/v1/ads/businesses/users", params=params)
+
+    def list_page_users(
+        self, account_id: str, page_id: str, business_id: str
+    ) -> dict[str, Any]:
+        """Page users of a business"""
+        params = self._build_params(
+            account_id=account_id,
+            page_id=page_id,
+            business_id=business_id,
+        )
+        return self._client._get("/v1/ads/page-users", params=params)
+
+    def assign_page_user(
+        self,
+        account_id: str,
+        page_id: str,
+        business_id: str,
+        user_id: str,
+        tasks: list[str],
+    ) -> dict[str, Any]:
+        """Assign a user to a Page"""
+        payload = self._build_payload(
+            account_id=account_id,
+            page_id=page_id,
+            business_id=business_id,
+            user_id=user_id,
+            tasks=tasks,
+        )
+        return self._client._post("/v1/ads/page-users", data=payload)
+
+    def remove_page_user(
+        self, account_id: str, page_id: str, user_id: str
+    ) -> dict[str, Any]:
+        """Remove a user from a Page"""
+        params = self._build_params(
+            account_id=account_id,
+            page_id=page_id,
+            user_id=user_id,
+        )
+        return self._client._delete("/v1/ads/page-users", params=params)
+
     def list_ad_labels(
         self,
         account_id: str,
@@ -850,6 +900,40 @@ class AdAccountsResource:
         )
         return self._client._patch("/v1/ads/accounts/manager-links", data=payload)
 
+    def list_ad_account_users(
+        self, account_id: str, ad_account_id: str, business_id: str
+    ) -> dict[str, Any]:
+        """Ad account users"""
+        params = self._build_params(
+            account_id=account_id,
+            ad_account_id=ad_account_id,
+            business_id=business_id,
+        )
+        return self._client._get("/v1/ads/accounts/users", params=params)
+
+    def assign_ad_account_user(
+        self, account_id: str, ad_account_id: str, user_id: str, tasks: list[str]
+    ) -> dict[str, Any]:
+        """Assign a user to an ad account"""
+        payload = self._build_payload(
+            account_id=account_id,
+            ad_account_id=ad_account_id,
+            user_id=user_id,
+            tasks=tasks,
+        )
+        return self._client._post("/v1/ads/accounts/users", data=payload)
+
+    def remove_ad_account_user(
+        self, account_id: str, ad_account_id: str, user_id: str
+    ) -> dict[str, Any]:
+        """Remove a user from an ad account"""
+        params = self._build_params(
+            account_id=account_id,
+            ad_account_id=ad_account_id,
+            user_id=user_id,
+        )
+        return self._client._delete("/v1/ads/accounts/users", params=params)
+
     def get_ad_account_finance(
         self, account_id: str, ad_account_id: str
     ) -> dict[str, Any]:
@@ -918,14 +1002,20 @@ class AdAccountsResource:
         self,
         account_id: str,
         ad_account_id: str,
-        default_dsa_beneficiary: str,
         *,
+        name: str | None = None,
+        spend_cap: Any | None = None,
+        reset_amount_spent: bool | None = None,
+        default_dsa_beneficiary: str | None = None,
         default_dsa_payor: str | None = None,
     ) -> dict[str, Any]:
         """Update ad account settings"""
         payload = self._build_payload(
             account_id=account_id,
             ad_account_id=ad_account_id,
+            name=name,
+            spend_cap=spend_cap,
+            reset_amount_spent=reset_amount_spent,
             default_dsa_beneficiary=default_dsa_beneficiary,
             default_dsa_payor=default_dsa_payor,
         )
@@ -1190,6 +1280,56 @@ class AdAccountsResource:
             after=after,
         )
         return await self._client._aget("/v1/ads/businesses", params=params)
+
+    async def alist_meta_business_users(
+        self, account_id: str, business_id: str
+    ) -> dict[str, Any]:
+        """Business users (async)"""
+        params = self._build_params(
+            account_id=account_id,
+            business_id=business_id,
+        )
+        return await self._client._aget("/v1/ads/businesses/users", params=params)
+
+    async def alist_page_users(
+        self, account_id: str, page_id: str, business_id: str
+    ) -> dict[str, Any]:
+        """Page users of a business (async)"""
+        params = self._build_params(
+            account_id=account_id,
+            page_id=page_id,
+            business_id=business_id,
+        )
+        return await self._client._aget("/v1/ads/page-users", params=params)
+
+    async def aassign_page_user(
+        self,
+        account_id: str,
+        page_id: str,
+        business_id: str,
+        user_id: str,
+        tasks: list[str],
+    ) -> dict[str, Any]:
+        """Assign a user to a Page (async)"""
+        payload = self._build_payload(
+            account_id=account_id,
+            page_id=page_id,
+            business_id=business_id,
+            user_id=user_id,
+            tasks=tasks,
+        )
+        return await self._client._apost("/v1/ads/page-users", data=payload)
+
+    async def aremove_page_user(
+        self, account_id: str, page_id: str, user_id: str
+    ) -> dict[str, Any]:
+        """Remove a user from a Page (async)"""
+        params = self._build_params(
+            account_id=account_id,
+            page_id=page_id,
+            user_id=user_id,
+        )
+        return await self._client._adelete("/v1/ads/page-users", params=params)
 
     async def alist_ad_labels(
         self,
@@ -1787,6 +1927,40 @@ class AdAccountsResource:
             "/v1/ads/accounts/manager-links", data=payload
         )
 
+    async def alist_ad_account_users(
+        self, account_id: str, ad_account_id: str, business_id: str
+    ) -> dict[str, Any]:
+        """Ad account users (async)"""
+        params = self._build_params(
+            account_id=account_id,
+            ad_account_id=ad_account_id,
+            business_id=business_id,
+        )
+        return await self._client._aget("/v1/ads/accounts/users", params=params)
+
+    async def aassign_ad_account_user(
+        self, account_id: str, ad_account_id: str, user_id: str, tasks: list[str]
+    ) -> dict[str, Any]:
+        """Assign a user to an ad account (async)"""
+        payload = self._build_payload(
+            account_id=account_id,
+            ad_account_id=ad_account_id,
+            user_id=user_id,
+            tasks=tasks,
+        )
+        return await self._client._apost("/v1/ads/accounts/users", data=payload)
+
+    async def aremove_ad_account_user(
+        self, account_id: str, ad_account_id: str, user_id: str
+    ) -> dict[str, Any]:
+        """Remove a user from an ad account (async)"""
+        params = self._build_params(
+            account_id=account_id,
+            ad_account_id=ad_account_id,
+            user_id=user_id,
+        )
+        return await self._client._adelete("/v1/ads/accounts/users", params=params)
+
     async def aget_ad_account_finance(
         self, account_id: str, ad_account_id: str
     ) -> dict[str, Any]:
@@ -1855,14 +2029,20 @@ class AdAccountsResource:
         self,
         account_id: str,
         ad_account_id: str,
-        default_dsa_beneficiary: str,
         *,
+        name: str | None = None,
+        spend_cap: Any | None = None,
+        reset_amount_spent: bool | None = None,
+        default_dsa_beneficiary: str | None = None,
         default_dsa_payor: str | None = None,
     ) -> dict[str, Any]:
         """Update ad account settings (async)"""
         payload = self._build_payload(
             account_id=account_id,
             ad_account_id=ad_account_id,
+            name=name,
+            spend_cap=spend_cap,
+            reset_amount_spent=reset_amount_spent,
             default_dsa_beneficiary=default_dsa_beneficiary,
             default_dsa_payor=default_dsa_payor,
         )
