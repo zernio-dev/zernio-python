@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.115.1"
+  version: "1.115.2"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -58191,7 +58191,7 @@ paths:
                     type: array
                     items:
                       type: object
-                      description: "Meta: an ArchivedAd (id, page_id, page_name, ad_creation_time, ad_delivery_start_time, ad_delivery_stop_time, ad_creative_bodies[], ad_creative_link_titles[], ad_creative_link_descriptions[], ad_creative_link_captions[], ad_snapshot_url, publisher_platforms[], languages[], plus eu_total_reach, beneficiary_payers, target_ages, target_gender, target_locations, age_country_gender_reach_breakdown, total_reach_by_location on EU/UK ads). LinkedIn: { adUrl, isRestricted, details: { type, advertiser: { advertiserName, advertiserUrl, adPayer }, adStatistics: { firstImpressionAt, latestImpressionAt, totalImpressions: { from, to }, impressionsDistributionByCountry[] }, adTargeting: [{ facetName, includedSegments[], excludedSegments[] }] } } (adStatistics and adTargeting only on EU-delivered ads)."
+                      description: "Meta: an ArchivedAd (id, page_id, page_name, ad_creation_time, ad_delivery_start_time, ad_delivery_stop_time, ad_creative_bodies[], ad_creative_link_titles[], ad_creative_link_descriptions[], ad_creative_link_captions[], ad_snapshot_url (access token stripped), ad_library_url (public Ad Library permalink), publisher_platforms[], languages[], plus eu_total_reach, beneficiary_payers, target_ages, target_gender, target_locations, age_country_gender_reach_breakdown, total_reach_by_location on EU/UK ads). LinkedIn: { adUrl, isRestricted, details: { type, advertiser: { advertiserName, advertiserUrl, adPayer }, adStatistics: { firstImpressionAt, latestImpressionAt, totalImpressions: { from, to }, impressionsDistributionByCountry[] }, adTargeting: [{ facetName, includedSegments[], excludedSegments[] }] } } (adStatistics and adTargeting only on EU-delivered ads)."
                   paging:
                     type: object
                     properties:
@@ -58210,7 +58210,8 @@ paths:
                         ad_delivery_start_time: "2026-08-03"
                         ad_creative_bodies: ["Schedule posts and run ads from one API."]
                         ad_creative_link_titles: ["Zernio for developers"]
-                        ad_snapshot_url: "https://www.facebook.com/ads/archive/render_ad/?id=1234567890&access_token=..."
+                        ad_snapshot_url: "https://www.facebook.com/ads/archive/render_ad/?id=1234567890"
+                        ad_library_url: "https://www.facebook.com/ads/library/?id=1234567890"
                         publisher_platforms: ["facebook", "instagram"]
                         languages: ["en"]
                         eu_total_reach: 18400
