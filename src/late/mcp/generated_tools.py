@@ -23480,6 +23480,7 @@ def register_generated_tools(mcp, _get_client):
         automatic_matching_fields: list[str] | None = None,
         first_party_cookie_status: str | None = None,
         data_use_setting: str | None = None,
+        enable_first_party_cookies: bool | None = None,
         auto_tagging: bool | None = None,
     ) -> str:
         """Update a tracking tag
@@ -23496,6 +23497,7 @@ def register_generated_tools(mcp, _get_client):
         zp=zip.
                 first_party_cookie_status
                 data_use_setting
+                enable_first_party_cookies: First-party cookie on or off (TikTok, LinkedIn). Platform-neutral alternative to `firstPartyCookieStatus`.
                 auto_tagging: Google Ads: turn gclid auto-tagging on or off for the ad account."""
         client = _get_client()
         try:
@@ -23508,6 +23510,7 @@ def register_generated_tools(mcp, _get_client):
                 automatic_matching_fields=automatic_matching_fields,
                 first_party_cookie_status=first_party_cookie_status,
                 data_use_setting=data_use_setting,
+                enable_first_party_cookies=enable_first_party_cookies,
                 auto_tagging=auto_tagging,
             )
             return _format_response(response)

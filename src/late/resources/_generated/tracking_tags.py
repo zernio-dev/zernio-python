@@ -152,6 +152,7 @@ class TrackingTagsResource:
         automatic_matching_fields: list[str] | None = None,
         first_party_cookie_status: str | None = None,
         data_use_setting: str | None = None,
+        enable_first_party_cookies: bool | None = None,
         auto_tagging: bool | None = None,
     ) -> dict[str, Any]:
         """Update a tracking tag"""
@@ -162,6 +163,7 @@ class TrackingTagsResource:
             automatic_matching_fields=automatic_matching_fields,
             first_party_cookie_status=first_party_cookie_status,
             data_use_setting=data_use_setting,
+            enable_first_party_cookies=enable_first_party_cookies,
             auto_tagging=auto_tagging,
         )
         return self._client._patch(
@@ -495,6 +497,7 @@ class TrackingTagsResource:
         automatic_matching_fields: list[str] | None = None,
         first_party_cookie_status: str | None = None,
         data_use_setting: str | None = None,
+        enable_first_party_cookies: bool | None = None,
         auto_tagging: bool | None = None,
     ) -> dict[str, Any]:
         """Update a tracking tag (async)"""
@@ -505,6 +508,7 @@ class TrackingTagsResource:
             automatic_matching_fields=automatic_matching_fields,
             first_party_cookie_status=first_party_cookie_status,
             data_use_setting=data_use_setting,
+            enable_first_party_cookies=enable_first_party_cookies,
             auto_tagging=auto_tagging,
         )
         return await self._client._apatch(
