@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.118.0"
+  version: "1.119.0"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -10803,6 +10803,56 @@ components:
           - dimension: { productBrand: { value: 'Acme' } }
           - dimension: { productBrand: {} }
             excluded: true
+    GoogleRecommendationMetrics:
+      type: object
+      properties:
+        impressions: { type: number }
+        clicks: { type: number }
+        cost: { type: number, description: "Account currency units." }
+        conversions: { type: number }
+        conversionsValue: { type: number }
+        videoViews: { type: number }
+    GoogleRecommendation:
+      type: object
+      required: [resourceName, id, type, dismissed, campaignId, campaignIds, adGroupId, campaignBudgetId, impact, details]
+      properties:
+        resourceName: { type: string, description: "customers/{customerId}/recommendations/{id}. Pass it to apply or dismiss." }
+        id: { type: string }
+        type: { type: string, description: "Google RecommendationType, such as CAMPAIGN_BUDGET, KEYWORD or SET_TARGET_CPA." }
+        dismissed: { type: boolean }
+        campaignId: { type: [string, "null"] }
+        campaignIds: { type: array, items: { type: string }, description: "Every campaign the recommendation targets (several for account-level types)." }
+        adGroupId: { type: [string, "null"] }
+        campaignBudgetId: { type: [string, "null"] }
+        impact:
+          type: [object, "null"]
+          description: "Google's estimate over its own window. Null when Google gives none for the type."
+          properties:
+            base: { $ref: '#/components/schemas/GoogleRecommendationMetrics' }
+            potential: { $ref: '#/components/schemas/GoogleRecommendationMetrics' }
+        details: { type: [object, "null"], description: "The type-specific recommendation payload exactly as Google returns it (camelCase, amounts in micros), for example recommendedTargetCpaMicros or budgetOptions." }
+      example:
+        resourceName: 'customers/9122445560/recommendations/NjgzMzAxODc4NS0yNDItMTc5MDQzODQxMDc1NC0rMjQxOTE1ODU2NzEtMA'
+        id: 'NjgzMzAxODc4NS0yNDItMTc5MDQzODQxMDc1NC0rMjQxOTE1ODU2NzEtMA'
+        type: FORECASTING_SET_TARGET_CPA
+        dismissed: false
+        campaignId: '24191585671'
+        campaignIds: ['24191585671']
+        adGroupId: null
+        campaignBudgetId: null
+        impact:
+          base: { impressions: 2790, clicks: 87, cost: 420, conversions: 3.96, conversionsValue: 0, videoViews: 0 }
+          potential: { impressions: 5909, clicks: 185, cost: 889.58, conversions: 8.39, conversionsValue: 0, videoViews: 0 }
+        details:
+          recommendedTargetCpaMicros: '105420000'
+          campaignBudget: { currentAmountMicros: '60000000', recommendedNewAmountMicros: '140000000', newStartDate: '2026-10-01' }
+    GoogleRecommendationResult:
+      type: object
+      required: [resourceName, status]
+      properties:
+        resourceName: { type: string }
+        status: { type: string, enum: [applied, dismissed, failed] }
+        error: { type: string, description: "Google's message when status is failed." }
     GoogleRsaHeadline:
       type: object
       required:
@@ -46944,6 +46994,136 @@ paths:
         '429': { description: "Google Ads operations budget exhausted; retry later." }
         '501': { description: Only available on Google Ads accounts }
 
+  /v1/ads/recommendations:
+    get:
+      operationId: listGoogleRecommendations
+      summary: List Google Ads recommendations
+      tags: ["Ad Campaigns"]
+      x-platforms: ["google"]
+      x-resource-group: "ads"
+      security:
+        - bearerAuth: []
+      description: "Google's optimization recommendations for one ad account: type, estimated impact (base vs potential metrics, cost in account currency units), the campaign, ad group or budget they target, and the type-specific payload Google returns (`details`, in Google's own shape with micros). Filter by campaignId and types. Cached for 10 minutes and cleared by apply or dismiss; served stale when Google quota is exhausted."
+      parameters:
+        - { name: accountId, in: query, required: true, schema: { type: string }, description: "Google ads SocialAccount id." }
+        - { name: adAccountId, in: query, schema: { type: string }, description: "Google customer id, digits only. Defaults to the connection's only customer." }
+        - { name: customerId, in: query, deprecated: true, schema: { type: string }, description: "Alias of adAccountId, kept for consistency with other Google endpoints." }
+        - { name: campaignId, in: query, schema: { type: string, pattern: '^\d+$' }, description: "Only recommendations targeting this campaign." }
+        - { name: types, in: query, schema: { type: string }, description: "Comma-separated Google RecommendationType values, for example CAMPAIGN_BUDGET,KEYWORD,SET_TARGET_CPA." }
+      responses:
+        '200':
+          description: "Recommendations."
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [adAccountId, recommendations, cachedAt, stale]
+                properties:
+                  adAccountId: { type: string }
+                  recommendations: { type: array, items: { $ref: '#/components/schemas/GoogleRecommendation' } }
+                  cachedAt: { type: [string, "null"], format: date-time }
+                  stale: { type: boolean }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '422': { description: "No Google Ads customer on this connection, or it needs reconnecting." }
+        '429': { description: "Google quota or the Zernio Google operations burst limit is exhausted." }
+        '501': { description: "accountId is not a Google Ads connection." }
+  /v1/ads/recommendations/apply:
+    post:
+      operationId: applyGoogleRecommendations
+      summary: Apply Google Ads recommendations
+      tags: ["Ad Campaigns"]
+      x-platforms: ["google"]
+      x-resource-group: "ads"
+      security:
+        - bearerAuth: []
+      description: "Apply up to 100 recommendations. This changes the account (budgets, bidding, keywords, assets) and is not reversible or idempotent; Google offers no validate-only mode for it. Items run in partial-failure mode, so one stale recommendation does not block the rest. `parameters` is optional and takes exactly one key named for the recommendation type, in Google's ApplyRecommendationOperation shape (for example `campaignBudget: { newBudgetAmountMicros }` or `keyword: { matchType, cpcBidMicros }`); omit it to apply Google's suggested values."
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [accountId, recommendations]
+              properties:
+                accountId: { type: string, description: "Google ads SocialAccount id." }
+                adAccountId: { type: string, description: "Google customer id, digits only. Required when the connection has several customers." }
+                recommendations:
+                  type: array
+                  minItems: 1
+                  maxItems: 100
+                  items:
+                    type: object
+                    required: [resourceName]
+                    properties:
+                      resourceName: { type: string, description: "Recommendation resource name from the list, or its id." }
+                      parameters:
+                        type: object
+                        description: "One key, such as campaignBudget, keyword, textAd, targetCpaOptIn, targetRoasOptIn, callAsset, calloutAsset, sitelinkAsset, moveUnusedBudget, responsiveSearchAd, responsiveSearchAdAsset, responsiveSearchAdImproveAdStrength, useBroadMatchKeyword, raiseTargetCpa, lowerTargetRoas, setTargetCpa, setTargetRoas, forecastingSetTargetCpa, forecastingSetTargetRoas, leadFormAsset, raiseTargetCpaBidTooLow, raiseTargetCpaPerformanceBidTooLow, lowerTargetRoasPerformanceBidTooLow, calloutExtension, callExtension or sitelinkExtension."
+                        additionalProperties: true
+            example:
+              accountId: '507f1f77bcf86cd799439011'
+              adAccountId: '9122445560'
+              recommendations:
+                - resourceName: 'customers/9122445560/recommendations/NjgzMzAxODc4NS0yNDEtMTc5MDQ3NTQyNjU5Ni0rMjM1MjA5NjcxNjctMA'
+                - resourceName: 'customers/9122445560/recommendations/NjgzMzAxODc4NS0yMjgtMTc5MDQyNDE5NjUwNS0rMTU3NjMyNzU3ODk'
+                  parameters: { campaignBudget: { newBudgetAmountMicros: '150000000' } }
+      responses:
+        '200':
+          description: "Per-recommendation outcome. A failed item does not stop the others."
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [adAccountId, results]
+                properties:
+                  adAccountId: { type: string }
+                  results: { type: array, items: { $ref: '#/components/schemas/GoogleRecommendationResult' } }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '422': { description: "No Google Ads customer on this connection, or it needs reconnecting." }
+        '429': { description: "Google quota or the Zernio Google operations burst limit is exhausted." }
+        '501': { description: "accountId is not a Google Ads connection." }
+  /v1/ads/recommendations/dismiss:
+    post:
+      operationId: dismissGoogleRecommendations
+      summary: Dismiss Google Ads recommendations
+      tags: ["Ad Campaigns"]
+      x-platforms: ["google"]
+      x-resource-group: "ads"
+      security:
+        - bearerAuth: []
+      description: "Dismiss up to 100 recommendations so Google stops suggesting them. Items run in partial-failure mode."
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [accountId, resourceNames]
+              properties:
+                accountId: { type: string, description: "Google ads SocialAccount id." }
+                adAccountId: { type: string, description: "Google customer id, digits only. Required when the connection has several customers." }
+                resourceNames: { type: array, minItems: 1, maxItems: 100, items: { type: string }, description: "Recommendation resource names from the list, or their ids." }
+      responses:
+        '200':
+          description: "Per-recommendation outcome. A failed item does not stop the others."
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [adAccountId, results]
+                properties:
+                  adAccountId: { type: string }
+                  results: { type: array, items: { $ref: '#/components/schemas/GoogleRecommendationResult' } }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '422': { description: "No Google Ads customer on this connection, or it needs reconnecting." }
+        '429': { description: "Google quota or the Zernio Google operations burst limit is exhausted." }
+        '501': { description: "accountId is not a Google Ads connection." }
   /v1/ads/bid-strategies:
     get:
       x-resource-group: "ads"

@@ -493,6 +493,7 @@ Both `from zernio import ...` and `from late import ...` work identically. The `
 | `ad_campaigns.list_campaign_negative_keyword_lists()` | List campaign negative lists |
 | `ad_campaigns.list_campaign_negative_keywords()` | List campaign-level negative keywords |
 | `ad_campaigns.list_google_asset_groups()` | List Performance Max asset groups |
+| `ad_campaigns.list_google_recommendations()` | List Google Ads recommendations |
 | `ad_campaigns.bulk_update_ad_campaign_status()` | Pause or resume many campaigns |
 | `ad_campaigns.create_ad_campaign()` | Create a standalone campaign |
 | `ad_campaigns.create_ad_set()` | Create a standalone ad group |
@@ -527,9 +528,11 @@ Both `from zernio import ...` and `from late import ...` work identically. The `
 | `ad_campaigns.delete_ad_campaign()` | Delete a campaign |
 | `ad_campaigns.delete_ad_set()` | Delete an ad set |
 | `ad_campaigns.add_ad_keywords()` | Add Search ad-group keywords |
+| `ad_campaigns.apply_google_recommendations()` | Apply Google Ads recommendations |
 | `ad_campaigns.attach_ad_group_assets()` | Attach ad-group assets |
 | `ad_campaigns.attach_campaign_assets()` | Attach campaign assets |
 | `ad_campaigns.boost_post()` | Boost post as ad |
+| `ad_campaigns.dismiss_google_recommendations()` | Dismiss Google Ads recommendations |
 | `ad_campaigns.duplicate_ad()` | Duplicate an ad |
 | `ad_campaigns.duplicate_ad_campaign()` | Duplicate a campaign |
 | `ad_campaigns.duplicate_ad_set()` | Duplicate an ad set |

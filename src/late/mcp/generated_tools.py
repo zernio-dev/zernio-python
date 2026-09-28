@@ -3545,6 +3545,102 @@ def register_generated_tools(mcp, _get_client):
 
     @mcp.tool(
         annotations=ToolAnnotations(
+            title="List Google Ads recommendations",
+            readOnlyHint=True,
+            destructiveHint=False,
+            openWorldHint=False,
+        )
+    )
+    def ad_campaigns_list_google_recommendations(
+        account_id: str,
+        ad_account_id: str | None = None,
+        customer_id: str | None = None,
+        campaign_id: str | None = None,
+        types: str | None = None,
+    ) -> str:
+        """List Google Ads recommendations
+
+        Args:
+            account_id: Google ads SocialAccount id. (required)
+            ad_account_id: Google customer id, digits only. Defaults to the connection's only customer.
+            customer_id: Alias of adAccountId, kept for consistency with other Google endpoints.
+            campaign_id: Only recommendations targeting this campaign.
+            types: Comma-separated Google RecommendationType values, for example CAMPAIGN_BUDGET,KEYWORD,SET_TARGET_CPA."""
+        client = _get_client()
+        try:
+            response = client.ad_campaigns.list_google_recommendations(
+                account_id=account_id,
+                ad_account_id=ad_account_id,
+                customer_id=customer_id,
+                campaign_id=campaign_id,
+                types=types,
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Apply Google Ads recommendations",
+            readOnlyHint=False,
+            destructiveHint=True,
+            openWorldHint=True,
+        )
+    )
+    def ad_campaigns_apply_google_recommendations(
+        account_id: str,
+        recommendations: list[dict[str, Any]] | None,
+        ad_account_id: str | None = None,
+    ) -> str:
+        """Apply Google Ads recommendations
+
+        Args:
+            account_id: Google ads SocialAccount id. (required)
+            ad_account_id: Google customer id, digits only. Required when the connection has several customers.
+            recommendations: (required)"""
+        client = _get_client()
+        try:
+            response = client.ad_campaigns.apply_google_recommendations(
+                account_id=account_id,
+                ad_account_id=ad_account_id,
+                recommendations=recommendations,
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Dismiss Google Ads recommendations",
+            readOnlyHint=False,
+            destructiveHint=True,
+            openWorldHint=True,
+        )
+    )
+    def ad_campaigns_dismiss_google_recommendations(
+        account_id: str,
+        resource_names: list[str] | None,
+        ad_account_id: str | None = None,
+    ) -> str:
+        """Dismiss Google Ads recommendations
+
+        Args:
+            account_id: Google ads SocialAccount id. (required)
+            ad_account_id: Google customer id, digits only. Required when the connection has several customers.
+            resource_names: Recommendation resource names from the list, or their ids. (required)"""
+        client = _get_client()
+        try:
+            response = client.ad_campaigns.dismiss_google_recommendations(
+                account_id=account_id,
+                ad_account_id=ad_account_id,
+                resource_names=resource_names,
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
             title="List portfolio bid strategies",
             readOnlyHint=True,
             destructiveHint=False,

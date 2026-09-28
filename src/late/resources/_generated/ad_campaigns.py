@@ -116,6 +116,55 @@ class AdCampaignsResource:
         )
         return self._client._get("/v1/ads", params=params)
 
+    def list_google_recommendations(
+        self,
+        account_id: str,
+        *,
+        ad_account_id: str | None = None,
+        customer_id: str | None = None,
+        campaign_id: str | None = None,
+        types: str | None = None,
+    ) -> dict[str, Any]:
+        """List Google Ads recommendations"""
+        params = self._build_params(
+            account_id=account_id,
+            ad_account_id=ad_account_id,
+            customer_id=customer_id,
+            campaign_id=campaign_id,
+            types=types,
+        )
+        return self._client._get("/v1/ads/recommendations", params=params)
+
+    def apply_google_recommendations(
+        self,
+        account_id: str,
+        recommendations: list[dict[str, Any]],
+        *,
+        ad_account_id: str | None = None,
+    ) -> dict[str, Any]:
+        """Apply Google Ads recommendations"""
+        payload = self._build_payload(
+            account_id=account_id,
+            ad_account_id=ad_account_id,
+            recommendations=recommendations,
+        )
+        return self._client._post("/v1/ads/recommendations/apply", data=payload)
+
+    def dismiss_google_recommendations(
+        self,
+        account_id: str,
+        resource_names: list[str],
+        *,
+        ad_account_id: str | None = None,
+    ) -> dict[str, Any]:
+        """Dismiss Google Ads recommendations"""
+        payload = self._build_payload(
+            account_id=account_id,
+            ad_account_id=ad_account_id,
+            resource_names=resource_names,
+        )
+        return self._client._post("/v1/ads/recommendations/dismiss", data=payload)
+
     def list_bid_strategies(
         self,
         account_id: str,
@@ -1498,6 +1547,57 @@ class AdCampaignsResource:
             to_date=to_date,
         )
         return await self._client._aget("/v1/ads", params=params)
+
+    async def alist_google_recommendations(
+        self,
+        account_id: str,
+        *,
+        ad_account_id: str | None = None,
+        customer_id: str | None = None,
+        campaign_id: str | None = None,
+        types: str | None = None,
+    ) -> dict[str, Any]:
+        """List Google Ads recommendations (async)"""
+        params = self._build_params(
+            account_id=account_id,
+            ad_account_id=ad_account_id,
+            customer_id=customer_id,
+            campaign_id=campaign_id,
+            types=types,
+        )
+        return await self._client._aget("/v1/ads/recommendations", params=params)
+
+    async def aapply_google_recommendations(
+        self,
+        account_id: str,
+        recommendations: list[dict[str, Any]],
+        *,
+        ad_account_id: str | None = None,
+    ) -> dict[str, Any]:
+        """Apply Google Ads recommendations (async)"""
+        payload = self._build_payload(
+            account_id=account_id,
+            ad_account_id=ad_account_id,
+            recommendations=recommendations,
+        )
+        return await self._client._apost("/v1/ads/recommendations/apply", data=payload)
+
+    async def adismiss_google_recommendations(
+        self,
+        account_id: str,
+        resource_names: list[str],
+        *,
+        ad_account_id: str | None = None,
+    ) -> dict[str, Any]:
+        """Dismiss Google Ads recommendations (async)"""
+        payload = self._build_payload(
+            account_id=account_id,
+            ad_account_id=ad_account_id,
+            resource_names=resource_names,
+        )
+        return await self._client._apost(
+            "/v1/ads/recommendations/dismiss", data=payload
+        )
 
     async def alist_bid_strategies(
         self,
