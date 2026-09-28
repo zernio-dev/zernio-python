@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.135.0"
+  version: "1.136.0"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -66182,6 +66182,11 @@ paths:
         Google conversion actions, LinkedIn conversion rules, X web event tags, OpenAI event
         settings, TikTok pixel events, Meta custom conversions. Platforms where events are just
         names the site sends (Pinterest) answer 501.
+
+        OpenAI Ads: the account's conversion event settings whose source is this pixel.
+        `siteEventId` is the event name the site sends (a standard event such as
+        `order_created`, or the lowercase custom event name); `clickWindowDays` is the
+        attribution window.
       security:
         - bearerAuth: []
       parameters:
@@ -66218,6 +66223,18 @@ paths:
         `siteEvent` the platform maps to its closest type. Each platform stores a subset of the
         optional fields; sending one it does not store answers 400 naming the supported fields.
         NOT idempotent unless noted per platform: do not retry blindly.
+
+        OpenAI Ads: creates a conversion event setting on the pixel (`POST
+        /conversions/event_settings`, source = the pixel). Accepts `name`, `type` and
+        `siteEvent` only. `type` is a standard event (`order_created`, `lead_created`,
+        `items_added`, `contents_viewed`, `checkout_started`, `registration_completed`,
+        `subscription_created`, `trial_started`, `appointment_scheduled`, `page_viewed`,
+        `app_installed`, `app_opened`) or, for anything else, the custom event name itself
+        (1 to 64 letters, digits, underscores or dashes; stored lowercase). `siteEvent` maps
+        `search` and `add_payment_info` to the custom events `search` and `addpaymentinfo`,
+        the names Zernio's Shopify pixel sends. The click attribution window is 30 days, the
+        only value OpenAI documents. Only standard events can be a conversions campaign's
+        optimization goal.
       security:
         - bearerAuth: []
       parameters:
@@ -66255,7 +66272,12 @@ paths:
       tags: ["Tracking Tags"]
       x-platforms: ["meta", "google", "tiktok", "linkedin", "x", "openai"]
       summary: Update a conversion event
-      description: Partial update; at least one field. A field the platform does not store answers 400.
+      description: |
+        Partial update; at least one field. A field the platform does not store answers 400.
+
+        OpenAI Ads answers 501: OpenAI documents only list and create for event settings, and
+        `POST`/`PATCH`/`PUT /v1/conversions/event_settings/{id}` answer 404 "Invalid URL".
+        Create a new event instead.
       security:
         - bearerAuth: []
       parameters:
@@ -66292,6 +66314,10 @@ paths:
       description: |
         Removes the conversion event. Platforms without a hard delete archive or disable it
         instead; `state` in the response says which (`deleted`, `archived`, `disabled`).
+
+        OpenAI Ads answers 501: there is no delete or archive route for event settings
+        (`DELETE /v1/conversions/event_settings/{id}` and `POST .../{id}/archive` answer 404
+        "Invalid URL"). Archive the event in OpenAI Ads Manager.
       security:
         - bearerAuth: []
       parameters:
