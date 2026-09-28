@@ -5725,8 +5725,8 @@ def register_generated_tools(mcp, _get_client):
                 destination_type: Meta only. Ad-set destination_type: where the click LANDS, as opposed to instagramAccountId which is who the ad runs as. Independent of plain link CTAs and their goal. A messaging callToAction selects its destination automatically; an explicit destinationType must then match. Lead ads use ON_AD.
                 whatsapp_phone_number: Meta WhatsApp only. E.164 number already paired with the Page. Omit to use the default pairing. Requires WHATSAPP_MESSAGE callToAction. Stored as creative.whatsappPhoneNumber on the ad.
                 currency: ISO 4217 currency code matching the ad account's currency. Meta only. Optional: Zernio resolves it from the ad account when omitted. The value selects the minor-unit exponent Zernio converts budget/bid amounts by before calling Meta (most currencies are cents; zero-decimal currencies like JPY/KRW are sent as-is).
-                start_date: Ad-set start time (ISO 8601, e.g. "2026-06-10T09:00:00Z"), mapped to the ad set's `start_time`. When omitted the ad starts delivering immediately. Same field as on POST /v1/ads/create.
-                end_date: Ad-set end time (ISO 8601), mapped to the ad set's `end_time`. Required for lifetime budgets. Same field as on POST /v1/ads/create.
+                start_date: Ad-set start time (ISO 8601, e.g. "2026-06-10T09:00:00Z"), mapped to the ad set's `start_time`. When omitted the ad starts delivering immediately. On Meta and TikTok a value without an offset (`YYYY-MM-DD`, `YYYY-MM-DD HH:MM:SS` or `YYYY-MM-DDTHH:MM:SS`) is read in the ad account timezone. Same field as on POST /v1/ads/create.
+                end_date: Ad-set end time (ISO 8601), mapped to the ad set's `end_time`. Required for lifetime budgets. On Meta and TikTok a value without an offset (`YYYY-MM-DD`, `YYYY-MM-DD HH:MM:SS` or `YYYY-MM-DDTHH:MM:SS`) is read in the ad account timezone, and a date-only end runs to 23:59:59 local. Same field as on POST /v1/ads/create.
                 schedule: Alias of the top-level `startDate` / `endDate`, kept for existing callers. Sending both forms with differing values is a 400.
                 targeting: Same geo/demographic fields as the `TargetingSpec` used by /v1/ads/create.
         Geo keys (`regions`/`cities`/`zips`/`metros`) resolve via
@@ -6524,14 +6524,15 @@ def register_generated_tools(mcp, _get_client):
         numeric IDs from Meta verification. Keys vary by category (e.g. universal_beneficiary /
         universal_payer for BRAZIL_REGULATION and THAILAND_UNIVERSAL). If omitted, Meta uses
         Ads Manager defaults when configured.
-                end_date: Required for lifetime budgets. On TikTok a value without an offset (`YYYY-MM-DD HH:MM:SS` or `YYYY-MM-DD`) is read in the ad account timezone.
+                end_date: Required for lifetime budgets. On Meta and TikTok a value without an offset (`YYYY-MM-DD`, `YYYY-MM-DD HH:MM:SS` or `YYYY-MM-DDTHH:MM:SS`) is read in the ad account timezone, and a date-only end runs to 23:59:59 local.
                 start_date: Ad-set start time (ISO 8601, e.g. "2026-06-10T09:00:00Z"), mapped to the ad set's
         start (Meta `start_time`, TikTok ad group `schedule_start_time`, LinkedIn / Pinterest / X
         / Google campaign start). When omitted the ad starts delivering immediately. For lifetime
-        budgets Meta also requires `endDate`. On TikTok a value without an offset
-        (`YYYY-MM-DD HH:MM:SS` or `YYYY-MM-DD`) is read in the ad account timezone. The created
-        ad's `schedule` echoes the start and end the platform stored, as UTC instants. Same field
-        as on `POST /v1/ads/boost`.
+        budgets Meta also requires `endDate`. On Meta and TikTok a value without an offset
+        (`YYYY-MM-DD`, `YYYY-MM-DD HH:MM:SS` or `YYYY-MM-DDTHH:MM:SS`) is read in the ad account
+        timezone (Meta itself would read it as UTC). The created ad's `schedule` echoes the start
+        and end the platform stored, as UTC instants; when attaching to an existing ad set
+        (`adSetId`) it is that ad set's start and end. Same field as on `POST /v1/ads/boost`.
                 page_id: Meta only. The Facebook Page the ad runs as (`object_story_spec.page_id`). Defaults to
         the Page bound to the connection. Pass another Page ID to run the ad as that Page: any
         Page granted to the connection is accepted (for a business-login connection, every Page
