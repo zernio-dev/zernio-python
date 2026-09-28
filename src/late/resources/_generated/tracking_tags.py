@@ -150,6 +150,7 @@ class TrackingTagsResource:
         automatic_matching_fields: list[str] | None = None,
         first_party_cookie_status: str | None = None,
         data_use_setting: str | None = None,
+        auto_tagging: bool | None = None,
     ) -> dict[str, Any]:
         """Update a tracking tag"""
         payload = self._build_payload(
@@ -159,6 +160,7 @@ class TrackingTagsResource:
             automatic_matching_fields=automatic_matching_fields,
             first_party_cookie_status=first_party_cookie_status,
             data_use_setting=data_use_setting,
+            auto_tagging=auto_tagging,
         )
         return self._client._patch(
             f"/v1/accounts/{account_id}/tracking-tags/{tag_id}", data=payload
@@ -455,6 +457,7 @@ class TrackingTagsResource:
         automatic_matching_fields: list[str] | None = None,
         first_party_cookie_status: str | None = None,
         data_use_setting: str | None = None,
+        auto_tagging: bool | None = None,
     ) -> dict[str, Any]:
         """Update a tracking tag (async)"""
         payload = self._build_payload(
@@ -464,6 +467,7 @@ class TrackingTagsResource:
             automatic_matching_fields=automatic_matching_fields,
             first_party_cookie_status=first_party_cookie_status,
             data_use_setting=data_use_setting,
+            auto_tagging=auto_tagging,
         )
         return await self._client._apatch(
             f"/v1/accounts/{account_id}/tracking-tags/{tag_id}", data=payload
