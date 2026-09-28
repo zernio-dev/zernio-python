@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.132.0"
+  version: "1.134.0"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -184,9 +184,9 @@ x-documentation:
     - `message.sent` - DM sent via the API
     - `message.edited` - A sender edited a message (Instagram, Messenger, Telegram, WhatsApp)
     - `message.deleted` - A sender deleted ("unsent") a message (Instagram; WhatsApp in both directions, whether the business deleted a message it sent or the customer deleted one they sent). `message.direction` tells the two apart.
-    - `message.delivered` - An outgoing message was delivered (WhatsApp, Messenger, SMS)
-    - `message.read` - An outgoing message was read by the recipient (WhatsApp, Messenger, Instagram)
-    - `message.failed` - An outgoing message failed delivery (WhatsApp, SMS; on SMS the carrier's error code rides in `error`)
+    - `message.delivered` - An outgoing message was delivered (WhatsApp, Messenger, SMS, RCS)
+    - `message.read` - An outgoing message was read by the recipient (WhatsApp, Messenger, Instagram, RCS)
+    - `message.failed` - An outgoing message failed delivery (WhatsApp, SMS, RCS; on SMS the carrier's error code rides in `error`)
     - `reaction.received` - A participant added or removed an emoji reaction on a message (WhatsApp, Telegram, Slack, Instagram, Facebook Messenger, TikTok)
     - `referral.received` - Someone opened an existing Instagram/Messenger thread through an ig.me/m.me `ref` link or a returning Messenger ad click; carries Meta's referral object (a referral that rides an inbound message arrives on `message.received` under `metadata.referral` instead)
     - `comment.received` - New comment received on a post (Instagram, Facebook, Threads, YouTube, LinkedIn, Bluesky, Reddit, TikTok). X/Twitter does NOT fire this event
@@ -218,6 +218,7 @@ x-documentation:
     - `branded_calling.identity.status_updated` - A caller identity changed status: requested (back in our review), changes_requested, rejected, pending_email_verification (filed; the authorizer must enter the code), in_review (carrier vetting), verified, suspended (infringement claim), expired or permanently_rejected
     - `branded_calling.identity.action_required` - A caller identity waits on you: answer a change request, enter the authorizer's code, fix a carrier rejection, respond to an infringement claim or renew an expired verification
     - `branded_calling.number.status_updated` - A number attached to a caller identity changed vetting status (verified = the identity now shows on its calls)
+    - `rcs.agent.status_updated` - An RCS agent changed status: changes_requested, brand_vetting, agent_review, testing, launch_review, launching, live, rejected or deactivated
     - `webhook.test` - Test event sent when verifying a webhook endpoint
 
     Every delivery carries `X-Zernio-Event` (the event name) and `X-Zernio-Event-Id` (the payload's `id`, a UUID generated once when the event is emitted). That id is identical on every subscription that receives the event, on every automatic retry and on a redelivery via `POST /v1/webhooks/logs/redeliver`, so it is the key to dedupe on. Payloads are signed with HMAC-SHA256 via the `X-Zernio-Signature` header when the subscription has a secret. Legacy `X-Late-*` copies of these three headers are still sent and will be removed in a future major version.
@@ -524,7 +525,7 @@ tags:
   - name: Webhooks
     description: |
       Configure webhooks for real-time notifications. Webhooks can be created from the dashboard (Settings → Webhooks) or via this API.
-      Events: post.scheduled, post.published, post.failed, post.partial, post.cancelled, post.recycled, post.platform.published, post.platform.failed, post.platform.deleted, post.tiktok.url_resolved, post.external.created, post.external.updated, post.external.deleted, account.connected, account.disconnected, account.ads.initial_sync_completed, account.ads.sync_failed, account.ads.sync_recovered, analytics.synced, message.received, conversation.started, conversation.control_changed, call.received, call.ended, call.failed, call.permission_request, message.sent, message.edited, message.deleted, message.delivered, message.read, message.failed, reaction.received, referral.received, comment.received, review.new, review.updated, lead.received, ad.status_changed, whatsapp.template.status_updated, whatsapp.template.category_updated, whatsapp.account.name_status_updated, whatsapp.automatic_event, whatsapp.number.activated, whatsapp.number.declined, whatsapp.number.action_required, whatsapp.number.verification_required, whatsapp.number.suspended, whatsapp.number.reactivated, whatsapp.number.released, whatsapp.number.kyc_submitted, phone_number.stock_available, verification.approved, verification.failed, sms.registration.action_required, sms.registration.status_updated, branded_calling.identity.status_updated, branded_calling.identity.action_required, branded_calling.number.status_updated, webhook.test.
+      Events: post.scheduled, post.published, post.failed, post.partial, post.cancelled, post.recycled, post.platform.published, post.platform.failed, post.platform.deleted, post.tiktok.url_resolved, post.external.created, post.external.updated, post.external.deleted, account.connected, account.disconnected, account.ads.initial_sync_completed, account.ads.sync_failed, account.ads.sync_recovered, analytics.synced, message.received, conversation.started, conversation.control_changed, call.received, call.ended, call.failed, call.permission_request, message.sent, message.edited, message.deleted, message.delivered, message.read, message.failed, reaction.received, referral.received, comment.received, review.new, review.updated, lead.received, ad.status_changed, whatsapp.template.status_updated, whatsapp.template.category_updated, whatsapp.account.name_status_updated, whatsapp.automatic_event, whatsapp.number.activated, whatsapp.number.declined, whatsapp.number.action_required, whatsapp.number.verification_required, whatsapp.number.suspended, whatsapp.number.reactivated, whatsapp.number.released, whatsapp.number.kyc_submitted, phone_number.stock_available, verification.approved, verification.failed, sms.registration.action_required, sms.registration.status_updated, branded_calling.identity.status_updated, branded_calling.identity.action_required, branded_calling.number.status_updated, rcs.agent.status_updated, webhook.test.
       Headers: every delivery carries X-Zernio-Event (event name) and X-Zernio-Event-Id (the payload `id`, a UUID minted once per event and identical across every subscribed endpoint, every automatic retry and every redelivery, so dedupe on it). Security: optional HMAC-SHA256 signature in X-Zernio-Signature header. Configure a secret key to enable verification. Custom headers supported. Legacy X-Late-Event, X-Late-Event-Id and X-Late-Signature duplicates are still sent and will be removed in a future major version.
 
       Resource groups. Every event belongs to one group: post.* to publishing, message.*, reaction.*, conversation.*, call.* and whatsapp.automatic_event to messages, comment.* and review.* to engagement, lead.* to contacts, ad.* to ads, account.*, whatsapp.template.* and whatsapp.account.* to accounts, analytics.* to analytics, whatsapp.number.*, verification.* and sms.registration.* to telephony, webhook.test to webhooks. Two independent controls use that mapping. (1) A restricted (zrk_) API key can only subscribe to, test-fire, redeliver, or read delivery logs for events in the groups it holds, so it can never create a subscription broader than itself. (2) Each subscription carries its own `disabledResourceGroups` denylist: events in a disabled group are dropped before delivery to that endpoint, on live delivery and on every replay path, no matter which key or session created the subscription. Changing that denylist applies to every event emitted after the change; events already queued when it landed can still be delivered for up to five minutes after they were enqueued, because the delivery worker trusts a five-minute enqueue-time snapshot before re-checking. Absent or empty on a subscription means it receives everything it subscribes to, which is the behavior of every subscription created before the field existed.
@@ -608,6 +609,23 @@ tags:
       numbers, export STOP opt-outs, and complete the US carrier registration (10DLC or
       toll-free) required before US traffic delivers.
       Enabling SMS on a number, carrier registration and sender IDs require usage-based billing.
+  - name: RCS
+    description: |
+      Branded, verified RCS messaging.
+      Each agent is a sender with your name, logo, banner and verified tick, owned by a vetted
+      company (brand). The US is self-serve end to end; other markets are filed with the carriers
+      by our team after review.
+
+      Lifecycle: `requested` (our review, nothing filed or billed) -> `brand_vetting` ->
+      `agent_review` -> `testing` (invite test phones, then send the launch filing) ->
+      `launch_review` (our review) -> `launching` (carrier review) -> `live`. Side exits:
+      `changes_requested`, `rejected`, `deactivated`. Status changes fire `rcs.agent.status_updated`.
+
+      Pricing per agent in the US: $150 when we submit it to the carriers, $750 when it goes live,
+      then $160/mo month to month from go-live (nothing monthly during carrier review). Other
+      markets: $150 when filed, then $75/mo from go-live. Messages (sent and received) at 1.5x
+      carrier cost. Set `smsFallbackFrom` to one of your SMS-enabled
+      numbers and phones without RCS get the message as SMS.
   - name: iMessage
     description: |
       Two-way iMessage on provider-provisioned senders. Order or register a sender
@@ -1145,6 +1163,262 @@ components:
           items: { $ref: '#/components/schemas/BrandedCallingIdentityNumber' }
         createdAt: { type: [string, "null"], format: date-time }
         updatedAt: { type: [string, "null"], format: date-time }
+    RcsBrandInput:
+      type: object
+      required: [displayName, legalName, legalEntityType, organizationType, websiteUrl, taxId, address, contact]
+      properties:
+        displayName: { type: string, maxLength: 100 }
+        legalName: { type: string, maxLength: 100, description: 'Exactly as on IRS records.' }
+        legalEntityType: { type: string, enum: [LIMITED_LIABILITY_COMPANY, SOLE_PROPRIETORSHIP, PARTNERSHIP, CORPORATION, S_CORPORATION] }
+        organizationType: { type: string, enum: [PRIVATE_PROFIT, PUBLIC_PROFIT, NON_PROFIT, GOVERNMENT] }
+        websiteUrl: { type: string, format: uri }
+        taxId: { type: string, description: 'US: the EIN, 9 digits, optionally NN-NNNNNNN. Elsewhere: the national tax or company registration id.' }
+        stockSymbol: { type: string, description: 'EXCHANGE:SYMBOL. Required for PUBLIC_PROFIT.' }
+        address:
+          type: object
+          required: [line1, city, postalCode, country]
+          properties:
+            line1: { type: string }
+            line2: { type: string }
+            city: { type: string }
+            state: { type: string, description: 'Required in the US.' }
+            postalCode: { type: string }
+            country: { type: string, enum: [US, GB, AT, BD, BR, CD, DE, ES, FR, IN, IT, MX, NG, NL, NO, PT, SE, SG, ZA], description: 'ISO 3166-1 alpha-2. Sets the launch market of agents under this brand. Spain (ES) is accepted but launches are paused at the carriers.' }
+        contact:
+          type: object
+          required: [firstName, lastName, email, phone]
+          properties:
+            firstName: { type: string }
+            lastName: { type: string }
+            title: { type: string }
+            email: { type: string, format: email, description: 'A personal address on the company domain; free-mail and group addresses (info@, support@) are rejected by the carriers.' }
+            phone: { type: string, description: E.164 }
+    RcsBrand:
+      allOf:
+        - $ref: '#/components/schemas/RcsBrandInput'
+        - type: object
+          properties:
+            id: { type: string }
+            status: { type: string, enum: [draft, vetting, verified, rejected], description: 'draft = not filed yet (still editable).' }
+            createdAt: { type: string, format: date-time }
+    RcsAgentProfile:
+      type: object
+      required: [description, logoUrl, heroUrl, brandColor, privacyPolicyUrl, termsUrl]
+      description: The agent's public profile. At least one of phone, website or email is required.
+      properties:
+        description: { type: string, maxLength: 100 }
+        logoUrl: { type: string, format: uri, description: '224x224, max 50 KB. Upload any image through POST /v1/rcs/assets to get a compliant URL.' }
+        heroUrl: { type: string, format: uri, description: 'Banner, 1440x448, max 200 KB. Upload through POST /v1/rcs/assets.' }
+        brandColor: { type: string, description: 'Hex colour, e.g. #1A73E8. Needs 4.5:1 contrast against white.' }
+        privacyPolicyUrl: { type: string, format: uri }
+        termsUrl: { type: string, format: uri }
+        phone:
+          type: object
+          required: [number, label]
+          properties:
+            number: { type: string, description: E.164 }
+            label: { type: string, maxLength: 25 }
+        website:
+          type: object
+          required: [url, label]
+          properties:
+            url: { type: string, format: uri }
+            label: { type: string, maxLength: 25 }
+        email:
+          type: object
+          required: [address, label]
+          properties:
+            address: { type: string, format: email }
+            label: { type: string, maxLength: 25 }
+    RcsLaunchRequest:
+      type: object
+      required: [companyOverview, agentOverview, interactions, messageExamples, consent, testVideoUrl]
+      properties:
+        companyOverview: { type: string, maxLength: 2000 }
+        agentOverview: { type: string, maxLength: 2000 }
+        interactions:
+          type: array
+          minItems: 1
+          items:
+            type: object
+            required: [type]
+            properties:
+              type: { type: string, enum: [TRANSACTIONAL_UPDATES, CUSTOMER_SUPPORT, LOYALTY_OR_REWARD, MARKETING_OR_PROMOTIONAL, ACCOUNT_ALERTS, TWO_WAY_CONVERSATION, OTHER] }
+              description: { type: string, description: Required when type is OTHER. }
+        messageExamples:
+          type: array
+          minItems: 3
+          maxItems: 10
+          items: { type: string, maxLength: 2000 }
+        consent:
+          type: object
+          required: [optInMethods, callToAction, doubleOptIn, optInMessage, helpResponse, optOutResponse]
+          properties:
+            optInMethods:
+              type: array
+              minItems: 1
+              items:
+                type: object
+                required: [type]
+                properties:
+                  type: { type: string, enum: [SMS, WEBSITE, MOBILE_APP, QR_CODE, SALE_POINT, OTHER] }
+                  description: { type: string, description: Required when type is OTHER. }
+            callToAction: { type: string, description: The opt-in wording people agree to. }
+            callToActionUrl: { type: string, format: uri, description: Required for WEBSITE opt-in. }
+            callToActionMediaUrl: { type: string, format: uri, description: 'Screenshot of the opt-in. Required for WEBSITE and MOBILE_APP opt-in.' }
+            doubleOptIn: { type: boolean }
+            doubleOptInMessage: { type: string, description: Required when doubleOptIn is true. }
+            optInMessage: { type: string }
+            helpResponse: { type: string }
+            optOutResponse: { type: string }
+        testVideoUrl: { type: string, format: uri, description: 'Public video of a test phone sending START, STOP and HELP plus one example conversation.' }
+        additionalInformation: { type: string, maxLength: 2000 }
+    RcsCarrierApproval:
+      type: object
+      properties:
+        approvalId: { type: string }
+        scope: { type: string, enum: [carrier, hub, bot] }
+        status: { type: string, enum: [PENDING, SUBMITTED, APPROVED, REJECTED] }
+        carrier: { type: [string, "null"] }
+        approvedAt: { type: [string, "null"], format: date-time }
+        rejectedReason: { type: [string, "null"] }
+    RcsTestDevice:
+      type: object
+      properties:
+        testDeviceId: { type: string }
+        phoneNumber: { type: string }
+        inviteStatus: { type: string, enum: [PENDING, ACCEPTED, DECLINED], description: The phone must accept the invite in its messaging app before it receives messages. }
+    RcsAgent:
+      type: object
+      properties:
+        id: { type: string }
+        profileId: { type: string }
+        accountId: { type: [string, "null"], description: 'The rcs inbox account, created once the agent exists with the carriers.' }
+        country: { type: string, description: 'Launch market (ISO 3166-1 alpha-2). US agents run through the carriers automatically; other markets are filed by our team and skip the testing and launch_review steps (send the launch request while the agent is still in review).' }
+        status: { type: string, enum: [requested, changes_requested, brand_vetting, agent_review, testing, launch_review, launching, live, rejected, deactivated] }
+        displayName: { type: string, maxLength: 40 }
+        useCase: { type: string, enum: [MULTI_USE, PROMOTIONAL, TRANSACTIONAL, OTP] }
+        profile: { $ref: '#/components/schemas/RcsAgentProfile' }
+        brand:
+          oneOf:
+            - $ref: '#/components/schemas/RcsBrand'
+            - type: "null"
+        launchRequest:
+          oneOf:
+            - $ref: '#/components/schemas/RcsLaunchRequest'
+            - type: "null"
+        carrierApprovals: { type: array, items: { $ref: '#/components/schemas/RcsCarrierApproval' } }
+        testDevices: { type: array, items: { $ref: '#/components/schemas/RcsTestDevice' } }
+        smsFallbackFrom: { type: [string, "null"] }
+        reviewNote: { type: [string, "null"], description: Our note while status is changes_requested. }
+        declineReason: { type: [string, "null"] }
+        requestedAt: { type: [string, "null"], format: date-time }
+        submittedAt: { type: [string, "null"], format: date-time }
+        liveAt: { type: [string, "null"], format: date-time }
+        createdAt: { type: string, format: date-time }
+    RcsSuggestion:
+      description: 'A tappable chip. Labels are max 25 characters. postbackData (max 2048) comes back unchanged in message.received metadata as postbackPayload when tapped; defaults to the label. Any string works, JSON included: values outside A-Z a-z 0-9 - _ . are encoded on the wire and decoded for you.'
+      oneOf:
+        - type: object
+          required: [type, text]
+          properties:
+            type: { type: string, enum: [reply] }
+            text: { type: string, maxLength: 25 }
+            postbackData: { type: string }
+        - type: object
+          required: [type, text, phoneNumber]
+          properties:
+            type: { type: string, enum: [dial] }
+            text: { type: string, maxLength: 25 }
+            phoneNumber: { type: string, description: E.164 }
+            postbackData: { type: string }
+        - type: object
+          required: [type, text, url]
+          properties:
+            type: { type: string, enum: [openUrl] }
+            text: { type: string, maxLength: 25 }
+            url: { type: string, format: uri }
+            application: { type: string, enum: [BROWSER, WEBVIEW], default: BROWSER }
+            webviewViewMode: { type: string, enum: [FULL, HALF, TALL], default: FULL }
+            postbackData: { type: string }
+        - type: object
+          required: [type, text]
+          description: Needs latitude + longitude, or a query.
+          properties:
+            type: { type: string, enum: [viewLocation] }
+            text: { type: string, maxLength: 25 }
+            latitude: { type: number }
+            longitude: { type: number }
+            query: { type: string }
+            label: { type: string }
+            postbackData: { type: string }
+        - type: object
+          required: [type, text]
+          properties:
+            type: { type: string, enum: [shareLocation] }
+            text: { type: string, maxLength: 25 }
+            postbackData: { type: string }
+        - type: object
+          required: [type, text, startTime, endTime, title]
+          properties:
+            type: { type: string, enum: [calendarEvent] }
+            text: { type: string, maxLength: 25 }
+            startTime: { type: string, format: date-time }
+            endTime: { type: string, format: date-time }
+            title: { type: string, maxLength: 100 }
+            description: { type: string, maxLength: 500 }
+            postbackData: { type: string }
+    RcsMedia:
+      type: object
+      required: [url]
+      properties:
+        url: { type: string, format: uri, description: Public image or video URL. }
+        thumbnailUrl: { type: string, format: uri, description: Max 100 KB. }
+        height: { type: string, enum: [SHORT, MEDIUM, TALL], default: MEDIUM }
+    RcsCard:
+      type: object
+      description: Needs a title, description or media.
+      properties:
+        title: { type: string, maxLength: 200 }
+        description: { type: string, maxLength: 2000 }
+        media: { $ref: '#/components/schemas/RcsMedia' }
+        suggestions: { type: array, maxItems: 4, items: { $ref: '#/components/schemas/RcsSuggestion' } }
+    RcsContent:
+      description: 'Message content. `suggestions` (max 11) render as chips under the message.'
+      oneOf:
+        - type: object
+          required: [type, text]
+          properties:
+            type: { type: string, enum: [text] }
+            text: { type: string, maxLength: 3072 }
+            suggestions: { type: array, maxItems: 11, items: { $ref: '#/components/schemas/RcsSuggestion' } }
+        - type: object
+          required: [type, media]
+          properties:
+            type: { type: string, enum: [media] }
+            media: { $ref: '#/components/schemas/RcsMedia' }
+            suggestions: { type: array, maxItems: 11, items: { $ref: '#/components/schemas/RcsSuggestion' } }
+        - type: object
+          required: [type, card]
+          properties:
+            type: { type: string, enum: [card] }
+            card: { $ref: '#/components/schemas/RcsCard' }
+            orientation: { type: string, enum: [VERTICAL, HORIZONTAL], default: VERTICAL }
+            thumbnailAlignment: { type: string, enum: [LEFT, RIGHT], default: LEFT }
+            suggestions: { type: array, maxItems: 11, items: { $ref: '#/components/schemas/RcsSuggestion' } }
+        - type: object
+          required: [type, cards]
+          properties:
+            type: { type: string, enum: [carousel] }
+            cards: { type: array, minItems: 2, maxItems: 10, items: { $ref: '#/components/schemas/RcsCard' } }
+            cardWidth: { type: string, enum: [SMALL, MEDIUM], default: MEDIUM }
+            suggestions: { type: array, maxItems: 11, items: { $ref: '#/components/schemas/RcsSuggestion' } }
+    RcsCapability:
+      type: object
+      properties:
+        phoneNumber: { type: string }
+        rcsCapable: { type: boolean }
+        features: { type: array, items: { type: string }, description: 'e.g. RICHCARD_STANDALONE, RICHCARD_CAROUSEL, ACTION_OPEN_URL, ACTION_DIAL. Absent when not capable.' }
     FeedbackReceipt:
       type: object
       properties:
@@ -3366,7 +3640,7 @@ components:
           type: array
           items:
             type: string
-            enum: [post.scheduled, post.published, post.failed, post.partial, post.cancelled, post.recycled, post.platform.published, post.platform.failed, post.platform.deleted, post.tiktok.url_resolved, post.external.created, post.external.updated, post.external.deleted, account.connected, account.disconnected, account.ads.initial_sync_completed, account.ads.sync_failed, account.ads.sync_recovered, analytics.synced, message.received, conversation.started, conversation.control_changed, call.received, call.ended, call.failed, call.permission_request, message.sent, message.edited, message.deleted, message.delivered, message.read, message.failed, reaction.received, referral.received, comment.received, review.new, review.updated, lead.received, ad.status_changed, whatsapp.template.status_updated, whatsapp.template.category_updated, whatsapp.account.name_status_updated, whatsapp.automatic_event, whatsapp.number.activated, whatsapp.number.declined, whatsapp.number.action_required, whatsapp.number.verification_required, whatsapp.number.suspended, whatsapp.number.reactivated, whatsapp.number.released, whatsapp.number.kyc_submitted, phone_number.stock_available, verification.approved, verification.failed, sms.registration.action_required, sms.registration.status_updated, branded_calling.identity.status_updated, branded_calling.identity.action_required, branded_calling.number.status_updated]
+            enum: [post.scheduled, post.published, post.failed, post.partial, post.cancelled, post.recycled, post.platform.published, post.platform.failed, post.platform.deleted, post.tiktok.url_resolved, post.external.created, post.external.updated, post.external.deleted, account.connected, account.disconnected, account.ads.initial_sync_completed, account.ads.sync_failed, account.ads.sync_recovered, analytics.synced, message.received, conversation.started, conversation.control_changed, call.received, call.ended, call.failed, call.permission_request, message.sent, message.edited, message.deleted, message.delivered, message.read, message.failed, reaction.received, referral.received, comment.received, review.new, review.updated, lead.received, ad.status_changed, whatsapp.template.status_updated, whatsapp.template.category_updated, whatsapp.account.name_status_updated, whatsapp.automatic_event, whatsapp.number.activated, whatsapp.number.declined, whatsapp.number.action_required, whatsapp.number.verification_required, whatsapp.number.suspended, whatsapp.number.reactivated, whatsapp.number.released, whatsapp.number.kyc_submitted, phone_number.stock_available, verification.approved, verification.failed, sms.registration.action_required, sms.registration.status_updated, branded_calling.identity.status_updated, branded_calling.identity.action_required, branded_calling.number.status_updated, rcs.agent.status_updated]
           description: Events subscribed to
         isActive:
           type: boolean
@@ -4713,7 +4987,7 @@ components:
         id: { type: string, description: "The platform's conversation id, equal to `conversation.platformConversationId` on inbox webhooks (whose `conversation.id` is Zernio's internal id). Both are accepted by the conversation endpoints." }
         platform:
           type: string
-          enum: [instagram, facebook, telegram, whatsapp, twitter, reddit, bluesky, sms, slack, tiktok, imessage]
+          enum: [instagram, facebook, telegram, whatsapp, twitter, reddit, bluesky, sms, rcs, slack, tiktok, imessage]
         platformConversationId: { type: string, description: 'Same value as `id`.' }
         participantId: { type: string, description: "Contact's platform identifier (IGSID, PSID, wa_id, etc.)" }
         participantName: { type: string }
@@ -4903,7 +5177,7 @@ components:
               description: Internal conversation ID
             platform:
               type: string
-              enum: [instagram, facebook, telegram, whatsapp, sms, twitter, bluesky, reddit, slack, tiktok, imessage]
+              enum: [instagram, facebook, telegram, whatsapp, sms, rcs, twitter, bluesky, reddit, slack, tiktok, imessage]
             platformMessageId:
               type: string
               description: Platform's message ID
@@ -5664,10 +5938,10 @@ components:
         delivery state for an outgoing message.
 
         Platform support:
-          * message.delivered: WhatsApp, Facebook Messenger, SMS.
-          * message.read: WhatsApp, Facebook Messenger, Instagram. Not SMS
+          * message.delivered: WhatsApp, Facebook Messenger, SMS, RCS.
+          * message.read: WhatsApp, Facebook Messenger, Instagram, RCS. Not SMS
             (carriers report delivery, never read).
-          * message.failed: WhatsApp and SMS (other platforms don't expose
+          * message.failed: WhatsApp, SMS and RCS (other platforms don't expose
             per-message failure via webhook). On SMS, `error.code` is the
             carrier's numeric code and `error.message` its reason.
       required: [id, event, message, statusAt, conversation, account, timestamp]
@@ -12484,18 +12758,9 @@ components:
         events:
           type: array
           description: 'Platforms where each conversion is its own object: the tag''s conversion events, with the id a site sends for each.'
-          items:
-            type: object
-            required: [id, name]
-            properties:
-              id: { type: string }
-              name: { type: string }
-              type: { type: string, description: Platform category of the event. }
-              siteEvent: { type: string, enum: [page_view, view_content, add_to_cart, search, initiate_checkout, add_payment_info, purchase], description: 'The neutral site event this conversion is fired for, when it maps to one.' }
-              siteEventId: { type: string, description: 'What the site sends to fire this event (Google conversion label, LinkedIn conversion rule id, X `tw-` event id).' }
-              status: { type: string }
+          items: { $ref: '#/components/schemas/TrackingTagEvent' }
         name: { type: string }
-        platform: { type: string, enum: [metaads, openaiads, tiktokads, googleads] }
+        platform: { type: string, enum: [metaads, openaiads, tiktokads, googleads, xads] }
         kind:
           type: string
           enum: [pixel, tag, insight_tag]
@@ -12534,6 +12799,34 @@ components:
           type: string
           description: 'Ad account id (`act_...`) that owns the tag, when reported.'
 
+    TrackingTagEvent:
+      type: object
+      description: 'A conversion event tied to a tracking tag (Google conversion action, LinkedIn conversion rule, X web event tag, OpenAI event setting, TikTok pixel event, Meta custom conversion).'
+      required: [id, name]
+      properties:
+        id: { type: string, description: 'Platform-native event id, the `{eventId}` of the per-event routes.' }
+        name: { type: string }
+        type: { type: string, description: Platform event type or category. }
+        siteEvent: { type: string, enum: [page_view, view_content, add_to_cart, search, initiate_checkout, add_payment_info, purchase], description: 'The neutral site event this conversion is fired for, when it maps to one.' }
+        siteEventId: { type: string, description: 'What the site sends to fire this event (Google conversion label, LinkedIn conversion rule id, X `tw-` event id).' }
+        status: { type: string }
+        defaultValue: { type: number }
+        currency: { type: string }
+        clickWindowDays: { type: integer }
+        viewWindowDays: { type: integer }
+    TrackingTagEventInput:
+      type: object
+      description: 'Conversion event fields. Each platform stores a subset; a field it does not store answers 400 naming the supported ones.'
+      properties:
+        adAccountId: { type: string, description: 'Scopes the lookup on platforms whose tag ids live inside an ad account.' }
+        name: { type: string, minLength: 1, maxLength: 200 }
+        type: { type: string, description: 'The platform''s own event type enum value (e.g. `PURCHASE`).' }
+        siteEvent: { type: string, enum: [page_view, view_content, add_to_cart, search, initiate_checkout, add_payment_info, purchase], description: 'Neutral alternative to `type`, mapped to the platform''s closest type.' }
+        enabled: { type: boolean }
+        defaultValue: { type: number, minimum: 0 }
+        currency: { type: string, description: ISO 4217 code. }
+        clickWindowDays: { type: integer, minimum: 1, maximum: 365 }
+        viewWindowDays: { type: integer, minimum: 0, maximum: 365 }
     SharedAdAccount:
       type: object
       description: An ad account a tracking tag is shared with (Meta `shared_accounts` edge).
@@ -13060,7 +13353,7 @@ webhooks:
       summary: Message read event
       description: |
         Fired when an outgoing message is read by the recipient. Supported on
-        WhatsApp, Facebook Messenger, and Instagram.
+        WhatsApp, Facebook Messenger, Instagram, and RCS.
       tags: [Webhook Events]
       requestBody:
         required: true
@@ -14048,6 +14341,42 @@ webhooks:
                     phoneNumber: { type: string }
                     status: { type: string, enum: [submitted, in_review, verified, unsuccessful, suspended, expired, permanently_rejected] }
                 reason: { type: string, description: 'The carrier''s rejection detail, when the number was refused.' }
+      responses:
+        '200':
+          description: Webhook received successfully
+  rcs.agent.status_updated:
+    post:
+      operationId: onRcsAgentStatusUpdated
+      summary: RCS agent status updated event
+      description: |
+        Fired on every customer-visible status change of an RCS agent: `changes_requested`
+        (we need changes before filing, `reason` is our note), `brand_vetting`, `agent_review`,
+        `testing` (add test phones, then send the launch filing; with a `reason` the launch
+        filing bounced), `launch_review`, `launching`, `live` (the agent can message any
+        RCS-capable phone), `rejected` (`reason` says why) and `deactivated`.
+      tags: [Webhook Events]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                id: { type: string, description: 'Stable webhook event ID: the dedupe key, also sent as the X-Zernio-Event-Id header and identical on every retry and redelivery. It identifies the event only, never an account or other resource.' }
+                event: { type: string, enum: [rcs.agent.status_updated] }
+                timestamp:
+                  type: string
+                  format: date-time
+                  description: 'UTC time at which Zernio generated this event (set once when the event payload is built, before delivery is queued). Retries and redeliveries keep the original value, so it reflects the event, not the delivery attempt.'
+                agent:
+                  type: object
+                  properties:
+                    id: { type: string }
+                    displayName: { type: string }
+                    profileId: { type: string }
+                    accountId: { type: [string, "null"], description: 'The rcs inbox account, once the agent exists with the carriers.' }
+                status: { type: string, enum: [changes_requested, brand_vetting, agent_review, testing, launch_review, launching, live, rejected, deactivated] }
+                reason: { type: string, description: 'Our review note on changes_requested, the reason on rejected, or why a launch filing bounced back to testing.' }
       responses:
         '200':
           description: Webhook received successfully
@@ -30923,7 +31252,7 @@ paths:
                   minItems: 1
                   items:
                     type: string
-                    enum: [post.scheduled, post.published, post.failed, post.partial, post.cancelled, post.recycled, post.platform.published, post.platform.failed, post.platform.deleted, post.tiktok.url_resolved, post.external.created, post.external.updated, post.external.deleted, account.connected, account.disconnected, account.ads.initial_sync_completed, account.ads.sync_failed, account.ads.sync_recovered, analytics.synced, message.received, conversation.started, conversation.control_changed, call.received, call.ended, call.failed, call.permission_request, message.sent, message.edited, message.deleted, message.delivered, message.read, message.failed, reaction.received, referral.received, comment.received, review.new, review.updated, lead.received, ad.status_changed, whatsapp.template.status_updated, whatsapp.template.category_updated, whatsapp.account.name_status_updated, whatsapp.automatic_event, whatsapp.number.activated, whatsapp.number.declined, whatsapp.number.action_required, whatsapp.number.verification_required, whatsapp.number.suspended, whatsapp.number.reactivated, whatsapp.number.released, whatsapp.number.kyc_submitted, phone_number.stock_available, verification.approved, verification.failed, sms.registration.action_required, sms.registration.status_updated, branded_calling.identity.status_updated, branded_calling.identity.action_required, branded_calling.number.status_updated]
+                    enum: [post.scheduled, post.published, post.failed, post.partial, post.cancelled, post.recycled, post.platform.published, post.platform.failed, post.platform.deleted, post.tiktok.url_resolved, post.external.created, post.external.updated, post.external.deleted, account.connected, account.disconnected, account.ads.initial_sync_completed, account.ads.sync_failed, account.ads.sync_recovered, analytics.synced, message.received, conversation.started, conversation.control_changed, call.received, call.ended, call.failed, call.permission_request, message.sent, message.edited, message.deleted, message.delivered, message.read, message.failed, reaction.received, referral.received, comment.received, review.new, review.updated, lead.received, ad.status_changed, whatsapp.template.status_updated, whatsapp.template.category_updated, whatsapp.account.name_status_updated, whatsapp.automatic_event, whatsapp.number.activated, whatsapp.number.declined, whatsapp.number.action_required, whatsapp.number.verification_required, whatsapp.number.suspended, whatsapp.number.reactivated, whatsapp.number.released, whatsapp.number.kyc_submitted, phone_number.stock_available, verification.approved, verification.failed, sms.registration.action_required, sms.registration.status_updated, branded_calling.identity.status_updated, branded_calling.identity.action_required, branded_calling.number.status_updated, rcs.agent.status_updated]
                   description: Events to subscribe to (at least one required)
                 isActive:
                   type: boolean
@@ -31080,7 +31409,7 @@ paths:
                   minItems: 1
                   items:
                     type: string
-                    enum: [post.scheduled, post.published, post.failed, post.partial, post.cancelled, post.recycled, post.platform.published, post.platform.failed, post.platform.deleted, post.tiktok.url_resolved, post.external.created, post.external.updated, post.external.deleted, account.connected, account.disconnected, account.ads.initial_sync_completed, account.ads.sync_failed, account.ads.sync_recovered, analytics.synced, message.received, conversation.started, conversation.control_changed, call.received, call.ended, call.failed, call.permission_request, message.sent, message.edited, message.deleted, message.delivered, message.read, message.failed, reaction.received, referral.received, comment.received, review.new, review.updated, lead.received, ad.status_changed, whatsapp.template.status_updated, whatsapp.template.category_updated, whatsapp.account.name_status_updated, whatsapp.automatic_event, whatsapp.number.activated, whatsapp.number.declined, whatsapp.number.action_required, whatsapp.number.verification_required, whatsapp.number.suspended, whatsapp.number.reactivated, whatsapp.number.released, whatsapp.number.kyc_submitted, phone_number.stock_available, verification.approved, verification.failed, sms.registration.action_required, sms.registration.status_updated, branded_calling.identity.status_updated, branded_calling.identity.action_required, branded_calling.number.status_updated]
+                    enum: [post.scheduled, post.published, post.failed, post.partial, post.cancelled, post.recycled, post.platform.published, post.platform.failed, post.platform.deleted, post.tiktok.url_resolved, post.external.created, post.external.updated, post.external.deleted, account.connected, account.disconnected, account.ads.initial_sync_completed, account.ads.sync_failed, account.ads.sync_recovered, analytics.synced, message.received, conversation.started, conversation.control_changed, call.received, call.ended, call.failed, call.permission_request, message.sent, message.edited, message.deleted, message.delivered, message.read, message.failed, reaction.received, referral.received, comment.received, review.new, review.updated, lead.received, ad.status_changed, whatsapp.template.status_updated, whatsapp.template.category_updated, whatsapp.account.name_status_updated, whatsapp.automatic_event, whatsapp.number.activated, whatsapp.number.declined, whatsapp.number.action_required, whatsapp.number.verification_required, whatsapp.number.suspended, whatsapp.number.reactivated, whatsapp.number.released, whatsapp.number.kyc_submitted, phone_number.stock_available, verification.approved, verification.failed, sms.registration.action_required, sms.registration.status_updated, branded_calling.identity.status_updated, branded_calling.identity.action_required, branded_calling.number.status_updated, rcs.agent.status_updated]
                   description: Events to subscribe to. Must contain at least one event if provided.
                 isActive:
                   type: boolean
@@ -32249,7 +32578,7 @@ paths:
           description: Filter by profile ID
         - name: platform
           in: query
-          schema: { type: string, enum: [facebook, instagram, telegram, whatsapp, sms, slack, imessage] }
+          schema: { type: string, enum: [facebook, instagram, telegram, whatsapp, sms, rcs, slack, imessage] }
           description: Filter by platform (searchable platforms only)
         - name: accountId
           in: query
@@ -38531,6 +38860,422 @@ paths:
         '409': { description: "Recipient has opted out (replied STOP), or the same Idempotency-Key is still in flight" }
         '422': { $ref: '#/components/responses/IdempotencyKeyReused' }
         '502': { description: Carrier-side send failed }
+
+  /v1/rcs/brands:
+    get:
+      x-resource-group: "messages"
+      operationId: listRcsBrands
+      tags: [RCS]
+      summary: List RCS brands
+      description: The team's RCS brands (vetted companies), to reuse one for another agent with `brandId`.
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Brands, newest first.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  brands: { type: array, items: { $ref: '#/components/schemas/RcsBrand' } }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { description: 'Your plan does not include the inbox, which RCS requires.' }
+
+  /v1/rcs/agents:
+    get:
+      x-resource-group: "messages"
+      operationId: listRcsAgents
+      tags: [RCS]
+      summary: List RCS agents
+      security:
+        - bearerAuth: []
+      parameters:
+        - { name: includeClosed, in: query, schema: { type: boolean }, description: 'Include rejected and deactivated agents.' }
+      responses:
+        '200':
+          description: Agents, newest first.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  agents: { type: array, items: { $ref: '#/components/schemas/RcsAgent' } }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { description: 'Your plan does not include the inbox, which RCS requires.' }
+    post:
+      x-resource-group: "messages"
+      operationId: createRcsAgent
+      tags: [RCS]
+      summary: Request an RCS agent
+      description: |
+        Requests a new agent for a profile, with a new company (`brand`) or an existing one
+        (`brandId`, skips vetting when it is already verified). The request lands in our review:
+        nothing is filed with the carriers or billed until we submit it. One open agent per profile.
+        Requires usage-based billing and a card on file. Send an `Idempotency-Key` header to make
+        retries safe.
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/IdempotencyKeyHeader'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [profileId, displayName, useCase, profile]
+              description: Send exactly one of brandId or brand.
+              properties:
+                profileId: { type: string }
+                brandId: { type: string }
+                brand: { $ref: '#/components/schemas/RcsBrandInput' }
+                displayName: { type: string, maxLength: 40, description: Shown as the sender name. }
+                useCase: { type: string, enum: [MULTI_USE, PROMOTIONAL, TRANSACTIONAL, OTP] }
+                profile: { $ref: '#/components/schemas/RcsAgentProfile' }
+                smsFallbackFrom: { type: string, description: 'One of your SMS-enabled numbers. Phones without RCS get the message as SMS from it.' }
+      responses:
+        '201':
+          description: Agent requested.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  agent: { $ref: '#/components/schemas/RcsAgent' }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '402': { description: 'No payment method on file (payment_method_required). Add a card and retry.' }
+        '403': { description: 'Your plan does not include the inbox, which RCS requires.' }
+        '404': { description: Profile or brand not found }
+        '409': { description: 'The profile already has an open agent, the brand was rejected, or the Idempotency-Key is still in flight' }
+        '422': { description: 'Usage-based billing is not enabled for the workspace (USAGE_BILLING_REQUIRED), or the Idempotency-Key was reused with a different body' }
+
+  /v1/rcs/agents/{agentId}:
+    get:
+      x-resource-group: "messages"
+      operationId: getRcsAgent
+      tags: [RCS]
+      summary: Get an RCS agent
+      security:
+        - bearerAuth: []
+      parameters:
+        - { name: agentId, in: path, required: true, schema: { type: string } }
+      responses:
+        '200':
+          description: The agent with its brand, carrier approvals and test devices.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  agent: { $ref: '#/components/schemas/RcsAgent' }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { description: 'Your plan does not include the inbox, which RCS requires.' }
+        '404': { description: Agent not found }
+    patch:
+      x-resource-group: "messages"
+      operationId: updateRcsAgent
+      tags: [RCS]
+      summary: Update an RCS agent
+      description: |
+        Edits the filing while the agent is `requested` or `changes_requested`; answering a change
+        request puts it back in our review. The company can only change until it is filed.
+        `smsFallbackFrom` stays editable in any status (null removes it).
+      security:
+        - bearerAuth: []
+      parameters:
+        - { name: agentId, in: path, required: true, schema: { type: string } }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              minProperties: 1
+              properties:
+                displayName: { type: string, maxLength: 40 }
+                useCase: { type: string, enum: [MULTI_USE, PROMOTIONAL, TRANSACTIONAL, OTP] }
+                profile: { $ref: '#/components/schemas/RcsAgentProfile' }
+                brand: { $ref: '#/components/schemas/RcsBrandInput' }
+                smsFallbackFrom: { type: [string, "null"] }
+      responses:
+        '200':
+          description: The updated agent.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  agent: { $ref: '#/components/schemas/RcsAgent' }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { description: 'Your plan does not include the inbox, which RCS requires.' }
+        '404': { description: Agent not found }
+        '409': { description: 'The filing is locked because it is already with the carriers' }
+    delete:
+      x-resource-group: "messages"
+      operationId: deactivateRcsAgent
+      tags: [RCS]
+      summary: Deactivate an RCS agent
+      description: Stops sending, disconnects its inbox account and stops monthly billing. Fees already charged are not refunded.
+      security:
+        - bearerAuth: []
+      parameters:
+        - { name: agentId, in: path, required: true, schema: { type: string } }
+      responses:
+        '200':
+          description: The deactivated agent.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  agent: { $ref: '#/components/schemas/RcsAgent' }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { description: 'Your plan does not include the inbox, which RCS requires.' }
+        '404': { description: Agent not found }
+        '409': { description: The agent is already rejected or deactivated }
+
+  /v1/rcs/agents/{agentId}/launch-request:
+    post:
+      x-resource-group: "messages"
+      operationId: requestRcsAgentLaunch
+      tags: [RCS]
+      summary: Send the launch filing
+      description: |
+        Sends the launch details the carriers review (campaign, consent and a public test video).
+        US agents send them once they are in `testing`; we review them before they reach the
+        carriers. Agents in other markets send them while still in review (`requested`,
+        `changes_requested` or `brand_vetting`), because we file everything with the carriers at
+        once; this saves the details without changing the status.
+      security:
+        - bearerAuth: []
+      parameters:
+        - { name: agentId, in: path, required: true, schema: { type: string } }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/RcsLaunchRequest' }
+      responses:
+        '200':
+          description: The agent, now in launch_review.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  agent: { $ref: '#/components/schemas/RcsAgent' }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { description: 'Your plan does not include the inbox, which RCS requires.' }
+        '404': { description: Agent not found }
+        '409': { description: The agent is not in testing }
+
+  /v1/rcs/agents/{agentId}/test-devices:
+    get:
+      x-resource-group: "messages"
+      operationId: listRcsTestDevices
+      tags: [RCS]
+      summary: List RCS test phones
+      security:
+        - bearerAuth: []
+      parameters:
+        - { name: agentId, in: path, required: true, schema: { type: string } }
+      responses:
+        '200':
+          description: Invited test phones.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  testDevices: { type: array, items: { $ref: '#/components/schemas/RcsTestDevice' } }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { description: 'Your plan does not include the inbox, which RCS requires.' }
+        '404': { description: Agent not found }
+    post:
+      x-resource-group: "messages"
+      operationId: addRcsTestDevice
+      tags: [RCS]
+      summary: Invite an RCS test phone
+      description: |
+        Invites a phone to try the agent before launch. It must accept the invite in its
+        messaging app. Available once the agent exists with the carriers (after brand vetting).
+        T-Mobile and AT&T numbers cannot be test phones.
+      security:
+        - bearerAuth: []
+      parameters:
+        - { name: agentId, in: path, required: true, schema: { type: string } }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [phoneNumber]
+              properties:
+                phoneNumber: { type: string, description: E.164 }
+      responses:
+        '201':
+          description: Invite sent.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  testDevice: { $ref: '#/components/schemas/RcsTestDevice' }
+        '400': { description: 'Invalid phone number, or the carrier refused it as a test phone' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { description: 'Your plan does not include the inbox, which RCS requires.' }
+        '404': { description: Agent not found }
+        '409': { description: The agent does not exist with the carriers yet }
+
+  /v1/rcs/agents/{agentId}/test-devices/{testDeviceId}:
+    delete:
+      x-resource-group: "messages"
+      operationId: removeRcsTestDevice
+      tags: [RCS]
+      summary: Remove an RCS test phone
+      security:
+        - bearerAuth: []
+      parameters:
+        - { name: agentId, in: path, required: true, schema: { type: string } }
+        - { name: testDeviceId, in: path, required: true, schema: { type: string, format: uuid } }
+      responses:
+        '200':
+          description: Removed.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success: { type: boolean }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { description: 'Your plan does not include the inbox, which RCS requires.' }
+        '404': { description: Agent or test phone not found }
+
+  /v1/rcs/assets:
+    post:
+      x-resource-group: "messages"
+      operationId: uploadRcsAsset
+      tags: [RCS]
+      summary: Upload an RCS logo or banner
+      description: |
+        Uploads an image and returns a public URL for `profile.logoUrl` or `profile.heroUrl`.
+        The image is cropped and compressed to the carriers' exact rules (logo 224x224 under
+        50 KB, banner 1440x448 under 200 KB).
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required: [file, kind]
+              properties:
+                file: { type: string, format: binary, description: 'PNG, JPEG or WebP.' }
+                kind: { type: string, enum: [logo, banner] }
+      responses:
+        '200':
+          description: Hosted URL.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  url: { type: string, format: uri }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { description: 'Your plan does not include the inbox, which RCS requires.' }
+        '422': { description: 'The image is unreadable, too small, or could not be compressed under the limit' }
+
+  /v1/rcs/messages:
+    post:
+      x-resource-group: "messages"
+      operationId: sendRcsMessage
+      tags: [RCS]
+      summary: Send an RCS message
+      description: |
+        Sends from one of your agents. Use `text` for a plain message or `content` for rich
+        content (card, carousel, media, suggestion chips). Before launch an agent only reaches
+        test phones that accepted the invite. With the agent's `smsFallbackFrom` set, phones
+        without RCS get `fallbackText` (default: the message's readable text) as SMS.
+
+        Replies and status arrive as webhooks with `platform: "rcs"`: `message.received`
+        (a tapped chip carries its postback in `metadata.postbackPayload`), `message.delivered`,
+        `message.read` and `message.failed`. Send an `Idempotency-Key` header to make retries safe.
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/IdempotencyKeyHeader'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [agentId, to]
+              description: Send exactly one of text or content.
+              properties:
+                agentId: { type: string }
+                to: { type: string, description: 'Recipient number (E.164; formatting is normalized).' }
+                text: { type: string, maxLength: 3072 }
+                content: { $ref: '#/components/schemas/RcsContent' }
+                fallbackText: { type: string, maxLength: 3072 }
+                ttlSeconds: { type: integer, minimum: 1, description: 'Seconds before an undelivered message expires.' }
+      responses:
+        '200':
+          description: Message accepted.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id: { type: string, description: Message ID }
+                  conversationId: { type: string }
+                  status: { type: string, enum: [sent] }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { description: 'The plan does not include the inbox, the recipient is not an accepted test phone before launch, or usage billing is not enabled' }
+        '404': { description: Agent not found }
+        '409': { description: 'The agent cannot send yet, the recipient opted out (replied STOP), or the Idempotency-Key is still in flight' }
+        '422': { $ref: '#/components/responses/IdempotencyKeyReused' }
+        '502': { description: Carrier-side send failed }
+
+  /v1/rcs/capabilities:
+    get:
+      x-resource-group: "messages"
+      operationId: getRcsCapabilities
+      tags: [RCS]
+      summary: Check RCS capability
+      description: Which recipients can receive RCS from the agent and which rich features their phones support. Up to 100 numbers.
+      security:
+        - bearerAuth: []
+      parameters:
+        - { name: agentId, in: query, required: true, schema: { type: string } }
+        - { name: numbers, in: query, required: true, schema: { type: string }, description: 'Comma-separated E.164 numbers, max 100.' }
+      responses:
+        '200':
+          description: One entry per number, in input order.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  capabilities: { type: array, items: { $ref: '#/components/schemas/RcsCapability' } }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { description: 'Your plan does not include the inbox, which RCS requires.' }
+        '404': { description: Agent not found }
+        '409': { description: The agent does not exist with the carriers yet }
 
   /v1/sms/lookup:
     get:
@@ -64871,7 +65616,7 @@ paths:
       x-resource-group: "ads"
       operationId: listTrackingTags
       tags: ["Tracking Tags"]
-      x-platforms: ["meta", "tiktok", "google"]
+      x-platforms: ["meta", "tiktok", "google", "x"]
       summary: List tracking tags
       description: |
         Returns the tracking tags (Meta Pixels, or OpenAI Ads pixels) the
@@ -64902,7 +65647,7 @@ paths:
               schema:
                 type: object
                 properties:
-                  platform: { type: string, enum: [metaads, openaiads, tiktokads, googleads] }
+                  platform: { type: string, enum: [metaads, openaiads, tiktokads, googleads, xads] }
                   tags:
                     type: array
                     items: { $ref: '#/components/schemas/TrackingTag' }
@@ -64918,7 +65663,7 @@ paths:
       x-resource-group: "ads"
       operationId: createTrackingTag
       tags: ["Tracking Tags"]
-      x-platforms: ["meta", "tiktok", "google"]
+      x-platforms: ["meta", "tiktok", "google", "x"]
       summary: Create a tracking tag
       description: |
         Meta: creates a Meta Pixel on the given ad account (`POST /act_{id}/adspixels`,
@@ -64976,7 +65721,7 @@ paths:
               schema:
                 type: object
                 properties:
-                  platform: { type: string, enum: [metaads, openaiads, tiktokads, googleads] }
+                  platform: { type: string, enum: [metaads, openaiads, tiktokads, googleads, xads] }
                   tag: { $ref: '#/components/schemas/TrackingTag' }
         '400': { description: 'Invalid body, invalid `adAccountId`, over the per-business pixel cap, or ad account not in a Business Manager.' }
         '401': { $ref: '#/components/responses/Unauthorized' }
@@ -64992,7 +65737,7 @@ paths:
       x-resource-group: "ads"
       operationId: getTrackingTag
       tags: ["Tracking Tags"]
-      x-platforms: ["meta", "tiktok", "google"]
+      x-platforms: ["meta", "tiktok", "google", "x"]
       summary: Get a tracking tag
       description: |
         Returns the full tag record including the base-code `code` snippet,
@@ -65016,7 +65761,7 @@ paths:
               schema:
                 type: object
                 properties:
-                  platform: { type: string, enum: [metaads, tiktokads, googleads] }
+                  platform: { type: string, enum: [metaads, tiktokads, googleads, xads] }
                   tag: { $ref: '#/components/schemas/TrackingTag' }
         '401': { $ref: '#/components/responses/Unauthorized' }
         '403': { description: 'Ads access required (Ads add-on on legacy plans, included on usage-based plans), or the Meta token lacks ads permissions (reconnect required).' }
@@ -65029,7 +65774,7 @@ paths:
       x-resource-group: "ads"
       operationId: updateTrackingTag
       tags: ["Tracking Tags"]
-      x-platforms: ["meta", "tiktok", "google"]
+      x-platforms: ["meta", "tiktok", "google", "x"]
       summary: Update a tracking tag
       description: |
         Partial-update a pixel. Whitelisted fields: `name` (rename),
@@ -65085,7 +65830,7 @@ paths:
               schema:
                 type: object
                 properties:
-                  platform: { type: string, enum: [metaads, tiktokads, googleads] }
+                  platform: { type: string, enum: [metaads, tiktokads, googleads, xads] }
                   tag: { $ref: '#/components/schemas/TrackingTag' }
         '400': { description: Invalid body (e.g. no fields supplied) or Meta validation failure. }
         '401': { $ref: '#/components/responses/Unauthorized' }
@@ -65206,7 +65951,7 @@ paths:
       x-resource-group: "ads"
       operationId: installTrackingTagOnStore
       tags: ["Tracking Tags"]
-      x-platforms: ["meta", "tiktok", "google", "shopify", "wordpress"]
+      x-platforms: ["meta", "tiktok", "google", "x", "shopify", "wordpress"]
       summary: Install on a Shopify store or WordPress site
       description: |
         Puts the Meta pixel on a connected Shopify store's storefront and checkout through
@@ -65270,7 +66015,7 @@ paths:
               schema:
                 type: object
                 properties:
-                  platform: { type: string, enum: [metaads, tiktokads, googleads] }
+                  platform: { type: string, enum: [metaads, tiktokads, googleads, xads] }
                   install:
                     allOf:
                       - $ref: '#/components/schemas/StorePixelInstall'
@@ -65307,7 +66052,7 @@ paths:
       x-resource-group: "ads"
       operationId: getTrackingTagStoreInstall
       tags: ["Tracking Tags"]
-      x-platforms: ["meta", "tiktok", "google", "shopify", "wordpress"]
+      x-platforms: ["meta", "tiktok", "google", "x", "shopify", "wordpress"]
       summary: Get store install status
       description: |
         Whether this tag is the one the Shopify store fires for its platform. `installedTagId`
@@ -65335,7 +66080,7 @@ paths:
               schema:
                 type: object
                 properties:
-                  platform: { type: string, enum: [metaads, tiktokads, googleads] }
+                  platform: { type: string, enum: [metaads, tiktokads, googleads, xads] }
                   install:
                     allOf:
                       - $ref: '#/components/schemas/StorePixelInstall'
@@ -65365,7 +66110,7 @@ paths:
       x-resource-group: "ads"
       operationId: removeTrackingTagFromStore
       tags: ["Tracking Tags"]
-      x-platforms: ["meta", "tiktok", "google", "shopify", "wordpress"]
+      x-platforms: ["meta", "tiktok", "google", "x", "shopify", "wordpress"]
       summary: Remove from a Shopify store or WordPress site
       description: |
         Removes the tag from the store. Idempotent: nothing installed returns 200 with
@@ -65390,7 +66135,7 @@ paths:
               schema:
                 type: object
                 properties:
-                  platform: { type: string, enum: [metaads, tiktokads, googleads] }
+                  platform: { type: string, enum: [metaads, tiktokads, googleads, xads] }
                   install:
                     allOf:
                       - $ref: '#/components/schemas/StorePixelInstall'
@@ -65404,12 +66149,159 @@ paths:
         '501': { description: 'The platform does not offer this operation (code `platform_not_supported`); the message names the reason and the alternative.' }
         '409': { description: 'The store fires a different pixel (code `invalid_resource_state`), or the store must re-approve the Zernio app (code `reconnect_required`, see `details.authUrl`).' }
 
+  /v1/accounts/{accountId}/tracking-tags/{tagId}/events:
+    get:
+      x-resource-group: "ads"
+      operationId: listTrackingTagEvents
+      tags: ["Tracking Tags"]
+      x-platforms: ["meta", "google", "tiktok", "linkedin", "x", "openai"]
+      summary: List conversion events
+      description: |
+        The tag's conversion events, on platforms where each conversion is its own object:
+        Google conversion actions, LinkedIn conversion rules, X web event tags, OpenAI event
+        settings, TikTok pixel events, Meta custom conversions. Platforms where events are just
+        names the site sends (Pinterest) answer 501.
+      security:
+        - bearerAuth: []
+      parameters:
+        - { name: accountId, in: path, required: true, schema: { type: string } }
+        - { name: tagId, in: path, required: true, schema: { type: string }, description: 'Tag id (`TrackingTag.id`).' }
+        - { name: adAccountId, in: query, required: false, schema: { type: string }, description: 'Scopes the lookup on platforms whose tag ids live inside an ad account.' }
+      responses:
+        '200':
+          description: Conversion events listed
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  platform: { type: string }
+                  events:
+                    type: array
+                    items: { $ref: '#/components/schemas/TrackingTagEvent' }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { description: 'Ads access required, or the platform token lacks the permission (reconnect required).' }
+        '404': { $ref: '#/components/responses/AccountUnavailable' }
+        '409': { $ref: '#/components/responses/AccountConnectionRequired' }
+        '501': { description: 'The platform has no conversion-event objects (code `platform_not_supported`); the message names the alternative.' }
+    post:
+      x-resource-group: "ads"
+      operationId: createTrackingTagEvent
+      tags: ["Tracking Tags"]
+      x-platforms: ["meta", "google", "tiktok", "linkedin", "x", "openai"]
+      summary: Create a conversion event
+      description: |
+        Creates a conversion event tied to the tag. Pass the platform's own event type in `type`
+        (e.g. Google `PURCHASE`, LinkedIn `ADD_TO_CART`, X `CHECKOUT_INITIATED`) or a neutral
+        `siteEvent` the platform maps to its closest type. Each platform stores a subset of the
+        optional fields; sending one it does not store answers 400 naming the supported fields.
+        NOT idempotent unless noted per platform: do not retry blindly.
+      security:
+        - bearerAuth: []
+      parameters:
+        - { name: accountId, in: path, required: true, schema: { type: string } }
+        - { name: tagId, in: path, required: true, schema: { type: string }, description: 'Tag id (`TrackingTag.id`).' }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              allOf:
+                - $ref: '#/components/schemas/TrackingTagEventInput'
+                - type: object
+                  required: [name]
+      responses:
+        '201':
+          description: Conversion event created
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  platform: { type: string }
+                  event: { $ref: '#/components/schemas/TrackingTagEvent' }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { description: 'Ads access required, or the platform token lacks the permission (reconnect required).' }
+        '404': { $ref: '#/components/responses/AccountUnavailable' }
+        '409': { $ref: '#/components/responses/AccountConnectionRequired' }
+        '501': { description: 'The platform cannot create conversion events through its API (code `platform_not_supported`).' }
+  /v1/accounts/{accountId}/tracking-tags/{tagId}/events/{eventId}:
+    patch:
+      x-resource-group: "ads"
+      operationId: updateTrackingTagEvent
+      tags: ["Tracking Tags"]
+      x-platforms: ["meta", "google", "tiktok", "linkedin", "x", "openai"]
+      summary: Update a conversion event
+      description: Partial update; at least one field. A field the platform does not store answers 400.
+      security:
+        - bearerAuth: []
+      parameters:
+        - { name: accountId, in: path, required: true, schema: { type: string } }
+        - { name: tagId, in: path, required: true, schema: { type: string } }
+        - { name: eventId, in: path, required: true, schema: { type: string }, description: 'Event id (`TrackingTagEvent.id`).' }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/TrackingTagEventInput' }
+      responses:
+        '200':
+          description: Conversion event updated
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  platform: { type: string }
+                  event: { $ref: '#/components/schemas/TrackingTagEvent' }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { description: 'Ads access required, or the platform token lacks the permission (reconnect required).' }
+        '404': { $ref: '#/components/responses/AccountUnavailable' }
+        '409': { $ref: '#/components/responses/AccountConnectionRequired' }
+        '501': { description: 'The platform cannot update conversion events through its API (code `platform_not_supported`).' }
+    delete:
+      x-resource-group: "ads"
+      operationId: deleteTrackingTagEvent
+      tags: ["Tracking Tags"]
+      x-platforms: ["meta", "google", "tiktok", "linkedin", "x", "openai"]
+      summary: Delete a conversion event
+      description: |
+        Removes the conversion event. Platforms without a hard delete archive or disable it
+        instead; `state` in the response says which (`deleted`, `archived`, `disabled`).
+      security:
+        - bearerAuth: []
+      parameters:
+        - { name: accountId, in: path, required: true, schema: { type: string } }
+        - { name: tagId, in: path, required: true, schema: { type: string } }
+        - { name: eventId, in: path, required: true, schema: { type: string }, description: 'Event id (`TrackingTagEvent.id`).' }
+        - { name: adAccountId, in: query, required: false, schema: { type: string }, description: 'Scopes the lookup on platforms whose tag ids live inside an ad account.' }
+      responses:
+        '200':
+          description: Conversion event removed
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  platform: { type: string }
+                  eventId: { type: string }
+                  state: { type: string, enum: [deleted, archived, disabled] }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { description: 'Ads access required, or the platform token lacks the permission (reconnect required).' }
+        '404': { $ref: '#/components/responses/AccountUnavailable' }
+        '409': { $ref: '#/components/responses/AccountConnectionRequired' }
+        '501': { description: 'The platform cannot remove conversion events through its API (code `platform_not_supported`).' }
+
   /v1/accounts/{accountId}/tracking-tags/{tagId}/stats:
     get:
       x-resource-group: "ads"
       operationId: getTrackingTagStats
       tags: ["Tracking Tags"]
-      x-platforms: ["meta", "tiktok", "google"]
+      x-platforms: ["meta", "tiktok", "google", "x"]
       summary: Get aggregated event stats
       description: |
         Returns event counts / health for the tag, where the platform exposes
@@ -65457,7 +66349,7 @@ paths:
               schema:
                 type: object
                 properties:
-                  platform: { type: string, enum: [metaads, tiktokads, googleads] }
+                  platform: { type: string, enum: [metaads, tiktokads, googleads, xads] }
                   stats:
                     type: object
                     properties:

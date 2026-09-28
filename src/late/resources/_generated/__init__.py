@@ -46,6 +46,7 @@ from .product_catalogs import ProductCatalogsResource
 from .products import ProductsResource
 from .profiles import ProfilesResource
 from .queue import QueueResource
+from .rcs import RcsResource
 from .reach_and_frequency import ReachAndFrequencyResource
 from .reddit import RedditResource
 from .reviews import ReviewsResource
@@ -114,6 +115,7 @@ __all__ = [
     "ProductsResource",
     "ProfilesResource",
     "QueueResource",
+    "RcsResource",
     "ReachAndFrequencyResource",
     "RedditResource",
     "ReviewsResource",

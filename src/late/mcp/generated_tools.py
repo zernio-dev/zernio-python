@@ -21778,6 +21778,356 @@ def register_generated_tools(mcp, _get_client):
         except Exception as e:
             return f"Error: {e}"
 
+    # RCS
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="List RCS brands",
+            readOnlyHint=True,
+            destructiveHint=False,
+            openWorldHint=False,
+        )
+    )
+    def rcs_list_rcs_brands() -> str:
+        """List RCS brands"""
+        client = _get_client()
+        try:
+            response = client.rcs.list_rcs_brands()
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="List RCS agents",
+            readOnlyHint=True,
+            destructiveHint=False,
+            openWorldHint=False,
+        )
+    )
+    def rcs_list_rcs_agents(include_closed: bool | None = None) -> str:
+        """List RCS agents
+
+        Args:
+            include_closed: Include rejected and deactivated agents."""
+        client = _get_client()
+        try:
+            response = client.rcs.list_rcs_agents(include_closed=include_closed)
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Request an RCS agent",
+            readOnlyHint=False,
+            destructiveHint=True,
+            openWorldHint=True,
+        )
+    )
+    def rcs_create_rcs_agent(
+        profile_id: str,
+        display_name: str,
+        use_case: str,
+        profile: dict[str, Any] | None,
+        brand_id: str | None = None,
+        brand: dict[str, Any] | None = None,
+        sms_fallback_from: str | None = None,
+    ) -> str:
+        """Request an RCS agent
+
+        Args:
+            profile_id: (required)
+            brand_id
+            brand
+            display_name: Shown as the sender name. (required)
+            use_case: (required)
+            profile: (required)
+            sms_fallback_from: One of your SMS-enabled numbers. Phones without RCS get the message as SMS from it."""
+        client = _get_client()
+        try:
+            response = client.rcs.create_rcs_agent(
+                profile_id=profile_id,
+                brand_id=brand_id,
+                brand=brand,
+                display_name=display_name,
+                use_case=use_case,
+                profile=profile,
+                sms_fallback_from=sms_fallback_from,
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Get an RCS agent",
+            readOnlyHint=True,
+            destructiveHint=False,
+            openWorldHint=False,
+        )
+    )
+    def rcs_get_rcs_agent(agent_id: str) -> str:
+        """Get an RCS agent
+
+        Args:
+            agent_id: (required)"""
+        client = _get_client()
+        try:
+            response = client.rcs.get_rcs_agent(agent_id=agent_id)
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Update an RCS agent",
+            readOnlyHint=False,
+            destructiveHint=True,
+            openWorldHint=True,
+        )
+    )
+    def rcs_update_rcs_agent(
+        agent_id: str,
+        display_name: str | None = None,
+        use_case: str | None = None,
+        profile: dict[str, Any] | None = None,
+        brand: dict[str, Any] | None = None,
+        sms_fallback_from: str | None = None,
+    ) -> str:
+        """Update an RCS agent
+
+        Args:
+            agent_id: (required)
+            display_name
+            use_case
+            profile
+            brand
+            sms_fallback_from"""
+        client = _get_client()
+        try:
+            response = client.rcs.update_rcs_agent(
+                agent_id=agent_id,
+                display_name=display_name,
+                use_case=use_case,
+                profile=profile,
+                brand=brand,
+                sms_fallback_from=sms_fallback_from,
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Deactivate an RCS agent",
+            readOnlyHint=False,
+            destructiveHint=True,
+            openWorldHint=True,
+        )
+    )
+    def rcs_deactivate_rcs_agent(agent_id: str) -> str:
+        """Deactivate an RCS agent
+
+        Args:
+            agent_id: (required)"""
+        client = _get_client()
+        try:
+            response = client.rcs.deactivate_rcs_agent(agent_id=agent_id)
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Send the launch filing",
+            readOnlyHint=False,
+            destructiveHint=True,
+            openWorldHint=True,
+        )
+    )
+    def rcs_request_rcs_agent_launch(
+        agent_id: str,
+        company_overview: str,
+        agent_overview: str,
+        interactions: list[dict[str, Any]] | None,
+        message_examples: list[str] | None,
+        consent: dict[str, Any] | None,
+        test_video_url: str,
+        additional_information: str | None = None,
+    ) -> str:
+        """Send the launch filing
+
+        Args:
+            agent_id: (required)
+            company_overview: (required)
+            agent_overview: (required)
+            interactions: (required)
+            message_examples: (required)
+            consent: (required)
+            test_video_url: Public video of a test phone sending START, STOP and HELP plus one example conversation. (required)
+            additional_information"""
+        client = _get_client()
+        try:
+            response = client.rcs.request_rcs_agent_launch(
+                agent_id=agent_id,
+                company_overview=company_overview,
+                agent_overview=agent_overview,
+                interactions=interactions,
+                message_examples=message_examples,
+                consent=consent,
+                test_video_url=test_video_url,
+                additional_information=additional_information,
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="List RCS test phones",
+            readOnlyHint=True,
+            destructiveHint=False,
+            openWorldHint=False,
+        )
+    )
+    def rcs_list_rcs_test_devices(agent_id: str) -> str:
+        """List RCS test phones
+
+        Args:
+            agent_id: (required)"""
+        client = _get_client()
+        try:
+            response = client.rcs.list_rcs_test_devices(agent_id=agent_id)
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Invite an RCS test phone",
+            readOnlyHint=False,
+            destructiveHint=True,
+            openWorldHint=True,
+        )
+    )
+    def rcs_add_rcs_test_device(agent_id: str, phone_number: str) -> str:
+        """Invite an RCS test phone
+
+        Args:
+            agent_id: (required)
+            phone_number: E.164 (required)"""
+        client = _get_client()
+        try:
+            response = client.rcs.add_rcs_test_device(
+                agent_id=agent_id, phone_number=phone_number
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Remove an RCS test phone",
+            readOnlyHint=False,
+            destructiveHint=True,
+            openWorldHint=True,
+        )
+    )
+    def rcs_remove_rcs_test_device(agent_id: str, test_device_id: str) -> str:
+        """Remove an RCS test phone
+
+        Args:
+            agent_id: (required)
+            test_device_id: (required)"""
+        client = _get_client()
+        try:
+            response = client.rcs.remove_rcs_test_device(
+                agent_id=agent_id, test_device_id=test_device_id
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Upload an RCS logo or banner",
+            readOnlyHint=False,
+            destructiveHint=True,
+            openWorldHint=True,
+        )
+    )
+    def rcs_upload_rcs_asset() -> str:
+        """Upload an RCS logo or banner"""
+        client = _get_client()
+        try:
+            response = client.rcs.upload_rcs_asset()
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Send an RCS message",
+            readOnlyHint=False,
+            destructiveHint=True,
+            openWorldHint=True,
+        )
+    )
+    def rcs_send_rcs_message(
+        agent_id: str,
+        to: str,
+        text: str | None = None,
+        content: dict[str, Any] | None = None,
+        fallback_text: str | None = None,
+        ttl_seconds: int | None = None,
+    ) -> str:
+        """Send an RCS message
+
+        Args:
+            agent_id: (required)
+            to: Recipient number (E.164; formatting is normalized). (required)
+            text
+            content
+            fallback_text
+            ttl_seconds: Seconds before an undelivered message expires."""
+        client = _get_client()
+        try:
+            response = client.rcs.send_rcs_message(
+                agent_id=agent_id,
+                to=to,
+                text=text,
+                content=content,
+                fallback_text=fallback_text,
+                ttl_seconds=ttl_seconds,
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Check RCS capability",
+            readOnlyHint=True,
+            destructiveHint=False,
+            openWorldHint=False,
+        )
+    )
+    def rcs_get_rcs_capabilities(agent_id: str, numbers: str) -> str:
+        """Check RCS capability
+
+        Args:
+            agent_id: (required)
+            numbers: Comma-separated E.164 numbers, max 100. (required)"""
+        client = _get_client()
+        try:
+            response = client.rcs.get_rcs_capabilities(
+                agent_id=agent_id, numbers=numbers
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
     # REACH_AND_FREQUENCY
 
     @mcp.tool(
@@ -23334,6 +23684,173 @@ def register_generated_tools(mcp, _get_client):
                 account_id=account_id,
                 tag_id=tag_id,
                 store_account_id=store_account_id,
+                ad_account_id=ad_account_id,
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="List conversion events",
+            readOnlyHint=True,
+            destructiveHint=False,
+            openWorldHint=False,
+        )
+    )
+    def tracking_tags_list_tracking_tag_events(
+        account_id: str, tag_id: str, ad_account_id: str | None = None
+    ) -> str:
+        """List conversion events
+
+        Args:
+            account_id: (required)
+            tag_id: Tag id (`TrackingTag.id`). (required)
+            ad_account_id: Scopes the lookup on platforms whose tag ids live inside an ad account."""
+        client = _get_client()
+        try:
+            response = client.tracking_tags.list_tracking_tag_events(
+                account_id=account_id, tag_id=tag_id, ad_account_id=ad_account_id
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Create a conversion event",
+            readOnlyHint=False,
+            destructiveHint=True,
+            openWorldHint=True,
+        )
+    )
+    def tracking_tags_create_tracking_tag_event(
+        account_id: str,
+        tag_id: str,
+        name: str,
+        ad_account_id: str | None = None,
+        type: str | None = None,
+        site_event: str | None = None,
+        enabled: bool | None = None,
+        default_value: float | None = None,
+        currency: str | None = None,
+        click_window_days: int | None = None,
+        view_window_days: int | None = None,
+    ) -> str:
+        """Create a conversion event
+
+        Args:
+            account_id: (required)
+            tag_id: Tag id (`TrackingTag.id`). (required)
+            ad_account_id: Scopes the lookup on platforms whose tag ids live inside an ad account.
+            name: (required)
+            type: The platform's own event type enum value (e.g. `PURCHASE`).
+            site_event: Neutral alternative to `type`, mapped to the platform's closest type.
+            enabled
+            default_value
+            currency: ISO 4217 code.
+            click_window_days
+            view_window_days"""
+        client = _get_client()
+        try:
+            response = client.tracking_tags.create_tracking_tag_event(
+                account_id=account_id,
+                tag_id=tag_id,
+                ad_account_id=ad_account_id,
+                name=name,
+                type=type,
+                site_event=site_event,
+                enabled=enabled,
+                default_value=default_value,
+                currency=currency,
+                click_window_days=click_window_days,
+                view_window_days=view_window_days,
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Update a conversion event",
+            readOnlyHint=False,
+            destructiveHint=True,
+            openWorldHint=True,
+        )
+    )
+    def tracking_tags_update_tracking_tag_event(
+        account_id: str,
+        tag_id: str,
+        event_id: str,
+        ad_account_id: str | None = None,
+        name: str | None = None,
+        type: str | None = None,
+        site_event: str | None = None,
+        enabled: bool | None = None,
+        default_value: float | None = None,
+        currency: str | None = None,
+        click_window_days: int | None = None,
+        view_window_days: int | None = None,
+    ) -> str:
+        """Update a conversion event
+
+        Args:
+            account_id: (required)
+            tag_id: (required)
+            event_id: Event id (`TrackingTagEvent.id`). (required)
+            ad_account_id: Scopes the lookup on platforms whose tag ids live inside an ad account.
+            name
+            type: The platform's own event type enum value (e.g. `PURCHASE`).
+            site_event: Neutral alternative to `type`, mapped to the platform's closest type.
+            enabled
+            default_value
+            currency: ISO 4217 code.
+            click_window_days
+            view_window_days"""
+        client = _get_client()
+        try:
+            response = client.tracking_tags.update_tracking_tag_event(
+                account_id=account_id,
+                tag_id=tag_id,
+                event_id=event_id,
+                ad_account_id=ad_account_id,
+                name=name,
+                type=type,
+                site_event=site_event,
+                enabled=enabled,
+                default_value=default_value,
+                currency=currency,
+                click_window_days=click_window_days,
+                view_window_days=view_window_days,
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Delete a conversion event",
+            readOnlyHint=False,
+            destructiveHint=True,
+            openWorldHint=True,
+        )
+    )
+    def tracking_tags_delete_tracking_tag_event(
+        account_id: str, tag_id: str, event_id: str, ad_account_id: str | None = None
+    ) -> str:
+        """Delete a conversion event
+
+        Args:
+            account_id: (required)
+            tag_id: (required)
+            event_id: Event id (`TrackingTagEvent.id`). (required)
+            ad_account_id: Scopes the lookup on platforms whose tag ids live inside an ad account."""
+        client = _get_client()
+        try:
+            response = client.tracking_tags.delete_tracking_tag_event(
+                account_id=account_id,
+                tag_id=tag_id,
+                event_id=event_id,
                 ad_account_id=ad_account_id,
             )
             return _format_response(response)

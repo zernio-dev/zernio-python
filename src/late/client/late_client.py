@@ -54,6 +54,7 @@ from ..resources import (
     ProductsResource,
     ProfilesResource,
     QueueResource,
+    RcsResource,
     ReachAndFrequencyResource,
     RedditResource,
     ReviewsResource,
@@ -201,6 +202,7 @@ class Zernio(BaseClient):
         self.products = ProductsResource(self)
         self.profiles = ProfilesResource(self)
         self.queue = QueueResource(self)
+        self.rcs = RcsResource(self)
         self.reach_and_frequency = ReachAndFrequencyResource(self)
         self.reddit = RedditResource(self)
         self.reviews = ReviewsResource(self)

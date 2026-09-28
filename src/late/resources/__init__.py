@@ -44,6 +44,7 @@ from ._generated.messaging_ads import MessagingAdsResource
 from ._generated.phone_numbers import PhoneNumbersResource
 from ._generated.product_catalogs import ProductCatalogsResource
 from ._generated.products import ProductsResource
+from ._generated.rcs import RcsResource
 from ._generated.reach_and_frequency import ReachAndFrequencyResource
 from ._generated.reddit import RedditResource
 from ._generated.reviews import ReviewsResource
@@ -120,6 +121,7 @@ __all__ = [
     "ProductsResource",
     "ProfilesResource",
     "QueueResource",
+    "RcsResource",
     "ReachAndFrequencyResource",
     "RedditResource",
     "ReviewsResource",

@@ -1032,6 +1032,23 @@ Both `from zernio import ...` and `from late import ...` work identically. The `
 | `products.get_product()` | Get a product |
 | `products.update_product()` | Update a product |
 
+### RCS
+| Method | Description |
+|--------|-------------|
+| `rcs.list_rcs_agents()` | List RCS agents |
+| `rcs.list_rcs_brands()` | List RCS brands |
+| `rcs.list_rcs_test_devices()` | List RCS test phones |
+| `rcs.create_rcs_agent()` | Request an RCS agent |
+| `rcs.get_rcs_agent()` | Get an RCS agent |
+| `rcs.get_rcs_capabilities()` | Check RCS capability |
+| `rcs.update_rcs_agent()` | Update an RCS agent |
+| `rcs.add_rcs_test_device()` | Invite an RCS test phone |
+| `rcs.deactivate_rcs_agent()` | Deactivate an RCS agent |
+| `rcs.remove_rcs_test_device()` | Remove an RCS test phone |
+| `rcs.request_rcs_agent_launch()` | Send the launch filing |
+| `rcs.send_rcs_message()` | Send an RCS message |
+| `rcs.upload_rcs_asset()` | Upload an RCS logo or banner |
+
 ### Reach and Frequency
 | Method | Description |
 |--------|-------------|
@@ -1095,15 +1112,19 @@ Both `from zernio import ...` and `from late import ...` work identically. The `
 ### Tracking Tags
 | Method | Description |
 |--------|-------------|
+| `tracking_tags.list_tracking_tag_events()` | List conversion events |
 | `tracking_tags.list_tracking_tag_shared_accounts()` | List accounts it is shared with |
 | `tracking_tags.list_tracking_tags()` | List tracking tags |
 | `tracking_tags.create_tracking_tag()` | Create a tracking tag |
+| `tracking_tags.create_tracking_tag_event()` | Create a conversion event |
 | `tracking_tags.get_ad_tracking_tags()` | Get ad tracking tags |
 | `tracking_tags.get_tracking_tag()` | Get a tracking tag |
 | `tracking_tags.get_tracking_tag_stats()` | Get aggregated event stats |
 | `tracking_tags.get_tracking_tag_store_install()` | Get store install status |
 | `tracking_tags.update_ad_tracking_tags()` | Set ad tracking tags |
 | `tracking_tags.update_tracking_tag()` | Update a tracking tag |
+| `tracking_tags.update_tracking_tag_event()` | Update a conversion event |
+| `tracking_tags.delete_tracking_tag_event()` | Delete a conversion event |
 | `tracking_tags.add_tracking_tag_shared_account()` | Share with an ad account |
 | `tracking_tags.install_tracking_tag_on_store()` | Install on a Shopify store or WordPress site |
 | `tracking_tags.remove_tracking_tag_from_store()` | Remove from a Shopify store or WordPress site |

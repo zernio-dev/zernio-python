@@ -251,6 +251,98 @@ class TrackingTagsResource:
             f"/v1/accounts/{account_id}/tracking-tags/{tag_id}/install", params=params
         )
 
+    def list_tracking_tag_events(
+        self, account_id: str, tag_id: str, *, ad_account_id: str | None = None
+    ) -> dict[str, Any]:
+        """List conversion events"""
+        params = self._build_params(
+            ad_account_id=ad_account_id,
+        )
+        return self._client._get(
+            f"/v1/accounts/{account_id}/tracking-tags/{tag_id}/events", params=params
+        )
+
+    def create_tracking_tag_event(
+        self,
+        account_id: str,
+        tag_id: str,
+        name: str,
+        *,
+        ad_account_id: str | None = None,
+        type: str | None = None,
+        site_event: str | None = None,
+        enabled: bool | None = None,
+        default_value: float | None = None,
+        currency: str | None = None,
+        click_window_days: int | None = None,
+        view_window_days: int | None = None,
+    ) -> dict[str, Any]:
+        """Create a conversion event"""
+        payload = self._build_payload(
+            ad_account_id=ad_account_id,
+            name=name,
+            type=type,
+            site_event=site_event,
+            enabled=enabled,
+            default_value=default_value,
+            currency=currency,
+            click_window_days=click_window_days,
+            view_window_days=view_window_days,
+        )
+        return self._client._post(
+            f"/v1/accounts/{account_id}/tracking-tags/{tag_id}/events", data=payload
+        )
+
+    def update_tracking_tag_event(
+        self,
+        account_id: str,
+        tag_id: str,
+        event_id: str,
+        *,
+        ad_account_id: str | None = None,
+        name: str | None = None,
+        type: str | None = None,
+        site_event: str | None = None,
+        enabled: bool | None = None,
+        default_value: float | None = None,
+        currency: str | None = None,
+        click_window_days: int | None = None,
+        view_window_days: int | None = None,
+    ) -> dict[str, Any]:
+        """Update a conversion event"""
+        payload = self._build_payload(
+            ad_account_id=ad_account_id,
+            name=name,
+            type=type,
+            site_event=site_event,
+            enabled=enabled,
+            default_value=default_value,
+            currency=currency,
+            click_window_days=click_window_days,
+            view_window_days=view_window_days,
+        )
+        return self._client._patch(
+            f"/v1/accounts/{account_id}/tracking-tags/{tag_id}/events/{event_id}",
+            data=payload,
+        )
+
+    def delete_tracking_tag_event(
+        self,
+        account_id: str,
+        tag_id: str,
+        event_id: str,
+        *,
+        ad_account_id: str | None = None,
+    ) -> dict[str, Any]:
+        """Delete a conversion event"""
+        params = self._build_params(
+            ad_account_id=ad_account_id,
+        )
+        return self._client._delete(
+            f"/v1/accounts/{account_id}/tracking-tags/{tag_id}/events/{event_id}",
+            params=params,
+        )
+
     def get_tracking_tag_stats(
         self,
         account_id: str,
@@ -450,6 +542,98 @@ class TrackingTagsResource:
         )
         return await self._client._adelete(
             f"/v1/accounts/{account_id}/tracking-tags/{tag_id}/install", params=params
+        )
+
+    async def alist_tracking_tag_events(
+        self, account_id: str, tag_id: str, *, ad_account_id: str | None = None
+    ) -> dict[str, Any]:
+        """List conversion events (async)"""
+        params = self._build_params(
+            ad_account_id=ad_account_id,
+        )
+        return await self._client._aget(
+            f"/v1/accounts/{account_id}/tracking-tags/{tag_id}/events", params=params
+        )
+
+    async def acreate_tracking_tag_event(
+        self,
+        account_id: str,
+        tag_id: str,
+        name: str,
+        *,
+        ad_account_id: str | None = None,
+        type: str | None = None,
+        site_event: str | None = None,
+        enabled: bool | None = None,
+        default_value: float | None = None,
+        currency: str | None = None,
+        click_window_days: int | None = None,
+        view_window_days: int | None = None,
+    ) -> dict[str, Any]:
+        """Create a conversion event (async)"""
+        payload = self._build_payload(
+            ad_account_id=ad_account_id,
+            name=name,
+            type=type,
+            site_event=site_event,
+            enabled=enabled,
+            default_value=default_value,
+            currency=currency,
+            click_window_days=click_window_days,
+            view_window_days=view_window_days,
+        )
+        return await self._client._apost(
+            f"/v1/accounts/{account_id}/tracking-tags/{tag_id}/events", data=payload
+        )
+
+    async def aupdate_tracking_tag_event(
+        self,
+        account_id: str,
+        tag_id: str,
+        event_id: str,
+        *,
+        ad_account_id: str | None = None,
+        name: str | None = None,
+        type: str | None = None,
+        site_event: str | None = None,
+        enabled: bool | None = None,
+        default_value: float | None = None,
+        currency: str | None = None,
+        click_window_days: int | None = None,
+        view_window_days: int | None = None,
+    ) -> dict[str, Any]:
+        """Update a conversion event (async)"""
+        payload = self._build_payload(
+            ad_account_id=ad_account_id,
+            name=name,
+            type=type,
+            site_event=site_event,
+            enabled=enabled,
+            default_value=default_value,
+            currency=currency,
+            click_window_days=click_window_days,
+            view_window_days=view_window_days,
+        )
+        return await self._client._apatch(
+            f"/v1/accounts/{account_id}/tracking-tags/{tag_id}/events/{event_id}",
+            data=payload,
+        )
+
+    async def adelete_tracking_tag_event(
+        self,
+        account_id: str,
+        tag_id: str,
+        event_id: str,
+        *,
+        ad_account_id: str | None = None,
+    ) -> dict[str, Any]:
+        """Delete a conversion event (async)"""
+        params = self._build_params(
+            ad_account_id=ad_account_id,
+        )
+        return await self._client._adelete(
+            f"/v1/accounts/{account_id}/tracking-tags/{tag_id}/events/{event_id}",
+            params=params,
         )
 
     async def aget_tracking_tag_stats(
