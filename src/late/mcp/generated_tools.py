@@ -22913,6 +22913,84 @@ def register_generated_tools(mcp, _get_client):
 
     @mcp.tool(
         annotations=ToolAnnotations(
+            title="Install on a Shopify store",
+            readOnlyHint=False,
+            destructiveHint=True,
+            openWorldHint=True,
+        )
+    )
+    def tracking_tags_install_tracking_tag_on_store(
+        account_id: str, tag_id: str, store_account_id: str
+    ) -> str:
+        """Install on a Shopify store
+
+        Args:
+            account_id: (required)
+            tag_id: Meta pixel id. (required)
+            store_account_id: The connected Shopify account id (platform `shopify`). (required)"""
+        client = _get_client()
+        try:
+            response = client.tracking_tags.install_tracking_tag_on_store(
+                account_id=account_id, tag_id=tag_id, store_account_id=store_account_id
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Get store install status",
+            readOnlyHint=True,
+            destructiveHint=False,
+            openWorldHint=False,
+        )
+    )
+    def tracking_tags_get_tracking_tag_store_install(
+        account_id: str, tag_id: str, store_account_id: str
+    ) -> str:
+        """Get store install status
+
+        Args:
+            account_id: (required)
+            tag_id: Meta pixel id. (required)
+            store_account_id: The connected Shopify account id. (required)"""
+        client = _get_client()
+        try:
+            response = client.tracking_tags.get_tracking_tag_store_install(
+                account_id=account_id, tag_id=tag_id, store_account_id=store_account_id
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Remove from a Shopify store",
+            readOnlyHint=False,
+            destructiveHint=True,
+            openWorldHint=True,
+        )
+    )
+    def tracking_tags_remove_tracking_tag_from_store(
+        account_id: str, tag_id: str, store_account_id: str
+    ) -> str:
+        """Remove from a Shopify store
+
+        Args:
+            account_id: (required)
+            tag_id: Meta pixel id. (required)
+            store_account_id: The connected Shopify account id. (required)"""
+        client = _get_client()
+        try:
+            response = client.tracking_tags.remove_tracking_tag_from_store(
+                account_id=account_id, tag_id=tag_id, store_account_id=store_account_id
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
             title="Get aggregated event stats",
             readOnlyHint=True,
             destructiveHint=False,

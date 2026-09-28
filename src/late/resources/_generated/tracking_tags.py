@@ -187,6 +187,39 @@ class TrackingTagsResource:
             params=params,
         )
 
+    def install_tracking_tag_on_store(
+        self, account_id: str, tag_id: str, store_account_id: str
+    ) -> dict[str, Any]:
+        """Install on a Shopify store"""
+        payload = self._build_payload(
+            store_account_id=store_account_id,
+        )
+        return self._client._post(
+            f"/v1/accounts/{account_id}/tracking-tags/{tag_id}/install", data=payload
+        )
+
+    def get_tracking_tag_store_install(
+        self, account_id: str, tag_id: str, store_account_id: str
+    ) -> dict[str, Any]:
+        """Get store install status"""
+        params = self._build_params(
+            store_account_id=store_account_id,
+        )
+        return self._client._get(
+            f"/v1/accounts/{account_id}/tracking-tags/{tag_id}/install", params=params
+        )
+
+    def remove_tracking_tag_from_store(
+        self, account_id: str, tag_id: str, store_account_id: str
+    ) -> dict[str, Any]:
+        """Remove from a Shopify store"""
+        params = self._build_params(
+            store_account_id=store_account_id,
+        )
+        return self._client._delete(
+            f"/v1/accounts/{account_id}/tracking-tags/{tag_id}/install", params=params
+        )
+
     def get_tracking_tag_stats(
         self,
         account_id: str,
@@ -322,6 +355,39 @@ class TrackingTagsResource:
         return await self._client._adelete(
             f"/v1/accounts/{account_id}/tracking-tags/{tag_id}/shared-accounts",
             params=params,
+        )
+
+    async def ainstall_tracking_tag_on_store(
+        self, account_id: str, tag_id: str, store_account_id: str
+    ) -> dict[str, Any]:
+        """Install on a Shopify store (async)"""
+        payload = self._build_payload(
+            store_account_id=store_account_id,
+        )
+        return await self._client._apost(
+            f"/v1/accounts/{account_id}/tracking-tags/{tag_id}/install", data=payload
+        )
+
+    async def aget_tracking_tag_store_install(
+        self, account_id: str, tag_id: str, store_account_id: str
+    ) -> dict[str, Any]:
+        """Get store install status (async)"""
+        params = self._build_params(
+            store_account_id=store_account_id,
+        )
+        return await self._client._aget(
+            f"/v1/accounts/{account_id}/tracking-tags/{tag_id}/install", params=params
+        )
+
+    async def aremove_tracking_tag_from_store(
+        self, account_id: str, tag_id: str, store_account_id: str
+    ) -> dict[str, Any]:
+        """Remove from a Shopify store (async)"""
+        params = self._build_params(
+            store_account_id=store_account_id,
+        )
+        return await self._client._adelete(
+            f"/v1/accounts/{account_id}/tracking-tags/{tag_id}/install", params=params
         )
 
     async def aget_tracking_tag_stats(

@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.124.0"
+  version: "1.125.0"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -720,6 +720,20 @@ components:
             type: invalid_request_error
             code: ads_connection_required
             param: accountId
+    StoreReconnectRequired:
+      description: 'The store must re-approve the Zernio Shopify app to grant pixel access (code `reconnect_required`). Send the merchant to `details.authUrl`; the Shopify account id stays the same. Also returned while the store account itself needs reconnection (code `ads_connection_required`).'
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/ErrorResponse' }
+          example:
+            error: 'The Shopify store acme.myshopify.com has not granted write_pixels, read_customer_events. Send the merchant to details.authUrl to re-approve the Zernio app (the account id stays the same), then retry.'
+            type: permission_error
+            code: reconnect_required
+            param: storeAccountId
+            platform: shopify
+            details:
+              missingScopes: [write_pixels, read_customer_events]
+              authUrl: 'https://acme.myshopify.com/admin/oauth/authorize?client_id=...'
     TemporarilyUnavailable:
       description: 'An upstream service or database is temporarily unavailable. Retry after the indicated delay. A timed-out write may have completed upstream; check its outcome before resubmitting.'
       headers:
@@ -12379,6 +12393,16 @@ components:
         skipped_reason: { type: string }
         created_at: { type: string, format: date-time }
         updated_at: { type: string, format: date-time }
+    StorePixelInstall:
+      type: object
+      description: A tracking tag's install on a connected store (Shopify web pixel).
+      properties:
+        storeAccountId: { type: string }
+        platform: { type: string, enum: [shopify] }
+        shopDomain: { type: string, example: 'acme.myshopify.com' }
+        installed: { type: boolean, description: 'True when this tag is the pixel the store fires.' }
+        installedTagId: { type: [string, "null"], description: 'The Meta pixel the store fires now (may be a different tag), or null.' }
+        webPixelId: { type: [string, "null"], description: 'Shopify web pixel id, or null when nothing is installed.' }
     TrackingTag:
       type: object
       description: |
@@ -64565,6 +64589,130 @@ paths:
 
         '405': { description: Platform does not support shared accounts. }
         '502': { description: 'Meta was unreachable or returned an unclassified error (type: platform_error; the raw Meta payload is in platformError). Retryable.' }
+
+  /v1/accounts/{accountId}/tracking-tags/{tagId}/install:
+    post:
+      x-resource-group: "ads"
+      operationId: installTrackingTagOnStore
+      tags: ["Tracking Tags"]
+      x-platforms: ["meta", "shopify"]
+      summary: Install on a Shopify store
+      description: |
+        Puts the Meta pixel on a connected Shopify store's storefront and checkout through
+        Zernio's Shopify web pixel (a Shopify app pixel, no theme edits). The store then sends
+        PageView, ViewContent, AddToCart, Search, InitiateCheckout, AddPaymentInfo and Purchase
+        (with value, currency, content_ids and contents) to the pixel, each with an event id.
+        Purchase uses `shopify_order_{orderId}` as its event id, so a Conversions API Purchase
+        you send for the same order with that `eventId` is deduplicated by Meta.
+
+        Idempotent: a store runs one Zernio pixel, so calling it again updates the install and
+        installing a different tag replaces the previous one (reported in `replacedTagId`).
+        Events respect the store's customer privacy settings (marketing consent).
+
+        `accountId` is the Meta ads account that owns the pixel (`tagId`); `storeAccountId` is the
+        Shopify account. Stores connected before pixel support must re-approve the Zernio app:
+        the call then answers 409 `reconnect_required` with `details.authUrl` to send the
+        merchant to (the Shopify account id stays the same). Meta only (platform `metaads`);
+        other platforms return 405.
+      security:
+        - bearerAuth: []
+      parameters:
+        - { name: accountId, in: path, required: true, schema: { type: string } }
+        - { name: tagId, in: path, required: true, schema: { type: string }, description: 'Meta pixel id.' }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [storeAccountId]
+              properties:
+                storeAccountId: { type: string, description: 'The connected Shopify account id (platform `shopify`).' }
+      responses:
+        '200':
+          description: Pixel installed on the store
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  platform: { type: string, enum: [metaads] }
+                  install:
+                    allOf:
+                      - $ref: '#/components/schemas/StorePixelInstall'
+                      - type: object
+                        properties:
+                          replacedTagId: { type: [string, "null"], description: 'The pixel this install replaced on the store, if any.' }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { description: 'Ads access required (Ads add-on on legacy plans, included on usage-based plans), or the Meta token lacks ads permissions (reconnect required).' }
+        '404': { $ref: '#/components/responses/AccountUnavailable' }
+        '405': { description: Platform does not support store installs. }
+        '409': { $ref: '#/components/responses/StoreReconnectRequired' }
+        '502': { description: 'Meta or Shopify was unreachable or returned an unclassified error. Retryable.' }
+    get:
+      x-resource-group: "ads"
+      operationId: getTrackingTagStoreInstall
+      tags: ["Tracking Tags"]
+      x-platforms: ["meta", "shopify"]
+      summary: Get store install status
+      description: |
+        Whether this pixel is the one the Shopify store fires. `installedTagId` names the pixel
+        the store currently fires, which can be a different tag. Meta only (platform `metaads`).
+      security:
+        - bearerAuth: []
+      parameters:
+        - { name: accountId, in: path, required: true, schema: { type: string } }
+        - { name: tagId, in: path, required: true, schema: { type: string }, description: 'Meta pixel id.' }
+        - { name: storeAccountId, in: query, required: true, schema: { type: string }, description: 'The connected Shopify account id.' }
+      responses:
+        '200':
+          description: Install status
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  platform: { type: string, enum: [metaads] }
+                  install: { $ref: '#/components/schemas/StorePixelInstall' }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { description: 'Ads access required (Ads add-on on legacy plans, included on usage-based plans).' }
+        '404': { $ref: '#/components/responses/AccountUnavailable' }
+        '405': { description: Platform does not support store installs. }
+        '409': { $ref: '#/components/responses/StoreReconnectRequired' }
+    delete:
+      x-resource-group: "ads"
+      operationId: removeTrackingTagFromStore
+      tags: ["Tracking Tags"]
+      x-platforms: ["meta", "shopify"]
+      summary: Remove from a Shopify store
+      description: |
+        Removes the pixel from the store. Idempotent: nothing installed returns 200 with
+        `installed: false`. If the store fires a different pixel, nothing is removed and the
+        call answers 409 `invalid_resource_state`. Meta only (platform `metaads`).
+      security:
+        - bearerAuth: []
+      parameters:
+        - { name: accountId, in: path, required: true, schema: { type: string } }
+        - { name: tagId, in: path, required: true, schema: { type: string }, description: 'Meta pixel id.' }
+        - { name: storeAccountId, in: query, required: true, schema: { type: string }, description: 'The connected Shopify account id.' }
+      responses:
+        '200':
+          description: Pixel removed (or was not installed)
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  platform: { type: string, enum: [metaads] }
+                  install: { $ref: '#/components/schemas/StorePixelInstall' }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { description: 'Ads access required (Ads add-on on legacy plans, included on usage-based plans).' }
+        '404': { $ref: '#/components/responses/AccountUnavailable' }
+        '405': { description: Platform does not support store installs. }
+        '409': { description: 'The store fires a different pixel (code `invalid_resource_state`), or the store must re-approve the Zernio app (code `reconnect_required`, see `details.authUrl`).' }
 
   /v1/accounts/{accountId}/tracking-tags/{tagId}/stats:
     get:
