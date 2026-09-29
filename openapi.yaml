@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.162.1"
+  version: "1.162.2"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -28260,7 +28260,7 @@ paths:
                         category: { type: string }
                         fan_count: { type: integer }
                   selectedPageId: { type: string }
-                  cached: { type: boolean }
+                  cached: { type: boolean, description: 'false when this response was just read from Meta (cold cache or a refresh that ran), true when served from the stored list (including a debounced refresh or an empty Meta answer)' }
               example:
                 pages:
                   - id: "123456789012345"
