@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.162.0"
+  version: "1.162.1"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -23308,7 +23308,8 @@ paths:
         Business login reports metadata.tokenType=system-user in GET /v1/accounts. An absent
         Meta expires_in leaves tokenExpiresAt absent; no personal-token re-exchange occurs.
         Subsequent classic requests can change the ad-account scope using the business token;
-        force=true requires loginMode=business to reconnect that connection.
+        force=true (or disconnecting the business connection first) switches the profile to the
+        standard Facebook login; the ads account is then held by the user token.
 
         **Same-token platforms (facebook, instagram, linkedin, pinterest).** The ads SocialAccount
         (metaads, linkedinads, pinterestads) reuses the OAuth token of the parent posting account,
@@ -23535,7 +23536,7 @@ paths:
         '404':
           description: "Profile or posting account not found"
         '409':
-          description: "Reconnect a system-user connection with loginMode=business."
+          description: "The Business Login connection needs reconnecting. Reconnect it with loginMode=business, or pass force=true (or disconnect it first) to switch to the standard login."
         '503':
           description: "Business login is not configured or the platform is temporarily unavailable."
 
