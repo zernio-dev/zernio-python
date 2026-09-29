@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.157.0"
+  version: "1.157.1"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -42658,7 +42658,8 @@ paths:
         '400': { description: Phone number is already released or being released }
         '401': { $ref: '#/components/responses/Unauthorized' }
         '404': { $ref: '#/components/responses/NotFound' }
-        '409': { description: 'The number is attached to a SIP trunk; detach it first (code invalid_resource_state).' }
+        '409': { description: 'The number is attached to a SIP trunk (detach it first), or it changed state while a pending order was being cancelled (code invalid_resource_state).' }
+        '503': { $ref: '#/components/responses/TemporarilyUnavailable' }
 
   /v1/phone-numbers/purchase:
     post:
@@ -46042,7 +46043,8 @@ paths:
         '400': { description: Phone number is already released or being released }
         '401': { $ref: '#/components/responses/Unauthorized' }
         '404': { $ref: '#/components/responses/NotFound' }
-        '409': { description: 'The number is attached to a SIP trunk; detach it first (code invalid_resource_state).' }
+        '409': { description: 'The number is attached to a SIP trunk (detach it first), or it changed state while a pending order was being cancelled (code invalid_resource_state).' }
+        '503': { $ref: '#/components/responses/TemporarilyUnavailable' }
 
   # ─── WhatsApp Sandbox (shared test number) ──────────────────────
   #
