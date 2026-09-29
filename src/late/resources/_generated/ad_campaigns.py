@@ -309,6 +309,7 @@ class AdCampaignsResource:
         to_date: str | None = None,
         has_delivery: bool | None = None,
         min_spend: float | None = None,
+        live: bool | None = False,
     ) -> dict[str, Any]:
         """List campaigns"""
         params = self._build_params(
@@ -326,6 +327,7 @@ class AdCampaignsResource:
             to_date=to_date,
             has_delivery=has_delivery,
             min_spend=min_spend,
+            live=live,
         )
         return self._client._get("/v1/ads/campaigns", params=params)
 
@@ -582,13 +584,17 @@ class AdCampaignsResource:
         *,
         account_id: str | None = None,
         campaign_id: str | None = None,
+        ad_set_id: str | None = None,
         platform: str | None = None,
+        live: bool | None = False,
     ) -> dict[str, Any]:
         """List ad sets"""
         params = self._build_params(
             account_id=account_id,
             campaign_id=campaign_id,
+            ad_set_id=ad_set_id,
             platform=platform,
+            live=live,
         )
         return self._client._get("/v1/ads/ad-sets", params=params)
 
@@ -803,9 +809,12 @@ class AdCampaignsResource:
         )
         return self._client._get("/v1/ads/timeline", params=params)
 
-    def get_ad(self, ad_id: str) -> dict[str, Any]:
+    def get_ad(self, ad_id: str, *, live: bool | None = False) -> dict[str, Any]:
         """Get ad details"""
-        return self._client._get(f"/v1/ads/{ad_id}")
+        params = self._build_params(
+            live=live,
+        )
+        return self._client._get(f"/v1/ads/{ad_id}", params=params)
 
     def update_ad(
         self,
@@ -1745,6 +1754,7 @@ class AdCampaignsResource:
         to_date: str | None = None,
         has_delivery: bool | None = None,
         min_spend: float | None = None,
+        live: bool | None = False,
     ) -> dict[str, Any]:
         """List campaigns (async)"""
         params = self._build_params(
@@ -1762,6 +1772,7 @@ class AdCampaignsResource:
             to_date=to_date,
             has_delivery=has_delivery,
             min_spend=min_spend,
+            live=live,
         )
         return await self._client._aget("/v1/ads/campaigns", params=params)
 
@@ -2024,13 +2035,17 @@ class AdCampaignsResource:
         *,
         account_id: str | None = None,
         campaign_id: str | None = None,
+        ad_set_id: str | None = None,
         platform: str | None = None,
+        live: bool | None = False,
     ) -> dict[str, Any]:
         """List ad sets (async)"""
         params = self._build_params(
             account_id=account_id,
             campaign_id=campaign_id,
+            ad_set_id=ad_set_id,
             platform=platform,
+            live=live,
         )
         return await self._client._aget("/v1/ads/ad-sets", params=params)
 
@@ -2249,9 +2264,12 @@ class AdCampaignsResource:
         )
         return await self._client._aget("/v1/ads/timeline", params=params)
 
-    async def aget_ad(self, ad_id: str) -> dict[str, Any]:
+    async def aget_ad(self, ad_id: str, *, live: bool | None = False) -> dict[str, Any]:
         """Get ad details (async)"""
-        return await self._client._aget(f"/v1/ads/{ad_id}")
+        params = self._build_params(
+            live=live,
+        )
+        return await self._client._aget(f"/v1/ads/{ad_id}", params=params)
 
     async def aupdate_ad(
         self,

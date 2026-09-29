@@ -4723,6 +4723,7 @@ def register_generated_tools(mcp, _get_client):
     def ad_campaigns_list_ad_sets(
         account_id: str | None = None,
         campaign_id: str | None = None,
+        ad_set_id: str | None = None,
         platform: str | None = None,
     ) -> str:
         """List ad sets
@@ -4730,11 +4731,15 @@ def register_generated_tools(mcp, _get_client):
         Args:
             account_id: Account ID
             campaign_id: Platform campaign ID
+            ad_set_id: Platform ad set ID
             platform"""
         client = _get_client()
         try:
             response = client.ad_campaigns.list_ad_sets(
-                account_id=account_id, campaign_id=campaign_id, platform=platform
+                account_id=account_id,
+                campaign_id=campaign_id,
+                ad_set_id=ad_set_id,
+                platform=platform,
             )
             return _format_response(response)
         except Exception as e:
