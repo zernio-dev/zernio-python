@@ -21,6 +21,7 @@ from .business_agent import BusinessAgentResource
 from .calls import CallsResource
 from .comment_automations import CommentAutomationsResource
 from .comments import CommentsResource
+from .commerce import CommerceResource
 from .connect import ConnectResource
 from .connected_apps import ConnectedAppsResource
 from .contacts import ContactsResource
@@ -90,6 +91,7 @@ __all__ = [
     "CallsResource",
     "CommentAutomationsResource",
     "CommentsResource",
+    "CommerceResource",
     "ConnectResource",
     "ConnectedAppsResource",
     "ContactsResource",

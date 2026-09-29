@@ -213,6 +213,9 @@ x-documentation:
     - `whatsapp.number.released` - A number was released and is no longer usable (terminal); carries a `reason`
     - `verification.approved` - A managed-OTP verification was approved (the user submitted the correct code)
     - `verification.failed` - A managed-OTP verification was exhausted after too many wrong code attempts
+    - `commerce.product.created` - A product was created on a connected store
+    - `commerce.product.updated` - A product on a connected store changed (fields, status, variants or prices)
+    - `commerce.product.deleted` - A product was deleted from a connected store
     - `sms.registration.action_required` - An SMS registration (10DLC or toll-free) is waiting on you: we need answers to some points (before submission, or to fix a carrier rejection), a sole-prop brand needs the code texted to its mobile, or the toll-free carrier asked for more information. Branch on `reason`; `message` says what to do
     - `sms.registration.status_updated` - An SMS registration changed status: changes_requested, requested, pending (with the carriers), approved (ready to send), rejected (we handle the fix) or deactivated
     - `branded_calling.identity.status_updated` - A caller identity changed status: requested (back in our review), changes_requested, rejected, pending_email_verification (filed; the authorizer must enter the code), in_review (carrier vetting), verified, suspended (infringement claim), expired or permanently_rejected
@@ -266,13 +269,32 @@ tags:
       the platform; Zernio proxies it and stores nothing.
   - name: Products
     description: |
-      Read and edit the product catalog on connected accounts. Currently
-      supported for Shopify accounts (scopes read_products and write_products).
-      Products are listed with their variants, options and images; edits cover
-      the product's own fields (title, description, handle, tags, vendor, type,
-      status, SEO) and variant prices. No product creation, inventory or
-      orders. All data lives on the platform; Zernio proxies it and stores
-      nothing.
+      Deprecated: use the Commerce endpoints (`/v1/commerce/products`), which
+      return the same catalog in the platform-neutral shape with prices that
+      carry their currency. These endpoints keep working with their original
+      response for existing integrations.
+  - name: Commerce
+    description: |
+      One API over every connected store. Write against it once and it works
+      for each supported platform: Shopify, and WooCommerce on self-hosted
+      WordPress sites (a connected WordPress account is the store; commerce
+      objects report `platform: woocommerce`). TikTok Shop and more follow.
+      Each operation lists its platforms in `x-platforms`. Pick the store with `accountId` (a query parameter on
+      reads, a body field on writes).
+
+      Conventions shared by every Commerce endpoint:
+      - Money is `{ amount, currency }` (CommerceMoney), with the amount as a decimal string
+        and the currency never null. Write bodies take a bare decimal amount
+        in the store's currency.
+      - Timestamps are ISO 8601 UTC.
+      - `status` uses the Zernio vocabulary. The platform's raw value is
+        always returned next to it as `platformStatus`.
+      - Lists return `{ <resource>, nextCursor }` with an opaque cursor.
+      - An operation a platform cannot serve answers 400 with code
+        `platform_not_supported`. `GET /v1/commerce/store` lists a store's
+        `capabilities` up front.
+
+      All data lives on the platform; Zernio proxies it and stores nothing.
   - name: Users
     description: |
       Read the authenticated user and team members.
@@ -541,7 +563,7 @@ tags:
   - name: Webhooks
     description: |
       Configure webhooks for real-time notifications. Webhooks can be created from the dashboard (Settings → Webhooks) or via this API.
-      Events: post.scheduled, post.published, post.failed, post.partial, post.cancelled, post.recycled, post.platform.published, post.platform.failed, post.platform.deleted, post.tiktok.url_resolved, post.external.created, post.external.updated, post.external.deleted, account.connected, account.disconnected, account.ads.initial_sync_completed, account.ads.sync_failed, account.ads.sync_recovered, analytics.synced, message.received, conversation.started, conversation.control_changed, call.received, call.ended, call.failed, call.permission_request, message.sent, message.edited, message.deleted, message.delivered, message.read, message.failed, reaction.received, referral.received, comment.received, review.new, review.updated, lead.received, ad.status_changed, whatsapp.template.status_updated, whatsapp.template.category_updated, whatsapp.account.name_status_updated, whatsapp.automatic_event, whatsapp.number.activated, whatsapp.number.declined, whatsapp.number.action_required, whatsapp.number.verification_required, whatsapp.number.suspended, whatsapp.number.reactivated, whatsapp.number.released, whatsapp.number.kyc_submitted, phone_number.stock_available, verification.approved, verification.failed, sms.registration.action_required, sms.registration.status_updated, branded_calling.identity.status_updated, branded_calling.identity.action_required, branded_calling.number.status_updated, rcs.agent.status_updated, webhook.test.
+      Events: post.scheduled, post.published, post.failed, post.partial, post.cancelled, post.recycled, post.platform.published, post.platform.failed, post.platform.deleted, post.tiktok.url_resolved, post.external.created, post.external.updated, post.external.deleted, account.connected, account.disconnected, account.ads.initial_sync_completed, account.ads.sync_failed, account.ads.sync_recovered, analytics.synced, message.received, conversation.started, conversation.control_changed, call.received, call.ended, call.failed, call.permission_request, message.sent, message.edited, message.deleted, message.delivered, message.read, message.failed, reaction.received, referral.received, comment.received, review.new, review.updated, lead.received, ad.status_changed, whatsapp.template.status_updated, whatsapp.template.category_updated, whatsapp.account.name_status_updated, whatsapp.automatic_event, whatsapp.number.activated, whatsapp.number.declined, whatsapp.number.action_required, whatsapp.number.verification_required, whatsapp.number.suspended, whatsapp.number.reactivated, whatsapp.number.released, whatsapp.number.kyc_submitted, phone_number.stock_available, verification.approved, verification.failed, sms.registration.action_required, sms.registration.status_updated, branded_calling.identity.status_updated, branded_calling.identity.action_required, branded_calling.number.status_updated, rcs.agent.status_updated, commerce.product.created, commerce.product.updated, commerce.product.deleted, webhook.test.
       Headers: every delivery carries X-Zernio-Event (event name) and X-Zernio-Event-Id (the payload `id`, a UUID minted once per event and identical across every subscribed endpoint, every automatic retry and every redelivery, so dedupe on it). Security: optional HMAC-SHA256 signature in X-Zernio-Signature header. Configure a secret key to enable verification. Custom headers supported. Legacy X-Late-Event, X-Late-Event-Id and X-Late-Signature duplicates are still sent and will be removed in a future major version.
 
       Resource groups. Every event belongs to one group: post.* to publishing, message.*, reaction.*, conversation.*, call.* and whatsapp.automatic_event to messages, comment.* and review.* to engagement, lead.* to contacts, ad.* to ads, account.*, whatsapp.template.* and whatsapp.account.* to accounts, analytics.* to analytics, whatsapp.number.*, verification.* and sms.registration.* to telephony, webhook.test to webhooks. Two independent controls use that mapping. (1) A restricted (zrk_) API key can only subscribe to, test-fire, redeliver, or read delivery logs for events in the groups it holds, so it can never create a subscription broader than itself. (2) Each subscription carries its own `disabledResourceGroups` denylist: events in a disabled group are dropped before delivery to that endpoint, on live delivery and on every replay path, no matter which key or session created the subscription. Changing that denylist applies to every event emitted after the change; events already queued when it landed can still be delivered for up to five minutes after they were enqueued, because the delivery worker trusts a five-minute enqueue-time snapshot before re-checking. Absent or empty on a subscription means it receives everything it subscribes to, which is the behavior of every subscription created before the field existed.
@@ -3669,7 +3691,7 @@ components:
           type: array
           items:
             type: string
-            enum: [post.scheduled, post.published, post.failed, post.partial, post.cancelled, post.recycled, post.platform.published, post.platform.failed, post.platform.deleted, post.tiktok.url_resolved, post.external.created, post.external.updated, post.external.deleted, account.connected, account.disconnected, account.ads.initial_sync_completed, account.ads.sync_failed, account.ads.sync_recovered, analytics.synced, message.received, conversation.started, conversation.control_changed, call.received, call.ended, call.failed, call.permission_request, message.sent, message.edited, message.deleted, message.delivered, message.read, message.failed, reaction.received, referral.received, comment.received, review.new, review.updated, lead.received, ad.status_changed, whatsapp.template.status_updated, whatsapp.template.category_updated, whatsapp.account.name_status_updated, whatsapp.automatic_event, whatsapp.number.activated, whatsapp.number.declined, whatsapp.number.action_required, whatsapp.number.verification_required, whatsapp.number.suspended, whatsapp.number.reactivated, whatsapp.number.released, whatsapp.number.kyc_submitted, phone_number.stock_available, verification.approved, verification.failed, sms.registration.action_required, sms.registration.status_updated, branded_calling.identity.status_updated, branded_calling.identity.action_required, branded_calling.number.status_updated, rcs.agent.status_updated]
+            enum: [post.scheduled, post.published, post.failed, post.partial, post.cancelled, post.recycled, post.platform.published, post.platform.failed, post.platform.deleted, post.tiktok.url_resolved, post.external.created, post.external.updated, post.external.deleted, account.connected, account.disconnected, account.ads.initial_sync_completed, account.ads.sync_failed, account.ads.sync_recovered, analytics.synced, message.received, conversation.started, conversation.control_changed, call.received, call.ended, call.failed, call.permission_request, message.sent, message.edited, message.deleted, message.delivered, message.read, message.failed, reaction.received, referral.received, comment.received, review.new, review.updated, lead.received, ad.status_changed, whatsapp.template.status_updated, whatsapp.template.category_updated, whatsapp.account.name_status_updated, whatsapp.automatic_event, whatsapp.number.activated, whatsapp.number.declined, whatsapp.number.action_required, whatsapp.number.verification_required, whatsapp.number.suspended, whatsapp.number.reactivated, whatsapp.number.released, whatsapp.number.kyc_submitted, phone_number.stock_available, verification.approved, verification.failed, sms.registration.action_required, sms.registration.status_updated, branded_calling.identity.status_updated, branded_calling.identity.action_required, branded_calling.number.status_updated, rcs.agent.status_updated, commerce.product.created, commerce.product.updated, commerce.product.deleted]
           description: Events subscribed to
         isActive:
           type: boolean
@@ -12465,6 +12487,364 @@ components:
         createdAt: { type: [string, "null"], format: date-time }
         updatedAt: { type: [string, "null"], format: date-time }
         publishedAt: { type: [string, "null"], format: date-time }
+    CommerceMoney:
+      type: object
+      description: 'An exact amount of money. The amount is a decimal string so cents are never lost to floating point.'
+      required: [amount, currency]
+      properties:
+        amount: { type: string, example: '19.90' }
+        currency: { type: string, description: 'ISO 4217 code. Never null: the store currency is filled in when the platform omits it.', example: USD }
+    CommerceCapability:
+      type: string
+      description: 'An operation a store supports. Calling an operation outside this list answers 400 platform_not_supported.'
+      enum: [products.read, products.create, products.update, products.status, products.price, products.variants, products.images, products.images_remove, collections.read, collections.write, metafields.read, metafields.write, pages.read, pages.write, inventory.read, inventory.write, channels.read, channels.write, discounts.read, discounts.write, navigation.read, navigation.write, metaobjects.read, metaobjects.write, markets.read, markets.write, marketing.write]
+    CommerceImage:
+      type: object
+      properties:
+        id: { type: [string, "null"], description: 'Media id, used to reorder or remove images. Null for collection images.' }
+        url: { type: string }
+        altText: { type: [string, "null"] }
+    CommerceMetafield:
+      type: object
+      required: [namespace, key, type, value]
+      properties:
+        namespace: { type: string }
+        key: { type: string }
+        type: { type: string, description: 'Platform value type, e.g. single_line_text_field, number_integer, json.' }
+        value: { type: string, description: 'The value serialized as a string, JSON for structured types.' }
+    CommercePage:
+      type: object
+      properties:
+        id: { type: string }
+        accountId: { type: string }
+        platform: { type: string, enum: [shopify] }
+        title: { type: string }
+        handle: { type: string }
+        bodyHtml: { type: string }
+        isPublished: { type: boolean }
+        publishedAt: { type: [string, "null"], format: date-time }
+        createdAt: { type: [string, "null"], format: date-time }
+        updatedAt: { type: [string, "null"], format: date-time }
+    CommerceLocation:
+      type: object
+      properties:
+        id: { type: string }
+        name: { type: string }
+        isActive: { type: boolean }
+        fulfillsOnlineOrders: { type: boolean }
+        address:
+          type: object
+          properties:
+            line1: { type: [string, "null"] }
+            line2: { type: [string, "null"] }
+            city: { type: [string, "null"] }
+            region: { type: [string, "null"] }
+            postalCode: { type: [string, "null"] }
+            countryCode: { type: [string, "null"] }
+            phone: { type: [string, "null"] }
+    CommerceInventoryItem:
+      type: object
+      properties:
+        productId: { type: string }
+        variantId: { type: string }
+        sku: { type: [string, "null"] }
+        tracked: { type: boolean, description: 'False when the platform does not count stock for the variant.' }
+        levels:
+          type: array
+          items:
+            type: object
+            properties:
+              locationId: { type: string }
+              available: { type: [integer, "null"] }
+              onHand: { type: [integer, "null"] }
+              committed: { type: [integer, "null"], description: 'Reserved for unfulfilled orders.' }
+              incoming: { type: [integer, "null"] }
+    CommerceChannel:
+      type: object
+      properties:
+        id: { type: string }
+        name: { type: string }
+    CommerceDiscount:
+      type: object
+      properties:
+        id: { type: string }
+        accountId: { type: string }
+        platform: { type: string, enum: [shopify] }
+        title: { type: string }
+        method: { type: string, enum: [code, automatic] }
+        type: { type: string, enum: [percentage, fixed_amount, free_shipping, buy_x_get_y, app] }
+        codes: { type: array, items: { type: string }, description: 'The first 10 codes; codeCount has the total.' }
+        codeCount: { type: [integer, "null"] }
+        value:
+          description: 'Null for free shipping, buy-X-get-Y and app discounts.'
+          oneOf:
+            - type: object
+              properties:
+                type: { type: string, enum: [percentage] }
+                percentage: { type: number, example: 15 }
+            - type: object
+              properties:
+                type: { type: string, enum: [fixed_amount] }
+                amount: { $ref: '#/components/schemas/CommerceMoney' }
+                appliesOnEachItem: { type: boolean }
+            - type: "null"
+        appliesTo:
+          type: [object, "null"]
+          properties:
+            type: { type: string, enum: [all, products, collections] }
+            productIds: { type: array, items: { type: string } }
+            variantIds: { type: array, items: { type: string } }
+            collectionIds: { type: array, items: { type: string } }
+        minimum:
+          type: [object, "null"]
+          properties:
+            type: { type: string, enum: [subtotal, quantity] }
+            amount: { $ref: '#/components/schemas/CommerceMoney' }
+            quantity: { type: integer }
+        usageLimit: { type: [integer, "null"] }
+        oncePerCustomer: { type: boolean }
+        usageCount: { type: integer }
+        startsAt: { type: string, format: date-time }
+        endsAt: { type: [string, "null"], format: date-time }
+        status: { type: string, enum: [active, scheduled, expired] }
+        platformStatus: { type: string }
+        summary: { type: string }
+        platformData: { type: [object, "null"], additionalProperties: true }
+    CommerceRedirect:
+      type: object
+      properties:
+        id: { type: string }
+        path: { type: string }
+        target: { type: string }
+    CommerceMenuItem:
+      type: object
+      properties:
+        id: { type: [string, "null"] }
+        title: { type: string }
+        type: { type: string, enum: [frontpage, collection, collections, product, catalog, page, blog, article, search, shop_policy, http, metaobject, customer_account_page] }
+        url: { type: [string, "null"] }
+        resourceId: { type: [string, "null"], description: 'The linked product, collection, page, blog, article or metaobject id.' }
+        items: { type: array, items: { $ref: '#/components/schemas/CommerceMenuItem' } }
+    CommerceMenuItemInput:
+      type: object
+      required: [title, type]
+      properties:
+        title: { type: string }
+        type: { type: string, enum: [frontpage, collection, collections, product, catalog, page, blog, article, search, shop_policy, http, metaobject, customer_account_page] }
+        url: { type: string, description: 'For http items.' }
+        resourceId: { type: string, description: 'For product, collection, page, blog, article and metaobject items.' }
+        items: { type: array, maxItems: 100, items: { $ref: '#/components/schemas/CommerceMenuItemInput' } }
+    CommerceMenu:
+      type: object
+      properties:
+        id: { type: string }
+        handle: { type: string }
+        title: { type: string }
+        items: { type: array, items: { $ref: '#/components/schemas/CommerceMenuItem' } }
+    CommerceMetaobjectDefinition:
+      type: object
+      properties:
+        id: { type: string }
+        type: { type: string }
+        name: { type: string }
+        fields:
+          type: array
+          items:
+            type: object
+            properties:
+              key: { type: string }
+              name: { type: string }
+              type: { type: string }
+              required: { type: boolean }
+    CommerceMetaobject:
+      type: object
+      properties:
+        id: { type: string }
+        type: { type: string }
+        handle: { type: string }
+        displayName: { type: string }
+        fields:
+          type: array
+          items:
+            type: object
+            properties:
+              key: { type: string }
+              type: { type: string }
+              value: { type: [string, "null"] }
+    CommerceMarket:
+      type: object
+      properties:
+        id: { type: string }
+        name: { type: string }
+        handle: { type: string }
+        status: { type: string, enum: [active, draft] }
+        type: { type: string }
+    CommercePriceList:
+      type: object
+      properties:
+        id: { type: string }
+        name: { type: string }
+        currency: { type: string }
+    CommerceStore:
+      type: object
+      required: [accountId, platform, name, domain, url, currency, country, capabilities, missingCapabilities, grantPermissionsUrl]
+      properties:
+        accountId: { type: string, description: 'Zernio SocialAccount id of the store.' }
+        platform: { type: string, enum: [shopify, woocommerce] }
+        name: { type: string }
+        domain: { type: string, description: 'The platform domain of the store, e.g. my-store.myshopify.com.' }
+        url: { type: [string, "null"], description: 'Public storefront URL.' }
+        currency: { type: string, description: 'ISO 4217 code the store sells in.' }
+        country: { type: [string, "null"], description: 'ISO 3166-1 alpha-2 country of the store.' }
+        capabilities:
+          type: array
+          items: { $ref: '#/components/schemas/CommerceCapability' }
+        missingCapabilities:
+          type: array
+          description: 'Capabilities the platform supports that this store has not granted yet.'
+          items: { $ref: '#/components/schemas/CommerceCapability' }
+        grantPermissionsUrl:
+          type: [string, "null"]
+          description: 'Shopify: a page in the Shopify admin where the store owner approves the permissions missingCapabilities need, on the existing install (no reinstall; they can revoke them later). Null when nothing is missing or the store cannot grant them this way (a store connected with its own custom-app token).'
+    CommerceProductStatus:
+      type: string
+      description: 'Zernio product status. The platform value is returned as platformStatus. Shopify: ACTIVE, DRAFT and ARCHIVED map to the same names; UNLISTED maps to inactive.'
+      enum: [active, draft, pending_review, rejected, inactive, archived, deleted]
+    CommerceVariant:
+      type: object
+      description: 'A purchasable variant of a product (one per option combination).'
+      properties:
+        id: { type: string, description: 'Platform-native variant id.' }
+        title: { type: string, description: 'Option combination label, e.g. "S / Blue".' }
+        sku: { type: [string, "null"] }
+        barcode: { type: [string, "null"] }
+        price: { $ref: '#/components/schemas/CommerceMoney' }
+        compareAtPrice:
+          description: 'Strike-through price; null when the variant is not on sale.'
+          oneOf:
+            - $ref: '#/components/schemas/CommerceMoney'
+            - type: "null"
+        inventoryQuantity: { type: [integer, "null"], description: 'Units on hand; null when inventory is not tracked.' }
+        availableForSale: { type: [boolean, "null"] }
+        options:
+          type: array
+          items:
+            type: object
+            properties:
+              name: { type: string }
+              value: { type: string }
+    CommerceProduct:
+      type: object
+      description: 'A product on a connected store, in the platform-neutral shape.'
+      properties:
+        id: { type: string, description: 'Platform-native product id.' }
+        accountId: { type: string }
+        platform: { type: string, enum: [shopify] }
+        title: { type: string }
+        descriptionHtml: { type: [string, "null"] }
+        handle: { type: [string, "null"], description: 'URL slug of the product.' }
+        vendor: { type: [string, "null"] }
+        productType: { type: [string, "null"] }
+        tags: { type: array, items: { type: string } }
+        status: { $ref: '#/components/schemas/CommerceProductStatus' }
+        platformStatus: { type: string, description: 'The raw status on the platform, e.g. ACTIVE on Shopify.' }
+        featuredImage:
+          oneOf:
+            - $ref: '#/components/schemas/CommerceImage'
+            - type: "null"
+        images:
+          type: array
+          description: 'First 20 images, in store order.'
+          items: { $ref: '#/components/schemas/CommerceImage' }
+        options:
+          type: array
+          description: 'Option axes (e.g. Size, Color) and their values.'
+          items:
+            type: object
+            properties:
+              name: { type: string }
+              values: { type: array, items: { type: string } }
+        variants:
+          type: array
+          description: 'First 100 variants.'
+          items: { $ref: '#/components/schemas/CommerceVariant' }
+        totalInventory: { type: [integer, "null"] }
+        url: { type: [string, "null"], description: 'Public storefront URL; null while the product is not published.' }
+        seo:
+          type: object
+          properties:
+            title: { type: [string, "null"] }
+            description: { type: [string, "null"] }
+        createdAt: { type: [string, "null"], format: date-time }
+        updatedAt: { type: [string, "null"], format: date-time }
+        publishedAt: { type: [string, "null"], format: date-time }
+        platformData: { type: [object, "null"], additionalProperties: true, description: 'Platform-only fields. Null when the platform has none.' }
+    WebhookPayloadCommerceProduct:
+      type: object
+      properties:
+        id: { type: string }
+        event: { type: string, enum: [commerce.product.created, commerce.product.updated, commerce.product.deleted] }
+        timestamp:
+          type: string
+          format: date-time
+          description: 'UTC time at which Zernio generated this event (set once when the event payload is built, before delivery is queued). Retries and redeliveries keep the original value, so it reflects the event, not the delivery attempt.'
+        store:
+          type: object
+          properties:
+            accountId: { type: string, description: 'Zernio SocialAccount id of the store.' }
+            platform: { type: string, enum: [shopify, woocommerce] }
+            shopId: { type: [string, "null"], description: 'The platform id of the shop.' }
+        resource:
+          type: object
+          properties:
+            type: { type: string, enum: [product] }
+            id: { type: string, description: 'Platform-native product id.' }
+            status:
+              description: 'Zernio product status; null on delete.'
+              oneOf:
+                - $ref: '#/components/schemas/CommerceProductStatus'
+                - type: "null"
+            platformStatus: { type: [string, "null"], description: 'Raw platform status, e.g. ACTIVE; null on delete.' }
+    CommerceCollection:
+      type: object
+      description: 'A product collection on a connected store.'
+      properties:
+        id: { type: string, description: 'Platform-native collection id.' }
+        accountId: { type: string }
+        platform: { type: string, enum: [shopify, woocommerce] }
+        title: { type: string }
+        handle: { type: [string, "null"] }
+        descriptionHtml: { type: [string, "null"] }
+        image:
+          oneOf:
+            - $ref: '#/components/schemas/CommerceImage'
+            - type: "null"
+        sortOrder: { type: string, enum: [manual, best_selling, alpha_asc, alpha_desc, price_asc, price_desc, created, created_desc, most_relevant] }
+        productCount: { type: [integer, "null"], description: 'Updates a few seconds after a membership change.' }
+        seo:
+          type: object
+          properties:
+            title: { type: [string, "null"] }
+            description: { type: [string, "null"] }
+        updatedAt: { type: [string, "null"], format: date-time }
+        platformData: { type: [object, "null"], additionalProperties: true }
+    CommerceCatalogSync:
+      type: object
+      description: 'A store kept in sync with an ad-platform product catalog.'
+      properties:
+        id: { type: string }
+        accountId: { type: string, description: 'The store SocialAccount id.' }
+        catalogPlatform: { type: string, enum: [meta] }
+        catalogAccountId: { type: string, description: 'The Meta login account whose token writes to the catalog.' }
+        catalogId: { type: string }
+        runStatus: { type: string, enum: [pending, running, succeeded, failed] }
+        lastRunStartedAt: { type: [string, "null"], format: date-time }
+        lastRunFinishedAt: { type: [string, "null"], format: date-time }
+        lastError: { type: [string, "null"], description: 'Why the last run failed, or how many items Meta rejected in a run that otherwise succeeded. Null after a clean run.' }
+        itemsSent: { type: integer, description: 'Catalog items (one per variant) Meta accepted in the last full run.' }
+        itemsSkipped: { type: integer, description: 'Products the last full run could not list: not published to the online store or without an image.' }
+        itemsDeleted: { type: integer, description: 'Items the last full run removed because the store no longer has them.' }
+        createdAt: { type: string, format: date-time }
     BusinessAgentSettings:
       type: object
       description: 'Meta Business Agent settings for one WhatsApp number, as Meta returns them.'
@@ -14237,6 +14617,60 @@ webhooks:
                     channel: { type: string, enum: [sms] }
                     to: { type: string }
                 reason: { type: string, enum: [max_attempts_reached] }
+      responses:
+        '200':
+          description: Webhook received successfully
+  commerce.product.created:
+    post:
+      operationId: onCommerceProductCreated
+      summary: Commerce product created event
+      description: |
+        Fired when a product is created on a connected store. The payload carries identifiers only; read the product with
+        `GET /v1/commerce/products/{productId}?accountId=...`. Fired once per
+        Zernio account connected to the store.
+      tags: [Webhook Events]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/WebhookPayloadCommerceProduct'
+      responses:
+        '200':
+          description: Webhook received successfully
+  commerce.product.updated:
+    post:
+      operationId: onCommerceProductUpdated
+      summary: Commerce product updated event
+      description: |
+        Fired when a product on a connected store changes: its fields, status, variants or prices. The payload carries identifiers only; read the product with
+        `GET /v1/commerce/products/{productId}?accountId=...`. Fired once per
+        Zernio account connected to the store.
+      tags: [Webhook Events]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/WebhookPayloadCommerceProduct'
+      responses:
+        '200':
+          description: Webhook received successfully
+  commerce.product.deleted:
+    post:
+      operationId: onCommerceProductDeleted
+      summary: Commerce product deleted event
+      description: |
+        Fired when a product is deleted from a connected store. `status` and `platformStatus` are null. The payload carries identifiers only; read the product with
+        `GET /v1/commerce/products/{productId}?accountId=...`. Fired once per
+        Zernio account connected to the store.
+      tags: [Webhook Events]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/WebhookPayloadCommerceProduct'
       responses:
         '200':
           description: Webhook received successfully
@@ -31336,7 +31770,7 @@ paths:
                   minItems: 1
                   items:
                     type: string
-                    enum: [post.scheduled, post.published, post.failed, post.partial, post.cancelled, post.recycled, post.platform.published, post.platform.failed, post.platform.deleted, post.tiktok.url_resolved, post.external.created, post.external.updated, post.external.deleted, account.connected, account.disconnected, account.ads.initial_sync_completed, account.ads.sync_failed, account.ads.sync_recovered, analytics.synced, message.received, conversation.started, conversation.control_changed, call.received, call.ended, call.failed, call.permission_request, message.sent, message.edited, message.deleted, message.delivered, message.read, message.failed, reaction.received, referral.received, comment.received, review.new, review.updated, lead.received, ad.status_changed, whatsapp.template.status_updated, whatsapp.template.category_updated, whatsapp.account.name_status_updated, whatsapp.automatic_event, whatsapp.number.activated, whatsapp.number.declined, whatsapp.number.action_required, whatsapp.number.verification_required, whatsapp.number.suspended, whatsapp.number.reactivated, whatsapp.number.released, whatsapp.number.kyc_submitted, phone_number.stock_available, verification.approved, verification.failed, sms.registration.action_required, sms.registration.status_updated, branded_calling.identity.status_updated, branded_calling.identity.action_required, branded_calling.number.status_updated, rcs.agent.status_updated]
+                    enum: [post.scheduled, post.published, post.failed, post.partial, post.cancelled, post.recycled, post.platform.published, post.platform.failed, post.platform.deleted, post.tiktok.url_resolved, post.external.created, post.external.updated, post.external.deleted, account.connected, account.disconnected, account.ads.initial_sync_completed, account.ads.sync_failed, account.ads.sync_recovered, analytics.synced, message.received, conversation.started, conversation.control_changed, call.received, call.ended, call.failed, call.permission_request, message.sent, message.edited, message.deleted, message.delivered, message.read, message.failed, reaction.received, referral.received, comment.received, review.new, review.updated, lead.received, ad.status_changed, whatsapp.template.status_updated, whatsapp.template.category_updated, whatsapp.account.name_status_updated, whatsapp.automatic_event, whatsapp.number.activated, whatsapp.number.declined, whatsapp.number.action_required, whatsapp.number.verification_required, whatsapp.number.suspended, whatsapp.number.reactivated, whatsapp.number.released, whatsapp.number.kyc_submitted, phone_number.stock_available, verification.approved, verification.failed, sms.registration.action_required, sms.registration.status_updated, branded_calling.identity.status_updated, branded_calling.identity.action_required, branded_calling.number.status_updated, rcs.agent.status_updated, commerce.product.created, commerce.product.updated, commerce.product.deleted]
                   description: Events to subscribe to (at least one required)
                 isActive:
                   type: boolean
@@ -31493,7 +31927,7 @@ paths:
                   minItems: 1
                   items:
                     type: string
-                    enum: [post.scheduled, post.published, post.failed, post.partial, post.cancelled, post.recycled, post.platform.published, post.platform.failed, post.platform.deleted, post.tiktok.url_resolved, post.external.created, post.external.updated, post.external.deleted, account.connected, account.disconnected, account.ads.initial_sync_completed, account.ads.sync_failed, account.ads.sync_recovered, analytics.synced, message.received, conversation.started, conversation.control_changed, call.received, call.ended, call.failed, call.permission_request, message.sent, message.edited, message.deleted, message.delivered, message.read, message.failed, reaction.received, referral.received, comment.received, review.new, review.updated, lead.received, ad.status_changed, whatsapp.template.status_updated, whatsapp.template.category_updated, whatsapp.account.name_status_updated, whatsapp.automatic_event, whatsapp.number.activated, whatsapp.number.declined, whatsapp.number.action_required, whatsapp.number.verification_required, whatsapp.number.suspended, whatsapp.number.reactivated, whatsapp.number.released, whatsapp.number.kyc_submitted, phone_number.stock_available, verification.approved, verification.failed, sms.registration.action_required, sms.registration.status_updated, branded_calling.identity.status_updated, branded_calling.identity.action_required, branded_calling.number.status_updated, rcs.agent.status_updated]
+                    enum: [post.scheduled, post.published, post.failed, post.partial, post.cancelled, post.recycled, post.platform.published, post.platform.failed, post.platform.deleted, post.tiktok.url_resolved, post.external.created, post.external.updated, post.external.deleted, account.connected, account.disconnected, account.ads.initial_sync_completed, account.ads.sync_failed, account.ads.sync_recovered, analytics.synced, message.received, conversation.started, conversation.control_changed, call.received, call.ended, call.failed, call.permission_request, message.sent, message.edited, message.deleted, message.delivered, message.read, message.failed, reaction.received, referral.received, comment.received, review.new, review.updated, lead.received, ad.status_changed, whatsapp.template.status_updated, whatsapp.template.category_updated, whatsapp.account.name_status_updated, whatsapp.automatic_event, whatsapp.number.activated, whatsapp.number.declined, whatsapp.number.action_required, whatsapp.number.verification_required, whatsapp.number.suspended, whatsapp.number.reactivated, whatsapp.number.released, whatsapp.number.kyc_submitted, phone_number.stock_available, verification.approved, verification.failed, sms.registration.action_required, sms.registration.status_updated, branded_calling.identity.status_updated, branded_calling.identity.action_required, branded_calling.number.status_updated, rcs.agent.status_updated, commerce.product.created, commerce.product.updated, commerce.product.deleted]
                   description: Events to subscribe to. Must contain at least one event if provided.
                 isActive:
                   type: boolean
@@ -67658,8 +68092,9 @@ paths:
 
   /v1/accounts/{accountId}/products:
     get:
-      x-resource-group: "publishing"
+      x-resource-group: "commerce"
       operationId: listProducts
+      deprecated: true
       tags: ["Products"]
       x-platforms: ["shopify"]
       summary: List products
@@ -67704,8 +68139,9 @@ paths:
 
   /v1/accounts/{accountId}/products/{productId}:
     get:
-      x-resource-group: "publishing"
+      x-resource-group: "commerce"
       operationId: getProduct
+      deprecated: true
       tags: ["Products"]
       x-platforms: ["shopify"]
       summary: Get a product
@@ -67738,8 +68174,9 @@ paths:
         '429': { description: 'Rate limited, either by Zernio or by Shopify. Retry later.' }
 
     patch:
-      x-resource-group: "publishing"
+      x-resource-group: "commerce"
       operationId: updateProduct
+      deprecated: true
       tags: ["Products"]
       x-platforms: ["shopify"]
       summary: Update a product
@@ -67818,6 +68255,2707 @@ paths:
         '403': { description: 'The platform rejected the request (code insufficient_permissions). The store lacks the product scopes or the token was revoked; reconnect the Shopify account.' }
         '404': { description: 'Account not found or not accessible (code account_not_found), or product not found (code product_not_found).' }
         '429': { description: 'Rate limited, either by Zernio or by Shopify. Retry later.' }
+
+  /v1/commerce/store:
+    get:
+      x-resource-group: "commerce"
+      operationId: getCommerceStore
+      tags: ["Commerce"]
+      x-platforms: ["shopify", "woocommerce"]
+      summary: Get a store
+      description: |
+        Returns the connected store with its currency, country and the
+        `capabilities` it supports, so an integration can tell up front which
+        Commerce operations the store serves. On Shopify, stock, sales
+        channels, discounts, navigation, metaobjects, markets, marketing and
+        image removal need permissions the store owner approves separately:
+        `missingCapabilities` lists what is not granted yet and
+        `grantPermissionsUrl` is the page where the owner approves it.
+      security:
+        - bearerAuth: []
+      parameters:
+        - { name: accountId, in: query, required: true, schema: { type: string }, description: 'Connected store SocialAccount id.' }
+      responses:
+        '200':
+          description: Store fetched
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  store: { $ref: '#/components/schemas/CommerceStore' }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { description: 'The platform rejected the request (code insufficient_permissions). Reconnect the store.' }
+        '404': { description: 'Account not found or not accessible (code account_not_found).' }
+        '429': { description: 'Rate limited, either by Zernio or by the platform. Retry later.' }
+
+  /v1/commerce/products:
+    get:
+      x-resource-group: "commerce"
+      operationId: listCommerceProducts
+      tags: ["Commerce"]
+      x-platforms: ["shopify", "woocommerce"]
+      summary: List products
+      description: |
+        Lists the store's products with their variants, options and images.
+        Cursor-paginated: pass `limit` (1-100, default 20) and the `cursor`
+        from a previous response's `nextCursor`, which is null on the last page.
+        Filter with `status` and/or `query` (the platform's product search
+        syntax, passed through verbatim). A status the platform has no
+        equivalent of returns an empty page.
+      security:
+        - bearerAuth: []
+      parameters:
+        - { name: accountId, in: query, required: true, schema: { type: string }, description: 'Connected store SocialAccount id.' }
+        - { name: limit, in: query, required: false, schema: { type: integer, minimum: 1, maximum: 100, default: 20 } }
+        - { name: cursor, in: query, required: false, schema: { type: string }, description: 'Opaque cursor from a previous response. Omit for the first page.' }
+        - { name: status, in: query, required: false, schema: { $ref: '#/components/schemas/CommerceProductStatus' } }
+        - { name: query, in: query, required: false, schema: { type: string, maxLength: 500 }, description: 'Platform product search syntax (Shopify: title, vendor, product_type, tag, sku, handle, ...).' }
+        - { name: collectionId, in: query, required: false, schema: { type: string }, description: 'Only products in this collection.' }
+      responses:
+        '200':
+          description: Products listed
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  products:
+                    type: array
+                    items: { $ref: '#/components/schemas/CommerceProduct' }
+                  nextCursor: { type: [string, "null"] }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { description: 'The platform rejected the request (code insufficient_permissions). A Shopify store connected before product access was added must be reconnected through GET /v1/connect/shopify.' }
+        '404': { description: 'Account not found or not accessible (code account_not_found).' }
+        '429': { description: 'Rate limited, either by Zernio or by the platform. Retry later.' }
+    post:
+      x-resource-group: "commerce"
+      operationId: createCommerceProduct
+      tags: ["Commerce"]
+      x-platforms: ["shopify", "woocommerce"]
+      summary: Create a product
+      description: |
+        Creates a product with its options and variants. `status` defaults to
+        `draft`: no platform offers a sandbox for product writes, so nothing
+        goes on sale unless you ask for `active`. A product without `options`
+        has exactly one variant. Images are fetched by the platform from the
+        given URLs and may appear on the product a few seconds later.
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [accountId, title, variants]
+              properties:
+                accountId: { type: string }
+                title: { type: string, minLength: 1 }
+                descriptionHtml: { type: string }
+                handle: { type: string, minLength: 1 }
+                vendor: { type: string }
+                productType: { type: string }
+                tags: { type: array, items: { type: string } }
+                seo:
+                  type: object
+                  properties:
+                    title: { type: string }
+                    description: { type: string }
+                status: { type: string, enum: [draft, active], default: draft }
+                images:
+                  type: array
+                  maxItems: 20
+                  items:
+                    type: object
+                    required: [url]
+                    properties:
+                      url: { type: string, format: uri }
+                      altText: { type: string }
+                options:
+                  type: array
+                  maxItems: 3
+                  items:
+                    type: object
+                    required: [name, values]
+                    properties:
+                      name: { type: string, example: Size }
+                      values: { type: array, minItems: 1, items: { type: string }, example: [S, M, L] }
+                variants:
+                  type: array
+                  minItems: 1
+                  maxItems: 100
+                  items:
+                    type: object
+                    required: [price]
+                    properties:
+                      sku: { type: string }
+                      price:
+                        oneOf:
+                          - { type: number, minimum: 0 }
+                          - { type: string, pattern: '^\d+(\.\d{1,2})?$' }
+                        description: 'Decimal amount in the store currency.'
+                      compareAtPrice:
+                        oneOf:
+                          - { type: number, minimum: 0 }
+                          - { type: string, pattern: '^\d+(\.\d{1,2})?$' }
+                          - { type: "null" }
+                      options:
+                        type: array
+                        description: 'One value per product option, e.g. [{ name: Size, value: M }].'
+                        items:
+                          type: object
+                          required: [name, value]
+                          properties:
+                            name: { type: string }
+                            value: { type: string }
+      responses:
+        '201':
+          description: Product created
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  product: { $ref: '#/components/schemas/CommerceProduct' }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { description: 'The platform rejected the request (code insufficient_permissions). Reconnect the store.' }
+        '404': { description: 'Account not found or not accessible (code account_not_found).' }
+        '429': { description: 'Rate limited, either by Zernio or by the platform. Retry later.' }
+
+  /v1/commerce/products/state:
+    post:
+      x-resource-group: "commerce"
+      operationId: changeCommerceProductState
+      tags: ["Commerce"]
+      x-platforms: ["shopify", "woocommerce"]
+      summary: Activate, deactivate, archive or delete products
+      description: |
+        Applies one action to up to 50 products and reports each product's
+        outcome, so one failure does not abort the rest. On Shopify,
+        `deactivate` sets the product to draft and `delete` is permanent.
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [accountId, productIds, action]
+              properties:
+                accountId: { type: string }
+                productIds: { type: array, minItems: 1, maxItems: 50, items: { type: string } }
+                action: { type: string, enum: [activate, deactivate, archive, delete] }
+      responses:
+        '200':
+          description: Action applied
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  action: { type: string, enum: [activate, deactivate, archive, delete] }
+                  succeeded: { type: array, items: { type: string } }
+                  failed:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        productId: { type: string }
+                        message: { type: string }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404': { description: 'Account not found or not accessible (code account_not_found).' }
+        '429': { description: 'Rate limited, either by Zernio or by the platform. Retry later.' }
+
+  /v1/commerce/products/{productId}:
+    get:
+      x-resource-group: "commerce"
+      operationId: getCommerceProduct
+      tags: ["Commerce"]
+      x-platforms: ["shopify", "woocommerce"]
+      summary: Get a product
+      security:
+        - bearerAuth: []
+      parameters:
+        - { name: productId, in: path, required: true, schema: { type: string }, description: 'Platform-native product id.' }
+        - { name: accountId, in: query, required: true, schema: { type: string }, description: 'Connected store SocialAccount id.' }
+      responses:
+        '200':
+          description: Product fetched
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  product: { $ref: '#/components/schemas/CommerceProduct' }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404': { description: 'Account not found (code account_not_found) or product not found (code product_not_found).' }
+        '429': { description: 'Rate limited, either by Zernio or by the platform. Retry later.' }
+    patch:
+      x-resource-group: "commerce"
+      operationId: updateCommerceProduct
+      tags: ["Commerce"]
+      x-platforms: ["shopify", "woocommerce"]
+      summary: Update a product
+      description: |
+        Partial-updates the product's own fields; at least one besides
+        `accountId` is required. `tags` replaces the full list. Change prices
+        with `POST /v1/commerce/products/{productId}/price` and status with
+        `POST /v1/commerce/products/state`.
+      security:
+        - bearerAuth: []
+      parameters:
+        - { name: productId, in: path, required: true, schema: { type: string }, description: 'Platform-native product id.' }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [accountId]
+              properties:
+                accountId: { type: string }
+                title: { type: string, minLength: 1 }
+                descriptionHtml: { type: string }
+                handle: { type: string, minLength: 1 }
+                vendor: { type: string }
+                productType: { type: string }
+                tags: { type: array, items: { type: string } }
+                seo:
+                  type: object
+                  properties:
+                    title: { type: string }
+                    description: { type: string }
+      responses:
+        '200':
+          description: Product updated
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  product: { $ref: '#/components/schemas/CommerceProduct' }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404': { description: 'Account not found (code account_not_found) or product not found (code product_not_found).' }
+        '429': { description: 'Rate limited, either by Zernio or by the platform. Retry later.' }
+
+  /v1/commerce/products/{productId}/price:
+    post:
+      x-resource-group: "commerce"
+      operationId: updateCommerceProductPrices
+      tags: ["Commerce"]
+      x-platforms: ["shopify", "woocommerce"]
+      summary: Update variant prices
+      description: |
+        Sets the price and/or compare-at price of the listed variants. Other
+        variants are untouched. Amounts are in the store currency; send
+        `compareAtPrice: null` to remove a strike-through price.
+      security:
+        - bearerAuth: []
+      parameters:
+        - { name: productId, in: path, required: true, schema: { type: string }, description: 'Platform-native product id.' }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [accountId, variants]
+              properties:
+                accountId: { type: string }
+                variants:
+                  type: array
+                  minItems: 1
+                  maxItems: 100
+                  items:
+                    type: object
+                    required: [id]
+                    description: 'Needs a price or a compareAtPrice.'
+                    properties:
+                      id: { type: string, description: 'Variant id from the product response.' }
+                      price:
+                        oneOf:
+                          - { type: number, minimum: 0 }
+                          - { type: string, pattern: '^\d+(\.\d{1,2})?$' }
+                      compareAtPrice:
+                        oneOf:
+                          - { type: number, minimum: 0 }
+                          - { type: string, pattern: '^\d+(\.\d{1,2})?$' }
+                          - { type: "null" }
+      responses:
+        '200':
+          description: Prices updated
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  product: { $ref: '#/components/schemas/CommerceProduct' }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404': { description: 'Account not found (code account_not_found) or product not found (code product_not_found).' }
+        '429': { description: 'Rate limited, either by Zernio or by the platform. Retry later.' }
+
+  /v1/commerce/collections:
+    get:
+      x-resource-group: "commerce"
+      operationId: listCommerceCollections
+      tags: ["Commerce"]
+      x-platforms: ["shopify", "woocommerce"]
+      summary: List collections
+      description: |
+        Lists the store's product collections. Cursor-paginated like products.
+        List a collection's products with `GET /v1/commerce/products?collectionId=...`.
+      security:
+        - bearerAuth: []
+      parameters:
+        - { name: accountId, in: query, required: true, schema: { type: string }, description: 'Connected store SocialAccount id.' }
+        - { name: limit, in: query, required: false, schema: { type: integer, minimum: 1, maximum: 100, default: 20 } }
+        - { name: cursor, in: query, required: false, schema: { type: string } }
+        - { name: query, in: query, required: false, schema: { type: string, maxLength: 500 }, description: 'Platform collection search syntax (Shopify: title, handle, collection_type, ...).' }
+      responses:
+        '200':
+          description: Collections listed
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  collections:
+                    type: array
+                    items: { $ref: '#/components/schemas/CommerceCollection' }
+                  nextCursor: { type: [string, "null"] }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { description: 'The platform rejected the request (code insufficient_permissions). Reconnect the store.' }
+        '404': { description: 'Account not found (code account_not_found) or collection not found (code resource_not_found).' }
+        '429': { description: 'Rate limited, either by Zernio or by the platform. Retry later.' }
+    post:
+      x-resource-group: "commerce"
+      operationId: createCommerceCollection
+      tags: ["Commerce"]
+      x-platforms: ["shopify", "woocommerce"]
+      summary: Create a collection
+      description: |
+        Creates a collection, optionally with hand-picked products. On Shopify
+        the collection starts unpublished from the online store; publish it
+        from the Shopify admin.
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [accountId, title]
+              properties:
+                accountId: { type: string }
+                title: { type: string, minLength: 1 }
+                descriptionHtml: { type: string }
+                handle: { type: string, minLength: 1 }
+                sortOrder: { type: string, enum: [manual, best_selling, alpha_asc, alpha_desc, price_asc, price_desc, created, created_desc, most_relevant] }
+                seo:
+                  type: object
+                  properties:
+                    title: { type: string }
+                    description: { type: string }
+                image:
+                  type: object
+                  required: [url]
+                  properties:
+                    url: { type: string, format: uri }
+                    altText: { type: string }
+                productIds: { type: array, maxItems: 250, items: { type: string } }
+      responses:
+        '201':
+          description: Collection created
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  collection: { $ref: '#/components/schemas/CommerceCollection' }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { description: 'The platform rejected the request (code insufficient_permissions). Reconnect the store.' }
+        '404': { description: 'Account not found (code account_not_found) or collection not found (code resource_not_found).' }
+        '429': { description: 'Rate limited, either by Zernio or by the platform. Retry later.' }
+
+  /v1/commerce/collections/{collectionId}:
+    get:
+      x-resource-group: "commerce"
+      operationId: getCommerceCollection
+      tags: ["Commerce"]
+      x-platforms: ["shopify", "woocommerce"]
+      summary: Get a collection
+      security:
+        - bearerAuth: []
+      parameters:
+        - { name: collectionId, in: path, required: true, schema: { type: string }, description: 'Platform-native collection id.' }
+        - { name: accountId, in: query, required: true, schema: { type: string }, description: 'Connected store SocialAccount id.' }
+      responses:
+        '200':
+          description: Collection fetched
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  collection: { $ref: '#/components/schemas/CommerceCollection' }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { description: 'The platform rejected the request (code insufficient_permissions). Reconnect the store.' }
+        '404': { description: 'Account not found (code account_not_found) or collection not found (code resource_not_found).' }
+        '429': { description: 'Rate limited, either by Zernio or by the platform. Retry later.' }
+    patch:
+      x-resource-group: "commerce"
+      operationId: updateCommerceCollection
+      tags: ["Commerce"]
+      x-platforms: ["shopify", "woocommerce"]
+      summary: Update a collection
+      description: 'Partial update; at least one field besides accountId is required. Change membership with POST /v1/commerce/collections/{collectionId}/products.'
+      security:
+        - bearerAuth: []
+      parameters:
+        - { name: collectionId, in: path, required: true, schema: { type: string }, description: 'Platform-native collection id.' }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [accountId]
+              properties:
+                accountId: { type: string }
+                title: { type: string, minLength: 1 }
+                descriptionHtml: { type: string }
+                handle: { type: string, minLength: 1 }
+                sortOrder: { type: string, enum: [manual, best_selling, alpha_asc, alpha_desc, price_asc, price_desc, created, created_desc, most_relevant] }
+                seo:
+                  type: object
+                  properties:
+                    title: { type: string }
+                    description: { type: string }
+                image:
+                  type: object
+                  required: [url]
+                  properties:
+                    url: { type: string, format: uri }
+                    altText: { type: string }
+      responses:
+        '200':
+          description: Collection updated
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  collection: { $ref: '#/components/schemas/CommerceCollection' }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { description: 'The platform rejected the request (code insufficient_permissions). Reconnect the store.' }
+        '404': { description: 'Account not found (code account_not_found) or collection not found (code resource_not_found).' }
+        '429': { description: 'Rate limited, either by Zernio or by the platform. Retry later.' }
+    delete:
+      x-resource-group: "commerce"
+      operationId: deleteCommerceCollection
+      tags: ["Commerce"]
+      x-platforms: ["shopify", "woocommerce"]
+      summary: Delete a collection
+      description: 'Deletes the collection. Its products are not affected.'
+      security:
+        - bearerAuth: []
+      parameters:
+        - { name: collectionId, in: path, required: true, schema: { type: string }, description: 'Platform-native collection id.' }
+        - { name: accountId, in: query, required: true, schema: { type: string }, description: 'Connected store SocialAccount id.' }
+      responses:
+        '200':
+          description: Collection deleted
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  deleted: { type: boolean }
+                  collectionId: { type: string }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { description: 'The platform rejected the request (code insufficient_permissions). Reconnect the store.' }
+        '404': { description: 'Account not found (code account_not_found) or collection not found (code resource_not_found).' }
+        '429': { description: 'Rate limited, either by Zernio or by the platform. Retry later.' }
+
+  /v1/commerce/collections/{collectionId}/products:
+    post:
+      x-resource-group: "commerce"
+      operationId: changeCommerceCollectionProducts
+      tags: ["Commerce"]
+      x-platforms: ["shopify", "woocommerce"]
+      summary: Add or remove products in a collection
+      description: |
+        Adds and/or removes hand-picked products. Products a collection
+        includes through its own rules are not affected. `pending` is true
+        when the platform finishes the change in the background; the product
+        count then catches up a few seconds later.
+      security:
+        - bearerAuth: []
+      parameters:
+        - { name: collectionId, in: path, required: true, schema: { type: string }, description: 'Platform-native collection id.' }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [accountId]
+              description: 'At least one product id in add or remove.'
+              properties:
+                accountId: { type: string }
+                add: { type: array, maxItems: 250, items: { type: string } }
+                remove: { type: array, maxItems: 250, items: { type: string } }
+      responses:
+        '200':
+          description: Membership changed
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  collection: { $ref: '#/components/schemas/CommerceCollection' }
+                  pending: { type: boolean }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { description: 'The platform rejected the request (code insufficient_permissions). Reconnect the store.' }
+        '404': { description: 'Account not found (code account_not_found) or collection not found (code resource_not_found).' }
+        '429': { description: 'Rate limited, either by Zernio or by the platform. Retry later.' }
+
+  /v1/commerce/products/{productId}/variants:
+    post:
+      x-resource-group: "commerce"
+      operationId: createCommerceProductVariants
+      tags: ["Commerce"]
+      x-platforms: ["shopify", "woocommerce"]
+      summary: Add variants
+      description: |
+        Adds variants to a product. Each variant names a value for every product option (create options first with POST .../options). A product's placeholder default variant is replaced when real ones arrive.
+      security:
+        - bearerAuth: []
+      parameters:
+        - { name: productId, in: path, required: true, schema: { type: string }, description: 'Platform-native id.' }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [accountId, variants]
+              properties:
+                accountId: { type: string }
+                variants:
+                  type: array
+                  minItems: 1
+                  maxItems: 100
+                  items:
+                    type: object
+                    required: [price]
+                    properties:
+                      sku: { type: string }
+                      price:
+                        oneOf:
+                          - { type: number, minimum: 0 }
+                          - { type: string, pattern: '^\d+(\.\d{1,2})?$' }
+                      compareAtPrice:
+                        oneOf:
+                          - { type: number, minimum: 0 }
+                          - { type: string, pattern: '^\d+(\.\d{1,2})?$' }
+                          - { type: "null" }
+                      options:
+                        type: array
+                        items:
+                          type: object
+                          properties:
+                            name: { type: string }
+                            value: { type: string }
+      responses:
+        '200':
+          description: Product after the change
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  product: { $ref: '#/components/schemas/CommerceProduct' }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { description: 'The store has not granted this permission, or the token was revoked (code insufficient_permissions). Reconnect the store to grant the latest permissions; GET /v1/commerce/store lists what the current grant allows.' }
+        '404': { description: 'Account not found (code account_not_found) or the resource was not found (code product_not_found or resource_not_found).' }
+        '429': { description: 'Rate limited, either by Zernio or by the platform. Retry later.' }
+    delete:
+      x-resource-group: "commerce"
+      operationId: deleteCommerceProductVariants
+      tags: ["Commerce"]
+      x-platforms: ["shopify", "woocommerce"]
+      summary: Delete variants
+      security:
+        - bearerAuth: []
+      parameters:
+        - { name: productId, in: path, required: true, schema: { type: string }, description: 'Platform-native id.' }
+        - { name: accountId, in: query, required: true, schema: { type: string }, description: 'Connected store SocialAccount id.' }
+        - { name: variantIds, in: query, required: true, schema: { type: string }, description: 'Comma-separated ids.' }
+      responses:
+        '200':
+          description: Product after the change
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  product: { $ref: '#/components/schemas/CommerceProduct' }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { description: 'The store has not granted this permission, or the token was revoked (code insufficient_permissions). Reconnect the store to grant the latest permissions; GET /v1/commerce/store lists what the current grant allows.' }
+        '404': { description: 'Account not found (code account_not_found) or the resource was not found (code product_not_found or resource_not_found).' }
+        '429': { description: 'Rate limited, either by Zernio or by the platform. Retry later.' }
+
+  /v1/commerce/products/{productId}/options:
+    post:
+      x-resource-group: "commerce"
+      operationId: createCommerceProductOptions
+      tags: ["Commerce"]
+      x-platforms: ["shopify", "woocommerce"]
+      summary: Add options
+      description: |
+        Adds option axes (e.g. Size, Color) and their values. With createVariants true the platform creates a variant for every new combination; otherwise existing variants take the first value.
+      security:
+        - bearerAuth: []
+      parameters:
+        - { name: productId, in: path, required: true, schema: { type: string }, description: 'Platform-native id.' }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [accountId, options]
+              properties:
+                accountId: { type: string }
+                options:
+                  type: array
+                  minItems: 1
+                  maxItems: 3
+                  items:
+                    type: object
+                    required: [name, values]
+                    properties:
+                      name: { type: string }
+                      values: { type: array, minItems: 1, items: { type: string } }
+                createVariants: { type: boolean, default: false }
+      responses:
+        '200':
+          description: Product after the change
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  product: { $ref: '#/components/schemas/CommerceProduct' }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { description: 'The store has not granted this permission, or the token was revoked (code insufficient_permissions). Reconnect the store to grant the latest permissions; GET /v1/commerce/store lists what the current grant allows.' }
+        '404': { description: 'Account not found (code account_not_found) or the resource was not found (code product_not_found or resource_not_found).' }
+        '429': { description: 'Rate limited, either by Zernio or by the platform. Retry later.' }
+    delete:
+      x-resource-group: "commerce"
+      operationId: deleteCommerceProductOptions
+      tags: ["Commerce"]
+      x-platforms: ["shopify", "woocommerce"]
+      summary: Delete options
+      description: |
+        Deletes options by name, with the variants that depended on them.
+      security:
+        - bearerAuth: []
+      parameters:
+        - { name: productId, in: path, required: true, schema: { type: string }, description: 'Platform-native id.' }
+        - { name: accountId, in: query, required: true, schema: { type: string }, description: 'Connected store SocialAccount id.' }
+        - { name: names, in: query, required: true, schema: { type: string }, description: 'Comma-separated option names.' }
+      responses:
+        '200':
+          description: Product after the change
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  product: { $ref: '#/components/schemas/CommerceProduct' }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { description: 'The store has not granted this permission, or the token was revoked (code insufficient_permissions). Reconnect the store to grant the latest permissions; GET /v1/commerce/store lists what the current grant allows.' }
+        '404': { description: 'Account not found (code account_not_found) or the resource was not found (code product_not_found or resource_not_found).' }
+        '429': { description: 'Rate limited, either by Zernio or by the platform. Retry later.' }
+
+  /v1/commerce/products/{productId}/images:
+    post:
+      x-resource-group: "commerce"
+      operationId: addCommerceProductImages
+      tags: ["Commerce"]
+      x-platforms: ["shopify", "woocommerce"]
+      summary: Add images
+      description: |
+        Adds images from public URLs. The platform fetches them, so they can appear on the product a few seconds after the call returns.
+      security:
+        - bearerAuth: []
+      parameters:
+        - { name: productId, in: path, required: true, schema: { type: string }, description: 'Platform-native id.' }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [accountId, images]
+              properties:
+                accountId: { type: string }
+                images:
+                  type: array
+                  minItems: 1
+                  maxItems: 20
+                  items:
+                    type: object
+                    required: [url]
+                    properties:
+                      url: { type: string, format: uri }
+                      altText: { type: string }
+      responses:
+        '200':
+          description: Product after the change
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  product: { $ref: '#/components/schemas/CommerceProduct' }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { description: 'The store has not granted this permission, or the token was revoked (code insufficient_permissions). Reconnect the store to grant the latest permissions; GET /v1/commerce/store lists what the current grant allows.' }
+        '404': { description: 'Account not found (code account_not_found) or the resource was not found (code product_not_found or resource_not_found).' }
+        '429': { description: 'Rate limited, either by Zernio or by the platform. Retry later.' }
+    delete:
+      x-resource-group: "commerce"
+      operationId: removeCommerceProductImages
+      tags: ["Commerce"]
+      x-platforms: ["shopify", "woocommerce"]
+      summary: Remove images
+      description: |
+        Removes images from the product by image id (the `id` on each image). The file stays in the store's media library. Needs the products.images_remove capability.
+      security:
+        - bearerAuth: []
+      parameters:
+        - { name: productId, in: path, required: true, schema: { type: string }, description: 'Platform-native id.' }
+        - { name: accountId, in: query, required: true, schema: { type: string }, description: 'Connected store SocialAccount id.' }
+        - { name: imageIds, in: query, required: true, schema: { type: string }, description: 'Comma-separated ids.' }
+      responses:
+        '200':
+          description: Product after the change
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  product: { $ref: '#/components/schemas/CommerceProduct' }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { description: 'The store has not granted this permission, or the token was revoked (code insufficient_permissions). Reconnect the store to grant the latest permissions; GET /v1/commerce/store lists what the current grant allows.' }
+        '404': { description: 'Account not found (code account_not_found) or the resource was not found (code product_not_found or resource_not_found).' }
+        '429': { description: 'Rate limited, either by Zernio or by the platform. Retry later.' }
+
+  /v1/commerce/products/{productId}/images/reorder:
+    post:
+      x-resource-group: "commerce"
+      operationId: reorderCommerceProductImages
+      tags: ["Commerce"]
+      x-platforms: ["shopify", "woocommerce"]
+      summary: Reorder images
+      description: |
+        Puts the product's images in the given order; the first becomes the featured image. `pending` is true while the platform finishes in the background.
+      security:
+        - bearerAuth: []
+      parameters:
+        - { name: productId, in: path, required: true, schema: { type: string }, description: 'Platform-native id.' }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [accountId, imageIds]
+              properties:
+                accountId: { type: string }
+                imageIds: { type: array, minItems: 1, maxItems: 250, items: { type: string } }
+      responses:
+        '200':
+          description: Reorder accepted
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  pending: { type: boolean }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { description: 'The store has not granted this permission, or the token was revoked (code insufficient_permissions). Reconnect the store to grant the latest permissions; GET /v1/commerce/store lists what the current grant allows.' }
+        '404': { description: 'Account not found (code account_not_found) or the resource was not found (code product_not_found or resource_not_found).' }
+        '429': { description: 'Rate limited, either by Zernio or by the platform. Retry later.' }
+
+  /v1/commerce/products/{productId}/duplicate:
+    post:
+      x-resource-group: "commerce"
+      operationId: duplicateCommerceProduct
+      tags: ["Commerce"]
+      x-platforms: ["shopify", "woocommerce"]
+      summary: Duplicate a product
+      description: |
+        Copies a product with its options, variants and (by default) images. The copy starts as a draft.
+      security:
+        - bearerAuth: []
+      parameters:
+        - { name: productId, in: path, required: true, schema: { type: string }, description: 'Platform-native id.' }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [accountId, title]
+              properties:
+                accountId: { type: string }
+                title: { type: string, minLength: 1 }
+                status: { type: string, enum: [draft, active], default: draft }
+                includeImages: { type: boolean, default: true }
+      responses:
+        '201':
+          description: Product duplicated
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  product: { $ref: '#/components/schemas/CommerceProduct' }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { description: 'The store has not granted this permission, or the token was revoked (code insufficient_permissions). Reconnect the store to grant the latest permissions; GET /v1/commerce/store lists what the current grant allows.' }
+        '404': { description: 'Account not found (code account_not_found) or the resource was not found (code product_not_found or resource_not_found).' }
+        '429': { description: 'Rate limited, either by Zernio or by the platform. Retry later.' }
+
+  /v1/commerce/products/{productId}/metafields:
+    get:
+      x-resource-group: "commerce"
+      operationId: listProductMetafields
+      tags: ["Commerce"]
+      x-platforms: ["shopify", "woocommerce"]
+      summary: List product metafields
+      security:
+        - bearerAuth: []
+      parameters:
+        - { name: productId, in: path, required: true, schema: { type: string }, description: 'Platform-native id.' }
+        - { name: accountId, in: query, required: true, schema: { type: string }, description: 'Connected store SocialAccount id.' }
+      responses:
+        '200':
+          description: Metafields listed
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  metafields: { type: array, items: { $ref: '#/components/schemas/CommerceMetafield' } }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { description: 'The store has not granted this permission, or the token was revoked (code insufficient_permissions). Reconnect the store to grant the latest permissions; GET /v1/commerce/store lists what the current grant allows.' }
+        '404': { description: 'Account not found (code account_not_found) or the resource was not found (code product_not_found or resource_not_found).' }
+        '429': { description: 'Rate limited, either by Zernio or by the platform. Retry later.' }
+    put:
+      x-resource-group: "commerce"
+      operationId: setProductMetafields
+      tags: ["Commerce"]
+      x-platforms: ["shopify", "woocommerce"]
+      summary: Set product metafields
+      description: |
+        Creates or updates custom fields by namespace and key.
+      security:
+        - bearerAuth: []
+      parameters:
+        - { name: productId, in: path, required: true, schema: { type: string }, description: 'Platform-native id.' }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [accountId, metafields]
+              properties:
+                accountId: { type: string }
+                metafields:
+                  type: array
+                  minItems: 1
+                  maxItems: 25
+                  items: { $ref: '#/components/schemas/CommerceMetafield' }
+      responses:
+        '200':
+          description: Metafields set
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  metafields: { type: array, items: { $ref: '#/components/schemas/CommerceMetafield' } }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { description: 'The store has not granted this permission, or the token was revoked (code insufficient_permissions). Reconnect the store to grant the latest permissions; GET /v1/commerce/store lists what the current grant allows.' }
+        '404': { description: 'Account not found (code account_not_found) or the resource was not found (code product_not_found or resource_not_found).' }
+        '429': { description: 'Rate limited, either by Zernio or by the platform. Retry later.' }
+    delete:
+      x-resource-group: "commerce"
+      operationId: deleteProductMetafields
+      tags: ["Commerce"]
+      x-platforms: ["shopify", "woocommerce"]
+      summary: Delete product metafields
+      security:
+        - bearerAuth: []
+      parameters:
+        - { name: productId, in: path, required: true, schema: { type: string }, description: 'Platform-native id.' }
+        - { name: accountId, in: query, required: true, schema: { type: string }, description: 'Connected store SocialAccount id.' }
+        - { name: keys, in: query, required: true, schema: { type: string }, description: 'Comma-separated namespace.key pairs.' }
+      responses:
+        '200':
+          description: Metafields deleted
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  deleted: { type: integer }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { description: 'The store has not granted this permission, or the token was revoked (code insufficient_permissions). Reconnect the store to grant the latest permissions; GET /v1/commerce/store lists what the current grant allows.' }
+        '404': { description: 'Account not found (code account_not_found) or the resource was not found (code product_not_found or resource_not_found).' }
+        '429': { description: 'Rate limited, either by Zernio or by the platform. Retry later.' }
+
+  /v1/commerce/products/{productId}/channels:
+    post:
+      x-resource-group: "commerce"
+      operationId: changeProductChannels
+      tags: ["Commerce"]
+      x-platforms: ["shopify"]
+      summary: Publish or unpublish a product
+      description: |
+        Publishes to and/or unpublishes from sales channels (the online store, Shop, POS and others). List channels with GET /v1/commerce/channels.
+      security:
+        - bearerAuth: []
+      parameters:
+        - { name: productId, in: path, required: true, schema: { type: string }, description: 'Platform-native id.' }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [accountId]
+              properties:
+                accountId: { type: string }
+                publish: { type: array, maxItems: 20, items: { type: string }, description: 'Channel ids from GET /v1/commerce/channels.' }
+                unpublish: { type: array, maxItems: 20, items: { type: string } }
+      responses:
+        '200':
+          description: Publication changed
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  productId: { type: string }
+                  published: { type: array, items: { type: string } }
+                  unpublished: { type: array, items: { type: string } }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { description: 'The store has not granted this permission, or the token was revoked (code insufficient_permissions). Reconnect the store to grant the latest permissions; GET /v1/commerce/store lists what the current grant allows.' }
+        '404': { description: 'Account not found (code account_not_found) or the resource was not found (code product_not_found or resource_not_found).' }
+        '429': { description: 'Rate limited, either by Zernio or by the platform. Retry later.' }
+
+  /v1/commerce/collections/{collectionId}/metafields:
+    get:
+      x-resource-group: "commerce"
+      operationId: listCollectionMetafields
+      tags: ["Commerce"]
+      x-platforms: ["shopify"]
+      summary: List collection metafields
+      security:
+        - bearerAuth: []
+      parameters:
+        - { name: collectionId, in: path, required: true, schema: { type: string }, description: 'Platform-native id.' }
+        - { name: accountId, in: query, required: true, schema: { type: string }, description: 'Connected store SocialAccount id.' }
+      responses:
+        '200':
+          description: Metafields listed
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  metafields: { type: array, items: { $ref: '#/components/schemas/CommerceMetafield' } }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { description: 'The store has not granted this permission, or the token was revoked (code insufficient_permissions). Reconnect the store to grant the latest permissions; GET /v1/commerce/store lists what the current grant allows.' }
+        '404': { description: 'Account not found (code account_not_found) or the resource was not found (code product_not_found or resource_not_found).' }
+        '429': { description: 'Rate limited, either by Zernio or by the platform. Retry later.' }
+    put:
+      x-resource-group: "commerce"
+      operationId: setCollectionMetafields
+      tags: ["Commerce"]
+      x-platforms: ["shopify"]
+      summary: Set collection metafields
+      description: |
+        Creates or updates custom fields by namespace and key.
+      security:
+        - bearerAuth: []
+      parameters:
+        - { name: collectionId, in: path, required: true, schema: { type: string }, description: 'Platform-native id.' }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [accountId, metafields]
+              properties:
+                accountId: { type: string }
+                metafields:
+                  type: array
+                  minItems: 1
+                  maxItems: 25
+                  items: { $ref: '#/components/schemas/CommerceMetafield' }
+      responses:
+        '200':
+          description: Metafields set
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  metafields: { type: array, items: { $ref: '#/components/schemas/CommerceMetafield' } }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { description: 'The store has not granted this permission, or the token was revoked (code insufficient_permissions). Reconnect the store to grant the latest permissions; GET /v1/commerce/store lists what the current grant allows.' }
+        '404': { description: 'Account not found (code account_not_found) or the resource was not found (code product_not_found or resource_not_found).' }
+        '429': { description: 'Rate limited, either by Zernio or by the platform. Retry later.' }
+    delete:
+      x-resource-group: "commerce"
+      operationId: deleteCollectionMetafields
+      tags: ["Commerce"]
+      x-platforms: ["shopify"]
+      summary: Delete collection metafields
+      security:
+        - bearerAuth: []
+      parameters:
+        - { name: collectionId, in: path, required: true, schema: { type: string }, description: 'Platform-native id.' }
+        - { name: accountId, in: query, required: true, schema: { type: string }, description: 'Connected store SocialAccount id.' }
+        - { name: keys, in: query, required: true, schema: { type: string }, description: 'Comma-separated namespace.key pairs.' }
+      responses:
+        '200':
+          description: Metafields deleted
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  deleted: { type: integer }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { description: 'The store has not granted this permission, or the token was revoked (code insufficient_permissions). Reconnect the store to grant the latest permissions; GET /v1/commerce/store lists what the current grant allows.' }
+        '404': { description: 'Account not found (code account_not_found) or the resource was not found (code product_not_found or resource_not_found).' }
+        '429': { description: 'Rate limited, either by Zernio or by the platform. Retry later.' }
+
+  /v1/commerce/collections/{collectionId}/channels:
+    post:
+      x-resource-group: "commerce"
+      operationId: changeCollectionChannels
+      tags: ["Commerce"]
+      x-platforms: ["shopify"]
+      summary: Publish or unpublish a collection
+      description: |
+        Publishes to and/or unpublishes from sales channels (the online store, Shop, POS and others). List channels with GET /v1/commerce/channels.
+      security:
+        - bearerAuth: []
+      parameters:
+        - { name: collectionId, in: path, required: true, schema: { type: string }, description: 'Platform-native id.' }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [accountId]
+              properties:
+                accountId: { type: string }
+                publish: { type: array, maxItems: 20, items: { type: string }, description: 'Channel ids from GET /v1/commerce/channels.' }
+                unpublish: { type: array, maxItems: 20, items: { type: string } }
+      responses:
+        '200':
+          description: Publication changed
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  collectionId: { type: string }
+                  published: { type: array, items: { type: string } }
+                  unpublished: { type: array, items: { type: string } }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { description: 'The store has not granted this permission, or the token was revoked (code insufficient_permissions). Reconnect the store to grant the latest permissions; GET /v1/commerce/store lists what the current grant allows.' }
+        '404': { description: 'Account not found (code account_not_found) or the resource was not found (code product_not_found or resource_not_found).' }
+        '429': { description: 'Rate limited, either by Zernio or by the platform. Retry later.' }
+
+  /v1/commerce/products/tags:
+    post:
+      x-resource-group: "commerce"
+      operationId: changeCommerceProductTags
+      tags: ["Commerce"]
+      x-platforms: ["shopify", "woocommerce"]
+      summary: Add or remove tags in bulk
+      description: |
+        Adds and/or removes tags on up to 50 products and reports each product's outcome.
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [accountId, productIds]
+              properties:
+                accountId: { type: string }
+                productIds: { type: array, minItems: 1, maxItems: 50, items: { type: string } }
+                add: { type: array, maxItems: 50, items: { type: string } }
+                remove: { type: array, maxItems: 50, items: { type: string } }
+      responses:
+        '200':
+          description: Tags changed
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  succeeded: { type: array, items: { type: string } }
+                  failed:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id: { type: string }
+                        message: { type: string }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { description: 'The store has not granted this permission, or the token was revoked (code insufficient_permissions). Reconnect the store to grant the latest permissions; GET /v1/commerce/store lists what the current grant allows.' }
+        '404': { description: 'Account not found (code account_not_found) or the resource was not found (code product_not_found or resource_not_found).' }
+        '429': { description: 'Rate limited, either by Zernio or by the platform. Retry later.' }
+
+  /v1/commerce/collections/{collectionId}/reorder:
+    post:
+      x-resource-group: "commerce"
+      operationId: reorderCommerceCollectionProducts
+      tags: ["Commerce"]
+      x-platforms: ["shopify"]
+      summary: Reorder products in a collection
+      description: |
+        Moves products to new 0-based positions. Only for collections sorted `manual`.
+      security:
+        - bearerAuth: []
+      parameters:
+        - { name: collectionId, in: path, required: true, schema: { type: string }, description: 'Platform-native id.' }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [accountId, moves]
+              properties:
+                accountId: { type: string }
+                moves:
+                  type: array
+                  minItems: 1
+                  maxItems: 250
+                  items:
+                    type: object
+                    required: [productId, position]
+                    properties:
+                      productId: { type: string }
+                      position: { type: integer, minimum: 0 }
+      responses:
+        '200':
+          description: Reorder accepted
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  pending: { type: boolean }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { description: 'The store has not granted this permission, or the token was revoked (code insufficient_permissions). Reconnect the store to grant the latest permissions; GET /v1/commerce/store lists what the current grant allows.' }
+        '404': { description: 'Account not found (code account_not_found) or the resource was not found (code product_not_found or resource_not_found).' }
+        '429': { description: 'Rate limited, either by Zernio or by the platform. Retry later.' }
+
+  /v1/commerce/pages:
+    get:
+      x-resource-group: "commerce"
+      operationId: listCommercePages
+      tags: ["Commerce"]
+      x-platforms: ["shopify", "woocommerce"]
+      summary: List pages
+      security:
+        - bearerAuth: []
+      parameters:
+        - { name: accountId, in: query, required: true, schema: { type: string }, description: 'Connected store SocialAccount id.' }
+        - { name: limit, in: query, required: false, schema: { type: integer, minimum: 1, maximum: 100, default: 20 } }
+        - { name: cursor, in: query, required: false, schema: { type: string } }
+        - { name: query, in: query, required: false, schema: { type: string, maxLength: 500 }, description: 'Platform search syntax, passed through.' }
+      responses:
+        '200':
+          description: Pages listed
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  pages: { type: array, items: { $ref: '#/components/schemas/CommercePage' } }
+                  nextCursor: { type: [string, "null"] }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { description: 'The store has not granted this permission, or the token was revoked (code insufficient_permissions). Reconnect the store to grant the latest permissions; GET /v1/commerce/store lists what the current grant allows.' }
+        '404': { description: 'Account not found (code account_not_found) or the resource was not found (code product_not_found or resource_not_found).' }
+        '429': { description: 'Rate limited, either by Zernio or by the platform. Retry later.' }
+    post:
+      x-resource-group: "commerce"
+      operationId: createCommercePage
+      tags: ["Commerce"]
+      x-platforms: ["shopify", "woocommerce"]
+      summary: Create a page
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [accountId, title]
+              properties:
+                accountId: { type: string }
+                title: { type: string, minLength: 1 }
+                handle: { type: string }
+                bodyHtml: { type: string }
+                isPublished: { type: boolean }
+      responses:
+        '201':
+          description: Page created
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  page: { $ref: '#/components/schemas/CommercePage' }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { description: 'The store has not granted this permission, or the token was revoked (code insufficient_permissions). Reconnect the store to grant the latest permissions; GET /v1/commerce/store lists what the current grant allows.' }
+        '404': { description: 'Account not found (code account_not_found) or the resource was not found (code product_not_found or resource_not_found).' }
+        '429': { description: 'Rate limited, either by Zernio or by the platform. Retry later.' }
+
+  /v1/commerce/pages/{pageId}:
+    get:
+      x-resource-group: "commerce"
+      operationId: getCommercePage
+      tags: ["Commerce"]
+      x-platforms: ["shopify", "woocommerce"]
+      summary: Get a page
+      security:
+        - bearerAuth: []
+      parameters:
+        - { name: pageId, in: path, required: true, schema: { type: string }, description: 'Platform-native id.' }
+        - { name: accountId, in: query, required: true, schema: { type: string }, description: 'Connected store SocialAccount id.' }
+      responses:
+        '200':
+          description: Page fetched
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  page: { $ref: '#/components/schemas/CommercePage' }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { description: 'The store has not granted this permission, or the token was revoked (code insufficient_permissions). Reconnect the store to grant the latest permissions; GET /v1/commerce/store lists what the current grant allows.' }
+        '404': { description: 'Account not found (code account_not_found) or the resource was not found (code product_not_found or resource_not_found).' }
+        '429': { description: 'Rate limited, either by Zernio or by the platform. Retry later.' }
+    patch:
+      x-resource-group: "commerce"
+      operationId: updateCommercePage
+      tags: ["Commerce"]
+      x-platforms: ["shopify", "woocommerce"]
+      summary: Update a page
+      security:
+        - bearerAuth: []
+      parameters:
+        - { name: pageId, in: path, required: true, schema: { type: string }, description: 'Platform-native id.' }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [accountId]
+              properties:
+                accountId: { type: string }
+                title: { type: string, minLength: 1 }
+                handle: { type: string }
+                bodyHtml: { type: string }
+                isPublished: { type: boolean }
+      responses:
+        '200':
+          description: Page updated
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  page: { $ref: '#/components/schemas/CommercePage' }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { description: 'The store has not granted this permission, or the token was revoked (code insufficient_permissions). Reconnect the store to grant the latest permissions; GET /v1/commerce/store lists what the current grant allows.' }
+        '404': { description: 'Account not found (code account_not_found) or the resource was not found (code product_not_found or resource_not_found).' }
+        '429': { description: 'Rate limited, either by Zernio or by the platform. Retry later.' }
+    delete:
+      x-resource-group: "commerce"
+      operationId: deleteCommercePage
+      tags: ["Commerce"]
+      x-platforms: ["shopify", "woocommerce"]
+      summary: Delete a page
+      security:
+        - bearerAuth: []
+      parameters:
+        - { name: pageId, in: path, required: true, schema: { type: string }, description: 'Platform-native id.' }
+        - { name: accountId, in: query, required: true, schema: { type: string }, description: 'Connected store SocialAccount id.' }
+      responses:
+        '200':
+          description: Page deleted
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  deleted: { type: boolean }
+                  pageId: { type: string }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { description: 'The store has not granted this permission, or the token was revoked (code insufficient_permissions). Reconnect the store to grant the latest permissions; GET /v1/commerce/store lists what the current grant allows.' }
+        '404': { description: 'Account not found (code account_not_found) or the resource was not found (code product_not_found or resource_not_found).' }
+        '429': { description: 'Rate limited, either by Zernio or by the platform. Retry later.' }
+
+  /v1/commerce/locations:
+    get:
+      x-resource-group: "commerce"
+      operationId: listCommerceLocations
+      tags: ["Commerce"]
+      x-platforms: ["shopify", "woocommerce"]
+      summary: List locations
+      description: |
+        The store's stock locations (warehouses, shops).
+      security:
+        - bearerAuth: []
+      parameters:
+        - { name: accountId, in: query, required: true, schema: { type: string }, description: 'Connected store SocialAccount id.' }
+      responses:
+        '200':
+          description: Locations listed
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  locations: { type: array, items: { $ref: '#/components/schemas/CommerceLocation' } }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { description: 'The store has not granted this permission, or the token was revoked (code insufficient_permissions). Reconnect the store to grant the latest permissions; GET /v1/commerce/store lists what the current grant allows.' }
+        '404': { description: 'Account not found (code account_not_found) or the resource was not found (code product_not_found or resource_not_found).' }
+        '429': { description: 'Rate limited, either by Zernio or by the platform. Retry later.' }
+
+  /v1/commerce/inventory:
+    get:
+      x-resource-group: "commerce"
+      operationId: listCommerceInventory
+      tags: ["Commerce"]
+      x-platforms: ["shopify", "woocommerce"]
+      summary: Get a product's stock
+      description: |
+        Stock per variant and location: available, on hand, committed to orders and incoming.
+      security:
+        - bearerAuth: []
+      parameters:
+        - { name: accountId, in: query, required: true, schema: { type: string }, description: 'Connected store SocialAccount id.' }
+        - { name: productId, in: query, required: true, schema: { type: string } }
+      responses:
+        '200':
+          description: Stock fetched
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  inventory: { type: array, items: { $ref: '#/components/schemas/CommerceInventoryItem' } }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { description: 'The store has not granted this permission, or the token was revoked (code insufficient_permissions). Reconnect the store to grant the latest permissions; GET /v1/commerce/store lists what the current grant allows.' }
+        '404': { description: 'Account not found (code account_not_found) or the resource was not found (code product_not_found or resource_not_found).' }
+        '429': { description: 'Rate limited, either by Zernio or by the platform. Retry later.' }
+
+  /v1/commerce/products/{productId}/inventory:
+    post:
+      x-resource-group: "commerce"
+      operationId: changeCommerceInventory
+      tags: ["Commerce"]
+      x-platforms: ["shopify", "woocommerce"]
+      summary: Set or adjust stock
+      description: |
+        `set` makes `quantity` the new available count; `adjust` adds `quantity` (negative to subtract). The variant must be stocked at the location. Answers the product's stock after the change.
+      security:
+        - bearerAuth: []
+      parameters:
+        - { name: productId, in: path, required: true, schema: { type: string }, description: 'Platform-native id.' }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [accountId, changes]
+              properties:
+                accountId: { type: string }
+                mode: { type: string, enum: [set, adjust], default: set }
+                changes:
+                  type: array
+                  minItems: 1
+                  maxItems: 250
+                  items:
+                    type: object
+                    required: [variantId, locationId, quantity]
+                    properties:
+                      variantId: { type: string }
+                      locationId: { type: string }
+                      quantity: { type: integer }
+      responses:
+        '200':
+          description: Stock changed
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  inventory: { type: array, items: { $ref: '#/components/schemas/CommerceInventoryItem' } }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { description: 'The store has not granted this permission, or the token was revoked (code insufficient_permissions). Reconnect the store to grant the latest permissions; GET /v1/commerce/store lists what the current grant allows.' }
+        '404': { description: 'Account not found (code account_not_found) or the resource was not found (code product_not_found or resource_not_found).' }
+        '429': { description: 'Rate limited, either by Zernio or by the platform. Retry later.' }
+
+  /v1/commerce/channels:
+    get:
+      x-resource-group: "commerce"
+      operationId: listCommerceChannels
+      tags: ["Commerce"]
+      x-platforms: ["shopify"]
+      summary: List sales channels
+      description: |
+        Where products and collections can be published: the online store, Shop, POS and installed channel apps.
+      security:
+        - bearerAuth: []
+      parameters:
+        - { name: accountId, in: query, required: true, schema: { type: string }, description: 'Connected store SocialAccount id.' }
+      responses:
+        '200':
+          description: Channels listed
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  channels: { type: array, items: { $ref: '#/components/schemas/CommerceChannel' } }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { description: 'The store has not granted this permission, or the token was revoked (code insufficient_permissions). Reconnect the store to grant the latest permissions; GET /v1/commerce/store lists what the current grant allows.' }
+        '404': { description: 'Account not found (code account_not_found) or the resource was not found (code product_not_found or resource_not_found).' }
+        '429': { description: 'Rate limited, either by Zernio or by the platform. Retry later.' }
+
+  /v1/commerce/discounts:
+    get:
+      x-resource-group: "commerce"
+      operationId: listCommerceDiscounts
+      tags: ["Commerce"]
+      x-platforms: ["shopify", "woocommerce"]
+      summary: List discounts
+      security:
+        - bearerAuth: []
+      parameters:
+        - { name: accountId, in: query, required: true, schema: { type: string }, description: 'Connected store SocialAccount id.' }
+        - { name: limit, in: query, required: false, schema: { type: integer, minimum: 1, maximum: 100, default: 20 } }
+        - { name: cursor, in: query, required: false, schema: { type: string } }
+        - { name: query, in: query, required: false, schema: { type: string, maxLength: 500 }, description: 'Platform search syntax, passed through.' }
+      responses:
+        '200':
+          description: Discounts listed
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  discounts: { type: array, items: { $ref: '#/components/schemas/CommerceDiscount' } }
+                  nextCursor: { type: [string, "null"] }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { description: 'The store has not granted this permission, or the token was revoked (code insufficient_permissions). Reconnect the store to grant the latest permissions; GET /v1/commerce/store lists what the current grant allows.' }
+        '404': { description: 'Account not found (code account_not_found) or the resource was not found (code product_not_found or resource_not_found).' }
+        '429': { description: 'Rate limited, either by Zernio or by the platform. Retry later.' }
+    post:
+      x-resource-group: "commerce"
+      operationId: createCommerceDiscount
+      tags: ["Commerce"]
+      x-platforms: ["shopify", "woocommerce"]
+      summary: Create a discount
+      description: |
+        Creates a code discount (buyers enter a code) or an automatic one (applied at checkout), as a percentage, a fixed amount or free shipping. It applies to every product unless productIds or collectionIds narrow it, and to every buyer.
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [accountId, title, method, type]
+              properties:
+                accountId: { type: string }
+                title: { type: string, minLength: 1 }
+                method: { type: string, enum: [code, automatic] }
+                type: { type: string, enum: [percentage, fixed_amount, free_shipping] }
+                code: { type: string, description: 'Required for method code.' }
+                percentage: { type: number, exclusiveMinimum: 0, maximum: 100, description: 'For type percentage, e.g. 15 for 15%.' }
+                amount: { type: string, description: 'For type fixed_amount, a decimal in the store currency.' }
+                appliesOnEachItem: { type: boolean, description: 'fixed_amount only: take the amount off each item instead of once per order.' }
+                minimumSubtotal: { type: [string, "null"], description: 'Minimum order subtotal, a decimal in the store currency.' }
+                minimumQuantity: { type: [integer, "null"], minimum: 1 }
+                usageLimit: { type: [integer, "null"], minimum: 1, description: 'Code discounts only: total uses allowed.' }
+                oncePerCustomer: { type: boolean, description: 'Code discounts only.' }
+                startsAt: { type: string, format: date-time, description: 'Defaults to now.' }
+                endsAt: { type: [string, "null"], format: date-time }
+                productIds: { type: array, maxItems: 100, items: { type: string } }
+                collectionIds: { type: array, maxItems: 100, items: { type: string } }
+      responses:
+        '201':
+          description: Discount created
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  discount: { $ref: '#/components/schemas/CommerceDiscount' }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { description: 'The store has not granted this permission, or the token was revoked (code insufficient_permissions). Reconnect the store to grant the latest permissions; GET /v1/commerce/store lists what the current grant allows.' }
+        '404': { description: 'Account not found (code account_not_found) or the resource was not found (code product_not_found or resource_not_found).' }
+        '429': { description: 'Rate limited, either by Zernio or by the platform. Retry later.' }
+
+  /v1/commerce/discounts/{discountId}:
+    get:
+      x-resource-group: "commerce"
+      operationId: getCommerceDiscount
+      tags: ["Commerce"]
+      x-platforms: ["shopify", "woocommerce"]
+      summary: Get a discount
+      security:
+        - bearerAuth: []
+      parameters:
+        - { name: discountId, in: path, required: true, schema: { type: string }, description: 'Platform-native id.' }
+        - { name: accountId, in: query, required: true, schema: { type: string }, description: 'Connected store SocialAccount id.' }
+      responses:
+        '200':
+          description: Discount fetched
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  discount: { $ref: '#/components/schemas/CommerceDiscount' }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { description: 'The store has not granted this permission, or the token was revoked (code insufficient_permissions). Reconnect the store to grant the latest permissions; GET /v1/commerce/store lists what the current grant allows.' }
+        '404': { description: 'Account not found (code account_not_found) or the resource was not found (code product_not_found or resource_not_found).' }
+        '429': { description: 'Rate limited, either by Zernio or by the platform. Retry later.' }
+    patch:
+      x-resource-group: "commerce"
+      operationId: updateCommerceDiscount
+      tags: ["Commerce"]
+      x-platforms: ["shopify", "woocommerce"]
+      summary: Update a discount
+      description: |
+        Changes a percentage, fixed-amount or free-shipping discount. Buy-X-get-Y and app discounts are read-only here.
+      security:
+        - bearerAuth: []
+      parameters:
+        - { name: discountId, in: path, required: true, schema: { type: string }, description: 'Platform-native id.' }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [accountId]
+              properties:
+                accountId: { type: string }
+                title: { type: string }
+                code: { type: string, description: 'Required for method code.' }
+                percentage: { type: number, exclusiveMinimum: 0, maximum: 100, description: 'For type percentage, e.g. 15 for 15%.' }
+                amount: { type: string, description: 'For type fixed_amount, a decimal in the store currency.' }
+                appliesOnEachItem: { type: boolean, description: 'fixed_amount only: take the amount off each item instead of once per order.' }
+                minimumSubtotal: { type: [string, "null"], description: 'Minimum order subtotal, a decimal in the store currency.' }
+                minimumQuantity: { type: [integer, "null"], minimum: 1 }
+                usageLimit: { type: [integer, "null"], minimum: 1, description: 'Code discounts only: total uses allowed.' }
+                oncePerCustomer: { type: boolean, description: 'Code discounts only.' }
+                startsAt: { type: string, format: date-time, description: 'Defaults to now.' }
+                endsAt: { type: [string, "null"], format: date-time }
+      responses:
+        '200':
+          description: Discount updated
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  discount: { $ref: '#/components/schemas/CommerceDiscount' }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { description: 'The store has not granted this permission, or the token was revoked (code insufficient_permissions). Reconnect the store to grant the latest permissions; GET /v1/commerce/store lists what the current grant allows.' }
+        '404': { description: 'Account not found (code account_not_found) or the resource was not found (code product_not_found or resource_not_found).' }
+        '429': { description: 'Rate limited, either by Zernio or by the platform. Retry later.' }
+    delete:
+      x-resource-group: "commerce"
+      operationId: deleteCommerceDiscount
+      tags: ["Commerce"]
+      x-platforms: ["shopify", "woocommerce"]
+      summary: Delete a discount
+      security:
+        - bearerAuth: []
+      parameters:
+        - { name: discountId, in: path, required: true, schema: { type: string }, description: 'Platform-native id.' }
+        - { name: accountId, in: query, required: true, schema: { type: string }, description: 'Connected store SocialAccount id.' }
+      responses:
+        '200':
+          description: Discount deleted
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  deleted: { type: boolean }
+                  discountId: { type: string }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { description: 'The store has not granted this permission, or the token was revoked (code insufficient_permissions). Reconnect the store to grant the latest permissions; GET /v1/commerce/store lists what the current grant allows.' }
+        '404': { description: 'Account not found (code account_not_found) or the resource was not found (code product_not_found or resource_not_found).' }
+        '429': { description: 'Rate limited, either by Zernio or by the platform. Retry later.' }
+
+  /v1/commerce/discounts/{discountId}/state:
+    post:
+      x-resource-group: "commerce"
+      operationId: setCommerceDiscountActive
+      tags: ["Commerce"]
+      x-platforms: ["shopify", "woocommerce"]
+      summary: Activate or deactivate a discount
+      description: |
+        Deactivating ends the discount now; activating starts it now.
+      security:
+        - bearerAuth: []
+      parameters:
+        - { name: discountId, in: path, required: true, schema: { type: string }, description: 'Platform-native id.' }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [accountId, active]
+              properties:
+                accountId: { type: string }
+                active: { type: boolean }
+      responses:
+        '200':
+          description: Discount state changed
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  discount: { $ref: '#/components/schemas/CommerceDiscount' }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { description: 'The store has not granted this permission, or the token was revoked (code insufficient_permissions). Reconnect the store to grant the latest permissions; GET /v1/commerce/store lists what the current grant allows.' }
+        '404': { description: 'Account not found (code account_not_found) or the resource was not found (code product_not_found or resource_not_found).' }
+        '429': { description: 'Rate limited, either by Zernio or by the platform. Retry later.' }
+
+  /v1/commerce/discounts/{discountId}/codes:
+    post:
+      x-resource-group: "commerce"
+      operationId: addCommerceDiscountCodes
+      tags: ["Commerce"]
+      x-platforms: ["shopify"]
+      summary: Add codes to a discount
+      description: |
+        Adds up to 250 more codes to a code discount, for example one per influencer. The platform adds them in the background.
+      security:
+        - bearerAuth: []
+      parameters:
+        - { name: discountId, in: path, required: true, schema: { type: string }, description: 'Platform-native id.' }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [accountId, codes]
+              properties:
+                accountId: { type: string }
+                codes: { type: array, minItems: 1, maxItems: 250, items: { type: string } }
+      responses:
+        '202':
+          description: Codes queued
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  pending: { type: boolean }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { description: 'The store has not granted this permission, or the token was revoked (code insufficient_permissions). Reconnect the store to grant the latest permissions; GET /v1/commerce/store lists what the current grant allows.' }
+        '404': { description: 'Account not found (code account_not_found) or the resource was not found (code product_not_found or resource_not_found).' }
+        '429': { description: 'Rate limited, either by Zernio or by the platform. Retry later.' }
+
+  /v1/commerce/redirects:
+    get:
+      x-resource-group: "commerce"
+      operationId: listCommerceRedirects
+      tags: ["Commerce"]
+      x-platforms: ["shopify"]
+      summary: List URL redirects
+      security:
+        - bearerAuth: []
+      parameters:
+        - { name: accountId, in: query, required: true, schema: { type: string }, description: 'Connected store SocialAccount id.' }
+        - { name: limit, in: query, required: false, schema: { type: integer, minimum: 1, maximum: 100, default: 20 } }
+        - { name: cursor, in: query, required: false, schema: { type: string } }
+        - { name: query, in: query, required: false, schema: { type: string, maxLength: 500 }, description: 'Platform search syntax, passed through.' }
+      responses:
+        '200':
+          description: Redirects listed
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  redirects: { type: array, items: { $ref: '#/components/schemas/CommerceRedirect' } }
+                  nextCursor: { type: [string, "null"] }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { description: 'The store has not granted this permission, or the token was revoked (code insufficient_permissions). Reconnect the store to grant the latest permissions; GET /v1/commerce/store lists what the current grant allows.' }
+        '404': { description: 'Account not found (code account_not_found) or the resource was not found (code product_not_found or resource_not_found).' }
+        '429': { description: 'Rate limited, either by Zernio or by the platform. Retry later.' }
+    post:
+      x-resource-group: "commerce"
+      operationId: createCommerceRedirect
+      tags: ["Commerce"]
+      x-platforms: ["shopify"]
+      summary: Create a URL redirect
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [accountId, path, target]
+              properties:
+                accountId: { type: string }
+                path: { type: string, description: 'The old path, starting with /.' }
+                target: { type: string, description: 'Where to send visitors: a path or a full URL.' }
+      responses:
+        '201':
+          description: Redirect created
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  redirect: { $ref: '#/components/schemas/CommerceRedirect' }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { description: 'The store has not granted this permission, or the token was revoked (code insufficient_permissions). Reconnect the store to grant the latest permissions; GET /v1/commerce/store lists what the current grant allows.' }
+        '404': { description: 'Account not found (code account_not_found) or the resource was not found (code product_not_found or resource_not_found).' }
+        '429': { description: 'Rate limited, either by Zernio or by the platform. Retry later.' }
+
+  /v1/commerce/redirects/{redirectId}:
+    patch:
+      x-resource-group: "commerce"
+      operationId: updateCommerceRedirect
+      tags: ["Commerce"]
+      x-platforms: ["shopify"]
+      summary: Update a URL redirect
+      security:
+        - bearerAuth: []
+      parameters:
+        - { name: redirectId, in: path, required: true, schema: { type: string }, description: 'Platform-native id.' }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [accountId]
+              properties:
+                accountId: { type: string }
+                path: { type: string }
+                target: { type: string }
+      responses:
+        '200':
+          description: Redirect updated
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  redirect: { $ref: '#/components/schemas/CommerceRedirect' }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { description: 'The store has not granted this permission, or the token was revoked (code insufficient_permissions). Reconnect the store to grant the latest permissions; GET /v1/commerce/store lists what the current grant allows.' }
+        '404': { description: 'Account not found (code account_not_found) or the resource was not found (code product_not_found or resource_not_found).' }
+        '429': { description: 'Rate limited, either by Zernio or by the platform. Retry later.' }
+    delete:
+      x-resource-group: "commerce"
+      operationId: deleteCommerceRedirect
+      tags: ["Commerce"]
+      x-platforms: ["shopify"]
+      summary: Delete a URL redirect
+      security:
+        - bearerAuth: []
+      parameters:
+        - { name: redirectId, in: path, required: true, schema: { type: string }, description: 'Platform-native id.' }
+        - { name: accountId, in: query, required: true, schema: { type: string }, description: 'Connected store SocialAccount id.' }
+      responses:
+        '200':
+          description: Redirect deleted
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  deleted: { type: boolean }
+                  redirectId: { type: string }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { description: 'The store has not granted this permission, or the token was revoked (code insufficient_permissions). Reconnect the store to grant the latest permissions; GET /v1/commerce/store lists what the current grant allows.' }
+        '404': { description: 'Account not found (code account_not_found) or the resource was not found (code product_not_found or resource_not_found).' }
+        '429': { description: 'Rate limited, either by Zernio or by the platform. Retry later.' }
+
+  /v1/commerce/menus:
+    get:
+      x-resource-group: "commerce"
+      operationId: listCommerceMenus
+      tags: ["Commerce"]
+      x-platforms: ["shopify"]
+      summary: List navigation menus
+      security:
+        - bearerAuth: []
+      parameters:
+        - { name: accountId, in: query, required: true, schema: { type: string }, description: 'Connected store SocialAccount id.' }
+      responses:
+        '200':
+          description: Menus listed
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  menus: { type: array, items: { $ref: '#/components/schemas/CommerceMenu' } }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { description: 'The store has not granted this permission, or the token was revoked (code insufficient_permissions). Reconnect the store to grant the latest permissions; GET /v1/commerce/store lists what the current grant allows.' }
+        '404': { description: 'Account not found (code account_not_found) or the resource was not found (code product_not_found or resource_not_found).' }
+        '429': { description: 'Rate limited, either by Zernio or by the platform. Retry later.' }
+    post:
+      x-resource-group: "commerce"
+      operationId: createCommerceMenu
+      tags: ["Commerce"]
+      x-platforms: ["shopify"]
+      summary: Create a navigation menu
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [accountId, title, handle, items]
+              properties:
+                accountId: { type: string }
+                title: { type: string }
+                handle: { type: string }
+                items:
+                  type: array
+                  maxItems: 100
+                  items: { $ref: '#/components/schemas/CommerceMenuItemInput' }
+      responses:
+        '201':
+          description: Menu created
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  menu: { $ref: '#/components/schemas/CommerceMenu' }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { description: 'The store has not granted this permission, or the token was revoked (code insufficient_permissions). Reconnect the store to grant the latest permissions; GET /v1/commerce/store lists what the current grant allows.' }
+        '404': { description: 'Account not found (code account_not_found) or the resource was not found (code product_not_found or resource_not_found).' }
+        '429': { description: 'Rate limited, either by Zernio or by the platform. Retry later.' }
+
+  /v1/commerce/menus/{menuId}:
+    get:
+      x-resource-group: "commerce"
+      operationId: getCommerceMenu
+      tags: ["Commerce"]
+      x-platforms: ["shopify"]
+      summary: Get a navigation menu
+      security:
+        - bearerAuth: []
+      parameters:
+        - { name: menuId, in: path, required: true, schema: { type: string }, description: 'Platform-native id.' }
+        - { name: accountId, in: query, required: true, schema: { type: string }, description: 'Connected store SocialAccount id.' }
+      responses:
+        '200':
+          description: Menu fetched
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  menu: { $ref: '#/components/schemas/CommerceMenu' }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { description: 'The store has not granted this permission, or the token was revoked (code insufficient_permissions). Reconnect the store to grant the latest permissions; GET /v1/commerce/store lists what the current grant allows.' }
+        '404': { description: 'Account not found (code account_not_found) or the resource was not found (code product_not_found or resource_not_found).' }
+        '429': { description: 'Rate limited, either by Zernio or by the platform. Retry later.' }
+    put:
+      x-resource-group: "commerce"
+      operationId: updateCommerceMenu
+      tags: ["Commerce"]
+      x-platforms: ["shopify"]
+      summary: Replace a navigation menu
+      description: |
+        Replaces the title and the whole item tree.
+      security:
+        - bearerAuth: []
+      parameters:
+        - { name: menuId, in: path, required: true, schema: { type: string }, description: 'Platform-native id.' }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [accountId, title, items]
+              properties:
+                accountId: { type: string }
+                title: { type: string }
+                handle: { type: string }
+                items:
+                  type: array
+                  maxItems: 100
+                  items: { $ref: '#/components/schemas/CommerceMenuItemInput' }
+      responses:
+        '200':
+          description: Menu updated
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  menu: { $ref: '#/components/schemas/CommerceMenu' }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { description: 'The store has not granted this permission, or the token was revoked (code insufficient_permissions). Reconnect the store to grant the latest permissions; GET /v1/commerce/store lists what the current grant allows.' }
+        '404': { description: 'Account not found (code account_not_found) or the resource was not found (code product_not_found or resource_not_found).' }
+        '429': { description: 'Rate limited, either by Zernio or by the platform. Retry later.' }
+    delete:
+      x-resource-group: "commerce"
+      operationId: deleteCommerceMenu
+      tags: ["Commerce"]
+      x-platforms: ["shopify"]
+      summary: Delete a navigation menu
+      security:
+        - bearerAuth: []
+      parameters:
+        - { name: menuId, in: path, required: true, schema: { type: string }, description: 'Platform-native id.' }
+        - { name: accountId, in: query, required: true, schema: { type: string }, description: 'Connected store SocialAccount id.' }
+      responses:
+        '200':
+          description: Menu deleted
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  deleted: { type: boolean }
+                  menuId: { type: string }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { description: 'The store has not granted this permission, or the token was revoked (code insufficient_permissions). Reconnect the store to grant the latest permissions; GET /v1/commerce/store lists what the current grant allows.' }
+        '404': { description: 'Account not found (code account_not_found) or the resource was not found (code product_not_found or resource_not_found).' }
+        '429': { description: 'Rate limited, either by Zernio or by the platform. Retry later.' }
+
+  /v1/commerce/metaobject-definitions:
+    get:
+      x-resource-group: "commerce"
+      operationId: listCommerceMetaobjectDefinitions
+      tags: ["Commerce"]
+      x-platforms: ["shopify"]
+      summary: List metaobject definitions
+      description: |
+        The custom content types defined on the store and their fields.
+      security:
+        - bearerAuth: []
+      parameters:
+        - { name: accountId, in: query, required: true, schema: { type: string }, description: 'Connected store SocialAccount id.' }
+      responses:
+        '200':
+          description: Definitions listed
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  definitions: { type: array, items: { $ref: '#/components/schemas/CommerceMetaobjectDefinition' } }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { description: 'The store has not granted this permission, or the token was revoked (code insufficient_permissions). Reconnect the store to grant the latest permissions; GET /v1/commerce/store lists what the current grant allows.' }
+        '404': { description: 'Account not found (code account_not_found) or the resource was not found (code product_not_found or resource_not_found).' }
+        '429': { description: 'Rate limited, either by Zernio or by the platform. Retry later.' }
+
+  /v1/commerce/metaobjects:
+    get:
+      x-resource-group: "commerce"
+      operationId: listCommerceMetaobjects
+      tags: ["Commerce"]
+      x-platforms: ["shopify"]
+      summary: List metaobjects of a type
+      security:
+        - bearerAuth: []
+      parameters:
+        - { name: accountId, in: query, required: true, schema: { type: string }, description: 'Connected store SocialAccount id.' }
+        - { name: type, in: query, required: true, schema: { type: string }, description: 'Definition type from GET /v1/commerce/metaobject-definitions.' }
+        - { name: limit, in: query, required: false, schema: { type: integer, minimum: 1, maximum: 100, default: 20 } }
+        - { name: cursor, in: query, required: false, schema: { type: string } }
+      responses:
+        '200':
+          description: Metaobjects listed
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  metaobjects: { type: array, items: { $ref: '#/components/schemas/CommerceMetaobject' } }
+                  nextCursor: { type: [string, "null"] }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { description: 'The store has not granted this permission, or the token was revoked (code insufficient_permissions). Reconnect the store to grant the latest permissions; GET /v1/commerce/store lists what the current grant allows.' }
+        '404': { description: 'Account not found (code account_not_found) or the resource was not found (code product_not_found or resource_not_found).' }
+        '429': { description: 'Rate limited, either by Zernio or by the platform. Retry later.' }
+    post:
+      x-resource-group: "commerce"
+      operationId: createCommerceMetaobject
+      tags: ["Commerce"]
+      x-platforms: ["shopify"]
+      summary: Create a metaobject
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [accountId, type, fields]
+              properties:
+                accountId: { type: string }
+                type: { type: string }
+                handle: { type: string }
+                fields:
+                  type: array
+                  minItems: 1
+                  maxItems: 100
+                  items:
+                    type: object
+                    required: [key, value]
+                    properties:
+                      key: { type: string }
+                      value: { type: string }
+      responses:
+        '201':
+          description: Metaobject created
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  metaobject: { $ref: '#/components/schemas/CommerceMetaobject' }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { description: 'The store has not granted this permission, or the token was revoked (code insufficient_permissions). Reconnect the store to grant the latest permissions; GET /v1/commerce/store lists what the current grant allows.' }
+        '404': { description: 'Account not found (code account_not_found) or the resource was not found (code product_not_found or resource_not_found).' }
+        '429': { description: 'Rate limited, either by Zernio or by the platform. Retry later.' }
+
+  /v1/commerce/metaobjects/{metaobjectId}:
+    get:
+      x-resource-group: "commerce"
+      operationId: getCommerceMetaobject
+      tags: ["Commerce"]
+      x-platforms: ["shopify"]
+      summary: Get a metaobject
+      security:
+        - bearerAuth: []
+      parameters:
+        - { name: metaobjectId, in: path, required: true, schema: { type: string }, description: 'Platform-native id.' }
+        - { name: accountId, in: query, required: true, schema: { type: string }, description: 'Connected store SocialAccount id.' }
+      responses:
+        '200':
+          description: Metaobject fetched
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  metaobject: { $ref: '#/components/schemas/CommerceMetaobject' }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { description: 'The store has not granted this permission, or the token was revoked (code insufficient_permissions). Reconnect the store to grant the latest permissions; GET /v1/commerce/store lists what the current grant allows.' }
+        '404': { description: 'Account not found (code account_not_found) or the resource was not found (code product_not_found or resource_not_found).' }
+        '429': { description: 'Rate limited, either by Zernio or by the platform. Retry later.' }
+    patch:
+      x-resource-group: "commerce"
+      operationId: updateCommerceMetaobject
+      tags: ["Commerce"]
+      x-platforms: ["shopify"]
+      summary: Update a metaobject
+      description: |
+        Sets the given field values; fields left out keep theirs.
+      security:
+        - bearerAuth: []
+      parameters:
+        - { name: metaobjectId, in: path, required: true, schema: { type: string }, description: 'Platform-native id.' }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [accountId, fields]
+              properties:
+                accountId: { type: string }
+                handle: { type: string }
+                fields:
+                  type: array
+                  minItems: 1
+                  maxItems: 100
+                  items:
+                    type: object
+                    required: [key, value]
+                    properties:
+                      key: { type: string }
+                      value: { type: string }
+      responses:
+        '200':
+          description: Metaobject updated
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  metaobject: { $ref: '#/components/schemas/CommerceMetaobject' }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { description: 'The store has not granted this permission, or the token was revoked (code insufficient_permissions). Reconnect the store to grant the latest permissions; GET /v1/commerce/store lists what the current grant allows.' }
+        '404': { description: 'Account not found (code account_not_found) or the resource was not found (code product_not_found or resource_not_found).' }
+        '429': { description: 'Rate limited, either by Zernio or by the platform. Retry later.' }
+    delete:
+      x-resource-group: "commerce"
+      operationId: deleteCommerceMetaobject
+      tags: ["Commerce"]
+      x-platforms: ["shopify"]
+      summary: Delete a metaobject
+      security:
+        - bearerAuth: []
+      parameters:
+        - { name: metaobjectId, in: path, required: true, schema: { type: string }, description: 'Platform-native id.' }
+        - { name: accountId, in: query, required: true, schema: { type: string }, description: 'Connected store SocialAccount id.' }
+      responses:
+        '200':
+          description: Metaobject deleted
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  deleted: { type: boolean }
+                  metaobjectId: { type: string }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { description: 'The store has not granted this permission, or the token was revoked (code insufficient_permissions). Reconnect the store to grant the latest permissions; GET /v1/commerce/store lists what the current grant allows.' }
+        '404': { description: 'Account not found (code account_not_found) or the resource was not found (code product_not_found or resource_not_found).' }
+        '429': { description: 'Rate limited, either by Zernio or by the platform. Retry later.' }
+
+  /v1/commerce/markets:
+    get:
+      x-resource-group: "commerce"
+      operationId: listCommerceMarkets
+      tags: ["Commerce"]
+      x-platforms: ["shopify"]
+      summary: List markets
+      description: |
+        The regions the store sells to, each with its own currency and pricing.
+      security:
+        - bearerAuth: []
+      parameters:
+        - { name: accountId, in: query, required: true, schema: { type: string }, description: 'Connected store SocialAccount id.' }
+      responses:
+        '200':
+          description: Markets listed
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  markets: { type: array, items: { $ref: '#/components/schemas/CommerceMarket' } }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { description: 'The store has not granted this permission, or the token was revoked (code insufficient_permissions). Reconnect the store to grant the latest permissions; GET /v1/commerce/store lists what the current grant allows.' }
+        '404': { description: 'Account not found (code account_not_found) or the resource was not found (code product_not_found or resource_not_found).' }
+        '429': { description: 'Rate limited, either by Zernio or by the platform. Retry later.' }
+
+  /v1/commerce/price-lists:
+    get:
+      x-resource-group: "commerce"
+      operationId: listCommercePriceLists
+      tags: ["Commerce"]
+      x-platforms: ["shopify"]
+      summary: List price lists
+      description: |
+        Price lists hold fixed prices per variant for a market.
+      security:
+        - bearerAuth: []
+      parameters:
+        - { name: accountId, in: query, required: true, schema: { type: string }, description: 'Connected store SocialAccount id.' }
+      responses:
+        '200':
+          description: Price lists listed
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  priceLists: { type: array, items: { $ref: '#/components/schemas/CommercePriceList' } }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { description: 'The store has not granted this permission, or the token was revoked (code insufficient_permissions). Reconnect the store to grant the latest permissions; GET /v1/commerce/store lists what the current grant allows.' }
+        '404': { description: 'Account not found (code account_not_found) or the resource was not found (code product_not_found or resource_not_found).' }
+        '429': { description: 'Rate limited, either by Zernio or by the platform. Retry later.' }
+
+  /v1/commerce/price-lists/{priceListId}/prices:
+    put:
+      x-resource-group: "commerce"
+      operationId: setCommercePriceListPrices
+      tags: ["Commerce"]
+      x-platforms: ["shopify"]
+      summary: Set fixed prices
+      description: |
+        Sets fixed prices for variants in the price list's currency, overriding the converted price in that market.
+      security:
+        - bearerAuth: []
+      parameters:
+        - { name: priceListId, in: path, required: true, schema: { type: string }, description: 'Platform-native id.' }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [accountId, prices]
+              properties:
+                accountId: { type: string }
+                prices:
+                  type: array
+                  minItems: 1
+                  maxItems: 250
+                  items:
+                    type: object
+                    required: [variantId, price]
+                    properties:
+                      variantId: { type: string }
+                      price: { type: string, description: 'Decimal in the price list currency.' }
+                      compareAtPrice: { type: [string, "null"] }
+      responses:
+        '200':
+          description: Prices set
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  priceListId: { type: string }
+                  updated: { type: integer }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { description: 'The store has not granted this permission, or the token was revoked (code insufficient_permissions). Reconnect the store to grant the latest permissions; GET /v1/commerce/store lists what the current grant allows.' }
+        '404': { description: 'Account not found (code account_not_found) or the resource was not found (code product_not_found or resource_not_found).' }
+        '429': { description: 'Rate limited, either by Zernio or by the platform. Retry later.' }
+    delete:
+      x-resource-group: "commerce"
+      operationId: deleteCommercePriceListPrices
+      tags: ["Commerce"]
+      x-platforms: ["shopify"]
+      summary: Remove fixed prices
+      description: |
+        The variants go back to the market's converted price.
+      security:
+        - bearerAuth: []
+      parameters:
+        - { name: priceListId, in: path, required: true, schema: { type: string }, description: 'Platform-native id.' }
+        - { name: accountId, in: query, required: true, schema: { type: string }, description: 'Connected store SocialAccount id.' }
+        - { name: variantIds, in: query, required: true, schema: { type: string }, description: 'Comma-separated ids.' }
+      responses:
+        '200':
+          description: Prices removed
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  priceListId: { type: string }
+                  deleted: { type: integer }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { description: 'The store has not granted this permission, or the token was revoked (code insufficient_permissions). Reconnect the store to grant the latest permissions; GET /v1/commerce/store lists what the current grant allows.' }
+        '404': { description: 'Account not found (code account_not_found) or the resource was not found (code product_not_found or resource_not_found).' }
+        '429': { description: 'Rate limited, either by Zernio or by the platform. Retry later.' }
+
+  /v1/commerce/marketing-activities:
+    put:
+      x-resource-group: "commerce"
+      operationId: upsertCommerceMarketingActivity
+      tags: ["Commerce"]
+      x-platforms: ["shopify"]
+      summary: Record a marketing activity
+      description: |
+        Creates or updates (by `remoteId`) an activity in the store's Marketing section, so the merchant sees a post, ad or message you ran for them, with its link and UTM parameters for attribution. Use your own id (for example the Zernio post or ad id) as `remoteId`.
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [accountId, remoteId, title, url, tactic, channel, status]
+              properties:
+                accountId: { type: string }
+                remoteId: { type: string, maxLength: 255 }
+                title: { type: string }
+                url: { type: string, format: uri }
+                previewImageUrl: { type: string, format: uri }
+                utm:
+                  type: object
+                  required: [campaign, source, medium]
+                  properties:
+                    campaign: { type: string }
+                    source: { type: string }
+                    medium: { type: string }
+                tactic: { type: string, enum: [ad, post, message, newsletter, link, affiliate, retargeting, loyalty, seo] }
+                channel: { type: string, enum: [social, search, display, email, referral] }
+                status: { type: string, enum: [active, inactive, paused, scheduled] }
+                budget:
+                  type: object
+                  required: [type, amount]
+                  properties:
+                    type: { type: string, enum: [daily, lifetime] }
+                    amount: { type: string, description: 'Decimal in the store currency.' }
+                adSpend: { type: string, description: 'Decimal in the store currency.' }
+                startedAt: { type: string, format: date-time }
+                endedAt: { type: string, format: date-time }
+      responses:
+        '200':
+          description: Activity recorded
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  marketingActivity:
+                    type: object
+                    properties:
+                      id: { type: string }
+                      remoteId: { type: string }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { description: 'The store has not granted this permission, or the token was revoked (code insufficient_permissions). Reconnect the store to grant the latest permissions; GET /v1/commerce/store lists what the current grant allows.' }
+        '404': { description: 'Account not found (code account_not_found) or the resource was not found (code product_not_found or resource_not_found).' }
+        '429': { description: 'Rate limited, either by Zernio or by the platform. Retry later.' }
+
+  /v1/commerce/marketing-activities/{remoteId}:
+    delete:
+      x-resource-group: "commerce"
+      operationId: deleteCommerceMarketingActivity
+      tags: ["Commerce"]
+      x-platforms: ["shopify"]
+      summary: Delete a marketing activity
+      security:
+        - bearerAuth: []
+      parameters:
+        - { name: remoteId, in: path, required: true, schema: { type: string }, description: 'The remoteId given when recording it.' }
+        - { name: accountId, in: query, required: true, schema: { type: string }, description: 'Connected store SocialAccount id.' }
+      responses:
+        '200':
+          description: Activity deleted
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  deleted: { type: boolean }
+                  remoteId: { type: string }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { description: 'The store has not granted this permission, or the token was revoked (code insufficient_permissions). Reconnect the store to grant the latest permissions; GET /v1/commerce/store lists what the current grant allows.' }
+        '404': { description: 'Account not found (code account_not_found) or the resource was not found (code product_not_found or resource_not_found).' }
+        '429': { description: 'Rate limited, either by Zernio or by the platform. Retry later.' }
+
+  /v1/commerce/marketing-activities/{remoteId}/engagements:
+    post:
+      x-resource-group: "commerce"
+      operationId: addCommerceMarketingEngagement
+      tags: ["Commerce"]
+      x-platforms: ["shopify"]
+      summary: Report daily engagement
+      description: |
+        Reports one day's numbers for an activity (UTC day), shown next to it in the store's Marketing section.
+      security:
+        - bearerAuth: []
+      parameters:
+        - { name: remoteId, in: path, required: true, schema: { type: string }, description: 'The remoteId given when recording it.' }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [accountId, date]
+              properties:
+                accountId: { type: string }
+                date: { type: string, format: date }
+                impressions: { type: integer, minimum: 0 }
+                views: { type: integer, minimum: 0 }
+                clicks: { type: integer, minimum: 0 }
+                shares: { type: integer, minimum: 0 }
+                likes: { type: integer, minimum: 0 }
+                comments: { type: integer, minimum: 0 }
+                adSpend: { type: string, description: 'Decimal in the store currency.' }
+      responses:
+        '201':
+          description: Engagement recorded
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  remoteId: { type: string }
+                  recorded: { type: boolean }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { description: 'The store has not granted this permission, or the token was revoked (code insufficient_permissions). Reconnect the store to grant the latest permissions; GET /v1/commerce/store lists what the current grant allows.' }
+        '404': { description: 'Account not found (code account_not_found) or the resource was not found (code product_not_found or resource_not_found).' }
+        '429': { description: 'Rate limited, either by Zernio or by the platform. Retry later.' }
+
+  /v1/commerce/catalog-syncs:
+    get:
+      x-resource-group: "commerce"
+      operationId: listCommerceCatalogSyncs
+      tags: ["Commerce"]
+      x-platforms: ["shopify", "woocommerce"]
+      summary: List catalog syncs
+      description: 'The ad-platform catalogs this store is kept in sync with.'
+      security:
+        - bearerAuth: []
+      parameters:
+        - { name: accountId, in: query, required: true, schema: { type: string }, description: 'Connected store SocialAccount id.' }
+      responses:
+        '200':
+          description: Catalog syncs listed
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  catalogSyncs:
+                    type: array
+                    items: { $ref: '#/components/schemas/CommerceCatalogSync' }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404': { description: 'Account not found or not accessible (code account_not_found).' }
+    post:
+      x-resource-group: "commerce"
+      operationId: createCommerceCatalogSync
+      tags: ["Commerce"]
+      x-platforms: ["shopify", "woocommerce"]
+      summary: Sync a store into a Meta catalog
+      description: |
+        Keeps a Meta product catalog in sync with the store, for catalog ads
+        (`goal: catalog_sales`) and Shops. The first full run starts right
+        away in the background; `runStatus` and the item counts report its
+        outcome. Every active product variant that is published to the online
+        store and has an image becomes a catalog item, grouped by product
+        (`item_group_id`). After that, product changes on the store update
+        the catalog within minutes, and a daily full run removes items for
+        products or variants the store no longer has. Items are namespaced to
+        the store, so a catalog can take several stores and a run never
+        touches items it did not create.
+
+        `catalogAccountId` is a connected facebook, instagram or metaads
+        account whose Meta login can manage the catalog (the catalog_management
+        permission); find catalogs with `GET /v1/ads/catalogs`.
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [accountId, catalogAccountId, catalogId]
+              properties:
+                accountId: { type: string, description: 'The store SocialAccount id.' }
+                catalogAccountId: { type: string }
+                catalogId: { type: string, pattern: '^\d+$', description: 'Meta product catalog id.' }
+      responses:
+        '202':
+          description: Sync created; the first run is queued
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  catalogSync: { $ref: '#/components/schemas/CommerceCatalogSync' }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { description: 'The Meta login cannot manage the catalog (code insufficient_permissions).' }
+        '404': { description: 'Account or catalog not found (code account_not_found or resource_not_found).' }
+        '409': { description: 'The store already syncs to that catalog (code catalog_sync_conflict).' }
+
+  /v1/commerce/catalog-syncs/{syncId}:
+    get:
+      x-resource-group: "commerce"
+      operationId: getCommerceCatalogSync
+      tags: ["Commerce"]
+      x-platforms: ["shopify", "woocommerce"]
+      summary: Get a catalog sync
+      security:
+        - bearerAuth: []
+      parameters:
+        - { name: syncId, in: path, required: true, schema: { type: string } }
+      responses:
+        '200':
+          description: Catalog sync fetched
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  catalogSync: { $ref: '#/components/schemas/CommerceCatalogSync' }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404': { description: 'Catalog sync not found (code resource_not_found).' }
+    delete:
+      x-resource-group: "commerce"
+      operationId: deleteCommerceCatalogSync
+      tags: ["Commerce"]
+      x-platforms: ["shopify", "woocommerce"]
+      summary: Stop a catalog sync
+      description: 'Stops syncing. Items already in the catalog stay there.'
+      security:
+        - bearerAuth: []
+      parameters:
+        - { name: syncId, in: path, required: true, schema: { type: string } }
+      responses:
+        '200':
+          description: Catalog sync stopped
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  deleted: { type: boolean }
+                  syncId: { type: string }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404': { description: 'Catalog sync not found (code resource_not_found).' }
+
+  /v1/commerce/catalog-syncs/{syncId}/run:
+    post:
+      x-resource-group: "commerce"
+      operationId: runCommerceCatalogSync
+      tags: ["Commerce"]
+      x-platforms: ["shopify", "woocommerce"]
+      summary: Run a catalog sync now
+      description: 'Queues a full run. Poll GET /v1/commerce/catalog-syncs/{syncId} for the outcome.'
+      security:
+        - bearerAuth: []
+      parameters:
+        - { name: syncId, in: path, required: true, schema: { type: string } }
+      responses:
+        '202':
+          description: Run queued
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  catalogSync: { $ref: '#/components/schemas/CommerceCatalogSync' }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404': { description: 'Catalog sync not found (code resource_not_found).' }
+        '409': { description: 'A run is already in progress (code catalog_sync_conflict).' }
 
   /v1/verify/verifications:
     post:

@@ -29,6 +29,7 @@ from ..resources import (
     CallsResource,
     CommentAutomationsResource,
     CommentsResource,
+    CommerceResource,
     ConnectedAppsResource,
     ConnectResource,
     ContactsResource,
@@ -177,6 +178,7 @@ class Zernio(BaseClient):
         self.calls = CallsResource(self)
         self.comment_automations = CommentAutomationsResource(self)
         self.comments = CommentsResource(self)
+        self.commerce = CommerceResource(self)
         self.connect = ConnectResource(self)
         self.connected_apps = ConnectedAppsResource(self)
         self.contacts = ContactsResource(self)

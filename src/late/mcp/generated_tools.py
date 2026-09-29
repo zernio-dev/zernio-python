@@ -12827,6 +12827,2182 @@ def register_generated_tools(mcp, _get_client):
         except Exception as e:
             return f"Error: {e}"
 
+    # COMMERCE
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Get a store",
+            readOnlyHint=True,
+            destructiveHint=False,
+            openWorldHint=False,
+        )
+    )
+    def commerce_get_commerce_store(account_id: str) -> str:
+        """Get a store
+
+        Args:
+            account_id: Connected store SocialAccount id. (required)"""
+        client = _get_client()
+        try:
+            response = client.commerce.get_commerce_store(account_id=account_id)
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="List products",
+            readOnlyHint=True,
+            destructiveHint=False,
+            openWorldHint=False,
+        )
+    )
+    def commerce_list_commerce_products(
+        account_id: str,
+        limit: int = 20,
+        cursor: str | None = None,
+        status: str | None = None,
+        query: str | None = None,
+        collection_id: str | None = None,
+    ) -> str:
+        """List products
+
+        Args:
+            account_id: Connected store SocialAccount id. (required)
+            limit
+            cursor: Opaque cursor from a previous response. Omit for the first page.
+            status
+            query: Platform product search syntax (Shopify: title, vendor, product_type, tag, sku, handle, ...).
+            collection_id: Only products in this collection."""
+        client = _get_client()
+        try:
+            response = client.commerce.list_commerce_products(
+                account_id=account_id,
+                limit=limit,
+                cursor=cursor,
+                status=status,
+                query=query,
+                collection_id=collection_id,
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Create a product",
+            readOnlyHint=False,
+            destructiveHint=True,
+            openWorldHint=True,
+        )
+    )
+    def commerce_create_commerce_product(
+        account_id: str,
+        title: str,
+        variants: list[dict[str, Any]] | None,
+        description_html: str | None = None,
+        handle: str | None = None,
+        vendor: str | None = None,
+        product_type: str | None = None,
+        tags: list[str] | None = None,
+        seo: dict[str, Any] | None = None,
+        status: str = "draft",
+        images: list[dict[str, Any]] | None = None,
+        options: list[dict[str, Any]] | None = None,
+    ) -> str:
+        """Create a product
+
+        Args:
+            account_id: (required)
+            title: (required)
+            description_html
+            handle
+            vendor
+            product_type
+            tags
+            seo
+            status
+            images
+            options
+            variants: (required)"""
+        client = _get_client()
+        try:
+            response = client.commerce.create_commerce_product(
+                account_id=account_id,
+                title=title,
+                description_html=description_html,
+                handle=handle,
+                vendor=vendor,
+                product_type=product_type,
+                tags=tags,
+                seo=seo,
+                status=status,
+                images=images,
+                options=options,
+                variants=variants,
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Activate, deactivate, archive or delete products",
+            readOnlyHint=False,
+            destructiveHint=True,
+            openWorldHint=True,
+        )
+    )
+    def commerce_change_commerce_product_state(
+        account_id: str, product_ids: list[str] | None, action: str
+    ) -> str:
+        """Activate, deactivate, archive or delete products
+
+        Args:
+            account_id: (required)
+            product_ids: (required)
+            action: (required)"""
+        client = _get_client()
+        try:
+            response = client.commerce.change_commerce_product_state(
+                account_id=account_id, product_ids=product_ids, action=action
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Get a product",
+            readOnlyHint=True,
+            destructiveHint=False,
+            openWorldHint=False,
+        )
+    )
+    def commerce_get_commerce_product(product_id: str, account_id: str) -> str:
+        """Get a product
+
+        Args:
+            product_id: Platform-native product id. (required)
+            account_id: Connected store SocialAccount id. (required)"""
+        client = _get_client()
+        try:
+            response = client.commerce.get_commerce_product(
+                product_id=product_id, account_id=account_id
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Update a product",
+            readOnlyHint=False,
+            destructiveHint=True,
+            openWorldHint=True,
+        )
+    )
+    def commerce_update_commerce_product(
+        product_id: str,
+        account_id: str,
+        title: str | None = None,
+        description_html: str | None = None,
+        handle: str | None = None,
+        vendor: str | None = None,
+        product_type: str | None = None,
+        tags: list[str] | None = None,
+        seo: dict[str, Any] | None = None,
+    ) -> str:
+        """Update a product
+
+        Args:
+            product_id: Platform-native product id. (required)
+            account_id: (required)
+            title
+            description_html
+            handle
+            vendor
+            product_type
+            tags
+            seo"""
+        client = _get_client()
+        try:
+            response = client.commerce.update_commerce_product(
+                product_id=product_id,
+                account_id=account_id,
+                title=title,
+                description_html=description_html,
+                handle=handle,
+                vendor=vendor,
+                product_type=product_type,
+                tags=tags,
+                seo=seo,
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Update variant prices",
+            readOnlyHint=False,
+            destructiveHint=True,
+            openWorldHint=True,
+        )
+    )
+    def commerce_update_commerce_product_prices(
+        product_id: str, account_id: str, variants: list[dict[str, Any]] | None
+    ) -> str:
+        """Update variant prices
+
+        Args:
+            product_id: Platform-native product id. (required)
+            account_id: (required)
+            variants: (required)"""
+        client = _get_client()
+        try:
+            response = client.commerce.update_commerce_product_prices(
+                product_id=product_id, account_id=account_id, variants=variants
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="List collections",
+            readOnlyHint=True,
+            destructiveHint=False,
+            openWorldHint=False,
+        )
+    )
+    def commerce_list_commerce_collections(
+        account_id: str,
+        limit: int = 20,
+        cursor: str | None = None,
+        query: str | None = None,
+    ) -> str:
+        """List collections
+
+        Args:
+            account_id: Connected store SocialAccount id. (required)
+            limit
+            cursor
+            query: Platform collection search syntax (Shopify: title, handle, collection_type, ...)."""
+        client = _get_client()
+        try:
+            response = client.commerce.list_commerce_collections(
+                account_id=account_id, limit=limit, cursor=cursor, query=query
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Create a collection",
+            readOnlyHint=False,
+            destructiveHint=True,
+            openWorldHint=True,
+        )
+    )
+    def commerce_create_commerce_collection(
+        account_id: str,
+        title: str,
+        description_html: str | None = None,
+        handle: str | None = None,
+        sort_order: str | None = None,
+        seo: dict[str, Any] | None = None,
+        image: dict[str, Any] | None = None,
+        product_ids: list[str] | None = None,
+    ) -> str:
+        """Create a collection
+
+        Args:
+            account_id: (required)
+            title: (required)
+            description_html
+            handle
+            sort_order
+            seo
+            image
+            product_ids"""
+        client = _get_client()
+        try:
+            response = client.commerce.create_commerce_collection(
+                account_id=account_id,
+                title=title,
+                description_html=description_html,
+                handle=handle,
+                sort_order=sort_order,
+                seo=seo,
+                image=image,
+                product_ids=product_ids,
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Get a collection",
+            readOnlyHint=True,
+            destructiveHint=False,
+            openWorldHint=False,
+        )
+    )
+    def commerce_get_commerce_collection(collection_id: str, account_id: str) -> str:
+        """Get a collection
+
+        Args:
+            collection_id: Platform-native collection id. (required)
+            account_id: Connected store SocialAccount id. (required)"""
+        client = _get_client()
+        try:
+            response = client.commerce.get_commerce_collection(
+                collection_id=collection_id, account_id=account_id
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Update a collection",
+            readOnlyHint=False,
+            destructiveHint=True,
+            openWorldHint=True,
+        )
+    )
+    def commerce_update_commerce_collection(
+        collection_id: str,
+        account_id: str,
+        title: str | None = None,
+        description_html: str | None = None,
+        handle: str | None = None,
+        sort_order: str | None = None,
+        seo: dict[str, Any] | None = None,
+        image: dict[str, Any] | None = None,
+    ) -> str:
+        """Update a collection
+
+        Args:
+            collection_id: Platform-native collection id. (required)
+            account_id: (required)
+            title
+            description_html
+            handle
+            sort_order
+            seo
+            image"""
+        client = _get_client()
+        try:
+            response = client.commerce.update_commerce_collection(
+                collection_id=collection_id,
+                account_id=account_id,
+                title=title,
+                description_html=description_html,
+                handle=handle,
+                sort_order=sort_order,
+                seo=seo,
+                image=image,
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Delete a collection",
+            readOnlyHint=False,
+            destructiveHint=True,
+            openWorldHint=True,
+        )
+    )
+    def commerce_delete_commerce_collection(collection_id: str, account_id: str) -> str:
+        """Delete a collection
+
+        Args:
+            collection_id: Platform-native collection id. (required)
+            account_id: Connected store SocialAccount id. (required)"""
+        client = _get_client()
+        try:
+            response = client.commerce.delete_commerce_collection(
+                collection_id=collection_id, account_id=account_id
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Add or remove products in a collection",
+            readOnlyHint=False,
+            destructiveHint=True,
+            openWorldHint=True,
+        )
+    )
+    def commerce_change_commerce_collection_products(
+        collection_id: str,
+        account_id: str,
+        add: list[str] | None = None,
+        remove: list[str] | None = None,
+    ) -> str:
+        """Add or remove products in a collection
+
+        Args:
+            collection_id: Platform-native collection id. (required)
+            account_id: (required)
+            add
+            remove"""
+        client = _get_client()
+        try:
+            response = client.commerce.change_commerce_collection_products(
+                collection_id=collection_id,
+                account_id=account_id,
+                add=add,
+                remove=remove,
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Add variants",
+            readOnlyHint=False,
+            destructiveHint=True,
+            openWorldHint=True,
+        )
+    )
+    def commerce_create_commerce_product_variants(
+        product_id: str, account_id: str, variants: list[dict[str, Any]] | None
+    ) -> str:
+        """Add variants
+
+        Args:
+            product_id: Platform-native id. (required)
+            account_id: (required)
+            variants: (required)"""
+        client = _get_client()
+        try:
+            response = client.commerce.create_commerce_product_variants(
+                product_id=product_id, account_id=account_id, variants=variants
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Delete variants",
+            readOnlyHint=False,
+            destructiveHint=True,
+            openWorldHint=True,
+        )
+    )
+    def commerce_delete_commerce_product_variants(
+        product_id: str, account_id: str, variant_ids: str
+    ) -> str:
+        """Delete variants
+
+        Args:
+            product_id: Platform-native id. (required)
+            account_id: Connected store SocialAccount id. (required)
+            variant_ids: Comma-separated ids. (required)"""
+        client = _get_client()
+        try:
+            response = client.commerce.delete_commerce_product_variants(
+                product_id=product_id, account_id=account_id, variant_ids=variant_ids
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Add options",
+            readOnlyHint=False,
+            destructiveHint=True,
+            openWorldHint=True,
+        )
+    )
+    def commerce_create_commerce_product_options(
+        product_id: str,
+        account_id: str,
+        options: list[dict[str, Any]] | None,
+        create_variants: bool = False,
+    ) -> str:
+        """Add options
+
+        Args:
+            product_id: Platform-native id. (required)
+            account_id: (required)
+            options: (required)
+            create_variants"""
+        client = _get_client()
+        try:
+            response = client.commerce.create_commerce_product_options(
+                product_id=product_id,
+                account_id=account_id,
+                options=options,
+                create_variants=create_variants,
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Delete options",
+            readOnlyHint=False,
+            destructiveHint=True,
+            openWorldHint=True,
+        )
+    )
+    def commerce_delete_commerce_product_options(
+        product_id: str, account_id: str, names: str
+    ) -> str:
+        """Delete options
+
+        Args:
+            product_id: Platform-native id. (required)
+            account_id: Connected store SocialAccount id. (required)
+            names: Comma-separated option names. (required)"""
+        client = _get_client()
+        try:
+            response = client.commerce.delete_commerce_product_options(
+                product_id=product_id, account_id=account_id, names=names
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Add images",
+            readOnlyHint=False,
+            destructiveHint=True,
+            openWorldHint=True,
+        )
+    )
+    def commerce_add_commerce_product_images(
+        product_id: str, account_id: str, images: list[dict[str, Any]] | None
+    ) -> str:
+        """Add images
+
+        Args:
+            product_id: Platform-native id. (required)
+            account_id: (required)
+            images: (required)"""
+        client = _get_client()
+        try:
+            response = client.commerce.add_commerce_product_images(
+                product_id=product_id, account_id=account_id, images=images
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Remove images",
+            readOnlyHint=False,
+            destructiveHint=True,
+            openWorldHint=True,
+        )
+    )
+    def commerce_remove_commerce_product_images(
+        product_id: str, account_id: str, image_ids: str
+    ) -> str:
+        """Remove images
+
+        Args:
+            product_id: Platform-native id. (required)
+            account_id: Connected store SocialAccount id. (required)
+            image_ids: Comma-separated ids. (required)"""
+        client = _get_client()
+        try:
+            response = client.commerce.remove_commerce_product_images(
+                product_id=product_id, account_id=account_id, image_ids=image_ids
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Reorder images",
+            readOnlyHint=False,
+            destructiveHint=True,
+            openWorldHint=True,
+        )
+    )
+    def commerce_reorder_commerce_product_images(
+        product_id: str, account_id: str, image_ids: list[str] | None
+    ) -> str:
+        """Reorder images
+
+        Args:
+            product_id: Platform-native id. (required)
+            account_id: (required)
+            image_ids: (required)"""
+        client = _get_client()
+        try:
+            response = client.commerce.reorder_commerce_product_images(
+                product_id=product_id, account_id=account_id, image_ids=image_ids
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Duplicate a product",
+            readOnlyHint=False,
+            destructiveHint=True,
+            openWorldHint=True,
+        )
+    )
+    def commerce_duplicate_commerce_product(
+        product_id: str,
+        account_id: str,
+        title: str,
+        status: str = "draft",
+        include_images: bool = True,
+    ) -> str:
+        """Duplicate a product
+
+        Args:
+            product_id: Platform-native id. (required)
+            account_id: (required)
+            title: (required)
+            status
+            include_images"""
+        client = _get_client()
+        try:
+            response = client.commerce.duplicate_commerce_product(
+                product_id=product_id,
+                account_id=account_id,
+                title=title,
+                status=status,
+                include_images=include_images,
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="List product metafields",
+            readOnlyHint=True,
+            destructiveHint=False,
+            openWorldHint=False,
+        )
+    )
+    def commerce_list_product_metafields(product_id: str, account_id: str) -> str:
+        """List product metafields
+
+        Args:
+            product_id: Platform-native id. (required)
+            account_id: Connected store SocialAccount id. (required)"""
+        client = _get_client()
+        try:
+            response = client.commerce.list_product_metafields(
+                product_id=product_id, account_id=account_id
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Set product metafields",
+            readOnlyHint=False,
+            destructiveHint=True,
+            openWorldHint=True,
+        )
+    )
+    def commerce_set_product_metafields(
+        product_id: str, account_id: str, metafields: list[dict[str, Any]] | None
+    ) -> str:
+        """Set product metafields
+
+        Args:
+            product_id: Platform-native id. (required)
+            account_id: (required)
+            metafields: (required)"""
+        client = _get_client()
+        try:
+            response = client.commerce.set_product_metafields(
+                product_id=product_id, account_id=account_id, metafields=metafields
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Delete product metafields",
+            readOnlyHint=False,
+            destructiveHint=True,
+            openWorldHint=True,
+        )
+    )
+    def commerce_delete_product_metafields(
+        product_id: str, account_id: str, keys: str
+    ) -> str:
+        """Delete product metafields
+
+        Args:
+            product_id: Platform-native id. (required)
+            account_id: Connected store SocialAccount id. (required)
+            keys: Comma-separated namespace.key pairs. (required)"""
+        client = _get_client()
+        try:
+            response = client.commerce.delete_product_metafields(
+                product_id=product_id, account_id=account_id, keys=keys
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Publish or unpublish a product",
+            readOnlyHint=False,
+            destructiveHint=True,
+            openWorldHint=True,
+        )
+    )
+    def commerce_change_product_channels(
+        product_id: str,
+        account_id: str,
+        publish: list[str] | None = None,
+        unpublish: list[str] | None = None,
+    ) -> str:
+        """Publish or unpublish a product
+
+        Args:
+            product_id: Platform-native id. (required)
+            account_id: (required)
+            publish: Channel ids from GET /v1/commerce/channels.
+            unpublish"""
+        client = _get_client()
+        try:
+            response = client.commerce.change_product_channels(
+                product_id=product_id,
+                account_id=account_id,
+                publish=publish,
+                unpublish=unpublish,
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="List collection metafields",
+            readOnlyHint=True,
+            destructiveHint=False,
+            openWorldHint=False,
+        )
+    )
+    def commerce_list_collection_metafields(collection_id: str, account_id: str) -> str:
+        """List collection metafields
+
+        Args:
+            collection_id: Platform-native id. (required)
+            account_id: Connected store SocialAccount id. (required)"""
+        client = _get_client()
+        try:
+            response = client.commerce.list_collection_metafields(
+                collection_id=collection_id, account_id=account_id
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Set collection metafields",
+            readOnlyHint=False,
+            destructiveHint=True,
+            openWorldHint=True,
+        )
+    )
+    def commerce_set_collection_metafields(
+        collection_id: str, account_id: str, metafields: list[dict[str, Any]] | None
+    ) -> str:
+        """Set collection metafields
+
+        Args:
+            collection_id: Platform-native id. (required)
+            account_id: (required)
+            metafields: (required)"""
+        client = _get_client()
+        try:
+            response = client.commerce.set_collection_metafields(
+                collection_id=collection_id,
+                account_id=account_id,
+                metafields=metafields,
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Delete collection metafields",
+            readOnlyHint=False,
+            destructiveHint=True,
+            openWorldHint=True,
+        )
+    )
+    def commerce_delete_collection_metafields(
+        collection_id: str, account_id: str, keys: str
+    ) -> str:
+        """Delete collection metafields
+
+        Args:
+            collection_id: Platform-native id. (required)
+            account_id: Connected store SocialAccount id. (required)
+            keys: Comma-separated namespace.key pairs. (required)"""
+        client = _get_client()
+        try:
+            response = client.commerce.delete_collection_metafields(
+                collection_id=collection_id, account_id=account_id, keys=keys
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Publish or unpublish a collection",
+            readOnlyHint=False,
+            destructiveHint=True,
+            openWorldHint=True,
+        )
+    )
+    def commerce_change_collection_channels(
+        collection_id: str,
+        account_id: str,
+        publish: list[str] | None = None,
+        unpublish: list[str] | None = None,
+    ) -> str:
+        """Publish or unpublish a collection
+
+        Args:
+            collection_id: Platform-native id. (required)
+            account_id: (required)
+            publish: Channel ids from GET /v1/commerce/channels.
+            unpublish"""
+        client = _get_client()
+        try:
+            response = client.commerce.change_collection_channels(
+                collection_id=collection_id,
+                account_id=account_id,
+                publish=publish,
+                unpublish=unpublish,
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Add or remove tags in bulk",
+            readOnlyHint=False,
+            destructiveHint=True,
+            openWorldHint=True,
+        )
+    )
+    def commerce_change_commerce_product_tags(
+        account_id: str,
+        product_ids: list[str] | None,
+        add: list[str] | None = None,
+        remove: list[str] | None = None,
+    ) -> str:
+        """Add or remove tags in bulk
+
+        Args:
+            account_id: (required)
+            product_ids: (required)
+            add
+            remove"""
+        client = _get_client()
+        try:
+            response = client.commerce.change_commerce_product_tags(
+                account_id=account_id, product_ids=product_ids, add=add, remove=remove
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Reorder products in a collection",
+            readOnlyHint=False,
+            destructiveHint=True,
+            openWorldHint=True,
+        )
+    )
+    def commerce_reorder_commerce_collection_products(
+        collection_id: str, account_id: str, moves: list[dict[str, Any]] | None
+    ) -> str:
+        """Reorder products in a collection
+
+        Args:
+            collection_id: Platform-native id. (required)
+            account_id: (required)
+            moves: (required)"""
+        client = _get_client()
+        try:
+            response = client.commerce.reorder_commerce_collection_products(
+                collection_id=collection_id, account_id=account_id, moves=moves
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="List pages",
+            readOnlyHint=True,
+            destructiveHint=False,
+            openWorldHint=False,
+        )
+    )
+    def commerce_list_commerce_pages(
+        account_id: str,
+        limit: int = 20,
+        cursor: str | None = None,
+        query: str | None = None,
+    ) -> str:
+        """List pages
+
+        Args:
+            account_id: Connected store SocialAccount id. (required)
+            limit
+            cursor
+            query: Platform search syntax, passed through."""
+        client = _get_client()
+        try:
+            response = client.commerce.list_commerce_pages(
+                account_id=account_id, limit=limit, cursor=cursor, query=query
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Create a page",
+            readOnlyHint=False,
+            destructiveHint=True,
+            openWorldHint=True,
+        )
+    )
+    def commerce_create_commerce_page(
+        account_id: str,
+        title: str,
+        handle: str | None = None,
+        body_html: str | None = None,
+        is_published: bool | None = None,
+    ) -> str:
+        """Create a page
+
+        Args:
+            account_id: (required)
+            title: (required)
+            handle
+            body_html
+            is_published"""
+        client = _get_client()
+        try:
+            response = client.commerce.create_commerce_page(
+                account_id=account_id,
+                title=title,
+                handle=handle,
+                body_html=body_html,
+                is_published=is_published,
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Get a page",
+            readOnlyHint=True,
+            destructiveHint=False,
+            openWorldHint=False,
+        )
+    )
+    def commerce_get_commerce_page(page_id: str, account_id: str) -> str:
+        """Get a page
+
+        Args:
+            page_id: Platform-native id. (required)
+            account_id: Connected store SocialAccount id. (required)"""
+        client = _get_client()
+        try:
+            response = client.commerce.get_commerce_page(
+                page_id=page_id, account_id=account_id
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Update a page",
+            readOnlyHint=False,
+            destructiveHint=True,
+            openWorldHint=True,
+        )
+    )
+    def commerce_update_commerce_page(
+        page_id: str,
+        account_id: str,
+        title: str | None = None,
+        handle: str | None = None,
+        body_html: str | None = None,
+        is_published: bool | None = None,
+    ) -> str:
+        """Update a page
+
+        Args:
+            page_id: Platform-native id. (required)
+            account_id: (required)
+            title
+            handle
+            body_html
+            is_published"""
+        client = _get_client()
+        try:
+            response = client.commerce.update_commerce_page(
+                page_id=page_id,
+                account_id=account_id,
+                title=title,
+                handle=handle,
+                body_html=body_html,
+                is_published=is_published,
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Delete a page",
+            readOnlyHint=False,
+            destructiveHint=True,
+            openWorldHint=True,
+        )
+    )
+    def commerce_delete_commerce_page(page_id: str, account_id: str) -> str:
+        """Delete a page
+
+        Args:
+            page_id: Platform-native id. (required)
+            account_id: Connected store SocialAccount id. (required)"""
+        client = _get_client()
+        try:
+            response = client.commerce.delete_commerce_page(
+                page_id=page_id, account_id=account_id
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="List locations",
+            readOnlyHint=True,
+            destructiveHint=False,
+            openWorldHint=False,
+        )
+    )
+    def commerce_list_commerce_locations(account_id: str) -> str:
+        """List locations
+
+        Args:
+            account_id: Connected store SocialAccount id. (required)"""
+        client = _get_client()
+        try:
+            response = client.commerce.list_commerce_locations(account_id=account_id)
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Get a product's stock",
+            readOnlyHint=True,
+            destructiveHint=False,
+            openWorldHint=False,
+        )
+    )
+    def commerce_list_commerce_inventory(account_id: str, product_id: str) -> str:
+        """Get a product's stock
+
+        Args:
+            account_id: Connected store SocialAccount id. (required)
+            product_id: (required)"""
+        client = _get_client()
+        try:
+            response = client.commerce.list_commerce_inventory(
+                account_id=account_id, product_id=product_id
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Set or adjust stock",
+            readOnlyHint=False,
+            destructiveHint=True,
+            openWorldHint=True,
+        )
+    )
+    def commerce_change_commerce_inventory(
+        product_id: str,
+        account_id: str,
+        changes: list[dict[str, Any]] | None,
+        mode: str = "set",
+    ) -> str:
+        """Set or adjust stock
+
+        Args:
+            product_id: Platform-native id. (required)
+            account_id: (required)
+            mode
+            changes: (required)"""
+        client = _get_client()
+        try:
+            response = client.commerce.change_commerce_inventory(
+                product_id=product_id, account_id=account_id, mode=mode, changes=changes
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="List sales channels",
+            readOnlyHint=True,
+            destructiveHint=False,
+            openWorldHint=False,
+        )
+    )
+    def commerce_list_commerce_channels(account_id: str) -> str:
+        """List sales channels
+
+        Args:
+            account_id: Connected store SocialAccount id. (required)"""
+        client = _get_client()
+        try:
+            response = client.commerce.list_commerce_channels(account_id=account_id)
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="List discounts",
+            readOnlyHint=True,
+            destructiveHint=False,
+            openWorldHint=False,
+        )
+    )
+    def commerce_list_commerce_discounts(
+        account_id: str,
+        limit: int = 20,
+        cursor: str | None = None,
+        query: str | None = None,
+    ) -> str:
+        """List discounts
+
+        Args:
+            account_id: Connected store SocialAccount id. (required)
+            limit
+            cursor
+            query: Platform search syntax, passed through."""
+        client = _get_client()
+        try:
+            response = client.commerce.list_commerce_discounts(
+                account_id=account_id, limit=limit, cursor=cursor, query=query
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Create a discount",
+            readOnlyHint=False,
+            destructiveHint=True,
+            openWorldHint=True,
+        )
+    )
+    def commerce_create_commerce_discount(
+        account_id: str,
+        title: str,
+        method: str,
+        type: str,
+        code: str | None = None,
+        percentage: float | None = None,
+        amount: str | None = None,
+        applies_on_each_item: bool | None = None,
+        minimum_subtotal: str | None = None,
+        minimum_quantity: str | None = None,
+        usage_limit: str | None = None,
+        once_per_customer: bool | None = None,
+        starts_at: str | None = None,
+        ends_at: str | None = None,
+        product_ids: list[str] | None = None,
+        collection_ids: list[str] | None = None,
+    ) -> str:
+        """Create a discount
+
+        Args:
+            account_id: (required)
+            title: (required)
+            method: (required)
+            type: (required)
+            code: Required for method code.
+            percentage: For type percentage, e.g. 15 for 15%.
+            amount: For type fixed_amount, a decimal in the store currency.
+            applies_on_each_item: fixed_amount only: take the amount off each item instead of once per order.
+            minimum_subtotal: Minimum order subtotal, a decimal in the store currency.
+            minimum_quantity
+            usage_limit: Code discounts only: total uses allowed.
+            once_per_customer: Code discounts only.
+            starts_at: Defaults to now.
+            ends_at
+            product_ids
+            collection_ids"""
+        client = _get_client()
+        try:
+            response = client.commerce.create_commerce_discount(
+                account_id=account_id,
+                title=title,
+                method=method,
+                type=type,
+                code=code,
+                percentage=percentage,
+                amount=amount,
+                applies_on_each_item=applies_on_each_item,
+                minimum_subtotal=minimum_subtotal,
+                minimum_quantity=minimum_quantity,
+                usage_limit=usage_limit,
+                once_per_customer=once_per_customer,
+                starts_at=starts_at,
+                ends_at=ends_at,
+                product_ids=product_ids,
+                collection_ids=collection_ids,
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Get a discount",
+            readOnlyHint=True,
+            destructiveHint=False,
+            openWorldHint=False,
+        )
+    )
+    def commerce_get_commerce_discount(discount_id: str, account_id: str) -> str:
+        """Get a discount
+
+        Args:
+            discount_id: Platform-native id. (required)
+            account_id: Connected store SocialAccount id. (required)"""
+        client = _get_client()
+        try:
+            response = client.commerce.get_commerce_discount(
+                discount_id=discount_id, account_id=account_id
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Update a discount",
+            readOnlyHint=False,
+            destructiveHint=True,
+            openWorldHint=True,
+        )
+    )
+    def commerce_update_commerce_discount(
+        discount_id: str,
+        account_id: str,
+        title: str | None = None,
+        code: str | None = None,
+        percentage: float | None = None,
+        amount: str | None = None,
+        applies_on_each_item: bool | None = None,
+        minimum_subtotal: str | None = None,
+        minimum_quantity: str | None = None,
+        usage_limit: str | None = None,
+        once_per_customer: bool | None = None,
+        starts_at: str | None = None,
+        ends_at: str | None = None,
+    ) -> str:
+        """Update a discount
+
+        Args:
+            discount_id: Platform-native id. (required)
+            account_id: (required)
+            title
+            code: Required for method code.
+            percentage: For type percentage, e.g. 15 for 15%.
+            amount: For type fixed_amount, a decimal in the store currency.
+            applies_on_each_item: fixed_amount only: take the amount off each item instead of once per order.
+            minimum_subtotal: Minimum order subtotal, a decimal in the store currency.
+            minimum_quantity
+            usage_limit: Code discounts only: total uses allowed.
+            once_per_customer: Code discounts only.
+            starts_at: Defaults to now.
+            ends_at"""
+        client = _get_client()
+        try:
+            response = client.commerce.update_commerce_discount(
+                discount_id=discount_id,
+                account_id=account_id,
+                title=title,
+                code=code,
+                percentage=percentage,
+                amount=amount,
+                applies_on_each_item=applies_on_each_item,
+                minimum_subtotal=minimum_subtotal,
+                minimum_quantity=minimum_quantity,
+                usage_limit=usage_limit,
+                once_per_customer=once_per_customer,
+                starts_at=starts_at,
+                ends_at=ends_at,
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Delete a discount",
+            readOnlyHint=False,
+            destructiveHint=True,
+            openWorldHint=True,
+        )
+    )
+    def commerce_delete_commerce_discount(discount_id: str, account_id: str) -> str:
+        """Delete a discount
+
+        Args:
+            discount_id: Platform-native id. (required)
+            account_id: Connected store SocialAccount id. (required)"""
+        client = _get_client()
+        try:
+            response = client.commerce.delete_commerce_discount(
+                discount_id=discount_id, account_id=account_id
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Activate or deactivate a discount",
+            readOnlyHint=False,
+            destructiveHint=True,
+            openWorldHint=True,
+        )
+    )
+    def commerce_set_commerce_discount_active(
+        discount_id: str, account_id: str, active: bool
+    ) -> str:
+        """Activate or deactivate a discount
+
+        Args:
+            discount_id: Platform-native id. (required)
+            account_id: (required)
+            active: (required)"""
+        client = _get_client()
+        try:
+            response = client.commerce.set_commerce_discount_active(
+                discount_id=discount_id, account_id=account_id, active=active
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Add codes to a discount",
+            readOnlyHint=False,
+            destructiveHint=True,
+            openWorldHint=True,
+        )
+    )
+    def commerce_add_commerce_discount_codes(
+        discount_id: str, account_id: str, codes: list[str] | None
+    ) -> str:
+        """Add codes to a discount
+
+        Args:
+            discount_id: Platform-native id. (required)
+            account_id: (required)
+            codes: (required)"""
+        client = _get_client()
+        try:
+            response = client.commerce.add_commerce_discount_codes(
+                discount_id=discount_id, account_id=account_id, codes=codes
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="List URL redirects",
+            readOnlyHint=True,
+            destructiveHint=False,
+            openWorldHint=False,
+        )
+    )
+    def commerce_list_commerce_redirects(
+        account_id: str,
+        limit: int = 20,
+        cursor: str | None = None,
+        query: str | None = None,
+    ) -> str:
+        """List URL redirects
+
+        Args:
+            account_id: Connected store SocialAccount id. (required)
+            limit
+            cursor
+            query: Platform search syntax, passed through."""
+        client = _get_client()
+        try:
+            response = client.commerce.list_commerce_redirects(
+                account_id=account_id, limit=limit, cursor=cursor, query=query
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Create a URL redirect",
+            readOnlyHint=False,
+            destructiveHint=True,
+            openWorldHint=True,
+        )
+    )
+    def commerce_create_commerce_redirect(
+        account_id: str, path: str, target: str
+    ) -> str:
+        """Create a URL redirect
+
+        Args:
+            account_id: (required)
+            path: The old path, starting with /. (required)
+            target: Where to send visitors: a path or a full URL. (required)"""
+        client = _get_client()
+        try:
+            response = client.commerce.create_commerce_redirect(
+                account_id=account_id, path=path, target=target
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Update a URL redirect",
+            readOnlyHint=False,
+            destructiveHint=True,
+            openWorldHint=True,
+        )
+    )
+    def commerce_update_commerce_redirect(
+        redirect_id: str,
+        account_id: str,
+        path: str | None = None,
+        target: str | None = None,
+    ) -> str:
+        """Update a URL redirect
+
+        Args:
+            redirect_id: Platform-native id. (required)
+            account_id: (required)
+            path
+            target"""
+        client = _get_client()
+        try:
+            response = client.commerce.update_commerce_redirect(
+                redirect_id=redirect_id, account_id=account_id, path=path, target=target
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Delete a URL redirect",
+            readOnlyHint=False,
+            destructiveHint=True,
+            openWorldHint=True,
+        )
+    )
+    def commerce_delete_commerce_redirect(redirect_id: str, account_id: str) -> str:
+        """Delete a URL redirect
+
+        Args:
+            redirect_id: Platform-native id. (required)
+            account_id: Connected store SocialAccount id. (required)"""
+        client = _get_client()
+        try:
+            response = client.commerce.delete_commerce_redirect(
+                redirect_id=redirect_id, account_id=account_id
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="List navigation menus",
+            readOnlyHint=True,
+            destructiveHint=False,
+            openWorldHint=False,
+        )
+    )
+    def commerce_list_commerce_menus(account_id: str) -> str:
+        """List navigation menus
+
+        Args:
+            account_id: Connected store SocialAccount id. (required)"""
+        client = _get_client()
+        try:
+            response = client.commerce.list_commerce_menus(account_id=account_id)
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Create a navigation menu",
+            readOnlyHint=False,
+            destructiveHint=True,
+            openWorldHint=True,
+        )
+    )
+    def commerce_create_commerce_menu(
+        account_id: str, title: str, handle: str, items: list[dict[str, Any]] | None
+    ) -> str:
+        """Create a navigation menu
+
+        Args:
+            account_id: (required)
+            title: (required)
+            handle: (required)
+            items: (required)"""
+        client = _get_client()
+        try:
+            response = client.commerce.create_commerce_menu(
+                account_id=account_id, title=title, handle=handle, items=items
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Get a navigation menu",
+            readOnlyHint=True,
+            destructiveHint=False,
+            openWorldHint=False,
+        )
+    )
+    def commerce_get_commerce_menu(menu_id: str, account_id: str) -> str:
+        """Get a navigation menu
+
+        Args:
+            menu_id: Platform-native id. (required)
+            account_id: Connected store SocialAccount id. (required)"""
+        client = _get_client()
+        try:
+            response = client.commerce.get_commerce_menu(
+                menu_id=menu_id, account_id=account_id
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Replace a navigation menu",
+            readOnlyHint=False,
+            destructiveHint=True,
+            openWorldHint=True,
+        )
+    )
+    def commerce_update_commerce_menu(
+        menu_id: str,
+        account_id: str,
+        title: str,
+        items: list[dict[str, Any]] | None,
+        handle: str | None = None,
+    ) -> str:
+        """Replace a navigation menu
+
+        Args:
+            menu_id: Platform-native id. (required)
+            account_id: (required)
+            title: (required)
+            handle
+            items: (required)"""
+        client = _get_client()
+        try:
+            response = client.commerce.update_commerce_menu(
+                menu_id=menu_id,
+                account_id=account_id,
+                title=title,
+                handle=handle,
+                items=items,
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Delete a navigation menu",
+            readOnlyHint=False,
+            destructiveHint=True,
+            openWorldHint=True,
+        )
+    )
+    def commerce_delete_commerce_menu(menu_id: str, account_id: str) -> str:
+        """Delete a navigation menu
+
+        Args:
+            menu_id: Platform-native id. (required)
+            account_id: Connected store SocialAccount id. (required)"""
+        client = _get_client()
+        try:
+            response = client.commerce.delete_commerce_menu(
+                menu_id=menu_id, account_id=account_id
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="List metaobject definitions",
+            readOnlyHint=True,
+            destructiveHint=False,
+            openWorldHint=False,
+        )
+    )
+    def commerce_list_commerce_metaobject_definitions(account_id: str) -> str:
+        """List metaobject definitions
+
+        Args:
+            account_id: Connected store SocialAccount id. (required)"""
+        client = _get_client()
+        try:
+            response = client.commerce.list_commerce_metaobject_definitions(
+                account_id=account_id
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="List metaobjects of a type",
+            readOnlyHint=True,
+            destructiveHint=False,
+            openWorldHint=False,
+        )
+    )
+    def commerce_list_commerce_metaobjects(
+        account_id: str, type: str, limit: int = 20, cursor: str | None = None
+    ) -> str:
+        """List metaobjects of a type
+
+        Args:
+            account_id: Connected store SocialAccount id. (required)
+            type: Definition type from GET /v1/commerce/metaobject-definitions. (required)
+            limit
+            cursor"""
+        client = _get_client()
+        try:
+            response = client.commerce.list_commerce_metaobjects(
+                account_id=account_id, type=type, limit=limit, cursor=cursor
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Create a metaobject",
+            readOnlyHint=False,
+            destructiveHint=True,
+            openWorldHint=True,
+        )
+    )
+    def commerce_create_commerce_metaobject(
+        account_id: str,
+        type: str,
+        fields: list[dict[str, Any]] | None,
+        handle: str | None = None,
+    ) -> str:
+        """Create a metaobject
+
+        Args:
+            account_id: (required)
+            type: (required)
+            handle
+            fields: (required)"""
+        client = _get_client()
+        try:
+            response = client.commerce.create_commerce_metaobject(
+                account_id=account_id, type=type, handle=handle, fields=fields
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Get a metaobject",
+            readOnlyHint=True,
+            destructiveHint=False,
+            openWorldHint=False,
+        )
+    )
+    def commerce_get_commerce_metaobject(metaobject_id: str, account_id: str) -> str:
+        """Get a metaobject
+
+        Args:
+            metaobject_id: Platform-native id. (required)
+            account_id: Connected store SocialAccount id. (required)"""
+        client = _get_client()
+        try:
+            response = client.commerce.get_commerce_metaobject(
+                metaobject_id=metaobject_id, account_id=account_id
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Update a metaobject",
+            readOnlyHint=False,
+            destructiveHint=True,
+            openWorldHint=True,
+        )
+    )
+    def commerce_update_commerce_metaobject(
+        metaobject_id: str,
+        account_id: str,
+        fields: list[dict[str, Any]] | None,
+        handle: str | None = None,
+    ) -> str:
+        """Update a metaobject
+
+        Args:
+            metaobject_id: Platform-native id. (required)
+            account_id: (required)
+            handle
+            fields: (required)"""
+        client = _get_client()
+        try:
+            response = client.commerce.update_commerce_metaobject(
+                metaobject_id=metaobject_id,
+                account_id=account_id,
+                handle=handle,
+                fields=fields,
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Delete a metaobject",
+            readOnlyHint=False,
+            destructiveHint=True,
+            openWorldHint=True,
+        )
+    )
+    def commerce_delete_commerce_metaobject(metaobject_id: str, account_id: str) -> str:
+        """Delete a metaobject
+
+        Args:
+            metaobject_id: Platform-native id. (required)
+            account_id: Connected store SocialAccount id. (required)"""
+        client = _get_client()
+        try:
+            response = client.commerce.delete_commerce_metaobject(
+                metaobject_id=metaobject_id, account_id=account_id
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="List markets",
+            readOnlyHint=True,
+            destructiveHint=False,
+            openWorldHint=False,
+        )
+    )
+    def commerce_list_commerce_markets(account_id: str) -> str:
+        """List markets
+
+        Args:
+            account_id: Connected store SocialAccount id. (required)"""
+        client = _get_client()
+        try:
+            response = client.commerce.list_commerce_markets(account_id=account_id)
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="List price lists",
+            readOnlyHint=True,
+            destructiveHint=False,
+            openWorldHint=False,
+        )
+    )
+    def commerce_list_commerce_price_lists(account_id: str) -> str:
+        """List price lists
+
+        Args:
+            account_id: Connected store SocialAccount id. (required)"""
+        client = _get_client()
+        try:
+            response = client.commerce.list_commerce_price_lists(account_id=account_id)
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Set fixed prices",
+            readOnlyHint=False,
+            destructiveHint=True,
+            openWorldHint=True,
+        )
+    )
+    def commerce_set_commerce_price_list_prices(
+        price_list_id: str, account_id: str, prices: list[dict[str, Any]] | None
+    ) -> str:
+        """Set fixed prices
+
+        Args:
+            price_list_id: Platform-native id. (required)
+            account_id: (required)
+            prices: (required)"""
+        client = _get_client()
+        try:
+            response = client.commerce.set_commerce_price_list_prices(
+                price_list_id=price_list_id, account_id=account_id, prices=prices
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Remove fixed prices",
+            readOnlyHint=False,
+            destructiveHint=True,
+            openWorldHint=True,
+        )
+    )
+    def commerce_delete_commerce_price_list_prices(
+        price_list_id: str, account_id: str, variant_ids: str
+    ) -> str:
+        """Remove fixed prices
+
+        Args:
+            price_list_id: Platform-native id. (required)
+            account_id: Connected store SocialAccount id. (required)
+            variant_ids: Comma-separated ids. (required)"""
+        client = _get_client()
+        try:
+            response = client.commerce.delete_commerce_price_list_prices(
+                price_list_id=price_list_id,
+                account_id=account_id,
+                variant_ids=variant_ids,
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Record a marketing activity",
+            readOnlyHint=False,
+            destructiveHint=True,
+            openWorldHint=True,
+        )
+    )
+    def commerce_upsert_commerce_marketing_activity(
+        account_id: str,
+        remote_id: str,
+        title: str,
+        url: str,
+        tactic: str,
+        channel: str,
+        status: str,
+        preview_image_url: str | None = None,
+        utm: dict[str, Any] | None = None,
+        budget: dict[str, Any] | None = None,
+        ad_spend: str | None = None,
+        started_at: str | None = None,
+        ended_at: str | None = None,
+    ) -> str:
+        """Record a marketing activity
+
+        Args:
+            account_id: (required)
+            remote_id: (required)
+            title: (required)
+            url: (required)
+            preview_image_url
+            utm
+            tactic: (required)
+            channel: (required)
+            status: (required)
+            budget
+            ad_spend: Decimal in the store currency.
+            started_at
+            ended_at"""
+        client = _get_client()
+        try:
+            response = client.commerce.upsert_commerce_marketing_activity(
+                account_id=account_id,
+                remote_id=remote_id,
+                title=title,
+                url=url,
+                preview_image_url=preview_image_url,
+                utm=utm,
+                tactic=tactic,
+                channel=channel,
+                status=status,
+                budget=budget,
+                ad_spend=ad_spend,
+                started_at=started_at,
+                ended_at=ended_at,
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Delete a marketing activity",
+            readOnlyHint=False,
+            destructiveHint=True,
+            openWorldHint=True,
+        )
+    )
+    def commerce_delete_commerce_marketing_activity(
+        remote_id: str, account_id: str
+    ) -> str:
+        """Delete a marketing activity
+
+        Args:
+            remote_id: The remoteId given when recording it. (required)
+            account_id: Connected store SocialAccount id. (required)"""
+        client = _get_client()
+        try:
+            response = client.commerce.delete_commerce_marketing_activity(
+                remote_id=remote_id, account_id=account_id
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Report daily engagement",
+            readOnlyHint=False,
+            destructiveHint=True,
+            openWorldHint=True,
+        )
+    )
+    def commerce_add_commerce_marketing_engagement(
+        remote_id: str,
+        account_id: str,
+        date: str,
+        impressions: int | None = None,
+        views: int | None = None,
+        clicks: int | None = None,
+        shares: int | None = None,
+        likes: int | None = None,
+        comments: int | None = None,
+        ad_spend: str | None = None,
+    ) -> str:
+        """Report daily engagement
+
+        Args:
+            remote_id: The remoteId given when recording it. (required)
+            account_id: (required)
+            date: (required)
+            impressions
+            views
+            clicks
+            shares
+            likes
+            comments
+            ad_spend: Decimal in the store currency."""
+        client = _get_client()
+        try:
+            response = client.commerce.add_commerce_marketing_engagement(
+                remote_id=remote_id,
+                account_id=account_id,
+                date=date,
+                impressions=impressions,
+                views=views,
+                clicks=clicks,
+                shares=shares,
+                likes=likes,
+                comments=comments,
+                ad_spend=ad_spend,
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="List catalog syncs",
+            readOnlyHint=True,
+            destructiveHint=False,
+            openWorldHint=False,
+        )
+    )
+    def commerce_list_commerce_catalog_syncs(account_id: str) -> str:
+        """List catalog syncs
+
+        Args:
+            account_id: Connected store SocialAccount id. (required)"""
+        client = _get_client()
+        try:
+            response = client.commerce.list_commerce_catalog_syncs(
+                account_id=account_id
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Sync a store into a Meta catalog",
+            readOnlyHint=False,
+            destructiveHint=True,
+            openWorldHint=True,
+        )
+    )
+    def commerce_create_commerce_catalog_sync(
+        account_id: str, catalog_account_id: str, catalog_id: str
+    ) -> str:
+        """Sync a store into a Meta catalog
+
+        Args:
+            account_id: The store SocialAccount id. (required)
+            catalog_account_id: (required)
+            catalog_id: Meta product catalog id. (required)"""
+        client = _get_client()
+        try:
+            response = client.commerce.create_commerce_catalog_sync(
+                account_id=account_id,
+                catalog_account_id=catalog_account_id,
+                catalog_id=catalog_id,
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Get a catalog sync",
+            readOnlyHint=True,
+            destructiveHint=False,
+            openWorldHint=False,
+        )
+    )
+    def commerce_get_commerce_catalog_sync(sync_id: str) -> str:
+        """Get a catalog sync
+
+        Args:
+            sync_id: (required)"""
+        client = _get_client()
+        try:
+            response = client.commerce.get_commerce_catalog_sync(sync_id=sync_id)
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Stop a catalog sync",
+            readOnlyHint=False,
+            destructiveHint=True,
+            openWorldHint=True,
+        )
+    )
+    def commerce_delete_commerce_catalog_sync(sync_id: str) -> str:
+        """Stop a catalog sync
+
+        Args:
+            sync_id: (required)"""
+        client = _get_client()
+        try:
+            response = client.commerce.delete_commerce_catalog_sync(sync_id=sync_id)
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Run a catalog sync now",
+            readOnlyHint=False,
+            destructiveHint=True,
+            openWorldHint=True,
+        )
+    )
+    def commerce_run_commerce_catalog_sync(sync_id: str) -> str:
+        """Run a catalog sync now
+
+        Args:
+            sync_id: (required)"""
+        client = _get_client()
+        try:
+            response = client.commerce.run_commerce_catalog_sync(sync_id=sync_id)
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
     # CONNECT
 
     @mcp.tool(
