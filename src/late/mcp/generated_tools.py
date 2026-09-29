@@ -5916,7 +5916,7 @@ def register_generated_tools(mcp, _get_client):
         `dsaBeneficiary`: required for EU targeting unless the ad account has
         a default payor.
                 lead_gen_form_id: Lead Gen form ID to attach to the boosted ad's creative. REQUIRED when `goal` is `lead_generation`. On Meta this is the leadgen_forms ID (create one via POST /v1/ads/lead-forms). On LinkedIn this is the adForm ID (create one via POST /v1/ads/lead-forms with a LinkedIn account); the creative's `leadgenCallToAction.destination` is set to `urn:li:adForm:{id}`. Ignored for other goals.
-                status: Meta, TikTok, LinkedIn, and Google. Publish state of the created entities. Omitted or ACTIVE publishes live (default); PAUSED creates them paused so you can review before they spend. On Meta a new campaign stays paused until explicitly activated; an attached ad is itself paused. On Google the pause is held on the campaign the boost creates (ad group and ad switched on), so PUT /v1/ads/campaigns/{campaignId}/status with `active` brings it live. On LinkedIn the whole campaign group, campaign, and creative hierarchy stays PAUSED (intendedStatus PAUSED on each).
+                status: Publish state of the created entities, on every platform. Omitted or ACTIVE publishes live (default); PAUSED pauses only the top-most object this boost creates and switches everything below it on: a new campaign is held paused with its ad set and ad on (one PUT /v1/ads/campaigns/{campaignId}/status with `active` brings it live); into an existing campaign (TikTok `existingCampaignId`) the new ad set is held paused; attached to an existing ad set (`adSetId`) the new ad itself is paused. On LinkedIn the held campaign group is PAUSED, its campaign and creative ACTIVE. X has no per-ad switch, so its lowest level is the line item.
                 budget_level: Meta only, same semantics as POST /v1/ads/create: campaign = Advantage campaign budget (CBO), the budget and bid strategy sit on the campaign and the ad set inherits them. Default adset. Not allowed with adSetId.
                 attribution_spec: Meta only. Ad-set attribution windows, same shape as POST /v1/ads/create. Applied on OUTCOME_SALES, OUTCOME_LEADS and OUTCOME_APP_PROMOTION campaigns (conversions, lead_conversion, lead_generation, app_promotion); other objectives keep Meta's default. Not allowed with adSetId.
                 bodies: Meta only. Extra primary-text options Meta rotates on the boosted post (asset_feed_spec.bodies with DEGREES_OF_FREEDOM); the post keeps its own text as one of the options. Works for Facebook posts and Instagram media. Under a conversions or traffic goal Meta also wants a website URL on the options, taken from `linkUrl` (send it with a `callToAction`); engagement boosts need none.
@@ -6395,8 +6395,8 @@ def register_generated_tools(mcp, _get_client):
                 validate_only: Google Performance Max validates the complete atomic campaign and asset group with no resource creation or local persistence. Google validation still downloads image URLs and consumes quota. On Meta, validates the complete inline campaign, ad set, creative and ad with execution_options validate_only. Nothing is uploaded or created, and validation bypasses Idempotency-Key storage. Supports a single image, all-image placementAssets with per-rule copy, existing video.id or existingCreativeId; other media pools, new video uploads, creatives[], adSetId and RESERVED buying return 400. Placement validation uses existing Instagram identities only. Existing campaign or creative nodes are marked skipped. Success returns 200 with per-node results; Meta rejection returns an error. ChatGPT (OpenAI) has no platform dry-run: Zernio runs every check it knows (creative lengths, budget, bid strategy, targeting) plus live lookups of the conversion event and target countries, and uploads or creates nothing. OpenAI's own write-time checks (image fetch, currency-specific minimums, ad review) still run only on a real create. Any other platform, or a Google campaignType other than pmax or demand_gen, returns 501 `feature_not_available`.
                 budget_amount: Budget in WHOLE currency units (USD: 50 = $50.00), NOT cents. Meta's own Marketing API takes this same number in minor units, so it is an easy and expensive mix-up. Required on legacy, multi-creative and Performance Max shapes. Inherited on attach. OpenAI Ads: in the ad account currency, minimum 1; OpenAI can require a higher daily minimum for some currencies and names it in the error.
                 budget_type: Required on legacy, multi-creative and Performance Max shapes. Inherited on attach. OpenAI Ads accepts both as the campaign's single spend cap. A lifetime cap can later switch to daily with PUT /v1/ads/campaigns/{campaignId}, but OpenAI never switches a daily cap back to lifetime (422). Automatic bidding (Maximize Results) needs a daily budget.
-                status: Google Performance Max accepts PAUSED only and always creates a paused campaign. Google Search and Display, Meta, TikTok, LinkedIn, and ChatGPT (OpenAI): publish state of the created entities. Omitted or ACTIVE publishes live (default, back-compat); PAUSED creates them paused so you can review before they spend. On Meta the pause is held on the campaign this call creates, leaving the ad set and ad switched on, so a single PUT /v1/ads/campaigns/{campaignId}/status with `active` brings the whole thing live. It is held at every level instead when the pause cannot rely on the campaign: `existingCampaignId` (that campaign may be running and is never touched) or `campaignStatus: ACTIVE`. Google Search and Display follow the same rule, and because Google keeps an independent switch at campaign, ad group and ad level, a PAUSED create leaves the campaign it creates PAUSED at Google. On TikTok the whole campaign > ad group > ad hierarchy stays paused. On LinkedIn the whole campaign group, campaign, and creative hierarchy stays PAUSED (intendedStatus PAUSED on each). ChatGPT (OpenAI) follows the Meta rule: the pause is held on the campaign this call creates.
-                campaign_status: Meta, Google, and ChatGPT (OpenAI). Overrides `status` for the campaign level alone, so you can create a live campaign whose ad set and ad stay paused, or the reverse. Omitted, it follows `status`.
+                status: Publish state of the created entities, on every platform. Omitted or ACTIVE publishes live (default, back-compat); PAUSED pauses only the TOP-MOST object this call creates and switches everything below it on, so one resume of that object brings the new tree live and nothing that already existed is touched: a new campaign is held paused with its ad set and ad on; with `existingCampaignId` the new ad set is held paused with its ad on; with `adSetId` the new ad itself is paused. `campaignStatus: ACTIVE` with `status: PAUSED` moves the pause down to the new ad set. LinkedIn: a held campaign group is PAUSED with its campaign and creative ACTIVE; a new campaign in an existing group stays DRAFT. X has no per-ad switch, so its lowest level is the line item. Google Performance Max and Demand Gen accept PAUSED only (the campaign is created paused).
+                campaign_status: Meta, Google, and ChatGPT (OpenAI). Overrides `status` for the new campaign alone. `PAUSED` holds the campaign off with its ad set and ad on; `ACTIVE` with `status: PAUSED` switches the campaign on and holds the new ad set paused (its ad on). Omitted, it follows `status`.
                 budget_level: Meta only. Where the budget lives, which selects the Meta budget model:
           - `adset` (default): ABO (Ad-set Budget Optimization). The budget is set on the
             ad set. This is the back-compatible behaviour; omit this field to keep it.
@@ -21287,14 +21287,16 @@ def register_generated_tools(mcp, _get_client):
                 objective: Defaults to `OUTCOME_ENGAGEMENT`. `OUTCOME_SALES` and `OUTCOME_LEADS` require
         additional account configuration (Dataset linked to the WABA
         for sales) and may be rejected by Meta if missing.
-                status: Ad-level status. Defaults to `ACTIVE`. `PAUSED` skips activating the
-        newly created ad(s) after Meta accepts them.
+                status: Defaults to `ACTIVE`. `PAUSED` pauses only the top-most object this
+        call creates: the new campaign (ad set and ads switched on), or, with
+        `adSetId`, the new ads themselves.
                 campaign_status: Campaign-level status, same semantics as `POST /v1/ads/create`. Defaults
-        to `ACTIVE`. `PAUSED` holds activation at the campaign so it never
-        spends before the advertiser reviews it, while the ad set and ad still
-        switch on (one resume call brings the whole hierarchy live). Only
-        meaningful when a new campaign is being created; rejected with a 400
-        alongside `adSetId` (the attach shape reuses an existing campaign).
+        to `status`. `PAUSED` holds the new campaign off while the ad set and
+        ads switch on (one resume call brings the whole hierarchy live);
+        `ACTIVE` with `status: PAUSED` switches the campaign on and pauses the
+        new ad set instead. Only meaningful when a new campaign is being
+        created; rejected with a 400 alongside `adSetId` (the attach shape
+        reuses an existing campaign).
                 bid_strategy: Meta bid strategy applied to the shared ad set. Defaults to
         `LOWEST_COST_WITHOUT_CAP` (auto-bid) when omitted.
         `LOWEST_COST_WITH_BID_CAP` and `COST_CAP` require
@@ -21558,14 +21560,16 @@ def register_generated_tools(mcp, _get_client):
                 objective: Defaults to `OUTCOME_ENGAGEMENT`. `OUTCOME_SALES` and `OUTCOME_LEADS` require
         additional account configuration (Dataset linked to the WABA
         for sales) and may be rejected by Meta if missing.
-                status: Ad-level status. Defaults to `ACTIVE`. `PAUSED` skips activating the
-        newly created ad(s) after Meta accepts them.
+                status: Defaults to `ACTIVE`. `PAUSED` pauses only the top-most object this
+        call creates: the new campaign (ad set and ads switched on), or, with
+        `adSetId`, the new ads themselves.
                 campaign_status: Campaign-level status, same semantics as `POST /v1/ads/create`. Defaults
-        to `ACTIVE`. `PAUSED` holds activation at the campaign so it never
-        spends before the advertiser reviews it, while the ad set and ad still
-        switch on (one resume call brings the whole hierarchy live). Only
-        meaningful when a new campaign is being created; rejected with a 400
-        alongside `adSetId` (the attach shape reuses an existing campaign).
+        to `status`. `PAUSED` holds the new campaign off while the ad set and
+        ads switch on (one resume call brings the whole hierarchy live);
+        `ACTIVE` with `status: PAUSED` switches the campaign on and pauses the
+        new ad set instead. Only meaningful when a new campaign is being
+        created; rejected with a 400 alongside `adSetId` (the attach shape
+        reuses an existing campaign).
                 bid_strategy: Meta bid strategy applied to the shared ad set. Defaults to
         `LOWEST_COST_WITHOUT_CAP` (auto-bid) when omitted.
         `LOWEST_COST_WITH_BID_CAP` and `COST_CAP` require
@@ -21813,14 +21817,16 @@ def register_generated_tools(mcp, _get_client):
                 objective: Defaults to `OUTCOME_ENGAGEMENT`. `OUTCOME_SALES` and `OUTCOME_LEADS` require
         additional account configuration (Dataset linked to the WABA
         for sales) and may be rejected by Meta if missing.
-                status: Ad-level status. Defaults to `ACTIVE`. `PAUSED` skips activating the
-        newly created ad(s) after Meta accepts them.
+                status: Defaults to `ACTIVE`. `PAUSED` pauses only the top-most object this
+        call creates: the new campaign (ad set and ads switched on), or, with
+        `adSetId`, the new ads themselves.
                 campaign_status: Campaign-level status, same semantics as `POST /v1/ads/create`. Defaults
-        to `ACTIVE`. `PAUSED` holds activation at the campaign so it never
-        spends before the advertiser reviews it, while the ad set and ad still
-        switch on (one resume call brings the whole hierarchy live). Only
-        meaningful when a new campaign is being created; rejected with a 400
-        alongside `adSetId` (the attach shape reuses an existing campaign).
+        to `status`. `PAUSED` holds the new campaign off while the ad set and
+        ads switch on (one resume call brings the whole hierarchy live);
+        `ACTIVE` with `status: PAUSED` switches the campaign on and pauses the
+        new ad set instead. Only meaningful when a new campaign is being
+        created; rejected with a 400 alongside `adSetId` (the attach shape
+        reuses an existing campaign).
                 bid_strategy: Meta bid strategy applied to the shared ad set. Defaults to
         `LOWEST_COST_WITHOUT_CAP` (auto-bid) when omitted.
         `LOWEST_COST_WITH_BID_CAP` and `COST_CAP` require

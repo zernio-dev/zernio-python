@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.150.0"
+  version: "1.151.0"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -477,6 +477,12 @@ tags:
         paused level you want live. This is how every platform behaves natively (Google: "Resuming a
         campaign only enables the campaign level"; Meta reports the inherited pause as
         CAMPAIGN_PAUSED / ADSET_PAUSED on the child).
+      - **Created paused = top-most object paused.** A create with `status: PAUSED` pauses only the
+        highest object that request creates and creates everything below it switched on: a new
+        campaign is paused with its ad set and ad on; a new ad set in an existing campaign is paused
+        with its ad on; an ad attached to an existing ad set is itself paused. One resume of that
+        object brings the whole new tree live. X has no per-ad switch (a promoted post follows its
+        line item).
   - name: Ad Creatives
     description: |
       Creative assets: the standalone creative library (create/reuse/rename), the ad-account image library
@@ -2263,18 +2269,20 @@ components:
           type: string
           enum: [ACTIVE, PAUSED]
           description: |
-            Ad-level status. Defaults to `ACTIVE`. `PAUSED` skips activating the
-            newly created ad(s) after Meta accepts them.
+            Defaults to `ACTIVE`. `PAUSED` pauses only the top-most object this
+            call creates: the new campaign (ad set and ads switched on), or, with
+            `adSetId`, the new ads themselves.
         campaignStatus:
           type: string
           enum: [ACTIVE, PAUSED]
           description: |
             Campaign-level status, same semantics as `POST /v1/ads/create`. Defaults
-            to `ACTIVE`. `PAUSED` holds activation at the campaign so it never
-            spends before the advertiser reviews it, while the ad set and ad still
-            switch on (one resume call brings the whole hierarchy live). Only
-            meaningful when a new campaign is being created; rejected with a 400
-            alongside `adSetId` (the attach shape reuses an existing campaign).
+            to `status`. `PAUSED` holds the new campaign off while the ad set and
+            ads switch on (one resume call brings the whole hierarchy live);
+            `ACTIVE` with `status: PAUSED` switches the campaign on and pauses the
+            new ad set instead. Only meaningful when a new campaign is being
+            created; rejected with a 400 alongside `adSetId` (the attach shape
+            reuses an existing campaign).
         bidStrategy:
           type: string
           enum:
@@ -11530,7 +11538,7 @@ components:
         status: { allOf: [{ $ref: '#/components/schemas/AdStatus' }], description: "Delivery status. Derived from the platform `effective_status`, so it inherits ancestor pauses (an ACTIVE ad under a PAUSED campaign reads `paused`). For the ad's own on/off toggle use `configuredStatus`; for the review state use `reviewStatus`." }
         configuredStatus:
           type: [string, "null"]
-          description: "The ad's own on/off switch as configured on the platform, independent of its parents: an ACTIVE ad under a paused ad set or campaign still reads ACTIVE here while `status` reads `paused`. Sources: Meta `configured_status`, TikTok ad `operation_status` (ENABLE -> ACTIVE, DISABLE -> PAUSED), ChatGPT (OpenAI) ad `status` (ACTIVE / PAUSED, plus ARCHIVED on OpenAI). On create it is read back from the platform, not copied from the request, so it can read ACTIVE for a `PAUSED` create where the platform holds the pause at the campaign (some Meta create flows). A TikTok ad created `PAUSED` is switched off at the ad, ad group and campaign and reads PAUSED. Distinct from `status`, which is the ancestor-cascaded delivery status. Only present for Meta, TikTok and OpenAI ads created or synced after the field was added for that platform; null otherwise."
+          description: "The ad's own on/off switch as configured on the platform, independent of its parents: an ACTIVE ad under a paused ad set or campaign still reads ACTIVE here while `status` reads `paused`. Sources: Meta `configured_status`, TikTok ad `operation_status` (ENABLE -> ACTIVE, DISABLE -> PAUSED), ChatGPT (OpenAI) ad `status` (ACTIVE / PAUSED, plus ARCHIVED on OpenAI). On create it is read back from the platform, not copied from the request: a `PAUSED` create pauses only the top-most object it creates, so an ad under a new paused campaign or ad set reads ACTIVE here with `status: paused`, and only an ad attached to an existing ad set reads PAUSED. Distinct from `status`, which is the ancestor-cascaded delivery status. Only present for Meta, TikTok and OpenAI ads created or synced after the field was added for that platform; null otherwise."
           example: ACTIVE
         reviewStatus:
           allOf: [{ $ref: '#/components/schemas/AdReviewStatus' }]
@@ -50296,9 +50304,8 @@ paths:
         `budgetType: daily`). On OpenAI `goal` sets the campaign objective, and
         `conversions` needs an active standard conversion event on the account. LinkedIn creates the
         campaign GROUP (our campaign level) and rejects a budget, which lives on the
-        campaign (ad set) level there; it comes back `status: DRAFT`. TikTok campaigns are
-        created without a status and report `ENABLE`. Created `PAUSED` unless
-        `status: ACTIVE` where the platform supports it.
+        campaign (ad set) level there; it comes back `status: DRAFT`. Created `PAUSED`
+        (TikTok `DISABLE`) unless `status: ACTIVE` where the platform supports it.
 
         **Idempotency:** send an `Idempotency-Key` header to make retries safe.
       security:
@@ -59031,7 +59038,7 @@ paths:
                 status:
                   type: string
                   enum: [ACTIVE, PAUSED]
-                  description: 'Meta, TikTok, LinkedIn, and Google. Publish state of the created entities. Omitted or ACTIVE publishes live (default); PAUSED creates them paused so you can review before they spend. On Meta a new campaign stays paused until explicitly activated; an attached ad is itself paused. On Google the pause is held on the campaign the boost creates (ad group and ad switched on), so PUT /v1/ads/campaigns/{campaignId}/status with `active` brings it live. On LinkedIn the whole campaign group, campaign, and creative hierarchy stays PAUSED (intendedStatus PAUSED on each).'
+                  description: "Publish state of the created entities, on every platform. Omitted or ACTIVE publishes live (default); PAUSED pauses only the top-most object this boost creates and switches everything below it on: a new campaign is held paused with its ad set and ad on (one PUT /v1/ads/campaigns/{campaignId}/status with `active` brings it live); into an existing campaign (TikTok `existingCampaignId`) the new ad set is held paused; attached to an existing ad set (`adSetId`) the new ad itself is paused. On LinkedIn the held campaign group is PAUSED, its campaign and creative ACTIVE. X has no per-ad switch, so its lowest level is the line item."
                 budgetLevel:
                   type: string
                   enum: [adset, campaign]
@@ -59546,11 +59553,11 @@ paths:
                 status:
                   type: string
                   enum: [ACTIVE, PAUSED]
-                  description: "Google Performance Max accepts PAUSED only and always creates a paused campaign. Google Search and Display, Meta, TikTok, LinkedIn, and ChatGPT (OpenAI): publish state of the created entities. Omitted or ACTIVE publishes live (default, back-compat); PAUSED creates them paused so you can review before they spend. On Meta the pause is held on the campaign this call creates, leaving the ad set and ad switched on, so a single PUT /v1/ads/campaigns/{campaignId}/status with `active` brings the whole thing live. It is held at every level instead when the pause cannot rely on the campaign: `existingCampaignId` (that campaign may be running and is never touched) or `campaignStatus: ACTIVE`. Google Search and Display follow the same rule, and because Google keeps an independent switch at campaign, ad group and ad level, a PAUSED create leaves the campaign it creates PAUSED at Google. On TikTok the whole campaign > ad group > ad hierarchy stays paused. On LinkedIn the whole campaign group, campaign, and creative hierarchy stays PAUSED (intendedStatus PAUSED on each). ChatGPT (OpenAI) follows the Meta rule: the pause is held on the campaign this call creates."
+                  description: "Publish state of the created entities, on every platform. Omitted or ACTIVE publishes live (default, back-compat); PAUSED pauses only the TOP-MOST object this call creates and switches everything below it on, so one resume of that object brings the new tree live and nothing that already existed is touched: a new campaign is held paused with its ad set and ad on; with `existingCampaignId` the new ad set is held paused with its ad on; with `adSetId` the new ad itself is paused. `campaignStatus: ACTIVE` with `status: PAUSED` moves the pause down to the new ad set. LinkedIn: a held campaign group is PAUSED with its campaign and creative ACTIVE; a new campaign in an existing group stays DRAFT. X has no per-ad switch, so its lowest level is the line item. Google Performance Max and Demand Gen accept PAUSED only (the campaign is created paused)."
                 campaignStatus:
                   type: string
                   enum: [ACTIVE, PAUSED]
-                  description: "Meta, Google, and ChatGPT (OpenAI). Overrides `status` for the campaign level alone, so you can create a live campaign whose ad set and ad stay paused, or the reverse. Omitted, it follows `status`."
+                  description: "Meta, Google, and ChatGPT (OpenAI). Overrides `status` for the new campaign alone. `PAUSED` holds the campaign off with its ad set and ad on; `ACTIVE` with `status: PAUSED` switches the campaign on and holds the new ad set paused (its ad on). Omitted, it follows `status`."
                 budgetLevel:
                   type: string
                   enum: [adset, campaign]
