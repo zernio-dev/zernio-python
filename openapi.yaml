@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.156.1"
+  version: "1.157.0"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -1897,6 +1897,13 @@ components:
 
         The route enforces this at the Zod boundary; OpenAPI's
         `required` cannot express the OR cleanly.
+
+        Campaign, ad set and targeting fields match POST /v1/ads/create on
+        Meta and run through the same builders: the full targeting set
+        (including `rawTargeting`, `languages`, `gender`, exclusions and
+        `savedTargetingId`), `budgetLevel` (campaign budget), `startDate` /
+        `endDate` in the ad account timezone, and `existingCampaignId` to add
+        a new ad set to a campaign you already have.
       properties:
         creativeFeatures:
           $ref: '#/components/schemas/MetaCreativeFeatures'
@@ -1959,6 +1966,18 @@ components:
           description: |
             Primary text shown above the image / video. Single-creative
             shape only. Mutually exclusive with `creatives[]`.
+        description:
+          type: string
+          minLength: 1
+          maxLength: 255
+          description: |
+            Link description, independent of `headline` and `body` (Meta's
+            `link_data.description`, `video_data.link_description` on video,
+            and the shared description of a `placementAssets` feed). Meta
+            shows it mainly on Facebook Feed placements, under the headline,
+            when there is room; Instagram, Stories, Reels and Messenger
+            placements do not display it. Also accepted per entry in
+            `creatives[]`. Not allowed with an existing post creative.
         imageUrl:
           type: string
           format: uri
@@ -2086,20 +2105,46 @@ components:
             Attach the creatives to this EXISTING messaging ad set instead of
             building a campaign, so the ad set keeps its learning phase. It then
             owns budget, targeting and schedule, so `budgetAmount`, `budgetType`,
-            `endDate`, `objective`, `countries`, `interests`, `audienceId` and
-            `campaignStatus` are rejected with a 400 alongside it. Its
+            `budgetLevel`, `startDate`, `endDate`, `objective`, `campaignStatus`,
+            `existingCampaignId`, the special ad category fields and every
+            targeting field except `ageMin`, `ageMax`, `placements` and
+            `advantageAudience` are rejected with a 400 alongside it. Its
             `destination_type` must match the ad's destination.
+        existingCampaignId:
+          type: string
+          pattern: '^\d+$'
+          description: |
+            Create the new messaging ad set (and its ads) under this EXISTING
+            Meta campaign instead of a new one, e.g. several audience ad sets
+            under one campaign. The campaign's objective must be
+            OUTCOME_ENGAGEMENT, OUTCOME_SALES or OUTCOME_LEADS (400 otherwise).
+            If the campaign has a campaign budget, omit `budgetAmount` and
+            `budgetType` (400 if sent); otherwise they are required and land
+            on the new ad set. `objective`, `campaignName`, `campaignStatus`,
+            `budgetLevel`, `specialAdCategories`, `specialAdCategoryCountry`
+            and `adSetId` are rejected alongside it. To add ads to an existing
+            ad set instead, use `adSetId`.
+        budgetLevel:
+          type: string
+          enum: [adset, campaign]
+          description: |
+            Where the budget lives. `adset` (default) puts it on the new ad
+            set. `campaign` creates an Advantage campaign budget (CBO): the
+            budget and bid strategy sit on the campaign and the ad set
+            inherits them, same as POST /v1/ads/create. Not allowed with
+            `adSetId` or `existingCampaignId`.
         budgetAmount:
           type: number
           exclusiveMinimum: 0
           description: |
             Budget amount in the ad account's currency major units
             (e.g. dollars for USD, not cents). Must be > 0.
-            Required unless `adSetId` is set, where the ad set owns it.
+            Required unless `adSetId` is set (the ad set owns it) or
+            `existingCampaignId` names a campaign with a campaign budget.
         budgetType:
           type: string
           enum: [daily, lifetime]
-          description: Required unless `adSetId` is set.
+          description: Required unless `adSetId` is set or `existingCampaignId` names a campaign with a campaign budget. `lifetime` requires `endDate`.
         currency:
           type: string
           minLength: 3
@@ -2111,11 +2156,20 @@ components:
             converts budget/bid amounts by before calling Meta (most
             currencies are cents; zero-decimal currencies like JPY/KRW are
             sent as-is).
+        startDate:
+          type: string
+          description: |
+            When the ad set starts delivering. ISO 8601 date or date-time. A
+            value with an offset (`2027-01-15T10:00:00+01:00`, `...Z`) is used
+            as is; one without an offset (`2027-01-15T10:00:00`) is read in the
+            ad account's timezone, and a date-only value starts at 00:00 local.
+            Defaults to now.
         endDate:
           type: string
-          format: date-time
           description: |
-            ISO 8601 datetime. Required when `budgetType` is `lifetime`.
+            ISO 8601 date or date-time, read like `startDate`; a date-only
+            value ends at 23:59:59 local. Required when `budgetType` is
+            `lifetime`.
         countries:
           type: array
           items: { type: string, minLength: 2, maxLength: 2 }
@@ -2250,6 +2304,44 @@ components:
               type: array
               items: { type: string, enum: [mobile, desktop] }
               description: "Restrict by device. Omit to deliver on both mobile and desktop."
+        gender: { type: string, enum: [all, male, female], default: all, description: "Restrict the audience by gender (Meta `genders`). Stored on the ad and read back in `targeting.gender`." }
+        languages: { type: array, items: { type: string }, description: "Audience languages (Meta `locales`). A bare ISO 639-1 code targets all regional variants (\"en\" = all English), a region-qualified code a specific one (\"en_GB\", \"pt_BR\"); unknown codes are rejected." }
+        places: { type: array, items: { type: object, required: [key], properties: { key: { type: string } } }, description: "Meta place keys (from GET /v1/ads/targeting/search)." }
+        neighborhoods: { type: array, items: { type: object, required: [key], properties: { key: { type: string } } }, description: "Meta neighborhood keys (from GET /v1/ads/targeting/search)." }
+        excludedLocations:
+          type: object
+          description: 'Geo to exclude, same shape as POST /v1/ads/create (countries, countryGroups, regions, cities, zips, places, neighborhoods, customLocations).'
+          additionalProperties: true
+        behaviors: { type: array, items: { type: object, required: [id], properties: { id: { type: string }, name: { type: string } } }, description: "Meta behavior ids. Each dimension is its own flexible_spec entry: OR within, AND across." }
+        workPositions: { type: array, items: { type: object, required: [id], properties: { id: { type: string }, name: { type: string } } } }
+        workEmployers: { type: array, items: { type: object, required: [id], properties: { id: { type: string }, name: { type: string } } } }
+        workIndustries: { type: array, items: { type: object, required: [id], properties: { id: { type: string }, name: { type: string } } } }
+        incomeTier: { type: string, enum: [top_5, top_10, top_10_25, top_25_50], description: 'Normalized household-income tier, same as POST /v1/ads/create. Incompatible with housing, employment and credit specialAdCategories.' }
+        userOs: { type: array, items: { type: string }, minItems: 1, description: "Meta `user_os`, e.g. [\"iOS_ver_14.0_and_above\"]." }
+        userDevice: { type: array, items: { type: string }, minItems: 1, description: "Meta `user_device`." }
+        audienceInclude: { type: array, items: { type: string }, minItems: 1, description: Custom or lookalike audience ids to include. }
+        audienceExclude: { type: array, items: { type: string }, minItems: 1, description: Custom or lookalike audience ids to exclude. }
+        savedTargetingId: { type: string, description: 'ID of a saved_targeting audience (POST /v1/ads/audiences), expanded as the base targeting. Precedence: savedTargetingId, then `targeting`, then the flat fields.' }
+        targeting:
+          $ref: '#/components/schemas/TargetingSpec'
+          description: 'Nested targeting object, same contract as POST /v1/ads/create and boost. Flat fields win per key.'
+        rawTargeting:
+          type: object
+          additionalProperties: true
+          description: |
+            Meta targeting spec sent as the BASE layer of the ad set's
+            `targeting`, exactly as POST /v1/ads/create does: use it for
+            anything the flat fields cannot express, such as a layered
+            `flexible_spec` (entries AND together, ids inside one entry OR).
+            Flat fields you also send are layered on top and win per key.
+            With rawTargeting present the US geo and `advantage_audience: 0`
+            defaults are not injected, so include `targeting_automation` in
+            it (or send `advantageAudience`), as Meta requires it on create.
+        specialAdCategories:
+          type: array
+          items: { type: string, enum: [HOUSING, EMPLOYMENT, CREDIT, ISSUES_ELECTIONS_POLITICS, FINANCIAL_PRODUCTS_SERVICES, ONLINE_GAMBLING_AND_GAMING] }
+          description: Meta special ad categories on the new campaign.
+        specialAdCategoryCountry: { type: array, items: { type: string }, description: 'Countries the special ad category applies to. Requires specialAdCategories.' }
         advantageAudience:
           type: integer
           enum: [0, 1]

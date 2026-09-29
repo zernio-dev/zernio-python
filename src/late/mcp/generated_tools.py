@@ -21154,14 +21154,18 @@ def register_generated_tools(mcp, _get_client):
         whatsapp_phone_number: str | None = None,
         headline: str | None = None,
         body: str | None = None,
+        description: str | None = None,
         image_url: str | None = None,
         video: dict[str, Any] | None = None,
         welcome_message: dict[str, Any] | None = None,
         creatives: list[dict[str, Any]] | None = None,
         ad_set_id: str | None = None,
+        existing_campaign_id: str | None = None,
+        budget_level: str | None = None,
         budget_amount: float | None = None,
         budget_type: str | None = None,
         currency: str | None = None,
+        start_date: str | None = None,
         end_date: str | None = None,
         countries: list[str] | None = None,
         cities: list[dict[str, Any]] | None = None,
@@ -21175,6 +21179,25 @@ def register_generated_tools(mcp, _get_client):
         interests: list[dict[str, Any]] | None = None,
         audience_id: str | None = None,
         placements: dict[str, Any] | None = None,
+        gender: str = "all",
+        languages: list[str] | None = None,
+        places: list[dict[str, Any]] | None = None,
+        neighborhoods: list[dict[str, Any]] | None = None,
+        excluded_locations: dict[str, Any] | None = None,
+        behaviors: list[dict[str, Any]] | None = None,
+        work_positions: list[dict[str, Any]] | None = None,
+        work_employers: list[dict[str, Any]] | None = None,
+        work_industries: list[dict[str, Any]] | None = None,
+        income_tier: str | None = None,
+        user_os: list[str] | None = None,
+        user_device: list[str] | None = None,
+        audience_include: list[str] | None = None,
+        audience_exclude: list[str] | None = None,
+        saved_targeting_id: str | None = None,
+        targeting: dict[str, Any] | None = None,
+        raw_targeting: dict[str, Any] | None = None,
+        special_ad_categories: list[str] | None = None,
+        special_ad_category_country: list[str] | None = None,
         advantage_audience: int | None = None,
         objective: str | None = None,
         status: str | None = None,
@@ -21214,6 +21237,13 @@ def register_generated_tools(mcp, _get_client):
         `creatives[]`.
                 body: Primary text shown above the image / video. Single-creative
         shape only. Mutually exclusive with `creatives[]`.
+                description: Link description, independent of `headline` and `body` (Meta's
+        `link_data.description`, `video_data.link_description` on video,
+        and the shared description of a `placementAssets` feed). Meta
+        shows it mainly on Facebook Feed placements, under the headline,
+        when there is room; Instagram, Stories, Reels and Messenger
+        placements do not display it. Also accepted per entry in
+        `creatives[]`. Not allowed with an existing post creative.
                 image_url: Image asset for single-creative shape. Mutually exclusive
         with `video` and with `creatives[]`. Required on the
         single-creative shape if neither `video` nor an existing post reference is supplied.
@@ -21234,20 +21264,45 @@ def register_generated_tools(mcp, _get_client):
                 ad_set_id: Attach the creatives to this EXISTING messaging ad set instead of
         building a campaign, so the ad set keeps its learning phase. It then
         owns budget, targeting and schedule, so `budgetAmount`, `budgetType`,
-        `endDate`, `objective`, `countries`, `interests`, `audienceId` and
-        `campaignStatus` are rejected with a 400 alongside it. Its
+        `budgetLevel`, `startDate`, `endDate`, `objective`, `campaignStatus`,
+        `existingCampaignId`, the special ad category fields and every
+        targeting field except `ageMin`, `ageMax`, `placements` and
+        `advantageAudience` are rejected with a 400 alongside it. Its
         `destination_type` must match the ad's destination.
+                existing_campaign_id: Create the new messaging ad set (and its ads) under this EXISTING
+        Meta campaign instead of a new one, e.g. several audience ad sets
+        under one campaign. The campaign's objective must be
+        OUTCOME_ENGAGEMENT, OUTCOME_SALES or OUTCOME_LEADS (400 otherwise).
+        If the campaign has a campaign budget, omit `budgetAmount` and
+        `budgetType` (400 if sent); otherwise they are required and land
+        on the new ad set. `objective`, `campaignName`, `campaignStatus`,
+        `budgetLevel`, `specialAdCategories`, `specialAdCategoryCountry`
+        and `adSetId` are rejected alongside it. To add ads to an existing
+        ad set instead, use `adSetId`.
+                budget_level: Where the budget lives. `adset` (default) puts it on the new ad
+        set. `campaign` creates an Advantage campaign budget (CBO): the
+        budget and bid strategy sit on the campaign and the ad set
+        inherits them, same as POST /v1/ads/create. Not allowed with
+        `adSetId` or `existingCampaignId`.
                 budget_amount: Budget amount in the ad account's currency major units
         (e.g. dollars for USD, not cents). Must be > 0.
-        Required unless `adSetId` is set, where the ad set owns it.
-                budget_type: Required unless `adSetId` is set.
+        Required unless `adSetId` is set (the ad set owns it) or
+        `existingCampaignId` names a campaign with a campaign budget.
+                budget_type: Required unless `adSetId` is set or `existingCampaignId` names a campaign with a campaign budget. `lifetime` requires `endDate`.
                 currency: ISO 4217 currency code matching the ad account's currency
         (e.g. `USD`). Optional: Zernio resolves it from the ad account
         when omitted. The value selects the minor-unit exponent Zernio
         converts budget/bid amounts by before calling Meta (most
         currencies are cents; zero-decimal currencies like JPY/KRW are
         sent as-is).
-                end_date: ISO 8601 datetime. Required when `budgetType` is `lifetime`.
+                start_date: When the ad set starts delivering. ISO 8601 date or date-time. A
+        value with an offset (`2027-01-15T10:00:00+01:00`, `...Z`) is used
+        as is; one without an offset (`2027-01-15T10:00:00`) is read in the
+        ad account's timezone, and a date-only value starts at 00:00 local.
+        Defaults to now.
+                end_date: ISO 8601 date or date-time, read like `startDate`; a date-only
+        value ends at 23:59:59 local. Required when `budgetType` is
+        `lifetime`.
                 countries: ISO 3166-1 alpha-2 country codes. Defaults to `["US"]` only
         when no other geo (`cities`, `regions`, `zips`, `metros`,
         `customLocations`) is supplied.
@@ -21284,6 +21339,32 @@ def register_generated_tools(mcp, _get_client):
         additionally enforces co-selection rules and restricts which
         placements are eligible for click-to-WhatsApp ads, returning an actionable
         error which we surface.
+                gender: Restrict the audience by gender (Meta `genders`). Stored on the ad and read back in `targeting.gender`.
+                languages: Audience languages (Meta `locales`). A bare ISO 639-1 code targets all regional variants ("en" = all English), a region-qualified code a specific one ("en_GB", "pt_BR"); unknown codes are rejected.
+                places: Meta place keys (from GET /v1/ads/targeting/search).
+                neighborhoods: Meta neighborhood keys (from GET /v1/ads/targeting/search).
+                excluded_locations: Geo to exclude, same shape as POST /v1/ads/create (countries, countryGroups, regions, cities, zips, places, neighborhoods, customLocations).
+                behaviors: Meta behavior ids. Each dimension is its own flexible_spec entry: OR within, AND across.
+                work_positions
+                work_employers
+                work_industries
+                income_tier: Normalized household-income tier, same as POST /v1/ads/create. Incompatible with housing, employment and credit specialAdCategories.
+                user_os: Meta `user_os`, e.g. ["iOS_ver_14.0_and_above"].
+                user_device: Meta `user_device`.
+                audience_include: Custom or lookalike audience ids to include.
+                audience_exclude: Custom or lookalike audience ids to exclude.
+                saved_targeting_id: ID of a saved_targeting audience (POST /v1/ads/audiences), expanded as the base targeting. Precedence: savedTargetingId, then `targeting`, then the flat fields.
+                targeting: Nested targeting object, same contract as POST /v1/ads/create and boost. Flat fields win per key.
+                raw_targeting: Meta targeting spec sent as the BASE layer of the ad set's
+        `targeting`, exactly as POST /v1/ads/create does: use it for
+        anything the flat fields cannot express, such as a layered
+        `flexible_spec` (entries AND together, ids inside one entry OR).
+        Flat fields you also send are layered on top and win per key.
+        With rawTargeting present the US geo and `advantage_audience: 0`
+        defaults are not injected, so include `targeting_automation` in
+        it (or send `advantageAudience`), as Meta requires it on create.
+                special_ad_categories: Meta special ad categories on the new campaign.
+                special_ad_category_country: Countries the special ad category applies to. Requires specialAdCategories.
                 advantage_audience: Meta's Advantage+ audience expansion. `0` (default) keeps
         targeting strict; `1` lets Meta expand beyond the supplied
         targeting when its delivery system finds better matches.
@@ -21365,14 +21446,18 @@ def register_generated_tools(mcp, _get_client):
                 whatsapp_phone_number=whatsapp_phone_number,
                 headline=headline,
                 body=body,
+                description=description,
                 image_url=image_url,
                 video=video,
                 welcome_message=welcome_message,
                 creatives=creatives,
                 ad_set_id=ad_set_id,
+                existing_campaign_id=existing_campaign_id,
+                budget_level=budget_level,
                 budget_amount=budget_amount,
                 budget_type=budget_type,
                 currency=currency,
+                start_date=start_date,
                 end_date=end_date,
                 countries=countries,
                 cities=cities,
@@ -21386,6 +21471,25 @@ def register_generated_tools(mcp, _get_client):
                 interests=interests,
                 audience_id=audience_id,
                 placements=placements,
+                gender=gender,
+                languages=languages,
+                places=places,
+                neighborhoods=neighborhoods,
+                excluded_locations=excluded_locations,
+                behaviors=behaviors,
+                work_positions=work_positions,
+                work_employers=work_employers,
+                work_industries=work_industries,
+                income_tier=income_tier,
+                user_os=user_os,
+                user_device=user_device,
+                audience_include=audience_include,
+                audience_exclude=audience_exclude,
+                saved_targeting_id=saved_targeting_id,
+                targeting=targeting,
+                raw_targeting=raw_targeting,
+                special_ad_categories=special_ad_categories,
+                special_ad_category_country=special_ad_category_country,
                 advantage_audience=advantage_audience,
                 objective=objective,
                 status=status,
@@ -21431,14 +21535,18 @@ def register_generated_tools(mcp, _get_client):
         whatsapp_phone_number: str | None = None,
         headline: str | None = None,
         body: str | None = None,
+        description: str | None = None,
         image_url: str | None = None,
         video: dict[str, Any] | None = None,
         welcome_message: dict[str, Any] | None = None,
         creatives: list[dict[str, Any]] | None = None,
         ad_set_id: str | None = None,
+        existing_campaign_id: str | None = None,
+        budget_level: str | None = None,
         budget_amount: float | None = None,
         budget_type: str | None = None,
         currency: str | None = None,
+        start_date: str | None = None,
         end_date: str | None = None,
         countries: list[str] | None = None,
         cities: list[dict[str, Any]] | None = None,
@@ -21452,6 +21560,25 @@ def register_generated_tools(mcp, _get_client):
         interests: list[dict[str, Any]] | None = None,
         audience_id: str | None = None,
         placements: dict[str, Any] | None = None,
+        gender: str = "all",
+        languages: list[str] | None = None,
+        places: list[dict[str, Any]] | None = None,
+        neighborhoods: list[dict[str, Any]] | None = None,
+        excluded_locations: dict[str, Any] | None = None,
+        behaviors: list[dict[str, Any]] | None = None,
+        work_positions: list[dict[str, Any]] | None = None,
+        work_employers: list[dict[str, Any]] | None = None,
+        work_industries: list[dict[str, Any]] | None = None,
+        income_tier: str | None = None,
+        user_os: list[str] | None = None,
+        user_device: list[str] | None = None,
+        audience_include: list[str] | None = None,
+        audience_exclude: list[str] | None = None,
+        saved_targeting_id: str | None = None,
+        targeting: dict[str, Any] | None = None,
+        raw_targeting: dict[str, Any] | None = None,
+        special_ad_categories: list[str] | None = None,
+        special_ad_category_country: list[str] | None = None,
         advantage_audience: int | None = None,
         objective: str | None = None,
         status: str | None = None,
@@ -21487,6 +21614,13 @@ def register_generated_tools(mcp, _get_client):
         `creatives[]`.
                 body: Primary text shown above the image / video. Single-creative
         shape only. Mutually exclusive with `creatives[]`.
+                description: Link description, independent of `headline` and `body` (Meta's
+        `link_data.description`, `video_data.link_description` on video,
+        and the shared description of a `placementAssets` feed). Meta
+        shows it mainly on Facebook Feed placements, under the headline,
+        when there is room; Instagram, Stories, Reels and Messenger
+        placements do not display it. Also accepted per entry in
+        `creatives[]`. Not allowed with an existing post creative.
                 image_url: Image asset for single-creative shape. Mutually exclusive
         with `video` and with `creatives[]`. Required on the
         single-creative shape if neither `video` nor an existing post reference is supplied.
@@ -21507,20 +21641,45 @@ def register_generated_tools(mcp, _get_client):
                 ad_set_id: Attach the creatives to this EXISTING messaging ad set instead of
         building a campaign, so the ad set keeps its learning phase. It then
         owns budget, targeting and schedule, so `budgetAmount`, `budgetType`,
-        `endDate`, `objective`, `countries`, `interests`, `audienceId` and
-        `campaignStatus` are rejected with a 400 alongside it. Its
+        `budgetLevel`, `startDate`, `endDate`, `objective`, `campaignStatus`,
+        `existingCampaignId`, the special ad category fields and every
+        targeting field except `ageMin`, `ageMax`, `placements` and
+        `advantageAudience` are rejected with a 400 alongside it. Its
         `destination_type` must match the ad's destination.
+                existing_campaign_id: Create the new messaging ad set (and its ads) under this EXISTING
+        Meta campaign instead of a new one, e.g. several audience ad sets
+        under one campaign. The campaign's objective must be
+        OUTCOME_ENGAGEMENT, OUTCOME_SALES or OUTCOME_LEADS (400 otherwise).
+        If the campaign has a campaign budget, omit `budgetAmount` and
+        `budgetType` (400 if sent); otherwise they are required and land
+        on the new ad set. `objective`, `campaignName`, `campaignStatus`,
+        `budgetLevel`, `specialAdCategories`, `specialAdCategoryCountry`
+        and `adSetId` are rejected alongside it. To add ads to an existing
+        ad set instead, use `adSetId`.
+                budget_level: Where the budget lives. `adset` (default) puts it on the new ad
+        set. `campaign` creates an Advantage campaign budget (CBO): the
+        budget and bid strategy sit on the campaign and the ad set
+        inherits them, same as POST /v1/ads/create. Not allowed with
+        `adSetId` or `existingCampaignId`.
                 budget_amount: Budget amount in the ad account's currency major units
         (e.g. dollars for USD, not cents). Must be > 0.
-        Required unless `adSetId` is set, where the ad set owns it.
-                budget_type: Required unless `adSetId` is set.
+        Required unless `adSetId` is set (the ad set owns it) or
+        `existingCampaignId` names a campaign with a campaign budget.
+                budget_type: Required unless `adSetId` is set or `existingCampaignId` names a campaign with a campaign budget. `lifetime` requires `endDate`.
                 currency: ISO 4217 currency code matching the ad account's currency
         (e.g. `USD`). Optional: Zernio resolves it from the ad account
         when omitted. The value selects the minor-unit exponent Zernio
         converts budget/bid amounts by before calling Meta (most
         currencies are cents; zero-decimal currencies like JPY/KRW are
         sent as-is).
-                end_date: ISO 8601 datetime. Required when `budgetType` is `lifetime`.
+                start_date: When the ad set starts delivering. ISO 8601 date or date-time. A
+        value with an offset (`2027-01-15T10:00:00+01:00`, `...Z`) is used
+        as is; one without an offset (`2027-01-15T10:00:00`) is read in the
+        ad account's timezone, and a date-only value starts at 00:00 local.
+        Defaults to now.
+                end_date: ISO 8601 date or date-time, read like `startDate`; a date-only
+        value ends at 23:59:59 local. Required when `budgetType` is
+        `lifetime`.
                 countries: ISO 3166-1 alpha-2 country codes. Defaults to `["US"]` only
         when no other geo (`cities`, `regions`, `zips`, `metros`,
         `customLocations`) is supplied.
@@ -21557,6 +21716,32 @@ def register_generated_tools(mcp, _get_client):
         additionally enforces co-selection rules and restricts which
         placements are eligible for click-to-WhatsApp ads, returning an actionable
         error which we surface.
+                gender: Restrict the audience by gender (Meta `genders`). Stored on the ad and read back in `targeting.gender`.
+                languages: Audience languages (Meta `locales`). A bare ISO 639-1 code targets all regional variants ("en" = all English), a region-qualified code a specific one ("en_GB", "pt_BR"); unknown codes are rejected.
+                places: Meta place keys (from GET /v1/ads/targeting/search).
+                neighborhoods: Meta neighborhood keys (from GET /v1/ads/targeting/search).
+                excluded_locations: Geo to exclude, same shape as POST /v1/ads/create (countries, countryGroups, regions, cities, zips, places, neighborhoods, customLocations).
+                behaviors: Meta behavior ids. Each dimension is its own flexible_spec entry: OR within, AND across.
+                work_positions
+                work_employers
+                work_industries
+                income_tier: Normalized household-income tier, same as POST /v1/ads/create. Incompatible with housing, employment and credit specialAdCategories.
+                user_os: Meta `user_os`, e.g. ["iOS_ver_14.0_and_above"].
+                user_device: Meta `user_device`.
+                audience_include: Custom or lookalike audience ids to include.
+                audience_exclude: Custom or lookalike audience ids to exclude.
+                saved_targeting_id: ID of a saved_targeting audience (POST /v1/ads/audiences), expanded as the base targeting. Precedence: savedTargetingId, then `targeting`, then the flat fields.
+                targeting: Nested targeting object, same contract as POST /v1/ads/create and boost. Flat fields win per key.
+                raw_targeting: Meta targeting spec sent as the BASE layer of the ad set's
+        `targeting`, exactly as POST /v1/ads/create does: use it for
+        anything the flat fields cannot express, such as a layered
+        `flexible_spec` (entries AND together, ids inside one entry OR).
+        Flat fields you also send are layered on top and win per key.
+        With rawTargeting present the US geo and `advantage_audience: 0`
+        defaults are not injected, so include `targeting_automation` in
+        it (or send `advantageAudience`), as Meta requires it on create.
+                special_ad_categories: Meta special ad categories on the new campaign.
+                special_ad_category_country: Countries the special ad category applies to. Requires specialAdCategories.
                 advantage_audience: Meta's Advantage+ audience expansion. `0` (default) keeps
         targeting strict; `1` lets Meta expand beyond the supplied
         targeting when its delivery system finds better matches.
@@ -21626,14 +21811,18 @@ def register_generated_tools(mcp, _get_client):
                 whatsapp_phone_number=whatsapp_phone_number,
                 headline=headline,
                 body=body,
+                description=description,
                 image_url=image_url,
                 video=video,
                 welcome_message=welcome_message,
                 creatives=creatives,
                 ad_set_id=ad_set_id,
+                existing_campaign_id=existing_campaign_id,
+                budget_level=budget_level,
                 budget_amount=budget_amount,
                 budget_type=budget_type,
                 currency=currency,
+                start_date=start_date,
                 end_date=end_date,
                 countries=countries,
                 cities=cities,
@@ -21647,6 +21836,25 @@ def register_generated_tools(mcp, _get_client):
                 interests=interests,
                 audience_id=audience_id,
                 placements=placements,
+                gender=gender,
+                languages=languages,
+                places=places,
+                neighborhoods=neighborhoods,
+                excluded_locations=excluded_locations,
+                behaviors=behaviors,
+                work_positions=work_positions,
+                work_employers=work_employers,
+                work_industries=work_industries,
+                income_tier=income_tier,
+                user_os=user_os,
+                user_device=user_device,
+                audience_include=audience_include,
+                audience_exclude=audience_exclude,
+                saved_targeting_id=saved_targeting_id,
+                targeting=targeting,
+                raw_targeting=raw_targeting,
+                special_ad_categories=special_ad_categories,
+                special_ad_category_country=special_ad_category_country,
                 advantage_audience=advantage_audience,
                 objective=objective,
                 status=status,
@@ -21688,14 +21896,18 @@ def register_generated_tools(mcp, _get_client):
         whatsapp_phone_number: str | None = None,
         headline: str | None = None,
         body: str | None = None,
+        description: str | None = None,
         image_url: str | None = None,
         video: dict[str, Any] | None = None,
         welcome_message: dict[str, Any] | None = None,
         creatives: list[dict[str, Any]] | None = None,
         ad_set_id: str | None = None,
+        existing_campaign_id: str | None = None,
+        budget_level: str | None = None,
         budget_amount: float | None = None,
         budget_type: str | None = None,
         currency: str | None = None,
+        start_date: str | None = None,
         end_date: str | None = None,
         countries: list[str] | None = None,
         cities: list[dict[str, Any]] | None = None,
@@ -21709,6 +21921,25 @@ def register_generated_tools(mcp, _get_client):
         interests: list[dict[str, Any]] | None = None,
         audience_id: str | None = None,
         placements: dict[str, Any] | None = None,
+        gender: str = "all",
+        languages: list[str] | None = None,
+        places: list[dict[str, Any]] | None = None,
+        neighborhoods: list[dict[str, Any]] | None = None,
+        excluded_locations: dict[str, Any] | None = None,
+        behaviors: list[dict[str, Any]] | None = None,
+        work_positions: list[dict[str, Any]] | None = None,
+        work_employers: list[dict[str, Any]] | None = None,
+        work_industries: list[dict[str, Any]] | None = None,
+        income_tier: str | None = None,
+        user_os: list[str] | None = None,
+        user_device: list[str] | None = None,
+        audience_include: list[str] | None = None,
+        audience_exclude: list[str] | None = None,
+        saved_targeting_id: str | None = None,
+        targeting: dict[str, Any] | None = None,
+        raw_targeting: dict[str, Any] | None = None,
+        special_ad_categories: list[str] | None = None,
+        special_ad_category_country: list[str] | None = None,
         advantage_audience: int | None = None,
         objective: str | None = None,
         status: str | None = None,
@@ -21744,6 +21975,13 @@ def register_generated_tools(mcp, _get_client):
         `creatives[]`.
                 body: Primary text shown above the image / video. Single-creative
         shape only. Mutually exclusive with `creatives[]`.
+                description: Link description, independent of `headline` and `body` (Meta's
+        `link_data.description`, `video_data.link_description` on video,
+        and the shared description of a `placementAssets` feed). Meta
+        shows it mainly on Facebook Feed placements, under the headline,
+        when there is room; Instagram, Stories, Reels and Messenger
+        placements do not display it. Also accepted per entry in
+        `creatives[]`. Not allowed with an existing post creative.
                 image_url: Image asset for single-creative shape. Mutually exclusive
         with `video` and with `creatives[]`. Required on the
         single-creative shape if neither `video` nor an existing post reference is supplied.
@@ -21764,20 +22002,45 @@ def register_generated_tools(mcp, _get_client):
                 ad_set_id: Attach the creatives to this EXISTING messaging ad set instead of
         building a campaign, so the ad set keeps its learning phase. It then
         owns budget, targeting and schedule, so `budgetAmount`, `budgetType`,
-        `endDate`, `objective`, `countries`, `interests`, `audienceId` and
-        `campaignStatus` are rejected with a 400 alongside it. Its
+        `budgetLevel`, `startDate`, `endDate`, `objective`, `campaignStatus`,
+        `existingCampaignId`, the special ad category fields and every
+        targeting field except `ageMin`, `ageMax`, `placements` and
+        `advantageAudience` are rejected with a 400 alongside it. Its
         `destination_type` must match the ad's destination.
+                existing_campaign_id: Create the new messaging ad set (and its ads) under this EXISTING
+        Meta campaign instead of a new one, e.g. several audience ad sets
+        under one campaign. The campaign's objective must be
+        OUTCOME_ENGAGEMENT, OUTCOME_SALES or OUTCOME_LEADS (400 otherwise).
+        If the campaign has a campaign budget, omit `budgetAmount` and
+        `budgetType` (400 if sent); otherwise they are required and land
+        on the new ad set. `objective`, `campaignName`, `campaignStatus`,
+        `budgetLevel`, `specialAdCategories`, `specialAdCategoryCountry`
+        and `adSetId` are rejected alongside it. To add ads to an existing
+        ad set instead, use `adSetId`.
+                budget_level: Where the budget lives. `adset` (default) puts it on the new ad
+        set. `campaign` creates an Advantage campaign budget (CBO): the
+        budget and bid strategy sit on the campaign and the ad set
+        inherits them, same as POST /v1/ads/create. Not allowed with
+        `adSetId` or `existingCampaignId`.
                 budget_amount: Budget amount in the ad account's currency major units
         (e.g. dollars for USD, not cents). Must be > 0.
-        Required unless `adSetId` is set, where the ad set owns it.
-                budget_type: Required unless `adSetId` is set.
+        Required unless `adSetId` is set (the ad set owns it) or
+        `existingCampaignId` names a campaign with a campaign budget.
+                budget_type: Required unless `adSetId` is set or `existingCampaignId` names a campaign with a campaign budget. `lifetime` requires `endDate`.
                 currency: ISO 4217 currency code matching the ad account's currency
         (e.g. `USD`). Optional: Zernio resolves it from the ad account
         when omitted. The value selects the minor-unit exponent Zernio
         converts budget/bid amounts by before calling Meta (most
         currencies are cents; zero-decimal currencies like JPY/KRW are
         sent as-is).
-                end_date: ISO 8601 datetime. Required when `budgetType` is `lifetime`.
+                start_date: When the ad set starts delivering. ISO 8601 date or date-time. A
+        value with an offset (`2027-01-15T10:00:00+01:00`, `...Z`) is used
+        as is; one without an offset (`2027-01-15T10:00:00`) is read in the
+        ad account's timezone, and a date-only value starts at 00:00 local.
+        Defaults to now.
+                end_date: ISO 8601 date or date-time, read like `startDate`; a date-only
+        value ends at 23:59:59 local. Required when `budgetType` is
+        `lifetime`.
                 countries: ISO 3166-1 alpha-2 country codes. Defaults to `["US"]` only
         when no other geo (`cities`, `regions`, `zips`, `metros`,
         `customLocations`) is supplied.
@@ -21814,6 +22077,32 @@ def register_generated_tools(mcp, _get_client):
         additionally enforces co-selection rules and restricts which
         placements are eligible for click-to-WhatsApp ads, returning an actionable
         error which we surface.
+                gender: Restrict the audience by gender (Meta `genders`). Stored on the ad and read back in `targeting.gender`.
+                languages: Audience languages (Meta `locales`). A bare ISO 639-1 code targets all regional variants ("en" = all English), a region-qualified code a specific one ("en_GB", "pt_BR"); unknown codes are rejected.
+                places: Meta place keys (from GET /v1/ads/targeting/search).
+                neighborhoods: Meta neighborhood keys (from GET /v1/ads/targeting/search).
+                excluded_locations: Geo to exclude, same shape as POST /v1/ads/create (countries, countryGroups, regions, cities, zips, places, neighborhoods, customLocations).
+                behaviors: Meta behavior ids. Each dimension is its own flexible_spec entry: OR within, AND across.
+                work_positions
+                work_employers
+                work_industries
+                income_tier: Normalized household-income tier, same as POST /v1/ads/create. Incompatible with housing, employment and credit specialAdCategories.
+                user_os: Meta `user_os`, e.g. ["iOS_ver_14.0_and_above"].
+                user_device: Meta `user_device`.
+                audience_include: Custom or lookalike audience ids to include.
+                audience_exclude: Custom or lookalike audience ids to exclude.
+                saved_targeting_id: ID of a saved_targeting audience (POST /v1/ads/audiences), expanded as the base targeting. Precedence: savedTargetingId, then `targeting`, then the flat fields.
+                targeting: Nested targeting object, same contract as POST /v1/ads/create and boost. Flat fields win per key.
+                raw_targeting: Meta targeting spec sent as the BASE layer of the ad set's
+        `targeting`, exactly as POST /v1/ads/create does: use it for
+        anything the flat fields cannot express, such as a layered
+        `flexible_spec` (entries AND together, ids inside one entry OR).
+        Flat fields you also send are layered on top and win per key.
+        With rawTargeting present the US geo and `advantage_audience: 0`
+        defaults are not injected, so include `targeting_automation` in
+        it (or send `advantageAudience`), as Meta requires it on create.
+                special_ad_categories: Meta special ad categories on the new campaign.
+                special_ad_category_country: Countries the special ad category applies to. Requires specialAdCategories.
                 advantage_audience: Meta's Advantage+ audience expansion. `0` (default) keeps
         targeting strict; `1` lets Meta expand beyond the supplied
         targeting when its delivery system finds better matches.
@@ -21881,14 +22170,18 @@ def register_generated_tools(mcp, _get_client):
                 whatsapp_phone_number=whatsapp_phone_number,
                 headline=headline,
                 body=body,
+                description=description,
                 image_url=image_url,
                 video=video,
                 welcome_message=welcome_message,
                 creatives=creatives,
                 ad_set_id=ad_set_id,
+                existing_campaign_id=existing_campaign_id,
+                budget_level=budget_level,
                 budget_amount=budget_amount,
                 budget_type=budget_type,
                 currency=currency,
+                start_date=start_date,
                 end_date=end_date,
                 countries=countries,
                 cities=cities,
@@ -21902,6 +22195,25 @@ def register_generated_tools(mcp, _get_client):
                 interests=interests,
                 audience_id=audience_id,
                 placements=placements,
+                gender=gender,
+                languages=languages,
+                places=places,
+                neighborhoods=neighborhoods,
+                excluded_locations=excluded_locations,
+                behaviors=behaviors,
+                work_positions=work_positions,
+                work_employers=work_employers,
+                work_industries=work_industries,
+                income_tier=income_tier,
+                user_os=user_os,
+                user_device=user_device,
+                audience_include=audience_include,
+                audience_exclude=audience_exclude,
+                saved_targeting_id=saved_targeting_id,
+                targeting=targeting,
+                raw_targeting=raw_targeting,
+                special_ad_categories=special_ad_categories,
+                special_ad_category_country=special_ad_category_country,
                 advantage_audience=advantage_audience,
                 objective=objective,
                 status=status,
