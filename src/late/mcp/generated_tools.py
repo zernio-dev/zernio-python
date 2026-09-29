@@ -19263,6 +19263,65 @@ def register_generated_tools(mcp, _get_client):
 
     @mcp.tool(
         annotations=ToolAnnotations(
+            title="List iMessage sandbox contacts",
+            readOnlyHint=True,
+            destructiveHint=False,
+            openWorldHint=False,
+        )
+    )
+    def imessage_list_imessage_sandbox_contacts() -> str:
+        """List iMessage sandbox contacts"""
+        client = _get_client()
+        try:
+            response = client.imessage.list_imessage_sandbox_contacts()
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Add an iMessage sandbox contact",
+            readOnlyHint=False,
+            destructiveHint=True,
+            openWorldHint=True,
+        )
+    )
+    def imessage_add_imessage_sandbox_contact(handle: str) -> str:
+        """Add an iMessage sandbox contact
+
+        Args:
+            handle: Phone in international format (+15551234567) or an Apple ID email (required)"""
+        client = _get_client()
+        try:
+            response = client.imessage.add_imessage_sandbox_contact(handle=handle)
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Remove an iMessage sandbox contact",
+            readOnlyHint=False,
+            destructiveHint=True,
+            openWorldHint=True,
+        )
+    )
+    def imessage_remove_imessage_sandbox_contact(contact_id: str) -> str:
+        """Remove an iMessage sandbox contact
+
+        Args:
+            contact_id: (required)"""
+        client = _get_client()
+        try:
+            response = client.imessage.remove_imessage_sandbox_contact(
+                contact_id=contact_id
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
             title="Subscribe or opt out an iMessage contact",
             readOnlyHint=False,
             destructiveHint=True,

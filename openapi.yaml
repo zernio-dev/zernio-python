@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.149.0"
+  version: "1.150.0"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -1812,6 +1812,17 @@ components:
         displayName: { type: [string, "null"] }
         failureReason: { type: [string, "null"] }
         accountId: { type: [string, "null"], description: The messaging account created at activation }
+        createdAt: { type: string, format: date-time }
+    ImessageSandboxContact:
+      type: object
+      properties:
+        id: { type: string }
+        handle: { type: string, description: 'Phone (E.164) or lowercase Apple ID email' }
+        status: { type: string, enum: [pending, active] }
+        joinText: { type: string, description: 'Send this from the handle to the sandbox line to activate it' }
+        joinLink: { type: string, description: 'Opens Messages on the sandbox line with joinText prefilled' }
+        activatedAt: { type: [string, "null"], format: date-time }
+        lastInboundAt: { type: [string, "null"], format: date-time, description: 'Replies are allowed for 24 hours after this' }
         createdAt: { type: string, format: date-time }
     ImessageAudienceContact:
       type: object
@@ -39086,6 +39097,85 @@ paths:
                   skip: { type: integer }
         '400': { $ref: '#/components/responses/BadRequest' }
         '401': { $ref: '#/components/responses/Unauthorized' }
+
+  /v1/imessage/sandbox/contacts:
+    get:
+      operationId: listImessageSandboxContacts
+      summary: List iMessage sandbox contacts
+      description: 'The shared sandbox line and your sandbox contacts. The sandbox lets you test iMessage without ordering a sender: add your own phone or Apple ID email, send its join code to the sandbox line from that phone, and your messages reach your inbox and webhooks. Replies are allowed for 24 hours after each message from the contact. Group chats and starting conversations are not supported.'
+      tags: [iMessage]
+      security: [{ bearerAuth: [] }]
+      responses:
+        '200':
+          description: Sandbox line and contacts
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  sandbox:
+                    type: object
+                    properties:
+                      accountId: { type: string, description: 'Use as accountId to reply from the sandbox line' }
+                      handle: { type: string, description: The sandbox line to message }
+                      contactLimit: { type: integer }
+                  contacts:
+                    type: array
+                    items: { $ref: '#/components/schemas/ImessageSandboxContact' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { description: 'Your plan does not include the inbox' }
+        '404': { description: 'The sandbox is not available right now' }
+    post:
+      operationId: addImessageSandboxContact
+      summary: Add an iMessage sandbox contact
+      description: 'Adds your own phone (E.164) or Apple ID email. The contact starts as pending; it becomes active when its joinText arrives at the sandbox line from that handle (joinLink opens Messages with it prefilled). Adding a handle that is already on your list returns it unchanged.'
+      tags: [iMessage]
+      security: [{ bearerAuth: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [handle]
+              properties:
+                handle: { type: string, description: 'Phone in international format (+15551234567) or an Apple ID email' }
+      responses:
+        '201':
+          description: Contact added
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  contact: { $ref: '#/components/schemas/ImessageSandboxContact' }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { description: 'Your plan does not include the inbox' }
+        '404': { description: 'The sandbox is not available right now' }
+        '409': { description: 'Contact limit reached, or the handle is on someone else''s sandbox list' }
+
+  /v1/imessage/sandbox/contacts/{contactId}:
+    delete:
+      operationId: removeImessageSandboxContact
+      summary: Remove an iMessage sandbox contact
+      description: 'Removes the contact and its sandbox conversation. Messages from that handle to the sandbox line are no longer delivered to you.'
+      tags: [iMessage]
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - { name: contactId, in: path, required: true, schema: { type: string } }
+      responses:
+        '200':
+          description: Removed
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success: { type: boolean }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404': { description: 'Sandbox contact not found' }
 
   /v1/imessage/audience/subscription:
     post:

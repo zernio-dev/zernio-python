@@ -173,6 +173,21 @@ class ImessageResource:
         )
         return self._client._get("/v1/imessage/audience", params=params)
 
+    def list_imessage_sandbox_contacts(self) -> dict[str, Any]:
+        """List iMessage sandbox contacts"""
+        return self._client._get("/v1/imessage/sandbox/contacts")
+
+    def add_imessage_sandbox_contact(self, handle: str) -> dict[str, Any]:
+        """Add an iMessage sandbox contact"""
+        payload = self._build_payload(
+            handle=handle,
+        )
+        return self._client._post("/v1/imessage/sandbox/contacts", data=payload)
+
+    def remove_imessage_sandbox_contact(self, contact_id: str) -> dict[str, Any]:
+        """Remove an iMessage sandbox contact"""
+        return self._client._delete(f"/v1/imessage/sandbox/contacts/{contact_id}")
+
     def set_imessage_subscription(
         self, account_id: str, conversation_id: str, subscribed: bool
     ) -> dict[str, Any]:
@@ -392,6 +407,23 @@ class ImessageResource:
             skip=skip,
         )
         return await self._client._aget("/v1/imessage/audience", params=params)
+
+    async def alist_imessage_sandbox_contacts(self) -> dict[str, Any]:
+        """List iMessage sandbox contacts (async)"""
+        return await self._client._aget("/v1/imessage/sandbox/contacts")
+
+    async def aadd_imessage_sandbox_contact(self, handle: str) -> dict[str, Any]:
+        """Add an iMessage sandbox contact (async)"""
+        payload = self._build_payload(
+            handle=handle,
+        )
+        return await self._client._apost("/v1/imessage/sandbox/contacts", data=payload)
+
+    async def aremove_imessage_sandbox_contact(self, contact_id: str) -> dict[str, Any]:
+        """Remove an iMessage sandbox contact (async)"""
+        return await self._client._adelete(
+            f"/v1/imessage/sandbox/contacts/{contact_id}"
+        )
 
     async def aset_imessage_subscription(
         self, account_id: str, conversation_id: str, subscribed: bool

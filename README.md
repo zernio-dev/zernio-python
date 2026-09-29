@@ -968,6 +968,7 @@ Both `from zernio import ...` and `from late import ...` work identically. The `
 |--------|-------------|
 | `imessage.list_imessage_audience()` | List iMessage audience |
 | `imessage.list_imessage_available_numbers()` | List instantly available iMessage numbers |
+| `imessage.list_imessage_sandbox_contacts()` | List iMessage sandbox contacts |
 | `imessage.list_imessage_sender_orders()` | List iMessage sender orders |
 | `imessage.list_imessage_senders()` | List iMessage senders |
 | `imessage.create_imessage_group()` | Start an iMessage group chat |
@@ -977,10 +978,12 @@ Both `from zernio import ...` and `from late import ...` work identically. The `
 | `imessage.update_imessage_group()` | Rename an iMessage group or change its photo |
 | `imessage.update_imessage_sender()` | Update an iMessage sender |
 | `imessage.add_imessage_group_participant()` | Add a participant to an iMessage group |
+| `imessage.add_imessage_sandbox_contact()` | Add an iMessage sandbox contact |
 | `imessage.cancel_imessage_sender()` | Cancel an iMessage sender |
 | `imessage.order_imessage_sender()` | Order a new iMessage sender |
 | `imessage.register_imessage_sender()` | Register an iMessage sender |
 | `imessage.remove_imessage_group_participant()` | Remove a participant from an iMessage group |
+| `imessage.remove_imessage_sandbox_contact()` | Remove an iMessage sandbox contact |
 | `imessage.reserve_imessage_available_number()` | Reserve an available iMessage number |
 | `imessage.set_imessage_subscription()` | Subscribe or opt out an iMessage contact |
 
