@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.146.0"
+  version: "1.146.1"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -11468,7 +11468,7 @@ components:
         status: { allOf: [{ $ref: '#/components/schemas/AdStatus' }], description: "Delivery status. Derived from the platform `effective_status`, so it inherits ancestor pauses (an ACTIVE ad under a PAUSED campaign reads `paused`). For the ad's own on/off toggle use `configuredStatus`; for the review state use `reviewStatus`." }
         configuredStatus:
           type: [string, "null"]
-          description: "The ad's own on/off switch as configured on the platform, independent of its parents: an ACTIVE ad under a paused ad set or campaign still reads ACTIVE here while `status` reads `paused`. Sources: Meta `configured_status`, TikTok ad `operation_status` (ENABLE -> ACTIVE, DISABLE -> PAUSED), ChatGPT (OpenAI) ad `status` (ACTIVE / PAUSED, plus ARCHIVED on OpenAI). Distinct from `status`, which is the ancestor-cascaded delivery status. Only present for Meta, TikTok and OpenAI ads created or synced after the field was added for that platform; null otherwise."
+          description: "The ad's own on/off switch as configured on the platform, independent of its parents: an ACTIVE ad under a paused ad set or campaign still reads ACTIVE here while `status` reads `paused`. Sources: Meta `configured_status`, TikTok ad `operation_status` (ENABLE -> ACTIVE, DISABLE -> PAUSED), ChatGPT (OpenAI) ad `status` (ACTIVE / PAUSED, plus ARCHIVED on OpenAI). On create it is read back from the platform, not copied from the request, so it can read ACTIVE for a `PAUSED` create where the platform holds the pause at the campaign (some Meta create flows). A TikTok ad created `PAUSED` is switched off at the ad, ad group and campaign and reads PAUSED. Distinct from `status`, which is the ancestor-cascaded delivery status. Only present for Meta, TikTok and OpenAI ads created or synced after the field was added for that platform; null otherwise."
           example: ACTIVE
         reviewStatus:
           allOf: [{ $ref: '#/components/schemas/AdReviewStatus' }]
@@ -51847,7 +51847,10 @@ paths:
         effective story/media IDs). `platform` is inferred from the ad, so it's
         not required in the body. Ads in terminal statuses (rejected, completed,
         cancelled) are skipped, and so is a request whose target already matches
-        the ad's own switch. The rolled-up `status` never decides a skip.
+        the ad's own switch as read LIVE from the platform (a stored value is
+        never trusted alone, since the switch may have been changed in the
+        platform's own UI). A skip also returns that live read. The rolled-up
+        `status` never decides a skip.
       security:
         - bearerAuth: []
       parameters:
