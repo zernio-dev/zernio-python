@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.157.1"
+  version: "1.158.0"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -43126,7 +43126,8 @@ paths:
                       entire pool). Empty when out of stock (or the area
                       lookup failed). Pass a chosen `ndc` as `areaCode` on POST
                       /v1/phone-numbers/purchase (or on the KYC submit for
-                      regulated countries) to require that area.
+                      regulated countries) to require that area. Equal to
+                      `areaAvailability.inStock`.
                     items:
                       type: object
                       properties:
@@ -43136,8 +43137,10 @@ paths:
                   soldOutAreas:
                     type: array
                     description: >
-                      Areas that had stock in the last 90 days and have none
-                      now. Pass one as `areaCode` with `preOrder: true` on the
+                      Every area of the country's numbering plan with nothing
+                      deliverable now: `areaAvailability.preOrder` plus
+                      `areaAvailability.outOfStock`, kept for older clients.
+                      Pass one as `areaCode` with `preOrder: true` on the
                       KYC submit when `preOrderable` is true, or watch it with
                       POST /v1/phone-numbers/stock-watches.
                     items:
@@ -43146,6 +43149,43 @@ paths:
                         ndc: { type: string, description: 'Area code (national destination code).' }
                         name: { type: string, description: 'Area name.' }
                         preOrderable: { type: boolean, description: 'Whether this area can be pre-ordered: the carrier sources a number in it (usually 2 to 4 weeks, never guaranteed).' }
+                  areaAvailability:
+                    type: object
+                    description: >
+                      Every area of the country's numbering plan (Google
+                      libphonenumber geocoding, one row per city: Madrid covers
+                      910 to 919), in one of three states, refreshed every 6
+                      hours from the carrier's own inventory counts. The same
+                      answer the dashboard picker and the public country pages
+                      show. Empty lists mean the pair has no cached coverage yet,
+                      not that the country has no areas.
+                    properties:
+                      inStock:
+                        type: array
+                        description: 'Deliverable numbers now, deepest first. Pass `ndc` as `areaCode` to hold the order to it.'
+                        items:
+                          type: object
+                          properties:
+                            ndc: { type: string }
+                            name: { type: string }
+                            count: { type: integer, description: 'Numbers we can sell there: the carrier count minus the numbers we hold back (WhatsApp refused them or another order holds them).' }
+                      preOrder:
+                        type: array
+                        description: 'The carrier lists nothing there and the number type is a document tier: submit KYC with `areaCode` and `preOrder: true`, the carrier sources one (usually 2 to 4 weeks, never guaranteed), nothing is billed until it is active.'
+                        items:
+                          type: object
+                          properties:
+                            ndc: { type: string }
+                            name: { type: string }
+                      outOfStock:
+                        type: array
+                        description: 'Nothing deliverable and no pre-order: `listed` > 0 is stock the carrier shows that WhatsApp refused recently (held back until it clears), 0 is a dry area of an instant tier. A stock watch (POST /v1/phone-numbers/stock-watches with `areaCode`) is the way to hear when it is back.'
+                        items:
+                          type: object
+                          properties:
+                            ndc: { type: string }
+                            name: { type: string }
+                            listed: { type: integer }
         '400': { description: 'Country not offerable, or the inventory provider rejected the lookup (its 4xx status is forwarded as-is).' }
         '401': { $ref: '#/components/responses/Unauthorized' }
         '502': { description: 'The inventory provider was unreachable or returned an unclassified error.' }
@@ -43537,7 +43577,8 @@ paths:
                       entire pool). Empty when out of stock (or the area
                       lookup failed). Pass a chosen `ndc` as `areaCode` on POST
                       /v1/phone-numbers/purchase (or on the KYC submit for
-                      regulated countries) to require that area.
+                      regulated countries) to require that area. Equal to
+                      `areaAvailability.inStock`.
                     items:
                       type: object
                       properties:
@@ -43547,8 +43588,10 @@ paths:
                   soldOutAreas:
                     type: array
                     description: >
-                      Areas that had stock in the last 90 days and have none
-                      now. Pass one as `areaCode` with `preOrder: true` on the
+                      Every area of the country's numbering plan with nothing
+                      deliverable now: `areaAvailability.preOrder` plus
+                      `areaAvailability.outOfStock`, kept for older clients.
+                      Pass one as `areaCode` with `preOrder: true` on the
                       KYC submit when `preOrderable` is true, or watch it with
                       POST /v1/phone-numbers/stock-watches.
                     items:
@@ -43557,6 +43600,43 @@ paths:
                         ndc: { type: string, description: 'Area code (national destination code).' }
                         name: { type: string, description: 'Area name.' }
                         preOrderable: { type: boolean, description: 'Whether this area can be pre-ordered: the carrier sources a number in it (usually 2 to 4 weeks, never guaranteed).' }
+                  areaAvailability:
+                    type: object
+                    description: >
+                      Every area of the country's numbering plan (Google
+                      libphonenumber geocoding, one row per city: Madrid covers
+                      910 to 919), in one of three states, refreshed every 6
+                      hours from the carrier's own inventory counts. The same
+                      answer the dashboard picker and the public country pages
+                      show. Empty lists mean the pair has no cached coverage yet,
+                      not that the country has no areas.
+                    properties:
+                      inStock:
+                        type: array
+                        description: 'Deliverable numbers now, deepest first. Pass `ndc` as `areaCode` to hold the order to it.'
+                        items:
+                          type: object
+                          properties:
+                            ndc: { type: string }
+                            name: { type: string }
+                            count: { type: integer, description: 'Numbers we can sell there: the carrier count minus the numbers we hold back (WhatsApp refused them or another order holds them).' }
+                      preOrder:
+                        type: array
+                        description: 'The carrier lists nothing there and the number type is a document tier: submit KYC with `areaCode` and `preOrder: true`, the carrier sources one (usually 2 to 4 weeks, never guaranteed), nothing is billed until it is active.'
+                        items:
+                          type: object
+                          properties:
+                            ndc: { type: string }
+                            name: { type: string }
+                      outOfStock:
+                        type: array
+                        description: 'Nothing deliverable and no pre-order: `listed` > 0 is stock the carrier shows that WhatsApp refused recently (held back until it clears), 0 is a dry area of an instant tier. A stock watch (POST /v1/phone-numbers/stock-watches with `areaCode`) is the way to hear when it is back.'
+                        items:
+                          type: object
+                          properties:
+                            ndc: { type: string }
+                            name: { type: string }
+                            listed: { type: integer }
         '400': { description: 'Country not offerable, or the inventory provider rejected the lookup (its 4xx status is forwarded as-is).' }
         '401': { $ref: '#/components/responses/Unauthorized' }
         '502': { description: 'The inventory provider was unreachable or returned an unclassified error.' }
@@ -45284,13 +45364,21 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/PhoneNumberStockWatch'
+                allOf:
+                  - $ref: '#/components/schemas/PhoneNumberStockWatch'
+                  - type: object
+                    properties:
+                      preOrderable: { type: boolean, description: 'True when the watched area can be bought today as a pre-order (the carrier lists nothing there and the type is a document tier): submit KYC with `areaCode` and `preOrder: true` instead of waiting, usually 2 to 4 weeks, nothing billed until active. The watch is armed either way.' }
         '200':
           description: 'A watch for this country and type already existed; returned unchanged.'
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/PhoneNumberStockWatch'
+                allOf:
+                  - $ref: '#/components/schemas/PhoneNumberStockWatch'
+                  - type: object
+                    properties:
+                      preOrderable: { type: boolean, description: 'See the 201 response.' }
         '400': { $ref: '#/components/responses/BadRequest' }
         '401': { $ref: '#/components/responses/Unauthorized' }
         '409': { description: 'The country (or the watched area) is in stock right now (buy instead of watching), or the 20-watch limit is reached (code invalid_resource_state).' }
