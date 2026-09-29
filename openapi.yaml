@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.148.0"
+  version: "1.148.1"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -37052,6 +37052,7 @@ paths:
         '400': { description: "Validation error (invalid name format, missing fields, invalid category)" }
         '401': { $ref: '#/components/responses/Unauthorized' }
         '404': { description: WhatsApp account not found }
+        '502': { description: Meta rejected the request or was unreachable. Meta 4xx statuses are forwarded as-is. }
 
   /v1/whatsapp/templates/{templateName}:
     get:
@@ -67205,7 +67206,7 @@ paths:
                       rows:
                         type: array
                         items: { type: object, additionalProperties: true }
-        '400': { description: Invalid query parameter. }
+        '400': { description: 'Invalid query parameter, or (Meta) the startTime/endTime window is too large for Meta to answer: narrow it, e.g. into 7-day ranges.' }
         '401': { $ref: '#/components/responses/Unauthorized' }
         '403': { description: 'Ads access required (Ads add-on on legacy plans, included on usage-based plans), or the Meta token lacks ads permissions (reconnect required).' }
         '404': { $ref: '#/components/responses/AccountUnavailable' }
