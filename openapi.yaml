@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.158.0"
+  version: "1.159.0"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -26821,6 +26821,11 @@ paths:
                       errors: 0
         '400': { description: Missing required fields }
         '401': { $ref: '#/components/responses/Unauthorized' }
+        '409':
+          description: 'The sign-in behind tempToken was already used by an earlier selection or has expired (code oauth_sign_in_consumed); start a new sign-in or send refreshToken'
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ErrorResponse' }
         '500': { description: Failed to connect LinkedIn account }
 
   /v1/connect/pinterest/select-board:
@@ -43200,6 +43205,8 @@ paths:
                             ndc: { type: string }
                             name: { type: string }
                             count: { type: integer, description: 'Numbers we can sell there: the carrier count minus the numbers we hold back (WhatsApp refused them or another order holds them).' }
+                            ndcs: { type: array, items: { type: string }, description: 'Every area code of the city, deepest first (Madrid: 915, 911, 910, ...). `ndc` is the one an order is placed against.' }
+                            aliases: { type: array, items: { type: string }, description: 'Other names the area answers to, present only when it has some (Milano for Milan, Sevilla for Seville).' }
                       preOrder:
                         type: array
                         description: 'The carrier lists nothing there and the number type is a document tier: submit KYC with `areaCode` and `preOrder: true`, the carrier sources one (usually 2 to 4 weeks, never guaranteed), nothing is billed until it is active.'
@@ -43208,6 +43215,8 @@ paths:
                           properties:
                             ndc: { type: string }
                             name: { type: string }
+                            ndcs: { type: array, items: { type: string }, description: 'Every area code of the city, deepest first (Madrid: 915, 911, 910, ...). `ndc` is the one an order is placed against.' }
+                            aliases: { type: array, items: { type: string }, description: 'Other names the area answers to, present only when it has some (Milano for Milan, Sevilla for Seville).' }
                       outOfStock:
                         type: array
                         description: 'Nothing deliverable and no pre-order: `listed` > 0 is stock the carrier shows that WhatsApp refused recently (held back until it clears), 0 is a dry area of an instant tier. A stock watch (POST /v1/phone-numbers/stock-watches with `areaCode`) is the way to hear when it is back.'
@@ -43217,6 +43226,8 @@ paths:
                             ndc: { type: string }
                             name: { type: string }
                             listed: { type: integer }
+                            ndcs: { type: array, items: { type: string }, description: 'Every area code of the city, deepest first (Madrid: 915, 911, 910, ...). `ndc` is the one an order is placed against.' }
+                            aliases: { type: array, items: { type: string }, description: 'Other names the area answers to, present only when it has some (Milano for Milan, Sevilla for Seville).' }
         '400': { description: 'Country not offerable, or the inventory provider rejected the lookup (its 4xx status is forwarded as-is).' }
         '401': { $ref: '#/components/responses/Unauthorized' }
         '502': { description: 'The inventory provider was unreachable or returned an unclassified error.' }
@@ -43651,6 +43662,8 @@ paths:
                             ndc: { type: string }
                             name: { type: string }
                             count: { type: integer, description: 'Numbers we can sell there: the carrier count minus the numbers we hold back (WhatsApp refused them or another order holds them).' }
+                            ndcs: { type: array, items: { type: string }, description: 'Every area code of the city, deepest first (Madrid: 915, 911, 910, ...). `ndc` is the one an order is placed against.' }
+                            aliases: { type: array, items: { type: string }, description: 'Other names the area answers to, present only when it has some (Milano for Milan, Sevilla for Seville).' }
                       preOrder:
                         type: array
                         description: 'The carrier lists nothing there and the number type is a document tier: submit KYC with `areaCode` and `preOrder: true`, the carrier sources one (usually 2 to 4 weeks, never guaranteed), nothing is billed until it is active.'
@@ -43659,6 +43672,8 @@ paths:
                           properties:
                             ndc: { type: string }
                             name: { type: string }
+                            ndcs: { type: array, items: { type: string }, description: 'Every area code of the city, deepest first (Madrid: 915, 911, 910, ...). `ndc` is the one an order is placed against.' }
+                            aliases: { type: array, items: { type: string }, description: 'Other names the area answers to, present only when it has some (Milano for Milan, Sevilla for Seville).' }
                       outOfStock:
                         type: array
                         description: 'Nothing deliverable and no pre-order: `listed` > 0 is stock the carrier shows that WhatsApp refused recently (held back until it clears), 0 is a dry area of an instant tier. A stock watch (POST /v1/phone-numbers/stock-watches with `areaCode`) is the way to hear when it is back.'
@@ -43668,6 +43683,8 @@ paths:
                             ndc: { type: string }
                             name: { type: string }
                             listed: { type: integer }
+                            ndcs: { type: array, items: { type: string }, description: 'Every area code of the city, deepest first (Madrid: 915, 911, 910, ...). `ndc` is the one an order is placed against.' }
+                            aliases: { type: array, items: { type: string }, description: 'Other names the area answers to, present only when it has some (Milano for Milan, Sevilla for Seville).' }
         '400': { description: 'Country not offerable, or the inventory provider rejected the lookup (its 4xx status is forwarded as-is).' }
         '401': { $ref: '#/components/responses/Unauthorized' }
         '502': { description: 'The inventory provider was unreachable or returned an unclassified error.' }
