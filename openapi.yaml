@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.155.0"
+  version: "1.156.0"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -1891,9 +1891,9 @@ components:
           creative fields must NOT be set on this shape.
 
         Existing post references work on messaging and CTWA only (not call ads).
-        They cannot be combined with each other or with headline, body, imageUrl,
-        video, or welcomeMessage. No media is uploaded and the organic post is
-        retained. Fresh creatives still require headline, body, and image or video.
+        They cannot be combined with each other or with headline, body, imageUrl
+        or video. `welcomeMessage` works on them (it lives on the ad, not the post).
+        No media is uploaded and the organic post is retained. Fresh creatives still require headline, body, and image or video.
 
         The route enforces this at the Zod boundary; OpenAPI's
         `required` cannot express the OR cleanly.
@@ -1929,7 +1929,7 @@ components:
         platformPostId:
           type: string
           minLength: 1
-          description: 'Messaging and CTWA only. Platform post or reel ID, the same input boostPost takes as platformPostId. Facebook IDs become object_story_id; Instagram IDs become source_instagram_media_id using the connected Instagram identity. Mutually exclusive with objectStoryId and fresh creative fields.'
+          description: 'Messaging and CTWA only. Platform post or reel ID, the same input boostPost takes as platformPostId. Facebook IDs become object_story_id; Instagram IDs become source_instagram_media_id run as the media owner (resolved from the media on a Meta ads business-login connection, so no Instagram connection is needed). Mutually exclusive with objectStoryId and fresh creative fields.'
         existingPostId:
           type: string
           minLength: 1
@@ -2025,12 +2025,12 @@ components:
             objectStoryId reference. Fresh and existing creatives can be mixed.
           items:
             type: object
-            description: 'Supply headline, body, and image/video, or exactly one existing post reference. References cannot be combined with fresh creative fields.'
+            description: 'Supply headline, body, and image/video, or exactly one existing post reference. References cannot be combined with headline, body, imageUrl or video; welcomeMessage works on both.'
             properties:
               platformPostId:
                 type: string
                 minLength: 1
-                description: 'Messaging and CTWA only. Platform post or reel ID, the same input boostPost takes as platformPostId. Facebook IDs become object_story_id; Instagram IDs become source_instagram_media_id using the connected Instagram identity. Mutually exclusive with objectStoryId and fresh creative fields.'
+                description: 'Messaging and CTWA only. Platform post or reel ID, the same input boostPost takes as platformPostId. Facebook IDs become object_story_id; Instagram IDs become source_instagram_media_id run as the media owner (resolved from the media on a Meta ads business-login connection, so no Instagram connection is needed). Mutually exclusive with objectStoryId and fresh creative fields.'
               existingPostId:
                 type: string
                 minLength: 1

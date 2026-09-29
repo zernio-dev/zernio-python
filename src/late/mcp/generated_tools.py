@@ -21205,7 +21205,7 @@ def register_generated_tools(mcp, _get_client):
          (required)
                 campaign_name: Exact name for the campaign this request provisions. Omitted keeps `<name> - Campaign`. Ignored with `adSetId` (the ad set already has a campaign).
                 ad_set_name: Exact name for the ad set this request provisions. Omitted keeps `<name> - Ad Set`. Ignored with `adSetId`.
-                platform_post_id: Messaging and CTWA only. Platform post or reel ID, the same input boostPost takes as platformPostId. Facebook IDs become object_story_id; Instagram IDs become source_instagram_media_id using the connected Instagram identity. Mutually exclusive with objectStoryId and fresh creative fields.
+                platform_post_id: Messaging and CTWA only. Platform post or reel ID, the same input boostPost takes as platformPostId. Facebook IDs become object_story_id; Instagram IDs become source_instagram_media_id run as the media owner (resolved from the media on a Meta ads business-login connection, so no Instagram connection is needed). Mutually exclusive with objectStoryId and fresh creative fields.
                 existing_post_id: Alias of platformPostId, kept for existing callers. Sending both with different values is a 400.
                 object_story_id: Messaging and CTWA only. Raw Facebook pageId_postId reference, used as object_story_id even with an Instagram account. Mutually exclusive with platformPostId and fresh creative fields.
                 page_id: Facebook Page the ad runs as, when the connection was granted several Pages. Defaults to the Page bound to the connection. Any Page granted to the connection is accepted; other ids answer 400 listing the granted Pages. Same semantics as `pageId` on POST /v1/ads/create.
@@ -21478,7 +21478,7 @@ def register_generated_tools(mcp, _get_client):
          (required)
                 campaign_name: Exact name for the campaign this request provisions. Omitted keeps `<name> - Campaign`. Ignored with `adSetId` (the ad set already has a campaign).
                 ad_set_name: Exact name for the ad set this request provisions. Omitted keeps `<name> - Ad Set`. Ignored with `adSetId`.
-                platform_post_id: Messaging and CTWA only. Platform post or reel ID, the same input boostPost takes as platformPostId. Facebook IDs become object_story_id; Instagram IDs become source_instagram_media_id using the connected Instagram identity. Mutually exclusive with objectStoryId and fresh creative fields.
+                platform_post_id: Messaging and CTWA only. Platform post or reel ID, the same input boostPost takes as platformPostId. Facebook IDs become object_story_id; Instagram IDs become source_instagram_media_id run as the media owner (resolved from the media on a Meta ads business-login connection, so no Instagram connection is needed). Mutually exclusive with objectStoryId and fresh creative fields.
                 existing_post_id: Alias of platformPostId, kept for existing callers. Sending both with different values is a 400.
                 object_story_id: Messaging and CTWA only. Raw Facebook pageId_postId reference, used as object_story_id even with an Instagram account. Mutually exclusive with platformPostId and fresh creative fields.
                 page_id: Facebook Page the ad runs as, when the connection was granted several Pages. Defaults to the Page bound to the connection. Any Page granted to the connection is accepted; other ids answer 400 listing the granted Pages. Same semantics as `pageId` on POST /v1/ads/create.
@@ -21735,7 +21735,7 @@ def register_generated_tools(mcp, _get_client):
          (required)
                 campaign_name: Exact name for the campaign this request provisions. Omitted keeps `<name> - Campaign`. Ignored with `adSetId` (the ad set already has a campaign).
                 ad_set_name: Exact name for the ad set this request provisions. Omitted keeps `<name> - Ad Set`. Ignored with `adSetId`.
-                platform_post_id: Messaging and CTWA only. Platform post or reel ID, the same input boostPost takes as platformPostId. Facebook IDs become object_story_id; Instagram IDs become source_instagram_media_id using the connected Instagram identity. Mutually exclusive with objectStoryId and fresh creative fields.
+                platform_post_id: Messaging and CTWA only. Platform post or reel ID, the same input boostPost takes as platformPostId. Facebook IDs become object_story_id; Instagram IDs become source_instagram_media_id run as the media owner (resolved from the media on a Meta ads business-login connection, so no Instagram connection is needed). Mutually exclusive with objectStoryId and fresh creative fields.
                 existing_post_id: Alias of platformPostId, kept for existing callers. Sending both with different values is a 400.
                 object_story_id: Messaging and CTWA only. Raw Facebook pageId_postId reference, used as object_story_id even with an Instagram account. Mutually exclusive with platformPostId and fresh creative fields.
                 page_id: Facebook Page the ad runs as, when the connection was granted several Pages. Defaults to the Page bound to the connection. Any Page granted to the connection is accepted; other ids answer 400 listing the granted Pages. Same semantics as `pageId` on POST /v1/ads/create.
