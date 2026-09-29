@@ -22452,7 +22452,7 @@ def register_generated_tools(mcp, _get_client):
             area_code: Area code or national dialing code the number must start with, e.g. 415 or 91
             type: Alias of numberType, kept for existing callers
             prefix: Alias of areaCode, kept for existing callers
-            locality: City
+            locality: A city name, matched against the numbering plan (accents and common aliases allowed) and searched by that city's area codes; a name no city of the plan matches returns no numbers. `areaCode` takes a city name too.
             contains: Pattern to match within the number
             sms: true narrows the pool to SMS-capable numbers. Each result still carries its full `features` list for per-number capability badging.
             limit
@@ -30369,7 +30369,7 @@ def register_generated_tools(mcp, _get_client):
             area_code: Area code or national dialing code the number must start with, e.g. 415 or 91
             type: Alias of numberType, kept for existing callers
             prefix: Alias of areaCode, kept for existing callers
-            locality: City
+            locality: A city name, matched against the numbering plan (accents and common aliases allowed) and searched by that city's area codes; a name no city of the plan matches returns no numbers. `areaCode` takes a city name too.
             contains: Pattern to match within the number
             limit"""
         client = _get_client()

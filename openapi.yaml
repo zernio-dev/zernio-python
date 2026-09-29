@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.159.0"
+  version: "1.160.0"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -43068,7 +43068,7 @@ paths:
         - { name: areaCode, in: query, required: false, description: "Area code or national dialing code the number must start with, e.g. 415 or 91", schema: { type: string } }
         - { name: type, in: query, required: false, deprecated: true, description: "Alias of numberType, kept for existing callers", schema: { type: string } }
         - { name: prefix, in: query, required: false, deprecated: true, description: "Alias of areaCode, kept for existing callers", schema: { type: string } }
-        - { name: locality, in: query, required: false, description: City, schema: { type: string } }
+        - { name: locality, in: query, required: false, description: 'A city name, matched against the numbering plan (accents and common aliases allowed) and searched by that city''s area codes; a name no city of the plan matches returns no numbers. `areaCode` takes a city name too.', schema: { type: string } }
         - { name: contains, in: query, required: false, description: Pattern to match within the number, schema: { type: string } }
         - { name: sms, in: query, required: false, schema: { type: boolean }, description: "true narrows the pool to SMS-capable numbers. Each result still carries its full `features` list for per-number capability badging." }
         - { name: limit, in: query, required: false, schema: { type: integer, default: 20, maximum: 100 } }
@@ -43539,7 +43539,7 @@ paths:
         - { name: areaCode, in: query, required: false, description: "Area code or national dialing code the number must start with, e.g. 415 or 91", schema: { type: string } }
         - { name: type, in: query, required: false, deprecated: true, description: "Alias of numberType, kept for existing callers", schema: { type: string } }
         - { name: prefix, in: query, required: false, deprecated: true, description: "Alias of areaCode, kept for existing callers", schema: { type: string } }
-        - { name: locality, in: query, required: false, description: City, schema: { type: string } }
+        - { name: locality, in: query, required: false, description: 'A city name, matched against the numbering plan (accents and common aliases allowed) and searched by that city''s area codes; a name no city of the plan matches returns no numbers. `areaCode` takes a city name too.', schema: { type: string } }
         - { name: contains, in: query, required: false, description: Pattern to match within the number, schema: { type: string } }
         - { name: limit, in: query, required: false, schema: { type: integer, default: 20, maximum: 100 } }
       responses:
