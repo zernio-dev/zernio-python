@@ -92,6 +92,25 @@ class AccountSettingsResource:
         """Delete FB persistent menu"""
         return self._client._delete(f"/v1/accounts/{account_id}/messenger-menu")
 
+    def get_messenger_get_started(self, account_id: str) -> dict[str, Any]:
+        """Get FB Get Started button"""
+        return self._client._get(f"/v1/accounts/{account_id}/messenger-get-started")
+
+    def set_messenger_get_started(
+        self, account_id: str, payload: str
+    ) -> dict[str, Any]:
+        """Set FB Get Started button"""
+        payload = self._build_payload(
+            payload=payload,
+        )
+        return self._client._put(
+            f"/v1/accounts/{account_id}/messenger-get-started", data=payload
+        )
+
+    def delete_messenger_get_started(self, account_id: str) -> dict[str, Any]:
+        """Delete FB Get Started button"""
+        return self._client._delete(f"/v1/accounts/{account_id}/messenger-get-started")
+
     def get_instagram_ice_breakers(self, account_id: str) -> dict[str, Any]:
         """Get IG ice breakers"""
         return self._client._get(f"/v1/accounts/{account_id}/instagram-ice-breakers")
@@ -148,6 +167,29 @@ class AccountSettingsResource:
     async def adelete_messenger_menu(self, account_id: str) -> dict[str, Any]:
         """Delete FB persistent menu (async)"""
         return await self._client._adelete(f"/v1/accounts/{account_id}/messenger-menu")
+
+    async def aget_messenger_get_started(self, account_id: str) -> dict[str, Any]:
+        """Get FB Get Started button (async)"""
+        return await self._client._aget(
+            f"/v1/accounts/{account_id}/messenger-get-started"
+        )
+
+    async def aset_messenger_get_started(
+        self, account_id: str, payload: str
+    ) -> dict[str, Any]:
+        """Set FB Get Started button (async)"""
+        payload = self._build_payload(
+            payload=payload,
+        )
+        return await self._client._aput(
+            f"/v1/accounts/{account_id}/messenger-get-started", data=payload
+        )
+
+    async def adelete_messenger_get_started(self, account_id: str) -> dict[str, Any]:
+        """Delete FB Get Started button (async)"""
+        return await self._client._adelete(
+            f"/v1/accounts/{account_id}/messenger-get-started"
+        )
 
     async def aget_instagram_ice_breakers(self, account_id: str) -> dict[str, Any]:
         """Get IG ice breakers (async)"""

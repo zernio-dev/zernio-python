@@ -239,6 +239,75 @@ def register_generated_tools(mcp, _get_client):
 
     @mcp.tool(
         annotations=ToolAnnotations(
+            title="Get FB Get Started button",
+            readOnlyHint=True,
+            destructiveHint=False,
+            openWorldHint=False,
+        )
+    )
+    def account_settings_get_messenger_get_started(account_id: str) -> str:
+        """Get FB Get Started button
+
+        Args:
+            account_id: (required)"""
+        client = _get_client()
+        try:
+            response = client.account_settings.get_messenger_get_started(
+                account_id=account_id
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Set FB Get Started button",
+            readOnlyHint=False,
+            destructiveHint=True,
+            openWorldHint=True,
+        )
+    )
+    def account_settings_set_messenger_get_started(
+        account_id: str, payload: str
+    ) -> str:
+        """Set FB Get Started button
+
+        Args:
+            account_id: (required)
+            payload: Postback payload sent when a person taps Get Started, e.g. `GET_STARTED` or `zernio:workflow:<workflowId>`. (required)"""
+        client = _get_client()
+        try:
+            response = client.account_settings.set_messenger_get_started(
+                account_id=account_id, payload=payload
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Delete FB Get Started button",
+            readOnlyHint=False,
+            destructiveHint=True,
+            openWorldHint=True,
+        )
+    )
+    def account_settings_delete_messenger_get_started(account_id: str) -> str:
+        """Delete FB Get Started button
+
+        Args:
+            account_id: (required)"""
+        client = _get_client()
+        try:
+            response = client.account_settings.delete_messenger_get_started(
+                account_id=account_id
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
             title="Get IG ice breakers",
             readOnlyHint=True,
             destructiveHint=False,

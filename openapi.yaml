@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.147.1"
+  version: "1.148.0"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -34451,7 +34451,7 @@ paths:
       x-resource-group: "accounts"
       operationId: setMessengerMenu
       summary: Set FB persistent menu
-      description: Set the persistent menu for a Facebook Messenger account. Max 3 top-level items, max 5 nested items.
+      description: 'Set the persistent menu for a Facebook Messenger account. Max 3 top-level items, max 5 nested items. Meta only shows a persistent menu on a page that has a Get Started button, so set one first with PUT /v1/accounts/{accountId}/messenger-get-started. A postback button whose payload is `zernio:workflow:<workflowId>` starts that workflow when tapped; the workflow must be active on this account and profile.'
       tags: [Account Settings]
       security: [{ bearerAuth: [] }]
       parameters:
@@ -34477,6 +34477,8 @@ paths:
         '400':
           description: Invalid request
         '401': { $ref: '#/components/responses/Unauthorized' }
+        '409':
+          description: 'The page has no Get Started button. Set one with PUT /v1/accounts/{accountId}/messenger-get-started and retry.'
     delete:
       x-resource-group: "accounts"
       operationId: deleteMessengerMenu
@@ -34494,6 +34496,100 @@ paths:
           description: Menu deleted
         '400': { $ref: '#/components/responses/BadRequest' }
         '401': { $ref: '#/components/responses/Unauthorized' }
+
+  /v1/accounts/{accountId}/messenger-get-started:
+    get:
+      x-resource-group: "accounts"
+      operationId: getMessengerGetStarted
+      summary: Get FB Get Started button
+      description: 'Get the Get Started button payload for a Facebook Messenger account. `data` is null when the page has none.'
+      tags: [Account Settings]
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - name: accountId
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        '200':
+          description: Get Started button configuration
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: [object, "null"]
+                    properties:
+                      payload: { type: string, description: Postback payload sent when a person taps Get Started }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404': { $ref: '#/components/responses/NotFound' }
+    put:
+      x-resource-group: "accounts"
+      operationId: setMessengerGetStarted
+      summary: Set FB Get Started button
+      description: "Set the Get Started button shown on a Facebook page's Messenger welcome screen. Meta requires it before a persistent menu can be set. Tapping it sends a postback with `payload`, which arrives as a `message.received` webhook carrying it in `metadata.postbackPayload`. Use `zernio:workflow:<workflowId>` to start a workflow on the tap; the workflow must be active on this account and profile."
+      tags: [Account Settings]
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - name: accountId
+          in: path
+          required: true
+          schema: { type: string }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [payload]
+              properties:
+                payload:
+                  type: string
+                  minLength: 1
+                  maxLength: 1000
+                  description: "Postback payload sent when a person taps Get Started, e.g. `GET_STARTED` or `zernio:workflow:<workflowId>`."
+            example:
+              payload: "zernio:workflow:5190ac0343606395fce014b0"
+      responses:
+        '200':
+          description: Get Started button set
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success: { type: boolean }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404': { $ref: '#/components/responses/NotFound' }
+    delete:
+      x-resource-group: "accounts"
+      operationId: deleteMessengerGetStarted
+      summary: Delete FB Get Started button
+      description: 'Remove the Get Started button. Meta refuses while a persistent menu is set, so delete the menu first.'
+      tags: [Account Settings]
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - name: accountId
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        '200':
+          description: Get Started button deleted
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success: { type: boolean }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '409':
+          description: 'A persistent menu is still set. Delete it with DELETE /v1/accounts/{accountId}/messenger-menu first.'
 
   /v1/accounts/{accountId}/instagram-ice-breakers:
     get:

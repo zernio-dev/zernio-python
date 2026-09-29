@@ -404,12 +404,15 @@ Both `from zernio import ...` and `from late import ...` work identically. The `
 | Method | Description |
 |--------|-------------|
 | `account_settings.get_instagram_ice_breakers()` | Get IG ice breakers |
+| `account_settings.get_messenger_get_started()` | Get FB Get Started button |
 | `account_settings.get_messenger_menu()` | Get FB persistent menu |
 | `account_settings.get_telegram_commands()` | Get TG bot commands |
 | `account_settings.delete_instagram_ice_breakers()` | Delete IG ice breakers |
+| `account_settings.delete_messenger_get_started()` | Delete FB Get Started button |
 | `account_settings.delete_messenger_menu()` | Delete FB persistent menu |
 | `account_settings.delete_telegram_commands()` | Delete TG bot commands |
 | `account_settings.set_instagram_ice_breakers()` | Set IG ice breakers |
+| `account_settings.set_messenger_get_started()` | Set FB Get Started button |
 | `account_settings.set_messenger_menu()` | Set FB persistent menu |
 | `account_settings.set_telegram_commands()` | Set TG bot commands |
 
