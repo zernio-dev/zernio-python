@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.154.0"
+  version: "1.155.0"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -1793,7 +1793,7 @@ components:
       properties:
         id: { type: string }
         status: { type: string, enum: [pending, approved, expired, max_attempts_reached, canceled, delivery_failed] }
-        channel: { type: string, enum: [sms] }
+        channel: { type: string, enum: [sms, whatsapp] }
         to: { type: string }
         expiresAt: { type: string, format: date-time }
         attempts: { type: integer }
@@ -14603,7 +14603,7 @@ webhooks:
                   type: object
                   properties:
                     verificationId: { type: string }
-                    channel: { type: string, enum: [sms] }
+                    channel: { type: string, enum: [sms, whatsapp] }
                     to: { type: string }
       responses:
         '200':
@@ -14633,7 +14633,7 @@ webhooks:
                   type: object
                   properties:
                     verificationId: { type: string }
-                    channel: { type: string, enum: [sms] }
+                    channel: { type: string, enum: [sms, whatsapp] }
                     to: { type: string }
                 reason: { type: string, enum: [max_attempts_reached] }
       responses:
@@ -71100,10 +71100,22 @@ paths:
         one per 60 seconds (429 with `retryAfterSeconds` inside the cooldown).
         The stored brandName/codeLength/ttlMinutes win on a resend.
 
-        Codes deliver by SMS from a phone number on your account (`from`
-        optional when you own exactly one SMS-enabled number) and the message
-        uses a fixed template. Each accepted send bills one verification fee
-        plus the standard message rate.
+        Codes deliver from a number on your account (`from` optional when
+        you own exactly one number on the channel), always with a fixed
+        template:
+
+        - `sms`: from an SMS-enabled number. Each accepted send bills one
+          verification fee plus the standard message rate.
+        - `whatsapp`: from a connected WhatsApp number, as a Meta
+          AUTHENTICATION template with a copy-code button. The first
+          WhatsApp verification on a WhatsApp Business Account creates the
+          `zernio_verify_code` template there and answers 422
+          `template_pending` until Meta approves it (usually minutes; retry
+          after `retryAfterSeconds`). Meta fixes the message text, so
+          `brandName` is not shown and the code's validity is not stated in
+          the message (`ttlMinutes` is still enforced). Each accepted send
+          bills one verification fee; Meta bills its authentication rate to
+          your WhatsApp Business Account.
       security:
         - bearerAuth: []
       requestBody:
@@ -71114,10 +71126,10 @@ paths:
               type: object
               required: [channel, to]
               properties:
-                channel: { type: string, enum: [sms], description: 'SMS-only for now.' }
-                to: { type: string, description: "E.164 phone number." }
-                from: { type: string, description: "The SMS-enabled number on your account to send from. Defaults to your only SMS number." }
-                brandName: { type: string, maxLength: 30, description: "Your app or business name, rendered in the message. Defaults to your account name. Letters, numbers, and basic punctuation only." }
+                channel: { type: string, enum: [sms, whatsapp] }
+                to: { type: string, description: "E.164 phone number. WhatsApp only delivers to a phone number, never to a username." }
+                from: { type: string, description: "The number on your account to send from: an SMS-enabled number for `sms`, a connected WhatsApp number for `whatsapp`. Defaults to your only number on that channel." }
+                brandName: { type: string, maxLength: 30, description: "Your app or business name, rendered in the SMS message. Defaults to your account name. Not shown on WhatsApp, where Meta fixes the message and shows your WhatsApp display name. Letters, numbers, and basic punctuation only." }
                 codeLength: { type: integer, minimum: 4, maximum: 8, default: 6 }
                 ttlMinutes: { type: integer, minimum: 1, maximum: 15, default: 10 }
       responses:
@@ -71136,9 +71148,9 @@ paths:
         '400': { $ref: '#/components/responses/BadRequest' }
         '401': { $ref: '#/components/responses/Unauthorized' }
         '403': { description: Verifications require usage-based billing. }
-        '404': { description: "The 'from' number is not an SMS-enabled number on this account." }
+        '404': { description: "The 'from' number is not an SMS-enabled (sms) or connected WhatsApp (whatsapp) number on this account." }
         '409': { description: The recipient has opted out of messages from your number. }
-        '422': { description: "Verifications need an SMS-enabled number on your account; add one first." }
+        '422': { description: "No number on your account for the channel (code linked_account_required), or, on whatsapp, the verification template is still in Meta review (code template_pending, retry after `retryAfterSeconds`) or was rejected, paused or disabled by Meta (code template_rejected, `details.status` and `details.reason` say why), or the WhatsApp number needs reconnection (code invalid_resource_state)." }
         '429': { description: 'Resend cooldown or a send cap was hit; `retryAfterSeconds` says when to retry.' }
 
   /v1/verify/verifications/{verificationId}:

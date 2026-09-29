@@ -26904,10 +26904,10 @@ def register_generated_tools(mcp, _get_client):
         """Send a verification code
 
         Args:
-            channel: SMS-only for now. (required)
-            to: E.164 phone number. (required)
-            from_: The SMS-enabled number on your account to send from. Defaults to your only SMS number.
-            brand_name: Your app or business name, rendered in the message. Defaults to your account name. Letters, numbers, and basic punctuation only.
+            channel: (required)
+            to: E.164 phone number. WhatsApp only delivers to a phone number, never to a username. (required)
+            from_: The number on your account to send from: an SMS-enabled number for `sms`, a connected WhatsApp number for `whatsapp`. Defaults to your only number on that channel.
+            brand_name: Your app or business name, rendered in the SMS message. Defaults to your account name. Not shown on WhatsApp, where Meta fixes the message and shows your WhatsApp display name. Letters, numbers, and basic punctuation only.
             code_length
             ttl_minutes"""
         client = _get_client()
