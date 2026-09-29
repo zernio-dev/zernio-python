@@ -79,6 +79,7 @@ class ConnectResource:
         profile_id: str,
         *,
         redirect_url: str | None = None,
+        scopes: str | None = None,
         headless: bool | None = False,
         login_method: str | None = "instagram_login",
         onboarding: str | None = None,
@@ -91,6 +92,7 @@ class ConnectResource:
         params = self._build_params(
             profile_id=profile_id,
             redirect_url=redirect_url,
+            scopes=scopes,
             headless=headless,
             login_method=login_method,
             onboarding=onboarding,
@@ -569,6 +571,7 @@ class ConnectResource:
         pending_data_token: str | None = None,
         account_id: str | None = None,
         redirect_url: str | None = None,
+        scopes: str | None = None,
     ) -> dict[str, Any]:
         """List Slack channels for the channel picker"""
         params = self._build_params(
@@ -576,6 +579,7 @@ class ConnectResource:
             pending_data_token=pending_data_token,
             account_id=account_id,
             redirect_url=redirect_url,
+            scopes=scopes,
         )
         return self._client._get("/v1/connect/slack", params=params)
 
@@ -886,6 +890,7 @@ class ConnectResource:
         profile_id: str,
         *,
         redirect_url: str | None = None,
+        scopes: str | None = None,
         headless: bool | None = False,
         login_method: str | None = "instagram_login",
         onboarding: str | None = None,
@@ -898,6 +903,7 @@ class ConnectResource:
         params = self._build_params(
             profile_id=profile_id,
             redirect_url=redirect_url,
+            scopes=scopes,
             headless=headless,
             login_method=login_method,
             onboarding=onboarding,
@@ -1398,6 +1404,7 @@ class ConnectResource:
         pending_data_token: str | None = None,
         account_id: str | None = None,
         redirect_url: str | None = None,
+        scopes: str | None = None,
     ) -> dict[str, Any]:
         """List Slack channels for the channel picker (async)"""
         params = self._build_params(
@@ -1405,6 +1412,7 @@ class ConnectResource:
             pending_data_token=pending_data_token,
             account_id=account_id,
             redirect_url=redirect_url,
+            scopes=scopes,
         )
         return await self._client._aget("/v1/connect/slack", params=params)
 
