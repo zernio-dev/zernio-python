@@ -410,7 +410,7 @@ class CommerceResource:
             f"/v1/commerce/products/{product_id}/duplicate", data=payload
         )
 
-    def list_product_metafields(
+    def list_commerce_product_metafields(
         self, product_id: str, account_id: str
     ) -> dict[str, Any]:
         """List product metafields"""
@@ -421,7 +421,7 @@ class CommerceResource:
             f"/v1/commerce/products/{product_id}/metafields", params=params
         )
 
-    def set_product_metafields(
+    def set_commerce_product_metafields(
         self, product_id: str, account_id: str, metafields: list[Any]
     ) -> dict[str, Any]:
         """Set product metafields"""
@@ -433,7 +433,7 @@ class CommerceResource:
             f"/v1/commerce/products/{product_id}/metafields", data=payload
         )
 
-    def delete_product_metafields(
+    def delete_commerce_product_metafields(
         self, product_id: str, account_id: str, keys: str
     ) -> dict[str, Any]:
         """Delete product metafields"""
@@ -445,7 +445,7 @@ class CommerceResource:
             f"/v1/commerce/products/{product_id}/metafields", params=params
         )
 
-    def change_product_channels(
+    def change_commerce_product_channels(
         self,
         product_id: str,
         account_id: str,
@@ -463,7 +463,7 @@ class CommerceResource:
             f"/v1/commerce/products/{product_id}/channels", data=payload
         )
 
-    def list_collection_metafields(
+    def list_commerce_collection_metafields(
         self, collection_id: str, account_id: str
     ) -> dict[str, Any]:
         """List collection metafields"""
@@ -474,7 +474,7 @@ class CommerceResource:
             f"/v1/commerce/collections/{collection_id}/metafields", params=params
         )
 
-    def set_collection_metafields(
+    def set_commerce_collection_metafields(
         self, collection_id: str, account_id: str, metafields: list[Any]
     ) -> dict[str, Any]:
         """Set collection metafields"""
@@ -486,7 +486,7 @@ class CommerceResource:
             f"/v1/commerce/collections/{collection_id}/metafields", data=payload
         )
 
-    def delete_collection_metafields(
+    def delete_commerce_collection_metafields(
         self, collection_id: str, account_id: str, keys: str
     ) -> dict[str, Any]:
         """Delete collection metafields"""
@@ -498,7 +498,7 @@ class CommerceResource:
             f"/v1/commerce/collections/{collection_id}/metafields", params=params
         )
 
-    def change_collection_channels(
+    def change_commerce_collection_channels(
         self,
         collection_id: str,
         account_id: str,
@@ -1469,7 +1469,7 @@ class CommerceResource:
             f"/v1/commerce/products/{product_id}/duplicate", data=payload
         )
 
-    async def alist_product_metafields(
+    async def alist_commerce_product_metafields(
         self, product_id: str, account_id: str
     ) -> dict[str, Any]:
         """List product metafields (async)"""
@@ -1480,7 +1480,7 @@ class CommerceResource:
             f"/v1/commerce/products/{product_id}/metafields", params=params
         )
 
-    async def aset_product_metafields(
+    async def aset_commerce_product_metafields(
         self, product_id: str, account_id: str, metafields: list[Any]
     ) -> dict[str, Any]:
         """Set product metafields (async)"""
@@ -1492,7 +1492,7 @@ class CommerceResource:
             f"/v1/commerce/products/{product_id}/metafields", data=payload
         )
 
-    async def adelete_product_metafields(
+    async def adelete_commerce_product_metafields(
         self, product_id: str, account_id: str, keys: str
     ) -> dict[str, Any]:
         """Delete product metafields (async)"""
@@ -1504,7 +1504,7 @@ class CommerceResource:
             f"/v1/commerce/products/{product_id}/metafields", params=params
         )
 
-    async def achange_product_channels(
+    async def achange_commerce_product_channels(
         self,
         product_id: str,
         account_id: str,
@@ -1522,7 +1522,7 @@ class CommerceResource:
             f"/v1/commerce/products/{product_id}/channels", data=payload
         )
 
-    async def alist_collection_metafields(
+    async def alist_commerce_collection_metafields(
         self, collection_id: str, account_id: str
     ) -> dict[str, Any]:
         """List collection metafields (async)"""
@@ -1533,7 +1533,7 @@ class CommerceResource:
             f"/v1/commerce/collections/{collection_id}/metafields", params=params
         )
 
-    async def aset_collection_metafields(
+    async def aset_commerce_collection_metafields(
         self, collection_id: str, account_id: str, metafields: list[Any]
     ) -> dict[str, Any]:
         """Set collection metafields (async)"""
@@ -1545,7 +1545,7 @@ class CommerceResource:
             f"/v1/commerce/collections/{collection_id}/metafields", data=payload
         )
 
-    async def adelete_collection_metafields(
+    async def adelete_commerce_collection_metafields(
         self, collection_id: str, account_id: str, keys: str
     ) -> dict[str, Any]:
         """Delete collection metafields (async)"""
@@ -1557,7 +1557,7 @@ class CommerceResource:
             f"/v1/commerce/collections/{collection_id}/metafields", params=params
         )
 
-    async def achange_collection_channels(
+    async def achange_commerce_collection_channels(
         self,
         collection_id: str,
         account_id: str,

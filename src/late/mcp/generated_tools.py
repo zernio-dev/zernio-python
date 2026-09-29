@@ -13500,7 +13500,9 @@ def register_generated_tools(mcp, _get_client):
             openWorldHint=False,
         )
     )
-    def commerce_list_product_metafields(product_id: str, account_id: str) -> str:
+    def commerce_list_commerce_product_metafields(
+        product_id: str, account_id: str
+    ) -> str:
         """List product metafields
 
         Args:
@@ -13508,7 +13510,7 @@ def register_generated_tools(mcp, _get_client):
             account_id: Connected store SocialAccount id. (required)"""
         client = _get_client()
         try:
-            response = client.commerce.list_product_metafields(
+            response = client.commerce.list_commerce_product_metafields(
                 product_id=product_id, account_id=account_id
             )
             return _format_response(response)
@@ -13523,7 +13525,7 @@ def register_generated_tools(mcp, _get_client):
             openWorldHint=True,
         )
     )
-    def commerce_set_product_metafields(
+    def commerce_set_commerce_product_metafields(
         product_id: str, account_id: str, metafields: list[dict[str, Any]] | None
     ) -> str:
         """Set product metafields
@@ -13534,7 +13536,7 @@ def register_generated_tools(mcp, _get_client):
             metafields: (required)"""
         client = _get_client()
         try:
-            response = client.commerce.set_product_metafields(
+            response = client.commerce.set_commerce_product_metafields(
                 product_id=product_id, account_id=account_id, metafields=metafields
             )
             return _format_response(response)
@@ -13549,7 +13551,7 @@ def register_generated_tools(mcp, _get_client):
             openWorldHint=True,
         )
     )
-    def commerce_delete_product_metafields(
+    def commerce_delete_commerce_product_metafields(
         product_id: str, account_id: str, keys: str
     ) -> str:
         """Delete product metafields
@@ -13560,7 +13562,7 @@ def register_generated_tools(mcp, _get_client):
             keys: Comma-separated namespace.key pairs. (required)"""
         client = _get_client()
         try:
-            response = client.commerce.delete_product_metafields(
+            response = client.commerce.delete_commerce_product_metafields(
                 product_id=product_id, account_id=account_id, keys=keys
             )
             return _format_response(response)
@@ -13575,7 +13577,7 @@ def register_generated_tools(mcp, _get_client):
             openWorldHint=True,
         )
     )
-    def commerce_change_product_channels(
+    def commerce_change_commerce_product_channels(
         product_id: str,
         account_id: str,
         publish: list[str] | None = None,
@@ -13590,7 +13592,7 @@ def register_generated_tools(mcp, _get_client):
             unpublish"""
         client = _get_client()
         try:
-            response = client.commerce.change_product_channels(
+            response = client.commerce.change_commerce_product_channels(
                 product_id=product_id,
                 account_id=account_id,
                 publish=publish,
@@ -13608,7 +13610,9 @@ def register_generated_tools(mcp, _get_client):
             openWorldHint=False,
         )
     )
-    def commerce_list_collection_metafields(collection_id: str, account_id: str) -> str:
+    def commerce_list_commerce_collection_metafields(
+        collection_id: str, account_id: str
+    ) -> str:
         """List collection metafields
 
         Args:
@@ -13616,7 +13620,7 @@ def register_generated_tools(mcp, _get_client):
             account_id: Connected store SocialAccount id. (required)"""
         client = _get_client()
         try:
-            response = client.commerce.list_collection_metafields(
+            response = client.commerce.list_commerce_collection_metafields(
                 collection_id=collection_id, account_id=account_id
             )
             return _format_response(response)
@@ -13631,7 +13635,7 @@ def register_generated_tools(mcp, _get_client):
             openWorldHint=True,
         )
     )
-    def commerce_set_collection_metafields(
+    def commerce_set_commerce_collection_metafields(
         collection_id: str, account_id: str, metafields: list[dict[str, Any]] | None
     ) -> str:
         """Set collection metafields
@@ -13642,7 +13646,7 @@ def register_generated_tools(mcp, _get_client):
             metafields: (required)"""
         client = _get_client()
         try:
-            response = client.commerce.set_collection_metafields(
+            response = client.commerce.set_commerce_collection_metafields(
                 collection_id=collection_id,
                 account_id=account_id,
                 metafields=metafields,
@@ -13659,7 +13663,7 @@ def register_generated_tools(mcp, _get_client):
             openWorldHint=True,
         )
     )
-    def commerce_delete_collection_metafields(
+    def commerce_delete_commerce_collection_metafields(
         collection_id: str, account_id: str, keys: str
     ) -> str:
         """Delete collection metafields
@@ -13670,7 +13674,7 @@ def register_generated_tools(mcp, _get_client):
             keys: Comma-separated namespace.key pairs. (required)"""
         client = _get_client()
         try:
-            response = client.commerce.delete_collection_metafields(
+            response = client.commerce.delete_commerce_collection_metafields(
                 collection_id=collection_id, account_id=account_id, keys=keys
             )
             return _format_response(response)
@@ -13685,7 +13689,7 @@ def register_generated_tools(mcp, _get_client):
             openWorldHint=True,
         )
     )
-    def commerce_change_collection_channels(
+    def commerce_change_commerce_collection_channels(
         collection_id: str,
         account_id: str,
         publish: list[str] | None = None,
@@ -13700,7 +13704,7 @@ def register_generated_tools(mcp, _get_client):
             unpublish"""
         client = _get_client()
         try:
-            response = client.commerce.change_collection_channels(
+            response = client.commerce.change_commerce_collection_channels(
                 collection_id=collection_id,
                 account_id=account_id,
                 publish=publish,

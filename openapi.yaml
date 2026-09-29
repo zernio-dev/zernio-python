@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.152.0"
+  version: "1.153.0"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -12516,7 +12516,7 @@ components:
     CommerceCapability:
       type: string
       description: 'An operation a store supports. Calling an operation outside this list answers 400 platform_not_supported.'
-      enum: [products.read, products.create, products.update, products.status, products.price, products.variants, products.images, products.images_remove, collections.read, collections.write, metafields.read, metafields.write, pages.read, pages.write, inventory.read, inventory.write, channels.read, channels.write, discounts.read, discounts.write, navigation.read, navigation.write, metaobjects.read, metaobjects.write, markets.read, markets.write, marketing.write]
+      enum: [products.read, products.create, products.update, products.status, products.price, products.variants, products.images, products.images_remove, collections.read, collections.write, collections.metafields, metafields.read, metafields.write, pages.read, pages.write, inventory.read, inventory.write, channels.read, channels.write, discounts.read, discounts.write, discounts.codes, navigation.read, navigation.write, metaobjects.read, metaobjects.write, markets.read, markets.write, marketing.write]
     CommerceImage:
       type: object
       properties:
@@ -68576,6 +68576,7 @@ paths:
       tags: ["Commerce"]
       x-platforms: ["shopify", "woocommerce"]
       summary: Get a product
+      description: 'One product with all its variants, options and images. Needs products.read. 404 product_not_found when the id does not exist in the store.'
       security:
         - bearerAuth: []
       parameters:
@@ -68793,6 +68794,7 @@ paths:
       tags: ["Commerce"]
       x-platforms: ["shopify", "woocommerce"]
       summary: Get a collection
+      description: 'One collection (a category on WooCommerce) with its image, sort order and product count. List its products with GET /v1/commerce/products?collectionId=. Needs collections.read.'
       security:
         - bearerAuth: []
       parameters:
@@ -69000,6 +69002,7 @@ paths:
       tags: ["Commerce"]
       x-platforms: ["shopify", "woocommerce"]
       summary: Delete variants
+      description: 'Deletes the variants in `variantIds` (comma-separated, up to 100) and returns the updated product. A product keeps at least one variant, so deleting every variant is refused by the platform. Needs products.variants.'
       security:
         - bearerAuth: []
       parameters:
@@ -69253,10 +69256,11 @@ paths:
   /v1/commerce/products/{productId}/metafields:
     get:
       x-resource-group: "commerce"
-      operationId: listProductMetafields
+      operationId: listCommerceProductMetafields
       tags: ["Commerce"]
       x-platforms: ["shopify", "woocommerce"]
       summary: List product metafields
+      description: 'The product''s custom fields (metafields on Shopify, public meta on WooCommerce) as namespace, key, type and value. Needs metafields.read.'
       security:
         - bearerAuth: []
       parameters:
@@ -69278,7 +69282,7 @@ paths:
         '429': { description: 'Rate limited, either by Zernio or by the platform. Retry later.' }
     put:
       x-resource-group: "commerce"
-      operationId: setProductMetafields
+      operationId: setCommerceProductMetafields
       tags: ["Commerce"]
       x-platforms: ["shopify", "woocommerce"]
       summary: Set product metafields
@@ -69318,10 +69322,11 @@ paths:
         '429': { description: 'Rate limited, either by Zernio or by the platform. Retry later.' }
     delete:
       x-resource-group: "commerce"
-      operationId: deleteProductMetafields
+      operationId: deleteCommerceProductMetafields
       tags: ["Commerce"]
       x-platforms: ["shopify", "woocommerce"]
       summary: Delete product metafields
+      description: 'Deletes the product custom fields named in `keys` (comma-separated `namespace.key`, up to 25) and returns how many were deleted. Needs metafields.write.'
       security:
         - bearerAuth: []
       parameters:
@@ -69346,7 +69351,7 @@ paths:
   /v1/commerce/products/{productId}/channels:
     post:
       x-resource-group: "commerce"
-      operationId: changeProductChannels
+      operationId: changeCommerceProductChannels
       tags: ["Commerce"]
       x-platforms: ["shopify"]
       summary: Publish or unpublish a product
@@ -69387,10 +69392,11 @@ paths:
   /v1/commerce/collections/{collectionId}/metafields:
     get:
       x-resource-group: "commerce"
-      operationId: listCollectionMetafields
+      operationId: listCommerceCollectionMetafields
       tags: ["Commerce"]
       x-platforms: ["shopify"]
       summary: List collection metafields
+      description: 'The collection''s metafields as namespace, key, type and value. Needs collections.metafields: WooCommerce keeps custom fields on products only and answers 400 platform_not_supported.'
       security:
         - bearerAuth: []
       parameters:
@@ -69412,12 +69418,12 @@ paths:
         '429': { description: 'Rate limited, either by Zernio or by the platform. Retry later.' }
     put:
       x-resource-group: "commerce"
-      operationId: setCollectionMetafields
+      operationId: setCommerceCollectionMetafields
       tags: ["Commerce"]
       x-platforms: ["shopify"]
       summary: Set collection metafields
       description: |
-        Creates or updates custom fields by namespace and key.
+        Creates or updates custom fields by namespace and key. Needs collections.metafields: WooCommerce keeps custom fields on products only and answers 400 platform_not_supported.
       security:
         - bearerAuth: []
       parameters:
@@ -69452,10 +69458,11 @@ paths:
         '429': { description: 'Rate limited, either by Zernio or by the platform. Retry later.' }
     delete:
       x-resource-group: "commerce"
-      operationId: deleteCollectionMetafields
+      operationId: deleteCommerceCollectionMetafields
       tags: ["Commerce"]
       x-platforms: ["shopify"]
       summary: Delete collection metafields
+      description: 'Deletes the collection metafields named in `keys` (comma-separated `namespace.key`, up to 25). Needs collections.metafields: WooCommerce answers 400 platform_not_supported.'
       security:
         - bearerAuth: []
       parameters:
@@ -69480,7 +69487,7 @@ paths:
   /v1/commerce/collections/{collectionId}/channels:
     post:
       x-resource-group: "commerce"
-      operationId: changeCollectionChannels
+      operationId: changeCommerceCollectionChannels
       tags: ["Commerce"]
       x-platforms: ["shopify"]
       summary: Publish or unpublish a collection
@@ -69617,6 +69624,7 @@ paths:
       tags: ["Commerce"]
       x-platforms: ["shopify", "woocommerce"]
       summary: List pages
+      description: 'The store''s content pages (Shopify online store pages, WordPress pages), cursor-paginated with `limit`, `cursor` and an optional `query`. Needs pages.read.'
       security:
         - bearerAuth: []
       parameters:
@@ -69645,6 +69653,7 @@ paths:
       tags: ["Commerce"]
       x-platforms: ["shopify", "woocommerce"]
       summary: Create a page
+      description: 'Creates a content page from `title`, optional `handle`, `bodyHtml` and `isPublished`, and returns it with status 201. Needs pages.write.'
       security:
         - bearerAuth: []
       requestBody:
@@ -69682,6 +69691,7 @@ paths:
       tags: ["Commerce"]
       x-platforms: ["shopify", "woocommerce"]
       summary: Get a page
+      description: 'One content page with its body. Needs pages.read.'
       security:
         - bearerAuth: []
       parameters:
@@ -69707,6 +69717,7 @@ paths:
       tags: ["Commerce"]
       x-platforms: ["shopify", "woocommerce"]
       summary: Update a page
+      description: 'Updates the fields you pass (`title`, `handle`, `bodyHtml`, `isPublished`) and returns the page. Needs pages.write.'
       security:
         - bearerAuth: []
       parameters:
@@ -69744,6 +69755,7 @@ paths:
       tags: ["Commerce"]
       x-platforms: ["shopify", "woocommerce"]
       summary: Delete a page
+      description: 'Deletes the page from the store. This cannot be undone. Needs pages.write.'
       security:
         - bearerAuth: []
       parameters:
@@ -69906,6 +69918,7 @@ paths:
       tags: ["Commerce"]
       x-platforms: ["shopify", "woocommerce"]
       summary: List discounts
+      description: 'The store''s discounts (Shopify code and automatic discounts, WooCommerce coupons), cursor-paginated with `limit`, `cursor` and an optional `query`. Each discount lists its first 10 codes; `codeCount` has the total. Needs discounts.read.'
       security:
         - bearerAuth: []
       parameters:
@@ -69984,6 +69997,7 @@ paths:
       tags: ["Commerce"]
       x-platforms: ["shopify", "woocommerce"]
       summary: Get a discount
+      description: 'One discount with its value, targets, minimum, usage and schedule. Needs discounts.read.'
       security:
         - bearerAuth: []
       parameters:
@@ -70055,6 +70069,7 @@ paths:
       tags: ["Commerce"]
       x-platforms: ["shopify", "woocommerce"]
       summary: Delete a discount
+      description: 'Deletes the discount; its codes stop working at checkout. This cannot be undone. Needs discounts.write.'
       security:
         - bearerAuth: []
       parameters:
@@ -70122,7 +70137,7 @@ paths:
       x-platforms: ["shopify"]
       summary: Add codes to a discount
       description: |
-        Adds up to 250 more codes to a code discount, for example one per influencer. The platform adds them in the background.
+        Adds up to 250 more codes to a code discount, for example one per influencer. The platform adds them in the background. Needs discounts.codes, which WooCommerce stores do not have.
       security:
         - bearerAuth: []
       parameters:
@@ -70159,6 +70174,7 @@ paths:
       tags: ["Commerce"]
       x-platforms: ["shopify"]
       summary: List URL redirects
+      description: 'The store''s URL redirects (old path to new target), cursor-paginated with `limit`, `cursor` and an optional `query` on the path. Shopify only. Needs navigation.read.'
       security:
         - bearerAuth: []
       parameters:
@@ -70187,6 +70203,7 @@ paths:
       tags: ["Commerce"]
       x-platforms: ["shopify"]
       summary: Create a URL redirect
+      description: 'Creates a redirect from `path` (starting with `/`) to `target` (a path or a full URL) and returns it with status 201. Shopify only. Needs navigation.write.'
       security:
         - bearerAuth: []
       requestBody:
@@ -70222,6 +70239,7 @@ paths:
       tags: ["Commerce"]
       x-platforms: ["shopify"]
       summary: Update a URL redirect
+      description: 'Changes the redirect''s `path` and/or `target`. Shopify only. Needs navigation.write.'
       security:
         - bearerAuth: []
       parameters:
@@ -70257,6 +70275,7 @@ paths:
       tags: ["Commerce"]
       x-platforms: ["shopify"]
       summary: Delete a URL redirect
+      description: 'Deletes the redirect; the old path answers 404 again. Shopify only. Needs navigation.write.'
       security:
         - bearerAuth: []
       parameters:
@@ -70285,6 +70304,7 @@ paths:
       tags: ["Commerce"]
       x-platforms: ["shopify"]
       summary: List navigation menus
+      description: 'The store''s navigation menus with their items. Shopify only. Needs navigation.read.'
       security:
         - bearerAuth: []
       parameters:
@@ -70309,6 +70329,7 @@ paths:
       tags: ["Commerce"]
       x-platforms: ["shopify"]
       summary: Create a navigation menu
+      description: 'Creates a navigation menu from `title`, `handle` and up to 100 `items`, and returns it with status 201. Shopify only. Needs navigation.write.'
       security:
         - bearerAuth: []
       requestBody:
@@ -70348,6 +70369,7 @@ paths:
       tags: ["Commerce"]
       x-platforms: ["shopify"]
       summary: Get a navigation menu
+      description: 'One navigation menu with its nested items. Shopify only. Needs navigation.read.'
       security:
         - bearerAuth: []
       parameters:
@@ -70414,6 +70436,7 @@ paths:
       tags: ["Commerce"]
       x-platforms: ["shopify"]
       summary: Delete a navigation menu
+      description: 'Deletes the navigation menu. Shopify only. Needs navigation.write.'
       security:
         - bearerAuth: []
       parameters:
@@ -70470,6 +70493,7 @@ paths:
       tags: ["Commerce"]
       x-platforms: ["shopify"]
       summary: List metaobjects of a type
+      description: 'The metaobjects of one `type` (a definition handle from GET /v1/commerce/metaobject-definitions), cursor-paginated with `limit` and `cursor`. Shopify only. Needs metaobjects.read.'
       security:
         - bearerAuth: []
       parameters:
@@ -70498,6 +70522,7 @@ paths:
       tags: ["Commerce"]
       x-platforms: ["shopify"]
       summary: Create a metaobject
+      description: 'Creates a metaobject of `type` with its `fields` (key and string value, up to 100) and an optional `handle`, and returns it with status 201. Shopify only. Needs metaobjects.write.'
       security:
         - bearerAuth: []
       requestBody:
@@ -70543,6 +70568,7 @@ paths:
       tags: ["Commerce"]
       x-platforms: ["shopify"]
       summary: Get a metaobject
+      description: 'One metaobject with its fields. Shopify only. Needs metaobjects.read.'
       security:
         - bearerAuth: []
       parameters:
@@ -70614,6 +70640,7 @@ paths:
       tags: ["Commerce"]
       x-platforms: ["shopify"]
       summary: Delete a metaobject
+      description: 'Deletes the metaobject. References to it from metafields stop resolving. Shopify only. Needs metaobjects.write.'
       security:
         - bearerAuth: []
       parameters:
@@ -70838,6 +70865,7 @@ paths:
       tags: ["Commerce"]
       x-platforms: ["shopify"]
       summary: Delete a marketing activity
+      description: 'Deletes the marketing activity you created with PUT /v1/commerce/marketing-activities, identified by the `remoteId` you gave it. Shopify only. Needs marketing.write.'
       security:
         - bearerAuth: []
       parameters:
@@ -70987,6 +71015,7 @@ paths:
       tags: ["Commerce"]
       x-platforms: ["shopify", "woocommerce"]
       summary: Get a catalog sync
+      description: 'One catalog sync with the status and counts of its last run (`itemsSent`, `itemsSkipped`, `itemsDeleted`, `lastError`). Poll it after POST /v1/commerce/catalog-syncs/{syncId}/run to follow a run.'
       security:
         - bearerAuth: []
       parameters:

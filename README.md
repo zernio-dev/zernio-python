@@ -755,9 +755,9 @@ Both `from zernio import ...` and `from late import ...` work identically. The `
 ### Commerce
 | Method | Description |
 |--------|-------------|
-| `commerce.list_collection_metafields()` | List collection metafields |
 | `commerce.list_commerce_catalog_syncs()` | List catalog syncs |
 | `commerce.list_commerce_channels()` | List sales channels |
+| `commerce.list_commerce_collection_metafields()` | List collection metafields |
 | `commerce.list_commerce_collections()` | List collections |
 | `commerce.list_commerce_discounts()` | List discounts |
 | `commerce.list_commerce_inventory()` | Get a product's stock |
@@ -768,9 +768,9 @@ Both `from zernio import ...` and `from late import ...` work identically. The `
 | `commerce.list_commerce_metaobjects()` | List metaobjects of a type |
 | `commerce.list_commerce_pages()` | List pages |
 | `commerce.list_commerce_price_lists()` | List price lists |
+| `commerce.list_commerce_product_metafields()` | List product metafields |
 | `commerce.list_commerce_products()` | List products |
 | `commerce.list_commerce_redirects()` | List URL redirects |
-| `commerce.list_product_metafields()` | List product metafields |
 | `commerce.create_commerce_catalog_sync()` | Sync a store into a Meta catalog |
 | `commerce.create_commerce_collection()` | Create a collection |
 | `commerce.create_commerce_discount()` | Create a discount |
@@ -797,37 +797,37 @@ Both `from zernio import ...` and `from late import ...` work identically. The `
 | `commerce.update_commerce_product()` | Update a product |
 | `commerce.update_commerce_product_prices()` | Update variant prices |
 | `commerce.update_commerce_redirect()` | Update a URL redirect |
-| `commerce.delete_collection_metafields()` | Delete collection metafields |
 | `commerce.delete_commerce_catalog_sync()` | Stop a catalog sync |
 | `commerce.delete_commerce_collection()` | Delete a collection |
+| `commerce.delete_commerce_collection_metafields()` | Delete collection metafields |
 | `commerce.delete_commerce_discount()` | Delete a discount |
 | `commerce.delete_commerce_marketing_activity()` | Delete a marketing activity |
 | `commerce.delete_commerce_menu()` | Delete a navigation menu |
 | `commerce.delete_commerce_metaobject()` | Delete a metaobject |
 | `commerce.delete_commerce_page()` | Delete a page |
 | `commerce.delete_commerce_price_list_prices()` | Remove fixed prices |
+| `commerce.delete_commerce_product_metafields()` | Delete product metafields |
 | `commerce.delete_commerce_product_options()` | Delete options |
 | `commerce.delete_commerce_product_variants()` | Delete variants |
 | `commerce.delete_commerce_redirect()` | Delete a URL redirect |
-| `commerce.delete_product_metafields()` | Delete product metafields |
 | `commerce.add_commerce_discount_codes()` | Add codes to a discount |
 | `commerce.add_commerce_marketing_engagement()` | Report daily engagement |
 | `commerce.add_commerce_product_images()` | Add images |
-| `commerce.change_collection_channels()` | Publish or unpublish a collection |
+| `commerce.change_commerce_collection_channels()` | Publish or unpublish a collection |
 | `commerce.change_commerce_collection_products()` | Add or remove products in a collection |
 | `commerce.change_commerce_inventory()` | Set or adjust stock |
+| `commerce.change_commerce_product_channels()` | Publish or unpublish a product |
 | `commerce.change_commerce_product_state()` | Activate, deactivate, archive or delete products |
 | `commerce.change_commerce_product_tags()` | Add or remove tags in bulk |
-| `commerce.change_product_channels()` | Publish or unpublish a product |
 | `commerce.duplicate_commerce_product()` | Duplicate a product |
 | `commerce.remove_commerce_product_images()` | Remove images |
 | `commerce.reorder_commerce_collection_products()` | Reorder products in a collection |
 | `commerce.reorder_commerce_product_images()` | Reorder images |
 | `commerce.run_commerce_catalog_sync()` | Run a catalog sync now |
-| `commerce.set_collection_metafields()` | Set collection metafields |
+| `commerce.set_commerce_collection_metafields()` | Set collection metafields |
 | `commerce.set_commerce_discount_active()` | Activate or deactivate a discount |
 | `commerce.set_commerce_price_list_prices()` | Set fixed prices |
-| `commerce.set_product_metafields()` | Set product metafields |
+| `commerce.set_commerce_product_metafields()` | Set product metafields |
 | `commerce.upsert_commerce_marketing_activity()` | Record a marketing activity |
 
 ### Connected Apps
