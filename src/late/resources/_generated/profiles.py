@@ -97,12 +97,14 @@ class ProfilesResource:
         idempotency_key: str | None = None,
         description: str | None = None,
         color: str | None = None,
+        timezone: str | None = None,
     ) -> dict[str, Any]:
         """Create profile"""
         payload = self._build_payload(
             name=name,
             description=description,
             color=color,
+            timezone=timezone,
         )
         headers: dict[str, str] = {}
         if idempotency_key is not None:
@@ -120,6 +122,7 @@ class ProfilesResource:
         name: str | None = None,
         description: Any | None = None,
         color: str | None = None,
+        timezone: Any | None = None,
         is_default: bool | None = None,
     ) -> dict[str, Any]:
         """Update profile"""
@@ -127,6 +130,7 @@ class ProfilesResource:
             name=name,
             description=description,
             color=color,
+            timezone=timezone,
             is_default=is_default,
         )
         return self._client._put(f"/v1/profiles/{profile_id}", data=payload)
@@ -159,12 +163,14 @@ class ProfilesResource:
         idempotency_key: str | None = None,
         description: str | None = None,
         color: str | None = None,
+        timezone: str | None = None,
     ) -> dict[str, Any]:
         """Create profile (async)"""
         payload = self._build_payload(
             name=name,
             description=description,
             color=color,
+            timezone=timezone,
         )
         headers: dict[str, str] = {}
         if idempotency_key is not None:
@@ -182,6 +188,7 @@ class ProfilesResource:
         name: str | None = None,
         description: Any | None = None,
         color: str | None = None,
+        timezone: Any | None = None,
         is_default: bool | None = None,
     ) -> dict[str, Any]:
         """Update profile (async)"""
@@ -189,6 +196,7 @@ class ProfilesResource:
             name=name,
             description=description,
             color=color,
+            timezone=timezone,
             is_default=is_default,
         )
         return await self._client._aput(f"/v1/profiles/{profile_id}", data=payload)

@@ -23210,7 +23210,7 @@ def register_generated_tools(mcp, _get_client):
         publish_now: bool = False,
         is_draft: bool = False,
         dry_run: bool = False,
-        timezone: str = "UTC",
+        timezone: str | None = None,
         tags: list[str] | None = None,
         hashtags: list[str] | None = None,
         mentions: list[str] | None = None,
@@ -23233,7 +23233,7 @@ def register_generated_tools(mcp, _get_client):
                 publish_now: Publish to every platform synchronously in this request instead of scheduling; the response then carries each platform result and `platformPostUrl`, with HTTP 207 when some platforms failed. Takes precedence over `scheduledFor`; ignored when `isDraft` is true.
                 is_draft: When true, saves the post as a draft. When none of scheduledFor, publishNow, or queuedFromProfile are provided, the post defaults to draft automatically.
                 dry_run: TikTok only. Preview whether each `tiktok` entry in `platforms` could publish right now under the TikTok Direct Post daily limits, without creating, scheduling or publishing anything: no post is persisted and no upload slot is claimed, so it can be repeated freely. The request still goes through auth, the payment gate and body validation, then returns HTTP 200 with `{ dryRun: true, canPublish, tiktok: [...] }` instead of 201. Only `tiktok` entries are evaluated; other platforms in the body are ignored, and a body with no `tiktok` entry is rejected with 400 `invalid_field_value` on `platforms`. An entry with `platformSpecificData.tiktokSettings.draft: true` (Creator Inbox upload) is not subject to the limit and always reports `canPublish: true`. Accounts connected through the TikTok for Business app do not go through these limits at all and also always report `canPublish: true`, so on those accounts a dry run confirms the request is well-formed rather than gating it.
-                timezone: IANA timezone (`Europe/Madrid`, `America/New_York`) used to interpret a `scheduledFor` (root or per-platform) that carries no `Z` or offset. Has no effect on values that already carry one. An unknown name returns 400 when `scheduledFor` is set.
+                timezone: IANA timezone (`Europe/Madrid`, `America/New_York`) used to interpret a `scheduledFor` (root or per-platform) that carries no `Z` or offset, and stored on the post. Has no effect on values that already carry one. When omitted, the post takes its profile's `timezone` (the queue's profile for a queued post, else the profile its accounts share), and UTC when there is none or the accounts sit on profiles with different timezones. An unknown name returns 400 when `scheduledFor` is set.
                 tags: Tags/keywords. YouTube constraints: each tag max 100 chars, combined max 500 chars, duplicates auto-removed.
                 hashtags: Stored for reference only. Hashtags are NOT automatically appended to the caption when publishing. Include hashtags directly in the content field (platforms like Instagram only support hashtags as caption text). For YouTube keywords, use the tags field instead.
                 mentions: Stored for reference only. This field does NOT automatically create @mentions when publishing. For LinkedIn @mentions, use the /v1/accounts/{accountId}/linkedin-mentions endpoint to resolve profile URLs to URNs, then embed the returned mentionFormat directly in the post content field.
@@ -24169,18 +24169,22 @@ def register_generated_tools(mcp, _get_client):
         )
     )
     def profiles_create_profile(
-        name: str, description: str | None = None, color: str | None = None
+        name: str,
+        description: str | None = None,
+        color: str | None = None,
+        timezone: str | None = None,
     ) -> str:
         """Create profile
 
         Args:
             name: (required)
             description
-            color"""
+            color
+            timezone: IANA timezone new posts on this profile use when they name no `timezone`. Omit to keep UTC. An unknown name returns 400."""
         client = _get_client()
         try:
             response = client.profiles.create_profile(
-                name=name, description=description, color=color
+                name=name, description=description, color=color, timezone=timezone
             )
             return _format_response(response)
         except Exception as e:
@@ -24219,6 +24223,7 @@ def register_generated_tools(mcp, _get_client):
         name: str | None = None,
         description: str | None = None,
         color: str | None = None,
+        timezone: str | None = None,
         is_default: bool | None = None,
     ) -> str:
         """Update profile
@@ -24228,6 +24233,7 @@ def register_generated_tools(mcp, _get_client):
             name
             description: Set to null to clear the description.
             color
+            timezone: IANA timezone new posts on this profile use when they name no `timezone`. Set to null to go back to UTC. An unknown name returns 400.
             is_default"""
         client = _get_client()
         try:
@@ -24236,6 +24242,7 @@ def register_generated_tools(mcp, _get_client):
                 name=name,
                 description=description,
                 color=color,
+                timezone=timezone,
                 is_default=is_default,
             )
             return _format_response(response)

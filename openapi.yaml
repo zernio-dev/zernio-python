@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.160.0"
+  version: "1.161.0"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -8749,6 +8749,9 @@ components:
         name: { type: string }
         description: { type: string }
         color: { type: string }
+        timezone:
+          type: [string, "null"]
+          description: 'IANA timezone new posts on this profile use when the request names no `timezone`. Null means UTC.'
         isDefault: { type: boolean }
         isOverLimit:
           type: boolean
@@ -19667,8 +19670,7 @@ paths:
                   description: 'TikTok only. Preview whether each `tiktok` entry in `platforms` could publish right now under the TikTok Direct Post daily limits, without creating, scheduling or publishing anything: no post is persisted and no upload slot is claimed, so it can be repeated freely. The request still goes through auth, the payment gate and body validation, then returns HTTP 200 with `{ dryRun: true, canPublish, tiktok: [...] }` instead of 201. Only `tiktok` entries are evaluated; other platforms in the body are ignored, and a body with no `tiktok` entry is rejected with 400 `invalid_field_value` on `platforms`. An entry with `platformSpecificData.tiktokSettings.draft: true` (Creator Inbox upload) is not subject to the limit and always reports `canPublish: true`. Accounts connected through the TikTok for Business app do not go through these limits at all and also always report `canPublish: true`, so on those accounts a dry run confirms the request is well-formed rather than gating it.'
                 timezone:
                   type: string
-                  default: UTC
-                  description: 'IANA timezone (`Europe/Madrid`, `America/New_York`) used to interpret a `scheduledFor` (root or per-platform) that carries no `Z` or offset. Has no effect on values that already carry one. An unknown name returns 400 when `scheduledFor` is set.'
+                  description: 'IANA timezone (`Europe/Madrid`, `America/New_York`) used to interpret a `scheduledFor` (root or per-platform) that carries no `Z` or offset, and stored on the post. Has no effect on values that already carry one. When omitted, the post takes its profile''s `timezone` (the queue''s profile for a queued post, else the profile its accounts share), and UTC when there is none or the accounts sit on profiles with different timezones. An unknown name returns 400 when `scheduledFor` is set.'
                 tags:
                   type: array
                   description: "Tags/keywords. YouTube constraints: each tag max 100 chars, combined max 500 chars, duplicates auto-removed."
@@ -20573,6 +20575,7 @@ paths:
           - `mediaUrls` aliases `media_urls`
         - Per-platform overrides use three dynamic column prefixes, one column per platform (e.g. `schedule_time_instagram`, `custom_content_tiktok`, `custom_media_youtube`): `schedule_time_<platform>`, `custom_content_<platform>`, `custom_media_<platform>`.
         - Any other column is not read. It does not error, but it is reported in the response's `warnings` array as `unknown_columns:<a,b,c>` (see BulkUploadResult), so a misnamed or unsupported column is never silently dropped.
+        - Timezone: `tz` sets the zone `schedule_time` is read in. A row without `tz` uses its profile's `timezone` (when all its target profiles share one), else UTC.
         - Row limits: 5000 rows is a hard cap that returns 400 above it. 500 rows is only an advisory threshold, it adds `rows_exceed_advisory_limit:500` to `warnings` and the request still processes.
 
         Example row (header + one data row):
@@ -21272,10 +21275,12 @@ paths:
                 name: { type: string }
                 description: { type: string }
                 color: { type: string, example: '#ffeda0' }
+                timezone: { type: string, example: 'Europe/Istanbul', description: 'IANA timezone new posts on this profile use when they name no `timezone`. Omit to keep UTC. An unknown name returns 400.' }
             example:
               name: "Marketing Team"
               description: "Profile for marketing campaigns"
               color: "#4CAF50"
+              timezone: "Europe/Istanbul"
       responses:
         '201':
           description: Created
@@ -21334,7 +21339,7 @@ paths:
       operationId: updateProfile
       tags: [Profiles]
       summary: Update profile
-      description: Updates a profile's name, description, color, or default status.
+      description: "Updates a profile's name, description, color, default timezone, or default status."
       parameters:
         - name: profileId
           in: path
@@ -21351,6 +21356,7 @@ paths:
                 name: { type: string, minLength: 1 }
                 description: { type: [string, "null"], description: 'Set to null to clear the description.' }
                 color: { type: string }
+                timezone: { type: [string, "null"], example: 'Europe/Istanbul', description: 'IANA timezone new posts on this profile use when they name no `timezone`. Set to null to go back to UTC. An unknown name returns 400.' }
                 isDefault: { type: boolean }
             example:
               name: "Marketing Team (Updated)"
@@ -21373,7 +21379,7 @@ paths:
                   color: "#2196F3"
                   isDefault: true
                   createdAt: "2024-11-01T10:00:00Z"
-        '400': { description: 'Invalid request, including a body that carries none of name, description, color or isDefault (code: missing_required_field).' }
+        '400': { description: 'Invalid request, including an unknown timezone or a body that carries none of name, description, color, timezone or isDefault (code: missing_required_field).' }
         '401': { $ref: '#/components/responses/Unauthorized' }
         '404': { $ref: '#/components/responses/NotFound' }
         '409': { description: "A profile with this name already exists (code: profile_name_conflict)." }
