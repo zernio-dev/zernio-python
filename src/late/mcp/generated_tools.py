@@ -5121,6 +5121,7 @@ def register_generated_tools(mcp, _get_client):
         account_id: str | None = None,
         profile_id: str | None = None,
         campaign_id: str | None = None,
+        updated_since: str | None = None,
         search: str | None = None,
         from_date: str | None = None,
         to_date: str | None = None,
@@ -5142,7 +5143,8 @@ def register_generated_tools(mcp, _get_client):
             page_id: Meta only: Facebook Page ID. Prunes the tree to ads whose creative is backed by this Page: campaigns and ad sets with no ad on the Page drop out, and rolled-up metrics cover only the Page's ads. Mirrors the same filter on /v1/ads and /v1/ads/campaigns.
             account_id: Account ID
             profile_id: Profile ID
-            campaign_id: Restrict the tree to a single campaign by its platform campaign id (the id the platform assigns, e.g. Meta's numeric campaign id). Filters the campaign set itself, so it works regardless of account size and pagination. Pass this when you already hold a campaign id instead of paging the tree to find it. Mirrors the `campaignId` filter on GET /v1/ads.
+            campaign_id: Restrict the tree to one or more campaigns by platform campaign id (the id the platform assigns, e.g. Meta's numeric campaign id). Comma-separate up to 100 ids (`?campaignId=123,456`). Filters the campaign set itself, so it works regardless of account size and pagination. Pass this when you already hold campaign ids (for example from an `ad.status_changed` webhook) instead of paging the whole tree.
+            updated_since: Return only campaigns with a change stored since this time (ISO 8601 with offset, e.g. `2026-09-30T10:00:00Z`): a new ad, or a change to any ad's status, review status, name, budget or creative. Each matching campaign comes back whole (every ad set and ad). Metrics are not a change: to refresh numbers, filter with `hasDelivery=true` and a date range instead. Combines with every other filter (with `hasDelivery`/`minSpend` a campaign must match both).
             search: Case-insensitive substring match on campaign, ad set and ad names (`_`, `%` and spaces match literally), or an exact platform campaign, ad set or ad id. A campaign whose name matches returns with all its ad sets and ads; a match on an ad set or ad name returns only the matching branch. Filters the campaign set itself, so `pagination.total` counts only matching campaigns.
             from_date: Start of the METRICS date range (YYYY-MM-DD). On its own it affects only the spend/impression numbers overlaid on each node, not which campaigns are returned. Pass `hasDelivery` or `minSpend` to also filter the campaign set to this window. Defaults to 90 days ago.
             to_date: End of metrics date range (YYYY-MM-DD). Defaults to today. Max 730-day range.
@@ -5164,6 +5166,7 @@ def register_generated_tools(mcp, _get_client):
                 account_id=account_id,
                 profile_id=profile_id,
                 campaign_id=campaign_id,
+                updated_since=updated_since,
                 search=search,
                 from_date=from_date,
                 to_date=to_date,
