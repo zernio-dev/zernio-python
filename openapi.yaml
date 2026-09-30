@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.178.0"
+  version: "1.179.0"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -2925,6 +2925,14 @@ components:
               * `verify` - send `followGate.message` with a confirm button. Tapping it is a
                 message, which grants consent, so the re-check on the tap resolves and the
                 real DM (or `followGate.notFollowingMessage`) follows automatically.
+        tapToUnlock:
+          type: boolean
+          default: false
+          description: |
+            Send `followGate.message` with its button to EVERY commenter and deliver the real
+            DM when they tap it, with no follow check at any point. Cannot be combined with a
+            `followerStatus` other than `any` or with `minFollowerCount` (400); `whenUnknown`
+            is ignored. Instagram only. A PATCH that sends `audience` without this field clears it.
     CommentAutomationFollowGate:
       type: object
       description: 'Copy for the follow gate. Sensible defaults are used for any field left empty.'
@@ -2932,11 +2940,11 @@ components:
         message:
           type: string
           maxLength: 640
-          description: 'Confirmation DM sent when whenUnknown=verify.'
+          description: 'Confirmation DM sent when whenUnknown=verify or tapToUnlock=true. The default copy asks for a follow under whenUnknown=verify and only for the tap under tapToUnlock.'
         buttonLabel:
           type: string
           maxLength: 20
-          description: 'Confirm button label. Defaults to "I''m following".'
+          description: 'Confirm button label. Defaults to "I''m following" (whenUnknown=verify) or "Unlock" (tapToUnlock).'
         notFollowingMessage:
           type: string
           maxLength: 1000
@@ -49943,7 +49951,9 @@ paths:
         follow relationship for people who have messaged the account, so `audience.whenUnknown`
         decides what happens for everyone else - including `verify`, which sends a one-tap
         confirmation DM (`followGate`) and then delivers the real DM automatically. People we
-        already know follow you skip the tap entirely.
+        already know follow you skip the tap entirely. Set `audience.tapToUnlock: true` instead
+        to send that button DM to every commenter and deliver the real DM on the tap with no
+        follow check.
 
         Set `alsoMatchInDms: true` on a `comment` automation to also answer people who send
         a keyword as a direct message instead of commenting it. One automation then covers
