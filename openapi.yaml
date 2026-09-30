@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.175.0"
+  version: "1.176.0"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -5824,6 +5824,9 @@ components:
                 details:
                   type: string
                   description: Meta's human-readable error detail string.
+                type:
+                  type: string
+                  description: 'Meta''s name for the content WhatsApp could not deliver, e.g. view_once, poll_creation, group_invite, edit. Absent when Meta sends none.'
             noRenderableContent:
               type: boolean
               description: |
@@ -5831,7 +5834,7 @@ components:
                 carries nothing an integrator can render (a `template`
                 attachment with no text and no parseable content, or Meta's
                 own `is_unsupported` flag). Sibling of `unsupported` above
-                (WhatsApp only, carries Meta's error code/title/details): this
+                (WhatsApp only, carries Meta's error code/title/details and unsupported type): this
                 field has no error envelope, only the boolean. Absence means
                 "not flagged", never "checked and renderable".
             tiktokMessageType:
