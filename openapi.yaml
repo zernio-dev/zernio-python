@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.162.2"
+  version: "1.163.0"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -7763,6 +7763,32 @@ components:
         roasAverageFloor: { type: number, description: "Decimal ROAS multiplier (2.0 = 2.0x). Required when bidStrategy is LOWEST_COST_WITH_MIN_ROAS; sending it without bidStrategy is a 400." }
         dailyMinSpendTarget: { type: number, description: "Meta daily_min_spend_target on the ad set being created: the least it should spend per day, in whole currency units. It reserves a share of a CAMPAIGN budget, so it requires budgetLevel campaign or an existingCampaignId whose campaign has the budget (Advantage campaign budget / CBO); with an ad-set budget it is a 400, because Meta rejects a spend limit on an ad set that owns its budget. A target, not a guarantee. Mutually exclusive with lifetimeMinSpendTarget: the flavour must match the campaign budget type. Rejected with 400 on POST /v1/ads/boost and in adSetId attach mode: use PUT /v1/ads/ad-sets/{adSetId} for an ad set that already exists." }
         lifetimeMinSpendTarget: { type: number, description: "Meta lifetime_min_spend_target: the lifetime-budget flavour of dailyMinSpendTarget, in whole currency units. Same rules and same rejections." }
+        customerLifecycle: { $ref: '#/components/schemas/MetaCustomerLifecycle' }
+    MetaCustomerLifecycle:
+      type: object
+      additionalProperties: false
+      required: [strategy]
+      description: |
+        Meta's Customer Lifecycle Strategy on a Sales ad set (Meta `ad_set_goal`). Rejected with 400
+        in adSetId attach mode: use PUT /v1/ads/ad-sets/{adSetId} for an ad set that already exists.
+        Read it back with `GET /v1/ads/ad-sets/{adSetId}?fields=ad_set_goal` (type 0 all customers,
+        1 new excluding engaged, 2 new customers).
+      properties:
+        strategy:
+          type: string
+          enum: [all_customers, new_customers, new_customers_excluding_engaged]
+          description: |
+            `all_customers` is "Maximize conversions from all customers". `new_customers` is "Acquire new
+            customers" (excludes existing customers). `new_customers_excluding_engaged` also excludes
+            people who engaged with you but have not bought yet.
+        existingCustomerAudienceIds:
+          type: array
+          items: { type: string }
+          description: "Custom audience ids that define your existing customers. Omit to use the definition saved on the ad account. Only with a new_customers strategy."
+        engagedAudienceIds:
+          type: array
+          items: { type: string }
+          description: "Custom audience ids that define engaged people. Only with new_customers_excluding_engaged."
     LinkedInAdsPlatformData:
       type: object
       additionalProperties: false
@@ -52056,6 +52082,7 @@ paths:
                         Meta `lifetime_min_spend_target`: the lifetime-budget flavour of
                         `dailyMinSpendTarget`, in whole currency units. Send this one when the campaign
                         budget is a lifetime budget. Same rules and same rejections.
+                    customerLifecycle: { $ref: '#/components/schemas/MetaCustomerLifecycle' }
                     promotedObject:
                       type: object
                       description: "Meta ad-set promoted_object, forwarded verbatim (same shape as /v1/ads/create). Unknown keys are rejected with 400."
