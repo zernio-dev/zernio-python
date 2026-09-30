@@ -6549,7 +6549,7 @@ def register_generated_tools(mcp, _get_client):
                 zips: Postal/ZIP geo targeting. `key` is the platform's postal location ID from /v1/ads/targeting/search?dimension=geo&geoType=zip. Supported on Meta, Google, TikTok, Pinterest, X.
                 metros: DMA / metro-area geo targeting (Meta and TikTok). `key` is the platform's metro ID from /v1/ads/targeting/search?dimension=geo&geoType=metro (TikTok metros appear as type `metro`, e.g. the New York DMA).
                 custom_locations: Point-radius (lat/lng) geo targeting. Meta only (custom_locations). Rejected on platforms without radius support.
-                behaviors: Behaviour entities from /v1/ads/targeting/search?dimension=behavior. Supported on Meta only (TikTok behaviours are rejected with a 400). Each must include id.
+                behaviors: Behaviour entities from /v1/ads/targeting/search?dimension=behavior (Meta and TikTok). On TikTok they target people who interacted with videos (watched to the end, liked, commented or shared, last 15 days) or creators (followed or viewed the profile) in the picked categories, and the ad group uses the TikTok placement only. Each must include id.
                 work_positions: Meta only. Job title entities from /v1/ads/targeting/search?dimension=workPosition. Each must include id. Rejected on other platforms (use LinkedIn's `jobTitles` there).
                 work_employers: Meta only. Employer entities from /v1/ads/targeting/search?dimension=workEmployer. Each must include id.
                 work_industries: Meta only. Work-industry entities from /v1/ads/targeting/search?dimension=workIndustry. Each must include id. Rejected on other platforms (use LinkedIn's `industries` there).
@@ -21377,7 +21377,7 @@ def register_generated_tools(mcp, _get_client):
                 places: Meta place keys (from GET /v1/ads/targeting/search).
                 neighborhoods: Meta neighborhood keys (from GET /v1/ads/targeting/search).
                 excluded_locations: Geo to exclude, same shape as POST /v1/ads/create (countries, countryGroups, regions, cities, zips, places, neighborhoods, customLocations).
-                behaviors: Meta behavior ids. Each dimension is its own flexible_spec entry: OR within, AND across.
+                behaviors: Behavior ids from /v1/ads/targeting/search?dimension=behavior. Meta: each dimension is its own flexible_spec entry (OR within, AND across). TikTok: video/creator interaction categories, sent as the ad group's actions.
                 work_positions
                 work_employers
                 work_industries
@@ -21754,7 +21754,7 @@ def register_generated_tools(mcp, _get_client):
                 places: Meta place keys (from GET /v1/ads/targeting/search).
                 neighborhoods: Meta neighborhood keys (from GET /v1/ads/targeting/search).
                 excluded_locations: Geo to exclude, same shape as POST /v1/ads/create (countries, countryGroups, regions, cities, zips, places, neighborhoods, customLocations).
-                behaviors: Meta behavior ids. Each dimension is its own flexible_spec entry: OR within, AND across.
+                behaviors: Behavior ids from /v1/ads/targeting/search?dimension=behavior. Meta: each dimension is its own flexible_spec entry (OR within, AND across). TikTok: video/creator interaction categories, sent as the ad group's actions.
                 work_positions
                 work_employers
                 work_industries
@@ -22115,7 +22115,7 @@ def register_generated_tools(mcp, _get_client):
                 places: Meta place keys (from GET /v1/ads/targeting/search).
                 neighborhoods: Meta neighborhood keys (from GET /v1/ads/targeting/search).
                 excluded_locations: Geo to exclude, same shape as POST /v1/ads/create (countries, countryGroups, regions, cities, zips, places, neighborhoods, customLocations).
-                behaviors: Meta behavior ids. Each dimension is its own flexible_spec entry: OR within, AND across.
+                behaviors: Behavior ids from /v1/ads/targeting/search?dimension=behavior. Meta: each dimension is its own flexible_spec entry (OR within, AND across). TikTok: video/creator interaction categories, sent as the ad group's actions.
                 work_positions
                 work_employers
                 work_industries
