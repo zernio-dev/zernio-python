@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.174.0"
+  version: "1.175.0"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -33751,6 +33751,12 @@ paths:
                             participantName: { type: [string, "null"] }
                             participantUsername: { type: [string, "null"] }
                             participantPicture: { type: [string, "null"] }
+                            businessScopedUserId:
+                              type: string
+                              description: 'WhatsApp only. Meta business-scoped user ID (BSUID), the stable identity anchor; present when Meta has sent it for this participant.'
+                            whatsappUsername:
+                              type: string
+                              description: 'WhatsApp only. The participant''s WhatsApp username (e.g. `jane.shop`, no leading @). Not a stable identifier, because users can change it: useful for display, not recommended as an identity anchor. Captured from inbound messages, so older threads fill in on their next inbound.'
                             status: { type: string, enum: [active, archived] }
                             lastMessage: { type: [string, "null"], description: "The conversation's most recent message preview" }
                             lastMessageAt: { type: [string, "null"], format: date-time }
