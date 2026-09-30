@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.164.0"
+  version: "1.164.1"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -2892,8 +2892,8 @@ components:
               description: 'Google Ads 429 only, when Google names the scope. DEVELOPER is the shared developer-token budget; ACCOUNT is your ad account.'
             budgetScope:
               type: string
-              enum: [user, platform]
-              description: "Zernio Google Ads operations-budget 429 only (never set alongside `quotaExhausted`). `user` is your own burst/daily allowance; `platform` is the fleet-wide daily budget shared across customers."
+              enum: [user]
+              description: "Zernio Google Ads burst-limit 429 only (never set alongside `quotaExhausted`). `user` is your own per-minute allowance on user-driven Google Ads calls; it clears within a minute."
     CommentAutomationAudience:
       type: object
       description: |
@@ -12255,7 +12255,7 @@ components:
         syncedAt: { type: [string, "null"], format: date-time }
         metrics:
           type: [object, "null"]
-          description: 'Trailing 30-day window. Null on rows synced before the metrics columns existed (re-synced on the keyword''s next weekly sweep).'
+          description: 'Trailing 30-day window. Null on rows synced before the metrics columns existed (re-synced on the keyword''s next daily sweep).'
           properties:
             windowDays: { type: integer }
             clicks: { type: integer }
@@ -50306,12 +50306,11 @@ paths:
       description: |
         Returns the Google Search keyword criteria (positive and negative) synced from
         connected Google Ads accounts, one row per ad-group keyword. Refreshed about
-        once a week per Google Ads customer (the keyword sweep rides the ads discovery
-        pass on a slower slot, to stay inside Google's shared daily API quota), so
-        keywords added on Google can take several days to appear. A customer synced
-        for the first time is populated on the next discovery pass rather than
-        waiting for its weekly slot, and connecting an account or triggering a
-        manual sync refreshes it immediately.
+        once a day per Google Ads customer (the keyword sweep rides the ads discovery
+        pass on a slower slot), so keywords added on Google can take up to a day to
+        appear. A customer synced for the first time is populated on the next discovery
+        pass rather than waiting for its daily slot, and connecting an account or
+        triggering a manual sync refreshes it immediately.
         Campaign-level negative keywords are not included; only ad-group-level
         criteria are.
       security:
@@ -53934,7 +53933,7 @@ paths:
                       nextPageToken: { type: [string, "null"], description: "Cursor for the next page; null when exhausted." }
         '400': { description: "Invalid input, or Google rejected the request; the message carries Google's error" }
         '401': { $ref: '#/components/responses/Unauthorized' }
-        '429': { description: "Per-user Google Ads operations budget or the shared Google quota reached; the message says which and when it resets." }
+        '429': { description: "Per-user Google Ads burst limit (15 requests per minute) or a Google rate limit reached; the message says which and when to retry." }
         '501': { description: Only supported on Google Ads }
 
   /v1/ads/keywords/historical-metrics:
@@ -53985,7 +53984,7 @@ paths:
                   aggregateMetricResults: { type: [object, "null"] }
         '400': { description: "Invalid input, or Google rejected the request; the message carries Google's error" }
         '401': { $ref: '#/components/responses/Unauthorized' }
-        '429': { description: "Per-user Google Ads operations budget or the shared Google quota reached; the message says which and when it resets." }
+        '429': { description: "Per-user Google Ads burst limit (15 requests per minute) or a Google rate limit reached; the message says which and when to retry." }
         '501': { description: Only supported on Google Ads }
 
   /v1/ads/insights:
@@ -54094,7 +54093,7 @@ paths:
         '400': { description: "Invalid input, or the platform rejected the query (unknown field, invalid breakdown combo, malformed GAQL); the message carries the platform's error" }
         '401': { $ref: '#/components/responses/Unauthorized' }
         '403': { description: "TikTok only: the connection cannot read that advertiser." }
-        '429': { description: "Platform rate limit reached. For Google this is the per-user operations budget or the shared quota; the message says which and when it resets." }
+        '429': { description: "Platform rate limit reached. For Google this is the per-user burst limit or a Google rate limit; the message says which and when to retry." }
         '501': { description: "Only supported on Meta (facebook/instagram), Google Ads and TikTok" }
 
   /v1/ads/insights/reports:
