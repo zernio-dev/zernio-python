@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.172.0"
+  version: "1.173.0"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -5108,7 +5108,7 @@ components:
             whatsappUsername:
               type: string
               description: |
-                WhatsApp only. User's WhatsApp username (e.g. `@jane`). Not a
+                WhatsApp only. User's WhatsApp username (e.g. `jane.shop`). Not a
                 stable identifier, because users can change it. Useful for display, not
                 recommended as an identity anchor.
             instagramProfile:
@@ -5474,7 +5474,7 @@ components:
                 whatsappUsername:
                   type: string
                   description: |
-                    WhatsApp only. User's WhatsApp username (e.g. `@jane`). Not a
+                    WhatsApp only. User's WhatsApp username (e.g. `jane.shop`). Not a
                     stable identifier, because users can change it. Useful for display,
                     not recommended as an identity anchor.
                 instagramProfile:
@@ -33137,6 +33137,12 @@ paths:
                           type: [string, "null"]
                           enum: [blue, government, business, none]
                           description: X verified badge type. Only present for X conversations.
+                        businessScopedUserId:
+                          type: string
+                          description: 'WhatsApp only. Meta business-scoped user ID (BSUID), the stable identity anchor; present when Meta has sent it for this participant.'
+                        whatsappUsername:
+                          type: string
+                          description: 'WhatsApp only. The participant''s WhatsApp username (e.g. `jane.shop`, no leading @). Not a stable identifier, because users can change it: useful for display, not recommended as an identity anchor. Captured from inbound messages, so older threads fill in on their next inbound.'
                         lastMessage: { type: string }
                         updatedTime: { type: string, format: date-time }
                         status: { type: string, enum: [active, archived] }
@@ -33815,6 +33821,12 @@ paths:
                         type: [string, "null"]
                         enum: [blue, government, business, none]
                         description: X verified badge type. Only present for X conversations.
+                      businessScopedUserId:
+                        type: string
+                        description: 'WhatsApp only. Meta business-scoped user ID (BSUID), the stable identity anchor; present when Meta has sent it for this participant.'
+                      whatsappUsername:
+                        type: string
+                        description: 'WhatsApp only. The participant''s WhatsApp username (e.g. `jane.shop`, no leading @). Not a stable identifier, because users can change it: useful for display, not recommended as an identity anchor. Captured from inbound messages, so older threads fill in on their next inbound.'
                       lastMessage: { type: string }
                       lastMessageAt: { type: string, format: date-time }
                       updatedTime: { type: string, format: date-time }
