@@ -30274,6 +30274,54 @@ def register_generated_tools(mcp, _get_client):
 
     @mcp.tool(
         annotations=ToolAnnotations(
+            title="Get pricing analytics",
+            readOnlyHint=True,
+            destructiveHint=False,
+            openWorldHint=False,
+        )
+    )
+    def whatsapp_phone_numbers_get_whats_app_pricing_analytics(
+        account_id: str,
+        start: str,
+        end: str,
+        granularity: str,
+        dimensions: str | None = None,
+        metric_types: str | None = None,
+        pricing_types: str | None = None,
+        pricing_categories: str | None = None,
+        country_codes: str | None = None,
+    ) -> str:
+        """Get pricing analytics
+
+        Args:
+            account_id: WhatsApp account ID (required)
+            start: Range start, ISO 8601 date or date-time. (required)
+            end: Range end, ISO 8601 date or date-time. Must be after start. (required)
+            granularity: (required)
+            dimensions: Comma-separated breakdowns: COUNTRY, PHONE, PRICING_CATEGORY, PRICING_TYPE, TIER. Without it each data point is a total for the interval.
+            metric_types: Comma-separated: COST, VOLUME. Defaults to both.
+            pricing_types: Comma-separated filter: REGULAR, FREE_CUSTOMER_SERVICE, FREE_ENTRY_POINT.
+            pricing_categories: Comma-separated filter of Meta pricing categories, for example MARKETING, MARKETING_LITE, UTILITY, AUTHENTICATION, AUTHENTICATION_INTERNATIONAL, SERVICE, REFERRAL_CONVERSION.
+            country_codes: Comma-separated ISO 3166-1 alpha-2 country codes to filter on."""
+        client = _get_client()
+        try:
+            response = client.whatsapp_phone_numbers.get_whats_app_pricing_analytics(
+                account_id=account_id,
+                start=start,
+                end=end,
+                granularity=granularity,
+                dimensions=dimensions,
+                metric_types=metric_types,
+                pricing_types=pricing_types,
+                pricing_categories=pricing_categories,
+                country_codes=country_codes,
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
             title="List phone numbers",
             readOnlyHint=True,
             destructiveHint=False,

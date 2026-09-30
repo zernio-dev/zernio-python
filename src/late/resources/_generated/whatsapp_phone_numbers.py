@@ -10,6 +10,8 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Any
 
 if TYPE_CHECKING:
+    from datetime import datetime
+
     from ..client.base import BaseClient
 
 
@@ -79,6 +81,33 @@ class WhatsappPhoneNumbersResource:
             account_id=account_id,
         )
         return self._client._get("/v1/whatsapp/number-info", params=params)
+
+    def get_whats_app_pricing_analytics(
+        self,
+        account_id: str,
+        start: datetime | str,
+        end: datetime | str,
+        granularity: str,
+        *,
+        dimensions: str | None = None,
+        metric_types: str | None = None,
+        pricing_types: str | None = None,
+        pricing_categories: str | None = None,
+        country_codes: str | None = None,
+    ) -> dict[str, Any]:
+        """Get pricing analytics"""
+        params = self._build_params(
+            account_id=account_id,
+            start=start,
+            end=end,
+            granularity=granularity,
+            dimensions=dimensions,
+            metric_types=metric_types,
+            pricing_types=pricing_types,
+            pricing_categories=pricing_categories,
+            country_codes=country_codes,
+        )
+        return self._client._get("/v1/whatsapp/pricing-analytics", params=params)
 
     def get_whats_app_phone_numbers(
         self, *, status: str | None = None, profile_id: str | None = None
@@ -296,6 +325,33 @@ class WhatsappPhoneNumbersResource:
             account_id=account_id,
         )
         return await self._client._aget("/v1/whatsapp/number-info", params=params)
+
+    async def aget_whats_app_pricing_analytics(
+        self,
+        account_id: str,
+        start: datetime | str,
+        end: datetime | str,
+        granularity: str,
+        *,
+        dimensions: str | None = None,
+        metric_types: str | None = None,
+        pricing_types: str | None = None,
+        pricing_categories: str | None = None,
+        country_codes: str | None = None,
+    ) -> dict[str, Any]:
+        """Get pricing analytics (async)"""
+        params = self._build_params(
+            account_id=account_id,
+            start=start,
+            end=end,
+            granularity=granularity,
+            dimensions=dimensions,
+            metric_types=metric_types,
+            pricing_types=pricing_types,
+            pricing_categories=pricing_categories,
+            country_codes=country_codes,
+        )
+        return await self._client._aget("/v1/whatsapp/pricing-analytics", params=params)
 
     async def aget_whats_app_phone_numbers(
         self, *, status: str | None = None, profile_id: str | None = None

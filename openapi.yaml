@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.170.0"
+  version: "1.171.0"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -42649,6 +42649,94 @@ paths:
         '401': { $ref: '#/components/responses/Unauthorized' }
         '404': { description: WhatsApp account not found }
 
+  /v1/whatsapp/pricing-analytics:
+    get:
+      x-resource-group: "analytics"
+      operationId: getWhatsAppPricingAnalytics
+      tags: [WhatsApp Phone Numbers]
+      summary: Get pricing analytics
+      description: |
+        Message volume and approximate cost for one connected WhatsApp number, read live
+        from Meta's `pricing_analytics` on the WhatsApp Business Account and scoped to
+        that account's phone number. Meta's figures are approximate and can lag; Meta
+        bills from its own invoice. Meta limits how far back and how fine the data goes
+        (for example HALF_HOUR only over short ranges) and answers out-of-range requests
+        with an error.
+      security:
+        - bearerAuth: []
+      parameters:
+        - { name: accountId, in: query, required: true, schema: { type: string }, description: WhatsApp account ID }
+        - { name: start, in: query, required: true, schema: { type: string, format: date-time }, description: 'Range start, ISO 8601 date or date-time.' }
+        - { name: end, in: query, required: true, schema: { type: string, format: date-time }, description: 'Range end, ISO 8601 date or date-time. Must be after start.' }
+        - { name: granularity, in: query, required: true, schema: { type: string, enum: [HALF_HOUR, DAILY, MONTHLY] } }
+        - name: dimensions
+          in: query
+          required: false
+          schema: { type: string, example: 'PRICING_CATEGORY,COUNTRY' }
+          description: 'Comma-separated breakdowns: COUNTRY, PHONE, PRICING_CATEGORY, PRICING_TYPE, TIER. Without it each data point is a total for the interval.'
+        - name: metricTypes
+          in: query
+          required: false
+          schema: { type: string, example: 'COST,VOLUME' }
+          description: 'Comma-separated: COST, VOLUME. Defaults to both.'
+        - name: pricingTypes
+          in: query
+          required: false
+          schema: { type: string, example: REGULAR }
+          description: 'Comma-separated filter: REGULAR, FREE_CUSTOMER_SERVICE, FREE_ENTRY_POINT.'
+        - name: pricingCategories
+          in: query
+          required: false
+          schema: { type: string, example: 'MARKETING,UTILITY' }
+          description: 'Comma-separated filter of Meta pricing categories, for example MARKETING, MARKETING_LITE, UTILITY, AUTHENTICATION, AUTHENTICATION_INTERNATIONAL, SERVICE, REFERRAL_CONVERSION.'
+        - name: countryCodes
+          in: query
+          required: false
+          schema: { type: string, example: 'ES,MX' }
+          description: Comma-separated ISO 3166-1 alpha-2 country codes to filter on.
+      responses:
+        '200':
+          description: Pricing data points for the range
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [accountId, phoneNumber, granularity, start, end, dataPoints]
+                properties:
+                  accountId: { type: string }
+                  phoneNumber: { type: string, description: 'The number the data is scoped to, digits only.' }
+                  granularity: { type: string, enum: [HALF_HOUR, DAILY, MONTHLY] }
+                  start: { type: string, format: date-time }
+                  end: { type: string, format: date-time }
+                  dataPoints:
+                    type: array
+                    items:
+                      type: object
+                      required: [start, end, phoneNumber, country, tier, pricingType, pricingCategory, volume, cost]
+                      properties:
+                        start: { type: string, format: date-time }
+                        end: { type: string, format: date-time }
+                        phoneNumber: { type: [string, "null"], description: 'Set when dimensions includes PHONE.' }
+                        country: { type: [string, "null"], description: 'Set when dimensions includes COUNTRY.' }
+                        tier: { type: [string, "null"], description: 'Volume pricing tier. Set when dimensions includes TIER.' }
+                        pricingType: { type: [string, "null"], description: 'Set when dimensions includes PRICING_TYPE.' }
+                        pricingCategory: { type: [string, "null"], description: 'Set when dimensions includes PRICING_CATEGORY.' }
+                        volume: { type: [integer, "null"], description: Messages delivered. }
+                        cost: { type: [number, "null"], description: 'Approximate charge, in the currency of the WABA''s payment method.' }
+              example:
+                accountId: '66e000000000000000000001'
+                phoneNumber: '34600000000'
+                granularity: DAILY
+                start: '2026-09-01T00:00:00.000Z'
+                end: '2026-09-30T00:00:00.000Z'
+                dataPoints:
+                  - { start: '2026-09-01T00:00:00.000Z', end: '2026-09-02T00:00:00.000Z', phoneNumber: null, country: ES, tier: null, pricingType: null, pricingCategory: MARKETING, volume: 12, cost: 0.73 }
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
   /v1/whatsapp/block-users/status:
     get:
       x-resource-group: "contacts"
