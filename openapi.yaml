@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.173.0"
+  version: "1.174.0"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -5058,6 +5058,10 @@ components:
               payload:
                 type: object
                 description: Additional attachment metadata
+                properties:
+                  voice:
+                    type: boolean
+                    description: 'WhatsApp audio only. True for a voice note recorded in the WhatsApp client, false for an audio file.'
         sender:
           type: object
           required: [id]
@@ -5428,6 +5432,10 @@ components:
                   payload:
                     type: object
                     description: Additional attachment metadata
+                    properties:
+                      voice:
+                        type: boolean
+                        description: 'WhatsApp audio only. True for a voice note recorded in the WhatsApp client, false for an audio file.'
             sender:
               type: object
               required: [id]
@@ -5641,6 +5649,12 @@ components:
                 product_retailer_id:
                   type: string
                   description: Retailer ID (SKU) of the product being asked about.
+            forwarded:
+              type: boolean
+              description: 'WhatsApp only. True when the user forwarded this message (5 times or fewer). Absent when not forwarded.'
+            frequentlyForwarded:
+              type: boolean
+              description: 'WhatsApp only. True when the message was forwarded more than 5 times; Meta then omits forwarded.'
             location:
               type: object
               description: |
@@ -5740,6 +5754,12 @@ components:
                   type: string
                 thumbnail_url:
                   type: string
+                welcome_message:
+                  type: object
+                  description: 'WhatsApp CTWA only. The greeting Meta showed the user in the ad.'
+                  properties:
+                    text:
+                      type: string
                 ad_id:
                   type: string
                   description: |
