@@ -23422,15 +23422,20 @@ def register_generated_tools(mcp, _get_client):
             openWorldHint=True,
         )
     )
-    def posts_unpublish_post(post_id: str, platform: str) -> str:
+    def posts_unpublish_post(
+        post_id: str, platform: str, account_id: str | None = None
+    ) -> str:
         """Unpublish post
 
         Args:
             post_id: (required)
-            platform: The platform to delete the post from (required)"""
+            platform: The platform to delete the post from (required)
+            account_id: Which account's copy to delete when the post was published to several accounts on this platform. Required in that case."""
         client = _get_client()
         try:
-            response = client.posts.unpublish_post(post_id=post_id, platform=platform)
+            response = client.posts.unpublish_post(
+                post_id=post_id, platform=platform, account_id=account_id
+            )
             return _format_response(response)
         except Exception as e:
             return f"Error: {e}"
@@ -23452,7 +23457,7 @@ def register_generated_tools(mcp, _get_client):
             post_id: (required)
             platform: The platform to edit the post on. (required)
             content: The new post text content (required)
-            account_id: Which account's copy of the post to edit when the post was published to several accounts on the same platform; defaults to the first."""
+            account_id: Which account's copy of the post to edit when the post was published to several accounts on the same platform. Required in that case."""
         client = _get_client()
         try:
             response = client.posts.edit_post(
@@ -23494,7 +23499,7 @@ def register_generated_tools(mcp, _get_client):
             post_id: Zernio post ID, or "_" when using direct video ID mode (required)
             platform: The platform to update metadata on (required)
             video_id: YouTube video ID (required for direct mode, ignored for post-based mode)
-            account_id: Zernio account ID (required for direct mode, ignored for post-based mode)
+            account_id: Zernio account ID. Required for direct mode. In post-based mode, picks which account's copy to update when the post was published to several accounts on this platform (required in that case).
             title: New video title (max 100 characters for YouTube)
             description: New video description
             tags: Array of keyword tags (max 500 characters combined for YouTube)

@@ -237,10 +237,13 @@ class PostsResource:
         """Retry failed post"""
         return self._client._post(f"/v1/posts/{post_id}/retry")
 
-    def unpublish_post(self, post_id: str, platform: str) -> dict[str, Any]:
+    def unpublish_post(
+        self, post_id: str, platform: str, *, account_id: str | None = None
+    ) -> dict[str, Any]:
         """Unpublish post"""
         payload = self._build_payload(
             platform=platform,
+            account_id=account_id,
         )
         return self._client._post(f"/v1/posts/{post_id}/unpublish", data=payload)
 
@@ -458,10 +461,13 @@ class PostsResource:
         """Retry failed post (async)"""
         return await self._client._apost(f"/v1/posts/{post_id}/retry")
 
-    async def aunpublish_post(self, post_id: str, platform: str) -> dict[str, Any]:
+    async def aunpublish_post(
+        self, post_id: str, platform: str, *, account_id: str | None = None
+    ) -> dict[str, Any]:
         """Unpublish post (async)"""
         payload = self._build_payload(
             platform=platform,
+            account_id=account_id,
         )
         return await self._client._apost(f"/v1/posts/{post_id}/unpublish", data=payload)
 

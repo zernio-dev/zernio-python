@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.164.1"
+  version: "1.165.0"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -20826,6 +20826,9 @@ paths:
                     - bluesky
                     - googlebusiness
                     - telegram
+                accountId:
+                  type: string
+                  description: "Which account's copy to delete when the post was published to several accounts on this platform. Required in that case."
             example:
               platform: "threads"
       responses:
@@ -20842,7 +20845,7 @@ paths:
                 success: true
                 message: "Post deleted from threads successfully"
         '400':
-          description: "Invalid request: platform not supported for deletion, post not on that platform, not published, no platform post ID, or no access token."
+          description: "Invalid request: platform not supported for deletion, post not on that platform (or not for the given accountId), not published, no platform post ID, or no access token."
           content:
             application/json:
               schema: { $ref: '#/components/schemas/ErrorResponse' }
@@ -20853,6 +20856,11 @@ paths:
             application/json:
               schema: { $ref: '#/components/schemas/ErrorResponse' }
         '404': { $ref: '#/components/responses/NotFound' }
+        '409':
+          description: "The post was published to several accounts on this platform and no accountId was sent (ambiguous_account)."
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ErrorResponse' }
         '500':
           description: Platform API deletion failed
   /v1/posts/{postId}/edit:
@@ -20865,8 +20873,8 @@ paths:
         Edit the text of an already-published post. Supported on X, Discord,
         Facebook, Reddit, LinkedIn, Telegram, Pinterest, Google Business Profile, YouTube,
         and Slack. When a post was published to several accounts on the same platform,
-        pass `accountId` to pick which account's copy to edit (the first entry is edited
-        otherwise). Each platform enforces its own rules:
+        pass `accountId` to pick which account's copy to edit (without it the request
+        returns 409). Each platform enforces its own rules:
 
         **X**
         - Connected X account must have an active X Premium subscription
@@ -20960,7 +20968,7 @@ paths:
                   type: string
                   description: >
                     Which account's copy of the post to edit when the post was published
-                    to several accounts on the same platform; defaults to the first.
+                    to several accounts on the same platform. Required in that case.
             example:
               platform: "facebook"
               content: "Updated post text with corrected information"
@@ -20998,6 +21006,11 @@ paths:
         '403':
           description: Forbidden
         '404': { $ref: '#/components/responses/NotFound' }
+        '409':
+          description: "The post was published to several accounts on this platform and no accountId was sent (ambiguous_account)."
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ErrorResponse' }
         '500':
           description: Platform API edit failed for a reason the platform did not classify.
   /v1/posts/{postId}/update-metadata:
@@ -21040,7 +21053,7 @@ paths:
                   description: YouTube video ID (required for direct mode, ignored for post-based mode)
                 accountId:
                   type: string
-                  description: Zernio account ID (required for direct mode, ignored for post-based mode)
+                  description: "Zernio account ID. Required for direct mode. In post-based mode, picks which account's copy to update when the post was published to several accounts on this platform (required in that case)."
                 title:
                   type: string
                   maxLength: 100
@@ -21127,6 +21140,11 @@ paths:
             application/json:
               schema: { $ref: '#/components/schemas/ErrorResponse' }
         '404': { $ref: '#/components/responses/NotFound' }
+        '409':
+          description: "The post was published to several accounts on this platform and no accountId was sent (ambiguous_account)."
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ErrorResponse' }
         '500':
           description: Platform API update failed
   /v1/users:
