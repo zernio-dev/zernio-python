@@ -28368,6 +28368,11 @@ paths:
         '400': { description: Page not in available pages }
         '401': { $ref: '#/components/responses/Unauthorized' }
         '404': { description: Account not found }
+        '409':
+          description: "Another account on this profile is already connected to that destination (profile_platform_conflict)."
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ErrorResponse' }
 
   /v1/accounts/{accountId}/linkedin-organizations:
     get:
@@ -28895,6 +28900,11 @@ paths:
         '400': { description: Invalid request }
         '401': { $ref: '#/components/responses/Unauthorized' }
         '404': { description: Account not found }
+        '409':
+          description: "Another account on this profile is already connected to that destination (profile_platform_conflict)."
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ErrorResponse' }
 
   /v1/accounts/{accountId}/linkedin-mentions:
     get:
@@ -29865,6 +29875,11 @@ paths:
         '400': { description: 'Location not in available locations, or the provided googleAccountId is not one of the accounts this connection manages' }
         '401': { $ref: '#/components/responses/Unauthorized' }
         '404': { description: Account not found }
+        '409':
+          description: "Another account on this profile is already connected to that destination (profile_platform_conflict)."
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ErrorResponse' }
 
   /v1/accounts/{accountId}/gmb-locations/assign:
     post:
