@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.166.1"
+  version: "1.167.0"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -5934,6 +5934,10 @@ components:
                 stored before this field shipped (2026-08). Existing messages
                 are NOT backfilled, so treat `null` as "unknown", never as
                 "sent by a human".
+        pricing:
+          $ref: '#/components/schemas/WhatsAppMessagePricing'
+        billingConversation:
+          $ref: '#/components/schemas/WhatsAppBillingConversation'
         conversation:
           $ref: '#/components/schemas/InboxWebhookConversation'
         account:
@@ -6143,6 +6147,10 @@ components:
                 templates are unaffected, or for 131031, that Meta restricted the
                 WhatsApp Business Account). Null for unmapped codes; fall back to
                 title/message.
+        pricing:
+          $ref: '#/components/schemas/WhatsAppMessagePricing'
+        billingConversation:
+          $ref: '#/components/schemas/WhatsAppBillingConversation'
         conversation:
           $ref: '#/components/schemas/InboxWebhookConversation'
         account:
@@ -6151,6 +6159,50 @@ components:
           type: string
           format: date-time
           description: 'UTC time at which Zernio generated this event (set once when the event payload is built, before delivery is queued). Retries and redeliveries keep the original value, so it reflects the event, not the delivery attempt.'
+    WhatsAppMessagePricing:
+      type: [object, "null"]
+      description: |
+        WhatsApp only. Meta's `pricing` object from the status webhook, camelCased.
+        Present (possibly null) on every WhatsApp `message.sent`, `message.delivered`,
+        `message.read` and `message.failed`; absent on other platforms. Meta includes it
+        on `sent` and on one of `delivered` or `read`, so it is null on the others and
+        usually on `failed`.
+      required: [billable, pricingModel, category, type]
+      properties:
+        billable:
+          type: [boolean, "null"]
+          description: Whether Meta bills this message. Meta has announced it will deprecate this field.
+        pricingModel:
+          type: [string, "null"]
+          description: '`PMP` (per-message pricing) or `CBP` (conversation-based, messages before 2025-07-01).'
+          example: PMP
+        category:
+          type: [string, "null"]
+          description: 'Pricing category as Meta sends it, for example `marketing`, `marketing_lite`, `utility`, `authentication`, `authentication-international`, `service`, `referral_conversion`.'
+          example: marketing
+        type:
+          type: [string, "null"]
+          description: '`regular` (billable), `free_customer_service` or `free_entry_point`.'
+          example: regular
+    WhatsAppBillingConversation:
+      type: [object, "null"]
+      description: |
+        WhatsApp only. Meta's `conversation` object from the status webhook (the billing
+        window, not the Zernio inbox `conversation`). Same presence rules as `pricing`;
+        from Graph API v24 Meta sends it only inside an open free entry point window.
+      required: [id, expiresAt, originType]
+      properties:
+        id:
+          type: [string, "null"]
+          description: Meta's conversation id.
+        expiresAt:
+          type: [string, "null"]
+          format: date-time
+          description: When the window expires. Meta sends it only on the `sent` status.
+        originType:
+          type: [string, "null"]
+          description: 'Meta `origin.type`, for example `marketing`, `utility`, `service`, `referral_conversion`.'
+          example: utility
     WebhookPayloadConversationStarted:
       type: object
       description: |
@@ -13950,6 +14002,8 @@ webhooks:
       description: |
         Fired when an outgoing message is delivered to the recipient.
         Supported on WhatsApp and Facebook Messenger.
+        On WhatsApp, `pricing` and `billingConversation` carry Meta's billing context for
+        the message (also on `message.sent`, `message.read` and `message.failed`).
       tags: [Webhook Events]
       requestBody:
         required: true
