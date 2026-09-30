@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.163.2"
+  version: "1.164.0"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -1800,6 +1800,8 @@ components:
         maxAttempts: { type: integer }
         sendCount: { type: integer, description: 'Accepted deliveries (initial send + resends); each bills one verification fee.' }
         lastSentAt: { type: [string, "null"], format: date-time }
+        deliveryStatus: { type: [string, "null"], enum: [delivered, read, failed, null], description: 'WhatsApp only, returned by GET /v1/verify/verifications/{verificationId} (null on create and check responses): what Meta reported for the latest send, null until it reports. A code that never reached the recipient (for example a number not on WhatsApp) reads failed, with the Meta error in deliveryErrorCode. failed does not settle the verification: Meta can report failed and later deliver the same message. Reported for at least an hour after the send, well past any code''s expiry.' }
+        deliveryErrorCode: { type: [integer, "null"], description: 'Meta error code when deliveryStatus is failed (e.g. 131026, message undeliverable).' }
         createdAt: { type: string, format: date-time }
         resend: { type: boolean, description: 'Present on create responses: true when an active verification was resent instead of created.' }
     ImessageSenderLifecycle:
@@ -4159,6 +4161,7 @@ components:
         metaVerificationStatus: { type: string, enum: [pending, code_requested, verified, expired] }
         metaVerifiedAt: { type: string, format: date-time }
         metaVerificationExpiresAt: { type: string, format: date-time }
+        metaPoolAddRejectedAt: { type: string, format: date-time, description: 'Set when WhatsApp reported the number as registered to another WhatsApp account while connecting it. The number keeps working for Calls and SMS; remove it from the other account and connect again, or replace it with POST /v1/whatsapp/phone-numbers/{id}/replace. Absent once WhatsApp accepts the number.' }
         socialAccountId: { type: [string, "null"], description: 'The WhatsApp account the number is linked to; null when WhatsApp is not connected.' }
         ownerAccountId: { type: [string, "null"], description: 'The telephony account that owns Calls and SMS on the number.' }
         sipTrunkId: { type: [string, "null"], description: 'SIP trunk the number is attached to; null when not trunked. While attached, enabling Calls or WhatsApp calling, requesting WhatsApp verification, and releasing the number all return 409.' }
