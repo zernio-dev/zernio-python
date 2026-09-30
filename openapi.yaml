@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.166.0"
+  version: "1.166.1"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -6432,6 +6432,12 @@ components:
           - `with_issues_ad_objects` - the ad object entered `WITH_ISSUES`.
             `status.raw` is `WITH_ISSUES` and the `error` block is populated
             from Meta's `error_code` / `error_summary` / `error_message`.
+
+        Review outcomes (an ad leaving `PENDING_REVIEW` for `ACTIVE`,
+        `DISAPPROVED` and so on) are also emitted from Zernio's own ad sync,
+        so they arrive even when Meta skips the webhook. `status.raw` is Meta's
+        `effective_status`. An ad-level outcome is delivered once per status:
+        whichever source sees it first sends it.
       required: [id, event, account, adObject, status, timestamp]
       properties:
         id:
