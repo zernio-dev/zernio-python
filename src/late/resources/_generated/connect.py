@@ -78,6 +78,7 @@ class ConnectResource:
         platform: str,
         profile_id: str,
         *,
+        reconnect_account_id: str | None = None,
         redirect_url: str | None = None,
         scopes: str | None = None,
         headless: bool | None = False,
@@ -91,6 +92,7 @@ class ConnectResource:
         """Get OAuth connect URL"""
         params = self._build_params(
             profile_id=profile_id,
+            reconnect_account_id=reconnect_account_id,
             redirect_url=redirect_url,
             scopes=scopes,
             headless=headless,
@@ -889,6 +891,7 @@ class ConnectResource:
         platform: str,
         profile_id: str,
         *,
+        reconnect_account_id: str | None = None,
         redirect_url: str | None = None,
         scopes: str | None = None,
         headless: bool | None = False,
@@ -902,6 +905,7 @@ class ConnectResource:
         """Get OAuth connect URL (async)"""
         params = self._build_params(
             profile_id=profile_id,
+            reconnect_account_id=reconnect_account_id,
             redirect_url=redirect_url,
             scopes=scopes,
             headless=headless,
