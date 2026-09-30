@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.163.0"
+  version: "1.163.1"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -7784,11 +7784,11 @@ components:
         existingCustomerAudienceIds:
           type: array
           items: { type: string }
-          description: "Custom audience ids that define your existing customers. Omit to use the definition saved on the ad account. Only with a new_customers strategy."
+          description: "Custom audience ids that define your existing customers. Required with both new_customers strategies (Meta answers 400 subcode 1870251 without them); not allowed with all_customers."
         engagedAudienceIds:
           type: array
           items: { type: string }
-          description: "Custom audience ids that define engaged people. Only with new_customers_excluding_engaged."
+          description: "Custom audience ids of people who engaged but have not bought. Required with new_customers_excluding_engaged, not allowed with the other strategies."
     LinkedInAdsPlatformData:
       type: object
       additionalProperties: false
