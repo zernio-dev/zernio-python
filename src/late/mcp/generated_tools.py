@@ -21206,7 +21206,7 @@ def register_generated_tools(mcp, _get_client):
         interests: list[dict[str, Any]] | None = None,
         audience_id: str | None = None,
         placements: dict[str, Any] | None = None,
-        gender: str = "all",
+        gender: str | None = None,
         languages: list[str] | None = None,
         places: list[dict[str, Any]] | None = None,
         neighborhoods: list[dict[str, Any]] | None = None,
@@ -21366,7 +21366,7 @@ def register_generated_tools(mcp, _get_client):
         additionally enforces co-selection rules and restricts which
         placements are eligible for click-to-WhatsApp ads, returning an actionable
         error which we surface.
-                gender: Restrict the audience by gender (Meta `genders`). Stored on the ad and read back in `targeting.gender`.
+                gender: Restrict the audience by gender (Meta `genders`). Omit or send all for everyone; all is ignored in adSetId attach mode. Stored on the ad and read back in `targeting.gender`.
                 languages: Audience languages (Meta `locales`). A bare ISO 639-1 code targets all regional variants ("en" = all English), a region-qualified code a specific one ("en_GB", "pt_BR"); unknown codes are rejected.
                 places: Meta place keys (from GET /v1/ads/targeting/search).
                 neighborhoods: Meta neighborhood keys (from GET /v1/ads/targeting/search).
@@ -21587,7 +21587,7 @@ def register_generated_tools(mcp, _get_client):
         interests: list[dict[str, Any]] | None = None,
         audience_id: str | None = None,
         placements: dict[str, Any] | None = None,
-        gender: str = "all",
+        gender: str | None = None,
         languages: list[str] | None = None,
         places: list[dict[str, Any]] | None = None,
         neighborhoods: list[dict[str, Any]] | None = None,
@@ -21743,7 +21743,7 @@ def register_generated_tools(mcp, _get_client):
         additionally enforces co-selection rules and restricts which
         placements are eligible for click-to-WhatsApp ads, returning an actionable
         error which we surface.
-                gender: Restrict the audience by gender (Meta `genders`). Stored on the ad and read back in `targeting.gender`.
+                gender: Restrict the audience by gender (Meta `genders`). Omit or send all for everyone; all is ignored in adSetId attach mode. Stored on the ad and read back in `targeting.gender`.
                 languages: Audience languages (Meta `locales`). A bare ISO 639-1 code targets all regional variants ("en" = all English), a region-qualified code a specific one ("en_GB", "pt_BR"); unknown codes are rejected.
                 places: Meta place keys (from GET /v1/ads/targeting/search).
                 neighborhoods: Meta neighborhood keys (from GET /v1/ads/targeting/search).
@@ -21948,7 +21948,7 @@ def register_generated_tools(mcp, _get_client):
         interests: list[dict[str, Any]] | None = None,
         audience_id: str | None = None,
         placements: dict[str, Any] | None = None,
-        gender: str = "all",
+        gender: str | None = None,
         languages: list[str] | None = None,
         places: list[dict[str, Any]] | None = None,
         neighborhoods: list[dict[str, Any]] | None = None,
@@ -22104,7 +22104,7 @@ def register_generated_tools(mcp, _get_client):
         additionally enforces co-selection rules and restricts which
         placements are eligible for click-to-WhatsApp ads, returning an actionable
         error which we surface.
-                gender: Restrict the audience by gender (Meta `genders`). Stored on the ad and read back in `targeting.gender`.
+                gender: Restrict the audience by gender (Meta `genders`). Omit or send all for everyone; all is ignored in adSetId attach mode. Stored on the ad and read back in `targeting.gender`.
                 languages: Audience languages (Meta `locales`). A bare ISO 639-1 code targets all regional variants ("en" = all English), a region-qualified code a specific one ("en_GB", "pt_BR"); unknown codes are rejected.
                 places: Meta place keys (from GET /v1/ads/targeting/search).
                 neighborhoods: Meta neighborhood keys (from GET /v1/ads/targeting/search).

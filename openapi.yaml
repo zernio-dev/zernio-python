@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.163.1"
+  version: "1.163.2"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -2304,7 +2304,7 @@ components:
               type: array
               items: { type: string, enum: [mobile, desktop] }
               description: "Restrict by device. Omit to deliver on both mobile and desktop."
-        gender: { type: string, enum: [all, male, female], default: all, description: "Restrict the audience by gender (Meta `genders`). Stored on the ad and read back in `targeting.gender`." }
+        gender: { type: string, enum: [all, male, female], description: "Restrict the audience by gender (Meta `genders`). Omit or send all for everyone; all is ignored in adSetId attach mode. Stored on the ad and read back in `targeting.gender`." }
         languages: { type: array, items: { type: string }, description: "Audience languages (Meta `locales`). A bare ISO 639-1 code targets all regional variants (\"en\" = all English), a region-qualified code a specific one (\"en_GB\", \"pt_BR\"); unknown codes are rejected." }
         places: { type: array, items: { type: object, required: [key], properties: { key: { type: string } } }, description: "Meta place keys (from GET /v1/ads/targeting/search)." }
         neighborhoods: { type: array, items: { type: object, required: [key], properties: { key: { type: string } } }, description: "Meta neighborhood keys (from GET /v1/ads/targeting/search)." }
