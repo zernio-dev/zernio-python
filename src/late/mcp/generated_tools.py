@@ -461,6 +461,8 @@ def register_generated_tools(mcp, _get_client):
         include_over_limit: bool = False,
         page: int | None = None,
         limit: int | None = None,
+        profile_ids: str | None = None,
+        per_profile: int | None = None,
     ) -> str:
         """List accounts
 
@@ -470,7 +472,9 @@ def register_generated_tools(mcp, _get_client):
             status: Filter accounts by connection status. `connected` returns healthy accounts; `disconnected` returns accounts that need reconnection (per the same reconnection check surfaced in the dashboard). Omit to return accounts in any status. When combined with page/limit, pagination totals reflect the filtered result set.
             include_over_limit: When true, includes accounts from over-limit profiles.
             page: Page number (1-based). Must be provided together with limit to enable server-side pagination; sending only one of the two returns 400. Omit both for all accounts.
-            limit: Page size. Must be provided together with page; sending only one of the two returns 400."""
+            limit: Page size. Must be provided together with page; sending only one of the two returns 400.
+            profile_ids: Comma-separated profile IDs (up to 50) to preview, together with perProfile. The response then also carries `profileTotals`.
+            per_profile: Return a preview of each profile in profileIds: the newest account of every platform it has, topped up to at least N. Requires profileIds; cannot be combined with page and limit."""
         client = _get_client()
         try:
             response = client.accounts.list_accounts(
@@ -480,6 +484,8 @@ def register_generated_tools(mcp, _get_client):
                 include_over_limit=include_over_limit,
                 page=page,
                 limit=limit,
+                profile_ids=profile_ids,
+                per_profile=per_profile,
             )
             return _format_response(response)
         except Exception as e:

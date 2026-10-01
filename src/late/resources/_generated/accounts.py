@@ -82,6 +82,8 @@ class AccountsResource:
         include_over_limit: bool | None = False,
         page: int | None = None,
         limit: int | None = None,
+        profile_ids: str | None = None,
+        per_profile: int | None = None,
     ) -> dict[str, Any]:
         """List accounts"""
         params = self._build_params(
@@ -91,6 +93,8 @@ class AccountsResource:
             include_over_limit=include_over_limit,
             page=page,
             limit=limit,
+            profile_ids=profile_ids,
+            per_profile=per_profile,
         )
         return self._client._get("/v1/accounts", params=params)
 
@@ -640,6 +644,8 @@ class AccountsResource:
         include_over_limit: bool | None = False,
         page: int | None = None,
         limit: int | None = None,
+        profile_ids: str | None = None,
+        per_profile: int | None = None,
     ) -> dict[str, Any]:
         """List accounts (async)"""
         params = self._build_params(
@@ -649,6 +655,8 @@ class AccountsResource:
             include_over_limit=include_over_limit,
             page=page,
             limit=limit,
+            profile_ids=profile_ids,
+            per_profile=per_profile,
         )
         return await self._client._aget("/v1/accounts", params=params)
 

@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.194.1"
+  version: "1.195.0"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -9219,6 +9219,9 @@ components:
         isOverLimit:
           type: boolean
           description: Only present when includeOverLimit=true. Indicates if this profile exceeds the plan limit.
+        accountCount:
+          type: integer
+          description: 'In the profile list. Connected accounts on the profile, including ones that need reconnecting; phone and SMS number internals and posting accounts hidden by an ads connect are not counted.'
         createdAt: { type: string, format: date-time }
     SocialAccount:
       type: object
@@ -10357,6 +10360,10 @@ components:
         pagination:
           description: Only present when page/limit params are provided
           $ref: '#/components/schemas/Pagination'
+        profileTotals:
+          type: object
+          additionalProperties: { type: integer }
+          description: 'Only with profileIds and perProfile. Accounts matching the filters per profile ID; a profile with none is absent.'
     FollowerStatsResponse:
       type: object
       properties:
@@ -22150,6 +22157,14 @@ paths:
           schema: { type: integer, minimum: 1, maximum: 100 }
           description: |
             Page size. Must be provided together with page; sending only one of the two returns 400.
+        - name: profileIds
+          in: query
+          schema: { type: string }
+          description: 'Comma-separated profile IDs (up to 50) to preview, together with perProfile. The response then also carries `profileTotals`.'
+        - name: perProfile
+          in: query
+          schema: { type: integer, minimum: 1, maximum: 24 }
+          description: 'Return a preview of each profile in profileIds: the newest account of every platform it has, topped up to at least N. Requires profileIds; cannot be combined with page and limit.'
       responses:
         '200':
           description: Accounts (with optional pagination)
