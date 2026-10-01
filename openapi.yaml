@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.192.0"
+  version: "1.193.0"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -226,6 +226,7 @@ x-documentation:
     - `branded_calling.identity.action_required` - A caller identity waits on you: answer a change request, enter the authorizer's code, fix a carrier rejection, respond to an infringement claim or renew an expired verification
     - `branded_calling.number.status_updated` - A number attached to a caller identity changed vetting status (verified = the identity now shows on its calls)
     - `rcs.agent.status_updated` - An RCS agent changed status: changes_requested, brand_vetting, agent_review, testing, launch_review, launching, live, rejected or deactivated
+    - `api.changelog.published` - An entry was published to the API changelog (https://docs.zernio.com/changelog). Carries the entry (`type`, `platforms`, markdown `message`, docs `url`) and the deterministic OpenAPI diff behind it (`changes`: operations and schemas added, removed and modified). Tenant-free: one broadcast reaches every subscription that opted in. Back-fill with GET /v1/changelog.
     - `webhook.test` - Test event sent when verifying a webhook endpoint
 
     Every delivery carries `X-Zernio-Event` (the event name) and `X-Zernio-Event-Id` (the payload's `id`, a UUID generated once when the event is emitted). That id is identical on every subscription that receives the event, on every automatic retry and on a redelivery via `POST /v1/webhooks/logs/redeliver`, so it is the key to dedupe on. Payloads are signed with HMAC-SHA256 via the `X-Zernio-Signature` header when the subscription has a secret. Legacy `X-Late-*` copies of these three headers are still sent and will be removed in a future major version.
@@ -244,7 +245,7 @@ x-documentation:
     | `ad.status_changed`, `whatsapp.template.*`, `whatsapp.account.*`, `whatsapp.contact.identity_changed` | `account.accountId` |
     | `whatsapp.automatic_event` | top-level `accountId` |
     | `whatsapp.number.*`, `sms.registration.*` | none; `number.id` / `registration.id` are the number and registration ids, `number.profileId` / `registration.profileId` the profile |
-    | `verification.*`, `phone_number.stock_available`, `webhook.test` | none |
+    | `verification.*`, `phone_number.stock_available`, `api.changelog.published`, `webhook.test` | none |
 
     ## Full Documentation
 
@@ -573,15 +574,18 @@ tags:
   - name: Webhooks
     description: |
       Configure webhooks for real-time notifications. Webhooks can be created from the dashboard (Settings → Webhooks) or via this API.
-      Events: post.scheduled, post.published, post.failed, post.partial, post.cancelled, post.recycled, post.platform.published, post.platform.failed, post.platform.deleted, post.tiktok.url_resolved, post.external.created, post.external.updated, post.external.deleted, account.connected, account.disconnected, account.ads.initial_sync_completed, account.ads.sync_failed, account.ads.sync_recovered, analytics.synced, message.received, conversation.started, conversation.control_changed, call.received, call.ended, call.failed, call.permission_request, message.sent, message.edited, message.deleted, message.delivered, message.read, message.played, message.failed, reaction.received, referral.received, comment.received, review.new, review.updated, lead.received, ad.status_changed, whatsapp.template.status_updated, whatsapp.template.category_updated, whatsapp.account.name_status_updated, whatsapp.account.quality_updated, whatsapp.account.status_updated, whatsapp.account.alert_received, whatsapp.contact.identity_changed, whatsapp.automatic_event, whatsapp.number.activated, whatsapp.number.declined, whatsapp.number.action_required, whatsapp.number.verification_required, whatsapp.number.suspended, whatsapp.number.reactivated, whatsapp.number.released, whatsapp.number.kyc_submitted, phone_number.stock_available, verification.approved, verification.failed, sms.registration.action_required, sms.registration.status_updated, branded_calling.identity.status_updated, branded_calling.identity.action_required, branded_calling.number.status_updated, rcs.agent.status_updated, commerce.product.created, commerce.product.updated, commerce.product.deleted, webhook.test.
+      Events: post.scheduled, post.published, post.failed, post.partial, post.cancelled, post.recycled, post.platform.published, post.platform.failed, post.platform.deleted, post.tiktok.url_resolved, post.external.created, post.external.updated, post.external.deleted, account.connected, account.disconnected, account.ads.initial_sync_completed, account.ads.sync_failed, account.ads.sync_recovered, analytics.synced, message.received, conversation.started, conversation.control_changed, call.received, call.ended, call.failed, call.permission_request, message.sent, message.edited, message.deleted, message.delivered, message.read, message.played, message.failed, reaction.received, referral.received, comment.received, review.new, review.updated, lead.received, ad.status_changed, whatsapp.template.status_updated, whatsapp.template.category_updated, whatsapp.account.name_status_updated, whatsapp.account.quality_updated, whatsapp.account.status_updated, whatsapp.account.alert_received, whatsapp.contact.identity_changed, whatsapp.automatic_event, whatsapp.number.activated, whatsapp.number.declined, whatsapp.number.action_required, whatsapp.number.verification_required, whatsapp.number.suspended, whatsapp.number.reactivated, whatsapp.number.released, whatsapp.number.kyc_submitted, phone_number.stock_available, verification.approved, verification.failed, api.changelog.published, sms.registration.action_required, sms.registration.status_updated, branded_calling.identity.status_updated, branded_calling.identity.action_required, branded_calling.number.status_updated, rcs.agent.status_updated, commerce.product.created, commerce.product.updated, commerce.product.deleted, webhook.test.
       Headers: every delivery carries X-Zernio-Event (event name) and X-Zernio-Event-Id (the payload `id`, a UUID minted once per event and identical across every subscribed endpoint, every automatic retry and every redelivery, so dedupe on it). Security: optional HMAC-SHA256 signature in X-Zernio-Signature header. Configure a secret key to enable verification. Custom headers supported. Legacy X-Late-Event, X-Late-Event-Id and X-Late-Signature duplicates are still sent and will be removed in a future major version.
 
-      Resource groups. Every event belongs to one group: post.* to publishing, message.*, reaction.*, conversation.*, call.* and whatsapp.automatic_event to messages, comment.* and review.* to engagement, lead.* to contacts, ad.* to ads, account.*, whatsapp.template.* and whatsapp.account.* to accounts, analytics.* to analytics, whatsapp.number.*, verification.* and sms.registration.* to telephony, webhook.test to webhooks. Two independent controls use that mapping. (1) A restricted (zrk_) API key can only subscribe to, test-fire, redeliver, or read delivery logs for events in the groups it holds, so it can never create a subscription broader than itself. (2) Each subscription carries its own `disabledResourceGroups` denylist: events in a disabled group are dropped before delivery to that endpoint, on live delivery and on every replay path, no matter which key or session created the subscription. Changing that denylist applies to every event emitted after the change; events already queued when it landed can still be delivered for up to five minutes after they were enqueued, because the delivery worker trusts a five-minute enqueue-time snapshot before re-checking. Absent or empty on a subscription means it receives everything it subscribes to, which is the behavior of every subscription created before the field existed.
+      Resource groups. Every event belongs to one group: post.* to publishing, message.*, reaction.*, conversation.*, call.* and whatsapp.automatic_event to messages, comment.* and review.* to engagement, lead.* to contacts, ad.* to ads, account.*, whatsapp.template.* and whatsapp.account.* to accounts, analytics.* to analytics, whatsapp.number.*, verification.* and sms.registration.* to telephony, api.changelog.published and webhook.test to webhooks. Two independent controls use that mapping. (1) A restricted (zrk_) API key can only subscribe to, test-fire, redeliver, or read delivery logs for events in the groups it holds, so it can never create a subscription broader than itself. (2) Each subscription carries its own `disabledResourceGroups` denylist: events in a disabled group are dropped before delivery to that endpoint, on live delivery and on every replay path, no matter which key or session created the subscription. Changing that denylist applies to every event emitted after the change; events already queued when it landed can still be delivered for up to five minutes after they were enqueued, because the delivery worker trusts a five-minute enqueue-time snapshot before re-checking. Absent or empty on a subscription means it receives everything it subscribes to, which is the behavior of every subscription created before the field existed.
 
       Profile and account filters. A subscription can also carry `profileIds`, an allowlist of profiles, and `accountIds`, an allowlist of connected accounts with the same semantics keyed on the account; each non-empty list narrows delivery and a subscription with both must be satisfied on both. A scoped subscription is only sent events it can attribute to one of those profiles: the profile of the connected account behind the event, or for an aggregate `post.*` event the profile of every account the post targets (a post spanning two scoped endpoints' profiles reaches both). So an integrator can route the profile holding test accounts to a staging endpoint while a second subscription, scoped to the production profiles, keeps production traffic. Events that belong to no profile (`verification.*`, `phone_number.*`, and a legacy post whose accounts were deleted) reach only unscoped subscriptions. The filter runs when an event is emitted; redelivery replays a delivery already made to that endpoint and test fires ignore it. Absent or empty means every profile (or every account).
   - name: Webhook Events
     description: |
       Incoming webhook deliveries sent by Zernio to your configured endpoint URL.
+  - name: Changelog
+    description: |
+      The API changelog (https://docs.zernio.com/changelog) as data: the entries the `api.changelog.published` webhook announces, newest first, for agents that automate against API changes and need to back-fill what they missed.
   - name: Logs
     description: |
       Publishing logs for transparency and debugging. Each log includes the platform API endpoint, HTTP status code, request/response bodies, duration, and retry attempts. Logs are automatically deleted after 7 days.
@@ -3863,7 +3867,7 @@ components:
           type: array
           items:
             type: string
-            enum: [post.scheduled, post.published, post.failed, post.partial, post.cancelled, post.recycled, post.platform.published, post.platform.failed, post.platform.deleted, post.tiktok.url_resolved, post.external.created, post.external.updated, post.external.deleted, account.connected, account.disconnected, account.ads.initial_sync_completed, account.ads.sync_failed, account.ads.sync_recovered, analytics.synced, message.received, conversation.started, conversation.control_changed, call.received, call.ended, call.failed, call.permission_request, message.sent, message.edited, message.deleted, message.delivered, message.read, message.played, message.failed, reaction.received, referral.received, comment.received, review.new, review.updated, lead.received, ad.status_changed, whatsapp.template.status_updated, whatsapp.template.category_updated, whatsapp.account.name_status_updated, whatsapp.account.quality_updated, whatsapp.account.status_updated, whatsapp.account.alert_received, whatsapp.contact.identity_changed, whatsapp.automatic_event, whatsapp.number.activated, whatsapp.number.declined, whatsapp.number.action_required, whatsapp.number.verification_required, whatsapp.number.suspended, whatsapp.number.reactivated, whatsapp.number.released, whatsapp.number.kyc_submitted, phone_number.stock_available, verification.approved, verification.failed, sms.registration.action_required, sms.registration.status_updated, branded_calling.identity.status_updated, branded_calling.identity.action_required, branded_calling.number.status_updated, rcs.agent.status_updated, commerce.product.created, commerce.product.updated, commerce.product.deleted]
+            enum: [post.scheduled, post.published, post.failed, post.partial, post.cancelled, post.recycled, post.platform.published, post.platform.failed, post.platform.deleted, post.tiktok.url_resolved, post.external.created, post.external.updated, post.external.deleted, account.connected, account.disconnected, account.ads.initial_sync_completed, account.ads.sync_failed, account.ads.sync_recovered, analytics.synced, message.received, conversation.started, conversation.control_changed, call.received, call.ended, call.failed, call.permission_request, message.sent, message.edited, message.deleted, message.delivered, message.read, message.played, message.failed, reaction.received, referral.received, comment.received, review.new, review.updated, lead.received, ad.status_changed, whatsapp.template.status_updated, whatsapp.template.category_updated, whatsapp.account.name_status_updated, whatsapp.account.quality_updated, whatsapp.account.status_updated, whatsapp.account.alert_received, whatsapp.contact.identity_changed, whatsapp.automatic_event, whatsapp.number.activated, whatsapp.number.declined, whatsapp.number.action_required, whatsapp.number.verification_required, whatsapp.number.suspended, whatsapp.number.reactivated, whatsapp.number.released, whatsapp.number.kyc_submitted, phone_number.stock_available, verification.approved, verification.failed, api.changelog.published, sms.registration.action_required, sms.registration.status_updated, branded_calling.identity.status_updated, branded_calling.identity.action_required, branded_calling.number.status_updated, rcs.agent.status_updated, commerce.product.created, commerce.product.updated, commerce.product.deleted]
           description: Events subscribed to
         isActive:
           type: boolean
@@ -7063,6 +7067,66 @@ components:
         conversationId: 6a0000000000000000000004
         changedAt: '2026-09-30T12:00:00.000Z'
         timestamp: '2026-09-30T12:00:01.000Z'
+    ApiChangelogOperationRef:
+      type: object
+      required: [method, path]
+      properties:
+        method: { type: string, example: POST }
+        path: { type: string, example: /v1/ads/create }
+        operationId: { type: string, example: createAd }
+    ApiChangelogEntry:
+      type: object
+      description: One API changelog entry, as shown on https://docs.zernio.com/changelog.
+      required: [id, type, platforms, message, publishedAt, specVersion, url, changes]
+      properties:
+        id: { type: string, description: 'Stable entry id; the same entry is never published twice.' }
+        type:
+          type: string
+          enum: [new_feature, breaking_change, improvement, deprecation, minor]
+        platforms:
+          type: array
+          items: { type: string }
+          description: 'Platform and area slugs the entry is about: a platform (`instagram`, `facebook`, `threads`, `tiktok`, `x`, `linkedin`, `youtube`, `pinterest`, `reddit`, `bluesky`, `telegram`, `snapchat`, `whatsapp`, `discord`, `slack`, `google-business`, `imessage`), an ads platform (`meta-ads`, `google-ads`, `tiktok-ads`, `linkedin-ads`, `pinterest-ads`, `x-ads`) or an area (`ads`, `publishing`, `inbox`, `telephony`, `commerce`, `analytics`, `webhooks`, `general`). Filter with the `platform` query parameter.'
+          example: [whatsapp, inbox]
+        message: { type: string, description: 'The announcement, in Markdown.' }
+        publishedAt: { type: string, format: date-time }
+        specVersion: { type: [string, "null"], description: 'The `info.version` of the OpenAPI spec the entry describes, when known.' }
+        url: { type: string, format: uri, description: 'The entry on the docs changelog.' }
+        changes:
+          type: object
+          description: 'Deterministic diff of the OpenAPI spec behind the entry. Empty lists when nothing of that kind changed.'
+          required: [endpoints, schemas]
+          properties:
+            endpoints:
+              type: object
+              required: [added, removed, modified]
+              properties:
+                added: { type: array, items: { $ref: '#/components/schemas/ApiChangelogOperationRef' } }
+                removed: { type: array, items: { $ref: '#/components/schemas/ApiChangelogOperationRef' } }
+                modified: { type: array, items: { $ref: '#/components/schemas/ApiChangelogOperationRef' } }
+            schemas:
+              type: object
+              required: [added, removed, modified]
+              properties:
+                added: { type: array, items: { type: string }, description: 'Component schema names.' }
+                removed: { type: array, items: { type: string } }
+                modified: { type: array, items: { type: string } }
+    WebhookPayloadApiChangelogPublished:
+      type: object
+      required: [id, event, entry, timestamp]
+      properties:
+        id:
+          type: string
+          description: 'Stable webhook event ID: the dedupe key, also sent as the X-Zernio-Event-Id header and identical on every retry and redelivery. It identifies the event only, never an account or other resource.'
+        event:
+          type: string
+          enum: [api.changelog.published]
+        entry:
+          $ref: '#/components/schemas/ApiChangelogEntry'
+        timestamp:
+          type: string
+          format: date-time
+          description: 'UTC time at which Zernio generated this event (set once when the event payload is built, before delivery is queued). Retries and redeliveries keep the original value, so it reflects the event, not the delivery attempt.'
     WebhookPayloadTest:
       type: object
       description: Webhook payload for test deliveries
@@ -15499,6 +15563,22 @@ webhooks:
       responses:
         '200':
           description: Webhook received successfully
+  api.changelog.published:
+    post:
+      operationId: onApiChangelogPublished
+      summary: API changelog entry published event
+      description: |
+        Fired when an entry is published to the API changelog (https://docs.zernio.com/changelog), which happens when a change to this OpenAPI spec goes live. The event belongs to no profile or account: every active subscription that opted in receives it, scoped subscriptions (`profileIds` / `accountIds`) do not. `entry.changes` is the deterministic diff of the spec (operations and schemas added, removed and modified); `entry.message` is the written announcement. Act on `changes` and `type`, read `message` for the why. Entries are listed by `GET /v1/changelog`.
+      tags: [Webhook Events]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/WebhookPayloadApiChangelogPublished'
+      responses:
+        '200':
+          description: Webhook received successfully
   webhook.test:
     post:
       operationId: onWebhookTest
@@ -22751,7 +22831,7 @@ paths:
         '404': { $ref: '#/components/responses/NotFound' }
   /v1/accounts/{accountId}/posts:
     get:
-      x-resource-group: "accounts"
+      x-resource-group: "publishing"
       operationId: getAccountPosts
       tags: [Accounts]
       x-platforms: ["facebook", "instagram", "twitter", "bluesky", "threads", "youtube", "linkedin", "reddit", "tiktok", "pinterest"]
@@ -22829,6 +22909,7 @@ paths:
 
   /v1/accounts/{accountId}/follow-status/{userId}:
     get:
+      x-resource-group: "accounts"
       operationId: getInstagramFollowStatus
       tags: [Accounts]
       x-platforms: ["instagram"]
@@ -24177,11 +24258,11 @@ paths:
 
   /v1/connect/meta-ads/callback:
     get:
+      x-resource-group: "public"
       operationId: completeMetaAdsBusinessLogin
       summary: Complete Meta business login
       tags: [Connect]
       x-platforms: [meta]
-      x-resource-group: "accounts"
       security: []
       description: "Facebook Login for Business redirect target. Meta supplies the single-use authorization code and the authenticated state returned by connectAds. The state expires after 30 minutes and binds the user, profile, Page selection and ad-account scope. No bearer token is sent by the browser. Success reconnects only metaads and redirects to the original redirect_url. Invalid state returns 400; inaccessible profiles or missing ads access cannot connect. Dashboard logins with several Pages redirect to the Facebook Page picker with an encrypted selectionToken valid for ten minutes. Listing and selecting require the initiating user and current profile access. No plaintext platform token is returned to the browser."
       parameters:
@@ -24715,6 +24796,7 @@ paths:
 
   /v1/connect/instagram/select-account:
     get:
+      x-resource-group: "accounts"
       operationId: listInstagramPages
       tags: [Connect]
       summary: List Pages with a linked Instagram account
@@ -24774,6 +24856,7 @@ paths:
         '401': { $ref: '#/components/responses/Unauthorized' }
         '403': { description: User does not have access to the specified profile }
     post:
+      x-resource-group: "accounts"
       operationId: selectInstagramAccount
       tags: [Connect]
       summary: Select the Page whose Instagram account to connect
@@ -30309,8 +30392,8 @@ paths:
         '401': { $ref: '#/components/responses/Unauthorized' }
         '404': { description: Account not found }
     post:
-      operationId: createYoutubePlaylist
       x-resource-group: "accounts"
+      operationId: createYoutubePlaylist
       tags: [Connect]
       summary: Create YouTube playlist
       description: >
@@ -32654,7 +32737,7 @@ paths:
                   minItems: 1
                   items:
                     type: string
-                    enum: [post.scheduled, post.published, post.failed, post.partial, post.cancelled, post.recycled, post.platform.published, post.platform.failed, post.platform.deleted, post.tiktok.url_resolved, post.external.created, post.external.updated, post.external.deleted, account.connected, account.disconnected, account.ads.initial_sync_completed, account.ads.sync_failed, account.ads.sync_recovered, analytics.synced, message.received, conversation.started, conversation.control_changed, call.received, call.ended, call.failed, call.permission_request, message.sent, message.edited, message.deleted, message.delivered, message.read, message.played, message.failed, reaction.received, referral.received, comment.received, review.new, review.updated, lead.received, ad.status_changed, whatsapp.template.status_updated, whatsapp.template.category_updated, whatsapp.account.name_status_updated, whatsapp.account.quality_updated, whatsapp.account.status_updated, whatsapp.account.alert_received, whatsapp.contact.identity_changed, whatsapp.automatic_event, whatsapp.number.activated, whatsapp.number.declined, whatsapp.number.action_required, whatsapp.number.verification_required, whatsapp.number.suspended, whatsapp.number.reactivated, whatsapp.number.released, whatsapp.number.kyc_submitted, phone_number.stock_available, verification.approved, verification.failed, sms.registration.action_required, sms.registration.status_updated, branded_calling.identity.status_updated, branded_calling.identity.action_required, branded_calling.number.status_updated, rcs.agent.status_updated, commerce.product.created, commerce.product.updated, commerce.product.deleted]
+                    enum: [post.scheduled, post.published, post.failed, post.partial, post.cancelled, post.recycled, post.platform.published, post.platform.failed, post.platform.deleted, post.tiktok.url_resolved, post.external.created, post.external.updated, post.external.deleted, account.connected, account.disconnected, account.ads.initial_sync_completed, account.ads.sync_failed, account.ads.sync_recovered, analytics.synced, message.received, conversation.started, conversation.control_changed, call.received, call.ended, call.failed, call.permission_request, message.sent, message.edited, message.deleted, message.delivered, message.read, message.played, message.failed, reaction.received, referral.received, comment.received, review.new, review.updated, lead.received, ad.status_changed, whatsapp.template.status_updated, whatsapp.template.category_updated, whatsapp.account.name_status_updated, whatsapp.account.quality_updated, whatsapp.account.status_updated, whatsapp.account.alert_received, whatsapp.contact.identity_changed, whatsapp.automatic_event, whatsapp.number.activated, whatsapp.number.declined, whatsapp.number.action_required, whatsapp.number.verification_required, whatsapp.number.suspended, whatsapp.number.reactivated, whatsapp.number.released, whatsapp.number.kyc_submitted, phone_number.stock_available, verification.approved, verification.failed, api.changelog.published, sms.registration.action_required, sms.registration.status_updated, branded_calling.identity.status_updated, branded_calling.identity.action_required, branded_calling.number.status_updated, rcs.agent.status_updated, commerce.product.created, commerce.product.updated, commerce.product.deleted]
                   description: Events to subscribe to (at least one required)
                 isActive:
                   type: boolean
@@ -32811,7 +32894,7 @@ paths:
                   minItems: 1
                   items:
                     type: string
-                    enum: [post.scheduled, post.published, post.failed, post.partial, post.cancelled, post.recycled, post.platform.published, post.platform.failed, post.platform.deleted, post.tiktok.url_resolved, post.external.created, post.external.updated, post.external.deleted, account.connected, account.disconnected, account.ads.initial_sync_completed, account.ads.sync_failed, account.ads.sync_recovered, analytics.synced, message.received, conversation.started, conversation.control_changed, call.received, call.ended, call.failed, call.permission_request, message.sent, message.edited, message.deleted, message.delivered, message.read, message.played, message.failed, reaction.received, referral.received, comment.received, review.new, review.updated, lead.received, ad.status_changed, whatsapp.template.status_updated, whatsapp.template.category_updated, whatsapp.account.name_status_updated, whatsapp.account.quality_updated, whatsapp.account.status_updated, whatsapp.account.alert_received, whatsapp.contact.identity_changed, whatsapp.automatic_event, whatsapp.number.activated, whatsapp.number.declined, whatsapp.number.action_required, whatsapp.number.verification_required, whatsapp.number.suspended, whatsapp.number.reactivated, whatsapp.number.released, whatsapp.number.kyc_submitted, phone_number.stock_available, verification.approved, verification.failed, sms.registration.action_required, sms.registration.status_updated, branded_calling.identity.status_updated, branded_calling.identity.action_required, branded_calling.number.status_updated, rcs.agent.status_updated, commerce.product.created, commerce.product.updated, commerce.product.deleted]
+                    enum: [post.scheduled, post.published, post.failed, post.partial, post.cancelled, post.recycled, post.platform.published, post.platform.failed, post.platform.deleted, post.tiktok.url_resolved, post.external.created, post.external.updated, post.external.deleted, account.connected, account.disconnected, account.ads.initial_sync_completed, account.ads.sync_failed, account.ads.sync_recovered, analytics.synced, message.received, conversation.started, conversation.control_changed, call.received, call.ended, call.failed, call.permission_request, message.sent, message.edited, message.deleted, message.delivered, message.read, message.played, message.failed, reaction.received, referral.received, comment.received, review.new, review.updated, lead.received, ad.status_changed, whatsapp.template.status_updated, whatsapp.template.category_updated, whatsapp.account.name_status_updated, whatsapp.account.quality_updated, whatsapp.account.status_updated, whatsapp.account.alert_received, whatsapp.contact.identity_changed, whatsapp.automatic_event, whatsapp.number.activated, whatsapp.number.declined, whatsapp.number.action_required, whatsapp.number.verification_required, whatsapp.number.suspended, whatsapp.number.reactivated, whatsapp.number.released, whatsapp.number.kyc_submitted, phone_number.stock_available, verification.approved, verification.failed, api.changelog.published, sms.registration.action_required, sms.registration.status_updated, branded_calling.identity.status_updated, branded_calling.identity.action_required, branded_calling.number.status_updated, rcs.agent.status_updated, commerce.product.created, commerce.product.updated, commerce.product.deleted]
                   description: Events to subscribe to. Must contain at least one event if provided.
                 isActive:
                   type: boolean
@@ -37052,6 +37135,7 @@ paths:
 
   /v1/inbox/posts/{postId}/like:
     post:
+      x-resource-group: "messages"
       operationId: likePost
       summary: Like post
       description: |
@@ -37135,6 +37219,7 @@ paths:
         '409':
           description: 'LinkedIn only: the account already holds a different reaction on this target (code invalid_resource_state); remove it before creating another.'
     delete:
+      x-resource-group: "messages"
       operationId: unlikePost
       summary: Unlike post
       description: |
@@ -42338,7 +42423,7 @@ paths:
 
   /v1/whatsapp/catalogs:
     get:
-      x-resource-group: "accounts"
+      x-resource-group: "messages"
       operationId: listWhatsAppCatalogs
       tags: [WhatsApp]
       summary: List the catalogs linked to a WhatsApp number
@@ -42365,7 +42450,7 @@ paths:
         '403': { $ref: '#/components/responses/CatalogPermissionDenied' }
         '404': { $ref: '#/components/responses/AccountUnavailable' }
     post:
-      x-resource-group: "accounts"
+      x-resource-group: "messages"
       operationId: linkWhatsAppCatalog
       tags: [WhatsApp]
       summary: Link a catalog to a WhatsApp number
@@ -42400,7 +42485,7 @@ paths:
         '403': { $ref: '#/components/responses/CatalogPermissionDenied' }
         '404': { $ref: '#/components/responses/AccountUnavailable' }
     delete:
-      x-resource-group: "accounts"
+      x-resource-group: "messages"
       operationId: unlinkWhatsAppCatalog
       tags: [WhatsApp]
       summary: Unlink a catalog from a WhatsApp number
@@ -42422,7 +42507,7 @@ paths:
         '404': { $ref: '#/components/responses/AccountUnavailable' }
   /v1/whatsapp/commerce-settings:
     get:
-      x-resource-group: "accounts"
+      x-resource-group: "messages"
       operationId: getWhatsAppCommerceSettings
       tags: [WhatsApp]
       summary: Get a number's commerce settings
@@ -42446,7 +42531,7 @@ paths:
         '403': { $ref: '#/components/responses/CatalogPermissionDenied' }
         '404': { $ref: '#/components/responses/AccountUnavailable' }
     put:
-      x-resource-group: "accounts"
+      x-resource-group: "messages"
       operationId: updateWhatsAppCommerceSettings
       tags: [WhatsApp]
       summary: Update a number's commerce settings
@@ -43226,7 +43311,7 @@ paths:
 
   /v1/whatsapp/account-events:
     get:
-      x-resource-group: "accounts"
+      x-resource-group: "messages"
       operationId: listWhatsAppAccountEvents
       tags: [WhatsApp]
       summary: List account notifications
@@ -50699,11 +50784,11 @@ paths:
 
   /v1/ads/recommendations:
     get:
+      x-resource-group: "ads"
       operationId: listGoogleRecommendations
       summary: List Google Ads recommendations
       tags: ["Ad Campaigns"]
       x-platforms: ["google"]
-      x-resource-group: "ads"
       security:
         - bearerAuth: []
       description: "Google's optimization recommendations for one ad account: type, estimated impact (base vs potential metrics, cost in account currency units), the campaign, ad group or budget they target, and the type-specific payload Google returns (`details`, in Google's own shape with micros). Filter by campaignId and types. Cached for 10 minutes and cleared by apply or dismiss; served stale when Google quota is exhausted."
@@ -50734,11 +50819,11 @@ paths:
         '501': { description: "accountId is not a Google Ads connection." }
   /v1/ads/recommendations/apply:
     post:
+      x-resource-group: "ads"
       operationId: applyGoogleRecommendations
       summary: Apply Google Ads recommendations
       tags: ["Ad Campaigns"]
       x-platforms: ["google"]
-      x-resource-group: "ads"
       security:
         - bearerAuth: []
       description: "Apply up to 100 recommendations. This changes the account (budgets, bidding, keywords, assets) and is not reversible or idempotent; Google offers no validate-only mode for it. Items run in partial-failure mode, so one stale recommendation does not block the rest. `parameters` is optional and takes exactly one key named for the recommendation type, in Google's ApplyRecommendationOperation shape (for example `campaignBudget: { newBudgetAmountMicros }` or `keyword: { matchType, cpcBidMicros }`); omit it to apply Google's suggested values."
@@ -50791,11 +50876,11 @@ paths:
         '501': { description: "accountId is not a Google Ads connection." }
   /v1/ads/recommendations/dismiss:
     post:
+      x-resource-group: "ads"
       operationId: dismissGoogleRecommendations
       summary: Dismiss Google Ads recommendations
       tags: ["Ad Campaigns"]
       x-platforms: ["google"]
-      x-resource-group: "ads"
       security:
         - bearerAuth: []
       description: "Dismiss up to 100 recommendations so Google stops suggesting them. Items run in partial-failure mode."
@@ -53676,9 +53761,9 @@ paths:
 
   /v1/ads/campaigns/{campaignId}/assets:
     get:
+      x-resource-group: "ads"
       operationId: listCampaignAssets
       summary: List campaign assets
-      x-resource-group: ads
       tags:
       - Ad Campaigns
       x-platforms:
@@ -53792,9 +53877,9 @@ paths:
         '501':
           description: "Only supported on Google Ads."
     post:
+      x-resource-group: "ads"
       operationId: attachCampaignAssets
       summary: Attach campaign assets
-      x-resource-group: ads
       tags:
       - Ad Campaigns
       x-platforms:
@@ -53906,9 +53991,9 @@ paths:
         '501':
           description: "Only supported on Google Ads."
     put:
+      x-resource-group: "ads"
       operationId: updateCampaignAssets
       summary: Update campaign assets
-      x-resource-group: ads
       tags:
       - Ad Campaigns
       x-platforms:
@@ -53986,9 +54071,9 @@ paths:
         '501':
           description: "Only supported on Google Ads."
     delete:
+      x-resource-group: "ads"
       operationId: removeCampaignAssets
       summary: Remove campaign assets
-      x-resource-group: ads
       tags:
       - Ad Campaigns
       x-platforms:
@@ -54071,9 +54156,9 @@ paths:
 
   /v1/ads/ad-sets/{adSetId}/assets:
     get:
+      x-resource-group: "ads"
       operationId: listAdGroupAssets
       summary: List ad-group assets
-      x-resource-group: ads
       tags:
       - Ad Campaigns
       x-platforms:
@@ -54187,9 +54272,9 @@ paths:
         '501':
           description: "Only supported on Google Ads."
     post:
+      x-resource-group: "ads"
       operationId: attachAdGroupAssets
       summary: Attach ad-group assets
-      x-resource-group: ads
       tags:
       - Ad Campaigns
       x-platforms:
@@ -54301,9 +54386,9 @@ paths:
         '501':
           description: "Only supported on Google Ads."
     put:
+      x-resource-group: "ads"
       operationId: updateAdGroupAssets
       summary: Update ad-group assets
-      x-resource-group: ads
       tags:
       - Ad Campaigns
       x-platforms:
@@ -54381,9 +54466,9 @@ paths:
         '501':
           description: "Only supported on Google Ads."
     delete:
+      x-resource-group: "ads"
       operationId: removeAdGroupAssets
       summary: Remove ad-group assets
-      x-resource-group: ads
       tags:
       - Ad Campaigns
       x-platforms:
@@ -55351,10 +55436,10 @@ paths:
 
   /v1/ads/{adId}/comments/{commentId}/reply:
     post:
+      x-resource-group: "engagement"
       operationId: replyToAdComment
       summary: Reply to an ad comment
       tags: ["Ad Accounts"]
-      x-resource-group: "engagement"
       x-platforms: ["tiktok"]
       description: |
         Reply to a first-level TikTok ad comment. Requires a TT_USER or CUSTOMIZED_USER identity with comment-management permission. Replies to replies are rejected. The response commentId identifies the new reply. This operation is not idempotent; do not blindly retry an uncertain response.
@@ -55418,10 +55503,10 @@ paths:
 
   /v1/ads/{adId}/comments/{commentId}/hide:
     post:
+      x-resource-group: "engagement"
       operationId: hideAdComment
       summary: Hide or unhide an ad comment
       tags: ["Ad Accounts"]
-      x-resource-group: "engagement"
       x-platforms: ["tiktok"]
       description: |
         Hide or restore a TikTok ad comment. Send hidden=true to hide it or hidden=false to make it public again. Identity and video item ID are not required; no identity lookup is performed.
@@ -55478,10 +55563,10 @@ paths:
 
   /v1/ads/{adId}/comments/{commentId}:
     delete:
+      x-resource-group: "engagement"
       operationId: deleteAdComment
       summary: Delete an ad comment
       tags: ["Ad Accounts"]
-      x-resource-group: "engagement"
       x-platforms: ["tiktok"]
       description: |
         Delete your own TikTok ad comment or reply. TikTok must return can_delete=true for the comment. Other users' comments can be hidden instead.
@@ -55905,11 +55990,11 @@ paths:
         '409': { $ref: '#/components/responses/AccountConnectionRequired' }
   /v1/ads/instagram-accounts:
     get:
+      x-resource-group: "ads"
       operationId: listAdsInstagramAccounts
       summary: List Instagram ad identities
       description: "Discovers identities through connected_instagram_accounts, Page linkage and Page-backed identities, with a best-effort business fallback. Business permission errors do not fail discovery. The resolved object uses the same profile-scoped resolver as ad creation; null means no identity was resolved. Format-specific observed-actor fallbacks at creative creation are not predicted."
       tags: ["Ad Accounts"]
-      x-resource-group: "ads"
       x-platforms: ["meta"]
       security:
         - bearerAuth: []
@@ -55970,11 +56055,11 @@ paths:
 
   /v1/ads/instagram-posts:
     get:
+      x-resource-group: "ads"
       operationId: listAdsInstagramPosts
       summary: List Instagram posts to boost
       description: "Lists the media of the Instagram account this Meta connection can reach, so an existing Instagram post can be boosted without connecting the Instagram account separately. Each `posts[].id` is the existing-post id to send as `platformPostId` when creating the ad; Meta turns it into `source_instagram_media_id` on the creative. Identity resolution reuses the same resolver as `/v1/ads/instagram-accounts`. `igUserId` is always checked against the identities the connection can reach and is never trusted as sent. When no identity is reachable the endpoint fails instead of returning an empty list, and the two causes stay apart: `403 reconnect_required` means the connection predates Instagram access (Meta then omits `instagram_business_account` from the Page read rather than erroring, so it looks identical to having no data) and the account must be reconnected granting Instagram access, while `422 instagram_business_account_unresolved` means the Page genuinely has no Instagram professional account linked."
       tags: ["Ad Accounts"]
-      x-resource-group: "ads"
       x-platforms: ["meta"]
       security:
         - bearerAuth: []
@@ -56034,11 +56119,11 @@ paths:
 
   /v1/ads/advertisable-applications:
     get:
+      x-resource-group: "ads"
       operationId: listAdvertisableApplications
       summary: List advertisable apps
       description: "Lists applications available to a Meta ad account, their supported platforms and unmodified object store URLs. A listed app still needs a configured mobile platform and store URL to run install promotion."
       tags: ["Ad Accounts"]
-      x-resource-group: "ads"
       x-platforms: ["meta"]
       security:
         - bearerAuth: []
@@ -56086,11 +56171,11 @@ paths:
 
   /v1/ads/ios-fourteen-campaign-limits:
     get:
+      x-resource-group: "ads"
       operationId: getIosFourteenCampaignLimits
       summary: Get iOS 14 campaign limits
       description: "Reads Meta iOS 14 campaign limits for an application on an ad account. applicationId is sent as Meta app_id. This read does not establish that the application is configured for iOS promotion."
       tags: ["Ad Accounts"]
-      x-resource-group: "ads"
       x-platforms: ["meta"]
       security:
         - bearerAuth: []
@@ -57951,9 +58036,9 @@ paths:
 
   /v1/ads/accounts/callouts:
     get:
+      x-resource-group: "ads"
       operationId: listAccountCallouts
       summary: List account callouts
-      x-resource-group: ads
       tags:
       - Ad Accounts
       x-platforms:
@@ -58028,9 +58113,9 @@ paths:
         '501':
           description: "Only supported on Google Ads."
     post:
+      x-resource-group: "ads"
       operationId: addAccountCallouts
       summary: Add account callouts
-      x-resource-group: ads
       tags:
       - Ad Accounts
       x-platforms:
@@ -58107,9 +58192,9 @@ paths:
         '501':
           description: "Only supported on Google Ads."
     put:
+      x-resource-group: "ads"
       operationId: updateAccountCallouts
       summary: Update account callouts
-      x-resource-group: ads
       tags:
       - Ad Accounts
       x-platforms:
@@ -58199,9 +58284,9 @@ paths:
         '501':
           description: "Only supported on Google Ads."
     delete:
+      x-resource-group: "ads"
       operationId: removeAccountCallout
       summary: Remove account callout
-      x-resource-group: ads
       tags:
       - Ad Accounts
       x-platforms:
@@ -58268,9 +58353,9 @@ paths:
 
   /v1/ads/accounts/sitelinks:
     get:
+      x-resource-group: "ads"
       operationId: listAccountSitelinks
       summary: List account sitelinks
-      x-resource-group: ads
       tags:
       - Ad Accounts
       x-platforms:
@@ -58355,9 +58440,9 @@ paths:
         '501':
           description: "Only supported on Google Ads."
     post:
+      x-resource-group: "ads"
       operationId: addAccountSitelinks
       summary: Add account sitelinks
-      x-resource-group: ads
       tags:
       - Ad Accounts
       x-platforms:
@@ -58446,9 +58531,9 @@ paths:
         '501':
           description: "Only supported on Google Ads."
     put:
+      x-resource-group: "ads"
       operationId: updateAccountSitelinks
       summary: Update account sitelinks
-      x-resource-group: ads
       tags:
       - Ad Accounts
       x-platforms:
@@ -58555,9 +58640,9 @@ paths:
         '501':
           description: "Only supported on Google Ads."
     delete:
+      x-resource-group: "ads"
       operationId: removeAccountSitelink
       summary: Remove account sitelink
-      x-resource-group: ads
       tags:
       - Ad Accounts
       x-platforms:
@@ -58624,9 +58709,9 @@ paths:
 
   /v1/ads/accounts/structured-snippets:
     get:
+      x-resource-group: "ads"
       operationId: listAccountStructuredSnippets
       summary: List account snippets
-      x-resource-group: ads
       tags:
       - Ad Accounts
       x-platforms:
@@ -58708,9 +58793,9 @@ paths:
         '501':
           description: "Only supported on Google Ads."
     post:
+      x-resource-group: "ads"
       operationId: addAccountStructuredSnippets
       summary: Add account snippets
-      x-resource-group: ads
       tags:
       - Ad Accounts
       x-platforms:
@@ -58811,9 +58896,9 @@ paths:
         '501':
           description: "Only supported on Google Ads."
     put:
+      x-resource-group: "ads"
       operationId: updateAccountStructuredSnippets
       summary: Update account snippets
-      x-resource-group: ads
       tags:
       - Ad Accounts
       x-platforms:
@@ -58900,9 +58985,9 @@ paths:
         '501':
           description: "Only supported on Google Ads."
     delete:
+      x-resource-group: "ads"
       operationId: removeAccountStructuredSnippet
       summary: Remove account snippet
-      x-resource-group: ads
       tags:
       - Ad Accounts
       x-platforms:
@@ -59321,10 +59406,10 @@ paths:
 
   /v1/ads/accounts:
     post:
+      x-resource-group: "ads"
       operationId: createAdAccount
       summary: Create Meta ad account
       tags: ["Ad Accounts"]
-      x-resource-group: "ads"
       x-platforms: ["meta"]
       description: |
         Creates a durable Meta ad account in the end user's own business portfolio using
@@ -60198,11 +60283,11 @@ paths:
 
   /v1/ads/campaigns/{campaignId}/asset-groups:
     get:
+      x-resource-group: "ads"
       operationId: listGoogleAssetGroups
       summary: List Performance Max asset groups
       tags: ["Ad Campaigns"]
       x-platforms: ["google"]
-      x-resource-group: "ads"
       description: "Read Performance Max asset groups and their linked text, image and YouTube assets. campaignId is the platform campaign id returned by creation or the campaign list. The campaign must be visible to the caller. Uses a 10-minute cache, with the last successful response served as stale when Google quota is exhausted. Removed groups and asset links are excluded. Campaign-level brand assets on campaigns with brand guidelines enabled are not included."
       security:
         - bearerAuth: []
@@ -60246,11 +60331,11 @@ paths:
         '501':
           description: "Campaign is not on Google Ads."
     post:
+      x-resource-group: "ads"
       operationId: createGoogleAssetGroup
       summary: Create a Performance Max asset group
       tags: ["Ad Campaigns"]
       x-platforms: ["google"]
-      x-resource-group: "ads"
       security:
         - bearerAuth: []
       description: "Add an asset group to an existing Performance Max campaign. The group, any new assets, their links and an optional listing-group tree are created in one atomic request, so Google checks the asset minimums (for non-retail campaigns) against the whole set. Created PAUSED unless status is ENABLED. validateOnly: true runs Google's validation without creating anything."
@@ -60312,11 +60397,11 @@ paths:
         '501': { description: "Campaign is not on Google Ads." }
   /v1/ads/campaigns/{campaignId}/asset-groups/{assetGroupId}:
     get:
+      x-resource-group: "ads"
       operationId: getGoogleAssetGroup
       summary: Get a Performance Max asset group
       tags: ["Ad Campaigns"]
       x-platforms: ["google"]
-      x-resource-group: "ads"
       security:
         - bearerAuth: []
       description: "One asset group with its linked assets, ad strength, primary status and listing-group tree. Uses a 10-minute cache, served stale when Google quota is exhausted; any write below clears it."
@@ -60342,11 +60427,11 @@ paths:
         '429': { description: "Google quota or the Zernio Google operations burst limit is exhausted." }
         '501': { description: "Campaign is not on Google Ads." }
     patch:
+      x-resource-group: "ads"
       operationId: updateGoogleAssetGroup
       summary: Update a Performance Max asset group
       tags: ["Ad Campaigns"]
       x-platforms: ["google"]
-      x-resource-group: "ads"
       security:
         - bearerAuth: []
       description: "Change the name, status (ENABLED or PAUSED), final URLs or display paths. Only the fields sent are written; null on path1 or path2 clears it. Change assets with the /assets endpoint and product targeting with /listing-group-filters. validateOnly: true validates without writing."
@@ -60386,11 +60471,11 @@ paths:
         '429': { description: "Google quota or the Zernio Google operations burst limit is exhausted." }
         '501': { description: "Campaign is not on Google Ads." }
     delete:
+      x-resource-group: "ads"
       operationId: removeGoogleAssetGroup
       summary: Remove a Performance Max asset group
       tags: ["Ad Campaigns"]
       x-platforms: ["google"]
-      x-resource-group: "ads"
       security:
         - bearerAuth: []
       description: "Removes the asset group on Google (status REMOVED, not reversible). Pass validateOnly=true to validate without removing."
@@ -60417,11 +60502,11 @@ paths:
         '501': { description: "Campaign is not on Google Ads." }
   /v1/ads/campaigns/{campaignId}/asset-groups/{assetGroupId}/assets:
     post:
+      x-resource-group: "ads"
       operationId: editGoogleAssetGroupAssets
       summary: Link or unlink asset group assets
       tags: ["Ad Campaigns"]
       x-platforms: ["google"]
-      x-resource-group: "ads"
       security:
         - bearerAuth: []
       description: "Link existing assets or new content to the asset group, and unlink assets, in one atomic request. Links are applied before unlinks, so swapping the last asset of a role does not trip Google's per-role minimum. Unlinking removes the link only; the asset stays in the account library. validateOnly: true validates without writing."
@@ -60461,11 +60546,11 @@ paths:
         '501': { description: "Campaign is not on Google Ads." }
   /v1/ads/campaigns/{campaignId}/asset-groups/{assetGroupId}/listing-group-filters:
     put:
+      x-resource-group: "ads"
       operationId: replaceGoogleListingGroupFilters
       summary: Replace an asset group's listing-group tree
       tags: ["Ad Campaigns"]
       x-platforms: ["google"]
-      x-resource-group: "ads"
       security:
         - bearerAuth: []
       description: "Replace the product (listing-group) tree of a Performance Max retail asset group. The current tree is removed and the new one created in one atomic request. Read the current tree with GET on the asset group. Requires a campaign linked to Merchant Center; other campaigns return 400 LISTING_SOURCE_NOT_ALLOWED from Google. validateOnly: true validates without writing."
@@ -72307,12 +72392,12 @@ paths:
 
   /v1/ads/pixels:
     get:
+      x-resource-group: "ads"
       operationId: 'listTikTokAdPixels'
       summary: 'List TikTok ad pixels'
       description: 'Lists pixels and their supported optimization events for a connected TikTok Ads account. The advertiser defaults to the first advertiser on the connection. Reconnect if Pixel Management permission has not been granted.'
       tags:
         - 'Ad Accounts'
-      x-resource-group: 'ads'
       x-platforms:
         - 'tiktok'
       security:
@@ -72397,12 +72482,12 @@ paths:
           description: 'Pixel Management permission is missing (code reconnect_required). Reconnect TikTok Ads to grant it.'
   /v1/ads/partnership-content:
     get:
+      x-resource-group: "ads"
       operationId: 'listPartnershipAdContent'
       summary: 'List partnership ad content'
       description: 'Private beta. Lists creator Instagram posts available to the advertiser for Partnership Ads. Supply creatorUsername or postUrl. Requires instagram_branded_content_ads_brand permission and an advertiser Instagram Business Account.'
       tags:
         - 'Ad Creatives'
-      x-resource-group: 'ads'
       x-platforms:
         - 'meta'
       security:
@@ -72468,12 +72553,12 @@ paths:
           description: 'The advertiser Instagram Business Account could not be resolved.'
   /v1/ads/partnership-permissions:
     get:
+      x-resource-group: "ads"
       operationId: 'listPartnershipAdPermissions'
       summary: 'List partnership permissions'
       description: 'Private beta. Lists granted or pending creator permissions for the advertiser Instagram Business Account. Requires instagram_branded_content_ads_brand permission.'
       tags:
         - 'Ad Creatives'
-      x-resource-group: 'ads'
       x-platforms:
         - 'meta'
       security:
@@ -72514,12 +72599,12 @@ paths:
         "422":
           description: 'The advertiser Instagram Business Account could not be resolved.'
     post:
+      x-resource-group: "ads"
       operationId: 'setPartnershipAdPermission'
       summary: 'Set partnership permission'
       description: 'Private beta. Requests permission from a creator or revokes it when revoke is true. Requests require the creator to approve in Instagram. Requires instagram_branded_content_ads_brand permission.'
       tags:
         - 'Ad Creatives'
-      x-resource-group: 'ads'
       x-platforms:
         - 'meta'
       security:
@@ -72568,6 +72653,7 @@ paths:
           description: 'The advertiser Instagram Business Account could not be resolved.'
   /v1/tools/tiktok/download:
     get:
+      x-resource-group: "publishing"
       operationId: downloadTikTokVideo
       tags: [Tools]
       x-platforms: ["tiktok"]
@@ -72630,3 +72716,59 @@ paths:
         '429': { $ref: '#/components/responses/RateLimited' }
         '502': { $ref: '#/components/responses/UpstreamFailure' }
         '503': { $ref: '#/components/responses/TemporarilyUnavailable' }
+
+  # ============================================
+  # Changelog
+  # ============================================
+  /v1/changelog:
+    get:
+      x-resource-group: "public"
+      operationId: listChangelog
+      tags: [Changelog]
+      summary: List API changelog entries
+      description: |
+        The API changelog, newest first. Each entry is what the `api.changelog.published` webhook delivered: the announcement in `message`, and in `changes` the deterministic diff of the OpenAPI spec (operations and schemas added, removed and modified) for automation to act on. Page with `before` set to the previous page's `nextCursor`.
+      parameters:
+        - name: type
+          in: query
+          required: false
+          schema:
+            type: string
+            enum: [new_feature, breaking_change, improvement, deprecation, minor]
+          description: Only entries of this type.
+        - name: platform
+          in: query
+          required: false
+          schema: { type: string, pattern: '^[a-z0-9-]+$' }
+          description: 'Only entries tagged with this platform or area slug (see `platforms` on the entry). One slug per request.'
+          example: whatsapp
+        - name: before
+          in: query
+          required: false
+          schema: { type: string, format: date-time }
+          description: Only entries published strictly before this instant. Pass the previous page's `nextCursor`.
+        - name: limit
+          in: query
+          required: false
+          schema: { type: integer, minimum: 1, maximum: 100, default: 20 }
+      responses:
+        '200':
+          description: Changelog entries
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [entries, nextCursor]
+                properties:
+                  entries:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/ApiChangelogEntry'
+                  nextCursor:
+                    type: [string, "null"]
+                    format: date-time
+                    description: '`before` value for the next page, or null when this page was not full.'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'

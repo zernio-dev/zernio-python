@@ -12094,6 +12094,38 @@ def register_generated_tools(mcp, _get_client):
         except Exception as e:
             return f"Error: {e}"
 
+    # CHANGELOG
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="List API changelog entries",
+            readOnlyHint=True,
+            destructiveHint=False,
+            openWorldHint=False,
+        )
+    )
+    def changelog_list_changelog(
+        type: str | None = None,
+        platform: str | None = None,
+        before: str | None = None,
+        limit: int = 20,
+    ) -> str:
+        """List API changelog entries
+
+        Args:
+            type: Only entries of this type.
+            platform: Only entries tagged with this platform or area slug (see `platforms` on the entry). One slug per request.
+            before: Only entries published strictly before this instant. Pass the previous page's `nextCursor`.
+            limit"""
+        client = _get_client()
+        try:
+            response = client.changelog.list_changelog(
+                type=type, platform=platform, before=before, limit=limit
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
     # COMMENT_AUTOMATIONS
 
     @mcp.tool(

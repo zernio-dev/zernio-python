@@ -724,6 +724,11 @@ Both `from zernio import ...` and `from late import ...` work identically. The `
 | `calls.get_call()` | Get a call (any channel) |
 | `calls.get_call_recording()` | Get a call recording |
 
+### Changelog
+| Method | Description |
+|--------|-------------|
+| `changelog.list_changelog()` | List API changelog entries |
+
 ### Comment Automations
 | Method | Description |
 |--------|-------------|

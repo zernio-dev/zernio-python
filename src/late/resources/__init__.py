@@ -21,6 +21,7 @@ from ._generated.branded_calling import BrandedCallingResource
 from ._generated.broadcasts import BroadcastsResource
 from ._generated.business_agent import BusinessAgentResource
 from ._generated.calls import CallsResource
+from ._generated.changelog import ChangelogResource
 from ._generated.comment_automations import CommentAutomationsResource
 from ._generated.comments import CommentsResource
 from ._generated.commerce import CommerceResource
@@ -95,6 +96,7 @@ __all__ = [
     "BroadcastsResource",
     "BusinessAgentResource",
     "CallsResource",
+    "ChangelogResource",
     "CommentAutomationsResource",
     "CommentsResource",
     "CommerceResource",

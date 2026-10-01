@@ -19,6 +19,7 @@ from .branded_calling import BrandedCallingResource
 from .broadcasts import BroadcastsResource
 from .business_agent import BusinessAgentResource
 from .calls import CallsResource
+from .changelog import ChangelogResource
 from .comment_automations import CommentAutomationsResource
 from .comments import CommentsResource
 from .commerce import CommerceResource
@@ -89,6 +90,7 @@ __all__ = [
     "BroadcastsResource",
     "BusinessAgentResource",
     "CallsResource",
+    "ChangelogResource",
     "CommentAutomationsResource",
     "CommentsResource",
     "CommerceResource",

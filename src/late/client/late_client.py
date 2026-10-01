@@ -27,6 +27,7 @@ from ..resources import (
     BroadcastsResource,
     BusinessAgentResource,
     CallsResource,
+    ChangelogResource,
     CommentAutomationsResource,
     CommentsResource,
     CommerceResource,
@@ -176,6 +177,7 @@ class Zernio(BaseClient):
         self.broadcasts = BroadcastsResource(self)
         self.business_agent = BusinessAgentResource(self)
         self.calls = CallsResource(self)
+        self.changelog = ChangelogResource(self)
         self.comment_automations = CommentAutomationsResource(self)
         self.comments = CommentsResource(self)
         self.commerce = CommerceResource(self)
