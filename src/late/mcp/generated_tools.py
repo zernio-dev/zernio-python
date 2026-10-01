@@ -9100,6 +9100,48 @@ def register_generated_tools(mcp, _get_client):
 
     @mcp.tool(
         annotations=ToolAnnotations(
+            title="Get an analytics dashboard",
+            readOnlyHint=True,
+            destructiveHint=False,
+            openWorldHint=False,
+        )
+    )
+    def analytics_get_analytics_dashboard(
+        from_date: str,
+        to_date: str,
+        profile_id: str = "all",
+        platform: str = "all",
+        compare: str | None = None,
+        top_posts: int = 5,
+        recent_posts: int = 10,
+    ) -> str:
+        """Get an analytics dashboard
+
+        Args:
+            profile_id: Profile ID, or "all" for every profile you can access.
+            platform: Platform to cover (e.g. "instagram"), or "all".
+            from_date: First day of the window (YYYY-MM-DD, inclusive). (required)
+            to_date: Last day of the window (YYYY-MM-DD, inclusive). May equal fromDate. The window covers at most 366 days. (required)
+            compare: Set to "previous_period" to also return previousTotals and previousFollowers for the window of the same length that ends the day before fromDate.
+            top_posts: How many top posts to return, ranked by engagement (likes, comments, shares and saves, the same sum as daily engagement).
+            recent_posts: How many of the most recently published posts to return."""
+        client = _get_client()
+        try:
+            response = client.analytics.get_analytics_dashboard(
+                profile_id=profile_id,
+                platform=platform,
+                from_date=from_date,
+                to_date=to_date,
+                compare=compare,
+                top_posts=top_posts,
+                recent_posts=recent_posts,
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
             title="Get best times to post",
             readOnlyHint=True,
             destructiveHint=False,

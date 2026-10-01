@@ -387,6 +387,29 @@ class AnalyticsResource:
         )
         return self._client._get("/v1/analytics/daily-metrics", params=params)
 
+    def get_analytics_dashboard(
+        self,
+        from_date: str,
+        to_date: str,
+        *,
+        profile_id: str | None = "all",
+        platform: str | None = "all",
+        compare: str | None = None,
+        top_posts: int | None = 5,
+        recent_posts: int | None = 10,
+    ) -> dict[str, Any]:
+        """Get an analytics dashboard"""
+        params = self._build_params(
+            profile_id=profile_id,
+            platform=platform,
+            from_date=from_date,
+            to_date=to_date,
+            compare=compare,
+            top_posts=top_posts,
+            recent_posts=recent_posts,
+        )
+        return self._client._get("/v1/analytics/dashboard", params=params)
+
     def get_best_time_to_post(
         self,
         *,
@@ -891,6 +914,29 @@ class AnalyticsResource:
             attribution=attribution,
         )
         return await self._client._aget("/v1/analytics/daily-metrics", params=params)
+
+    async def aget_analytics_dashboard(
+        self,
+        from_date: str,
+        to_date: str,
+        *,
+        profile_id: str | None = "all",
+        platform: str | None = "all",
+        compare: str | None = None,
+        top_posts: int | None = 5,
+        recent_posts: int | None = 10,
+    ) -> dict[str, Any]:
+        """Get an analytics dashboard (async)"""
+        params = self._build_params(
+            profile_id=profile_id,
+            platform=platform,
+            from_date=from_date,
+            to_date=to_date,
+            compare=compare,
+            top_posts=top_posts,
+            recent_posts=recent_posts,
+        )
+        return await self._client._aget("/v1/analytics/dashboard", params=params)
 
     async def aget_best_time_to_post(
         self,

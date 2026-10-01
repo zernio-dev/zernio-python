@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.188.0"
+  version: "1.189.0"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -1095,6 +1095,53 @@ components:
                   effective_account_limit: 2000
                   current_account_count: 2000
   schemas:
+    AnalyticsDashboardTotals:
+      type: object
+      properties:
+        impressions: { type: integer }
+        reach: { type: integer }
+        likes: { type: integer }
+        comments: { type: integer }
+        shares: { type: integer }
+        saves: { type: integer }
+        clicks: { type: integer }
+        views: { type: integer }
+        engagementRate:
+          type: number
+          description: 'Percentage. Likes, comments, shares and saves over impressions, pooled per platform (reach, then views, when a platform has no impressions).'
+    AnalyticsDashboardFollowers:
+      type: object
+      properties:
+        current: { type: integer, description: 'Live follower count when the window includes today, otherwise the count the window ended on.' }
+        gained: { type: integer, description: 'Last minus first follower snapshot inside the window. Can be negative.' }
+        byAccount:
+          type: array
+          items:
+            type: object
+            properties:
+              accountId: { type: string }
+              platform: { type: string }
+              current: { type: integer }
+              gained: { type: integer }
+    AnalyticsDashboardPost:
+      type: object
+      properties:
+        postId: { type: string }
+        platform: { type: string }
+        publishedAt: { type: string, format: date-time }
+        metrics:
+          type: object
+          description: Lifetime metrics of the post on this platform.
+          properties:
+            impressions: { type: integer }
+            reach: { type: integer }
+            likes: { type: integer }
+            comments: { type: integer }
+            shares: { type: integer }
+            saves: { type: integer }
+            clicks: { type: integer }
+            views: { type: integer }
+            engagementRate: { type: number }
     BrandedCallingContact:
       type: object
       required: [firstName, lastName, email, phoneNumber]
@@ -17688,6 +17735,117 @@ paths:
                 properties:
                   error: { type: string, example: "Analytics add-on required" }
                   code: { type: string, example: "analytics_addon_required" }
+
+  /v1/analytics/dashboard:
+    get:
+      x-resource-group: "analytics"
+      operationId: getAnalyticsDashboard
+      tags: [Analytics]
+      summary: Get an analytics dashboard
+      description: |
+        Everything an analytics dashboard needs in one call: window totals, follower growth, a per-day series, top posts, recent posts and, optionally, the same figures for the previous period.
+        Daily and total metrics use received attribution: each day holds the engagement that arrived that day, on any post, so `totals` is always the sum of `daily`.
+        `topPosts` and `recentPosts` list posts published in the window with their lifetime metrics. A post cross-posted to several platforms appears once per platform.
+        All dates are UTC days. Requires the Analytics add-on.
+      parameters:
+        - name: profileId
+          in: query
+          schema: { type: string, default: all }
+          description: 'Profile ID, or "all" for every profile you can access.'
+        - name: platform
+          in: query
+          schema: { type: string, default: all }
+          description: 'Platform to cover (e.g. "instagram"), or "all".'
+        - name: fromDate
+          in: query
+          required: true
+          schema: { type: string, format: date, example: "2026-09-01" }
+          description: First day of the window (YYYY-MM-DD, inclusive).
+        - name: toDate
+          in: query
+          required: true
+          schema: { type: string, format: date, example: "2026-09-30" }
+          description: 'Last day of the window (YYYY-MM-DD, inclusive). May equal fromDate. The window covers at most 366 days.'
+        - name: compare
+          in: query
+          schema: { type: string, enum: [previous_period] }
+          description: 'Set to "previous_period" to also return previousTotals and previousFollowers for the window of the same length that ends the day before fromDate.'
+        - name: topPosts
+          in: query
+          schema: { type: integer, minimum: 0, maximum: 25, default: 5 }
+          description: 'How many top posts to return, ranked by engagement (likes, comments, shares and saves, the same sum as daily engagement).'
+        - name: recentPosts
+          in: query
+          schema: { type: integer, minimum: 0, maximum: 25, default: 10 }
+          description: How many of the most recently published posts to return.
+      responses:
+        '200':
+          description: Dashboard for the window
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [dateRange, totals, followers, daily, topPosts, recentPosts, dataAsOf]
+                properties:
+                  dateRange:
+                    type: object
+                    properties:
+                      fromDate: { type: string, format: date }
+                      toDate: { type: string, format: date }
+                  totals: { $ref: '#/components/schemas/AnalyticsDashboardTotals' }
+                  previousTotals: { $ref: '#/components/schemas/AnalyticsDashboardTotals' }
+                  followers: { $ref: '#/components/schemas/AnalyticsDashboardFollowers' }
+                  previousFollowers: { $ref: '#/components/schemas/AnalyticsDashboardFollowers' }
+                  daily:
+                    type: array
+                    description: One entry per day of the window, days without data included as zeros.
+                    items:
+                      type: object
+                      properties:
+                        date: { type: string, format: date }
+                        impressions: { type: integer }
+                        reach: { type: integer }
+                        engagement: { type: integer, description: 'Likes, comments, shares and saves received that day.' }
+                        views: { type: integer }
+                        followersGained: { type: integer, description: 'Net follower change against the previous snapshot. Can be negative.' }
+                  topPosts:
+                    type: array
+                    items: { $ref: '#/components/schemas/AnalyticsDashboardPost' }
+                  recentPosts:
+                    type: array
+                    items: { $ref: '#/components/schemas/AnalyticsDashboardPost' }
+                  dataAsOf:
+                    type: [string, "null"]
+                    format: date-time
+                    description: When the most recently synced account in scope was last synced. Null if none has synced yet.
+              examples:
+                success:
+                  value:
+                    dateRange: { fromDate: "2026-09-01", toDate: "2026-09-02" }
+                    totals: { impressions: 5400, reach: 4100, likes: 320, comments: 41, shares: 18, saves: 25, clicks: 60, views: 2200, engagementRate: 5.59 }
+                    followers:
+                      current: 12840
+                      gained: 96
+                      byAccount:
+                        - { accountId: "64e1f0a9c2b4d5e6f7a8b9c0", platform: "instagram", current: 12840, gained: 96 }
+                    daily:
+                      - { date: "2026-09-01", impressions: 2900, reach: 2200, engagement: 210, views: 1200, followersGained: 0 }
+                      - { date: "2026-09-02", impressions: 2500, reach: 1900, engagement: 194, views: 1000, followersGained: 96 }
+                    topPosts:
+                      - postId: "65f1c0a9e2b4d5f6a7b8c9d0"
+                        platform: "instagram"
+                        publishedAt: "2026-09-01T15:00:00.000Z"
+                        metrics: { impressions: 3100, reach: 2600, likes: 210, comments: 22, shares: 9, saves: 14, clicks: 30, views: 1500, engagementRate: 8.19 }
+                    recentPosts: []
+                    dataAsOf: "2026-09-02T23:10:00.000Z"
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '402':
+          description: Analytics access required. Legacy plans need the Analytics add-on; included by default on usage-based plans.
+        '403':
+          description: The profile is not accessible, or is beyond your plan's profile limit (PROFILE_OVER_LIMIT).
+        '404':
+          description: Profile not found or not accessible with this API key.
 
   /v1/analytics/best-time:
     get:
