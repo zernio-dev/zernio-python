@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.189.0"
+  version: "1.189.1"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -17822,7 +17822,7 @@ paths:
                 success:
                   value:
                     dateRange: { fromDate: "2026-09-01", toDate: "2026-09-02" }
-                    totals: { impressions: 5400, reach: 4100, likes: 320, comments: 41, shares: 18, saves: 25, clicks: 60, views: 2200, engagementRate: 5.59 }
+                    totals: { impressions: 5400, reach: 4100, likes: 320, comments: 41, shares: 18, saves: 25, clicks: 60, views: 2200, engagementRate: 7.48 }
                     followers:
                       current: 12840
                       gained: 96
@@ -17835,7 +17835,7 @@ paths:
                       - postId: "65f1c0a9e2b4d5f6a7b8c9d0"
                         platform: "instagram"
                         publishedAt: "2026-09-01T15:00:00.000Z"
-                        metrics: { impressions: 3100, reach: 2600, likes: 210, comments: 22, shares: 9, saves: 14, clicks: 30, views: 1500, engagementRate: 8.19 }
+                        metrics: { impressions: 3100, reach: 2600, likes: 210, comments: 22, shares: 9, saves: 14, clicks: 30, views: 1500, engagementRate: 8.23 }
                     recentPosts: []
                     dataAsOf: "2026-09-02T23:10:00.000Z"
         '400': { $ref: '#/components/responses/BadRequest' }
