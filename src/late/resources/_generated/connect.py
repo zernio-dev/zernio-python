@@ -320,8 +320,9 @@ class ConnectResource:
         profile_id: str,
         temp_token: str,
         user_profile: dict[str, Any],
-        account_type: str,
         *,
+        account_type: str | None = None,
+        selections: list[dict[str, Any]] | None = None,
         selected_organization: dict[str, Any] | None = None,
         redirect_url: str | None = None,
     ) -> dict[str, Any]:
@@ -331,6 +332,7 @@ class ConnectResource:
             temp_token=temp_token,
             user_profile=user_profile,
             account_type=account_type,
+            selections=selections,
             selected_organization=selected_organization,
             redirect_url=redirect_url,
         )
@@ -1147,8 +1149,9 @@ class ConnectResource:
         profile_id: str,
         temp_token: str,
         user_profile: dict[str, Any],
-        account_type: str,
         *,
+        account_type: str | None = None,
+        selections: list[dict[str, Any]] | None = None,
         selected_organization: dict[str, Any] | None = None,
         redirect_url: str | None = None,
     ) -> dict[str, Any]:
@@ -1158,6 +1161,7 @@ class ConnectResource:
             temp_token=temp_token,
             user_profile=user_profile,
             account_type=account_type,
+            selections=selections,
             selected_organization=selected_organization,
             redirect_url=redirect_url,
         )

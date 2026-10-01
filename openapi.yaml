@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.191.0"
+  version: "1.192.0"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -27405,12 +27405,26 @@ paths:
           application/json:
             schema:
               type: object
-              required: [profileId, tempToken, userProfile, accountType]
+              required: [profileId, tempToken, userProfile]
               properties:
                 profileId: { type: string }
                 tempToken: { type: string }
                 userProfile: { type: object }
-                accountType: { type: string, enum: [personal, organization] }
+                accountType:
+                  type: string
+                  enum: [personal, organization]
+                  description: 'Send this (with selectedOrganization for an organization) or selections, not both.'
+                selections:
+                  type: array
+                  minItems: 1
+                  maxItems: 25
+                  description: 'Several accounts to connect from one sign-in (yourself and/or organizations), each as its own account. With two or more entries the response lists `accounts` and `failed` instead of `account`, and the request is refused with 400 while a profile holds one LinkedIn account and on a reconnect or an ads connect. A single entry behaves exactly like accountType.'
+                  items:
+                    type: object
+                    required: [accountType]
+                    properties:
+                      accountType: { type: string, enum: [personal, organization] }
+                      selectedOrganization: { type: object, description: 'Same shape as selectedOrganization.' }
                 selectedOrganization:
                   type: object
                   required: [id, urn, name]
@@ -27475,6 +27489,19 @@ paths:
                       profilePicture: { type: string }
                       isActive: { type: boolean }
                       accountType: { type: string, enum: [personal, organization] }
+                  accounts:
+                    type: array
+                    description: 'selections only. The connected accounts, same shape as `account`. The redirect_url then carries `accountIds` (comma-separated) and `accountId` of the first.'
+                    items: { type: object }
+                  failed:
+                    type: array
+                    description: 'selections only. The accounts that could not be connected while the others were. `id` is the organization URN or the member id, or `selections[i]` for an entry naming neither.'
+                    items:
+                      type: object
+                      properties:
+                        id: { type: string }
+                        code: { type: string }
+                        message: { type: string }
                   bulkRefresh:
                     type: object
                     properties:
@@ -27511,6 +27538,11 @@ paths:
                       errors: 0
         '400': { description: Missing required fields }
         '401': { $ref: '#/components/responses/Unauthorized' }
+        '422':
+          description: 'selections only. None of the accounts could be connected; `details.failed` lists each one with its reason.'
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ErrorResponse' }
         '409':
           description: 'The sign-in behind tempToken was already used by an earlier selection or has expired (code oauth_sign_in_consumed); start a new sign-in or send refreshToken'
           content:

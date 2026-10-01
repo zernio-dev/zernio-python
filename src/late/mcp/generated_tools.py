@@ -15819,7 +15819,8 @@ def register_generated_tools(mcp, _get_client):
         profile_id: str,
         temp_token: str,
         user_profile: dict[str, Any] | None,
-        account_type: str,
+        account_type: str | None = None,
+        selections: list[dict[str, Any]] | None = None,
         selected_organization: dict[str, Any] | None = None,
         redirect_url: str | None = None,
     ) -> str:
@@ -15829,7 +15830,8 @@ def register_generated_tools(mcp, _get_client):
             profile_id: (required)
             temp_token: (required)
             user_profile: (required)
-            account_type: (required)
+            account_type: Send this (with selectedOrganization for an organization) or selections, not both.
+            selections: Several accounts to connect from one sign-in (yourself and/or organizations), each as its own account. With two or more entries the response lists `accounts` and `failed` instead of `account`, and the request is refused with 400 while a profile holds one LinkedIn account and on a reconnect or an ads connect. A single entry behaves exactly like accountType.
             selected_organization
             redirect_url"""
         client = _get_client()
@@ -15839,6 +15841,7 @@ def register_generated_tools(mcp, _get_client):
                 temp_token=temp_token,
                 user_profile=user_profile,
                 account_type=account_type,
+                selections=selections,
                 selected_organization=selected_organization,
                 redirect_url=redirect_url,
             )
