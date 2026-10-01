@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.184.0"
+  version: "1.185.0"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -23869,8 +23869,11 @@ paths:
           description: |
             Existing SocialAccount ID. Required for `twitter` (X Ads). Optional for `tiktok`:
             omit to enter ads-only mode (no TikTok posting account linked; ad creation uses
-            a Brand Identity instead of a TT_USER). Ignored for same-token (`facebook`,
-            `instagram`, `linkedin`, `pinterest`) and standalone (`googleads`) platforms.
+            a Brand Identity instead of a TT_USER). For same-token platforms (`facebook`,
+            `instagram`, `linkedin`, `pinterest`) it picks which posting account the ads
+            connection uses when the profile holds several of that platform; with one it can
+            be omitted, and an id that names no active account of the platform on the profile
+            is ignored. Ignored for standalone platforms (`googleads`).
         - name: redirect_url
           in: query
           schema: { type: string, format: uri }
@@ -24010,7 +24013,7 @@ paths:
         '404':
           description: "Profile or posting account not found"
         '409':
-          description: "The Business Login connection needs reconnecting. Reconnect it with loginMode=business, or pass force=true (or disconnect it first) to switch to the standard login."
+          description: "The Business Login connection needs reconnecting (reconnect it with loginMode=business, or pass force=true or disconnect it first to switch to the standard login), or the profile holds several active accounts of the platform and no accountId names one (ambiguous_account)."
         '503':
           description: "Business login is not configured or the platform is temporarily unavailable."
 
