@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.187.0"
+  version: "1.188.0"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -11246,9 +11246,9 @@ components:
                   distanceUnit: { type: string, enum: [mile, kilometer] }
                   name: { type: string }
                   address: { type: string, description: "Optional label, sent to Meta as `address_string`. latitude/longitude take precedence for the pin location." }
-        ageMin: { type: integer, minimum: 13, maximum: 100, description: "Minimum age. Applied on Meta, TikTok, Pinterest, LinkedIn and X; rejected with 400 on Google and OpenAI. Each platform clamps to its own range: Meta and Pinterest effectively cap at 65 (65 = 65+), TikTok maps up to 100. LinkedIn rounds out to its buckets (18-24, 25-34, 35-54, 55+) and has no under-18 audience; X rounds out to the narrowest of its fixed ranges (e.g. 25-34 becomes 25-49, 18-65 becomes 18+). Pinterest has no under-18 bucket, so an ageMin below 18 starts at 18 there." }
+        ageMin: { type: integer, minimum: 13, maximum: 100, description: "Minimum age. Applied on Meta, TikTok, Pinterest, LinkedIn, X and Google Search/Display (Google excludes the age ranges outside the request); rejected with 400 on OpenAI and on Google Performance Max / Demand Gen. Each platform clamps to its own range: Meta and Pinterest effectively cap at 65 (65 = 65+), TikTok maps up to 100. LinkedIn rounds out to its buckets (18-24, 25-34, 35-54, 55+) and has no under-18 audience; X rounds out to the narrowest of its fixed ranges (e.g. 25-34 becomes 25-49, 18-65 becomes 18+). Pinterest has no under-18 bucket, so an ageMin below 18 starts at 18 there." }
         ageMax: { type: integer, minimum: 13, maximum: 100, description: "Maximum age. Same per-platform application and clamping as ageMin." }
-        gender: { type: string, enum: [all, male, female], description: "Restrict by gender. 'all' (default) targets everyone. Applied on Meta, TikTok, Pinterest, LinkedIn and X; rejected with 400 on Google and OpenAI." }
+        gender: { type: string, enum: [all, male, female], description: "Restrict by gender. 'all' (default) targets everyone. Applied on Meta, TikTok, Pinterest, LinkedIn, X and Google Search/Display (Google excludes the other gender); rejected with 400 on OpenAI and on Google Performance Max / Demand Gen." }
         incomeTier:
           type: string
           enum: [top_5, top_10, top_10_25, top_25_50]
