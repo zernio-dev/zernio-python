@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.183.0"
+  version: "1.184.0"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -11099,8 +11099,9 @@ components:
         resolved via `GET /v1/ads/targeting/search`. A spec is therefore meaningful only
         for the platform it was built against, except the portable fields (`countries`,
         `ageMin`/`ageMax`, `gender`, `incomeTier`, `languages`) which carry across
-        platforms. Fields a platform cannot honour are rejected at create time with
-        `INVALID_FIELD_VALUE` naming the offending field (not silently dropped).
+        platforms. Fields a platform cannot honour are rejected on create, boost and
+        targeting update with `INVALID_FIELD_VALUE` naming the offending field (never
+        silently dropped).
       properties:
         userOs:
           type: array
@@ -11245,9 +11246,9 @@ components:
                   distanceUnit: { type: string, enum: [mile, kilometer] }
                   name: { type: string }
                   address: { type: string, description: "Optional label, sent to Meta as `address_string`. latitude/longitude take precedence for the pin location." }
-        ageMin: { type: integer, minimum: 13, maximum: 100, description: "Minimum age. Applied on Meta, TikTok and Pinterest; ignored on Google, LinkedIn and X. Each platform clamps to its own range: Meta and Pinterest effectively cap at 65 (65 = 65+), TikTok maps up to 100. Pinterest has no under-18 bucket, so an ageMin below 18 starts at 18 there." }
+        ageMin: { type: integer, minimum: 13, maximum: 100, description: "Minimum age. Applied on Meta, TikTok and Pinterest; rejected with 400 on Google, LinkedIn, X and OpenAI. Each platform clamps to its own range: Meta and Pinterest effectively cap at 65 (65 = 65+), TikTok maps up to 100. Pinterest has no under-18 bucket, so an ageMin below 18 starts at 18 there." }
         ageMax: { type: integer, minimum: 13, maximum: 100, description: "Maximum age. Same per-platform application and clamping as ageMin." }
-        gender: { type: string, enum: [all, male, female], description: "Restrict by gender. 'all' (default) targets everyone. Applied on Meta, TikTok and Pinterest. Ignored on Google, LinkedIn and X." }
+        gender: { type: string, enum: [all, male, female], description: "Restrict by gender. 'all' (default) targets everyone. Applied on Meta, TikTok and Pinterest; rejected with 400 on Google, LinkedIn, X and OpenAI." }
         incomeTier:
           type: string
           enum: [top_5, top_10, top_10_25, top_25_50]
@@ -11257,10 +11258,10 @@ components:
             tiers on Google, and any income tier on LinkedIn / X / Pinterest, are rejected.
             On Meta, income/zip targeting requires the relevant `specialAdCategories` to be
             unset (housing/employment/credit ads cannot use it).
-        languages: { type: array, items: { type: string }, description: "Language codes restricting the audience by language. On Meta, ISO 639-1 codes (e.g. ['en']); a bare code targets all regional variants (\"en\" = all English), or use a region-qualified code (\"en_GB\", \"pt_BR\") for a specific one. Unknown codes are rejected." }
+        languages: { type: array, items: { type: string }, description: "Language codes restricting the audience by language. Applied on Meta and Google; rejected with 400 on TikTok, LinkedIn, Pinterest, X and OpenAI. On Meta, ISO 639-1 codes (e.g. ['en']); a bare code targets all regional variants (\"en\" = all English), or use a region-qualified code (\"en_GB\", \"pt_BR\") for a specific one. Unknown codes are rejected." }
         interests:
           type: array
-          description: "Interest entities from /v1/ads/targeting/search?dimension=interest. Each carries the platform's opaque id."
+          description: "Interest entities from /v1/ads/targeting/search?dimension=interest. Each carries the platform's opaque id. Rejected with 400 on Google (use Demand Gen audience userInterests there) and OpenAI."
           items:
             type: object
             required: [id]
