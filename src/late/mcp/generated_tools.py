@@ -15665,13 +15665,18 @@ def register_generated_tools(mcp, _get_client):
         )
     )
     def connect_select_instagram_account(
-        profile_id: str, page_id: str, temp_token: str, redirect_url: str | None = None
+        profile_id: str,
+        temp_token: str,
+        page_id: str | None = None,
+        page_ids: list[str] | None = None,
+        redirect_url: str | None = None,
     ) -> str:
         """Select the Page whose Instagram account to connect
 
         Args:
             profile_id: Profile ID from your connection flow (required)
-            page_id: The Facebook Page ID selected by the user, from GET /v1/connect/instagram/select-account (required)
+            page_id: The Facebook Page ID selected by the user, from GET /v1/connect/instagram/select-account. Send this or pageIds, not both.
+            page_ids: Several Page IDs whose linked Instagram accounts to connect from one sign-in, each as its own account. With two or more distinct IDs the response lists `accounts` and `failed` instead of `account`, and the request is refused with 400 while a profile holds one Instagram account and on a reconnect or an ads connect. A single distinct ID behaves exactly like pageId.
             temp_token: Long-lived Facebook user access token from the OAuth callback redirect (required)
             redirect_url: Optional custom redirect URL to return to after selection"""
         client = _get_client()
@@ -15679,6 +15684,7 @@ def register_generated_tools(mcp, _get_client):
             response = client.connect.select_instagram_account(
                 profile_id=profile_id,
                 page_id=page_id,
+                page_ids=page_ids,
                 temp_token=temp_token,
                 redirect_url=redirect_url,
             )

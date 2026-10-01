@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.190.0"
+  version: "1.191.0"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -24578,7 +24578,7 @@ paths:
             schema:
               oneOf:
                 - type: object
-                  required: [profileId, pageId, tempToken, userProfile]
+                  required: [profileId, tempToken, userProfile]
                   not: { required: [selectionToken], properties: { selectionToken: {} } }
                   properties:
                     profileId:
@@ -24586,7 +24586,13 @@ paths:
                       description: "Profile ID from your classic connection flow."
                     pageId:
                       type: string
-                      description: "The Facebook Page ID selected by the user."
+                      description: "The Facebook Page ID selected by the user. Send this or pageIds, not both."
+                    pageIds:
+                      type: array
+                      minItems: 1
+                      maxItems: 25
+                      items: { type: string }
+                      description: "Several Page IDs to connect from one sign-in, each as its own account. With two or more distinct IDs the response lists `accounts` and `failed` instead of `account`, and the request is refused with 400 while a profile holds one Facebook account and on a reconnect or an ads connect, which pick exactly one Page. A single distinct ID behaves exactly like pageId."
                     tempToken:
                       type: string
                       description: "Temporary Facebook access token from OAuth."
@@ -24655,6 +24661,19 @@ paths:
                       profilePicture: { type: string }
                       isActive: { type: boolean }
                       selectedPageName: { type: string }
+                  accounts:
+                    type: array
+                    description: "pageIds only. The connected accounts, same shape as `account`. The redirect_url then carries `accountIds` (comma-separated) and `accountId` of the first."
+                    items: { type: object }
+                  failed:
+                    type: array
+                    description: "pageIds only. The Pages that could not be connected while the others were."
+                    items:
+                      type: object
+                      properties:
+                        id: { type: string, description: "The Page ID." }
+                        code: { type: string }
+                        message: { type: string }
               example:
                 message: "Facebook page connected successfully"
                 redirect_url: "https://yourdomain.com/integrations/callback?connected=facebook&profileId=507f1f77bcf86cd799439011&accountId=64e1f0a9e2b5af0012ab34cd&username=My+Brand+Page"
@@ -24673,6 +24692,11 @@ paths:
           description: User does not have access to the specified profile
         '404':
           description: Selected page not found in available pages
+        '422':
+          description: "pageIds only. None of the Pages could be connected; `details.failed` lists each one with its reason."
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ErrorResponse' }
         '409':
           description: |
             Reconnect identity mismatch. The OAuth
@@ -24763,14 +24787,20 @@ paths:
           application/json:
             schema:
               type: object
-              required: [profileId, pageId, tempToken]
+              required: [profileId, tempToken]
               properties:
                 profileId:
                   type: string
                   description: Profile ID from your connection flow
                 pageId:
                   type: string
-                  description: 'The Facebook Page ID selected by the user, from GET /v1/connect/instagram/select-account'
+                  description: 'The Facebook Page ID selected by the user, from GET /v1/connect/instagram/select-account. Send this or pageIds, not both.'
+                pageIds:
+                  type: array
+                  minItems: 1
+                  maxItems: 25
+                  items: { type: string }
+                  description: 'Several Page IDs whose linked Instagram accounts to connect from one sign-in, each as its own account. With two or more distinct IDs the response lists `accounts` and `failed` instead of `account`, and the request is refused with 400 while a profile holds one Instagram account and on a reconnect or an ads connect. A single distinct ID behaves exactly like pageId.'
                 tempToken:
                   type: string
                   description: Long-lived Facebook user access token from the OAuth callback redirect
@@ -24811,6 +24841,19 @@ paths:
                       profilePicture: { type: string }
                       isActive: { type: boolean }
                       loginMethod: { type: string, enum: [facebook_login] }
+                  accounts:
+                    type: array
+                    description: 'pageIds only. The connected accounts, same shape as `account`. The redirect_url then carries `accountIds` (comma-separated) and `accountId` of the first.'
+                    items: { type: object }
+                  failed:
+                    type: array
+                    description: 'pageIds only. The Pages whose Instagram account could not be connected while the others were.'
+                    items:
+                      type: object
+                      properties:
+                        id: { type: string, description: 'The Page ID.' }
+                        code: { type: string }
+                        message: { type: string }
               example:
                 message: "Instagram (via Facebook) connected"
                 account:
@@ -24827,6 +24870,11 @@ paths:
         '402': { $ref: '#/components/responses/PaymentRequired' }
         '403': { description: User does not have access to the specified profile }
         '404': { description: Selected page not found among the pages this token can manage }
+        '422':
+          description: 'pageIds only. None of the accounts could be connected; `details.failed` lists each Page with its reason.'
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ErrorResponse' }
 
   /v1/connect/googlebusiness/locations:
     get:

@@ -242,15 +242,17 @@ class ConnectResource:
     def select_instagram_account(
         self,
         profile_id: str,
-        page_id: str,
         temp_token: str,
         *,
+        page_id: str | None = None,
+        page_ids: list[str] | None = None,
         redirect_url: str | None = None,
     ) -> dict[str, Any]:
         """Select the Page whose Instagram account to connect"""
         payload = self._build_payload(
             profile_id=profile_id,
             page_id=page_id,
+            page_ids=page_ids,
             temp_token=temp_token,
             redirect_url=redirect_url,
         )
@@ -1061,15 +1063,17 @@ class ConnectResource:
     async def aselect_instagram_account(
         self,
         profile_id: str,
-        page_id: str,
         temp_token: str,
         *,
+        page_id: str | None = None,
+        page_ids: list[str] | None = None,
         redirect_url: str | None = None,
     ) -> dict[str, Any]:
         """Select the Page whose Instagram account to connect (async)"""
         payload = self._build_payload(
             profile_id=profile_id,
             page_id=page_id,
+            page_ids=page_ids,
             temp_token=temp_token,
             redirect_url=redirect_url,
         )
