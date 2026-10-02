@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.198.0"
+  version: "1.199.0"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -868,15 +868,15 @@ components:
         application/json:
           schema: { $ref: '#/components/schemas/ErrorResponse' }
     Unauthorized:
-      description: Unauthorized
+      description: 'Missing or invalid API key. `code` is `missing_credentials` when no Authorization header was sent and `invalid_credentials` when the key is unknown, revoked or expired.'
       content:
         application/json:
-          schema:
-            type: object
-            properties:
-              error:
-                type: string
-                example: Unauthorized
+          schema: { $ref: '#/components/schemas/ErrorResponse' }
+          example:
+            error: 'Missing API key. Send it as Authorization: Bearer <your API key>.'
+            type: authentication_error
+            code: missing_credentials
+            docUrl: https://docs.zernio.com
     NotFound:
       description: Resource not found
       content:
@@ -2872,6 +2872,9 @@ components:
         param:
           type: string
           description: The request field that caused the error, when applicable.
+        docUrl:
+          type: string
+          description: Documentation page for resolving the error, when one applies.
         platform:
           type: string
           description: "Upstream platform (e.g. meta, google, tiktok), present when type is platform_error."
