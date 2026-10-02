@@ -441,6 +441,17 @@ class PhoneNumbersResource:
         """Stop watching a country"""
         return self._client._delete(f"/v1/phone-numbers/stock-watches/{id}")
 
+    def request_phone_number_whats_app_code(
+        self, id: str, *, method: str | None = None
+    ) -> dict[str, Any]:
+        """Request the WhatsApp verification code for a number"""
+        payload = self._build_payload(
+            method=method,
+        )
+        return self._client._post(
+            f"/v1/phone-numbers/{id}/whatsapp/request-code", data=payload
+        )
+
     async def alist_phone_numbers(
         self, *, status: str | None = None, profile_id: str | None = None
     ) -> dict[str, Any]:
@@ -818,3 +829,14 @@ class PhoneNumbersResource:
     async def adelete_phone_number_stock_watch(self, id: str) -> dict[str, Any]:
         """Stop watching a country (async)"""
         return await self._client._adelete(f"/v1/phone-numbers/stock-watches/{id}")
+
+    async def arequest_phone_number_whats_app_code(
+        self, id: str, *, method: str | None = None
+    ) -> dict[str, Any]:
+        """Request the WhatsApp verification code for a number (async)"""
+        payload = self._build_payload(
+            method=method,
+        )
+        return await self._client._apost(
+            f"/v1/phone-numbers/{id}/whatsapp/request-code", data=payload
+        )

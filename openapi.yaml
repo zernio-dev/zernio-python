@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.197.0"
+  version: "1.198.0"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -46793,6 +46793,68 @@ paths:
         '401': { $ref: '#/components/responses/Unauthorized' }
         '404': { description: Number not found }
         '409': { description: No existing SMS registration to reuse for this number }
+
+  /v1/phone-numbers/{id}/whatsapp/request-code:
+    post:
+      x-resource-group: "telephony"
+      operationId: requestPhoneNumberWhatsAppCode
+      tags: [Phone Numbers]
+      summary: Request the WhatsApp verification code for a number
+      description: |
+        Starts (or restarts) WhatsApp verification of a Zernio-hosted number:
+        adds it to Meta's pre-verified pool when needed and asks Meta to send
+        the verification code, which Zernio captures on the number itself.
+        Used to connect WhatsApp on a number bought for calls or SMS.
+        `/v1/whatsapp/phone-numbers/{id}/request-code` is a deprecated alias
+        with the same contract.
+
+        When Meta refuses the number for WhatsApp (Meta error 136021):
+        a number that is already live (`active` or `suspended`) is left
+        untouched and keeps working for calls and SMS, and the call answers
+        409 `number_not_whatsapp_eligible`; buy a new number with WhatsApp
+        enabled instead. A number that was never live (still verifying) is
+        replaced at no extra cost with a WhatsApp-eligible number on the same
+        record, answered as 200 with `replaced: true`.
+      security:
+        - bearerAuth: []
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string }, description: "Phone number record ID (from GET /v1/phone-numbers)." }
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                method: { type: string, enum: [SMS, VOICE], description: "Delivery method for the code. Omit to let Zernio pick (SMS when the number can receive it, else VOICE)." }
+      responses:
+        '200':
+          description: 'Code requested, or the number was already verified, or a never-live number was replaced.'
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message: { type: string }
+                  method: { type: string, enum: [SMS, VOICE] }
+                  alreadyVerified: { type: boolean, description: 'Meta already reports the number as verified. No code is sent and the number is activated.' }
+                  replaced: { type: boolean, description: 'Meta refused the original number, which had never been live, so it was replaced on the same record.' }
+                  newPhoneNumber: { type: string, description: 'The replacement number, present when `replaced` is true.' }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '409':
+          description: |
+            The number cannot be verified for WhatsApp right now. `code` says why:
+            - `number_not_whatsapp_eligible`: Meta does not allow this already-live number on WhatsApp. It keeps working for calls and SMS and is not replaced. Buy a new number for WhatsApp.
+            - `whatsapp_number_in_use`: Meta reports the number is registered to another WhatsApp account.
+            - `META_INVALID_NUMBER`: Meta refused a never-live number and no replacement could be sourced.
+            - `PENDING_REGULATORY`: the number is still in carrier regulatory review.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ErrorResponse' }
+        '429': { description: 'Meta paused verification for this number. `retryAt` says when it lifts.' }
+        '503': { description: 'The number is not ready for verification yet, retry shortly.' }
 
   /v1/phone-numbers/{id}/whatsapp/calling:
     get:

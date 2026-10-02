@@ -23222,6 +23222,31 @@ def register_generated_tools(mcp, _get_client):
         except Exception as e:
             return f"Error: {e}"
 
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Request the WhatsApp verification code for a number",
+            readOnlyHint=False,
+            destructiveHint=True,
+            openWorldHint=True,
+        )
+    )
+    def phone_numbers_request_phone_number_whats_app_code(
+        id: str, method: str | None = None
+    ) -> str:
+        """Request the WhatsApp verification code for a number
+
+        Args:
+            id: Phone number record ID (from GET /v1/phone-numbers). (required)
+            method: Delivery method for the code. Omit to let Zernio pick (SMS when the number can receive it, else VOICE)."""
+        client = _get_client()
+        try:
+            response = client.phone_numbers.request_phone_number_whats_app_code(
+                id=id, method=method
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
     # POSTS
 
     @mcp.tool(
