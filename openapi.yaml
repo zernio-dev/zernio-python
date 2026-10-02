@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.201.0"
+  version: "1.201.1"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -39948,7 +39948,8 @@ paths:
         the response is 202 with the lifecycle object; poll
         GET /v1/imessage/senders/{senderId} or subscribe to the
         account.connected webhook. Billing starts at activation (monthly per
-        sender, no proration). Requires usage-based billing and a valid
+        sender, no proration); when the account spend threshold is below the
+        sender price, the first month is charged before the number is bought. Requires usage-based billing and a valid
         payment method. Pass purchaseIntentId to make retries idempotent —
         the provider-side order is never retried automatically. Ordered phone
         senders include SMS/RCS fallback with call forwarding and the ability
@@ -39993,12 +39994,12 @@ paths:
                   sender: { $ref: '#/components/schemas/ImessageSenderLifecycle' }
         '400': { $ref: '#/components/responses/BadRequest' }
         '401': { $ref: '#/components/responses/Unauthorized' }
-        '402': { description: 'A valid payment method is required (code: payment_method_required), or the last payment failed and is still unpaid (code: payment_required). Pay the open invoice or update the card in Billing, then retry.' }
+        '402': { description: 'A valid payment method is required (code: payment_method_required); the last payment failed and is still unpaid, or the card was declined for the first month (code: payment_required). Nothing is ordered; update the card in Billing, then order again.' }
         '403': { description: 'Sender limit reached (code: imessage_sender_limit)' }
         '404': { description: Profile not found or access denied }
-        '409': { description: 'Billing setup is incomplete and support must finish it (code: billing_setup_incomplete)' }
+        '409': { description: 'Billing setup is incomplete and support must finish it (code: billing_setup_incomplete), or the first-month payment was not confirmed in time (code: invalid_resource_state; details.purchase_intent_id): nothing was ordered, retry with that purchaseIntentId within the hour and you are not charged twice.' }
         '422': { description: 'Workspace is not on usage-based billing (code: usage_billing_required)' }
-        '502': { description: 'The provider rejected the order; nothing was charged' }
+        '502': { description: 'The provider rejected the order. Nothing was charged, or a first month already billed is given back as account credit.' }
 
   /v1/imessage/senders/{senderId}:
     get:
