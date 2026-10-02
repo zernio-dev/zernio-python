@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.199.0"
+  version: "1.199.1"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -39886,7 +39886,7 @@ paths:
                   account: { $ref: '#/components/schemas/ImessageSender' }
         '400': { $ref: '#/components/responses/BadRequest' }
         '401': { $ref: '#/components/responses/Unauthorized' }
-        '402': { description: 'A valid payment method is required (code: payment_method_required)' }
+        '402': { description: 'A valid payment method is required (code: payment_method_required), or the last payment failed and is still unpaid (code: payment_required). Pay the open invoice or update the card in Billing, then retry.' }
         '404': { description: Profile not found or access denied }
         '409': { description: 'Sender already registered to another profile (code: imessage_sender_conflict), or billing setup is incomplete and support must finish it (code: billing_setup_incomplete)' }
 
@@ -39967,7 +39967,7 @@ paths:
                   sender: { $ref: '#/components/schemas/ImessageSenderLifecycle' }
         '400': { $ref: '#/components/responses/BadRequest' }
         '401': { $ref: '#/components/responses/Unauthorized' }
-        '402': { description: 'A valid payment method is required (code: payment_method_required)' }
+        '402': { description: 'A valid payment method is required (code: payment_method_required), or the last payment failed and is still unpaid (code: payment_required). Pay the open invoice or update the card in Billing, then retry.' }
         '403': { description: 'Sender limit reached (code: imessage_sender_limit)' }
         '404': { description: Profile not found or access denied }
         '409': { description: 'Billing setup is incomplete and support must finish it (code: billing_setup_incomplete)' }
