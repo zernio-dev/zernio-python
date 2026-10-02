@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.203.0"
+  version: "1.204.0"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -52719,7 +52719,9 @@ paths:
         With `live=true` (which needs a `campaignId` or `adSetId` filter) each listed ad set's own
         switch (`platformAdSetStatus`) is read live, for the first 20 rows; later rows keep their
         synced value with `statusReadAt: null`. Live reads cover TikTok, Meta, Google and OpenAI.
-        The rolled-up `status` is not re-derived by a live read.
+        The rolled-up `status` is not re-derived by a live read. On TikTok the same live read also
+        returns the ad group's applied `optimizationGoal` and `billingEvent`, as TikTok's adgroup/get
+        reports them, so you can verify the goal TikTok applied rather than the one you requested.
       security:
         - bearerAuth: []
       parameters:
@@ -52782,6 +52784,8 @@ paths:
                         isExternal: { type: [boolean, "null"] }
                         platformCreatedAt: { type: [string, "null"], format: date-time }
                         statusReadAt: { type: [string, "null"], format: date-time, description: "Only with `live=true`. When `platformAdSetStatus` was read from the platform; null when this row was not read live." }
+                        optimizationGoal: { type: [string, "null"], description: "TikTok only, only with `live=true` and only on rows read live. The ad group's `optimization_goal` exactly as TikTok's adgroup/get returns it now (for example ENGAGED_VIEW, ENGAGED_VIEW_FIFTEEN, CLICK, CONVERT). Absent on rows not read live and on other platforms." }
+                        billingEvent: { type: [string, "null"], description: "TikTok only, only with `live=true` and only on rows read live. The ad group's `billing_event` exactly as TikTok's adgroup/get returns it now (for example CPV, CPC, OCPM)." }
         '400': { $ref: '#/components/responses/BadRequest' }
         '401': { $ref: '#/components/responses/Unauthorized' }
         '403':
