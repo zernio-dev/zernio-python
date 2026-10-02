@@ -5688,6 +5688,26 @@ def register_generated_tools(mcp, _get_client):
 
     @mcp.tool(
         annotations=ToolAnnotations(
+            title="Read the platform's review verdict for an ad",
+            readOnlyHint=True,
+            destructiveHint=False,
+            openWorldHint=False,
+        )
+    )
+    def ad_campaigns_get_ad_review(ad_id: str) -> str:
+        """Read the platform's review verdict for an ad
+
+        Args:
+            ad_id: Zernio ad id (24-char hex) or the platform ad id. (required)"""
+        client = _get_client()
+        try:
+            response = client.ad_campaigns.get_ad_review(ad_id=ad_id)
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
             title="List campaign negative lists",
             readOnlyHint=True,
             destructiveHint=False,

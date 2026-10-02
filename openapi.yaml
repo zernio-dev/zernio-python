@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.204.0"
+  version: "1.205.0"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -54910,6 +54910,72 @@ paths:
         '404': { description: Ad not found }
         '429': { description: Meta rate limit reached }
         '501': { description: Only supported on Meta (facebook/instagram) }
+
+  /v1/ads/{adId}/review:
+    get:
+      x-resource-group: "ads"
+      operationId: getAdReview
+      tags: ["Ad Campaigns"]
+      x-platforms: ["tiktok"]
+      summary: Read the platform's review verdict for an ad
+      description: |-
+        Reads the ad's review verdict from the platform now: whether it was approved, where it may
+        not deliver, and every rejection reason with TikTok's suggestion and the piece of content it
+        refers to. Read-only, so it works on a paused ad without re-enabling it.
+
+        TikTok only (`/ad/review_info/`); every other platform returns 501. Use it alongside the ad's
+        `platformStatus`: TikTok reports `AD_STATUS_AUDIT` while the ad is in review and
+        `AD_STATUS_AD_PRE_ONLINE` once it passed and is about to deliver (both map to
+        `status: pending_review`); `AD_STATUS_AUDIT_DENY` maps to `rejected`.
+      security:
+        - bearerAuth: []
+      parameters:
+        - { name: adId, in: path, required: true, schema: { type: string }, description: "Zernio ad id (24-char hex) or the platform ad id." }
+      responses:
+        '200':
+          description: The review verdict
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  adId: { type: string }
+                  platform: { type: string }
+                  platformAdId: { type: string }
+                  review:
+                    type: object
+                    properties:
+                      approved: { type: [boolean, "null"], description: "TikTok `is_approved`." }
+                      reviewStatus: { type: [string, "null"], description: "TikTok `review_status`, verbatim: ALL_AVAILABLE (approved everywhere), PART_AVAILABLE (approved for part of the targeting), UNAVAILABLE (rejected)." }
+                      forbiddenPlacements: { type: array, items: { type: string } }
+                      forbiddenAges: { type: array, items: { type: string } }
+                      forbiddenLocations: { type: array, items: { type: string } }
+                      forbiddenOperatingSystems: { type: array, items: { type: string } }
+                      rejections:
+                        type: array
+                        description: "One entry per rejected piece of content (TikTok `reject_info`). Empty when the ad was approved."
+                        items:
+                          type: object
+                          properties:
+                            reasons: { type: array, items: { type: string } }
+                            suggestion: { type: [string, "null"], description: "TikTok's advice for fixing the rejection." }
+                            forbiddenPlacements: { type: array, items: { type: string } }
+                            forbiddenAges: { type: array, items: { type: string } }
+                            forbiddenLocations: { type: array, items: { type: string } }
+                            content:
+                              type: [object, "null"]
+                              description: "The content TikTok reviewed."
+                              properties:
+                                type: { type: [string, "null"], description: "MODE_STRING, MODE_IMAGE, MODE_VIDEO or MODE_CAROUSEL_MUSIC." }
+                                text: { type: [string, "null"] }
+                                imageId: { type: [string, "null"] }
+                                videoId: { type: [string, "null"] }
+                                musicId: { type: [string, "null"] }
+                      readAt: { type: string, format: date-time, description: "When the verdict was read from TikTok." }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404': { description: "Ad not found, it has no TikTok ad id yet, or TikTok has no review record for it" }
+        '501': { description: Only supported on TikTok }
 
   /v1/ads/{adId}/media:
     get:

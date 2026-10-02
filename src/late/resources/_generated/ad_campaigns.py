@@ -1003,6 +1003,10 @@ class AdCampaignsResource:
         """Remove ad-group assets"""
         return self._client._delete(f"/v1/ads/ad-sets/{ad_set_id}/assets")
 
+    def get_ad_review(self, ad_id: str) -> dict[str, Any]:
+        """Read the platform's review verdict for an ad"""
+        return self._client._get(f"/v1/ads/{ad_id}/review")
+
     def list_campaign_negative_keyword_lists(
         self, campaign_id: str, *, platform: str | None = None
     ) -> dict[str, Any]:
@@ -2465,6 +2469,10 @@ class AdCampaignsResource:
     ) -> dict[str, Any]:
         """Remove ad-group assets (async)"""
         return await self._client._adelete(f"/v1/ads/ad-sets/{ad_set_id}/assets")
+
+    async def aget_ad_review(self, ad_id: str) -> dict[str, Any]:
+        """Read the platform's review verdict for an ad (async)"""
+        return await self._client._aget(f"/v1/ads/{ad_id}/review")
 
     async def alist_campaign_negative_keyword_lists(
         self, campaign_id: str, *, platform: str | None = None
