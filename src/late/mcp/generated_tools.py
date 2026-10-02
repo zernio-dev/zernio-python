@@ -458,6 +458,10 @@ def register_generated_tools(mcp, _get_client):
         profile_id: str | None = None,
         platform: str | None = None,
         status: str | None = None,
+        search: str | None = None,
+        category: str | None = None,
+        sort: str | None = None,
+        order: str = "asc",
         include_over_limit: bool = False,
         page: int | None = None,
         limit: int | None = None,
@@ -470,6 +474,10 @@ def register_generated_tools(mcp, _get_client):
             profile_id: Filter accounts by profile ID. Must be a valid ObjectId.
             platform: Filter accounts by platform (e.g. "instagram", "twitter").
             status: Filter accounts by connection status. `connected` returns healthy accounts; `disconnected` returns accounts that need reconnection (per the same reconnection check surfaced in the dashboard). Omit to return accounts in any status. When combined with page/limit, pagination totals reflect the filtered result set.
+            search: Case-insensitive match on the account username, display name or platform user id, or an exact account id. Combine with page/limit to paginate the matches.
+            category: Only accounts of this kind. ads = ad accounts (Meta, Google, LinkedIn, Pinterest, TikTok, X, OpenAI), communication = WhatsApp, Telegram, Discord, Slack and iMessage, blogs = Shopify and WordPress, social = every other platform.
+            sort: Sort a paginated listing (page/limit) by account name, platform, profile name, status (accounts needing a reconnect first when ascending) or connection date. Ties keep the default order: platform, then newest first.
+            order: Direction for `sort`.
             include_over_limit: When true, includes accounts from over-limit profiles.
             page: Page number (1-based). Must be provided together with limit to enable server-side pagination; sending only one of the two returns 400. Omit both for all accounts.
             limit: Page size. Must be provided together with page; sending only one of the two returns 400.
@@ -481,6 +489,10 @@ def register_generated_tools(mcp, _get_client):
                 profile_id=profile_id,
                 platform=platform,
                 status=status,
+                search=search,
+                category=category,
+                sort=sort,
+                order=order,
                 include_over_limit=include_over_limit,
                 page=page,
                 limit=limit,
