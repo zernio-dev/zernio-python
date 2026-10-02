@@ -30415,16 +30415,20 @@ def register_generated_tools(mcp, _get_client):
     ) -> str:
         """Get pricing analytics
 
-        Args:
-            account_id: WhatsApp account ID (required)
-            start: Range start, ISO 8601 date or date-time. (required)
-            end: Range end, ISO 8601 date or date-time. Must be after start. (required)
-            granularity: (required)
-            dimensions: Comma-separated breakdowns: COUNTRY, PHONE, PRICING_CATEGORY, PRICING_TYPE, TIER. Without it each data point is a total for the interval.
-            metric_types: Comma-separated: COST, VOLUME. Defaults to both.
-            pricing_types: Comma-separated filter: REGULAR, FREE_CUSTOMER_SERVICE, FREE_ENTRY_POINT.
-            pricing_categories: Comma-separated filter of Meta pricing categories, for example MARKETING, MARKETING_LITE, UTILITY, AUTHENTICATION, AUTHENTICATION_INTERNATIONAL, SERVICE, REFERRAL_CONVERSION.
-            country_codes: Comma-separated ISO 3166-1 alpha-2 country codes to filter on."""
+            Args:
+                account_id: WhatsApp account ID (required)
+                start: Range start, ISO 8601 date or date-time. (required)
+                end: Range end, ISO 8601 date or date-time. Must be after start. (required)
+                granularity: Size of each data point. Meta refuses MONTHLY when the range is too short for a
+        monthly bucket (for example a range that starts at the beginning of the current
+        month and ends today); that is a 400 with `param: granularity` and Meta's reason
+        in `error`. Use DAILY for short or month-to-date ranges.
+         (required)
+                dimensions: Comma-separated breakdowns: COUNTRY, PHONE, PRICING_CATEGORY, PRICING_TYPE, TIER. Without it each data point is a total for the interval.
+                metric_types: Comma-separated: COST, VOLUME. Defaults to both.
+                pricing_types: Comma-separated filter: REGULAR, FREE_CUSTOMER_SERVICE, FREE_ENTRY_POINT.
+                pricing_categories: Comma-separated filter of Meta pricing categories, for example MARKETING, MARKETING_LITE, UTILITY, AUTHENTICATION, AUTHENTICATION_INTERNATIONAL, SERVICE, REFERRAL_CONVERSION.
+                country_codes: Comma-separated ISO 3166-1 alpha-2 country codes to filter on."""
         client = _get_client()
         try:
             response = client.whatsapp_phone_numbers.get_whats_app_pricing_analytics(

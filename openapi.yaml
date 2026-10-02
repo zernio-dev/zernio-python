@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.199.1"
+  version: "1.200.0"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -43091,7 +43091,15 @@ paths:
         - { name: accountId, in: query, required: true, schema: { type: string }, description: WhatsApp account ID }
         - { name: start, in: query, required: true, schema: { type: string, format: date-time }, description: 'Range start, ISO 8601 date or date-time.' }
         - { name: end, in: query, required: true, schema: { type: string, format: date-time }, description: 'Range end, ISO 8601 date or date-time. Must be after start.' }
-        - { name: granularity, in: query, required: true, schema: { type: string, enum: [HALF_HOUR, DAILY, MONTHLY] } }
+        - name: granularity
+          in: query
+          required: true
+          schema: { type: string, enum: [HALF_HOUR, DAILY, MONTHLY] }
+          description: |
+            Size of each data point. Meta refuses MONTHLY when the range is too short for a
+            monthly bucket (for example a range that starts at the beginning of the current
+            month and ends today); that is a 400 with `param: granularity` and Meta's reason
+            in `error`. Use DAILY for short or month-to-date ranges.
         - name: dimensions
           in: query
           required: false
@@ -43155,7 +43163,17 @@ paths:
                 dataPoints:
                   - { start: '2026-09-01T00:00:00.000Z', end: '2026-09-02T00:00:00.000Z', phoneNumber: null, country: ES, tier: null, pricingType: null, pricingCategory: MARKETING, volume: 12, cost: 0.73 }
         '400':
-          $ref: '#/components/responses/BadRequest'
+          description: |
+            Invalid query, or Meta refused it. When Meta refuses, `error` carries Meta's own
+            reason (for example "Too small time window to get monthly granularity data." or
+            that COST is not shown for businesses billed through a partner), `code` is
+            `invalid_field_value`, `platformError` holds Meta's raw error, and `param` is
+            `granularity` when the range is too short for MONTHLY. Retrying the same query
+            fails the same way.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
         '401':
           $ref: '#/components/responses/Unauthorized'
         '404':
