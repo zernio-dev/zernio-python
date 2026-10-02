@@ -15789,8 +15789,9 @@ def register_generated_tools(mcp, _get_client):
     )
     def connect_select_google_business_location(
         profile_id: str,
-        location_id: str,
         pending_data_token: str,
+        location_id: str | None = None,
+        locations: list[dict[str, Any]] | None = None,
         account_id: str | None = None,
         redirect_url: str | None = None,
     ) -> str:
@@ -15798,7 +15799,8 @@ def register_generated_tools(mcp, _get_client):
 
         Args:
             profile_id: Profile ID from your connection flow (required)
-            location_id: The Google Business Profile location ID selected by the user (required)
+            location_id: The Google Business Profile location ID selected by the user. Send this or locations, not both.
+            locations: Several locations to connect from one sign-in, each as its own account. The sign-in is used once for the whole batch and handed back only if none connected. With two or more distinct locations the response lists `accounts` and `failed` instead of `account`, and the request is refused with 400 on a reconnect. A single location behaves exactly like locationId.
             account_id: Optional but recommended. The Google Business Profile Account resource name ("accounts/123") that owns the selected location (returned per-location by GET /v1/connect/googlebusiness/locations). When provided, the location is resolved directly instead of by enumerating the account, which is required for accounts that own many locations. Omit only for small accounts.
             pending_data_token: Token from the OAuth callback redirect (pendingDataToken query param). Tokens and profile data are retrieved server-side from this token. (required)
             redirect_url: Optional custom redirect URL to return to after selection"""
@@ -15807,6 +15809,7 @@ def register_generated_tools(mcp, _get_client):
             response = client.connect.select_google_business_location(
                 profile_id=profile_id,
                 location_id=location_id,
+                locations=locations,
                 account_id=account_id,
                 pending_data_token=pending_data_token,
                 redirect_url=redirect_url,
@@ -16275,17 +16278,29 @@ def register_generated_tools(mcp, _get_client):
             openWorldHint=True,
         )
     )
-    def connect_discord_channel(guild_id: str, channel_id: str, profile_id: str) -> str:
+    def connect_discord_channel(
+        guild_id: str,
+        profile_id: str,
+        channel_id: str | None = None,
+        channel_ids: list[str] | None = None,
+        redirect_url: str | None = None,
+    ) -> str:
         """Connect a Discord channel
 
         Args:
             guild_id: Discord server (guild) the channel belongs to (required)
-            channel_id: Text, announcement or forum channel to publish to (required)
-            profile_id: Profile to connect the channel to (required)"""
+            channel_id: Text, announcement or forum channel to publish to. Send this or channelIds, not both.
+            channel_ids: Several channels of the server to connect, each as its own account. With two or more distinct ids the response lists `accounts` and `failed` instead of `account`. A single id behaves exactly like channelId.
+            profile_id: Profile to connect the channel to (required)
+            redirect_url: channelIds only: a URL to return in `redirect_url`, with `connected`, `profileId`, `accountId` and `accountIds` appended."""
         client = _get_client()
         try:
             response = client.connect.connect_discord_channel(
-                guild_id=guild_id, channel_id=channel_id, profile_id=profile_id
+                guild_id=guild_id,
+                channel_id=channel_id,
+                channel_ids=channel_ids,
+                profile_id=profile_id,
+                redirect_url=redirect_url,
             )
             return _format_response(response)
         except Exception as e:
@@ -16337,7 +16352,9 @@ def register_generated_tools(mcp, _get_client):
     )
     def connect_slack_channel(
         profile_id: str,
-        channel_id: str,
+        channel_id: str | None = None,
+        channel_ids: list[str] | None = None,
+        redirect_url: str | None = None,
         pending_data_token: str | None = None,
         account_id: str | None = None,
     ) -> str:
@@ -16345,7 +16362,9 @@ def register_generated_tools(mcp, _get_client):
 
         Args:
             profile_id: (required)
-            channel_id: Slack channel id, C... or G... (required)
+            channel_id: Slack channel id, C... or G.... Send this or channelIds, not both.
+            channel_ids: Several channels of the workspace to connect, each as its own account. With two or more distinct ids the response lists `accounts` and `failed` instead of `account`, and the request is refused with 400 on a reconnect. A single id behaves exactly like channelId.
+            redirect_url: channelIds only: a URL to return in `redirect_url`, with `connected`, `profileId`, `accountId` and `accountIds` appended.
             pending_data_token: Nonce from the OAuth redirect. Required unless accountId is sent.
             account_id: Existing Slack account whose workspace token is reused. Required unless pendingDataToken is sent."""
         client = _get_client()
@@ -16353,6 +16372,8 @@ def register_generated_tools(mcp, _get_client):
             response = client.connect.connect_slack_channel(
                 profile_id=profile_id,
                 channel_id=channel_id,
+                channel_ids=channel_ids,
+                redirect_url=redirect_url,
                 pending_data_token=pending_data_token,
                 account_id=account_id,
             )

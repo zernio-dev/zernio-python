@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.201.1"
+  version: "1.202.0"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -25120,14 +25120,25 @@ paths:
           application/json:
             schema:
               type: object
-              required: [profileId, locationId, pendingDataToken]
+              required: [profileId, pendingDataToken]
               properties:
                 profileId:
                   type: string
                   description: Profile ID from your connection flow
                 locationId:
                   type: string
-                  description: The Google Business Profile location ID selected by the user
+                  description: "The Google Business Profile location ID selected by the user. Send this or locations, not both."
+                locations:
+                  type: array
+                  minItems: 1
+                  maxItems: 25
+                  description: "Several locations to connect from one sign-in, each as its own account. The sign-in is used once for the whole batch and handed back only if none connected. With two or more distinct locations the response lists `accounts` and `failed` instead of `account`, and the request is refused with 400 on a reconnect. A single location behaves exactly like locationId."
+                  items:
+                    type: object
+                    required: [locationId]
+                    properties:
+                      locationId: { type: string }
+                      accountId: { type: string, description: 'The location''s Google Business Profile Account resource name, as for the top-level accountId.' }
                 accountId:
                   type: string
                   description: >
@@ -25176,6 +25187,19 @@ paths:
                       isActive: { type: boolean }
                       selectedLocationName: { type: string, description: 'Human-readable location display name, NOT a resource name. Do not use it to build API paths.' }
                       selectedLocationId: { type: string, description: 'Bare Google Business Profile location id. Combine with the Google Business Profile account id as accounts/{gbpAccountId}/locations/{selectedLocationId} to form the location resource names that gmb-reviews/batch expects in locationNames.' }
+                  accounts:
+                    type: array
+                    description: "locations with two or more distinct entries only. The connected accounts, same shape as `account`. The redirect_url then carries `accountIds` (comma-separated) and `accountId` of the first."
+                    items: { type: object }
+                  failed:
+                    type: array
+                    description: "locations only. The locations that could not be connected while the others were."
+                    items:
+                      type: object
+                      properties:
+                        id: { type: string, description: "The location ID." }
+                        code: { type: string }
+                        message: { type: string }
               example:
                 message: "Google Business location connected successfully"
                 redirect_url: "https://yourdomain.com/integrations/callback?connected=googlebusiness&profileId=507f1f77bcf86cd799439011&accountId=64e1f0a9e2b5af0012ab34cd&username=My+Coffee+Shop"
@@ -25194,6 +25218,11 @@ paths:
           description: User does not have access to the specified profile
         '404':
           description: Selected location not found in available locations
+        '422':
+          description: "locations only. None of the locations could be connected; `details.failed` lists each one with its reason."
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ErrorResponse' }
         '500':
           description: Failed to save Google Business Profile connection
 
@@ -28532,21 +28561,33 @@ paths:
       operationId: connectDiscordChannel
       tags: [Connect]
       summary: Connect a Discord channel
-      description: 'Finalize a Discord connect by binding one channel to a profile. Served by a dedicated route, so it is not reachable through POST /v1/connect/{platform}. One connected account per channel: repeat the call with a different channelId to add another.'
+      description: 'Finalize a Discord connect by binding channels to a profile. Served by a dedicated route, so it is not reachable through POST /v1/connect/{platform}. One connected account per channel: send channelIds to connect several channels of the server at once, or repeat the call with a different channelId.'
       requestBody:
         required: true
         content:
           application/json:
             schema:
               type: object
-              required: [guildId, channelId, profileId]
+              required: [guildId, profileId]
               properties:
                 guildId: { type: string, description: 'Discord server (guild) the channel belongs to' }
-                channelId: { type: string, description: 'Text, announcement or forum channel to publish to' }
+                channelId: { type: string, description: 'Text, announcement or forum channel to publish to. Send this or channelIds, not both.' }
+                channelIds:
+                  type: array
+                  minItems: 1
+                  maxItems: 25
+                  items: { type: string }
+                  description: "Several channels of the server to connect, each as its own account. With two or more distinct ids the response lists `accounts` and `failed` instead of `account`. A single id behaves exactly like channelId."
                 profileId: { type: string, description: 'Profile to connect the channel to' }
+                redirect_url: { type: string, description: 'channelIds only: a URL to return in `redirect_url`, with `connected`, `profileId`, `accountId` and `accountIds` appended.' }
       responses:
         '200': { description: Channel connected }
         '400': { $ref: '#/components/responses/BadRequest' }
+        '422':
+          description: "channelIds only. None of the channels could be connected; `details.failed` lists each one with its reason."
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ErrorResponse' }
         '401': { $ref: '#/components/responses/Unauthorized' }
         '402': { $ref: '#/components/responses/PaymentRequired' }
         '404': { description: Profile not found }
@@ -28655,10 +28696,17 @@ paths:
           application/json:
             schema:
               type: object
-              required: [profileId, channelId]
+              required: [profileId]
               properties:
                 profileId: { type: string }
-                channelId: { type: string, description: 'Slack channel id, C... or G...' }
+                channelId: { type: string, description: 'Slack channel id, C... or G.... Send this or channelIds, not both.' }
+                channelIds:
+                  type: array
+                  minItems: 1
+                  maxItems: 25
+                  items: { type: string }
+                  description: "Several channels of the workspace to connect, each as its own account. With two or more distinct ids the response lists `accounts` and `failed` instead of `account`, and the request is refused with 400 on a reconnect. A single id behaves exactly like channelId."
+                redirect_url: { type: string, description: 'channelIds only: a URL to return in `redirect_url`, with `connected`, `profileId`, `accountId` and `accountIds` appended.' }
                 pendingDataToken: { type: string, description: 'Nonce from the OAuth redirect. Required unless accountId is sent.' }
                 accountId: { type: string, description: 'Existing Slack account whose workspace token is reused. Required unless pendingDataToken is sent.' }
       responses:
@@ -28668,6 +28716,11 @@ paths:
         '402': { $ref: '#/components/responses/PaymentRequired' }
         '403': { description: Slack connections are temporarily unavailable }
         '404': { description: Profile not found }
+        '422':
+          description: "channelIds only. None of the channels could be connected; `details.failed` lists each one with its reason."
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ErrorResponse' }
 
   /v1/connect/telegram:
     get:

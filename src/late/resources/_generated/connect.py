@@ -280,9 +280,10 @@ class ConnectResource:
     def select_google_business_location(
         self,
         profile_id: str,
-        location_id: str,
         pending_data_token: str,
         *,
+        location_id: str | None = None,
+        locations: list[dict[str, Any]] | None = None,
         account_id: str | None = None,
         redirect_url: str | None = None,
     ) -> dict[str, Any]:
@@ -290,6 +291,7 @@ class ConnectResource:
         payload = self._build_payload(
             profile_id=profile_id,
             location_id=location_id,
+            locations=locations,
             account_id=account_id,
             pending_data_token=pending_data_token,
             redirect_url=redirect_url,
@@ -560,13 +562,21 @@ class ConnectResource:
         return self._client._get("/v1/connect/whatsapp/sdk-config", headers=headers)
 
     def connect_discord_channel(
-        self, guild_id: str, channel_id: str, profile_id: str
+        self,
+        guild_id: str,
+        profile_id: str,
+        *,
+        channel_id: str | None = None,
+        channel_ids: list[str] | None = None,
+        redirect_url: str | None = None,
     ) -> dict[str, Any]:
         """Connect a Discord channel"""
         payload = self._build_payload(
             guild_id=guild_id,
             channel_id=channel_id,
+            channel_ids=channel_ids,
             profile_id=profile_id,
+            redirect_url=redirect_url,
         )
         return self._client._post("/v1/connect/discord", data=payload)
 
@@ -592,8 +602,10 @@ class ConnectResource:
     def connect_slack_channel(
         self,
         profile_id: str,
-        channel_id: str,
         *,
+        channel_id: str | None = None,
+        channel_ids: list[str] | None = None,
+        redirect_url: str | None = None,
         pending_data_token: str | None = None,
         account_id: str | None = None,
     ) -> dict[str, Any]:
@@ -601,6 +613,8 @@ class ConnectResource:
         payload = self._build_payload(
             profile_id=profile_id,
             channel_id=channel_id,
+            channel_ids=channel_ids,
+            redirect_url=redirect_url,
             pending_data_token=pending_data_token,
             account_id=account_id,
         )
@@ -1107,9 +1121,10 @@ class ConnectResource:
     async def aselect_google_business_location(
         self,
         profile_id: str,
-        location_id: str,
         pending_data_token: str,
         *,
+        location_id: str | None = None,
+        locations: list[dict[str, Any]] | None = None,
         account_id: str | None = None,
         redirect_url: str | None = None,
     ) -> dict[str, Any]:
@@ -1117,6 +1132,7 @@ class ConnectResource:
         payload = self._build_payload(
             profile_id=profile_id,
             location_id=location_id,
+            locations=locations,
             account_id=account_id,
             pending_data_token=pending_data_token,
             redirect_url=redirect_url,
@@ -1399,13 +1415,21 @@ class ConnectResource:
         )
 
     async def aconnect_discord_channel(
-        self, guild_id: str, channel_id: str, profile_id: str
+        self,
+        guild_id: str,
+        profile_id: str,
+        *,
+        channel_id: str | None = None,
+        channel_ids: list[str] | None = None,
+        redirect_url: str | None = None,
     ) -> dict[str, Any]:
         """Connect a Discord channel (async)"""
         payload = self._build_payload(
             guild_id=guild_id,
             channel_id=channel_id,
+            channel_ids=channel_ids,
             profile_id=profile_id,
+            redirect_url=redirect_url,
         )
         return await self._client._apost("/v1/connect/discord", data=payload)
 
@@ -1431,8 +1455,10 @@ class ConnectResource:
     async def aconnect_slack_channel(
         self,
         profile_id: str,
-        channel_id: str,
         *,
+        channel_id: str | None = None,
+        channel_ids: list[str] | None = None,
+        redirect_url: str | None = None,
         pending_data_token: str | None = None,
         account_id: str | None = None,
     ) -> dict[str, Any]:
@@ -1440,6 +1466,8 @@ class ConnectResource:
         payload = self._build_payload(
             profile_id=profile_id,
             channel_id=channel_id,
+            channel_ids=channel_ids,
+            redirect_url=redirect_url,
             pending_data_token=pending_data_token,
             account_id=account_id,
         )
