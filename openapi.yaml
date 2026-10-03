@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.205.0"
+  version: "1.206.0"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -12528,6 +12528,14 @@ components:
           type: [string, "null"]
           format: date-time
           description: "Only on GET /v1/ads/campaigns with `live=true`. When `platformCampaignStatus` was read from the platform; null when this campaign could not be read live."
+        nativeSettings:
+          type: object
+          additionalProperties: true
+          description: "TikTok only, only on GET /v1/ads/campaigns with `live=true` and only on campaigns read live. TikTok's campaign/get record verbatim: operation_status, objective_type, budget_mode (BUDGET_MODE_INFINITE means no campaign budget, so budget lives on the ad groups), budget, and budget_optimize_on when TikTok returns it. Plus advertiser_currency and advertiser_timezone from TikTok's advertiser/info."
+        configReadAt:
+          type: [string, "null"]
+          format: date-time
+          description: "Only on GET /v1/ads/campaigns with `live=true`. When `nativeSettings` was read from the platform. Null whenever native settings were not read now."
         campaignIssuesInfo:
           type: [array, "null"]
           description: "Platform-reported campaign issues (Meta `issues_info[]`)."
@@ -52722,6 +52730,12 @@ paths:
         The rolled-up `status` is not re-derived by a live read. On TikTok the same live read also
         returns the ad group's applied `optimizationGoal` and `billingEvent`, as TikTok's adgroup/get
         reports them, so you can verify the goal TikTok applied rather than the one you requested.
+        It also returns `nativeSettings`: TikTok's own adgroup/get record for the ad group, verbatim and
+        read in that same call (budget, budget_mode, schedule, placements, locations, ages, gender,
+        languages, interests, actions, audiences and exclusions), plus the advertiser's currency and
+        timezone (TikTok's schedule times are in that timezone). `configReadAt` says when it was read; it
+        is null on every row whose native settings were not read now, so never treat a null as a match.
+        These are read, not retained create payloads, and are not stored.
       security:
         - bearerAuth: []
       parameters:
@@ -52786,6 +52800,8 @@ paths:
                         statusReadAt: { type: [string, "null"], format: date-time, description: "Only with `live=true`. When `platformAdSetStatus` was read from the platform; null when this row was not read live." }
                         optimizationGoal: { type: [string, "null"], description: "TikTok only, only with `live=true` and only on rows read live. The ad group's `optimization_goal` exactly as TikTok's adgroup/get returns it now (for example ENGAGED_VIEW, ENGAGED_VIEW_FIFTEEN, CLICK, CONVERT). Absent on rows not read live and on other platforms." }
                         billingEvent: { type: [string, "null"], description: "TikTok only, only with `live=true` and only on rows read live. The ad group's `billing_event` exactly as TikTok's adgroup/get returns it now (for example CPV, CPC, OCPM)." }
+                        nativeSettings: { type: object, additionalProperties: true, description: "TikTok only, only with `live=true` and only on rows read live. TikTok's adgroup/get record verbatim (snake_case, TikTok's own names and enums): operation_status, optimization_goal, optimization_event, billing_event, bid_type, bid_price, budget, budget_mode, pacing, schedule_type, schedule_start_time, schedule_end_time, dayparting, placement_type, placements, location_ids, age_groups, gender, languages, interest_category_ids, interest_keyword_ids, actions, audience_ids, excluded_audience_ids, operating_systems, frequency, frequency_schedule, smart_audience_enabled, smart_interest_behavior_enabled. Plus advertiser_currency and advertiser_timezone from TikTok's advertiser/info. A field TikTok does not return is absent." }
+                        configReadAt: { type: [string, "null"], format: date-time, description: "Only with `live=true`. When `nativeSettings` was read from the platform. Null on every row whose native settings were not read now (row past the cap, failed read, or a platform without a native read)." }
         '400': { $ref: '#/components/responses/BadRequest' }
         '401': { $ref: '#/components/responses/Unauthorized' }
         '403':
