@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.209.0"
+  version: "1.210.0"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -61215,6 +61215,17 @@ paths:
                     authored are cleaned up; the pre-existing parent is left
                     untouched and is never (re)activated. Mutually exclusive
                     with `adSetId` and `creatives[]`.
+                phoneNumber:
+                  type: string
+                  pattern: '^\+[1-9]\d{6,14}$'
+                  description: |
+                    Meta attach shape only (`adSetId`). The phone number (E.164, e.g. `+4712345678`)
+                    for an ad added to a "website and phone call" ad set (destination_type
+                    `WEBSITE_AND_PHONE_CALL`), sent as the creative's call configuration. Optional:
+                    when omitted, the number on the ad set's existing ads is reused, and if none of
+                    them carries one the request is a 400. Rejected with 400 on any other ad set,
+                    with `existingCreativeId`, without `adSetId`, or on other platforms (a new call
+                    campaign is `POST /v1/ads/call`).
                 existingCreativeId:
                   type: string
                   description: |

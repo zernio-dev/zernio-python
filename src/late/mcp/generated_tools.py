@@ -6341,6 +6341,7 @@ def register_generated_tools(mcp, _get_client):
         creatives: list[dict[str, Any]] | None = None,
         ad_set_id: str | None = None,
         existing_campaign_id: str | None = None,
+        phone_number: str | None = None,
         existing_creative_id: str | None = None,
         business_name: str | None = None,
         board_id: str | None = None,
@@ -6584,6 +6585,13 @@ def register_generated_tools(mcp, _get_client):
         authored are cleaned up; the pre-existing parent is left
         untouched and is never (re)activated. Mutually exclusive
         with `adSetId` and `creatives[]`.
+                phone_number: Meta attach shape only (`adSetId`). The phone number (E.164, e.g. `+4712345678`)
+        for an ad added to a "website and phone call" ad set (destination_type
+        `WEBSITE_AND_PHONE_CALL`), sent as the creative's call configuration. Optional:
+        when omitted, the number on the ad set's existing ads is reused, and if none of
+        them carries one the request is a 400. Rejected with 400 on any other ad set,
+        with `existingCreativeId`, without `adSetId`, or on other platforms (a new call
+        campaign is `POST /v1/ads/call`).
                 existing_creative_id: Meta only. Reuse an EXISTING ad creative by id instead of
         building a new one from the copy/media fields (which are then
         ignored). Combine with `existingCampaignId` to build a
@@ -6958,6 +6966,7 @@ def register_generated_tools(mcp, _get_client):
                 creatives=creatives,
                 ad_set_id=ad_set_id,
                 existing_campaign_id=existing_campaign_id,
+                phone_number=phone_number,
                 existing_creative_id=existing_creative_id,
                 business_name=business_name,
                 board_id=board_id,
