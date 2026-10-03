@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.206.2"
+  version: "1.207.0"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -53122,6 +53122,19 @@ paths:
                     LOWEST_COST_WITH_MIN_ROAS is rejected with 422 (OpenAI has no ROAS-based
                     bidding). Other platforms (linkedin, pinterest, google, twitter) return 501
                     Not Implemented when bidStrategy is set.
+                smartTargeting:
+                  type: object
+                  description: |
+                    TikTok only (a 400 elsewhere). TikTok Smart Targeting on the ad group: `audience` is
+                    TikTok's `smart_audience_enabled`, `interestsBehaviors` its `smart_interest_behavior_enabled`.
+                    When on, TikTok may deliver beyond the selected audiences or interests. Available on
+                    Video views, Traffic, Lead generation, App install, Web conversion and Community interaction.
+                    Only the flags you send are written; an unwritten flag reads back null in
+                    `nativeSettings`, so send `false` explicitly to be able to verify it is off.
+                    Applied with TikTok's adgroup/update; read it back with GET /v1/ads/ad-sets?adSetId=...&live=true.
+                  properties:
+                    audience: { type: boolean, description: "TikTok smart_audience_enabled." }
+                    interestsBehaviors: { type: boolean, description: "TikTok smart_interest_behavior_enabled." }
                 bidAmount:
                   type: number
                   description: |
@@ -60493,6 +60506,19 @@ paths:
                   maxItems: 5
                   items: { type: string }
                   description: 'Meta only. Extra primary-text options Meta rotates on the boosted post (asset_feed_spec.bodies with DEGREES_OF_FREEDOM); the post keeps its own text as one of the options. Works for Facebook posts and Instagram media. Under a conversions or traffic goal Meta also wants a website URL on the options, taken from `linkUrl` (send it with a `callToAction`); engagement boosts need none.'
+                smartTargeting:
+                  type: object
+                  description: |
+                    TikTok only (a 400 elsewhere). TikTok Smart Targeting on the ad group: `audience` is
+                    TikTok's `smart_audience_enabled`, `interestsBehaviors` its `smart_interest_behavior_enabled`.
+                    When on, TikTok may deliver beyond the selected audiences or interests. Available on
+                    Video views, Traffic, Lead generation, App install, Web conversion and Community interaction.
+                    Only the flags you send are written; an unwritten flag reads back null in
+                    `nativeSettings`, so send `false` explicitly to be able to verify it is off.
+                    Not available with smartPlus or when attaching to an existing ad set (adSetId).
+                  properties:
+                    audience: { type: boolean, description: "TikTok smart_audience_enabled." }
+                    interestsBehaviors: { type: boolean, description: "TikTok smart_interest_behavior_enabled." }
                 optimizationGoal:
                   type: string
                   description: |
@@ -60961,6 +60987,19 @@ paths:
 
                     **OpenAI Ads**
                     - Only `traffic`, `awareness`, and `conversions` are supported (other goals return 400). Maps to OpenAI's `bidding_type` (clicks, impressions, conversions respectively). `conversions` requires an active conversion event setting on the account; create a tracking tag with `defaultEventType` via the tracking-tags API (`POST /v1/accounts/{accountId}/tracking-tags`), or configure a conversion event in OpenAI Ads Manager, or the request returns 400. Pick the event with `promotedObject.customEventType` (see AdPromotedObject); without it the most recently created optimizable event is used.
+                smartTargeting:
+                  type: object
+                  description: |
+                    TikTok only (a 400 elsewhere). TikTok Smart Targeting on the ad group: `audience` is
+                    TikTok's `smart_audience_enabled`, `interestsBehaviors` its `smart_interest_behavior_enabled`.
+                    When on, TikTok may deliver beyond the selected audiences or interests. Available on
+                    Video views, Traffic, Lead generation, App install, Web conversion and Community interaction.
+                    Only the flags you send are written; an unwritten flag reads back null in
+                    `nativeSettings`, so send `false` explicitly to be able to verify it is off.
+                    Not available with smartPlus or when attaching to an existing ad set (adSetId).
+                  properties:
+                    audience: { type: boolean, description: "TikTok smart_audience_enabled." }
+                    interestsBehaviors: { type: boolean, description: "TikTok smart_interest_behavior_enabled." }
                 optimizationGoal: { type: string, description: "Meta, or TikTok with goal video_views (ENGAGED_VIEW, the 6-second default, or ENGAGED_VIEW_FIFTEEN; both bill per view). Meta: Explicit ad-set `optimization_goal` (e.g. `LANDING_PAGE_VIEWS`, `LINK_CLICKS`, `REACH`, `IMPRESSIONS`, `OFFSITE_CONVERSIONS`, `THRUPLAY`, `LEAD_GENERATION`). Overrides the default derived from `goal` (e.g. `traffic` defaults to `LINK_CLICKS`). Forwarded verbatim to Meta, which validates compatibility with the campaign objective and rejects incompatible combinations." }
                 billingEvent: { type: string, description: "Meta only. Explicit ad-set `billing_event`. Defaults to `IMPRESSIONS`. Forwarded verbatim to Meta, which validates compatibility with the optimization goal." }
                 buyingType: { type: string, enum: [AUCTION, RESERVED], default: AUCTION, description: "Meta only. Defaults to AUCTION and is explicitly sent on new campaigns, including validateOnly. Reusing existingCampaignId does not change the campaign. RESERVED = Reach & Frequency: requires `rfPredictionId` (a RESERVED prediction from /v1/ads/rf-predictions + /reserve). Budget, schedule and pricing come from the reservation, so budgetAmount/budgetType are not required and bid fields are ignored. Only the plain single-ad shape (no creatives[], adSetId, existingCampaignId or dynamicCreative)." }

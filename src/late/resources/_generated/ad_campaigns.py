@@ -710,6 +710,7 @@ class AdCampaignsResource:
         status: str | None = None,
         name: str | None = None,
         bid_strategy: Any | None = None,
+        smart_targeting: dict[str, Any] | None = None,
         bid_amount: float | None = None,
         roas_average_floor: float | None = None,
         value_rule_set_id: str | None = None,
@@ -723,6 +724,7 @@ class AdCampaignsResource:
             status=status,
             name=name,
             bid_strategy=bid_strategy,
+            smart_targeting=smart_targeting,
             bid_amount=bid_amount,
             roas_average_floor=roas_average_floor,
             value_rule_set_id=value_rule_set_id,
@@ -1083,6 +1085,7 @@ class AdCampaignsResource:
         budget_level: str | None = None,
         attribution_spec: list[dict[str, Any]] | None = None,
         bodies: list[str] | None = None,
+        smart_targeting: dict[str, Any] | None = None,
         optimization_goal: str | None = None,
     ) -> dict[str, Any]:
         """Boost post as ad"""
@@ -1136,6 +1139,7 @@ class AdCampaignsResource:
             budget_level=budget_level,
             attribution_spec=attribution_spec,
             bodies=bodies,
+            smart_targeting=smart_targeting,
             optimization_goal=optimization_goal,
         )
         headers: dict[str, str] = {}
@@ -1279,6 +1283,7 @@ class AdCampaignsResource:
         ad_name: str | None = None,
         tracking: Any | None = None,
         goal: str | None = None,
+        smart_targeting: dict[str, Any] | None = None,
         optimization_goal: str | None = None,
         billing_event: str | None = None,
         buying_type: str | None = "AUCTION",
@@ -1392,6 +1397,7 @@ class AdCampaignsResource:
             ad_name=ad_name,
             tracking=tracking,
             goal=goal,
+            smart_targeting=smart_targeting,
             optimization_goal=optimization_goal,
             billing_event=billing_event,
             buying_type=buying_type,
@@ -2169,6 +2175,7 @@ class AdCampaignsResource:
         status: str | None = None,
         name: str | None = None,
         bid_strategy: Any | None = None,
+        smart_targeting: dict[str, Any] | None = None,
         bid_amount: float | None = None,
         roas_average_floor: float | None = None,
         value_rule_set_id: str | None = None,
@@ -2182,6 +2189,7 @@ class AdCampaignsResource:
             status=status,
             name=name,
             bid_strategy=bid_strategy,
+            smart_targeting=smart_targeting,
             bid_amount=bid_amount,
             roas_average_floor=roas_average_floor,
             value_rule_set_id=value_rule_set_id,
@@ -2550,6 +2558,7 @@ class AdCampaignsResource:
         budget_level: str | None = None,
         attribution_spec: list[dict[str, Any]] | None = None,
         bodies: list[str] | None = None,
+        smart_targeting: dict[str, Any] | None = None,
         optimization_goal: str | None = None,
     ) -> dict[str, Any]:
         """Boost post as ad (async)"""
@@ -2603,6 +2612,7 @@ class AdCampaignsResource:
             budget_level=budget_level,
             attribution_spec=attribution_spec,
             bodies=bodies,
+            smart_targeting=smart_targeting,
             optimization_goal=optimization_goal,
         )
         headers: dict[str, str] = {}
@@ -2746,6 +2756,7 @@ class AdCampaignsResource:
         ad_name: str | None = None,
         tracking: Any | None = None,
         goal: str | None = None,
+        smart_targeting: dict[str, Any] | None = None,
         optimization_goal: str | None = None,
         billing_event: str | None = None,
         buying_type: str | None = "AUCTION",
@@ -2859,6 +2870,7 @@ class AdCampaignsResource:
             ad_name=ad_name,
             tracking=tracking,
             goal=goal,
+            smart_targeting=smart_targeting,
             optimization_goal=optimization_goal,
             billing_event=billing_event,
             buying_type=buying_type,

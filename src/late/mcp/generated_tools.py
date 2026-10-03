@@ -5014,6 +5014,7 @@ def register_generated_tools(mcp, _get_client):
         status: str | None = None,
         name: str | None = None,
         bid_strategy: str | None = None,
+        smart_targeting: dict[str, Any] | None = None,
         bid_amount: float | None = None,
         roas_average_floor: float | None = None,
         value_rule_set_id: str | None = None,
@@ -5036,6 +5037,13 @@ def register_generated_tools(mcp, _get_client):
         LOWEST_COST_WITH_MIN_ROAS is rejected with 422 (OpenAI has no ROAS-based
         bidding). Other platforms (linkedin, pinterest, google, twitter) return 501
         Not Implemented when bidStrategy is set.
+                smart_targeting: TikTok only (a 400 elsewhere). TikTok Smart Targeting on the ad group: `audience` is
+        TikTok's `smart_audience_enabled`, `interestsBehaviors` its `smart_interest_behavior_enabled`.
+        When on, TikTok may deliver beyond the selected audiences or interests. Available on
+        Video views, Traffic, Lead generation, App install, Web conversion and Community interaction.
+        Only the flags you send are written; an unwritten flag reads back null in
+        `nativeSettings`, so send `false` explicitly to be able to verify it is off.
+        Applied with TikTok's adgroup/update; read it back with GET /v1/ads/ad-sets?adSetId=...&live=true.
                 bid_amount: Bid cap in WHOLE currency units (USD: 5 = $5.00; JPY: 100 = ¥100). Required when
         bidStrategy is LOWEST_COST_WITH_BID_CAP or COST_CAP. Internally converted to Meta's
         smallest-denomination integer, or (on OpenAI) to micros (× 1,000,000). Meta only:
@@ -5064,6 +5072,7 @@ def register_generated_tools(mcp, _get_client):
                 status=status,
                 name=name,
                 bid_strategy=bid_strategy,
+                smart_targeting=smart_targeting,
                 bid_amount=bid_amount,
                 roas_average_floor=roas_average_floor,
                 value_rule_set_id=value_rule_set_id,
@@ -5815,6 +5824,7 @@ def register_generated_tools(mcp, _get_client):
         budget_level: str | None = None,
         attribution_spec: list[dict[str, Any]] | None = None,
         bodies: list[str] | None = None,
+        smart_targeting: dict[str, Any] | None = None,
         optimization_goal: str | None = None,
     ) -> str:
         """Boost post as ad
@@ -5961,6 +5971,13 @@ def register_generated_tools(mcp, _get_client):
                 budget_level: Meta only, same semantics as POST /v1/ads/create: campaign = Advantage campaign budget (CBO), the budget and bid strategy sit on the campaign and the ad set inherits them. Default adset. Not allowed with adSetId.
                 attribution_spec: Meta only. Ad-set attribution windows, same shape as POST /v1/ads/create. Applied on OUTCOME_SALES, OUTCOME_LEADS and OUTCOME_APP_PROMOTION campaigns (conversions, lead_conversion, lead_generation, app_promotion); other objectives keep Meta's default. Not allowed with adSetId.
                 bodies: Meta only. Extra primary-text options Meta rotates on the boosted post (asset_feed_spec.bodies with DEGREES_OF_FREEDOM); the post keeps its own text as one of the options. Works for Facebook posts and Instagram media. Under a conversions or traffic goal Meta also wants a website URL on the options, taken from `linkUrl` (send it with a `callToAction`); engagement boosts need none.
+                smart_targeting: TikTok only (a 400 elsewhere). TikTok Smart Targeting on the ad group: `audience` is
+        TikTok's `smart_audience_enabled`, `interestsBehaviors` its `smart_interest_behavior_enabled`.
+        When on, TikTok may deliver beyond the selected audiences or interests. Available on
+        Video views, Traffic, Lead generation, App install, Web conversion and Community interaction.
+        Only the flags you send are written; an unwritten flag reads back null in
+        `nativeSettings`, so send `false` explicitly to be able to verify it is off.
+        Not available with smartPlus or when attaching to an existing ad set (adSetId).
                 optimization_goal: Meta, or TikTok with `goal: video_views`. TikTok: ENGAGED_VIEW (6-second
         Focused View, the default) or ENGAGED_VIEW_FIFTEEN (15-second views), both
         billed per view (CPV); any other value is a 400. Meta: explicit ad-set
@@ -6025,6 +6042,7 @@ def register_generated_tools(mcp, _get_client):
                 budget_level=budget_level,
                 attribution_spec=attribution_spec,
                 bodies=bodies,
+                smart_targeting=smart_targeting,
                 optimization_goal=optimization_goal,
             )
             return _format_response(response)
@@ -6291,6 +6309,7 @@ def register_generated_tools(mcp, _get_client):
         ad_name: str | None = None,
         tracking: dict[str, Any] | None = None,
         goal: str | None = None,
+        smart_targeting: dict[str, Any] | None = None,
         optimization_goal: str | None = None,
         billing_event: str | None = None,
         buying_type: str = "AUCTION",
@@ -6426,6 +6445,13 @@ def register_generated_tools(mcp, _get_client):
 
         **OpenAI Ads**
         - Only `traffic`, `awareness`, and `conversions` are supported (other goals return 400). Maps to OpenAI's `bidding_type` (clicks, impressions, conversions respectively). `conversions` requires an active conversion event setting on the account; create a tracking tag with `defaultEventType` via the tracking-tags API (`POST /v1/accounts/{accountId}/tracking-tags`), or configure a conversion event in OpenAI Ads Manager, or the request returns 400. Pick the event with `promotedObject.customEventType` (see AdPromotedObject); without it the most recently created optimizable event is used.
+                smart_targeting: TikTok only (a 400 elsewhere). TikTok Smart Targeting on the ad group: `audience` is
+        TikTok's `smart_audience_enabled`, `interestsBehaviors` its `smart_interest_behavior_enabled`.
+        When on, TikTok may deliver beyond the selected audiences or interests. Available on
+        Video views, Traffic, Lead generation, App install, Web conversion and Community interaction.
+        Only the flags you send are written; an unwritten flag reads back null in
+        `nativeSettings`, so send `false` explicitly to be able to verify it is off.
+        Not available with smartPlus or when attaching to an existing ad set (adSetId).
                 optimization_goal: Meta, or TikTok with goal video_views (ENGAGED_VIEW, the 6-second default, or ENGAGED_VIEW_FIFTEEN; both bill per view). Meta: Explicit ad-set `optimization_goal` (e.g. `LANDING_PAGE_VIEWS`, `LINK_CLICKS`, `REACH`, `IMPRESSIONS`, `OFFSITE_CONVERSIONS`, `THRUPLAY`, `LEAD_GENERATION`). Overrides the default derived from `goal` (e.g. `traffic` defaults to `LINK_CLICKS`). Forwarded verbatim to Meta, which validates compatibility with the campaign objective and rejects incompatible combinations.
                 billing_event: Meta only. Explicit ad-set `billing_event`. Defaults to `IMPRESSIONS`. Forwarded verbatim to Meta, which validates compatibility with the optimization goal.
                 buying_type: Meta only. Defaults to AUCTION and is explicitly sent on new campaigns, including validateOnly. Reusing existingCampaignId does not change the campaign. RESERVED = Reach & Frequency: requires `rfPredictionId` (a RESERVED prediction from /v1/ads/rf-predictions + /reserve). Budget, schedule and pricing come from the reservation, so budgetAmount/budgetType are not required and bid fields are ignored. Only the plain single-ad shape (no creatives[], adSetId, existingCampaignId or dynamicCreative).
@@ -6900,6 +6926,7 @@ def register_generated_tools(mcp, _get_client):
                 ad_name=ad_name,
                 tracking=tracking,
                 goal=goal,
+                smart_targeting=smart_targeting,
                 optimization_goal=optimization_goal,
                 billing_event=billing_event,
                 buying_type=buying_type,
