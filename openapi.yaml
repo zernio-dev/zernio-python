@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.210.1"
+  version: "1.211.0"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -9839,8 +9839,8 @@ components:
         clicks: { type: integer, example: 0, description: 'Link clicks where the platform reports them. Always 0 on Facebook Page stories: Meta exposes no link-click metric for stories.' }
         views: { type: integer, example: 0 }
         follows: { type: [integer, "null"], example: 0, description: 'Instagram feed posts and stories only: organic accounts that started following from this post. Null on Instagram Reels and non-Reels video, where Meta does not expose this metric for the media. 0 for other platforms.' }
-        igReelsAvgWatchTime: { type: integer, example: 0, description: 'Instagram Reels only: average watch time per play, in milliseconds. 0 for non-Reels media and other platforms.' }
-        igReelsVideoViewTotalTime: { type: integer, example: 0, description: 'Instagram Reels only: total watch time including replays, in milliseconds. 0 for non-Reels media and other platforms.' }
+        igReelsAvgWatchTime: { type: integer, example: 0, description: 'Average watch time per play, in milliseconds, for Instagram Reels, Facebook Reels and TikTok videos (business accounts). On Facebook it includes replays within a play, so it can exceed the Reel length. 0 for other media and platforms, including regular Facebook videos.' }
+        igReelsVideoViewTotalTime: { type: integer, example: 0, description: 'Total watch time including replays, in milliseconds, for Instagram Reels, Facebook Reels and TikTok videos (business accounts). 0 for other media and platforms, including regular Facebook videos.' }
         reelsSkipRate: { type: number, example: 48.8, description: 'Instagram Reels only: percentage (0-100) of initial views that skipped the reel within its first 3 seconds, as reported by Meta. Meta labels the metric estimated and in development, so it can move between syncs. 0 for non-Reels media and other platforms. When a post is published to several accounts, the aggregate is weighted by views.' }
         completionRate: { type: number, example: 0, description: 'TikTok accounts connected through the TikTok for Business app only: share of viewers who watched the video to the end, 0 to 1, as TikTok reports it (T+24-48h, only for posts active in the last 7 days). 0 for other platforms. When a post is published to several accounts, the aggregate is weighted by views.' }
         profileViews: { type: integer, example: 0, description: 'TikTok accounts connected through the TikTok for Business app only: profile views from users who reached the profile through this post (T+24-48h). 0 for other platforms.' }
@@ -10075,8 +10075,8 @@ components:
             clicks: { type: integer }
             views: { type: integer }
             follows: { type: integer, description: 'Follows attributed to this post (Instagram)' }
-            igReelsAvgWatchTime: { type: integer, description: 'Instagram Reels average watch time, in milliseconds' }
-            igReelsVideoViewTotalTime: { type: integer, description: 'Instagram Reels total watch time, in milliseconds' }
+            igReelsAvgWatchTime: { type: integer, description: 'Average watch time per play, in milliseconds (Instagram Reels, Facebook Reels, TikTok business videos)' }
+            igReelsVideoViewTotalTime: { type: integer, description: 'Total watch time including replays, in milliseconds (Instagram Reels, Facebook Reels, TikTok business videos)' }
             reposts: { type: integer }
             reelsSkipRate: { type: number, description: 'Instagram Reels skip rate, 0 to 1' }
             completionRate: { type: number, description: 'TikTok business lane: share of viewers who watched to the end, 0 to 1' }
