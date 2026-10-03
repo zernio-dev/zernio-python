@@ -8266,6 +8266,7 @@ def register_generated_tools(mcp, _get_client):
         dimension: str = "interest",
         geo_type: str = "city",
         country_code: str | None = None,
+        ad_account_id: str | None = None,
         limit: int = 25,
     ) -> str:
         """Search targeting options
@@ -8276,6 +8277,7 @@ def register_generated_tools(mcp, _get_client):
             dimension: What to search. `geo` resolves locations (scope further with `geoType`), `interest`/`behavior` resolve audience entities (`behavior` is Meta only), `income` resolves the normalized income tiers, `language` resolves Google's targetable language_constant table (Google only), `workPosition`/`workEmployer`/`workIndustry` resolve Meta work demographics, `industry`/`jobFunction`/`seniority`/`companySize` resolve LinkedIn B2B facets (LinkedIn only). Defaults to `interest` for backward compatibility with the deprecated /v1/ads/interests alias.
             geo_type: Only used when `dimension=geo`. The kind of location to resolve. `all` searches every type in one relevance-ranked call. Defaults to `city`.
             country_code: ISO 3166-1 alpha-2 country code (e.g. NL) to scope a geo search.
+            ad_account_id: TikTok only: the advertiser to search as, when the connection holds several. Each TikTok advertiser has its own targetable regions and catalogs. Defaults to the connection's first advertiser; an advertiser the connection does not hold returns 400.
             limit: Maximum results to return."""
         client = _get_client()
         try:
@@ -8285,6 +8287,7 @@ def register_generated_tools(mcp, _get_client):
                 dimension=dimension,
                 geo_type=geo_type,
                 country_code=country_code,
+                ad_account_id=ad_account_id,
                 limit=limit,
             )
             return _format_response(response)

@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.206.1"
+  version: "1.206.2"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -62896,7 +62896,8 @@ paths:
         TikTok geo searches return every matching level in one list (`type` is
         `country`, `region`, `city`, `district`, or `metro` for DMA areas), and
         `geoType` is not applied. Results are scoped to the advertiser's targetable
-        markets. A `country` result's id is its ISO 3166-1 alpha-2 code, for
+        markets (pass `adAccountId` when the connection holds several advertisers). A
+        two-letter `q` also matches a country by ISO code (`q=GB` returns the United Kingdom first). A `country` result's id is its ISO 3166-1 alpha-2 code, for
         `targeting.countries`; every other id is TikTok's numeric location id,
         usable in `regions`/`cities`/`metros` keys on `POST /v1/ads/create`.
 
@@ -62962,6 +62963,7 @@ paths:
         - { name: dimension, in: query, required: false, schema: { type: string, enum: [geo, interest, behavior, income, language, workPosition, workEmployer, workIndustry, industry, jobFunction, seniority, companySize], default: interest }, description: "What to search. `geo` resolves locations (scope further with `geoType`), `interest`/`behavior` resolve audience entities (`behavior` is Meta only), `income` resolves the normalized income tiers, `language` resolves Google's targetable language_constant table (Google only), `workPosition`/`workEmployer`/`workIndustry` resolve Meta work demographics, `industry`/`jobFunction`/`seniority`/`companySize` resolve LinkedIn B2B facets (LinkedIn only). Defaults to `interest` for backward compatibility with the deprecated /v1/ads/interests alias." }
         - { name: geoType, in: query, required: false, schema: { type: string, enum: [all, country, country_group, region, city, subcity, neighborhood, place, zip, metro_area, geo_market], default: city }, description: "Only used when `dimension=geo`. The kind of location to resolve. `all` searches every type in one relevance-ranked call. Defaults to `city`." }
         - { name: countryCode, in: query, required: false, schema: { type: string, minLength: 2, maxLength: 2 }, description: "ISO 3166-1 alpha-2 country code (e.g. NL) to scope a geo search." }
+        - { name: adAccountId, in: query, required: false, schema: { type: string }, description: "TikTok only: the advertiser to search as, when the connection holds several. Each TikTok advertiser has its own targetable regions and catalogs. Defaults to the connection's first advertiser; an advertiser the connection does not hold returns 400." }
         - { name: limit, in: query, required: false, schema: { type: integer, minimum: 1, maximum: 100, default: 25 }, description: "Maximum results to return." }
       responses:
         '409': { $ref: '#/components/responses/AccountConnectionRequired' }
