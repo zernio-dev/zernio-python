@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.211.0"
+  version: "1.211.1"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -36766,7 +36766,8 @@ paths:
         '403':
           description: 'Inbox addon required, or the connected account is not permitted to comment on this post on the platform (code platform_api_error, type platform_error)'
         '409': { $ref: '#/components/responses/IdempotencyKeyInFlight' }
-        '422': { $ref: '#/components/responses/IdempotencyKeyReused' }
+        '422':
+          description: 'Idempotency-Key reused with a different request, or the platform rejected the comment (for example a locked thread, a deleted parent or a post too old for comments; code platform_api_error)'
         '429': { $ref: '#/components/responses/RateLimited' }
         '502':
           description: 'Upstream platform error (code platform_api_error, type platform_error)'
