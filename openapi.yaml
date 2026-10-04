@@ -64050,7 +64050,7 @@ paths:
                         platformAudienceId: { type: string }
                         name: { type: string }
                         description: { type: string }
-                        type: { type: string, enum: [customer_list, company_list, engagement, meta_engagement, website, website_retargeting, lookalike, saved_targeting] }
+                        type: { type: string, enum: [customer_list, company_list, engagement, meta_engagement, tiktok_engagement, pinterest_engagement, website, website_retargeting, lookalike, saved_targeting] }
                         spec:
                           anyOf:
                             - $ref: '#/components/schemas/TargetingSpec'
@@ -64069,8 +64069,28 @@ paths:
       x-platforms: ["meta", "google", "tiktok", "linkedin", "pinterest", "x"]
       summary: Create custom audience
       description: |
-        Create a custom audience. `customer_list` is supported on Meta, Google, X, LinkedIn, TikTok, and Pinterest;
-        `website` and `lookalike` are Meta-only; `company_list`, `engagement` and `website_retargeting` are LinkedIn-only.
+        Create a custom audience. `customer_list` is supported on Meta, Google, X, LinkedIn, TikTok, and Pinterest.
+        `website` (pixel/tag visitors) and `lookalike` are supported on Meta, TikTok, Pinterest and Google.
+        `meta_engagement` is Meta-only, `tiktok_engagement` TikTok-only, `pinterest_engagement` Pinterest-only;
+        `company_list`, `engagement` and `website_retargeting` are LinkedIn-only. A type sent to a platform
+        that does not support it is a 422 `FEATURE_NOT_AVAILABLE`.
+
+        Per-platform rules for `website`:
+
+        - Meta: `pixelId` required, `retentionDays` 1-180, optional `urlContains` or raw `rule`. `event` is not accepted.
+        - TikTok: `pixelId` required, `retentionDays` one of 7, 14, 30, 60, 90, 180. `event` is a TikTok pixel event
+          (default `PAGE BROWSE`; also `CLICK BUTTON`, `PIXEL SUBMIT FORM`, `CONTACT`, `DOWNLOAD`,
+          `PIXEL ADD PAYMENT INFO`, `COMPLETE PAYMENT`, `INITIATE CHECKOUT`, `COMPLETE REGISTRATION`,
+          `PRODUCT DETAIL PAGE BROWSE`, `PIXEL SEARCH`, `PIXEL ADD TO CART`, `PLACE AN ORDER`,
+          `PIXEL ADD TO WISHLIST`, `PIXEL SUBSCRIBE`), optional `urlContains`.
+        - Pinterest: `pixelId` is the Pinterest tag id, `retentionDays` 1-540, optional `event` (e.g. `checkout`, `addtocart`).
+          Pinterest matches URLs exactly, so `urlContains` is a 400 there.
+        - Google: no `pixelId` (the account's Google tag is used), `retentionDays` 1-540, `urlContains`
+          defaults to `/` (all visitors). Built as a rule-based user list with prepopulation requested.
+
+        Per-platform rules for `lookalike`: Meta takes `ratio` (0.01-0.20); Pinterest takes `ratio` in whole
+        percents (0.01-0.10) and `country` US, CA or GB; TikTok and Google take `size` (narrow, balanced, broad)
+        instead of `ratio`. TikTok needs a seed with at least 1,000 matched people.
         `saved_targeting` stores a reusable TargetingSpec (no member upload, no adAccountId) that you reference later via
         `savedTargetingId` on `POST /v1/ads/create`.
 
@@ -64081,7 +64101,8 @@ paths:
         - `company_list` is filled AT CREATION from the `companies` array below, which is required. To change the list
           afterwards send the new full list to `POST /v1/ads/audiences/{audienceId}/companies` (a replace, not a merge).
           The `/users` endpoint rejects these audiences with a 422.
-        - `website`, `website_retargeting`, `engagement`, `meta_engagement` and `lookalike` fill themselves from the pixel,
+        - `website`, `website_retargeting`, `engagement`, `meta_engagement`, `tiktok_engagement`, `pinterest_engagement`
+          and `lookalike` fill themselves from the pixel,
           engagement source or seed audience you point them at. They take no member upload at all.
 
         Create is not idempotent, never auto-retry.
@@ -64095,14 +64116,14 @@ paths:
               oneOf:
                 - type: object
                   title: UploadedOrDerivedAudience
-                  description: "customer_list, website, or lookalike audience (uploaded or derived from a source)."
+                  description: "customer_list, website, lookalike or engagement audience (uploaded or derived from a source)."
                   required: [accountId, adAccountId, name, type]
                   properties:
                     accountId: { type: string }
                     adAccountId: { type: string, description: "Platform ad account ID. Must start with act_ for Meta; bare platform id for others (Google customer id, X/TikTok/LinkedIn/Pinterest account id)." }
                     name: { type: string, maxLength: 255 }
                     description: { type: string }
-                    type: { type: string, enum: [customer_list, company_list, engagement, meta_engagement, website, website_retargeting, lookalike] }
+                    type: { type: string, enum: [customer_list, company_list, engagement, meta_engagement, tiktok_engagement, pinterest_engagement, website, website_retargeting, lookalike] }
                     matchRules:
                       type: array
                       minItems: 1
@@ -64174,8 +64195,8 @@ paths:
                           domain: { type: string, maxLength: 100 }
                           website: { type: string, maxLength: 100 }
                           linkedinPageUrl: { type: string }
-                    pixelId: { type: string, description: Required for website audiences }
-                    retentionDays: { type: integer, minimum: 1, maximum: 365, description: "Required for website (max 180) and meta_engagement (max 365) audiences." }
+                    pixelId: { type: string, description: "website: the Meta pixel, TikTok pixel or Pinterest tag id. Required on those three, rejected on Google." }
+                    retentionDays: { type: integer, minimum: 1, maximum: 540, description: "Required for website (Meta max 180, TikTok 7/14/30/60/90/180, Pinterest and Google max 540), meta_engagement (max 365) and tiktok_engagement (7/14/30/60/90/180; organic and live video and most business-account events only 7/14/30)." }
                     engagementSource:
                       type: string
                       enum: [page, instagram, video]
@@ -64186,22 +64207,60 @@ paths:
                     sourceId: { type: string, description: "Required for meta_engagement: the Page / IG account / video id." }
                     event:
                       type: string
+                      maxLength: 100
                       description: |
-                        meta_engagement only. The engagement event; defaults per source
+                        meta_engagement: the engagement event; defaults per source
                         (page → page_engaged, instagram → ig_business_profile_all,
                         video → video_watched). Ignored when `rule` is provided.
+
+                        website on TikTok: the pixel event (default `PAGE BROWSE`). website
+                        on Pinterest: the tag event (`pagevisit`, `signup`, `checkout`, `viewcategory`, `search`, `addtocart`, `watchvideo`, `lead`, `custom` or a partner-defined event).
+
+                        tiktok_engagement (required): the TikTok engagement event, validated
+                        per `source` (TikTok's filter values, spaces included):
+                        - ads: `CLICK`, `IMPRESSION`, `PLAY 2S`, `PLAY 6S`, `PLAY 25`, `PLAY 50`, `PLAY 75`,
+                          `PLAY OVER`, and the `ENGAGEMENT APP PROFILE` / `ENGAGEMENT TIKTOK INSTANT` /
+                          `ENGAGEMENT COLLECTION ADS` `CLICK` and `IMPRESSION` events.
+                        - organic_video: `ORGANIC VIDEO PLAY 2S`, `ORGANIC VIDEO PLAY 6S`,
+                          `ORGANIC VIDEO PLAY OVER`, `ORGANIC VIDEO ENGAGEMENT`.
+                        - live_video: `LIVE VIDEO VIEW`, `LIVE VIDEO ENGAGEMENT`.
+                        - business_account: `BUSINESS ACCOUNT PROFILE FOLLOW`, `BUSINESS ACCOUNT PROFILE VISIT`,
+                          `BUSINESS ACCOUNT ENGAGEMENT`, `BUSINESS ACCOUNT PLAY 2S`, `BUSINESS ACCOUNT PLAY 6S`,
+                          `BUSINESS ACCOUNT PLAY OVER` and the rest of TikTok's business-account events.
+                        An unknown value is a 400 that lists the valid ones.
                     sourceAudienceId: { type: string, description: Required for lookalike audiences }
                     country: { type: string, description: "2-letter code, required for lookalike audiences" }
-                    ratio: { type: number, minimum: 0.01, maximum: 0.20, description: Required for lookalike audiences }
+                    ratio: { type: number, minimum: 0.01, maximum: 0.20, description: "lookalike on Meta (0.01-0.20) and Pinterest (0.01-0.10, whole percents). Rejected on TikTok and Google." }
+                    size: { type: string, enum: [narrow, balanced, broad], description: "lookalike on TikTok and Google: audience breadth. Rejected on Meta and Pinterest." }
+                    source:
+                      type: string
+                      enum: [ads, organic_video, live_video, business_account]
+                      description: "Required for tiktok_engagement: what people engaged with."
+                    sourceIds:
+                      type: array
+                      minItems: 1
+                      maxItems: 50
+                      items: { type: string }
+                      description: "tiktok_engagement: ad group / campaign ids for `ads`, video ids for `organic_video` and `live_video` (max 10). Required except for `business_account`."
+                    identityId: { type: string, description: "tiktok_engagement: the TikTok identity that owns the videos or business account. Required for organic_video, live_video and business_account." }
+                    identityType: { type: string, enum: [TT_USER, BC_AUTH_TT], description: "tiktok_engagement: type of `identityId`." }
+                    identityAuthorizedBcId: { type: string, description: "tiktok_engagement: required when identityType is BC_AUTH_TT." }
+                    engagerType: { type: integer, enum: [1, 2], description: "pinterest_engagement: Pinterest's `engager_type`, passed through when set." }
+                    engagementType: { type: string, enum: [click, save, closeup, comment, like], description: "pinterest_engagement: limit to one engagement action." }
+                    engagementDomains: { type: array, items: { type: string }, description: "pinterest_engagement: people who engaged with Pins from these domains. The domain must be claimed on the Pinterest account or Pinterest rejects it." }
+                    campaignIds: { type: array, items: { type: string, pattern: '^\d+$' }, description: "pinterest_engagement: people who engaged with these campaigns' ads." }
+                    adIds: { type: array, items: { type: string, pattern: '^\d+$' }, description: "pinterest_engagement: people who engaged with these ads." }
+                    pinIds: { type: array, items: { type: string, pattern: '^\d+$' }, description: "pinterest_engagement: people who engaged with these Pins. At least one of engagementDomains, campaignIds, adIds or pinIds is required." }
                     urlContains:
                       type: string
                       description: |
-                        website only. Narrows the audience from all visitors to visitors of
-                        URLs containing this substring. Ignored when `rule` is supplied.
+                        website on Meta, TikTok and Google. Narrows the audience from all visitors
+                        to visitors of URLs containing this substring. Ignored when `rule` is
+                        supplied. A 400 on Pinterest, which only matches exact URLs.
                     rule:
                       type: object
                       description: |
-                        Optional raw Meta rule, replacing the one we build. Omit it for all
+                        Meta only (a 400 elsewhere). Optional raw Meta rule, replacing the one we build. Omit it for all
                         visitors of `pixelId`, or use `urlContains` for the common page-match
                         case.
 
