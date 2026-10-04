@@ -9051,6 +9051,32 @@ def register_generated_tools(mcp, _get_client):
 
     @mcp.tool(
         annotations=ToolAnnotations(
+            title="Get Facebook Page demographics",
+            readOnlyHint=True,
+            destructiveHint=False,
+            openWorldHint=False,
+        )
+    )
+    def analytics_get_facebook_demographics(
+        account_id: str, breakdown: str | None = None
+    ) -> str:
+        """Get Facebook Page demographics
+
+            Args:
+                account_id: The Zernio SocialAccount ID for the Facebook account (required)
+                breakdown: Comma-separated list of demographic dimensions: country, city.
+        Defaults to both if omitted."""
+        client = _get_client()
+        try:
+            response = client.analytics.get_facebook_demographics(
+                account_id=account_id, breakdown=breakdown
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
             title="Get Instagram demographics",
             readOnlyHint=True,
             destructiveHint=False,
