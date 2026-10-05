@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.213.1"
+  version: "1.214.0"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -8097,6 +8097,37 @@ components:
           example: '105890561436614'
       description: Feed aspect ratio 0.5625-1.91, carousels up to 10 items, stories require media (no captions). User tag coordinates 0.0-1.0 from top-left. Images over 8 MB and videos over platform limits are auto-compressed.
 
+    InstagramBusinessDiscovery:
+      type: object
+      required: [profile, media]
+      properties:
+        profile:
+          type: object
+          required: [id, username]
+          properties:
+            id: { type: string, description: Instagram user ID of the looked-up account }
+            username: { type: string }
+            name: { type: [string, "null"] }
+            biography: { type: [string, "null"] }
+            website: { type: [string, "null"] }
+            profilePictureUrl: { type: [string, "null"], description: 'Temporary CDN URL; download it rather than storing the link.' }
+            followersCount: { type: [integer, "null"] }
+            followsCount: { type: [integer, "null"] }
+            mediaCount: { type: [integer, "null"] }
+        media:
+          type: array
+          description: 'Most recent media first, up to `limit`.'
+          items:
+            type: object
+            properties:
+              id: { type: string }
+              caption: { type: [string, "null"] }
+              mediaType: { type: [string, "null"], description: 'IMAGE, VIDEO or CAROUSEL_ALBUM' }
+              mediaProductType: { type: [string, "null"], description: 'FEED or REELS' }
+              timestamp: { type: [string, "null"], format: date-time }
+              permalink: { type: [string, "null"] }
+              likeCount: { type: [integer, "null"], description: Null when the owner hides like counts }
+              commentsCount: { type: [integer, "null"] }
     InstagramAudioAsset:
       type: object
       description: 'One asset from the Instagram audio catalog. Licensed music carries artist/artwork fields; original sounds carry creator fields instead, so most fields are nullable.'
@@ -30212,6 +30243,57 @@ paths:
         '404': { $ref: '#/components/responses/AccountUnavailable' }
 
         '502': { description: Instagram rejected the request }
+
+  /v1/accounts/{accountId}/instagram/business-discovery:
+    get:
+      x-resource-group: "analytics"
+      operationId: getInstagramBusinessDiscovery
+      tags: [Instagram]
+      summary: Look up a public Instagram Business account
+      description: |
+        Returns the public profile and most recent media of any Instagram
+        Business or Creator account, looked up by username through one of your
+        connected Instagram accounts. Useful for competitor and market research.
+        Personal accounts and private accounts cannot be looked up.
+
+        Requires an Instagram account connected via **Facebook Login**. Meta
+        serves business discovery on graph.facebook.com only, so accounts
+        connected with classic Instagram Login receive a 400
+        (`instagram_business_discovery_requires_facebook_login`) and must be
+        reconnected choosing the Facebook option. Any one such account can look
+        up any public Business or Creator handle.
+
+        `likeCount` is null when the owner hides like counts.
+      parameters:
+        - name: accountId
+          in: path
+          required: true
+          description: 'The ID of a connected Instagram account (Facebook Login).'
+          schema: { type: string }
+        - name: username
+          in: query
+          required: true
+          description: 'Instagram handle to look up, with or without the leading @. Case-insensitive.'
+          schema: { type: string, maxLength: 31, example: nike }
+        - name: limit
+          in: query
+          required: false
+          description: 'How many of the most recent media to return.'
+          schema: { type: integer, minimum: 1, maximum: 25, default: 12 }
+      responses:
+        '200':
+          description: Public profile and recent media
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/InstagramBusinessDiscovery' }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404':
+          description: 'The account is not reachable by the caller (`account_not_found`), or no public Business or Creator account has that username (`instagram_profile_not_found`).'
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ErrorResponse' }
+        '409': { $ref: '#/components/responses/AccountConnectionRequired' }
 
   /v1/accounts/{accountId}/instagram/stories/{storyId}/insights:
     get:

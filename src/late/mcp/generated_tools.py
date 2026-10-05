@@ -20182,6 +20182,32 @@ def register_generated_tools(mcp, _get_client):
 
     @mcp.tool(
         annotations=ToolAnnotations(
+            title="Look up a public Instagram Business account",
+            readOnlyHint=True,
+            destructiveHint=False,
+            openWorldHint=False,
+        )
+    )
+    def instagram_get_instagram_business_discovery(
+        account_id: str, username: str, limit: int = 12
+    ) -> str:
+        """Look up a public Instagram Business account
+
+        Args:
+            account_id: The ID of a connected Instagram account (Facebook Login). (required)
+            username: Instagram handle to look up, with or without the leading @. Case-insensitive. (required)
+            limit: How many of the most recent media to return."""
+        client = _get_client()
+        try:
+            response = client.instagram.get_instagram_business_discovery(
+                account_id=account_id, username=username, limit=limit
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
             title="Get Instagram story insights",
             readOnlyHint=True,
             destructiveHint=False,

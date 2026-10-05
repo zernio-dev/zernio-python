@@ -101,6 +101,18 @@ class InstagramResource:
             f"/v1/accounts/{account_id}/instagram/audio/{audio_id}"
         )
 
+    def get_instagram_business_discovery(
+        self, account_id: str, username: str, *, limit: int | None = 12
+    ) -> dict[str, Any]:
+        """Look up a public Instagram Business account"""
+        params = self._build_params(
+            username=username,
+            limit=limit,
+        )
+        return self._client._get(
+            f"/v1/accounts/{account_id}/instagram/business-discovery", params=params
+        )
+
     def get_instagram_story_insights(
         self, account_id: str, story_id: str
     ) -> dict[str, Any]:
@@ -137,6 +149,18 @@ class InstagramResource:
         """Get Instagram audio metadata (async)"""
         return await self._client._aget(
             f"/v1/accounts/{account_id}/instagram/audio/{audio_id}"
+        )
+
+    async def aget_instagram_business_discovery(
+        self, account_id: str, username: str, *, limit: int | None = 12
+    ) -> dict[str, Any]:
+        """Look up a public Instagram Business account (async)"""
+        params = self._build_params(
+            username=username,
+            limit=limit,
+        )
+        return await self._client._aget(
+            f"/v1/accounts/{account_id}/instagram/business-discovery", params=params
         )
 
     async def aget_instagram_story_insights(
