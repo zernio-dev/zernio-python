@@ -9950,7 +9950,7 @@ components:
         saves: { type: integer, example: 0, description: 'Number of saves/bookmarks (Instagram, Pinterest, X)' }
         clicks: { type: integer, example: 0, description: 'Link clicks where the platform reports them. Always 0 on Facebook Page stories: Meta exposes no link-click metric for stories.' }
         views: { type: integer, example: 0 }
-        follows: { type: [integer, "null"], example: 0, description: 'Instagram feed posts and stories only: organic accounts that started following from this post. Null on Instagram Reels and non-Reels video, where Meta does not expose this metric for the media. 0 for other platforms.' }
+        follows: { type: [integer, "null"], example: 0, description: 'Accounts that started following from this post. Instagram feed posts and stories (organic follows), Facebook Reels (Meta post_video_followers) and the TikTok business lane. Null on Instagram Reels and non-Reels video and on Facebook posts that are not Reels, where Meta does not expose this metric for the media. 0 for other platforms.' }
         igReelsAvgWatchTime: { type: integer, example: 0, description: 'Average watch time per play, in milliseconds, for Instagram Reels, Facebook Reels and TikTok videos (business accounts). On Facebook it includes replays within a play, so it can exceed the Reel length. 0 for other media and platforms, including regular Facebook videos.' }
         igReelsVideoViewTotalTime: { type: integer, example: 0, description: 'Total watch time including replays, in milliseconds, for Instagram Reels, Facebook Reels and TikTok videos (business accounts). 0 for other media and platforms, including regular Facebook videos.' }
         reelsSkipRate: { type: number, example: 48.8, description: 'Instagram Reels only: percentage (0-100) of initial views that skipped the reel within its first 3 seconds, as reported by Meta. Meta labels the metric estimated and in development, so it can move between syncs. 0 for non-Reels media and other platforms. When a post is published to several accounts, the aggregate is weighted by views.' }
@@ -10192,7 +10192,7 @@ components:
             sends: { type: integer }
             clicks: { type: integer }
             views: { type: integer }
-            follows: { type: integer, description: 'Follows attributed to this post (Instagram)' }
+            follows: { type: integer, description: 'Follows attributed to this post (Instagram feed and stories, Facebook Reels, TikTok business lane)' }
             igReelsAvgWatchTime: { type: integer, description: 'Average watch time per play, in milliseconds (Instagram Reels, Facebook Reels, TikTok business videos)' }
             igReelsVideoViewTotalTime: { type: integer, description: 'Total watch time including replays, in milliseconds (Instagram Reels, Facebook Reels, TikTok business videos)' }
             reposts: { type: integer }
@@ -18506,7 +18506,7 @@ paths:
                         saves: { type: integer, description: "Total saves on this date" }
                         clicks: { type: integer, description: "Total clicks on this date" }
                         views: { type: integer, description: "Total views on this date" }
-                        follows: { type: integer, description: "Follows attributed to the post on this date (Instagram feed and stories, TikTok business lane); 0 elsewhere" }
+                        follows: { type: [integer, "null"], description: 'Follows attributed to the post on this date (Instagram feed and stories, Facebook Reels, TikTok business lane). Null on Instagram Reels and video and on Facebook posts that are not Reels, where Meta has no follows metric; 0 on other platforms.' }
                         completionRate: { type: number, description: "TikTok business lane: share of viewers who watched to the end on this date, 0 to 1; 0 elsewhere" }
                         profileViews: { type: integer, description: "TikTok business lane: profile views attributed to the post on this date; 0 elsewhere" }
                         websiteClicks: { type: integer, description: "TikTok business lane: website-link clicks attributed to the post on this date (also inside clicks); 0 elsewhere" }
