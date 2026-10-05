@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.215.3"
+  version: "1.215.4"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -51856,6 +51856,7 @@ paths:
         - { name: platform, in: query, schema: { type: string, enum: [facebook, instagram, tiktok, linkedin, pinterest, google, twitter, openai] } }
         - { name: status, in: query, schema: { $ref: '#/components/schemas/AdStatus' }, description: Filter by derived campaign status (post-aggregation) }
         - { name: adAccountId, in: query, schema: { type: string }, description: Platform ad account ID (e.g. act_123 for Meta) }
+        - { name: campaignId, in: query, schema: { type: string }, description: "Platform campaign ID (the `platformCampaignId` on each returned campaign). Returns only that campaign, or an empty list when it is not visible to the caller. Mirrors the same filter on /v1/ads and /v1/ads/tree." }
         - { name: pageId, in: query, schema: { type: string }, description: "Meta only: Facebook Page ID. Campaigns have no Page of their own, so this keeps campaigns having at least one ad backed by this Page, with adCount and metrics computed over those ads only. Mirrors the same filter on /v1/ads and /v1/ads/tree." }
         - { name: accountId, in: query, schema: { type: string }, description: Account ID }
         - { name: profileId, in: query, schema: { type: string }, description: Profile ID }
@@ -52034,7 +52035,9 @@ paths:
         `skipped: 1`, with the reason). Otherwise the switch is written (`updated: 1`), read back and
         stored, and the delivery status of the ads under it (up to 20) is re-read and stored, so an
         immediate GET returns what the platform now reports. A stored switch never skips a write, and
-        when the platform cannot be read the write always goes out.
+        when the platform cannot be read the write always goes out. On Meta the check reads the
+        campaign's own `status`, so a delivery status such as `IN_PROCESS` or `WITH_ISSUES` does not
+        force a write.
       security:
         - bearerAuth: []
       parameters:
@@ -52718,8 +52721,9 @@ paths:
                 renameStrategy:
                   type: string
                   enum: [DEEP_RENAME, ONLY_TOP_LEVEL_RENAME, NO_RENAME]
-                renamePrefix: { type: string }
-                renameSuffix: { type: string }
+                  description: "Meta's native `rename_strategy` values. `DEEP_RENAME` renames the copied campaign and every copied child (ad sets, ads) with `renamePrefix` / `renameSuffix`. `ONLY_TOP_LEVEL_RENAME` renames only the copied campaign; children keep their source names. `NO_RENAME` keeps every source name. With no rename option at all, Meta appends its own ` - Copy` suffix; LinkedIn defaults to `DEEP_RENAME` (its campaign group and campaigns are renamed). Ignored on TikTok, where `renamePrefix` / `renameSuffix` apply to every copied object."
+                renamePrefix: { type: string, description: "Text prepended to each renamed object's name." }
+                renameSuffix: { type: string, description: "Text appended to each renamed object's name. On LinkedIn an omitted suffix defaults to ` (Copy)`." }
                 syncAfter: { type: boolean, default: true, description: Trigger ads discovery on the owning account after the copy succeeds }
       responses:
         '200':
@@ -53173,15 +53177,18 @@ paths:
               type: object
               required: [platform]
               properties:
-                platform: { type: string, enum: [facebook, instagram] }
+                platform: { type: string, enum: [facebook, instagram, tiktok] }
                 campaignId: { type: string, description: Destination platform campaign id (defaults to the source's campaign) }
                 deepCopy: { type: boolean, default: true, description: Copy child ads + creatives }
                 statusOption: { type: string, enum: [ACTIVE, PAUSED, INHERITED_FROM_SOURCE], default: PAUSED }
                 startTime: { type: string, format: date-time, description: "Reschedule the copy's start (ISO 8601). A value without an offset (`YYYY-MM-DD`, `YYYY-MM-DD HH:MM:SS` or `YYYY-MM-DDTHH:MM:SS`) is read in the ad account timezone." }
                 endTime: { type: string, format: date-time, description: "Reschedule the copy's end, read like `startTime`; a date-only end runs to 23:59:59 local." }
-                renameStrategy: { type: string, enum: [DEEP_RENAME, ONLY_TOP_LEVEL_RENAME, NO_RENAME] }
-                renamePrefix: { type: string }
-                renameSuffix: { type: string }
+                renameStrategy:
+                  type: string
+                  enum: [DEEP_RENAME, ONLY_TOP_LEVEL_RENAME, NO_RENAME]
+                  description: "Meta's native `rename_strategy` values. `DEEP_RENAME` renames the copied ad set and its copied ads with `renamePrefix` / `renameSuffix`. `ONLY_TOP_LEVEL_RENAME` renames only the copied ad set; its ads keep their source names. `NO_RENAME` keeps every source name. With no rename option at all, Meta appends its own ` - Copy` suffix. Ignored on TikTok, where `renamePrefix` / `renameSuffix` still apply."
+                renamePrefix: { type: string, description: "Text prepended to each renamed object's name." }
+                renameSuffix: { type: string, description: "Text appended to each renamed object's name." }
                 syncAfter: { type: boolean, default: true }
       responses:
         '200':
@@ -53199,7 +53206,7 @@ paths:
         '403':
           description: 'Returned with code `ads_allowance_exceeded` when the team has no payment method on file and has reached the 500 free live ads: add a card to resume.'
         '404': { description: Source ad set not found }
-        '501': { description: Only supported on Meta (facebook/instagram) }
+        '501': { description: Only supported on Meta (facebook/instagram) and TikTok }
 
   /v1/ads/{adId}/duplicate:
     post:
@@ -53242,9 +53249,12 @@ paths:
               properties:
                 adSetId: { type: string, description: Destination platform ad set id (defaults to the source's ad set) }
                 statusOption: { type: string, enum: [ACTIVE, PAUSED, INHERITED_FROM_SOURCE], default: PAUSED }
-                renameStrategy: { type: string, enum: [DEEP_RENAME, ONLY_TOP_LEVEL_RENAME, NO_RENAME] }
-                renamePrefix: { type: string }
-                renameSuffix: { type: string }
+                renameStrategy:
+                  type: string
+                  enum: [DEEP_RENAME, ONLY_TOP_LEVEL_RENAME, NO_RENAME]
+                  description: "Meta's native `rename_strategy` values. An ad has no copied children, so `DEEP_RENAME` and `ONLY_TOP_LEVEL_RENAME` both rename the copy with `renamePrefix` / `renameSuffix`, and `NO_RENAME` keeps the source name. With no rename option at all, Meta appends its own ` - Copy` suffix."
+                renamePrefix: { type: string, description: "Text prepended to the copy's name." }
+                renameSuffix: { type: string, description: "Text appended to the copy's name." }
                 syncAfter: { type: boolean, default: true }
                 reuseSourceCreative:
                   type: boolean
@@ -53562,7 +53572,9 @@ paths:
         the delivery status of its ads (up to 20) is re-read and stored, so an
         immediate GET returns what the platform now reports. A stored switch
         never skips a write, and when the platform cannot be read the write
-        always goes out.
+        always goes out. On Meta the check reads the ad set's own `status`, so
+        a repeated request skips even while `platformAdSetStatus` reads
+        `CAMPAIGN_PAUSED`, `WITH_ISSUES` or `IN_PROCESS`.
       security:
         - bearerAuth: []
       parameters:

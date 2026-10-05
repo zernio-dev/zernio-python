@@ -5371,6 +5371,7 @@ def register_generated_tools(mcp, _get_client):
         ]
         | None = None,
         ad_account_id: str | None = None,
+        campaign_id: str | None = None,
         page_id: str | None = None,
         account_id: str | None = None,
         profile_id: str | None = None,
@@ -5404,6 +5405,7 @@ def register_generated_tools(mcp, _get_client):
             platform
             status: Filter by derived campaign status (post-aggregation)
             ad_account_id: Platform ad account ID (e.g. act_123 for Meta)
+            campaign_id: Platform campaign ID (the `platformCampaignId` on each returned campaign). Returns only that campaign, or an empty list when it is not visible to the caller. Mirrors the same filter on /v1/ads and /v1/ads/tree.
             page_id: Meta only: Facebook Page ID. Campaigns have no Page of their own, so this keeps campaigns having at least one ad backed by this Page, with adCount and metrics computed over those ads only. Mirrors the same filter on /v1/ads and /v1/ads/tree.
             account_id: Account ID
             profile_id: Profile ID
@@ -5421,6 +5423,7 @@ def register_generated_tools(mcp, _get_client):
                 platform=platform,
                 status=status,
                 ad_account_id=ad_account_id,
+                campaign_id=campaign_id,
                 page_id=page_id,
                 account_id=account_id,
                 profile_id=profile_id,
@@ -6099,9 +6102,9 @@ def register_generated_tools(mcp, _get_client):
             status_option: ACTIVE = launch the clone immediately (spends the moment LinkedIn approves it). PAUSED = clone stays DRAFT, safe default. INHERITED_FROM_SOURCE = mirror each entity's source status per-entity. Duplicating an ACTIVE campaign this way starts a second front of spend.
             start_time: Reschedule the copied hierarchy's start (ISO 8601). On Meta and TikTok a value without an offset (`YYYY-MM-DD`, `YYYY-MM-DD HH:MM:SS` or `YYYY-MM-DDTHH:MM:SS`) is read in the ad account timezone; LinkedIn ad accounts carry no timezone, so there it is read as UTC. TikTok defaults to a start a few minutes after the copy.
             end_time: Reschedule the copied hierarchy's end, read like `startTime`; a date-only end runs to 23:59:59 local. Defaults to the source's end.
-            rename_strategy
-            rename_prefix
-            rename_suffix
+            rename_strategy: Meta's native `rename_strategy` values. `DEEP_RENAME` renames the copied campaign and every copied child (ad sets, ads) with `renamePrefix` / `renameSuffix`. `ONLY_TOP_LEVEL_RENAME` renames only the copied campaign; children keep their source names. `NO_RENAME` keeps every source name. With no rename option at all, Meta appends its own ` - Copy` suffix; LinkedIn defaults to `DEEP_RENAME` (its campaign group and campaigns are renamed). Ignored on TikTok, where `renamePrefix` / `renameSuffix` apply to every copied object.
+            rename_prefix: Text prepended to each renamed object's name.
+            rename_suffix: Text appended to each renamed object's name. On LinkedIn an omitted suffix defaults to ` (Copy)`.
             sync_after: Trigger ads discovery on the owning account after the copy succeeds"""
         client = _get_client()
         try:
@@ -6341,7 +6344,7 @@ def register_generated_tools(mcp, _get_client):
     )
     def ad_campaigns_duplicate_ad_set(
         ad_set_id: str,
-        platform: Literal["facebook", "instagram"],
+        platform: Literal["facebook", "instagram", "tiktok"],
         campaign_id: str | None = None,
         deep_copy: bool = True,
         status_option: Literal["ACTIVE", "PAUSED", "INHERITED_FROM_SOURCE"] = "PAUSED",
@@ -6377,9 +6380,9 @@ def register_generated_tools(mcp, _get_client):
             status_option
             start_time: Reschedule the copy's start (ISO 8601). A value without an offset (`YYYY-MM-DD`, `YYYY-MM-DD HH:MM:SS` or `YYYY-MM-DDTHH:MM:SS`) is read in the ad account timezone.
             end_time: Reschedule the copy's end, read like `startTime`; a date-only end runs to 23:59:59 local.
-            rename_strategy
-            rename_prefix
-            rename_suffix
+            rename_strategy: Meta's native `rename_strategy` values. `DEEP_RENAME` renames the copied ad set and its copied ads with `renamePrefix` / `renameSuffix`. `ONLY_TOP_LEVEL_RENAME` renames only the copied ad set; its ads keep their source names. `NO_RENAME` keeps every source name. With no rename option at all, Meta appends its own ` - Copy` suffix. Ignored on TikTok, where `renamePrefix` / `renameSuffix` still apply.
+            rename_prefix: Text prepended to each renamed object's name.
+            rename_suffix: Text appended to each renamed object's name.
             sync_after"""
         client = _get_client()
         try:
@@ -6438,9 +6441,9 @@ def register_generated_tools(mcp, _get_client):
             ad_id: Zernio ad ID or platform ad ID (required)
             ad_set_id: Destination platform ad set id (defaults to the source's ad set)
             status_option
-            rename_strategy
-            rename_prefix
-            rename_suffix
+            rename_strategy: Meta's native `rename_strategy` values. An ad has no copied children, so `DEEP_RENAME` and `ONLY_TOP_LEVEL_RENAME` both rename the copy with `renamePrefix` / `renameSuffix`, and `NO_RENAME` keeps the source name. With no rename option at all, Meta appends its own ` - Copy` suffix.
+            rename_prefix: Text prepended to the copy's name.
+            rename_suffix: Text appended to the copy's name.
             sync_after
             reuse_source_creative: Point the copy at the source ad's creative object instead of copying it, so the copy keeps the same Facebook post, the same Instagram media, their existing likes, comments and shares, and the full creative setup (text variations included). This is what Ads Manager's "show existing reactions, comments and shares" does. Meta's native copy always publishes new posts. A creative belongs to one ad account, so `adSetId` must be in the source ad's account. 400 when the source ad has no creative yet."""
         client = _get_client()
