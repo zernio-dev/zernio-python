@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.215.0"
+  version: "1.215.3"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -2189,7 +2189,7 @@ components:
             building a campaign, so the ad set keeps its learning phase. It then
             owns budget, targeting and schedule, so `budgetAmount`, `budgetType`,
             `budgetLevel`, `startDate`, `endDate`, `objective`, `campaignStatus`,
-            `existingCampaignId`, the special ad category fields and every
+            `adSetStatus`, `existingCampaignId`, the special ad category fields and every
             targeting field except `ageMin`, `ageMax`, `placements` and
             `advantageAudience` are rejected with a 400 alongside it. Its
             `destination_type` must match the ad's destination.
@@ -2458,6 +2458,23 @@ components:
             new ad set instead. Only meaningful when a new campaign is being
             created; rejected with a 400 alongside `adSetId` (the attach shape
             reuses an existing campaign).
+        adSetStatus:
+          type: string
+          enum: [ACTIVE, PAUSED]
+          description: |
+            Ad-set-level status, same semantics as `POST /v1/ads/create`. Sets
+            the new ad set's switch alone and overrides `status` for it. A
+            level status (`campaignStatus`, `adSetStatus`, `adStatus`) always
+            wins for its level, and `status: PAUSED` adds a hold of its own
+            only when none of them is PAUSED. Rejected with a 400 alongside
+            `adSetId` (that ad set already exists).
+        adStatus:
+          $ref: '#/components/schemas/AdActivationStatus'
+          description: |
+            Ad-level status, same semantics as `POST /v1/ads/create`. Sets the
+            new ads' switch and overrides `status` for them, also with
+            `adSetId`. Send `campaignStatus`, `adSetStatus` and `adStatus` all
+            PAUSED to create every object paused.
         bidStrategy:
           type: string
           enum:
@@ -3904,7 +3921,7 @@ components:
         lastFiredAt:
           type: string
           format: date-time
-          description: Timestamp of last successful webhook delivery
+          description: 'Timestamp of the last successful webhook delivery. On a healthy endpoint it is refreshed at most once every 10 minutes, so it can trail the most recent delivery by up to 10 minutes.'
         failureCount:
           type: integer
           description: >-
@@ -10935,6 +10952,10 @@ components:
     AdStatus:
       type: string
       enum: [active, paused, pending_review, rejected, completed, cancelled, error]
+    AdActivationStatus:
+      type: string
+      enum: [ACTIVE, PAUSED]
+      description: "Request-side publish switch for `adStatus` on ad creation endpoints only (`status`, `campaignStatus` and `adSetStatus` carry their own inline ACTIVE/PAUSED enum there; the status-update endpoints are a separate lowercase `active`/`paused` enum). Distinct from `AdStatus` (the platform-reported delivery status returned on reads)."
     AdReviewStatus:
       type: string
       enum: [in_review, approved, rejected, with_issues]
@@ -24388,13 +24409,16 @@ paths:
             with `details.accountStatus` (Meta's `account_status`) and, when Meta
             gives one, `details.disableReason`. Unsettled and in-grace accounts
             are accepted, matching the `selectable` flag of `GET /v1/ads/accounts`.
-            Setting a scope also removes already synced ads from de-scoped ad
-            accounts. On Meta the scope also decides which ad accounts Zernio
-            subscribes to ad-account webhooks: only the scoped ones, instead of
-            every ad account the login can reach. The scope is kept when this
-            call returns an `authUrl`, so the Meta Ads account created after
-            OAuth is scoped (and only its scoped ad accounts synced and
-            subscribed) from the start. For multiple accounts use `adAccountIds` instead.
+            Setting a scope also removes already synced ads, campaigns, ad sets
+            and keywords from de-scoped ad accounts. On Meta the scope also decides
+            which ad accounts Zernio subscribes to ad-account webhooks: only the
+            scoped ones, instead of every ad account the login can reach. The scope
+            is kept when this call returns an `authUrl`, so the Meta Ads account
+            created after OAuth is scoped (and only its scoped ad accounts synced and
+            subscribed) from the start. On `googleads` the scope is kept through
+            OAuth when `redirect_url` is set, so the Google Ads connection created
+            after OAuth syncs only its scoped customers from the first sync.
+            For multiple accounts use `adAccountIds` instead.
           example: act_1330190928038136
         - name: adAccountIds
           in: query
@@ -24408,7 +24432,8 @@ paths:
             support and id shapes as `adAccountId`). Repeat the param
             (`?adAccountIds=act_1&adAccountIds=act_2`) or comma-separate
             (`?adAccountIds=act_1,act_2`). Persisted server-side; latest call
-            wins, and de-scoped ad accounts have their synced ads removed.
+            wins, and de-scoped ad accounts have their synced ads, campaigns,
+            ad sets and keywords removed.
             On Meta only the scoped ad accounts get webhook subscriptions,
             including when the call starts a fresh OAuth.
             Omitting both `adAccountId` and `adAccountIds` keeps any previously
@@ -61269,11 +61294,26 @@ paths:
                 status:
                   type: string
                   enum: [ACTIVE, PAUSED]
-                  description: "Publish state of the created entities, on every platform. Omitted or ACTIVE publishes live (default, back-compat); PAUSED pauses only the TOP-MOST object this call creates and switches everything below it on, so one resume of that object brings the new tree live and nothing that already existed is touched: a new campaign is held paused with its ad set and ad on; with `existingCampaignId` the new ad set is held paused with its ad on; with `adSetId` the new ad itself is paused. `campaignStatus: ACTIVE` with `status: PAUSED` moves the pause down to the new ad set. LinkedIn: a held campaign group is PAUSED with its campaign and creative ACTIVE; a new campaign in an existing group stays DRAFT. X has no per-ad switch, so its lowest level is the line item. Google Performance Max and Demand Gen accept PAUSED only (the campaign is created paused)."
+                  description: "Publish state of the created entities, on every platform. Omitted or ACTIVE publishes live (default, back-compat); PAUSED pauses only the TOP-MOST object this call creates and switches everything below it on, so one resume of that object brings the new tree live and nothing that already existed is touched: a new campaign is held paused with its ad set and ad on; with `existingCampaignId` the new ad set is held paused with its ad on; with `adSetId` the new ad itself is paused. `campaignStatus: ACTIVE` with `status: PAUSED` moves the pause down to the new ad set. `campaignStatus`, `adSetStatus` and `adStatus` set one level each and always win for that level; `status: PAUSED` adds a hold of its own only when none of them is PAUSED. To create every object paused, send all three as PAUSED. LinkedIn: a held campaign group is PAUSED with its campaign and creative ACTIVE; a new campaign in an existing group stays DRAFT. X has no per-ad switch, so its lowest level is the line item. Google Performance Max and Demand Gen accept PAUSED only (the campaign is created paused)."
                 campaignStatus:
                   type: string
                   enum: [ACTIVE, PAUSED]
-                  description: "Meta, Google, and ChatGPT (OpenAI). Overrides `status` for the new campaign alone. `PAUSED` holds the campaign off with its ad set and ad on; `ACTIVE` with `status: PAUSED` switches the campaign on and holds the new ad set paused (its ad on). Omitted, it follows `status`."
+                  description: "Every platform. Sets the switch of the new campaign alone (LinkedIn: the campaign group) and overrides `status` for it. `PAUSED` holds the campaign off with its ad set and ad on unless `adSetStatus` or `adStatus` say otherwise; `ACTIVE` with `status: PAUSED` switches the campaign on and holds the new ad set paused (its ad on). Omitted, it follows `status`. Ignored when the request creates no campaign (`existingCampaignId` or `adSetId`)."
+                adSetStatus:
+                  type: string
+                  enum: [ACTIVE, PAUSED]
+                  description: |
+                    Every platform. Sets the switch of the new ad set alone (Google, TikTok, Pinterest and ChatGPT: the ad group; LinkedIn: the campaign, which stays DRAFT when held; X: the line item) and overrides `status` for it. Omitted, it follows `status`.
+
+                    Precedence: a level status (`campaignStatus`, `adSetStatus`, `adStatus`) always wins for its level. `status: PAUSED` then holds the top-most new object that has no level status, and only when no level status is PAUSED; every other new object is switched on. So `campaignStatus: ACTIVE` + `adSetStatus: PAUSED` + `adStatus: PAUSED` keeps the campaign on with the new ad set and ad off, and all three PAUSED creates the whole tree paused.
+
+                    Rejected with a 400 alongside `adSetId` (that ad set already exists; change it with PUT /v1/ads/ad-sets/{adSetId}/status). Performance Max and Demand Gen accept PAUSED only.
+                adStatus:
+                  $ref: '#/components/schemas/AdActivationStatus'
+                  description: |
+                    Sets the switch of the new ad alone, also when attaching to an existing ad set with `adSetId`, and overrides `status` for it. Same precedence as `adSetStatus`. Omitted, it follows `status`.
+
+                    X returns a 400: a promoted post has no switch of its own, so hold the line item with `adSetStatus`. `PAUSED` with `buyingType: RESERVED` returns a 400 (Meta creates the first Reach and Frequency ad ACTIVE). Performance Max and Demand Gen accept PAUSED only.
                 budgetLevel:
                   type: string
                   enum: [adset, campaign]

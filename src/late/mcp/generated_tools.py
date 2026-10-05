@@ -8195,6 +8195,8 @@ def register_generated_tools(mcp, _get_client):
         budget_type: Literal["daily", "lifetime"] | None = None,
         status: Literal["ACTIVE", "PAUSED"] | None = None,
         campaign_status: Literal["ACTIVE", "PAUSED"] | None = None,
+        ad_set_status: Literal["ACTIVE", "PAUSED"] | None = None,
+        ad_status: Literal["ACTIVE", "PAUSED"] | None = None,
         budget_level: Literal["adset", "campaign"] = "adset",
         currency: str | None = None,
         headline: str | None = None,
@@ -8430,8 +8432,16 @@ def register_generated_tools(mcp, _get_client):
                 validate_only: Google Performance Max validates the complete atomic campaign and asset group with no resource creation or local persistence. Google validation still downloads image URLs and consumes quota. On Meta, validates the complete inline campaign, ad set, creative and ad with execution_options validate_only. Nothing is uploaded or created, and validation bypasses Idempotency-Key storage. Supports a single image, all-image placementAssets with per-rule copy, existing video.id or existingCreativeId; other media pools, new video uploads, creatives[], adSetId and RESERVED buying return 400. Placement validation uses existing Instagram identities only. Existing campaign or creative nodes are marked skipped. Success returns 200 with per-node results; Meta rejection returns an error. ChatGPT (OpenAI) has no platform dry-run: Zernio runs every check it knows (creative lengths, budget, bid strategy, targeting) plus live lookups of the conversion event and target countries, and uploads or creates nothing. OpenAI's own write-time checks (image fetch, currency-specific minimums, ad review) still run only on a real create. Any other platform, or a Google campaignType other than pmax or demand_gen, returns 501 `feature_not_available`.
                 budget_amount: Budget in WHOLE currency units (USD: 50 = $50.00), NOT cents. Meta's own Marketing API takes this same number in minor units, so it is an easy and expensive mix-up. Required on legacy, multi-creative and Performance Max shapes. Inherited on attach. OpenAI Ads: in the ad account currency, minimum 1; OpenAI can require a higher daily minimum for some currencies and names it in the error.
                 budget_type: Required on legacy, multi-creative and Performance Max shapes. Inherited on attach. OpenAI Ads accepts both as the campaign's single spend cap. A lifetime cap can later switch to daily with PUT /v1/ads/campaigns/{campaignId}, but OpenAI never switches a daily cap back to lifetime (422). Automatic bidding (Maximize Results) needs a daily budget.
-                status: Publish state of the created entities, on every platform. Omitted or ACTIVE publishes live (default, back-compat); PAUSED pauses only the TOP-MOST object this call creates and switches everything below it on, so one resume of that object brings the new tree live and nothing that already existed is touched: a new campaign is held paused with its ad set and ad on; with `existingCampaignId` the new ad set is held paused with its ad on; with `adSetId` the new ad itself is paused. `campaignStatus: ACTIVE` with `status: PAUSED` moves the pause down to the new ad set. LinkedIn: a held campaign group is PAUSED with its campaign and creative ACTIVE; a new campaign in an existing group stays DRAFT. X has no per-ad switch, so its lowest level is the line item. Google Performance Max and Demand Gen accept PAUSED only (the campaign is created paused).
-                campaign_status: Meta, Google, and ChatGPT (OpenAI). Overrides `status` for the new campaign alone. `PAUSED` holds the campaign off with its ad set and ad on; `ACTIVE` with `status: PAUSED` switches the campaign on and holds the new ad set paused (its ad on). Omitted, it follows `status`.
+                status: Publish state of the created entities, on every platform. Omitted or ACTIVE publishes live (default, back-compat); PAUSED pauses only the TOP-MOST object this call creates and switches everything below it on, so one resume of that object brings the new tree live and nothing that already existed is touched: a new campaign is held paused with its ad set and ad on; with `existingCampaignId` the new ad set is held paused with its ad on; with `adSetId` the new ad itself is paused. `campaignStatus: ACTIVE` with `status: PAUSED` moves the pause down to the new ad set. `campaignStatus`, `adSetStatus` and `adStatus` set one level each and always win for that level; `status: PAUSED` adds a hold of its own only when none of them is PAUSED. To create every object paused, send all three as PAUSED. LinkedIn: a held campaign group is PAUSED with its campaign and creative ACTIVE; a new campaign in an existing group stays DRAFT. X has no per-ad switch, so its lowest level is the line item. Google Performance Max and Demand Gen accept PAUSED only (the campaign is created paused).
+                campaign_status: Every platform. Sets the switch of the new campaign alone (LinkedIn: the campaign group) and overrides `status` for it. `PAUSED` holds the campaign off with its ad set and ad on unless `adSetStatus` or `adStatus` say otherwise; `ACTIVE` with `status: PAUSED` switches the campaign on and holds the new ad set paused (its ad on). Omitted, it follows `status`. Ignored when the request creates no campaign (`existingCampaignId` or `adSetId`).
+                ad_set_status: Every platform. Sets the switch of the new ad set alone (Google, TikTok, Pinterest and ChatGPT: the ad group; LinkedIn: the campaign, which stays DRAFT when held; X: the line item) and overrides `status` for it. Omitted, it follows `status`.
+
+        Precedence: a level status (`campaignStatus`, `adSetStatus`, `adStatus`) always wins for its level. `status: PAUSED` then holds the top-most new object that has no level status, and only when no level status is PAUSED; every other new object is switched on. So `campaignStatus: ACTIVE` + `adSetStatus: PAUSED` + `adStatus: PAUSED` keeps the campaign on with the new ad set and ad off, and all three PAUSED creates the whole tree paused.
+
+        Rejected with a 400 alongside `adSetId` (that ad set already exists; change it with PUT /v1/ads/ad-sets/{adSetId}/status). Performance Max and Demand Gen accept PAUSED only.
+                ad_status: Sets the switch of the new ad alone, also when attaching to an existing ad set with `adSetId`, and overrides `status` for it. Same precedence as `adSetStatus`. Omitted, it follows `status`.
+
+        X returns a 400: a promoted post has no switch of its own, so hold the line item with `adSetStatus`. `PAUSED` with `buyingType: RESERVED` returns a 400 (Meta creates the first Reach and Frequency ad ACTIVE). Performance Max and Demand Gen accept PAUSED only.
                 budget_level: Meta only. Where the budget lives, which selects the Meta budget model:
           - `adset` (default): ABO (Ad-set Budget Optimization). The budget is set on the
             ad set. This is the back-compatible behaviour; omit this field to keep it.
@@ -8914,6 +8924,8 @@ def register_generated_tools(mcp, _get_client):
                 budget_type=budget_type,
                 status=status,
                 campaign_status=campaign_status,
+                ad_set_status=ad_set_status,
+                ad_status=ad_status,
                 budget_level=budget_level,
                 currency=currency,
                 headline=headline,
@@ -19102,18 +19114,22 @@ def register_generated_tools(mcp, _get_client):
         with `details.accountStatus` (Meta's `account_status`) and, when Meta
         gives one, `details.disableReason`. Unsettled and in-grace accounts
         are accepted, matching the `selectable` flag of `GET /v1/ads/accounts`.
-        Setting a scope also removes already synced ads from de-scoped ad
-        accounts. On Meta the scope also decides which ad accounts Zernio
-        subscribes to ad-account webhooks: only the scoped ones, instead of
-        every ad account the login can reach. The scope is kept when this
-        call returns an `authUrl`, so the Meta Ads account created after
-        OAuth is scoped (and only its scoped ad accounts synced and
-        subscribed) from the start. For multiple accounts use `adAccountIds` instead.
+        Setting a scope also removes already synced ads, campaigns, ad sets
+        and keywords from de-scoped ad accounts. On Meta the scope also decides
+        which ad accounts Zernio subscribes to ad-account webhooks: only the
+        scoped ones, instead of every ad account the login can reach. The scope
+        is kept when this call returns an `authUrl`, so the Meta Ads account
+        created after OAuth is scoped (and only its scoped ad accounts synced and
+        subscribed) from the start. On `googleads` the scope is kept through
+        OAuth when `redirect_url` is set, so the Google Ads connection created
+        after OAuth syncs only its scoped customers from the first sync.
+        For multiple accounts use `adAccountIds` instead.
                 ad_account_ids: Scope ad sync to multiple platform ad accounts (same platform
         support and id shapes as `adAccountId`). Repeat the param
         (`?adAccountIds=act_1&adAccountIds=act_2`) or comma-separate
         (`?adAccountIds=act_1,act_2`). Persisted server-side; latest call
-        wins, and de-scoped ad accounts have their synced ads removed.
+        wins, and de-scoped ad accounts have their synced ads, campaigns,
+        ad sets and keywords removed.
         On Meta only the scoped ad accounts get webhook subscriptions,
         including when the call starts a fresh OAuth.
         Omitting both `adAccountId` and `adAccountIds` keeps any previously
@@ -26370,6 +26386,8 @@ def register_generated_tools(mcp, _get_client):
         | None = None,
         status: Literal["ACTIVE", "PAUSED"] | None = None,
         campaign_status: Literal["ACTIVE", "PAUSED"] | None = None,
+        ad_set_status: Literal["ACTIVE", "PAUSED"] | None = None,
+        ad_status: Literal["ACTIVE", "PAUSED"] | None = None,
         bid_strategy: Literal[
             "LOWEST_COST_WITHOUT_CAP",
             "LOWEST_COST_WITH_BID_CAP",
@@ -26456,7 +26474,7 @@ def register_generated_tools(mcp, _get_client):
         building a campaign, so the ad set keeps its learning phase. It then
         owns budget, targeting and schedule, so `budgetAmount`, `budgetType`,
         `budgetLevel`, `startDate`, `endDate`, `objective`, `campaignStatus`,
-        `existingCampaignId`, the special ad category fields and every
+        `adSetStatus`, `existingCampaignId`, the special ad category fields and every
         targeting field except `ageMin`, `ageMax`, `placements` and
         `advantageAudience` are rejected with a 400 alongside it. Its
         `destination_type` must match the ad's destination.
@@ -26573,6 +26591,16 @@ def register_generated_tools(mcp, _get_client):
         new ad set instead. Only meaningful when a new campaign is being
         created; rejected with a 400 alongside `adSetId` (the attach shape
         reuses an existing campaign).
+                ad_set_status: Ad-set-level status, same semantics as `POST /v1/ads/create`. Sets
+        the new ad set's switch alone and overrides `status` for it. A
+        level status (`campaignStatus`, `adSetStatus`, `adStatus`) always
+        wins for its level, and `status: PAUSED` adds a hold of its own
+        only when none of them is PAUSED. Rejected with a 400 alongside
+        `adSetId` (that ad set already exists).
+                ad_status: Ad-level status, same semantics as `POST /v1/ads/create`. Sets the
+        new ads' switch and overrides `status` for them, also with
+        `adSetId`. Send `campaignStatus`, `adSetStatus` and `adStatus` all
+        PAUSED to create every object paused.
                 bid_strategy: Meta bid strategy applied to the shared ad set. Defaults to
         `LOWEST_COST_WITHOUT_CAP` (auto-bid) when omitted.
         `LOWEST_COST_WITH_BID_CAP` and `COST_CAP` require
@@ -26685,6 +26713,8 @@ def register_generated_tools(mcp, _get_client):
                 objective=objective,
                 status=status,
                 campaign_status=campaign_status,
+                ad_set_status=ad_set_status,
+                ad_status=ad_status,
                 bid_strategy=bid_strategy,
                 bid_amount=bid_amount,
                 roas_average_floor=roas_average_floor,
@@ -26809,6 +26839,8 @@ def register_generated_tools(mcp, _get_client):
         | None = None,
         status: Literal["ACTIVE", "PAUSED"] | None = None,
         campaign_status: Literal["ACTIVE", "PAUSED"] | None = None,
+        ad_set_status: Literal["ACTIVE", "PAUSED"] | None = None,
+        ad_status: Literal["ACTIVE", "PAUSED"] | None = None,
         bid_strategy: Literal[
             "LOWEST_COST_WITHOUT_CAP",
             "LOWEST_COST_WITH_BID_CAP",
@@ -26883,7 +26915,7 @@ def register_generated_tools(mcp, _get_client):
         building a campaign, so the ad set keeps its learning phase. It then
         owns budget, targeting and schedule, so `budgetAmount`, `budgetType`,
         `budgetLevel`, `startDate`, `endDate`, `objective`, `campaignStatus`,
-        `existingCampaignId`, the special ad category fields and every
+        `adSetStatus`, `existingCampaignId`, the special ad category fields and every
         targeting field except `ageMin`, `ageMax`, `placements` and
         `advantageAudience` are rejected with a 400 alongside it. Its
         `destination_type` must match the ad's destination.
@@ -27000,6 +27032,16 @@ def register_generated_tools(mcp, _get_client):
         new ad set instead. Only meaningful when a new campaign is being
         created; rejected with a 400 alongside `adSetId` (the attach shape
         reuses an existing campaign).
+                ad_set_status: Ad-set-level status, same semantics as `POST /v1/ads/create`. Sets
+        the new ad set's switch alone and overrides `status` for it. A
+        level status (`campaignStatus`, `adSetStatus`, `adStatus`) always
+        wins for its level, and `status: PAUSED` adds a hold of its own
+        only when none of them is PAUSED. Rejected with a 400 alongside
+        `adSetId` (that ad set already exists).
+                ad_status: Ad-level status, same semantics as `POST /v1/ads/create`. Sets the
+        new ads' switch and overrides `status` for them, also with
+        `adSetId`. Send `campaignStatus`, `adSetStatus` and `adStatus` all
+        PAUSED to create every object paused.
                 bid_strategy: Meta bid strategy applied to the shared ad set. Defaults to
         `LOWEST_COST_WITHOUT_CAP` (auto-bid) when omitted.
         `LOWEST_COST_WITH_BID_CAP` and `COST_CAP` require
@@ -27100,6 +27142,8 @@ def register_generated_tools(mcp, _get_client):
                 objective=objective,
                 status=status,
                 campaign_status=campaign_status,
+                ad_set_status=ad_set_status,
+                ad_status=ad_status,
                 bid_strategy=bid_strategy,
                 bid_amount=bid_amount,
                 roas_average_floor=roas_average_floor,
@@ -27220,6 +27264,8 @@ def register_generated_tools(mcp, _get_client):
         | None = None,
         status: Literal["ACTIVE", "PAUSED"] | None = None,
         campaign_status: Literal["ACTIVE", "PAUSED"] | None = None,
+        ad_set_status: Literal["ACTIVE", "PAUSED"] | None = None,
+        ad_status: Literal["ACTIVE", "PAUSED"] | None = None,
         bid_strategy: Literal[
             "LOWEST_COST_WITHOUT_CAP",
             "LOWEST_COST_WITH_BID_CAP",
@@ -27297,7 +27343,7 @@ def register_generated_tools(mcp, _get_client):
         building a campaign, so the ad set keeps its learning phase. It then
         owns budget, targeting and schedule, so `budgetAmount`, `budgetType`,
         `budgetLevel`, `startDate`, `endDate`, `objective`, `campaignStatus`,
-        `existingCampaignId`, the special ad category fields and every
+        `adSetStatus`, `existingCampaignId`, the special ad category fields and every
         targeting field except `ageMin`, `ageMax`, `placements` and
         `advantageAudience` are rejected with a 400 alongside it. Its
         `destination_type` must match the ad's destination.
@@ -27414,6 +27460,16 @@ def register_generated_tools(mcp, _get_client):
         new ad set instead. Only meaningful when a new campaign is being
         created; rejected with a 400 alongside `adSetId` (the attach shape
         reuses an existing campaign).
+                ad_set_status: Ad-set-level status, same semantics as `POST /v1/ads/create`. Sets
+        the new ad set's switch alone and overrides `status` for it. A
+        level status (`campaignStatus`, `adSetStatus`, `adStatus`) always
+        wins for its level, and `status: PAUSED` adds a hold of its own
+        only when none of them is PAUSED. Rejected with a 400 alongside
+        `adSetId` (that ad set already exists).
+                ad_status: Ad-level status, same semantics as `POST /v1/ads/create`. Sets the
+        new ads' switch and overrides `status` for them, also with
+        `adSetId`. Send `campaignStatus`, `adSetStatus` and `adStatus` all
+        PAUSED to create every object paused.
                 bid_strategy: Meta bid strategy applied to the shared ad set. Defaults to
         `LOWEST_COST_WITHOUT_CAP` (auto-bid) when omitted.
         `LOWEST_COST_WITH_BID_CAP` and `COST_CAP` require
@@ -27512,6 +27568,8 @@ def register_generated_tools(mcp, _get_client):
                 objective=objective,
                 status=status,
                 campaign_status=campaign_status,
+                ad_set_status=ad_set_status,
+                ad_status=ad_status,
                 bid_strategy=bid_strategy,
                 bid_amount=bid_amount,
                 roas_average_floor=roas_average_floor,
