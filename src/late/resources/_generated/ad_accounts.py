@@ -944,6 +944,27 @@ class AdAccountsResource:
         )
         return self._client._get("/v1/ads/accounts/finance", params=params)
 
+    def get_ad_account_live_entities(
+        self,
+        account_id: str,
+        ad_account_id: str,
+        *,
+        status: str | None = None,
+        level: str | None = None,
+        limit: int | None = 200,
+        after: str | None = None,
+    ) -> dict[str, Any]:
+        """Read an ad account's campaigns and ad sets live"""
+        params = self._build_params(
+            account_id=account_id,
+            ad_account_id=ad_account_id,
+            status=status,
+            level=level,
+            limit=limit,
+            after=after,
+        )
+        return self._client._get("/v1/ads/accounts/live", params=params)
+
     def create_ad_account(
         self,
         account_id: str,
@@ -1970,6 +1991,27 @@ class AdAccountsResource:
             ad_account_id=ad_account_id,
         )
         return await self._client._aget("/v1/ads/accounts/finance", params=params)
+
+    async def aget_ad_account_live_entities(
+        self,
+        account_id: str,
+        ad_account_id: str,
+        *,
+        status: str | None = None,
+        level: str | None = None,
+        limit: int | None = 200,
+        after: str | None = None,
+    ) -> dict[str, Any]:
+        """Read an ad account's campaigns and ad sets live (async)"""
+        params = self._build_params(
+            account_id=account_id,
+            ad_account_id=ad_account_id,
+            status=status,
+            level=level,
+            limit=limit,
+            after=after,
+        )
+        return await self._client._aget("/v1/ads/accounts/live", params=params)
 
     async def acreate_ad_account(
         self,

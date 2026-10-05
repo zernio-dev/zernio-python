@@ -4179,6 +4179,65 @@ def register_generated_tools(mcp, _get_client):
 
     @mcp.tool(
         annotations=ToolAnnotations(
+            title="Read an ad account's campaigns and ad sets live",
+            readOnlyHint=True,
+            destructiveHint=False,
+            openWorldHint=False,
+        )
+    )
+    def ad_accounts_get_ad_account_live_entities(
+        account_id: str,
+        ad_account_id: str,
+        status: str | None = None,
+        level: Literal["campaign", "adSet"] | None = None,
+        limit: int = 200,
+        after: str | None = None,
+    ) -> str:
+        """Read an ad account's campaigns and ad sets live
+
+            Reads the campaigns and ad sets of one Meta ad account **live from Meta**, in a single
+            Graph call per request (the account's `/campaigns` and `/adsets` edges, filtered by
+            `effective_status`), so it is cheap enough to run before every write: for example a
+            per-ad-account spend ceiling that must see the current `daily_budget` / `lifetime_budget`
+            rather than the synced copy.
+
+            **Live vs synced.** GET /v1/ads/campaigns and GET /v1/ads/ad-sets serve Zernio's synced
+            store, refreshed by background sync (typically 15 to 60 minutes behind Meta), and their
+            `live=true` re-reads only the on/off switches of at most 20 objects. This endpoint returns
+            what Meta reports at `readAt`, for every matching campaign and ad set, and stores nothing.
+
+            Budgets and bid amounts are converted from Meta's minor units to whole units of
+            `currency`, the same units as the synced rows. A campaign with a campaign budget
+            (Advantage+ campaign budget) carries `budget` and its ad sets have `budget: null`;
+            otherwise each ad ...
+
+            Platforms: meta
+
+            Args:
+                account_id: Zernio SocialAccount id (posting or ads variant) used to resolve the Meta token. (required)
+                ad_account_id: Meta ad account id (act_<n>). (required)
+                status: Comma-separated Meta `effective_status` values to keep: ACTIVE, PAUSED, IN_PROCESS,
+        WITH_ISSUES, DELETED, ARCHIVED, and CAMPAIGN_PAUSED (ad sets only; the campaigns level
+        ignores it). Defaults to every status except DELETED and ARCHIVED. An unknown value is a 400.
+                level: Read only one level. Required with `after`. Both levels are read when omitted.
+                limit: Maximum rows per level in this response.
+                after: Cursor from `paging.campaigns.after` or `paging.adSets.after` of a previous response. Requires `level`."""
+        client = _get_client()
+        try:
+            response = client.ad_accounts.get_ad_account_live_entities(
+                account_id=account_id,
+                ad_account_id=ad_account_id,
+                status=status,
+                level=level,
+                limit=limit,
+                after=after,
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
             title="Create Meta ad account",
             readOnlyHint=False,
             destructiveHint=True,
@@ -6219,6 +6278,7 @@ def register_generated_tools(mcp, _get_client):
     )
     def ad_campaigns_list_ad_sets(
         account_id: str | None = None,
+        ad_account_id: str | None = None,
         campaign_id: str | None = None,
         ad_set_id: str | None = None,
         platform: Literal[
@@ -6243,18 +6303,19 @@ def register_generated_tools(mcp, _get_client):
         until an ad joins it via `adSetId` on POST /v1/ads/create. Returns at most 500
         rows, newest first.
 
-        **Status freshness.** `status`, `configuredStatus`, `platformStatus`, `platformAdSetStatus`
-        and `platformCampaignStatus` are the values Zernio last stored. Background sync refreshes
-        them, typically within 15 to 60 minutes (Google up to about 3 hours), and ended or
-        long-paused objects may be refreshed less often. Zernio's own status writes re-read the
-        switches they change. A change made in the platform's own ads manager therefore shows up
-        here only after the next sync. Controllers that act on a switch should pass `live=true`,
-        which reads the switches ...
+        **This list is SYNCED, not live** (refreshed by background sync, see below). Each row also
+        carries the ad set's config (`targeting`, `bidStrategy`, `bidAmount`, `optimizationGoal`,
+        `billingEvent`, `promotedObject`), so `?accountId=...&adAccountId=act_...` returns the config of
+        every ad set of an ad account in one call, without a `campaignId`. To read
+        budgets, status, targeting, promoted object and bid strategy of every campaign and ad set of a
+        Meta ad account LIVE in one call (for example as a pre-write spend gate), use
+        GET /v1/ads/accounts/live ...
 
         Platforms: meta, google, tiktok, linkedin, pinterest, x
 
         Args:
             account_id: Account ID
+            ad_account_id: Platform ad account id (Meta act_<n>). Lists every synced ad set of that ad account; no campaignId needed.
             campaign_id: Platform campaign ID
             ad_set_id: Platform ad set ID
             platform"""
@@ -6262,6 +6323,7 @@ def register_generated_tools(mcp, _get_client):
         try:
             response = client.ad_campaigns.list_ad_sets(
                 account_id=account_id,
+                ad_account_id=ad_account_id,
                 campaign_id=campaign_id,
                 ad_set_id=ad_set_id,
                 platform=platform,

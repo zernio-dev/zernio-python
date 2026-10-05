@@ -448,6 +448,7 @@ Both `from zernio import ...` and `from late import ...` work identically. The `
 | `ad_accounts.create_value_rule_set()` | Create a value rule set |
 | `ad_accounts.get_ad_account_finance()` | Ad account finances |
 | `ad_accounts.get_ad_account_hierarchy()` | Get manager account hierarchy |
+| `ad_accounts.get_ad_account_live_entities()` | Read an ad account's campaigns and ad sets live |
 | `ad_accounts.get_ad_comments()` | List comments on an ad |
 | `ad_accounts.get_ad_negative_keyword_list()` | Get a negative keyword list |
 | `ad_accounts.get_ads_activity_log()` | Ad account change / audit log |

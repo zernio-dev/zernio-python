@@ -585,6 +585,7 @@ class AdCampaignsResource:
         self,
         *,
         account_id: str | None = None,
+        ad_account_id: str | None = None,
         campaign_id: str | None = None,
         ad_set_id: str | None = None,
         platform: str | None = None,
@@ -593,6 +594,7 @@ class AdCampaignsResource:
         """List ad sets"""
         params = self._build_params(
             account_id=account_id,
+            ad_account_id=ad_account_id,
             campaign_id=campaign_id,
             ad_set_id=ad_set_id,
             platform=platform,
@@ -2056,6 +2058,7 @@ class AdCampaignsResource:
         self,
         *,
         account_id: str | None = None,
+        ad_account_id: str | None = None,
         campaign_id: str | None = None,
         ad_set_id: str | None = None,
         platform: str | None = None,
@@ -2064,6 +2067,7 @@ class AdCampaignsResource:
         """List ad sets (async)"""
         params = self._build_params(
             account_id=account_id,
+            ad_account_id=ad_account_id,
             campaign_id=campaign_id,
             ad_set_id=ad_set_id,
             platform=platform,
